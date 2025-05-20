@@ -254,3 +254,17 @@ input.number--appearance-none[type="number"]::-webkit-outer-spin-button {
 .dob-format h2.react-datepicker__current-month {
   display: none;
 }
+.custom--slider .slick-next{
+  right: 0;
+}
+.custom--slider .slick-prev{
+  left: 0;
+  z-index: 1;
+}
+.custom--slider .slick-next, .custom--slider .slick-prev {
+    width: 45px;
+}
+
+.custom--slider .slick-next:before, .custom--slider .slick-prev:before {
+    font-size: 35px;
+}

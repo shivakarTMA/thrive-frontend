@@ -411,6 +411,7 @@ export const mockData = [
     callTag: "Hot",
     staff: "Preeti",
     profileImage: "https://randomuser.me/api/portraits/women/10.jpg",
+    ptSessions:0,
   },
   {
     id: 2,
@@ -448,6 +449,7 @@ export const mockData = [
     callTag: "Warm",
     staff: "Prerna",
     profileImage: "https://randomuser.me/api/portraits/men/31.jpg",
+    ptSessions:5,
   },
   {
     id: 3,
@@ -485,6 +487,7 @@ export const mockData = [
     callTag: "Cold",
     staff: "Anuj",
     profileImage: "https://randomuser.me/api/portraits/women/32.jpg",
+    ptSessions:0,
   },
   {
     id: 4,
@@ -522,6 +525,7 @@ export const mockData = [
     callTag: "Hot",
     staff: "Ritika",
     profileImage: "https://randomuser.me/api/portraits/men/21.jpg",
+    ptSessions:0,
   },
   {
     id: 5,
@@ -559,6 +563,7 @@ export const mockData = [
     callTag: "Warm",
     staff: "Manish",
     profileImage: "https://randomuser.me/api/portraits/women/28.jpg",
+    ptSessions:3,
   },
   {
     id: 6,
@@ -596,6 +601,7 @@ export const mockData = [
     callTag: "Cold",
     staff: "Prerna",
     profileImage: "https://randomuser.me/api/portraits/men/22.jpg",
+    ptSessions:9,
   },
   {
     id: 7,
@@ -633,6 +639,7 @@ export const mockData = [
     callTag: "Warm",
     staff: "Alok",
     profileImage: "https://randomuser.me/api/portraits/women/14.jpg",
+    ptSessions:10,
   },
   {
     id: 8,
@@ -670,6 +677,7 @@ export const mockData = [
     callTag: "Hot",
     staff: "Maya",
     profileImage: "https://randomuser.me/api/portraits/men/18.jpg",
+    ptSessions:0,
   },
   {
     id: 9,
@@ -707,6 +715,7 @@ export const mockData = [
     callTag: "Cold",
     staff: "Ritika",
     profileImage: "https://randomuser.me/api/portraits/women/26.jpg",
+    ptSessions:1,
   },
   {
     id: 10,
@@ -744,6 +753,7 @@ export const mockData = [
     callTag: "Warm",
     staff: "Raj",
     profileImage: "https://randomuser.me/api/portraits/men/19.jpg",
+    ptSessions:0,
   },
 ];
 
@@ -1291,7 +1301,9 @@ export const servicesData = [
       "Get one-on-one guidance with certified personal trainers for customized fitness plans.",
     price: 500,
     images: [
-      "https://cdn.pixabay.com/photo/2016/11/21/12/59/personal-trainer-1840884_1280.jpg",
+      "https://img3.khelomore.com/venues/71/images/1040x490/Ryder-DLF-4.jpg",
+      "https://corvuss.in/wp-content/uploads/5.jpeg",
+      "https://cms-tc.pbskids.org/global/Practice-Being-a-Good-Sport-Mezz-Image-908x510.jpg",
     ],
   },
   {
@@ -1303,7 +1315,9 @@ export const servicesData = [
       "Build muscle and strength under the supervision of experienced strength coaches.",
     price: 450,
     images: [
-      "https://cdn.pixabay.com/photo/2017/01/31/20/23/dumbbell-2022066_1280.jpg",
+      "https://img3.khelomore.com/venues/71/images/1040x490/Ryder-DLF-4.jpg",
+      "https://corvuss.in/wp-content/uploads/5.jpeg",
+      "https://cms-tc.pbskids.org/global/Practice-Being-a-Good-Sport-Mezz-Image-908x510.jpg",
     ],
   },
   {
@@ -1314,8 +1328,10 @@ export const servicesData = [
     description:
       "Effective fat-loss programs with nutritional tracking and fitness routines.",
     price: 400,
-    images: [
-      "https://cdn.pixabay.com/photo/2014/12/03/20/32/weight-loss-556673_1280.jpg",
+   images: [
+      "https://img3.khelomore.com/venues/71/images/1040x490/Ryder-DLF-4.jpg",
+      "https://corvuss.in/wp-content/uploads/5.jpeg",
+      "https://cms-tc.pbskids.org/global/Practice-Being-a-Good-Sport-Mezz-Image-908x510.jpg",
     ],
   },
   {
@@ -1326,8 +1342,10 @@ export const servicesData = [
     description:
       "Injury recovery and mobility support with professional physiotherapy trainers.",
     price: 600,
-    images: [
-      "https://cdn.pixabay.com/photo/2017/02/02/15/15/knee-2031424_1280.jpg",
+     images: [
+      "https://img3.khelomore.com/venues/71/images/1040x490/Ryder-DLF-4.jpg",
+      "https://corvuss.in/wp-content/uploads/5.jpeg",
+      "https://cms-tc.pbskids.org/global/Practice-Being-a-Good-Sport-Mezz-Image-908x510.jpg",
     ],
   },
   {
@@ -1338,8 +1356,10 @@ export const servicesData = [
     description:
       "Remote fitness training sessions via video with personalized feedback.",
     price: 300,
-    images: [
-      "https://cdn.pixabay.com/photo/2016/11/18/21/42/video-call-1834295_1280.jpg",
+     images: [
+      "https://img3.khelomore.com/venues/71/images/1040x490/Ryder-DLF-4.jpg",
+      "https://corvuss.in/wp-content/uploads/5.jpeg",
+      "https://cms-tc.pbskids.org/global/Practice-Being-a-Good-Sport-Mezz-Image-908x510.jpg",
     ],
   },
 
@@ -1353,7 +1373,9 @@ export const servicesData = [
       "Dance your way to fitness with fun and energetic Zumba group classes.",
     price: 250,
     images: [
-      "https://cdn.pixabay.com/photo/2020/10/23/04/49/zumba-5678829_1280.jpg",
+      "https://img3.khelomore.com/venues/71/images/1040x490/Ryder-DLF-4.jpg",
+      "https://corvuss.in/wp-content/uploads/5.jpeg",
+      "https://cms-tc.pbskids.org/global/Practice-Being-a-Good-Sport-Mezz-Image-908x510.jpg",
     ],
   },
   {
@@ -1365,8 +1387,10 @@ export const servicesData = [
     description:
       "Strengthen your core and improve posture in our group Pilates sessions.",
     price: 300,
-    images: [
-      "https://cdn.pixabay.com/photo/2016/11/21/13/59/woman-1847758_1280.jpg",
+     images: [
+      "https://img3.khelomore.com/venues/71/images/1040x490/Ryder-DLF-4.jpg",
+      "https://corvuss.in/wp-content/uploads/5.jpeg",
+      "https://cms-tc.pbskids.org/global/Practice-Being-a-Good-Sport-Mezz-Image-908x510.jpg",
     ],
   },
   {
@@ -1379,7 +1403,9 @@ export const servicesData = [
       "Join our energetic dance event — perfect for fun and fitness.",
     price: 280,
     images: [
-      "https://cdn.pixabay.com/photo/2016/11/29/05/08/people-1867129_1280.jpg",
+      "https://img3.khelomore.com/venues/71/images/1040x490/Ryder-DLF-4.jpg",
+      "https://corvuss.in/wp-content/uploads/5.jpeg",
+      "https://cms-tc.pbskids.org/global/Practice-Being-a-Good-Sport-Mezz-Image-908x510.jpg",
     ],
   },
   {
@@ -1391,7 +1417,9 @@ export const servicesData = [
     description: "Learn professional makeup techniques in our weekend events.",
     price: 320,
     images: [
-      "https://cdn.pixabay.com/photo/2016/07/12/23/36/makeup-1513699_1280.jpg",
+      "https://img3.khelomore.com/venues/71/images/1040x490/Ryder-DLF-4.jpg",
+      "https://corvuss.in/wp-content/uploads/5.jpeg",
+      "https://cms-tc.pbskids.org/global/Practice-Being-a-Good-Sport-Mezz-Image-908x510.jpg",
     ],
   },
   {
@@ -1402,8 +1430,10 @@ export const servicesData = [
     subCategory: "Event",
     description: "Learn professional makeup techniques in our weekend events.",
     price: 320,
-    images: [
-      "https://cdn.pixabay.com/photo/2016/07/12/23/36/makeup-1513699_1280.jpg",
+     images: [
+      "https://img3.khelomore.com/venues/71/images/1040x490/Ryder-DLF-4.jpg",
+      "https://corvuss.in/wp-content/uploads/5.jpeg",
+      "https://cms-tc.pbskids.org/global/Practice-Being-a-Good-Sport-Mezz-Image-908x510.jpg",
     ],
   },
 ];

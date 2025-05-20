@@ -13,6 +13,7 @@ import { IoCloseCircle, IoTimeOutline } from "react-icons/io5";
 import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
+import { GrPrevious, GrNext } from "react-icons/gr";
 
 const BookingService = () => {
   const { id } = useParams();
@@ -21,11 +22,12 @@ const BookingService = () => {
   const [filteredMembers, setFilteredMembers] = useState([]);
   const [selectedMember, setSelectedMember] = useState(null);
   const [serviceBooked, setServiceBooked] = useState(false);
+  const [weekOffset, setWeekOffset] = useState(0);
+
   const searchRef = useRef(null);
   const [selectedDate, setSelectedDate] = useState(
     dayjs().format("YYYY-MM-DD")
   );
-  const [weekOffset, setWeekOffset] = useState(0); // for week navigation
   const [selectedMonth, setSelectedMonth] = useState(dayjs().month()); // 0-11
   const [selectedYear, setSelectedYear] = useState(dayjs().year());
 
@@ -52,7 +54,7 @@ const BookingService = () => {
   });
 
   const sliderSetting = {
-    dots: true,
+    dots: false,
     infinite: true,
     speed: 500,
     slidesToShow: 1,
@@ -91,8 +93,6 @@ const BookingService = () => {
     const slotTime = dayjs(selectedDate).hour(hour).minute(minute);
     return slotTime.isBefore(now);
   };
-
-  const currentMonthIndex = dayjs().month();
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -143,6 +143,22 @@ const BookingService = () => {
     setFilteredMembers([]);
   };
 
+  const weekdaysInMonth = monthDays.filter((day) => {
+    const dayOfWeek = day.day(); // 0=Sun, 1=Mon, ..., 6=Sat
+    return dayOfWeek !== 0 && dayOfWeek !== 6; // only Mon-Fri
+  });
+
+  const startOfWeek = dayjs(selectedDate).startOf("week").add(1, "day"); // Monday of selectedDate's week
+  // const weekDays = Array.from({ length: 7 }).map((_, i) =>
+  //   startOfWeek.add(i, "day")
+  // );
+
+  const weekStart = dayjs()
+    .startOf("week")
+    .add(1, "day")
+    .add(weekOffset, "week"); // start from Monday
+  const weekDays = Array.from({ length: 7 }, (_, i) => weekStart.add(i, "day"));
+
   const handlePayment = () => {
     if (!selectedMember || !selectedMember.name || !selectedMember.contact) {
       toast.error("Please select a member before making payment.");
@@ -168,14 +184,20 @@ const BookingService = () => {
     setFilteredMembers([]);
   };
 
+  console.log("Selected Slots:", selectedMember);
+
+  useEffect(() => {
+    const d = dayjs(selectedDate);
+    setSelectedMonth(d.month());
+    setSelectedYear(d.year());
+  }, [selectedDate]);
+
   return (
     <>
       <div className="page--content">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="col-span-2 border rounded p-6 shadow-sm">
-            <h2 className="text-2xl font-semibold mb-4">
-              Book Your Appointment
-            </h2>
+            <h2 className="text-2xl font-semibold mb-4">Book Your Slots</h2>
 
             <div className="mb-4 relative" ref={searchRef}>
               <label className="block font-medium mb-1">Member Name:</label>
@@ -201,115 +223,119 @@ const BookingService = () => {
               )}
             </div>
 
-            <div className="flex items-center justify-between mb-4">
-              <div className="text-xl font-bold mb-4">
-                {dayjs(selectedDate).format("dddd, MMMM D, YYYY")}
+            {serviceItem?.type === "pt" && (
+              <>
+                {selectedMember && (
+                  <div className="my-2 text-sm text-gray-700">
+                    <span className="font-semibold">PT Sessions:</span>{" "}
+                    {selectedMember.ptSessions}
+                  </div>
+                )}
+              </>
+            )}
+
+            {serviceItem?.type === "pt" && selectedMember?.ptSessions === 0 ? (
+              <div className="text-red-500">
+                No PT sessions available for this member.
               </div>
+            ) : (
+              <>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="text-xl font-bold mb-4">
+                    {dayjs(selectedDate).format("dddd, MMMM D, YYYY")}
+                  </div>
 
-              <div className="flex items-center gap-4 mb-4">
-                <button
-                  onClick={() => {
-                    const prevMonth = dayjs()
-                      .year(selectedYear)
-                      .month(selectedMonth)
-                      .subtract(1, "month");
-                    setSelectedMonth(prevMonth.month());
-                    setSelectedYear(prevMonth.year());
-                  }}
-                >
-                  &lt;
-                </button>
-                <span className="text-lg font-semibold">
-                  {dayjs()
-                    .year(selectedYear)
-                    .month(selectedMonth)
-                    .format("MMMM YYYY")}
-                </span>
+                  <div className="flex items-center justify-between mb-4">
+                    <button
+                      onClick={() => setWeekOffset(weekOffset - 1)}
+                      className="px-3 py-1 rounded"
+                    >
+                      <GrPrevious />
+                    </button>
+                    <div className="text-lg font-bold">
+                      {weekStart.format("MMMM YYYY")}
+                    </div>
+                    <button
+                      onClick={() => setWeekOffset(weekOffset + 1)}
+                      className="px-3 py-1 rounded"
+                    >
+                      <GrNext />
+                    </button>
+                  </div>
+                </div>
 
-                <button
-                  onClick={() => {
-                    const nextMonth = dayjs()
-                      .year(selectedYear)
-                      .month(selectedMonth)
-                      .add(1, "month");
-                    setSelectedMonth(nextMonth.month());
-                    setSelectedYear(nextMonth.year());
-                  }}
-                >
-                  &gt;
-                </button>
-              </div>
-            </div>
+                <div className="grid grid-cols-7 gap-2 text-center font-semibold text-gray-700 mb-2">
+                  {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map(
+                    (d) => (
+                      <div key={d}>{d}</div>
+                    )
+                  )}
+                </div>
 
-            <div className="grid grid-cols-7 gap-2 items-center mb-4">
-              {Array.from({ length: startWeekdayIndex }).map((_, i) => (
-                <div key={`empty-${i}`} />
-              ))}
+                <div className="grid grid-cols-7 gap-2 mb-4 border p-3 rounded">
+                  {weekDays.map((day) => {
+                    const dateStr = day.format("YYYY-MM-DD");
+                    const isPast = day.isBefore(dayjs(), "day");
+                    const isToday = dateStr === dayjs().format("YYYY-MM-DD");
+                    const isSelected = selectedDate === dateStr;
 
-              {monthDays.map((day) => {
-                const dateStr = day.format("YYYY-MM-DD");
-                const isPast = day.isBefore(today, "day");
-                const isToday = dateStr === today.format("YYYY-MM-DD");
-                const isSelected = selectedDate === dateStr;
-                const isDisabled = isPast && !isToday;
+                    return (
+                      <button
+                        key={dateStr}
+                        onClick={() => setSelectedDate(dateStr)}
+                        disabled={isPast && !isToday}
+                        className={`flex flex-col items-center px-3 py-2 rounded min-w-[50px]
+          ${
+            isSelected
+              ? "bg-blue-600 text-white"
+              : "bg-gray-200 hover:bg-gray-300"
+          }
+          ${isPast && !isToday ? "opacity-40 cursor-not-allowed" : ""}`}
+                      >
+                        <span className="text-sm font-medium">
+                          {day.format("ddd")}
+                        </span>
+                        <span className="text-base">{day.format("D")}</span>
+                      </button>
+                    );
+                  })}
+                </div>
 
-                return (
-                  <button
-                    key={dateStr}
-                    disabled={isDisabled}
-                    className={`flex flex-col items-center px-3 py-2 rounded min-w-[50px]
-            ${
-              isSelected
-                ? "bg-blue-600 text-white"
-                : "bg-gray-200 hover:bg-gray-300"
-            }
-            ${isDisabled ? "opacity-40 cursor-not-allowed" : ""}`}
-                    onClick={() => !isDisabled && setSelectedDate(dateStr)}
-                  >
-                    <span className="text-sm font-medium">
-                      {day.format("ddd")}
-                    </span>
-                    <span className="text-base">{day.format("D")}</span>
-                  </button>
-                );
-              })}
-            </div>
+                {selectedDate && (
+                  <div className="mb-4 border p-3 rounded">
+                    <h3 className="text-lg font-semibold mb-2">
+                      Available Time Slots
+                    </h3>
 
-            {selectedDate &&
-              dayjs(selectedDate).month() === selectedMonth &&
-              dayjs(selectedDate).year() === selectedYear && (
-                <>
-                  {["Morning", "Afternoon"].map((session) => (
-                    <div key={session} className="mb-4">
-                      <h3 className="text-lg font-semibold mb-2">{session}</h3>
+                    {times.filter((time) => {
+                      const slot = slotAvailability[selectedDate]?.[time] || {
+                        status: "available",
+                      };
+                      const isPast = isPastTime(time);
+                      return slot.status === "available" && !isPast;
+                    }).length === 0 ? (
+                      <div className="text-gray-500 italic">
+                        No available slots
+                      </div>
+                    ) : (
                       <div className="flex flex-wrap gap-[5px]">
                         {times
                           .filter((time) => {
-                            const hour = parseInt(time.split(":")[0]);
-                            return session === "Morning"
-                              ? hour < 12
-                              : hour >= 12;
-                          })
-                          .filter((time) => !isPastTime(time)) // 🛑 filter past
-                          .map((time) => {
                             const slot = slotAvailability[selectedDate]?.[
                               time
-                            ] || {
-                              status: "available",
-                            };
+                            ] || { status: "available" };
+                            const isPast = isPastTime(time);
+                            return slot.status === "available" && !isPast;
+                          })
+                          .map((time) => {
                             const selected = isSelected(selectedDate, time);
-
                             let btnClass = "bg-blue-200 hover:bg-blue-300";
-                            if (slot.status === "booked")
-                              btnClass = "bg-red-500 text-white";
-                            else if (selected)
-                              btnClass = "bg-green-400 text-white";
+                            if (selected) btnClass = "bg-green-400 text-white";
 
                             return (
                               <button
                                 key={time}
                                 className={`w-[calc(20%-5px)] px-4 py-2 rounded ${btnClass}`}
-                                disabled={slot.status === "booked"}
                                 onClick={() => toggleSlot(selectedDate, time)}
                               >
                                 {time}
@@ -317,15 +343,16 @@ const BookingService = () => {
                             );
                           })}
                       </div>
-                    </div>
-                  ))}
-                </>
-              )}
+                    )}
+                  </div>
+                )}
+              </>
+            )}
           </div>
 
           <div className="border rounded shadow-sm">
             {serviceItem?.images && (
-              <Slider {...sliderSetting}>
+              <Slider {...sliderSetting} className="custom--slider">
                 {serviceItem.images.map((img, idx) => (
                   <div key={idx}>
                     <img
@@ -344,37 +371,8 @@ const BookingService = () => {
               </h1>
               <p className="mb-3 text-gray-700">{serviceItem?.description}</p>
               <p className="text-gray-900 font-medium mb-2">
-                Price: ₹{serviceItem?.price} / 30 mins
+                Price: ₹{serviceItem?.price}
               </p>
-
-              <div className="mt-5">
-                <h2 className="font-semibold text-lg mb-2">Selected Slots:</h2>
-                {selectedSlots.length === 0 ? (
-                  <p>No slots selected.</p>
-                ) : (
-                  <ul className="flex flex-wrap gap-4">
-                    {selectedSlots.map((slot) => (
-                      <li
-                        key={slot.key}
-                        className="border py-2 px-4 rounded relative min-w-[150px] bg-gray-100"
-                      >
-                        <p className="flex items-center gap-2">
-                          <CiCalendar /> {slot.date}
-                        </p>
-                        <p className="flex items-center gap-2">
-                          <IoTimeOutline /> {slot.time}
-                        </p>
-                        <button
-                          className="text-black absolute top-[-10px] right-[-10px] text-2xl"
-                          onClick={() => toggleSlot(slot.date, slot.time)}
-                        >
-                          <IoCloseCircle />
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
 
               <div className="mt-4 text-lg font-bold">
                 Total Price: ₹{totalPrice}
