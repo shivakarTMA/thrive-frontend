@@ -1,0 +1,225 @@
+import React, { useEffect, useState } from "react";
+import { AiOutlineHome } from "react-icons/ai";
+import { FiUsers, FiUserPlus } from "react-icons/fi";
+import { FaAngleDown } from "react-icons/fa6";
+import { Link, useLocation } from "react-router-dom";
+import { PiChartPieSlice, PiUserList } from "react-icons/pi";
+import { SlCalender } from "react-icons/sl";
+import { IoBarChartOutline } from "react-icons/io5";
+import { GoTools } from "react-icons/go";
+import { LuList } from "react-icons/lu";
+import { useSelector } from "react-redux";
+
+const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
+  const location = useLocation();
+  const { accessToken } = useSelector((state) => state.auth);
+  const userType = useSelector((state) => state.auth?.user?.userType);
+
+  // const [dropdownToggle, setDropdownToggle] = useState();
+
+  // useEffect(() => {
+  //   if (toggleMenuBar) {
+  //     setDropdownToggle(false);
+  //   }
+  // }, [toggleMenuBar]);
+
+  // const toggleLeadsMenu = () => {
+  //   setDropdownToggle(!dropdownToggle);
+  //   setToggleMenuBar(false);
+  // };
+
+  // const handleLeadModal = () => {
+  //   setLeadModal(true);
+  // };
+
+  // useEffect(() => {
+  //   // Keep dropdown open if current path matches dropdown routes
+  //   const dropdownRoutes = ["/all-leads", "/create-lead"];
+  //   const isDropdownActive = dropdownRoutes.some((path) =>
+  //     location.pathname.startsWith(path)
+  //   );
+  //   setDropdownToggle(isDropdownActive);
+
+  //   // Close dropdown when menu bar is toggled
+  //   if (toggleMenuBar) {
+  //     setDropdownToggle(false);
+  //   }
+  // }, [location.pathname, toggleMenuBar]);
+
+  return (
+    <div className={`sidebar ${toggleMenuBar ? "activetoggle" : ""}`}>
+      <div className="sidebar-logo d-flex align-items-center">
+        <Link to="/">
+          <img
+            src="https://themarcomavenue.com/thrive/assets/images/DLF-Thrive-New-Logo-1-White.png"
+            alt="logo"
+            width="180px"
+            height="50px"
+          />
+        </Link>
+      </div>
+
+      <div className="mt-5 px-3 sidebar--menu--list">
+        <p className="text-white text-uppercase menu--head mb-5">Overview</p>
+        <Link
+          to="/"
+          className={`nav-link ${location.pathname === "/" ? "active" : ""}`}
+        >
+          <AiOutlineHome className="menu--icon" />
+          <span className="nav-text">Dashboard</span>
+        </Link>
+
+        <p className="text-white mt-5 text-uppercase menu--head mb-5">
+          General settings
+        </p>
+
+        {/* <div
+          className="nav-link d-flex justify-between align-items-center mb-2"
+          onClick={toggleLeadsMenu}
+          style={{ cursor: "pointer" }}
+        >
+          <div className="flex items-center gap-[10px]">
+            <IoBarChartOutline className="menu--icon" />
+            <span className="nav-text">My Leads</span>
+          </div>
+          <FaAngleDown
+            className={`downmenu transition ${
+              dropdownToggle ? "rotate-[180deg]" : ""
+            }`}
+          />
+        </div> */}
+
+        {/* {dropdownToggle && (
+          <div className="mt-2 ">
+            <div
+              className="nav-link bg-black mb-1 cursor-pointer"
+              onClick={handleLeadModal}
+            >
+              <FiUserPlus className="menu--icon" />
+              <span className="nav-text">Create Leads</span>
+            </div>
+            <Link
+              to="/all-leads"
+              className={`nav-link bg-black mb-1 ${
+                location.pathname === "/all-leads" ? "active" : ""
+              }`}
+            >
+              <PiUserList className="menu--icon" />
+              <span className="nav-text">All Leads</span>
+            </Link>
+          </div>
+        )} */}
+
+        {accessToken && userType === "FOH" && (
+          <>
+            <Link
+              to="/all-leads"
+              className={`nav-link mb-2 ${
+                location.pathname === "/all-leads" ? "active" : ""
+              }`}
+            >
+              <IoBarChartOutline className="menu--icon" />
+              <span className="nav-text">My Leads</span>
+            </Link>
+            <Link to="#" className="nav-link mb-2">
+              <SlCalender className="menu--icon" />
+              <span className="nav-text">Bookings</span>
+            </Link>
+
+            <Link
+              to="/all-members"
+              className={`nav-link mb-2 ${
+                location.pathname === "/all-members" ? "active" : ""
+              }`}
+            >
+              <FiUsers className="menu--icon" />
+              <span className="nav-text">Members</span>
+            </Link>
+
+            <Link
+              to="/lost-found"
+              className={`nav-link mb-2 ${
+                location.pathname === "/lost-found" ? "active" : ""
+              }`}
+            >
+              <GoTools className="menu--icon" />
+              <span className="nav-text">Operational Tools</span>
+            </Link>
+            <Link to="/services-list/" className="nav-link mb-2">
+              <LuList className="menu--icon" />
+              <span className="nav-text">Services</span>
+            </Link>
+            <Link to="#" className="nav-link mb-2">
+              <PiChartPieSlice className="menu--icon" />
+
+              <span className="nav-text">Reports</span>
+            </Link>
+          </>
+        )}
+
+        {accessToken && userType === "PT" && (
+          <>
+            <Link
+              to="/my-clients"
+              className={`nav-link mb-2 ${
+                location.pathname === "/my-clients" ? "active" : ""
+              }`}
+            >
+              <IoBarChartOutline className="menu--icon" />
+              <span className="nav-text">My Clients</span>
+            </Link>
+
+            <Link
+              to="/my-calendar"
+              className={`nav-link mb-2 ${
+                location.pathname === "/my-calendar" ? "active" : ""
+              }`}
+            >
+              <FiUsers className="menu--icon" />
+              <span className="nav-text">My Calendar</span>
+            </Link>
+
+            <Link
+              to="/workout-plans"
+              className={`nav-link mb-2 ${
+                location.pathname === "/workout-plans" ? "active" : ""
+              }`}
+            >
+              <GoTools className="menu--icon" />
+              <span className="nav-text">Workout Plans</span>
+            </Link>
+            <Link
+              to="/assessments-progress"
+              className={`nav-link mb-2 ${
+                location.pathname === "/assessments-progress" ? "active" : ""
+              }`}
+            >
+              <GoTools className="menu--icon" />
+              <span className="nav-text">Assessments & Progress</span>
+            </Link>
+            <Link
+              to="/reports-incentives"
+              className={`nav-link mb-2 ${
+                location.pathname === "/reports-incentives" ? "active" : ""
+              }`}
+            >
+              <GoTools className="menu--icon" />
+              <span className="nav-text">Reports & Incentives</span>
+            </Link>
+            <Link
+              to="/tasks-followups"
+              className={`nav-link mb-2 ${
+                location.pathname === "/tasks-followups" ? "active" : ""
+              }`}
+            >
+              <GoTools className="menu--icon" />
+              <span className="nav-text">Tasks / Follow-ups</span>
+            </Link>
+          </>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default Sidebar;
