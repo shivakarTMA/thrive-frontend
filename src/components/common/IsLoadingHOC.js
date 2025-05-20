@@ -1,28 +1,22 @@
 import React, { useState } from "react";
-import { Circles } from "react-loader-spinner";
+import { ClipLoader } from "react-spinners";
 
+// Loader component using react-spinners
 const Loading = () => {
   return (
-    <div className='fixed left-[0px] w-full top-[0px] min-h-screen flex items-center justify-center before:[" "] before:w-full before:min-h-screen before:absolute before:bg-black before:opacity-[0.5] before:z-[-1] z-[9]'>
-      <Circles
-        height="80"
-        width="80"
-        color="white"
-        ariaLabel="circles-loading"
-        wrapperStyle={{}}
-        wrapperclassName=""
-        visible={true}
-      />
+    <div className="fixed inset-0 z-[9] flex items-center justify-center bg-black bg-opacity-50">
+      <ClipLoader color="#ffffff" size={60} />
     </div>
   );
 };
 
+// Higher-Order Component for managing loading state
 const IsLoadingHOC = (WrappedComponent) => {
-  function HOC(props) {
+  const HOC = (props) => {
     const [isLoading, setLoading] = useState(false);
 
-    const setLoadingState = (isComponentLoading) => {
-      setLoading(isComponentLoading);
+    const setLoadingState = (loadingState) => {
+      setLoading(loadingState);
     };
 
     return (
@@ -35,8 +29,26 @@ const IsLoadingHOC = (WrappedComponent) => {
         />
       </>
     );
-  }
+  };
+
   return HOC;
 };
 
 export default IsLoadingHOC;
+
+
+// Example usage of IsLoadingHOC
+// Uncomment the following lines to see how to use the HOC in a component
+// import React, { useEffect } from "react";
+// import IsLoadingHOC from "./IsLoadingHOC";
+
+// const Dashboard = ({ isLoading, setLoading }) => {
+//   useEffect(() => {
+//     setLoading(true);
+//     setTimeout(() => setLoading(false), 2000); // simulate async
+//   }, []);
+
+//   return <div className="text-white">Dashboard Content</div>;
+// };
+
+// export default IsLoadingHOC(Dashboard);
