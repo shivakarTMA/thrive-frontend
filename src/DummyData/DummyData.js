@@ -747,7 +747,6 @@ export const mockData = [
   },
 ];
 
-
 export const membershipData = [
   {
     title: "Gold Max Membership",
@@ -878,18 +877,16 @@ export const lostFoundData = [
   },
 ];
 
-
 export const trainerAvailability = {
   shivakar: [
     { date: "2025-05-07", time: "10:00:00" },
-    { date: "2025-05-07", time: "14:00:00" }
+    { date: "2025-05-07", time: "14:00:00" },
   ],
   esha: [
     { date: "2025-05-07", time: "09:00:00" },
-    { date: "2025-05-07", time: "16:00:00" }
-  ]
+    { date: "2025-05-07", time: "16:00:00" },
+  ],
 };
-
 
 export const todaySessions = [
   {
@@ -978,7 +975,10 @@ export const servicesList = [
   { value: "membership plan", label: "Membership Plan" },
   { value: "personal training", label: "Personal Training" },
   { value: "thrive membership fee", label: "Thrive Membership Fee" },
-  { value: "corporate wellness activations", label: "Corporate Wellness Activations" },
+  {
+    value: "corporate wellness activations",
+    label: "Corporate Wellness Activations",
+  },
   { value: "miscellaneous fee", label: "Miscellaneous Fee" },
   { value: "nutrition packages", label: "Nutrition Packages" },
 ];
@@ -1141,151 +1141,282 @@ export const productsByType = {
   ],
 };
 
-
 export const servicesData = [
   {
     id: 1,
     title: "Cricket",
-    type: "outdoor",
+    type: "cricket",
+    category: "Sports",
     description:
       "Experience the thrill of cricket with our premium pitches, professional-grade equipment, and expert coaching.",
     price: 300,
     images: [
       "https://img3.khelomore.com/venues/71/images/1040x490/Ryder-DLF-4.jpg",
       "https://corvuss.in/wp-content/uploads/5.jpeg",
-      "https://cms-tc.pbskids.org/global/Practice-Being-a-Good-Sport-Mezz-Image-908x510.jpg"
+      "https://cms-tc.pbskids.org/global/Practice-Being-a-Good-Sport-Mezz-Image-908x510.jpg",
     ],
   },
   {
     id: 2,
     title: "Pickleball",
-    type: "outdoor",
+    type: "pickleball",
+    category: "Sports",
     description:
       "Try out one of the fastest growing sports with top-quality pickleball courts and gear.",
     price: 250,
     images: [
       "https://img3.khelomore.com/venues/71/images/1040x490/Ryder-DLF-4.jpg",
       "https://corvuss.in/wp-content/uploads/5.jpeg",
-      "https://cms-tc.pbskids.org/global/Practice-Being-a-Good-Sport-Mezz-Image-908x510.jpg"
+      "https://cms-tc.pbskids.org/global/Practice-Being-a-Good-Sport-Mezz-Image-908x510.jpg",
     ],
   },
   {
     id: 3,
     title: "Tennis",
-    type: "outdoor",
+    type: "tennis",
+    category: "Sports",
     description:
       "Play on professionally maintained tennis courts. We offer coaching sessions, match play, and equipment rentals.",
     price: 350,
     images: [
       "https://img3.khelomore.com/venues/71/images/1040x490/Ryder-DLF-4.jpg",
       "https://corvuss.in/wp-content/uploads/5.jpeg",
-      "https://cms-tc.pbskids.org/global/Practice-Being-a-Good-Sport-Mezz-Image-908x510.jpg"
+      "https://cms-tc.pbskids.org/global/Practice-Being-a-Good-Sport-Mezz-Image-908x510.jpg",
     ],
   },
   {
     id: 4,
     title: "Table Tennis",
-    type: "indoor",
+    type: "table tennis",
+    category: "Sports",
     description:
       "Challenge your reflexes with fast-paced table tennis games in our indoor facilities.",
     price: 150,
     images: [
       "https://img3.khelomore.com/venues/71/images/1040x490/Ryder-DLF-4.jpg",
       "https://corvuss.in/wp-content/uploads/5.jpeg",
-      "https://cms-tc.pbskids.org/global/Practice-Being-a-Good-Sport-Mezz-Image-908x510.jpg"
+      "https://cms-tc.pbskids.org/global/Practice-Being-a-Good-Sport-Mezz-Image-908x510.jpg",
     ],
   },
   {
     id: 5,
     title: "Football",
-    type: "outdoor",
+    type: "football",
+    category: "Sports",
     description:
       "Join our 5-a-side and full-field football matches in high-quality turf arenas.",
     price: 400,
     images: [
       "https://img3.khelomore.com/venues/71/images/1040x490/Ryder-DLF-4.jpg",
       "https://corvuss.in/wp-content/uploads/5.jpeg",
-      "https://cms-tc.pbskids.org/global/Practice-Being-a-Good-Sport-Mezz-Image-908x510.jpg"
+      "https://cms-tc.pbskids.org/global/Practice-Being-a-Good-Sport-Mezz-Image-908x510.jpg",
     ],
   },
   {
     id: 6,
     title: "Basketball",
-    type: "indoor",
+    type: "basketball",
+    category: "Sports",
     description:
       "Shoot hoops at our professional basketball courts with high-quality equipment and flooring.",
     price: 280,
     images: [
       "https://img3.khelomore.com/venues/71/images/1040x490/Ryder-DLF-4.jpg",
       "https://corvuss.in/wp-content/uploads/5.jpeg",
-      "https://cms-tc.pbskids.org/global/Practice-Being-a-Good-Sport-Mezz-Image-908x510.jpg"
+      "https://cms-tc.pbskids.org/global/Practice-Being-a-Good-Sport-Mezz-Image-908x510.jpg",
     ],
   },
   {
     id: 7,
     title: "Badminton",
-    type: "indoor",
+    type: "badminton",
+    category: "Sports",
     description:
       "Play on indoor badminton courts with high-grade shuttlecocks and rackets available.",
     price: 220,
     images: [
       "https://img3.khelomore.com/venues/71/images/1040x490/Ryder-DLF-4.jpg",
       "https://corvuss.in/wp-content/uploads/5.jpeg",
-      "https://cms-tc.pbskids.org/global/Practice-Being-a-Good-Sport-Mezz-Image-908x510.jpg"
+      "https://cms-tc.pbskids.org/global/Practice-Being-a-Good-Sport-Mezz-Image-908x510.jpg",
     ],
   },
   {
     id: 8,
     title: "Swimming",
-    type: "indoor",
+    type: "swimming",
+    category: "Sports",
     description:
       "Enjoy lap swimming or take lessons in our temperature-controlled indoor pool.",
     price: 350,
     images: [
       "https://img3.khelomore.com/venues/71/images/1040x490/Ryder-DLF-4.jpg",
       "https://corvuss.in/wp-content/uploads/5.jpeg",
-      "https://cms-tc.pbskids.org/global/Practice-Being-a-Good-Sport-Mezz-Image-908x510.jpg"
+      "https://cms-tc.pbskids.org/global/Practice-Being-a-Good-Sport-Mezz-Image-908x510.jpg",
     ],
   },
   {
     id: 9,
     title: "Skating",
-    type: "indoor",
+    type: "skating",
+    category: "Sports",
     description:
       "Roll into action at our smooth skating rink with rentals and music sessions.",
     price: 180,
     images: [
       "https://img3.khelomore.com/venues/71/images/1040x490/Ryder-DLF-4.jpg",
       "https://corvuss.in/wp-content/uploads/5.jpeg",
-      "https://cms-tc.pbskids.org/global/Practice-Being-a-Good-Sport-Mezz-Image-908x510.jpg"
+      "https://cms-tc.pbskids.org/global/Practice-Being-a-Good-Sport-Mezz-Image-908x510.jpg",
     ],
   },
   {
     id: 10,
     title: "Yoga",
-    type: "wellness",
+    type: "yoga",
+    category: "GX", // Yoga as part of GX (Group Exercise)
     description:
       "Relax and rejuvenate with guided yoga classes for all levels, including Hatha, Vinyasa, and more.",
     price: 200,
     images: [
       "https://img3.khelomore.com/venues/71/images/1040x490/Ryder-DLF-4.jpg",
       "https://corvuss.in/wp-content/uploads/5.jpeg",
-      "https://cms-tc.pbskids.org/global/Practice-Being-a-Good-Sport-Mezz-Image-908x510.jpg"
+      "https://cms-tc.pbskids.org/global/Practice-Being-a-Good-Sport-Mezz-Image-908x510.jpg",
+    ],
+  },
+  {
+    id: 11,
+    title: "Personal Training",
+    type: "pt",
+    category: "Trainers",
+    description:
+      "Get one-on-one guidance with certified personal trainers for customized fitness plans.",
+    price: 500,
+    images: [
+      "https://cdn.pixabay.com/photo/2016/11/21/12/59/personal-trainer-1840884_1280.jpg",
+    ],
+  },
+  {
+    id: 12,
+    title: "Strength Coaching",
+    type: "nc",
+    category: "Trainers",
+    description:
+      "Build muscle and strength under the supervision of experienced strength coaches.",
+    price: 450,
+    images: [
+      "https://cdn.pixabay.com/photo/2017/01/31/20/23/dumbbell-2022066_1280.jpg",
+    ],
+  },
+  {
+    id: 13,
+    title: "Weight Loss Coach",
+    type: "nc",
+    category: "Trainers",
+    description:
+      "Effective fat-loss programs with nutritional tracking and fitness routines.",
+    price: 400,
+    images: [
+      "https://cdn.pixabay.com/photo/2014/12/03/20/32/weight-loss-556673_1280.jpg",
+    ],
+  },
+  {
+    id: 14,
+    title: "Rehabilitation Training",
+    type: "spa",
+    category: "Trainers",
+    description:
+      "Injury recovery and mobility support with professional physiotherapy trainers.",
+    price: 600,
+    images: [
+      "https://cdn.pixabay.com/photo/2017/02/02/15/15/knee-2031424_1280.jpg",
+    ],
+  },
+  {
+    id: 15,
+    title: "Online Coaching",
+    type: "salon",
+    category: "Trainers",
+    description:
+      "Remote fitness training sessions via video with personalized feedback.",
+    price: 300,
+    images: [
+      "https://cdn.pixabay.com/photo/2016/11/18/21/42/video-call-1834295_1280.jpg",
+    ],
+  },
+
+  {
+    id: 16,
+    title: "Zumba",
+    type: "zumba",
+    category: "GX",
+    subCategory: "Group Class",
+    description:
+      "Dance your way to fitness with fun and energetic Zumba group classes.",
+    price: 250,
+    images: [
+      "https://cdn.pixabay.com/photo/2020/10/23/04/49/zumba-5678829_1280.jpg",
+    ],
+  },
+  {
+    id: 17,
+    title: "Pilates",
+    type: "pilates",
+    category: "GX",
+    subCategory: "Group Class",
+    description:
+      "Strengthen your core and improve posture in our group Pilates sessions.",
+    price: 300,
+    images: [
+      "https://cdn.pixabay.com/photo/2016/11/21/13/59/woman-1847758_1280.jpg",
+    ],
+  },
+  {
+    id: 18,
+    title: "Dance Event",
+    type: "dance",
+    category: "GX",
+    subCategory: "Event",
+    description:
+      "Join our energetic dance event — perfect for fun and fitness.",
+    price: 280,
+    images: [
+      "https://cdn.pixabay.com/photo/2016/11/29/05/08/people-1867129_1280.jpg",
+    ],
+  },
+  {
+    id: 19,
+    title: "Makeup Workshop",
+    type: "makeup",
+    category: "GX",
+    subCategory: "Event",
+    description: "Learn professional makeup techniques in our weekend events.",
+    price: 320,
+    images: [
+      "https://cdn.pixabay.com/photo/2016/07/12/23/36/makeup-1513699_1280.jpg",
+    ],
+  },
+  {
+    id: 20,
+    title: "Makeup Workshop",
+    type: "makeup",
+    category: "GX",
+    subCategory: "Event",
+    description: "Learn professional makeup techniques in our weekend events.",
+    price: 320,
+    images: [
+      "https://cdn.pixabay.com/photo/2016/07/12/23/36/makeup-1513699_1280.jpg",
     ],
   },
 ];
 
-// DummyData/SlotAvailability.js
-// DummyData/SlotAvailability.js
 export const slotAvailability = {
-  "2025-05-16": {
+  "2025-05-21": {
     "06:00": { status: "booked", service: "Cricket" },
     "08:00": { status: "booked", service: "Tennis" },
     "11:00": { status: "booked", service: "Pickleball" },
     "14:00": { status: "booked", service: "Table-tennis" },
     "18:00": { status: "booked", service: "Tennis" },
   },
-  "2025-05-17": {
+  "2025-05-22": {
     "05:00": { status: "booked", service: "Pickleball" },
     "08:00": { status: "booked", service: "Cricket" },
     "10:00": { status: "booked", service: "Tennis" },

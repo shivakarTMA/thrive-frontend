@@ -1,5 +1,4 @@
-// BookingService.jsx
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import {
   mockData,
@@ -7,17 +6,13 @@ import {
   slotAvailability,
 } from "../../DummyData/DummyData";
 import dayjs from "dayjs";
-import Select from "react-select";
-import { customStyles } from "../../Helper/helper";
-import { useRef, useEffect } from "react";
 import { toast } from "react-toastify";
 import BookingSuccessModal from "../../components/BookingSuccessModal";
 import { CiCalendar } from "react-icons/ci";
 import { IoCloseCircle, IoTimeOutline } from "react-icons/io5";
-
-// import Slider from "react-slick";
-// import "slick-carousel/slick/slick.css";
-// import "slick-carousel/slick/slick-theme.css";
+import Slider from "react-slick";
+import "slick-carousel/slick/slick.css";
+import "slick-carousel/slick/slick-theme.css";
 
 const BookingService = () => {
   const { id } = useParams();
@@ -27,61 +22,77 @@ const BookingService = () => {
   const [selectedMember, setSelectedMember] = useState(null);
   const [serviceBooked, setServiceBooked] = useState(false);
   const searchRef = useRef(null);
+  const [selectedDate, setSelectedDate] = useState(
+    dayjs().format("YYYY-MM-DD")
+  );
+  const [weekOffset, setWeekOffset] = useState(0); // for week navigation
+  const [selectedMonth, setSelectedMonth] = useState(dayjs().month()); // 0-11
+  const [selectedYear, setSelectedYear] = useState(dayjs().year());
 
-  //   const sliderSetting = {
-  //     dots: true,
-  //     infinite: true,
-  //     speed: 500,
-  //     slidesToShow: 1,
-  //     slidesToScroll: 1,
-  //     arrows: true,
-  //   };
+  const daysInMonth = dayjs()
+    .year(selectedYear)
+    .month(selectedMonth)
+    .daysInMonth();
+
+  const firstDayOfMonth = dayjs()
+    .year(selectedYear)
+    .month(selectedMonth)
+    .date(1);
+
+  const startWeekdayIndex =
+    firstDayOfMonth.day() === 0 ? 6 : firstDayOfMonth.day() - 1;
+  const today = dayjs();
+
+  const monthDays = Array.from({ length: daysInMonth }, (_, i) => {
+    const date = dayjs()
+      .year(selectedYear)
+      .month(selectedMonth)
+      .date(i + 1);
+    return date;
+  });
+
+  const sliderSetting = {
+    dots: true,
+    infinite: true,
+    speed: 500,
+    slidesToShow: 1,
+    slidesToScroll: 1,
+    arrows: true,
+  };
 
   const [selectedSlots, setSelectedSlots] = useState([]);
-  const [view, setView] = useState("week");
-  const [month, setMonth] = useState(dayjs().month());
-
-  const memberOptions = mockData.map((member) => ({
-    value: member.id,
-    label: `${member.name} (${member.contact})`,
-    member,
-  }));
 
   const times = [
-    "05:00",
-    "06:00",
-    "07:00",
     "08:00",
+    "08:30",
     "09:00",
+    "09:30",
     "10:00",
+    "10:30",
     "11:00",
+    "11:30",
     "12:00",
+    "12:30",
     "13:00",
+    "13:30",
     "14:00",
+    "14:30",
     "15:00",
+    "15:30",
     "16:00",
-    "17:00",
-    "18:00",
-    "19:00",
-    "20:00",
+    "16:30",
   ];
 
-  const viewOptions = [
-    { value: "week", label: "This Week" },
-    { value: "next-week", label: "Next Week" },
-    { value: "month", label: "Full Month" },
-  ];
+  const now = dayjs();
+
+  const isPastTime = (time) => {
+    if (selectedDate !== now.format("YYYY-MM-DD")) return false;
+    const [hour, minute] = time.split(":");
+    const slotTime = dayjs(selectedDate).hour(hour).minute(minute);
+    return slotTime.isBefore(now);
+  };
 
   const currentMonthIndex = dayjs().month();
-  const monthOptions = Array.from({ length: 12 - currentMonthIndex }).map(
-    (_, i) => {
-      const month = dayjs().month(currentMonthIndex + i);
-      return {
-        value: month.month(),
-        label: month.format("MMMM"),
-      };
-    }
-  );
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -89,28 +100,11 @@ const BookingService = () => {
         setFilteredMembers([]);
       }
     };
-
     document.addEventListener("mousedown", handleClickOutside);
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
-
-  const getDatesToShow = () => {
-    if (view === "week" || view === "next-week") {
-      let startDay = dayjs();
-      if (view === "next-week") {
-        startDay = startDay.add(7, "day");
-      }
-      return Array.from({ length: 7 }).map((_, i) => startDay.add(i, "day"));
-    } else {
-      const today = dayjs().month(month).startOf("month");
-      const daysInMonth = today.daysInMonth();
-      return Array.from({ length: daysInMonth }).map((_, i) =>
-        today.add(i, "day")
-      );
-    }
-  };
 
   const toggleSlot = (date, time) => {
     const key = `${date}_${time}`;
@@ -177,41 +171,21 @@ const BookingService = () => {
   return (
     <>
       <div className="page--content">
-        <div className="flex gap-4 mb-5">
-          {/* <div>
-          {serviceItem?.images && (
-            <div className="mb-6 max-w-xl">
-              <Slider {...sliderSetting}>
-                {serviceItem.images.map((img, idx) => (
-                  <div key={idx}>
-                    <img
-                      src={img}
-                      alt={`${serviceItem.title} ${idx + 1}`}
-                      className="w-full h-60 object-cover rounded"
-                    />
-                  </div>
-                ))}
-              </Slider>
-            </div>
-          )}
-        </div> */}
-          <div>
-            <h1 className="text-3xl font-semibold">{serviceItem?.title}</h1>
-            <p className="mb-3">
-              <strong>Description</strong>: {serviceItem?.description}
-            </p>
-            <div className="mb-4 relative" ref={searchRef}>
-              <div className="flex items-center gap-2">
-                <label className="block font-medium mb-1">Member Name: </label>
-                <input
-                  type="text"
-                  value={searchTerm}
-                  onChange={handleSearchChange}
-                  placeholder="Enter name or mobile"
-                  className="custom--input w-full max-w-[200px]"
-                />
-              </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="col-span-2 border rounded p-6 shadow-sm">
+            <h2 className="text-2xl font-semibold mb-4">
+              Book Your Appointment
+            </h2>
 
+            <div className="mb-4 relative" ref={searchRef}>
+              <label className="block font-medium mb-1">Member Name:</label>
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={handleSearchChange}
+                placeholder="Enter name or mobile"
+                className="custom--input w-full max-w-md"
+              />
               {filteredMembers.length > 0 && (
                 <ul className="absolute w-full border rounded mt-1 max-h-40 overflow-y-auto bg-white shadow-md z-10">
                   {filteredMembers.map((m) => (
@@ -226,137 +200,198 @@ const BookingService = () => {
                 </ul>
               )}
             </div>
-          </div>
-        </div>
 
-        {/* 
-      {selectedMember && (
-        <div className="mb-4 p-3 border rounded bg-gray-100">
-          <p>
-            <strong>Name:</strong> {selectedMember.name}
-          </p>
-          <p>
-            <strong>Contact:</strong> {selectedMember.contact}
-          </p>
-        </div>
-      )} */}
+            <div className="flex items-center justify-between mb-4">
+              <div className="text-xl font-bold mb-4">
+                {dayjs(selectedDate).format("dddd, MMMM D, YYYY")}
+              </div>
 
-        <div className="flex items-center gap-4 mb-4">
-          <div className="w-48">
-            <Select
-              options={viewOptions}
-              value={viewOptions.find((o) => o.value === view)}
-              onChange={(opt) => setView(opt.value)}
-              styles={customStyles}
-            />
-          </div>
+              <div className="flex items-center gap-4 mb-4">
+                <button
+                  onClick={() => {
+                    const prevMonth = dayjs()
+                      .year(selectedYear)
+                      .month(selectedMonth)
+                      .subtract(1, "month");
+                    setSelectedMonth(prevMonth.month());
+                    setSelectedYear(prevMonth.year());
+                  }}
+                >
+                  &lt;
+                </button>
+                <span className="text-lg font-semibold">
+                  {dayjs()
+                    .year(selectedYear)
+                    .month(selectedMonth)
+                    .format("MMMM YYYY")}
+                </span>
 
-          {view === "month" && (
-            <div className="w-48">
-              <Select
-                options={monthOptions}
-                value={monthOptions.find((o) => o.value === month)}
-                onChange={(opt) => setMonth(opt.value)}
-                styles={customStyles}
-              />
+                <button
+                  onClick={() => {
+                    const nextMonth = dayjs()
+                      .year(selectedYear)
+                      .month(selectedMonth)
+                      .add(1, "month");
+                    setSelectedMonth(nextMonth.month());
+                    setSelectedYear(nextMonth.year());
+                  }}
+                >
+                  &gt;
+                </button>
+              </div>
             </div>
-          )}
-        </div>
-        <div className="overflow-x-auto border rounded mb-6">
-          <table className="w-full border-collapse text-center">
-            <thead>
-              <tr>
-                <th className="border p-2 min-w-[100px]">Time</th>
-                {getDatesToShow().map((d) => (
-                  <th
-                    key={d.format("YYYY-MM-DD")}
-                    className="border p-2 min-w-[150px]"
-                  >
-                    {d.format("DD MMM")}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {times.map((time) => (
-                <tr key={time}>
-                  <td className="border p-2 font-medium">{time}</td>
-                  {getDatesToShow().map((d) => {
-                    const dateStr = d.format("YYYY-MM-DD");
-                    const slot = slotAvailability[dateStr]?.[time] || {
-                      status: "available",
-                    };
-                    const selected = isSelected(dateStr, time);
 
-                    let cellClass = "bg-white";
-                    let content = "";
-
-                    if (slot.status === "booked") {
-                      cellClass = "bg-red-500 text-white text-sm";
-                      content = `Booked: ${slot.service}`;
-                    } else if (selected) {
-                      cellClass = "bg-green-400 text-white cursor-pointer";
-                      content = `Selected`;
-                    } else {
-                      cellClass =
-                        "bg-blue-200 hover:bg-blue-300 cursor-pointer";
-                      content = `Available`;
-                    }
-
-                    return (
-                      <td
-                        key={`${dateStr}-${time}`}
-                        className={`border p-1 ${cellClass}`}
-                        onClick={() =>
-                          slot.status !== "booked" && toggleSlot(dateStr, time)
-                        }
-                      >
-                        {content}
-                      </td>
-                    );
-                  })}
-                </tr>
+            <div className="grid grid-cols-7 gap-2 items-center mb-4">
+              {Array.from({ length: startWeekdayIndex }).map((_, i) => (
+                <div key={`empty-${i}`} />
               ))}
-            </tbody>
-          </table>
-        </div>
-        <div className="mt-5">
-          <h2 className="font-semibold text-lg mb-2">Selected Slots:</h2>
-          {selectedSlots.length === 0 ? (
-            <p>No slots selected.</p>
-          ) : (
-            <ul className="flex flex-wrap gap-6">
-              {selectedSlots.map((slot) => (
-                <li key={slot.key} className="border py-2 px-4 rounded relative min-w-[150px]">
-                  <p className="flex items-center gap-2">
-                    <CiCalendar /> {slot.date}
-                  </p>
-                  <p className="flex items-center gap-2">
-                    <IoTimeOutline /> {slot.time}
-                  </p>
+
+              {monthDays.map((day) => {
+                const dateStr = day.format("YYYY-MM-DD");
+                const isPast = day.isBefore(today, "day");
+                const isToday = dateStr === today.format("YYYY-MM-DD");
+                const isSelected = selectedDate === dateStr;
+                const isDisabled = isPast && !isToday;
+
+                return (
                   <button
-                    className="text-black absolute top-[-10px] right-[-10px] text-2xl"
-                    onClick={() => toggleSlot(slot.date, slot.time)}
+                    key={dateStr}
+                    disabled={isDisabled}
+                    className={`flex flex-col items-center px-3 py-2 rounded min-w-[50px]
+            ${
+              isSelected
+                ? "bg-blue-600 text-white"
+                : "bg-gray-200 hover:bg-gray-300"
+            }
+            ${isDisabled ? "opacity-40 cursor-not-allowed" : ""}`}
+                    onClick={() => !isDisabled && setSelectedDate(dateStr)}
                   >
-                    <IoCloseCircle />
+                    <span className="text-sm font-medium">
+                      {day.format("ddd")}
+                    </span>
+                    <span className="text-base">{day.format("D")}</span>
                   </button>
-                </li>
-              ))}
-            </ul>
-          )}
+                );
+              })}
+            </div>
+
+            {selectedDate &&
+              dayjs(selectedDate).month() === selectedMonth &&
+              dayjs(selectedDate).year() === selectedYear && (
+                <>
+                  {["Morning", "Afternoon"].map((session) => (
+                    <div key={session} className="mb-4">
+                      <h3 className="text-lg font-semibold mb-2">{session}</h3>
+                      <div className="flex flex-wrap gap-[5px]">
+                        {times
+                          .filter((time) => {
+                            const hour = parseInt(time.split(":")[0]);
+                            return session === "Morning"
+                              ? hour < 12
+                              : hour >= 12;
+                          })
+                          .filter((time) => !isPastTime(time)) // 🛑 filter past
+                          .map((time) => {
+                            const slot = slotAvailability[selectedDate]?.[
+                              time
+                            ] || {
+                              status: "available",
+                            };
+                            const selected = isSelected(selectedDate, time);
+
+                            let btnClass = "bg-blue-200 hover:bg-blue-300";
+                            if (slot.status === "booked")
+                              btnClass = "bg-red-500 text-white";
+                            else if (selected)
+                              btnClass = "bg-green-400 text-white";
+
+                            return (
+                              <button
+                                key={time}
+                                className={`w-[calc(20%-5px)] px-4 py-2 rounded ${btnClass}`}
+                                disabled={slot.status === "booked"}
+                                onClick={() => toggleSlot(selectedDate, time)}
+                              >
+                                {time}
+                              </button>
+                            );
+                          })}
+                      </div>
+                    </div>
+                  ))}
+                </>
+              )}
+          </div>
+
+          <div className="border rounded shadow-sm">
+            {serviceItem?.images && (
+              <Slider {...sliderSetting}>
+                {serviceItem.images.map((img, idx) => (
+                  <div key={idx}>
+                    <img
+                      src={img}
+                      alt={`${serviceItem.title} ${idx + 1}`}
+                      className="w-full h-60 object-cover rounded"
+                    />
+                  </div>
+                ))}
+              </Slider>
+            )}
+
+            <div className="p-4">
+              <h1 className="text-2xl font-semibold mb-2">
+                {serviceItem?.title}
+              </h1>
+              <p className="mb-3 text-gray-700">{serviceItem?.description}</p>
+              <p className="text-gray-900 font-medium mb-2">
+                Price: ₹{serviceItem?.price} / 30 mins
+              </p>
+
+              <div className="mt-5">
+                <h2 className="font-semibold text-lg mb-2">Selected Slots:</h2>
+                {selectedSlots.length === 0 ? (
+                  <p>No slots selected.</p>
+                ) : (
+                  <ul className="flex flex-wrap gap-4">
+                    {selectedSlots.map((slot) => (
+                      <li
+                        key={slot.key}
+                        className="border py-2 px-4 rounded relative min-w-[150px] bg-gray-100"
+                      >
+                        <p className="flex items-center gap-2">
+                          <CiCalendar /> {slot.date}
+                        </p>
+                        <p className="flex items-center gap-2">
+                          <IoTimeOutline /> {slot.time}
+                        </p>
+                        <button
+                          className="text-black absolute top-[-10px] right-[-10px] text-2xl"
+                          onClick={() => toggleSlot(slot.date, slot.time)}
+                        >
+                          <IoCloseCircle />
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+
+              <div className="mt-4 text-lg font-bold">
+                Total Price: ₹{totalPrice}
+              </div>
+
+              <button
+                className={`mt-4 bg-black text-white px-5 py-2 rounded w-full ${
+                  selectedSlots.length === 0 && "opacity-50 cursor-not-allowed"
+                }`}
+                onClick={handlePayment}
+                disabled={selectedSlots.length === 0}
+              >
+                Make Payment
+              </button>
+            </div>
+          </div>
         </div>
-
-        <div className="mt-4 text-lg font-bold">Total Price: ₹{totalPrice}</div>
-
-        <button
-          className={`mt-4 bg-black text-white px-5 py-2 rounded ${
-            selectedSlots.length === 0 && "opacity-50 cursor-not-allowed"
-          }`}
-          onClick={handlePayment}
-          disabled={selectedSlots.length === 0}
-        >
-          Make Payment
-        </button>
       </div>
 
       <BookingSuccessModal
