@@ -411,7 +411,10 @@ export const mockData = [
     callTag: "Hot",
     staff: "Preeti",
     profileImage: "https://randomuser.me/api/portraits/women/10.jpg",
-    ptSessions:0,
+    ptSessions: 0,
+    trainersList: [
+      { name: "Deepak", id: 858 },
+    ]
   },
   {
     id: 2,
@@ -449,7 +452,7 @@ export const mockData = [
     callTag: "Warm",
     staff: "Prerna",
     profileImage: "https://randomuser.me/api/portraits/men/31.jpg",
-    ptSessions:5,
+    ptSessions: 5,
   },
   {
     id: 3,
@@ -487,7 +490,7 @@ export const mockData = [
     callTag: "Cold",
     staff: "Anuj",
     profileImage: "https://randomuser.me/api/portraits/women/32.jpg",
-    ptSessions:0,
+    ptSessions: 0,
   },
   {
     id: 4,
@@ -525,7 +528,7 @@ export const mockData = [
     callTag: "Hot",
     staff: "Ritika",
     profileImage: "https://randomuser.me/api/portraits/men/21.jpg",
-    ptSessions:0,
+    ptSessions: 0,
   },
   {
     id: 5,
@@ -563,7 +566,7 @@ export const mockData = [
     callTag: "Warm",
     staff: "Manish",
     profileImage: "https://randomuser.me/api/portraits/women/28.jpg",
-    ptSessions:3,
+    ptSessions: 3,
   },
   {
     id: 6,
@@ -601,7 +604,7 @@ export const mockData = [
     callTag: "Cold",
     staff: "Prerna",
     profileImage: "https://randomuser.me/api/portraits/men/22.jpg",
-    ptSessions:9,
+    ptSessions: 9,
   },
   {
     id: 7,
@@ -639,7 +642,7 @@ export const mockData = [
     callTag: "Warm",
     staff: "Alok",
     profileImage: "https://randomuser.me/api/portraits/women/14.jpg",
-    ptSessions:10,
+    ptSessions: 10,
   },
   {
     id: 8,
@@ -677,7 +680,7 @@ export const mockData = [
     callTag: "Hot",
     staff: "Maya",
     profileImage: "https://randomuser.me/api/portraits/men/18.jpg",
-    ptSessions:0,
+    ptSessions: 0,
   },
   {
     id: 9,
@@ -715,7 +718,7 @@ export const mockData = [
     callTag: "Cold",
     staff: "Ritika",
     profileImage: "https://randomuser.me/api/portraits/women/26.jpg",
-    ptSessions:1,
+    ptSessions: 1,
   },
   {
     id: 10,
@@ -753,7 +756,7 @@ export const mockData = [
     callTag: "Warm",
     staff: "Raj",
     profileImage: "https://randomuser.me/api/portraits/men/19.jpg",
-    ptSessions:0,
+    ptSessions: 0,
   },
 ];
 
@@ -1157,6 +1160,7 @@ export const servicesData = [
     title: "Cricket",
     type: "cricket",
     category: "Sports",
+    clubName: "Cricket Club",
     description:
       "Experience the thrill of cricket with our premium pitches, professional-grade equipment, and expert coaching.",
     price: 300,
@@ -1171,6 +1175,7 @@ export const servicesData = [
     title: "Pickleball",
     type: "pickleball",
     category: "Sports",
+    clubName: "Pickleball Club",
     description:
       "Try out one of the fastest growing sports with top-quality pickleball courts and gear.",
     price: 250,
@@ -1185,6 +1190,7 @@ export const servicesData = [
     title: "Tennis",
     type: "tennis",
     category: "Sports",
+    clubName: "Tennis Club",
     description:
       "Play on professionally maintained tennis courts. We offer coaching sessions, match play, and equipment rentals.",
     price: 350,
@@ -1199,6 +1205,7 @@ export const servicesData = [
     title: "Table Tennis",
     type: "table tennis",
     category: "Sports",
+    clubName: "Table Club",
     description:
       "Challenge your reflexes with fast-paced table tennis games in our indoor facilities.",
     price: 150,
@@ -1213,6 +1220,7 @@ export const servicesData = [
     title: "Football",
     type: "football",
     category: "Sports",
+    clubName: "Football Club",
     description:
       "Join our 5-a-side and full-field football matches in high-quality turf arenas.",
     price: 400,
@@ -1227,6 +1235,7 @@ export const servicesData = [
     title: "Basketball",
     type: "basketball",
     category: "Sports",
+    clubName: "Basketball Club",
     description:
       "Shoot hoops at our professional basketball courts with high-quality equipment and flooring.",
     price: 280,
@@ -1241,6 +1250,7 @@ export const servicesData = [
     title: "Badminton",
     type: "badminton",
     category: "Sports",
+    clubName: "Cricket Club",
     description:
       "Play on indoor badminton courts with high-grade shuttlecocks and rackets available.",
     price: 220,
@@ -1255,6 +1265,7 @@ export const servicesData = [
     title: "Swimming",
     type: "swimming",
     category: "Sports",
+    clubName: "Swimming Club",
     description:
       "Enjoy lap swimming or take lessons in our temperature-controlled indoor pool.",
     price: 350,
@@ -1269,6 +1280,7 @@ export const servicesData = [
     title: "Skating",
     type: "skating",
     category: "Sports",
+    clubName: "Skating Club",
     description:
       "Roll into action at our smooth skating rink with rentals and music sessions.",
     price: 180,
@@ -1282,6 +1294,8 @@ export const servicesData = [
     id: 10,
     title: "Yoga",
     type: "yoga",
+    trainerName: "Gaurav",
+    trainerId: 252,
     category: "GX", // Yoga as part of GX (Group Exercise)
     description:
       "Relax and rejuvenate with guided yoga classes for all levels, including Hatha, Vinyasa, and more.",
@@ -1296,6 +1310,8 @@ export const servicesData = [
     id: 11,
     title: "Personal Training",
     type: "pt",
+    trainerName: "Deepak",
+    trainerId: 858,
     category: "Trainers",
     description:
       "Get one-on-one guidance with certified personal trainers for customized fitness plans.",
@@ -1310,6 +1326,8 @@ export const servicesData = [
     id: 12,
     title: "Strength Coaching",
     type: "nc",
+     trainerName: "Leena",
+    trainerId: 878,
     category: "Trainers",
     description:
       "Build muscle and strength under the supervision of experienced strength coaches.",
@@ -1324,11 +1342,13 @@ export const servicesData = [
     id: 13,
     title: "Weight Loss Coach",
     type: "nc",
+    trainerName: "Pooja",
+    trainerId: 8778,
     category: "Trainers",
     description:
       "Effective fat-loss programs with nutritional tracking and fitness routines.",
     price: 400,
-   images: [
+    images: [
       "https://img3.khelomore.com/venues/71/images/1040x490/Ryder-DLF-4.jpg",
       "https://corvuss.in/wp-content/uploads/5.jpeg",
       "https://cms-tc.pbskids.org/global/Practice-Being-a-Good-Sport-Mezz-Image-908x510.jpg",
@@ -1338,11 +1358,13 @@ export const servicesData = [
     id: 14,
     title: "Rehabilitation Training",
     type: "spa",
+    trainerName: "Omkar",
+    trainerId: 8578,
     category: "Trainers",
     description:
       "Injury recovery and mobility support with professional physiotherapy trainers.",
     price: 600,
-     images: [
+    images: [
       "https://img3.khelomore.com/venues/71/images/1040x490/Ryder-DLF-4.jpg",
       "https://corvuss.in/wp-content/uploads/5.jpeg",
       "https://cms-tc.pbskids.org/global/Practice-Being-a-Good-Sport-Mezz-Image-908x510.jpg",
@@ -1352,11 +1374,13 @@ export const servicesData = [
     id: 15,
     title: "Online Coaching",
     type: "salon",
+    trainerName: "Yash",
+    trainerId: 8508,
     category: "Trainers",
     description:
       "Remote fitness training sessions via video with personalized feedback.",
     price: 300,
-     images: [
+    images: [
       "https://img3.khelomore.com/venues/71/images/1040x490/Ryder-DLF-4.jpg",
       "https://corvuss.in/wp-content/uploads/5.jpeg",
       "https://cms-tc.pbskids.org/global/Practice-Being-a-Good-Sport-Mezz-Image-908x510.jpg",
@@ -1367,6 +1391,8 @@ export const servicesData = [
     id: 16,
     title: "Zumba",
     type: "zumba",
+    trainerName: "Umesh",
+    trainerId: 8008,
     category: "GX",
     subCategory: "Group Class",
     description:
@@ -1382,12 +1408,14 @@ export const servicesData = [
     id: 17,
     title: "Pilates",
     type: "pilates",
+    trainerName: "Tanya",
+    trainerId: 8004,
     category: "GX",
     subCategory: "Group Class",
     description:
       "Strengthen your core and improve posture in our group Pilates sessions.",
     price: 300,
-     images: [
+    images: [
       "https://img3.khelomore.com/venues/71/images/1040x490/Ryder-DLF-4.jpg",
       "https://corvuss.in/wp-content/uploads/5.jpeg",
       "https://cms-tc.pbskids.org/global/Practice-Being-a-Good-Sport-Mezz-Image-908x510.jpg",
@@ -1397,6 +1425,8 @@ export const servicesData = [
     id: 18,
     title: "Dance Event",
     type: "dance",
+    trainerName: "Rajesh",
+    trainerId: 8104,
     category: "GX",
     subCategory: "Event",
     description:
@@ -1412,6 +1442,8 @@ export const servicesData = [
     id: 19,
     title: "Makeup Workshop",
     type: "makeup",
+    trainerName: "Esha",
+    trainerId: 1459,
     category: "GX",
     subCategory: "Event",
     description: "Learn professional makeup techniques in our weekend events.",
@@ -1426,11 +1458,13 @@ export const servicesData = [
     id: 20,
     title: "Makeup Workshop",
     type: "makeup",
+     trainerName: "Waqar",
+    trainerId: 1234,
     category: "GX",
     subCategory: "Event",
     description: "Learn professional makeup techniques in our weekend events.",
     price: 320,
-     images: [
+    images: [
       "https://img3.khelomore.com/venues/71/images/1040x490/Ryder-DLF-4.jpg",
       "https://corvuss.in/wp-content/uploads/5.jpeg",
       "https://cms-tc.pbskids.org/global/Practice-Being-a-Good-Sport-Mezz-Image-908x510.jpg",
