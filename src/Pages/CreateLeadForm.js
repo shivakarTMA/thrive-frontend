@@ -33,6 +33,7 @@ const assignTrainers = [
 const leadSourceTypes = [
   { value: "facebook", label: "Facebook" },
   { value: "instagram", label: "Instagram" },
+  { value: "others", label: "Others" },
 ];
 
 const stepValidationSchemas = [
@@ -58,6 +59,10 @@ const stepValidationSchemas = [
       }),
       leadSourceType: Yup.string().when("leadSource", {
         is: (val) => ["social media", "events / campaigns"].includes(val),
+        then: () => Yup.string().required("This is required"),
+      }),
+      otherSource: Yup.string().when("leadSourceType", {
+        is: "others",
         then: () => Yup.string().required("This is required"),
       }),
     }),
@@ -86,6 +91,7 @@ const CreateLeadForm = ({ setLeadModal }) => {
       serviceName: "",
       leadSource: "",
       leadSourceType:"",
+      otherSource: "",
       leadType: "",
       leadSubType: "",
       companyName: "",
@@ -96,13 +102,6 @@ const CreateLeadForm = ({ setLeadModal }) => {
       date: null,
       time: null,
       trainer: "",
-    },
-    scheduleLeadFollowUp: {
-      staffName: "",
-      date: null,
-      time: null,
-      callTag: "",
-      message: "",
     },
     professionalInfoPrimaryContact: {
       designation: "",
@@ -196,17 +195,19 @@ const CreateLeadForm = ({ setLeadModal }) => {
   };
 
   const handlePhoneBlur = () => {
-  const value = formik.values.personalDetails.contactNumber;
+  const inputValue = formik.values.personalDetails.contactNumber?.replace(/\s/g, "");
 
-  if (value && value.length >= 5) {
-    const matches = mockData.filter((user) =>
-      user.contact.replace(/\s/g, "").includes(value.replace(/\s/g, ""))
-    );
+  if (inputValue && inputValue.length >= 5) {
+    const matches = mockData.filter((user) => {
+      const userContact = user.contact?.replace(/\s/g, "");
+      return userContact === inputValue; // 👈 exact match only
+    });
     setMatchingUsers(matches);
   } else {
     setMatchingUsers([]);
   }
 };
+
 
 
   const handleInput = (e) => {
@@ -618,6 +619,27 @@ const CreateLeadForm = ({ setLeadModal }) => {
                           formik.touched.leadInformation?.leadSourceType && (
                             <div className="text-red-500 text-sm">
                               {formik.errors.leadInformation.leadSourceType}
+                            </div>
+                          )}
+                      </div>
+                    )}
+
+                    {formik.values.leadInformation.leadSourceType === "others" && (
+                      <div>
+                        <label className="mb-2 block">
+                          Others<span className="text-red-500">*</span>
+                        </label>
+                        <input
+                        type="text"
+                        name="leadInformation.otherSource"
+                        value={formik.values.leadInformation.otherSource}
+                        onChange={formik.handleChange}
+                        className="custom--input w-full"
+                      />
+                        {formik.errors.leadInformation?.otherSource &&
+                          formik.touched.leadInformation?.otherSource && (
+                            <div className="text-red-500 text-sm">
+                              {formik.errors.leadInformation.otherSource}
                             </div>
                           )}
                       </div>
