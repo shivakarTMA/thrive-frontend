@@ -9,7 +9,6 @@ import {
   servicesName,
   leadsSources,
   leadTypes,
-  companies,
   trainerAvailability,
   mockData,
   leadSubTypes,
@@ -18,13 +17,10 @@ import {
 import {
   convertToISODate,
   customStyles,
-  formatDateTime,
-  formatTime,
 } from "../Helper/helper";
 import { IoCloseCircle } from "react-icons/io5";
-import { Formik, Field, Form, ErrorMessage, useFormik } from "formik";
+import { useFormik } from "formik";
 import * as Yup from "yup";
-import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 
 const assignTrainers = [
@@ -71,12 +67,8 @@ const stepValidationSchemas = [
 ];
 
 const CreateLeadForm = ({ setLeadModal }) => {
-  const [activeTab, setActiveTab] = useState("personal");
   const leadBoxRef = useRef(null);
   const [step, setStep] = useState(0);
-  const steps = [0, 1, 2, 3];
-  const currentStep = 2;
-  const navigate = useNavigate();
   const [matchingUsers, setMatchingUsers] = useState([]);
   const now = new Date();
 
@@ -157,33 +149,25 @@ const CreateLeadForm = ({ setLeadModal }) => {
   const isTodaySelected =
     selectedDateTime.toDateString() === now.toDateString();
 
-  // minTime logic: current time if today, else 12:00 AM
   const minTime = new Date(selectedDateTime);
   if (isTodaySelected) {
     minTime.setHours(now.getHours(), now.getMinutes(), 0, 0);
   } else {
-    minTime.setHours(0, 0, 0, 0); // 12:00 AM
+    minTime.setHours(0, 0, 0, 0);
   }
 
-  // maxTime: always 11:59 PM
   const maxTime = new Date(selectedDateTime);
   maxTime.setHours(23, 59, 59, 999);
-  // const isTodaySelected =
-  //   selectedDateTime.toDateString() === now.toDateString();
-
-  // const minTime = isTodaySelected ? now : new Date(0, 0, 0, 0, 0); // midnight
-  // const maxTime = new Date(0, 0, 0, 23, 59, 59); // 11:59 PM
 
   const handleNextStep = async () => {
     const errors = await formik.validateForm();
 
-    // Check if contact is duplicated
     if (
-      step === 0 && // assuming step 0 is where phone is entered
+      step === 0 &&
       matchingUsers.length > 0
     ) {
       toast.error("This contact number is already registered.");
-      return; // prevent moving to the next step
+      return;
     }
 
     if (Object.keys(errors).length === 0) {
@@ -209,36 +193,26 @@ const CreateLeadForm = ({ setLeadModal }) => {
 
   const handlePhoneChange = (value) => {
     formik.setFieldValue("personalDetails.contactNumber", value);
-
-    if (value && value.length >= 5) {
-      const matches = mockData.filter((user) =>
-        user.contact.replace(/\s/g, "").includes(value.replace(/\s/g, ""))
-      );
-      setMatchingUsers(matches);
-    } else {
-      setMatchingUsers([]);
-    }
   };
 
-  const handleUserSelect = (user) => {
-    // navigate(`/edit-lead-details/${user.id}`, { state: user });
-    // setLeadModal(false);
-  };
+  const handlePhoneBlur = () => {
+  const value = formik.values.personalDetails.contactNumber;
+
+  if (value && value.length >= 5) {
+    const matches = mockData.filter((user) =>
+      user.contact.replace(/\s/g, "").includes(value.replace(/\s/g, ""))
+    );
+    setMatchingUsers(matches);
+  } else {
+    setMatchingUsers([]);
+  }
+};
+
 
   const handleInput = (e) => {
     const { name, value } = e.target;
     const keys = name.split(".");
     formik.setFieldValue(name, value); // Directly set the field value in Formik
-  };
-
-  const handleTimeSchedule = (sectionKey, time) => {
-    const formattedTime = formatTime(time);
-    formik.setFieldValue(`${sectionKey}.time`, formattedTime);
-
-    // If a trainer is already assigned, clear it
-    if (formik.values[sectionKey]?.trainer !== undefined) {
-      formik.setFieldValue(`${sectionKey}.trainer`, "");
-    }
   };
 
   const handleSelectSchedule = (name, selectedOption) => {
@@ -258,22 +232,6 @@ const CreateLeadForm = ({ setLeadModal }) => {
         return slotDateTime.getTime() === combinedDateTime.getTime();
       })
     );
-  };
-
-  const handleDateSchedule = (date) => {
-    const formattedDate = formatDateTime(date);
-    formik.setFieldValue("schedule.date", formattedDate);
-    formik.setFieldValue("schedule.time", null); // Clear time on date change
-    formik.setFieldValue("schedule.trainer", ""); // Clear trainer
-  };
-
-  const handleDateChange = (fieldPath, date, withTime = false) => {
-    const formatted = formatDateTime(date, withTime);
-    formik.setFieldValue(fieldPath, formatted);
-  };
-
-  const handleSelectChange = (name, selectedOption) => {
-    formik.setFieldValue(name, selectedOption.value);
   };
 
   const handleOverlayClick = (e) => {
@@ -359,33 +317,21 @@ const CreateLeadForm = ({ setLeadModal }) => {
                         name="personalDetails.contactNumber"
                         value={formik.values.personalDetails.contactNumber}
                         onChange={handlePhoneChange}
+                        onBlur={handlePhoneBlur}
                         international
                         defaultCountry="IN"
                         className="custom--input w-full custom--phone"
                       />
 
-                      {/* Dropdown: Matching Users */}
                       {matchingUsers.length > 0 && (
                         <div className="border mt-2 bg-white shadow rounded p-2 max-h-40 overflow-y-auto z-10 absolute w-full">
                           {matchingUsers.map((user) => (
                             <div
                               key={user.id}
-                              className="p-2 hover:bg-gray-100 cursor-pointer flex items-center gap-2"
-                              onClick={() => handleUserSelect(user)}
+                              className="p-2 flex items-center gap-2"
                             >
-                              {/* <img
-                                src={user.profileImage}
-                                alt={user.name}
-                                className="w-8 h-8 rounded-full"
-                              /> */}
                               <div>
                                 <div className="font-medium">{user.name}</div>
-                                <div className="text-gray-500 text-xs">
-                                  {user.email}
-                                </div>
-                                <div className="text-gray-400 text-xs">
-                                  {user.contact}
-                                </div>
                               </div>
                             </div>
                           ))}
