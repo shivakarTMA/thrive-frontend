@@ -81,3 +81,4 @@ export const customStyles = {
     const [day, month, year] = dateString.split("-");
     return new Date(`${year}-${month}-${day}`);
   };
+  

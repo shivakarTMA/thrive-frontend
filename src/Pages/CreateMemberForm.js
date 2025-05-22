@@ -14,7 +14,12 @@ import {
   mockData,
 } from "../DummyData/DummyData";
 
-import { customStyles, formatDateTime, formatTime } from "../Helper/helper";
+import {
+  convertToISODate,
+  customStyles,
+  formatDateTime,
+  formatTime,
+} from "../Helper/helper";
 import { IoCloseCircle } from "react-icons/io5";
 import { Formik, Field, Form, ErrorMessage, useFormik } from "formik";
 import * as Yup from "yup";
@@ -22,7 +27,7 @@ import { FaCamera } from "react-icons/fa";
 import { FaUserLarge } from "react-icons/fa6";
 import ProductModal from "../components/modal/ProductDetails";
 import { useSelector } from "react-redux";
-
+import ConfirmUnderAge from "../components/modal/ConfirmUnderAge";
 
 const voucherList = [
   { code: "FIT10", discount: 10 },
@@ -51,7 +56,7 @@ const stepValidationSchemas = [
         .email("Invalid email format")
         .required("Email is required"),
       gender: Yup.string().required("Gender is required"),
-      dob: Yup.date()
+      dob: Yup.string()
         .nullable()
         .required("Date of birth is required")
         .max(new Date(), "Date of birth cannot be in the future"),
@@ -91,7 +96,7 @@ const CreateMemberForm = ({ setMemberModal }) => {
   const [profileImage, setProfileImage] = useState("");
   const [showProductModal, setShowProductModal] = useState(false);
   const [step, setStep] = useState(0);
-  const { user } = useSelector((state) => state.auth)
+  const { user } = useSelector((state) => state.auth);
 
   const [voucherInput, setVoucherInput] = useState("");
   const [voucherStatus, setVoucherStatus] = useState(null); // "success", "error", or null
@@ -99,6 +104,12 @@ const CreateMemberForm = ({ setMemberModal }) => {
 
   const leadBoxRef = useRef(null);
   const [matchingUsers, setMatchingUsers] = useState([]);
+  const [duplicateError, setDuplicateError] = useState("");
+  const [showDuplicateModal, setShowDuplicateModal] = useState(false);
+  const [hasDismissedDuplicateModal, setHasDismissedDuplicateModal] =
+    useState(false);
+  const [showUnderageModal, setShowUnderageModal] = useState(false);
+  const [pendingDob, setPendingDob] = useState(null);
 
   const initialValues = {
     memberDetails: {
@@ -162,7 +173,15 @@ const CreateMemberForm = ({ setMemberModal }) => {
   const handleNextStep = async () => {
     const errors = await formik.validateForm();
 
+    // ✅ Check for form validation errors
     if (Object.keys(errors).length === 0) {
+      // ✅ Block if duplicateError exists
+      if (duplicateError) {
+        // console.warn("Duplicate number detected:", duplicateError);
+        setShowDuplicateModal(true);
+        return;
+      }
+
       if (step === stepValidationSchemas.length - 1) {
         formik.handleSubmit();
       } else {
@@ -243,16 +262,78 @@ const CreateMemberForm = ({ setMemberModal }) => {
 
   const handlePhoneChange = (value) => {
     formik.setFieldValue("memberDetails.contactNumber", value);
+    setHasDismissedDuplicateModal(false);
+  };
 
-    console.log(value);
+  const handleCheckDublicate = () => {
+    const inputValue = formik.values.memberDetails.contactNumber?.replace(
+      /\s/g,
+      ""
+    );
 
-    if (value && value.length >= 5) {
-      const matches = mockData.filter((user) => user.contact.includes(value));
-      console.log(matches, "matches");
+    if (inputValue && inputValue.length >= 5) {
+      const matches = mockData.filter((user) => {
+        const userContact = user.contact?.replace(/\s/g, "");
+        return userContact === inputValue;
+      });
+
       setMatchingUsers(matches);
+
+      const activeMatch = matches.find((user) => user.status === "active");
+
+      if (activeMatch) {
+        setDuplicateError(
+          "That a member with this phone number already exists"
+        );
+        //   setDuplicateError(
+        //   `Member "${activeMatch.name}" is already registered with this number`
+        // );
+
+        if (!hasDismissedDuplicateModal) {
+          setShowDuplicateModal(true);
+        }
+      } else {
+        setDuplicateError("");
+      }
     } else {
       setMatchingUsers([]);
+      setDuplicateError("");
     }
+  };
+
+  const handleDobChange = (date) => {
+    if (!date) return;
+
+    const today = new Date();
+    const birthDate = new Date(date);
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+
+    if (
+      monthDiff < 0 ||
+      (monthDiff === 0 && today.getDate() < birthDate.getDate())
+    ) {
+      age--;
+    }
+
+    if (age < 18) {
+      setPendingDob(date);
+      setShowUnderageModal(true);
+    } else {
+      formik.setFieldValue("memberDetails.dob", date);
+    }
+  };
+
+  const confirmDob = () => {
+    formik.setFieldValue("memberDetails.dob", pendingDob);
+    setShowUnderageModal(false);
+    setPendingDob(null);
+  };
+
+  const cancelDob = () => {
+    formik.setFieldValue("memberDetails.dob", "");
+    setShowUnderageModal(false);
+    setPendingDob(null);
   };
 
   const handleUserSelect = (user) => {
@@ -372,18 +453,52 @@ const CreateMemberForm = ({ setMemberModal }) => {
                           name="memberDetails.contactNumber"
                           value={formik.values.memberDetails.contactNumber}
                           onChange={handlePhoneChange}
-                          onBlur={() =>
-                            formik.setFieldTouched(
-                              "memberDetails.contactNumber",
-                              true
-                            )
-                          }
+                          onBlur={handleCheckDublicate}
                           international
                           defaultCountry="IN"
                           countryCallingCodeEditable={false}
                           className="custom--input w-full custom--phone"
-                          autoComplete={false}
                         />
+
+                        {duplicateError
+                          ? showDuplicateModal && (
+                              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                                <div className="bg-white p-6 rounded shadow-lg max-w-sm w-full text-center">
+                                  <h2 className="text-lg font-semibold text-red-600 mb-4">
+                                    Duplicate Entry
+                                  </h2>
+                                  <p className="text-sm text-gray-700 mb-6">
+                                    {duplicateError}
+                                  </p>
+                                  <button
+                                    onClick={() => {
+                                      setShowDuplicateModal(false);
+                                      setHasDismissedDuplicateModal(true);
+                                    }}
+                                    className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+                                  >
+                                    Close
+                                  </button>
+                                </div>
+                              </div>
+                            )
+                          : matchingUsers.length > 0 && (
+                              <div className="border mt-2 bg-white shadow rounded p-2 max-h-40 overflow-y-auto z-10 absolute w-full">
+                                {matchingUsers.map((user) => (
+                                  <div
+                                    key={user.id}
+                                    className="p-2 cursor-pointer text-sm flex items-center gap-2"
+                                    onClick={() => handleUserSelect(user)}
+                                  >
+                                    <div>
+                                      <div className="font-medium">
+                                        {user.name}
+                                      </div>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
 
                         {formik.errors.memberDetails?.contactNumber &&
                           formik.touched.memberDetails?.contactNumber && (
@@ -391,33 +506,6 @@ const CreateMemberForm = ({ setMemberModal }) => {
                               {formik.errors.memberDetails.contactNumber}
                             </div>
                           )}
-
-                        {matchingUsers.length > 0 && (
-                          <div className="border mt-2 bg-white shadow rounded p-2 max-h-40 overflow-y-auto z-10 absolute w-full">
-                            {matchingUsers.map((user) => (
-                              <div
-                                key={user.id}
-                                className="p-2 hover:bg-gray-100 cursor-pointer text-sm flex items-center gap-2"
-                                onClick={() => handleUserSelect(user)}
-                              >
-                                <img
-                                  src={user.profileImage}
-                                  alt={user.name}
-                                  className="w-8 h-8 rounded-full"
-                                />
-                                <div>
-                                  <div className="font-medium">{user.name}</div>
-                                  <div className="text-gray-500 text-xs">
-                                    {user.email}
-                                  </div>
-                                  <div className="text-gray-400 text-xs">
-                                    {user.contact}
-                                  </div>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        )}
                       </div>
                       <div>
                         <label className="mb-2 block">
@@ -503,19 +591,24 @@ const CreateMemberForm = ({ setMemberModal }) => {
                         <label className="mb-2 block">
                           DOB<span className="text-red-500">*</span>
                         </label>
-                        <div className="custom--date">
+                        <div className="custom--date dob-format">
                           <DatePicker
                             selected={
                               formik.values.memberDetails.dob
-                                ? new Date(formik.values.memberDetails.dob)
+                                ? convertToISODate(
+                                    formik.values.memberDetails.dob
+                                  )
                                 : null
                             }
-                            onChange={(date) =>
-                              formik.setFieldValue("memberDetails.dob", date)
-                            }
+                            onChange={handleDobChange}
+                            showMonthDropdown
+                            showYearDropdown
+                            maxDate={new Date()}
                             dateFormat="dd MMM yyyy"
+                            dropdownMode="select"
                             placeholderText="Select date"
                           />
+
                           {formik.errors.memberDetails?.dob &&
                             formik.touched.memberDetails?.dob && (
                               <div className="text-red-500 text-sm">
@@ -624,7 +717,7 @@ const CreateMemberForm = ({ setMemberModal }) => {
                         onChange={formik.handleChange}
                         className="custom--input w-full"
                       />
-                     
+
                       {formik.errors.professionalInformation?.companyName &&
                         formik.touched.professionalInformation?.companyName && (
                           <div className="text-red-500 text-sm">
@@ -664,7 +757,7 @@ const CreateMemberForm = ({ setMemberModal }) => {
                       <PhoneInput
                         name="emergencyContact.contact"
                         value={formik.values.emergencyContact.contact}
-                        onChange={handlePhoneChange}
+                        onChange={formik.handleChange}
                         onBlur={() =>
                           formik.setFieldTouched(
                             "emergencyContact.contact ",
@@ -975,6 +1068,15 @@ const CreateMemberForm = ({ setMemberModal }) => {
           selectedType={formik.values?.productType}
           onClose={() => setShowProductModal(false)}
           onSubmit={handleProductSubmit}
+        />
+      )}
+
+      {showUnderageModal && (
+        <ConfirmUnderAge
+          title="Underage Confirmation"
+          message="Lead's age is less than 18. Do you still wish to continue?"
+          onConfirm={confirmDob}
+          onCancel={cancelDob}
         />
       )}
     </>

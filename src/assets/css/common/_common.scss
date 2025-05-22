@@ -268,3 +268,10 @@ input.number--appearance-none[type="number"]::-webkit-outer-spin-button {
 .custom--slider .slick-next:before, .custom--slider .slick-prev:before {
     font-size: 35px;
 }
+
+input:-webkit-autofill,
+input:-webkit-autofill:hover, 
+input:-webkit-autofill:focus, 
+input:-webkit-autofill:active{
+    -webkit-box-shadow: 0 0 0 30px white inset !important;
+}
