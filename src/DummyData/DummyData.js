@@ -279,32 +279,29 @@ export const servicesName = [
 ];
 
 export const leadsSources = [
-  { value: "corporate", label: "Corporate" },
-  { value: "corporate-voucher", label: "Corporate voucher" },
-  { value: "events", label: "Events" },
-  { value: "facebook", label: "Facebook" },
-  { value: "google", label: "Google" },
   { value: "hoardings", label: "Hoardings" },
-  { value: "instagram", label: "Instagram" },
-  { value: "member-app", label: "Member App" },
-  { value: "others", label: "Others" },
-  { value: "passing-by", label: "Passing By" },
-  { value: "ppc", label: "PPC" },
-  { value: "qr", label: "QR" },
+  { value: "google", label: "Google" },
+  { value: "social media", label: "Social Media" },
   { value: "referral", label: "Referral" },
-  { value: "social-media", label: "Social media" },
+  { value: "corporate", label: "Corporate" },
+  { value: "word of mouth", label: "Word of Mouth" },
+  { value: "thrive app", label: "Thrive App" },
   { value: "website", label: "Website" },
-  { value: "whatsapp", label: "WhatsApp" },
-  { value: "word-of-mouth", label: "Word of mouth" },
-  { value: "yoactiv", label: "Yoactiv" },
+  { value: "events / campaigns", label: "Events / Campaigns" },
+  { value: "corporate outreach", label: "Corporate Outreach" },
+  { value: "qr code", label: "QR Code" },
 ];
 
 export const leadTypes = [
   { value: "walk-in", label: "Walk-in" },
   { value: "phone", label: "Phone" },
-  { value: "email", label: "e-mail" },
-  { value: "social-media", label: "Social media" },
-  { value: "website", label: "Website" },
+  { value: "email", label: "Email" },
+  { value: "whatsApp", label: "WhatsApp" },
+];
+
+export const leadSubTypes = [
+  { value: "in-bound", label: "In-bound" },
+  { value: "outbound", label: "Outbound" },
 ];
 
 export const companies = [
@@ -892,14 +889,22 @@ export const lostFoundData = [
 
 export const trainerAvailability = {
   shivakar: [
-    { date: "2025-05-07", time: "10:00:00" },
-    { date: "2025-05-07", time: "14:00:00" },
+    { date: "2025-05-25", time: "10:00:00" },
+    { date: "2025-05-25", time: "14:00:00" },
+    { date: "2025-05-25", time: "09:00:00" },
+    { date: "2025-05-25", time: "11:30:00" },
   ],
   esha: [
-    { date: "2025-05-07", time: "09:00:00" },
-    { date: "2025-05-07", time: "16:00:00" },
+    { date: "2025-05-22", time: "09:00:00" },
+    { date: "2025-05-22", time: "16:00:00" },
+    { date: "2025-05-22", time: "14:00:00" },
+  ],
+  arjun: [
+    { date: "2025-05-23", time: "10:00:00" },
+    { date: "2025-05-23", time: "15:30:00" },
   ],
 };
+
 
 export const todaySessions = [
   {

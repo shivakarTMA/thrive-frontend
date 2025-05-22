@@ -10,7 +10,7 @@ const DropdownMenu = ({ children, isOpen, onClose }) => {
   return (
     <div
       ref={ref}
-      className="absolute top-full mt-4 right-0 z-50 bg-white shadow min-w-[150px]"
+      className="absolute top-full mt-4 right-0 z-50 bg-white shadow min-w-[180px]"
     >
       {children}
     </div>

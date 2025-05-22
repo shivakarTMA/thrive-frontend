@@ -12,15 +12,15 @@ import {
   companies,
   trainerAvailability,
   mockData,
-} from "../../DummyData/DummyData";
+} from "../DummyData/DummyData";
 
-import { customStyles, formatDateTime, formatTime } from "../../Helper/helper";
+import { customStyles, formatDateTime, formatTime } from "../Helper/helper";
 import { IoCloseCircle } from "react-icons/io5";
 import { Formik, Field, Form, ErrorMessage, useFormik } from "formik";
 import * as Yup from "yup";
 import { FaCamera } from "react-icons/fa";
 import { FaUserLarge } from "react-icons/fa6";
-import ProductModal from "../../components/modal/ProductDetails";
+import ProductModal from "../components/modal/ProductDetails";
 import { useSelector } from "react-redux";
 
 
@@ -164,9 +164,9 @@ const CreateMemberForm = ({ setMemberModal }) => {
 
     if (Object.keys(errors).length === 0) {
       if (step === stepValidationSchemas.length - 1) {
-        formik.handleSubmit(); // 🚀 Final submit
+        formik.handleSubmit();
       } else {
-        setStep(step + 1); // ✅ Move to next step
+        setStep(step + 1);
       }
     } else {
       console.log("Validation Errors:", errors);
@@ -615,22 +615,16 @@ const CreateMemberForm = ({ setMemberModal }) => {
                       <label className="mb-2 block">
                         Company<span className="text-red-500">*</span>
                       </label>
-                      <Select
+                      <input
+                        type="text"
                         name="professionalInformation.companyName"
-                        value={companies.find(
-                          (opt) =>
-                            opt.value ===
-                            formik.values.professionalInformation.companyName
-                        )}
-                        onChange={(option) =>
-                          formik.setFieldValue(
-                            "professionalInformation.companyName",
-                            option.value
-                          )
+                        value={
+                          formik.values.professionalInformation.companyName
                         }
-                        options={companies}
-                        styles={customStyles}
+                        onChange={formik.handleChange}
+                        className="custom--input w-full"
                       />
+                     
                       {formik.errors.professionalInformation?.companyName &&
                         formik.touched.professionalInformation?.companyName && (
                           <div className="text-red-500 text-sm">

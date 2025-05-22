@@ -11,11 +11,11 @@ import Login from "../components/common/Login";
 import PrivateRoute from "./PrivateRoute";
 
 // FOH Pages
-import Home from "../Pages/FOH/Home";
-import AllLeads from "../Pages/FOH/AllLeads";
-import MemberList from "../Pages/FOH/MemberList";
-import MemberProfile from "../Pages/FOH/MemberProfile";
-import AllLostFound from "../Pages/FOH/AllLostFound";
+import Home from "../Pages/Home";
+import AllLeads from "../Pages/AllLeads";
+import MemberList from "../Pages/MemberList";
+import MemberProfile from "../Pages/MemberProfile";
+import AllLostFound from "../Pages/AllLostFound";
 
 // PT Pages
 import PtHome from "../Pages/PT/Home";
@@ -25,12 +25,12 @@ import WorkoutPlans from "../Pages/PT/WorkoutPlans";
 import AssessmentsProgress from "../Pages/PT/AssessmentsProgress";
 import ReportsIncentives from "../Pages/PT/ReportsIncentives";
 import TasksFollowUps from "../Pages/PT/TasksFollowUps";
-import EditLeadDetails from "../Pages/FOH/EditLeadDetails";
+import EditLeadDetails from "../Pages/EditLeadDetails";
 import ForgotPassword from "../components/common/ForgotPassword";
 import ResetPassword from "../components/common/ResetPassword";
-import LeadFollowUp from "../Pages/FOH/LeadFollowUp";
-import ServicesLIst from "../Pages/FOH/ServicesLIst";
-import BookingService from "../Pages/FOH/BookingService";
+import LeadFollowUp from "../Pages/LeadFollowUp";
+import ServicesLIst from "../Pages/ServicesLIst";
+import BookingService from "../Pages/BookingService";
 
 export default function Routing() {
   const { accessToken } = useSelector((state) => state.auth);

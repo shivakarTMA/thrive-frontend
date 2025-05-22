@@ -6,7 +6,7 @@ import {
   leadTypes,
   mockData,
   servicesName,
-} from "../../DummyData/DummyData";
+} from "../DummyData/DummyData";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import PhoneInput, { isValidPhoneNumber } from "react-phone-number-input";
@@ -19,7 +19,7 @@ import {
   convertToISODate,
   customStyles,
   formatDateTime,
-} from "../../Helper/helper";
+} from "../Helper/helper";
 
 const validationSchema = Yup.object({
   personalDetails: Yup.object({
@@ -207,10 +207,11 @@ const EditLeadDetails = () => {
                         : null
                     }
                     onChange={(date) => {
-                      formik.setFieldValue("personalDetails.dob", date ? formatDateTime(date) : null)
+                      formik.setFieldValue("personalDetails.dob", date)
                     }}
                     showMonthDropdown
                     showYearDropdown
+                     maxDate={new Date()}
                     dateFormat="dd MMM yyyy"
                     dropdownMode="select"
                     placeholderText="Select date"

@@ -3,8 +3,8 @@ import Select from "react-select";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { useParams } from "react-router-dom";
-import { mockData } from "../../DummyData/DummyData";
-import { customStyles } from "../../Helper/helper";
+import { mockData } from "../DummyData/DummyData";
+import { customStyles } from "../Helper/helper";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 
@@ -103,6 +103,27 @@ const LeadFollowUp = () => {
       resetForm();
     },
   });
+
+  const now = new Date();
+  const selectedDateTime = formik.values.trialDateTime
+    ? new Date(formik.values.trialDateTime)
+    : now;
+
+  // Check if selected day is today
+  const isTodaySelected =
+    selectedDateTime.toDateString() === now.toDateString();
+
+  // Set dynamic minTime
+  const minTime = new Date(selectedDateTime);
+  if (isTodaySelected) {
+    minTime.setHours(now.getHours(), now.getMinutes(), 0, 0); // current time
+  } else {
+    minTime.setHours(0, 0, 0, 0); // 12:00 AM
+  }
+
+  // Set maxTime to 11:59 PM
+  const maxTime = new Date(selectedDateTime);
+  maxTime.setHours(23, 59, 59, 999);
 
   console.log("Formik Errors (if any):", formik.errors);
 
@@ -245,10 +266,13 @@ const LeadFollowUp = () => {
                           formik.setFieldValue("trialDateTime", val)
                         }
                         showTimeSelect
-                        timeFormat="HH:mm"
-                        dateFormat="MMMM d, yyyy h:mm aa"
-                        placeholderText="Select trial date & time"
+                        timeFormat="hh:mm aa"
+                        dateFormat="MMMM d, yyyy hh:mm aa"
+                        placeholderText="Select follow-up date & time"
                         className="border px-3 py-2 w-full"
+                        minDate={now} // disables all past days
+                        minTime={minTime} // disables past times today
+                        maxTime={maxTime}
                       />
                     </div>
                   </div>
@@ -302,16 +326,20 @@ const LeadFollowUp = () => {
                     </label>
                     <div className="custom--date">
                       <DatePicker
-                        selected={formik.values.followUpDate}
+                        selected={selectedDateTime}
                         onChange={(val) =>
-                          formik.setFieldValue("followUpDate", val)
+                          formik.setFieldValue("trialDateTime", val)
                         }
                         showTimeSelect
-                        timeFormat="HH:mm"
-                        dateFormat="MMMM d, yyyy h:mm aa"
-                        placeholderText="Follow-up date & time"
+                        timeFormat="hh:mm aa"
+                        dateFormat="MMMM d, yyyy hh:mm aa"
+                        placeholderText="Select follow-up date & time"
                         className="border px-3 py-2 w-full"
+                        minDate={now}
+                        minTime={minTime}
+                        maxTime={maxTime}
                       />
+
                       {formik.errors?.followUpDate &&
                         formik.touched?.followUpDate && (
                           <div className="text-red-500 text-sm">

@@ -2,8 +2,8 @@ import React, { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { GoPlusCircle } from "react-icons/go";
 import { FiEdit2 } from "react-icons/fi";
-import { membershipData, mockData } from "../../DummyData/DummyData";
-import ProfileDetails from "../../components/memberprofile/ProfileDetails";
+import { membershipData, mockData } from "../DummyData/DummyData";
+import ProfileDetails from "../components/memberprofile/ProfileDetails";
 import { FaCrown } from "react-icons/fa";
 import { BsThreeDotsVertical } from "react-icons/bs";
 

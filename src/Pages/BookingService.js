@@ -4,10 +4,10 @@ import {
   mockData,
   servicesData,
   slotAvailability,
-} from "../../DummyData/DummyData";
+} from "../DummyData/DummyData";
 import dayjs from "dayjs";
 import { toast } from "react-toastify";
-import BookingSuccessModal from "../../components/BookingSuccessModal";
+import BookingSuccessModal from "../components/BookingSuccessModal";
 import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";

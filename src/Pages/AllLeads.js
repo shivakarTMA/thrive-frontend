@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import { FaAngleLeft, FaAngleRight, FaWhatsapp } from "react-icons/fa";
 import Select from "react-select";
-import { customStyles } from "../../Helper/helper";
+import { customStyles } from "../Helper/helper";
 import { IoIosAddCircleOutline, IoIosSearch } from "react-icons/io";
 import { FiPlus } from "react-icons/fi";
-import { mockData } from "../../DummyData/DummyData";
+import { mockData } from "../DummyData/DummyData";
 import CreateLeadForm from "./CreateLeadForm";
 import { Link } from "react-router-dom";
 import { LiaEdit } from "react-icons/lia";

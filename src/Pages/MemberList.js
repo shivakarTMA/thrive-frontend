@@ -1,12 +1,9 @@
 import React, { useState } from "react";
 import { FaAngleLeft, FaAngleRight } from "react-icons/fa";
 import Select from "react-select";
-import { customStyles } from "../../Helper/helper";
-import { IoIosSearch } from "react-icons/io";
-import { FiPlus } from "react-icons/fi";
-import CreateLeadForm from "./CreateLeadForm";
+import { customStyles } from "../Helper/helper";
+import { mockData } from "../DummyData/DummyData";
 import { Link } from "react-router-dom";
-import { mockData } from "../../DummyData/DummyData";
 
 const getUniqueOptions = (data, key) => {
   return Array.from(new Set(data.map((item) => item[key]))).map((val) => ({

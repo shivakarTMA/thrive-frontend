@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import { FaAngleLeft, FaAngleRight } from "react-icons/fa";
 import Select from "react-select";
-import { customStyles } from "../../Helper/helper";
+import { customStyles } from "../Helper/helper";
 import { IoIosSearch } from "react-icons/io";
 import { FiPlus } from "react-icons/fi";
-import { lostFoundData } from "../../DummyData/DummyData";
+import { lostFoundData } from "../DummyData/DummyData";
 
 
 const getUniqueOptions = (data, key) => {

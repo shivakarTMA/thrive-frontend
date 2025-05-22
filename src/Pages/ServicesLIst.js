@@ -1,7 +1,7 @@
 import React, { useState } from "react";
-import { servicesData } from "../../DummyData/DummyData";
+import { servicesData } from "../DummyData/DummyData";
 import Select from "react-select";
-import { customStyles } from "../../Helper/helper";
+import { customStyles } from "../Helper/helper";
 import { Link } from "react-router-dom";
 
 const priceOptions = [

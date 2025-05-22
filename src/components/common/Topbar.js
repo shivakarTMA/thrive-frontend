@@ -16,9 +16,9 @@ import { FiUser, FiUsers } from "react-icons/fi";
 import { useDispatch, useSelector } from "react-redux";
 import { logout } from "../../Redux/Reducers/authSlice";
 import DropdownMenu from "../DropdownMenu";
-import CreateLeadForm from "../../Pages/FOH/CreateLeadForm";
-import CreateMemberForm from "../../Pages/FOH/CreateMemberForm";
-import CreateInvoice from "../../Pages/FOH/CreateInvoice";
+import CreateLeadForm from "../../Pages/CreateLeadForm";
+import CreateMemberForm from "../../Pages/CreateMemberForm";
+import CreateInvoice from "../../Pages/CreateInvoice";
 import ProfileDetails from "../modal/ProfileDetails";
 
 const Topbar = ({ setToggleMenuBar, toggleMenuBar }) => {
@@ -139,21 +139,21 @@ const Topbar = ({ setToggleMenuBar, toggleMenuBar }) => {
                     className="nav-link flex items-center gap-2 px-3 py-2 hover:bg-black hover:text-white transition border-b cursor-pointer"
                   >
                     <IoBarChartOutline className="menu--icon" />
-                    <span className="nav-text">Lead</span>
+                    <span className="nav-text">Add Lead</span>
                   </div>
                   <div
                     onClick={() => setMemberModal(true)}
                     className="nav-link flex items-center gap-2 px-3 py-2 hover:bg-black hover:text-white transition border-b cursor-pointer"
                   >
                     <FiUsers className="menu--icon" />
-                    <span className="nav-text">Member</span>
+                    <span className="nav-text">Create Member</span>
                   </div>
                   <div
                     onClick={() => setInvoiceModal(true)}
                     className="nav-link flex items-center gap-2 px-3 py-2 hover:bg-black hover:text-white transition border-b cursor-pointer"
                   >
                     <LiaFileInvoiceSolid className="menu--icon" />
-                    <span className="nav-text">Invoice</span>
+                    <span className="nav-text">Create Invoice</span>
                   </div>
                 </DropdownMenu>
               )}

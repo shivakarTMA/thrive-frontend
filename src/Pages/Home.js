@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import StatCard from "../../components/StatCard";
+import StatCard from "../components/StatCard";
 import { Link } from "react-router-dom";
 import Select from "react-select";
 import {
@@ -8,18 +8,18 @@ import {
   leadsStatus,
   groupClasses,
   assignedLeadsData,
-} from "../../DummyData/DummyData";
+} from "../DummyData/DummyData";
 import {
   customStyles,
-} from "../../Helper/helper";
+} from "../Helper/helper";
 import { FaUserCircle } from "react-icons/fa";
-import ScrollableTabs from "../../components/common/ScrollableTabs";
+import ScrollableTabs from "../components/common/ScrollableTabs";
 import { GoPlusCircle } from "react-icons/go";
 import Highcharts from "highcharts";
 import HighchartsReact from "highcharts-react-official";
-import TrialUserCard from "../../components/TrialUserCard";
+import TrialUserCard from "../components/TrialUserCard";
 import DatePicker from "react-datepicker";
-import PendingOrderTable from "../../components/PendingOrderTable";
+import PendingOrderTable from "../components/PendingOrderTable";
 
 const callOptions = [
   { value: "enquiry calls", label: "Enquiry Calls" },
