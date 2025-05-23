@@ -25,24 +25,28 @@ const noReasons = [
   { value: "time constraints", label: "Time Constraints" },
   { value: "lack of motivation", label: "Lack of motivation" },
 ];
+
 const callStatusOption = [
-  { value: "enquiry", label: "Enquiry" },
   { value: "trial scheduled", label: "Trial Scheduled" },
-  { value: "enquiry follow-up", label: "Enquiry follow-up" },
-  { value: "busy tone", label: "Busy Tone" },
-  { value: "sale", label: "Sale" },
-  { value: "switched Off/ out of reach", label: "Switched Off/ Out of Reach" },
-  { value: "no answer", label: "No answer" },
+  { value: "tour scheduled", label: "Tour Scheduled" },
+  { value: "no answer", label: "No Answer" },
+  { value: "call again", label: "Call Again" },
+  { value: "not interested", label: "Not Interested" },
   { value: "future prospect", label: "Future Prospect" },
-  { value: "did not put enquiry", label: "Did not Put Enquiry" },
-  { value: "notinterested", label: "Not Interested" },
-  { value: "not relevant", label: "Not Relevant" },
-  { value: "invalid number", label: "Invalid number" },
+  { value: "wrong number", label: "Wrong Number" },
 ];
+
 const staffNameOption = [{ value: "Rajat Sharma", label: "Rajat Sharma" }];
-const scheduleForOption = [
-  { value: "Call", label: "Call" },
-  { value: "Trial", label: "Trial" },
+const leadStatus = [
+  { value: "closed", label: "Closed" },
+  { value: "lost", label: "Lost" },
+];
+
+const serviceType = [
+  { value: "membership", label: "Membership" },
+  { value: "pt", label: "PT" },
+  { value: "gx", label: "GX" },
+  { value: "recreation", label: "Recreation" },
 ];
 
 const validationSchema = Yup.object().shape({
@@ -78,10 +82,12 @@ const LeadFollowUp = () => {
   const formik = useFormik({
     initialValues: {
       callStatus: "",
+      leadStatus: "",
+      serviceType: "",
       notInterestedReason: "",
       trialType: "",
       trialDateTime: null,
-      staffName: "Nitin",
+      TrialTourStaff: "",
       discussion: "",
       scheduleFor: "",
       followUpDate: null,
@@ -143,7 +149,6 @@ const LeadFollowUp = () => {
               {leadDetails?.name} - {leadDetails?.contact}
             </h2>
 
-            {/* Called By & Call Status */}
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="mb-2 block">
@@ -164,9 +169,10 @@ const LeadFollowUp = () => {
                   </div>
                 )}
               </div>
+              
               <div>
                 <label className="mb-2 block">
-                  Call Status<span className="text-red-500">*</span>
+                  Lead Call Status<span className="text-red-500">*</span>
                 </label>
                 <Select
                   name="callStatus"
@@ -175,7 +181,7 @@ const LeadFollowUp = () => {
                     formik.setFieldValue("callStatus", option.value)
                   }
                   styles={customStyles}
-                  placeholder="Call Status"
+                  placeholder="Lead Call Status"
                 />
                 {formik.errors?.callStatus && formik.touched?.callStatus && (
                   <div className="text-red-500 text-sm">
@@ -183,8 +189,46 @@ const LeadFollowUp = () => {
                   </div>
                 )}
               </div>
+              <div>
+                <label className="mb-2 block">
+                  Lead Status<span className="text-red-500">*</span>
+                </label>
+                <Select
+                  name="leadStatus"
+                  options={leadStatus}
+                  onChange={(option) =>
+                    formik.setFieldValue("leadStatus", option.value)
+                  }
+                  styles={customStyles}
+                  placeholder="Lead Status"
+                />
+                {formik.errors?.leadStatus && formik.touched?.leadStatus && (
+                  <div className="text-red-500 text-sm">
+                    {formik.errors?.leadStatus}
+                  </div>
+                )}
+              </div>
+              <div>
+                <label className="mb-2 block">
+                  Service Type<span className="text-red-500">*</span>
+                </label>
+                <Select
+                  name="serviceType"
+                  options={serviceType}
+                  onChange={(option) =>
+                    formik.setFieldValue("serviceType", option.value)
+                  }
+                  styles={customStyles}
+                  placeholder="Service Type"
+                />
+                {formik.errors?.serviceType && formik.touched?.serviceType && (
+                  <div className="text-red-500 text-sm">
+                    {formik.errors?.serviceType}
+                  </div>
+                )}
+              </div>
             </div>
-            {formik.values?.callStatus === "notinterested" && (
+            {formik.values?.callStatus === "not interested" && (
               <div className="w-full mt-3">
                 <div>
                   <label className="mb-2 block">
@@ -210,53 +254,23 @@ const LeadFollowUp = () => {
               </div>
             )}
 
-            {formik.values?.callStatus === "trial scheduled" && (
-              <div className="border p-3 rounded w-full mt-3">
-                <div className="my-5 !mt-0">
-                  <label className="mb-2 block">Trial Type</label>
-                  <div className="flex gap-2">
-                    <label className="custom--radio">
-                      Trial Appointment
-                      <input
-                        type="radio"
-                        name="trialType"
-                        value="trial appointment"
-                        checked={
-                          formik.values.trialType === "trial appointment"
-                        }
-                        className="w-4 h-4"
-                        onChange={formik.handleChange}
-                      />
-                      <span className="radio-checkmark"></span>
-                    </label>
-                    <label className="custom--radio">
-                      Trial Class
-                      <input
-                        type="radio"
-                        name="trialType"
-                        className="w-4 h-4"
-                        value="trial class"
-                        checked={formik.values.trialType === "trial class"}
-                        onChange={formik.handleChange}
-                      />
-                      <span className="radio-checkmark"></span>
-                    </label>
-                    <label className="custom--radio">
-                      Trial Session
-                      <input
-                        type="radio"
-                        name="trialType"
-                        className="w-4 h-4"
-                        value="trial session"
-                        checked={formik.values.trialType === "trial session"}
-                        onChange={formik.handleChange}
-                      />
-                      <span className="radio-checkmark"></span>
-                    </label>
-                  </div>
-                </div>
+            {(formik.values?.callStatus === "trial scheduled" || formik.values?.callStatus === "tour scheduled") && (
+              <div className="w-full mt-3"> 
+                
 
                 <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="mb-2 block">Staff Name</label>
+                    <Select
+                      name="TrialTourStaff"
+                      options={staffNameOption}
+                      onChange={(option) =>
+                        formik.setFieldValue("TrialTourStaff", option.value)
+                      }
+                      styles={customStyles}
+                      placeholder="Assign Staff"
+                    />
+                  </div>
                   <div>
                     <label className="mb-2 block">Date & Time</label>
                     <div className="custom--date">
@@ -276,18 +290,7 @@ const LeadFollowUp = () => {
                       />
                     </div>
                   </div>
-                  <div>
-                    <label className="mb-2 block">Staff Name</label>
-                    <Select
-                      name="staffName"
-                      options={staffNameOption}
-                      onChange={(option) =>
-                        formik.setFieldValue("staffName", option.value)
-                      }
-                      styles={customStyles}
-                      placeholder="Assign Staff"
-                    />
-                  </div>
+                  
                 </div>
               </div>
             )}

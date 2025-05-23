@@ -102,11 +102,11 @@ const CreateLeadForm = ({ setLeadModal }) => {
       time: null,
       trainer: "",
     },
-    professionalInfoPrimaryContact: {
-      designation: "",
-      companyName: "",
-      officialEmail: "",
-    },
+    // professionalInfoPrimaryContact: {
+    //   designation: "",
+    //   companyName: "",
+    //   officialEmail: "",
+    // },
   };
 
   const formik = useFormik({
@@ -731,7 +731,7 @@ const CreateLeadForm = ({ setLeadModal }) => {
                       </div>
                     </div>
 
-                    <hr className="my-3" />
+                    {/* <hr className="my-3" />
 
                     <h3 className="text-2xl font-semibold mb-2">
                       Primary Contact
@@ -775,7 +775,7 @@ const CreateLeadForm = ({ setLeadModal }) => {
                           className="custom--input w-full"
                         />
                       </div>
-                    </div>
+                    </div> */}
                   </>
                 )}
 
@@ -874,7 +874,7 @@ const CreateLeadForm = ({ setLeadModal }) => {
                 {step > 0 && (
                   <button
                     type="button"
-                    className="px-4 py-2 border rounded max-w-[150px] w-full"
+                    className="bg-white px-4 py-2 border rounded max-w-[150px] w-full"
                     onClick={() => setStep(step - 1)}
                   >
                     Back

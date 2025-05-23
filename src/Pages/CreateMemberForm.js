@@ -12,6 +12,8 @@ import {
   companies,
   trainerAvailability,
   mockData,
+  leadSubTypes,
+  centreInfo,
 } from "../DummyData/DummyData";
 
 import {
@@ -38,11 +40,6 @@ const voucherList = [
 const stepValidationSchemas = [
   // ✅ Step 0: Full set of required fields
   Yup.object({
-    leadInformation: Yup.object({
-      leadSource: Yup.string().required("Lead Source is required"),
-      leadType: Yup.string().required("Lead Type is required"),
-    }),
-
     memberDetails: Yup.object({
       name: Yup.string()
         .min(3, "Name must be at least 3 characters")
@@ -60,6 +57,7 @@ const stepValidationSchemas = [
         .nullable()
         .required("Date of birth is required")
         .max(new Date(), "Date of birth cannot be in the future"),
+      address: Yup.string().required("Address is required"),
     }),
 
     leadInformation: Yup.object({
@@ -67,9 +65,28 @@ const stepValidationSchemas = [
       leadType: Yup.string().required("Lead Type is required"),
     }),
 
-    professionalInformation: Yup.object({
-      companyName: Yup.string().required("Company Name is required"),
+    leadInformation: Yup.object({
+      leadSource: Yup.string().required("Lead Source is required"),
+      leadType: Yup.string().required("Lead Type is required"),
+      leadSubType: Yup.string().when("leadType", {
+        is: "phone",
+        then: () => Yup.string().required("This is required"),
+      }),
+      leadSourceType: Yup.string().when("leadSource", {
+        is: (val) => ["social media", "events / campaigns"].includes(val),
+        then: () => Yup.string().required("This is required"),
+      }),
+      otherSource: Yup.string().when("leadSourceType", {
+        is: "others",
+        then: () => Yup.string().required("This is required"),
+      }),
     }),
+  }),
+
+  Yup.object({
+    // professionalInformation: Yup.object({
+    //   companyName: Yup.string().required("Company Name is required"),
+    // }),
 
     emergencyContact: Yup.object({
       contact: Yup.string()
@@ -80,8 +97,6 @@ const stepValidationSchemas = [
         }),
     }),
   }),
-
-  // ✅ Step 1: Invoice Info
   Yup.object({
     invoiceDetails: Yup.object({
       invoiceDate: Yup.string().required("Invoice Date is required"),
@@ -89,6 +104,12 @@ const stepValidationSchemas = [
       memberName: Yup.string().required("Member Name is required"),
     }),
   }),
+];
+
+const leadSourceTypes = [
+  { value: "facebook", label: "Facebook" },
+  { value: "instagram", label: "Instagram" },
+  { value: "others", label: "Others" },
 ];
 
 const CreateMemberForm = ({ setMemberModal }) => {
@@ -123,18 +144,23 @@ const CreateMemberForm = ({ setMemberModal }) => {
     },
     leadInformation: {
       leadSource: "",
+      leadSourceType: "",
+      otherSource: "",
       leadType: "",
+      leadSubType: "",
     },
     professionalInformation: {
       designation: "",
       companyName: "",
       officialEmail: "",
     },
-    emergencyContact: {
-      name: "",
-      contact: "",
-      relationship: "",
-    },
+    emergencyContacts: [
+      {
+        name: "",
+        contact: "",
+        relationship: "",
+      },
+    ],
     membershipDetails: {
       leadOwner: user?.name,
       centre: "",
@@ -260,6 +286,25 @@ const CreateMemberForm = ({ setMemberModal }) => {
     }
   };
 
+  const handleAddContact = () => {
+    formik.setFieldValue("emergencyContacts", [
+      ...formik.values.emergencyContacts,
+      { name: "", contact: "", relationship: "" },
+    ]);
+  };
+
+  const handleRemoveContact = (index) => {
+    const updated = [...formik.values.emergencyContacts];
+    updated.splice(index, 1);
+    formik.setFieldValue("emergencyContacts", updated);
+  };
+
+  const handleEmergancyPhone = (value, index) => {
+    const updated = [...formik.values.emergencyContacts];
+    updated[index].contact = value;
+    formik.setFieldValue("emergencyContacts", updated);
+  };
+
   const handlePhoneChange = (value) => {
     formik.setFieldValue("memberDetails.contactNumber", value);
     setHasDismissedDuplicateModal(false);
@@ -374,11 +419,11 @@ const CreateMemberForm = ({ setMemberModal }) => {
   return (
     <>
       <div
-        className="create--lead--container fixed top-0 left-0 z-[999] w-full bg-black bg-opacity-60 h-full"
+        className="create--lead--container overflow-auto hide--overflow fixed top-0 left-0 z-[999] w-full bg-black bg-opacity-60 h-full"
         onClick={handleOverlayClick}
       >
         <div
-          className="max-w-5xl border shadow bg-white ms-auto h-full overflow-auto hide--overflow container--leadbox"
+          className="min-h-[70vh]  w-full max-w-5xl border shadow bg-white mx-auto mt-[100px] mb-[100px] container--leadbox rounded-[10px] flex flex-col"
           ref={leadBoxRef}
           onClick={(e) => e.stopPropagation()}
         >
@@ -392,8 +437,8 @@ const CreateMemberForm = ({ setMemberModal }) => {
             </div>
           </div>
 
-          <div className="p-6">
-            <div className="flex gap-2 mb-4">
+          <div className="flex-1 flex flex-col">
+            {/* <div className="flex gap-2 mb-4">
               <button
                 className={`px-4 py-2 rounded border ${
                   step === 0 ? "bg-black text-white" : "bg-white text-black"
@@ -410,638 +455,773 @@ const CreateMemberForm = ({ setMemberModal }) => {
               >
                 Invoice Information
               </button>
-            </div>
+            </div> */}
 
-            <form className="space-y-6" onSubmit={formik.handleSubmit}>
-              {step === 0 && (
-                <>
-                  <h3 className="text-2xl font-semibold">Member Details</h3>
-                  <div className="flex gap-4">
-                    <div className="max-w-[200px] w-full relative">
-                      {profileImage ? (
-                        <img
-                          src={profileImage} // optional fallback
-                          alt="Profile Preview"
-                          width={200}
-                          height={200}
-                          className="w-full h-[200px] object-cover object-center rounded-[10px]"
+            <form
+              className="space-y-6 flex-1 flex flex-col justify-between"
+              onSubmit={formik.handleSubmit}
+            >
+              <div className="p-6">
+                {step === 0 && (
+                  <>
+                    <h3 className="text-2xl font-semibold mb-2">
+                      Member Details
+                    </h3>
+                    <div className="flex gap-4">
+                      <div className="max-w-[200px] w-full relative">
+                        {profileImage ? (
+                          <img
+                            src={profileImage} // optional fallback
+                            alt="Profile Preview"
+                            width={200}
+                            height={200}
+                            className="w-full h-[200px] object-cover object-center rounded-[10px]"
+                          />
+                        ) : (
+                          <div className="bg-gray-100 h-full rounded-[10px] flex items-center justify-center">
+                            <FaUserLarge className="text-5xl" />
+                          </div>
+                        )}
+
+                        <div className="absolute bottom-[-10px] right-[-10px]">
+                          <label className="cursor-pointer w-[45px] h-[45px] flex items-center justify-center bg-white text-sm px-2 py-1 rounded-full shadow">
+                            <FaCamera className="text-2xl" />
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={handleImageChange}
+                              className="hidden"
+                            />
+                          </label>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-3 gap-4">
+                        <div className="relative">
+                          <label className="mb-2 block">
+                            Contact Number
+                            <span className="text-red-500">*</span>
+                          </label>
+                          <PhoneInput
+                            name="memberDetails.contactNumber"
+                            value={formik.values.memberDetails.contactNumber}
+                            onChange={handlePhoneChange}
+                            onBlur={handleCheckDublicate}
+                            international
+                            defaultCountry="IN"
+                            countryCallingCodeEditable={false}
+                            className="custom--input w-full custom--phone"
+                          />
+
+                          {duplicateError
+                            ? showDuplicateModal && (
+                                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                                  <div className="bg-white p-6 rounded shadow-lg max-w-sm w-full text-center">
+                                    <h2 className="text-lg font-semibold text-red-600 mb-4">
+                                      Duplicate Entry
+                                    </h2>
+                                    <p className="text-sm text-gray-700 mb-6">
+                                      {duplicateError}
+                                    </p>
+                                    <button
+                                      onClick={() => {
+                                        setShowDuplicateModal(false);
+                                        setHasDismissedDuplicateModal(true);
+                                      }}
+                                      className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+                                    >
+                                      Close
+                                    </button>
+                                  </div>
+                                </div>
+                              )
+                            : matchingUsers.length > 0 && (
+                                <div className="border mt-2 bg-white shadow rounded p-2 max-h-40 overflow-y-auto z-10 absolute w-full">
+                                  {matchingUsers.map((user) => (
+                                    <div
+                                      key={user.id}
+                                      className="p-2 cursor-pointer text-sm flex items-center gap-2"
+                                      onClick={() => handleUserSelect(user)}
+                                    >
+                                      <div>
+                                        <div className="font-medium">
+                                          {user.name}
+                                        </div>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+
+                          {formik.errors.memberDetails?.contactNumber &&
+                            formik.touched.memberDetails?.contactNumber && (
+                              <div className="text-red-500 text-sm">
+                                {formik.errors.memberDetails.contactNumber}
+                              </div>
+                            )}
+                        </div>
+                        <div>
+                          <label className="mb-2 block">
+                            Full Name<span className="text-red-500">*</span>
+                          </label>
+
+                          <input
+                            name="memberDetails.name"
+                            value={formik.values.memberDetails.name}
+                            onChange={formik.handleChange}
+                            className="custom--input w-full"
+                          />
+                          {formik.errors.memberDetails?.name &&
+                            formik.touched.memberDetails?.name && (
+                              <div className="text-red-500 text-sm">
+                                {formik.errors.memberDetails.name}
+                              </div>
+                            )}
+                        </div>
+
+                        <div>
+                          <label className="mb-2 block">
+                            Email<span className="text-red-500">*</span>
+                          </label>
+                          <input
+                            type="email"
+                            name="memberDetails.email"
+                            value={formik.values.memberDetails.email}
+                            onChange={formik.handleChange}
+                            className="custom--input w-full"
+                          />
+                          {formik.errors.memberDetails?.email &&
+                            formik.touched.memberDetails?.email && (
+                              <div className="text-red-500 text-sm">
+                                {formik.errors.memberDetails.email}
+                              </div>
+                            )}
+                        </div>
+
+                        <div>
+                          <label className="mb-2 block">
+                            Gender<span className="text-red-500">*</span>
+                          </label>
+                          <div className="flex gap-2">
+                            <label className="custom--radio">
+                              Male
+                              <input
+                                type="radio"
+                                name="memberDetails.gender"
+                                value="male"
+                                checked={
+                                  formik.values.memberDetails.gender === "male"
+                                }
+                                className="w-4 h-4"
+                                onChange={formik.handleChange}
+                              />
+                              <span className="radio-checkmark"></span>
+                            </label>
+                            <label className="custom--radio">
+                              Female
+                              <input
+                                type="radio"
+                                name="memberDetails.gender"
+                                value="female"
+                                checked={
+                                  formik.values.memberDetails.gender ===
+                                  "female"
+                                }
+                                className="w-4 h-4"
+                                onChange={formik.handleChange}
+                              />
+                              <span className="radio-checkmark"></span>
+                            </label>
+                          </div>
+                          {formik.errors.memberDetails?.gender &&
+                            formik.touched.memberDetails?.gender && (
+                              <div className="text-red-500 text-sm">
+                                {formik.errors.memberDetails.gender}
+                              </div>
+                            )}
+                        </div>
+
+                        <div>
+                          <label className="mb-2 block">
+                            DOB<span className="text-red-500">*</span>
+                          </label>
+                          <div className="custom--date dob-format">
+                            <DatePicker
+                              selected={
+                                formik.values.memberDetails.dob
+                                  ? convertToISODate(
+                                      formik.values.memberDetails.dob
+                                    )
+                                  : null
+                              }
+                              onChange={handleDobChange}
+                              showMonthDropdown
+                              showYearDropdown
+                              maxDate={new Date()}
+                              dateFormat="dd MMM yyyy"
+                              dropdownMode="select"
+                              placeholderText="Select date"
+                            />
+
+                            {formik.errors.memberDetails?.dob &&
+                              formik.touched.memberDetails?.dob && (
+                                <div className="text-red-500 text-sm">
+                                  {formik.errors.memberDetails.dob}
+                                </div>
+                              )}
+                          </div>
+                        </div>
+
+                        <div className="col-span-3dd">
+                          <label className="mb-2 block">
+                            Address<span className="text-red-500">*</span>
+                          </label>
+                          <input
+                            name="memberDetails.address"
+                            value={formik.values.memberDetails.address}
+                            onChange={formik.handleChange}
+                            className="custom--input w-full"
+                          />
+                          {formik.errors.memberDetails?.address &&
+                            formik.touched.memberDetails?.address && (
+                              <div className="text-red-500 text-sm">
+                                {formik.errors.memberDetails.address}
+                              </div>
+                            )}
+                        </div>
+                      </div>
+                    </div>
+
+                    <hr className="my-5 mt-10" />
+                    <h3 className="text-2xl font-semibold mb-2">
+                      Lead Information
+                    </h3>
+                    <div className="grid grid-cols-3 gap-4">
+                      <div>
+                        <label className="mb-2 block">
+                          Lead Type<span className="text-red-500">*</span>
+                        </label>
+                        <Select
+                          name="leadInformation.leadType"
+                          value={leadTypes.find(
+                            (opt) =>
+                              opt.value ===
+                              formik.values.leadInformation.leadType
+                          )}
+                          onChange={(option) =>
+                            formik.setFieldValue(
+                              "leadInformation.leadType",
+                              option.value
+                            )
+                          }
+                          options={leadTypes}
+                          styles={customStyles}
                         />
-                      ) : (
-                        <div className="bg-gray-100 h-full rounded-[10px] flex items-center justify-center">
-                          <FaUserLarge className="text-5xl" />
+                        {formik.errors.leadInformation?.leadType &&
+                          formik.touched.leadInformation?.leadType && (
+                            <div className="text-red-500 text-sm">
+                              {formik.errors.leadInformation.leadType}
+                            </div>
+                          )}
+                      </div>
+
+                      {formik.values.leadInformation.leadType === "phone" && (
+                        <div>
+                          <label className="mb-2 block">
+                            Lead Sub-type<span className="text-red-500">*</span>
+                          </label>
+                          <Select
+                            name="leadInformation.leadSubType"
+                            value={leadSubTypes.find(
+                              (opt) =>
+                                opt.value ===
+                                formik.values.leadInformation.leadSubType
+                            )}
+                            onChange={(option) =>
+                              formik.setFieldValue(
+                                "leadInformation.leadSubType",
+                                option.value
+                              )
+                            }
+                            options={leadSubTypes}
+                            styles={customStyles}
+                          />
+                          {formik.errors.leadInformation?.leadSubType &&
+                            formik.touched.leadInformation?.leadSubType && (
+                              <div className="text-red-500 text-sm">
+                                {formik.errors.leadInformation.leadSubType}
+                              </div>
+                            )}
                         </div>
                       )}
 
-                      <div className="absolute bottom-[-10px] right-[-10px]">
-                        <label className="cursor-pointer w-[45px] h-[45px] flex items-center justify-center bg-white text-sm px-2 py-1 rounded-full shadow">
-                          <FaCamera className="text-2xl" />
-                          <input
-                            type="file"
-                            accept="image/*"
-                            onChange={handleImageChange}
-                            className="hidden"
-                          />
-                        </label>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-3 gap-4">
-                      <div className="relative">
+                      <div>
                         <label className="mb-2 block">
-                          Contact Number<span className="text-red-500">*</span>
+                          Lead Source<span className="text-red-500">*</span>
                         </label>
-                        <PhoneInput
-                          name="memberDetails.contactNumber"
-                          value={formik.values.memberDetails.contactNumber}
-                          onChange={handlePhoneChange}
-                          onBlur={handleCheckDublicate}
-                          international
-                          defaultCountry="IN"
-                          countryCallingCodeEditable={false}
-                          className="custom--input w-full custom--phone"
-                        />
-
-                        {duplicateError
-                          ? showDuplicateModal && (
-                              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                                <div className="bg-white p-6 rounded shadow-lg max-w-sm w-full text-center">
-                                  <h2 className="text-lg font-semibold text-red-600 mb-4">
-                                    Duplicate Entry
-                                  </h2>
-                                  <p className="text-sm text-gray-700 mb-6">
-                                    {duplicateError}
-                                  </p>
-                                  <button
-                                    onClick={() => {
-                                      setShowDuplicateModal(false);
-                                      setHasDismissedDuplicateModal(true);
-                                    }}
-                                    className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
-                                  >
-                                    Close
-                                  </button>
-                                </div>
-                              </div>
+                        <Select
+                          name="leadInformation.leadSource"
+                          value={leadsSources.find(
+                            (opt) =>
+                              opt.value ===
+                              formik.values.leadInformation.leadSource
+                          )}
+                          onChange={(option) =>
+                            formik.setFieldValue(
+                              "leadInformation.leadSource",
+                              option.value
                             )
-                          : matchingUsers.length > 0 && (
-                              <div className="border mt-2 bg-white shadow rounded p-2 max-h-40 overflow-y-auto z-10 absolute w-full">
-                                {matchingUsers.map((user) => (
-                                  <div
-                                    key={user.id}
-                                    className="p-2 cursor-pointer text-sm flex items-center gap-2"
-                                    onClick={() => handleUserSelect(user)}
-                                  >
-                                    <div>
-                                      <div className="font-medium">
-                                        {user.name}
-                                      </div>
-                                    </div>
-                                  </div>
-                                ))}
+                          }
+                          options={leadsSources}
+                          styles={customStyles}
+                        />
+                        {formik.errors.leadInformation?.leadSource &&
+                          formik.touched.leadInformation?.leadSource && (
+                            <div className="text-red-500 text-sm">
+                              {formik.errors.leadInformation.leadSource}
+                            </div>
+                          )}
+                      </div>
+                      {formik.values.leadInformation.leadSource ===
+                        "social media" && (
+                        <div>
+                          <label className="mb-2 block">
+                            Lead Sub-Source
+                            <span className="text-red-500">*</span>
+                          </label>
+                          <Select
+                            name="leadInformation.leadSourceType"
+                            value={leadSourceTypes.find(
+                              (opt) =>
+                                opt.value ===
+                                formik.values.leadInformation.leadSourceType
+                            )}
+                            onChange={(option) =>
+                              formik.setFieldValue(
+                                "leadInformation.leadSourceType",
+                                option.value
+                              )
+                            }
+                            options={leadSourceTypes}
+                            styles={customStyles}
+                          />
+                          {formik.errors.leadInformation?.leadSourceType &&
+                            formik.touched.leadInformation?.leadSourceType && (
+                              <div className="text-red-500 text-sm">
+                                {formik.errors.leadInformation.leadSourceType}
                               </div>
                             )}
+                        </div>
+                      )}
+                      {formik.values.leadInformation.leadSourceType ===
+                        "others" && (
+                        <div>
+                          <label className="mb-2 block">
+                            Others<span className="text-red-500">*</span>
+                          </label>
+                          <input
+                            type="text"
+                            name="leadInformation.otherSource"
+                            value={formik.values.leadInformation.otherSource}
+                            onChange={formik.handleChange}
+                            className="custom--input w-full"
+                          />
+                          {formik.errors.leadInformation?.otherSource &&
+                            formik.touched.leadInformation?.otherSource && (
+                              <div className="text-red-500 text-sm">
+                                {formik.errors.leadInformation.otherSource}
+                              </div>
+                            )}
+                        </div>
+                      )}
+                    </div>
+                  </>
+                )}
 
-                        {formik.errors.memberDetails?.contactNumber &&
-                          formik.touched.memberDetails?.contactNumber && (
-                            <div className="text-red-500 text-sm">
-                              {formik.errors.memberDetails.contactNumber}
-                            </div>
-                          )}
-                      </div>
+                {step === 1 && (
+                  <>
+                    <h3 className="text-2xl font-semibold mb-2">
+                      Professional Information
+                    </h3>
+                    <div className="grid grid-cols-3 gap-4">
                       <div>
-                        <label className="mb-2 block">
-                          Full Name<span className="text-red-500">*</span>
-                        </label>
-
-                        <input
-                          name="memberDetails.name"
-                          value={formik.values.memberDetails.name}
-                          onChange={formik.handleChange}
-                          className="custom--input w-full"
-                        />
-                        {formik.errors.memberDetails?.name &&
-                          formik.touched.memberDetails?.name && (
-                            <div className="text-red-500 text-sm">
-                              {formik.errors.memberDetails.name}
-                            </div>
-                          )}
-                      </div>
-
-                      <div>
-                        <label className="mb-2 block">
-                          Email<span className="text-red-500">*</span>
-                        </label>
+                        <label className="mb-2 block">Designation</label>
                         <input
                           type="email"
-                          name="memberDetails.email"
-                          value={formik.values.memberDetails.email}
+                          name="professionalInformation.designation"
+                          value={
+                            formik.values.professionalInformation.designation
+                          }
                           onChange={formik.handleChange}
                           className="custom--input w-full"
                         />
-                        {formik.errors.memberDetails?.email &&
-                          formik.touched.memberDetails?.email && (
-                            <div className="text-red-500 text-sm">
-                              {formik.errors.memberDetails.email}
-                            </div>
-                          )}
                       </div>
-
                       <div>
-                        <label className="mb-2 block">
-                          Gender<span className="text-red-500">*</span>
-                        </label>
-                        <div className="flex gap-2">
-                          <label className="custom--radio">
-                            Male
-                            <input
-                              type="radio"
-                              name="memberDetails.gender"
-                              value="male"
-                              checked={
-                                formik.values.memberDetails.gender === "male"
-                              }
-                              className="w-4 h-4"
-                              onChange={formik.handleChange}
-                            />
-                            <span className="radio-checkmark"></span>
-                          </label>
-                          <label className="custom--radio">
-                            Female
-                            <input
-                              type="radio"
-                              name="memberDetails.gender"
-                              value="female"
-                              checked={
-                                formik.values.memberDetails.gender === "female"
-                              }
-                              className="w-4 h-4"
-                              onChange={formik.handleChange}
-                            />
-                            <span className="radio-checkmark"></span>
-                          </label>
-                        </div>
-                        {formik.errors.memberDetails?.gender &&
-                          formik.touched.memberDetails?.gender && (
+                        <label className="mb-2 block">Company</label>
+                        <input
+                          type="text"
+                          name="professionalInformation.companyName"
+                          value={
+                            formik.values.professionalInformation.companyName
+                          }
+                          onChange={formik.handleChange}
+                          className="custom--input w-full"
+                        />
+
+                        {/* {formik.errors.professionalInformation?.companyName &&
+                          formik.touched.professionalInformation
+                            ?.companyName && (
                             <div className="text-red-500 text-sm">
-                              {formik.errors.memberDetails.gender}
+                              {
+                                formik.errors.professionalInformation
+                                  .companyName
+                              }
                             </div>
-                          )}
+                          )} */}
                       </div>
-
                       <div>
-                        <label className="mb-2 block">
-                          DOB<span className="text-red-500">*</span>
-                        </label>
-                        <div className="custom--date dob-format">
-                          <DatePicker
-                            selected={
-                              formik.values.memberDetails.dob
-                                ? convertToISODate(
-                                    formik.values.memberDetails.dob
-                                  )
-                                : null
-                            }
-                            onChange={handleDobChange}
-                            showMonthDropdown
-                            showYearDropdown
-                            maxDate={new Date()}
-                            dateFormat="dd MMM yyyy"
-                            dropdownMode="select"
-                            placeholderText="Select date"
+                        <label className="mb-2 block">Official Email Id</label>
+                        <input
+                          type="email"
+                          name="professionalInformation.officialEmail"
+                          value={
+                            formik.values.professionalInformation.officialEmail
+                          }
+                          onChange={formik.handleChange}
+                          className="custom--input w-full"
+                        />
+                      </div>
+                    </div>
+
+                    <hr className="my-5" />
+                    <h3 className="text-2xl font-semibold mb-2">
+                      Emergency Contact
+                    </h3>
+                    {formik.values.emergencyContacts.map((contact, index) => (
+                      <div
+                        key={index}
+                        className="grid grid-cols-3 gap-4 mb-4 border p-4 rounded-lg"
+                      >
+                        <div>
+                          <label className="mb-2 block">Name</label>
+                          <input
+                            type="text"
+                            name={`emergencyContacts.${index}.name`}
+                            value={contact.name}
+                            onChange={formik.handleChange}
+                            className="custom--input w-full"
                           />
+                        </div>
 
-                          {formik.errors.memberDetails?.dob &&
-                            formik.touched.memberDetails?.dob && (
-                              <div className="text-red-500 text-sm">
-                                {formik.errors.memberDetails.dob}
-                              </div>
-                            )}
+                        <div>
+                          <label className="mb-2 block">Number</label>
+                          <PhoneInput
+                            name={`emergencyContacts.${index}.contact`}
+                            value={contact.contact}
+                            onChange={(value) =>
+                              handleEmergancyPhone(value, index)
+                            }
+                            international
+                            defaultCountry="IN"
+                            countryCallingCodeEditable={false}
+                            className="custom--input w-full custom--phone"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="mb-2 block">Relationship</label>
+                          <input
+                            type="text"
+                            name={`emergencyContacts.${index}.relationship`}
+                            value={contact.relationship}
+                            onChange={formik.handleChange}
+                            className="custom--input w-full"
+                          />
+                        </div>
+
+                        <div className="col-span-3 flex justify-end mt-2">
+                          {formik.values.emergencyContacts.length > 1 && (
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveContact(index)}
+                              className="text-red-500"
+                            >
+                              Remove
+                            </button>
+                          )}
                         </div>
                       </div>
+                    ))}
 
-                      <div className="col-span-3dd">
-                        <label className="mb-2 block">Address</label>
+                    <button
+                      type="button"
+                      onClick={handleAddContact}
+                      className="mt-2 text-blue-500"
+                    >
+                      + Add Emergency Contact
+                    </button>
+
+                    <hr className="my-5" />
+                    <h3 className="text-2xl font-semibold mb-2">
+                      Membership Details
+                    </h3>
+                    <div className="grid grid-cols-3 gap-4">
+                      <div>
+                        <label className="mb-2 block">Lead Owner</label>
                         <input
-                          name="memberDetails.address"
-                          value={formik.values.memberDetails.address}
-                          onChange={formik.handleChange}
+                          type="text"
+                          name="membershipDetails.leadOwner"
+                          value={formik.values.membershipDetails.leadOwner}
+                          // onChange={formik.handleChange}
+                          className="custom--input w-full"
+                        />
+                      </div>
+                      <div>
+                        <label className="mb-2 block">Centre Details</label>
+                        <Select
+                          name="membershipDetails.centre"
+                          value={centreInfo.find(
+                            (opt) =>
+                              opt.value ===
+                              formik.values.membershipDetails.centre
+                          )}
+                          onChange={(option) => {
+                            formik.setFieldValue(
+                              "membershipDetails.centre",
+                              option.value
+                            );
+                            formik.setFieldValue(
+                              "membershipDetails.state",
+                              option.state
+                            );
+                            formik.setFieldValue(
+                              "membershipDetails.country",
+                              option.country
+                            );
+                          }}
+                          options={centreInfo}
+                          styles={customStyles}
+                        />
+                      </div>
+                      <div>
+                        <label className="mb-2 block">State</label>
+                        <input
+                          type="text"
+                          name="membershipDetails.state"
+                          value={formik.values.membershipDetails.state}
+                          readOnly={true}
+                          className="custom--input w-full"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="mb-2 block">Country</label>
+                        <input
+                          type="text"
+                          name="membershipDetails.country"
+                          value={formik.values.membershipDetails.country}
+                          readOnly={true}
                           className="custom--input w-full"
                         />
                       </div>
                     </div>
-                  </div>
+                  </>
+                )}
 
-                  <hr />
-                  <h3 className="text-2xl font-semibold">Lead Information</h3>
-                  <div className="grid grid-cols-3 gap-4">
-                    <div>
-                      <label className="mb-2 block">
-                        Lead Source<span className="text-red-500">*</span>
-                      </label>
-                      <Select
-                        name="leadInformation.leadSource"
-                        value={leadsSources.find(
-                          (opt) =>
-                            opt.value ===
-                            formik.values.leadInformation.leadSource
-                        )}
-                        onChange={(option) =>
-                          formik.setFieldValue(
-                            "leadInformation.leadSource",
-                            option.value
-                          )
-                        }
-                        options={leadsSources}
-                        styles={customStyles}
-                      />
-                      {formik.errors.leadInformation?.leadSource &&
-                        formik.touched.leadInformation?.leadSource && (
-                          <div className="text-red-500 text-sm">
-                            {formik.errors.leadInformation.leadSource}
-                          </div>
-                        )}
-                    </div>
-                    <div>
-                      <label className="mb-2 block">
-                        Lead Type<span className="text-red-500">*</span>
-                      </label>
-                      <Select
-                        name="leadInformation.leadType"
-                        value={leadTypes.find(
-                          (opt) =>
-                            opt.value === formik.values.leadInformation.leadType
-                        )}
-                        onChange={(option) =>
-                          formik.setFieldValue(
-                            "leadInformation.leadType",
-                            option.value
-                          )
-                        }
-                        options={leadTypes}
-                        styles={customStyles}
-                      />
-                      {formik.errors.leadInformation?.leadType &&
-                        formik.touched.leadInformation?.leadType && (
-                          <div className="text-red-500 text-sm">
-                            {formik.errors.leadInformation.leadType}
-                          </div>
-                        )}
-                    </div>
-                  </div>
-                  <hr />
-                  <h3 className="text-2xl font-semibold">
-                    Professional Information
-                  </h3>
-                  <div className="grid grid-cols-3 gap-4">
-                    <div>
-                      <label className="mb-2 block">Designation</label>
-                      <input
-                        type="email"
-                        name="professionalInformation.designation"
-                        value={
-                          formik.values.professionalInformation.designation
-                        }
-                        onChange={formik.handleChange}
-                        className="custom--input w-full"
-                      />
-                    </div>
-                    <div>
-                      <label className="mb-2 block">
-                        Company<span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        name="professionalInformation.companyName"
-                        value={
-                          formik.values.professionalInformation.companyName
-                        }
-                        onChange={formik.handleChange}
-                        className="custom--input w-full"
-                      />
-
-                      {formik.errors.professionalInformation?.companyName &&
-                        formik.touched.professionalInformation?.companyName && (
-                          <div className="text-red-500 text-sm">
-                            {formik.errors.professionalInformation.companyName}
-                          </div>
-                        )}
-                    </div>
-                    <div>
-                      <label className="mb-2 block">Official Email Id</label>
-                      <input
-                        type="email"
-                        name="professionalInformation.officialEmail"
-                        value={
-                          formik.values.professionalInformation.officialEmail
-                        }
-                        onChange={formik.handleChange}
-                        className="custom--input w-full"
-                      />
-                    </div>
-                  </div>
-
-                  <hr />
-                  <h3 className="text-2xl font-semibold">Emergency Contact</h3>
-                  <div className="grid grid-cols-3 gap-4">
-                    <div>
-                      <label className="mb-2 block">Name</label>
-                      <input
-                        type="text"
-                        name="emergencyContact.name"
-                        value={formik.values.emergencyContact.name}
-                        onChange={formik.handleChange}
-                        className="custom--input w-full"
-                      />
-                    </div>
-                    <div>
-                      <label className="mb-2 block">Number</label>
-                      <PhoneInput
-                        name="emergencyContact.contact"
-                        value={formik.values.emergencyContact.contact}
-                        onChange={formik.handleChange}
-                        onBlur={() =>
-                          formik.setFieldTouched(
-                            "emergencyContact.contact ",
-                            true
-                          )
-                        }
-                        international
-                        defaultCountry="IN"
-                        countryCallingCodeEditable={false}
-                        className="custom--input w-full custom--phone"
-                      />
-                      {formik.errors.emergencyContact?.contact &&
-                        formik.touched.emergencyContact?.contact && (
-                          <div className="text-red-500 text-sm">
-                            {formik.errors.emergencyContact.contact}
-                          </div>
-                        )}
-                    </div>
-                    <div>
-                      <label className="mb-2 block">Relationship</label>
-                      <input
-                        type="text"
-                        name="emergencyContact.relationship"
-                        value={formik.values.emergencyContact.relationship}
-                        onChange={formik.handleChange}
-                        className="custom--input w-full"
-                      />
-                    </div>
-                  </div>
-                  <hr />
-                  <h3 className="text-2xl font-semibold">Membership Details</h3>
-                  <div className="grid grid-cols-3 gap-4">
-                    <div>
-                      <label className="mb-2 block">Lead Owner</label>
-                      <input
-                        type="text"
-                        name="membershipDetails.leadOwner"
-                        value={formik.values.membershipDetails.leadOwner}
-                        // onChange={formik.handleChange}
-                        className="custom--input w-full"
-                      />
-                    </div>
-                    <div>
-                      <label className="mb-2 block">Centre Details</label>
-                      <Select
-                        name="membershipDetails.centre"
-                        value={leadTypes.find(
-                          (opt) =>
-                            opt.value === formik.values.membershipDetails.centre
-                        )}
-                        onChange={(option) =>
-                          formik.setFieldValue(
-                            "membershipDetails.centre",
-                            option.value
-                          )
-                        }
-                        options={leadTypes}
-                        styles={customStyles}
-                      />
-                    </div>
-                    <div>
-                      <label className="mb-2 block">State</label>
-                      <Select
-                        name="membershipDetails.state"
-                        value={leadTypes.find(
-                          (opt) =>
-                            opt.value === formik.values.membershipDetails.state
-                        )}
-                        onChange={(option) =>
-                          formik.setFieldValue(
-                            "membershipDetails.state",
-                            option.value
-                          )
-                        }
-                        options={leadTypes}
-                        styles={customStyles}
-                      />
-                    </div>
-                    <div>
-                      <label className="mb-2 block">Country</label>
-                      <Select
-                        name="membershipDetails.country"
-                        value={leadTypes.find(
-                          (opt) =>
-                            opt.value ===
-                            formik.values.membershipDetails.country
-                        )}
-                        onChange={(option) =>
-                          formik.setFieldValue(
-                            "membershipDetails.country",
-                            option.value
-                          )
-                        }
-                        options={leadTypes}
-                        styles={customStyles}
-                      />
-                    </div>
-                  </div>
-                </>
-              )}
-
-              {/* Professional tab is intentionally skipped as requested */}
-              {step === 1 && (
-                <>
-                  <div className="grid grid-cols-3 gap-4">
-                    <div>
-                      <label className="mb-2 block">Invoice Date</label>
-                      <input
-                        name="invoiceDetails.invoiceDate"
-                        value={formik.values.invoiceDetails.invoiceDate}
-                        readOnly={true}
-                        className="custom--input w-full"
-                      />
-                    </div>
-                    <div>
-                      <label className="mb-2 block">Lead Owner</label>
-                      <input
-                        name="invoiceDetails.leadOwner"
-                        value={formik.values.invoiceDetails.leadOwner}
-                        // onChange={handleInput}
-                        className="custom--input w-full"
-                        readOnly={true}
-                      />
-                    </div>
-
-                    <div>
-                      <label className="mb-2 block">Member Name</label>
-                      <input
-                        name="invoiceDetails.memberName"
-                        value={formik.values.invoiceDetails.memberName}
-                        // onChange={handleInput}
-                        className="custom--input w-full"
-                        readOnly={true}
-                      />
-                    </div>
-                  </div>
-                  <hr />
-                  <h3 className="text-2xl font-semibold">Description Field</h3>
-                  <div className="grid grid-cols-3 gap-4">
-                    <div>
-                      <label className="mb-2 block">Product Type</label>
-                      <input
-                        name="productType"
-                        value={formik.values.productType}
-                        // onChange={handleInput}
-                        readOnly={true}
-                        className="custom--input w-full capitalize"
-                      />
-                    </div>
-                    <div>
-                      <label className="mb-2 block">Product Name</label>
-                      <div onClick={() => setShowProductModal(true)}>
+                {step === 2 && (
+                  <>
+                    <h3 className="text-2xl font-semibold mb-2">
+                      Invoice Details
+                    </h3>
+                    <div className="grid grid-cols-3 gap-4">
+                      <div>
+                        <label className="mb-2 block">Invoice Date</label>
                         <input
-                          name="productDetails.productName"
-                          value={formik.values.productDetails.productName}
+                          name="invoiceDetails.invoiceDate"
+                          value={formik.values.invoiceDetails.invoiceDate}
+                          readOnly={true}
+                          className="custom--input w-full"
+                        />
+                      </div>
+                      <div>
+                        <label className="mb-2 block">Lead Owner</label>
+                        <input
+                          name="invoiceDetails.leadOwner"
+                          value={formik.values.invoiceDetails.leadOwner}
+                          // onChange={handleInput}
+                          className="custom--input w-full"
+                          readOnly={true}
+                        />
+                      </div>
+
+                      <div>
+                        <label className="mb-2 block">Member Name</label>
+                        <input
+                          name="invoiceDetails.memberName"
+                          value={formik.values.invoiceDetails.memberName}
                           // onChange={handleInput}
                           className="custom--input w-full"
                           readOnly={true}
                         />
                       </div>
                     </div>
-
-                    <div>
-                      <label className="mb-2 block">Voucher Code</label>
-                      <div className="flex gap-0">
-                        <input
-                          type="text"
-                          value={voucherInput}
-                          onChange={(e) => setVoucherInput(e.target.value)}
-                          placeholder="Enter voucher code"
-                          className={`!rounded-r-[0px] custom--input w-full ${
-                            voucherStatus === "success"
-                              ? "border-green-500"
-                              : voucherStatus === "error"
-                              ? "border-red-500"
-                              : ""
-                          }`}
-                        />
-                        <button
-                          type="button"
-                          onClick={handleApplyVoucher}
-                          className="px-4 py-2 bg-black text-white rounded-r-[10px]"
-                        >
-                          Apply
-                        </button>
-                      </div>
-                      {voucherStatus === "success" && (
-                        <p className="text-green-600 text-sm mt-1">
-                          Voucher applied: {selectedVoucher.code} (
-                          {selectedVoucher.discount}% off)
-                        </p>
-                      )}
-                      {voucherStatus === "error" && (
-                        <p className="text-red-600 text-sm mt-1">
-                          Invalid voucher code.
-                        </p>
-                      )}
-                    </div>
-
-                    <div>
-                      <label className="mb-2 block">Duration</label>
-                      <input
-                        name="productDetails.servicesDuration"
-                        value={formik.values.productDetails.servicesDuration}
-                        onChange={formik.handleChange}
-                        className="custom--input w-full"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="mb-2 block">Service Fee</label>
-                      <input
-                        name="productDetails.amount"
-                        value={formik.values.productDetails.amount}
-                        readOnly={true}
-                        className="custom--input w-full"
-                      />
-                    </div>
-                  </div>
-                  <hr />
-                  <div className="bg-[#f7f7f7] p-[20px] rounded-[10px]">
-                    <h3 className="text-2xl font-semibold">
-                      Price Calculation
+                    <hr className="my-3 mt-5" />
+                    <h3 className="text-2xl font-semibold mb-2">
+                      Description Field
                     </h3>
-                    <div className="price--calculation my-5">
-                      <div className="price--item">
-                        <p>
-                          Reg Fee:{" "}
-                          <span className="font-bold">
-                            ₹{regFee.toFixed(2)}
-                          </span>
-                        </p>
+                    <div className="grid grid-cols-3 gap-4">
+                      <div>
+                        <label className="mb-2 block">Product Type</label>
+                        <input
+                          name="productType"
+                          value={formik.values.productType}
+                          // onChange={handleInput}
+                          readOnly={true}
+                          className="custom--input w-full capitalize"
+                        />
                       </div>
-                      <div className="price--item">
-                        <p>
-                          Service Fee:{" "}
-                          <span className="font-bold">
-                            ₹{serviceFee.toFixed(2)}
-                          </span>
-                        </p>
+                      <div>
+                        <label className="mb-2 block">Product Name</label>
+                        <div onClick={() => setShowProductModal(true)}>
+                          <input
+                            name="productDetails.productName"
+                            value={formik.values.productDetails.productName}
+                            // onChange={handleInput}
+                            className="custom--input w-full"
+                            readOnly={true}
+                          />
+                        </div>
                       </div>
-                      <div className="price--item">
-                        <p>
-                          CGST (9%):{" "}
-                          <span className="font-bold">₹{cgst.toFixed(2)}</span>
-                        </p>
+
+                      <div>
+                        <label className="mb-2 block">Voucher Code</label>
+                        <div className="flex gap-0">
+                          <input
+                            type="text"
+                            value={voucherInput}
+                            onChange={(e) => setVoucherInput(e.target.value)}
+                            placeholder="Enter voucher code"
+                            className={`!rounded-r-[0px] custom--input w-full ${
+                              voucherStatus === "success"
+                                ? "border-green-500"
+                                : voucherStatus === "error"
+                                ? "border-red-500"
+                                : ""
+                            }`}
+                          />
+                          <button
+                            type="button"
+                            onClick={handleApplyVoucher}
+                            className="px-4 py-2 bg-black text-white rounded-r-[10px]"
+                          >
+                            Apply
+                          </button>
+                        </div>
+                        {voucherStatus === "success" && (
+                          <p className="text-green-600 text-sm mt-1">
+                            Voucher applied: {selectedVoucher.code} (
+                            {selectedVoucher.discount}% off)
+                          </p>
+                        )}
+                        {voucherStatus === "error" && (
+                          <p className="text-red-600 text-sm mt-1">
+                            Invalid voucher code.
+                          </p>
+                        )}
                       </div>
-                      <div className="price--item">
-                        <p>
-                          SGST (9%):{" "}
-                          <span className="font-bold">₹{sgst.toFixed(2)}</span>
-                        </p>
+
+                      <div>
+                        <label className="mb-2 block">Duration</label>
+                        <input
+                          name="productDetails.servicesDuration"
+                          value={formik.values.productDetails.servicesDuration}
+                          onChange={formik.handleChange}
+                          className="custom--input w-full"
+                        />
                       </div>
-                      <div className="price--item">
-                        <p>
-                          Subtotal:{" "}
-                          <span className="font-bold">
-                            ₹{subtotal.toFixed(2)}
-                          </span>
-                        </p>
-                      </div>
-                      <div className="price--item">
-                        <p>
-                          Discount:{" "}
-                          <span className="font-bold">
-                            {discountPercent}% (₹
-                            {discountAmount.toFixed(2)})
-                          </span>
-                        </p>
+
+                      <div>
+                        <label className="mb-2 block">Service Fee</label>
+                        <input
+                          name="productDetails.amount"
+                          value={formik.values.productDetails.amount}
+                          readOnly={true}
+                          className="custom--input w-full"
+                        />
                       </div>
                     </div>
-                    <p className="text-2xl font-semibold">
-                      Total Payment:{" "}
-                      <span className="font-bold">₹{total.toFixed(2)}</span>
-                    </p>
-                  </div>
-                </>
-              )}
 
-              <div className="flex gap-4 justify-end">
+                    <div className="mt-5 bg-[#f7f7f7] p-[20px] rounded-[10px]">
+                      <h3 className="text-2xl font-semibold">
+                        Price Calculation
+                      </h3>
+                      <div className="price--calculation my-5">
+                        <div className="price--item">
+                          <p>
+                            Reg Fee:{" "}
+                            <span className="font-bold">
+                              ₹{regFee.toFixed(2)}
+                            </span>
+                          </p>
+                        </div>
+                        <div className="price--item">
+                          <p>
+                            Service Fee:{" "}
+                            <span className="font-bold">
+                              ₹{serviceFee.toFixed(2)}
+                            </span>
+                          </p>
+                        </div>
+                        <div className="price--item">
+                          <p>
+                            CGST (9%):{" "}
+                            <span className="font-bold">
+                              ₹{cgst.toFixed(2)}
+                            </span>
+                          </p>
+                        </div>
+                        <div className="price--item">
+                          <p>
+                            SGST (9%):{" "}
+                            <span className="font-bold">
+                              ₹{sgst.toFixed(2)}
+                            </span>
+                          </p>
+                        </div>
+                        <div className="price--item">
+                          <p>
+                            Subtotal:{" "}
+                            <span className="font-bold">
+                              ₹{subtotal.toFixed(2)}
+                            </span>
+                          </p>
+                        </div>
+                        <div className="price--item">
+                          <p>
+                            Discount:{" "}
+                            <span className="font-bold">
+                              {discountPercent}% (₹
+                              {discountAmount.toFixed(2)})
+                            </span>
+                          </p>
+                        </div>
+                      </div>
+                      <p className="text-2xl font-semibold">
+                        Total Payment:{" "}
+                        <span className="font-bold">₹{total.toFixed(2)}</span>
+                      </p>
+                    </div>
+                  </>
+                )}
+              </div>
+              <div
+                className={`flex gap-4 bg-gray-50 rounded mt-6 p-5 ${
+                  step > 0 ? "justify-between" : "justify-end"
+                }`}
+              >
                 {step > 0 && (
                   <button
                     type="button"
-                    className="px-4 py-2 border rounded"
+                    className="bg-white px-4 py-2 border rounded max-w-[150px] w-full"
                     onClick={() => setStep(step - 1)}
                   >
                     Back
@@ -1049,8 +1229,8 @@ const CreateMemberForm = ({ setMemberModal }) => {
                 )}
 
                 <button
-                  type="button" // Always "button" — submission is handled in the function
-                  className="px-4 py-2 bg-black text-white rounded"
+                  type="button"
+                  className="px-4 py-2 bg-black text-white rounded max-w-[150px] w-full"
                   onClick={handleNextStep}
                 >
                   {step === stepValidationSchemas.length - 1

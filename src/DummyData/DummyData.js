@@ -299,6 +299,13 @@ export const leadTypes = [
   { value: "whatsApp", label: "WhatsApp" },
 ];
 
+export const centreInfo = [
+  { value: "centre-1", label: "Centre 1", state: "Maharashtra", country: "India" },
+  { value: "centre-2", label: "Centre 2", state: "California", country: "USA" },
+  { value: "centre-3", label: "Centre 3", state: "New South Wales", country: "Australia" },
+];
+
+
 export const leadSubTypes = [
   { value: "in-bound", label: "In-bound" },
   { value: "outbound", label: "Outbound" },
@@ -1038,7 +1045,7 @@ export const productsByType = {
   "membership plan": [
     {
       id: 1,
-      productName: "Membership Plan",
+      productName: "6-Month Membership (6 Days/Week)",
       shortDescription: "6 Days Per week. Valid for 6 month(s).",
       servicesDuration: "6 months plan",
       amount: 100,
@@ -1047,7 +1054,7 @@ export const productsByType = {
     },
     {
       id: 2,
-      productName: "Membership Plan",
+      productName: "12-Month Membership (1 Day/Week)",
       shortDescription: "1 Day Per week. Valid for 12 month(s).",
       servicesDuration: "12 months plan",
       amount: 200,
@@ -1056,7 +1063,7 @@ export const productsByType = {
     },
     {
       id: 3,
-      productName: "Membership Plan",
+      productName: "13-Month Membership (Promo: 6 Days/Week)",
       shortDescription: "6 Days Per week. Valid for 13 month(s).",
       servicesDuration: "12 Months Promotional Plan",
       amount: 300,
@@ -1068,7 +1075,7 @@ export const productsByType = {
   "personal training": [
     {
       id: 4,
-      productName: "Personal Training",
+      productName: "10 Session Personal Training Pack",
       shortDescription: "10 Session Pack – 1-on-1 training",
       servicesDuration: "10 sessions plan",
       amount: 500,
@@ -1077,7 +1084,7 @@ export const productsByType = {
     },
     {
       id: 5,
-      productName: "Personal Training",
+      productName: "20 Session Personal Training Pack",
       shortDescription: "20 Session Pack – 1-on-1 training",
       servicesDuration: "20 sessions plan",
       amount: 900,
@@ -1089,7 +1096,7 @@ export const productsByType = {
   "thrive membership fee": [
     {
       id: 6,
-      productName: "Thrive Membership Fee",
+      productName: "Thrive Monthly Membership Fee",
       shortDescription: "Thrive Monthly Subscription",
       servicesDuration: "1 month",
       amount: 150,
@@ -1101,7 +1108,7 @@ export const productsByType = {
   "corporate wellness activations": [
     {
       id: 7,
-      productName: "Corporate Wellness",
+      productName: "Corporate Wellness – One-Time Workshop",
       shortDescription: "One-time corporate workshop session",
       servicesDuration: "1-day event",
       amount: 1200,
@@ -1110,7 +1117,7 @@ export const productsByType = {
     },
     {
       id: 8,
-      productName: "Corporate Wellness",
+      productName: "Corporate Wellness – 3-Month Weekly Sessions",
       shortDescription: "Weekly sessions for 3 months",
       servicesDuration: "12 sessions",
       amount: 3000,
@@ -1122,7 +1129,7 @@ export const productsByType = {
   "miscellaneous fee": [
     {
       id: 9,
-      productName: "Miscellaneous Fee",
+      productName: "Monthly Locker Rental",
       shortDescription: "Locker Rental Fee – Monthly",
       servicesDuration: "1 month",
       amount: 50,
@@ -1131,7 +1138,7 @@ export const productsByType = {
     },
     {
       id: 10,
-      productName: "Miscellaneous Fee",
+      productName: "One-Time Late Payment Fee",
       shortDescription: "Late Payment Fee",
       servicesDuration: "One-time",
       amount: 25,
@@ -1143,7 +1150,7 @@ export const productsByType = {
   "nutrition packages": [
     {
       id: 11,
-      productName: "Nutrition Package",
+      productName: "Basic Nutrition Consultation (4 Weeks)",
       shortDescription: "Basic Meal Plan Consultation (4 Weeks)",
       servicesDuration: "1 month",
       amount: "250",
@@ -1152,7 +1159,7 @@ export const productsByType = {
     },
     {
       id: 12,
-      productName: "Nutrition Package",
+      productName: "3-Month Meal Coaching Program",
       shortDescription: "3-Month Meal Coaching Program",
       servicesDuration: "3 months",
       amount: "700",

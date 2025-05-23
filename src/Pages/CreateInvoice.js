@@ -266,11 +266,11 @@ const CreateInvoice = ({ setInvoiceModal }) => {
   return (
     <>
       <div
-        className="create--lead--container fixed top-0 left-0 z-[999] w-full bg-black bg-opacity-60 h-full"
+        className="create--lead--container overflow-auto hide--overflow fixed top-0 left-0 z-[999] w-full bg-black bg-opacity-60 h-full"
         onClick={handleOverlayClick}
       >
         <div
-          className="max-w-5xl border shadow bg-white ms-auto h-full overflow-auto hide--overflow container--leadbox"
+          className="min-h-[70vh]  w-full max-w-5xl border shadow bg-white mx-auto mt-[100px] mb-[100px] container--leadbox rounded-[10px] flex flex-col"
           ref={leadBoxRef}
           onClick={(e) => e.stopPropagation()}
         >
@@ -339,10 +339,10 @@ const CreateInvoice = ({ setInvoiceModal }) => {
                           onClick={() => handleSuggestionClick(entry)}
                           className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
                         >
-                          <span className="font-medium">{entry.name}</span> –{" "}
-                          <span className="text-sm text-gray-500">
+                          <span className="font-medium">{entry.name}</span> 
+                          {/* <span className="text-sm text-gray-500">
                             {entry.contact}
-                          </span>
+                          </span> */}
                         </li>
                       ))}
                     </ul>

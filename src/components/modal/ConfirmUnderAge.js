@@ -1,4 +1,3 @@
-// components/ConfirmUnderAge.jsx
 import React from "react";
 
 const ConfirmUnderAge = ({ title, message, onConfirm, onCancel }) => {
