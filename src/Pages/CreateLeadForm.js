@@ -11,7 +11,7 @@ import {
   leadTypes,
   trainerAvailability,
   mockData,
-  leadSubTypes,
+  // leadSubTypes,
 } from "../DummyData/DummyData";
 
 import { convertToISODate, customStyles } from "../Helper/helper";
@@ -20,6 +20,7 @@ import { useFormik } from "formik";
 import * as Yup from "yup";
 import { toast } from "react-toastify";
 import ConfirmUnderAge from "../components/modal/ConfirmUnderAge";
+import StepProgressBar from "../components/common/StepProgressBar";
 
 const assignTrainers = [
   { value: "shivakar", label: "Shivakar" },
@@ -51,10 +52,6 @@ const stepValidationSchemas = [
     leadInformation: Yup.object({
       leadSource: Yup.string().required("Lead Source is required"),
       leadType: Yup.string().required("Lead Type is required"),
-      leadSubType: Yup.string().when("leadType", {
-        is: "phone",
-        then: () => Yup.string().required("This is required"),
-      }),
       leadSourceType: Yup.string().when("leadSource", {
         is: (val) => ["social media", "events / campaigns"].includes(val),
         then: () => Yup.string().required("This is required"),
@@ -65,7 +62,6 @@ const stepValidationSchemas = [
       }),
     }),
   }),
-  Yup.object({}),
 ];
 
 const CreateLeadForm = ({ setLeadModal }) => {
@@ -102,11 +98,6 @@ const CreateLeadForm = ({ setLeadModal }) => {
       time: null,
       trainer: "",
     },
-    // professionalInfoPrimaryContact: {
-    //   designation: "",
-    //   companyName: "",
-    //   officialEmail: "",
-    // },
   };
 
   const formik = useFormik({
@@ -305,6 +296,8 @@ const CreateLeadForm = ({ setLeadModal }) => {
           </div>
 
           <div className="flex-1 flex flex-col">
+            <StepProgressBar currentStep={step} totalSteps={stepValidationSchemas.length} />
+            
             {/* <div className="relative mb-6 max-w-[800px] mx-auto w-full">
             <div className="absolute top-1/2 left-0 w-full h-1 bg-gray-300 -translate-y-1/2 z-0"></div>
             <div
@@ -422,7 +415,7 @@ const CreateLeadForm = ({ setLeadModal }) => {
                                   )
                                 : null
                             }
-                             onChange={handleDobChange}
+                            onChange={handleDobChange}
                             showMonthDropdown
                             showYearDropdown
                             maxDate={new Date()}
@@ -574,7 +567,7 @@ const CreateLeadForm = ({ setLeadModal }) => {
                           )}
                       </div>
 
-                      {formik.values.leadInformation.leadType === "phone" && (
+                      {/* {formik.values.leadInformation.leadType === "phone" && (
                         <div>
                           <label className="mb-2 block">
                             Lead Sub-type<span className="text-red-500">*</span>
@@ -602,7 +595,7 @@ const CreateLeadForm = ({ setLeadModal }) => {
                               </div>
                             )}
                         </div>
-                      )}
+                      )} */}
 
                       <div>
                         <label className="mb-2 block">
@@ -731,87 +724,42 @@ const CreateLeadForm = ({ setLeadModal }) => {
                       </div>
                     </div>
 
-                    {/* <hr className="my-3" />
+                    <hr className="my-3" />
 
-                    <h3 className="text-2xl font-semibold mb-2">
-                      Primary Contact
-                    </h3>
-                    <div className="grid grid-cols-3 gap-4">
-                      <div>
-                        <label className="mb-2 block">Company name</label>
-                        <input
-                          name="professionalInfoPrimaryContact.companyName"
-                          value={
-                            formik.values.professionalInfoPrimaryContact
-                              .companyName
-                          }
-                          onChange={handleInput}
-                          className="custom--input w-full"
-                        />
-                      </div>
-                      <div>
-                        <label className="mb-2 block">Designation</label>
-                        <input
-                          name="professionalInfoPrimaryContact.designation"
-                          value={
-                            formik.values.professionalInfoPrimaryContact
-                              .designation
-                          }
-                          onChange={handleInput}
-                          className="custom--input w-full"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="mb-2 block">Official Email</label>
-                        <input
-                          type="email"
-                          name="professionalInfoPrimaryContact.officialEmail"
-                          value={
-                            formik.values.professionalInfoPrimaryContact
-                              .officialEmail
-                          }
-                          onChange={handleInput}
-                          className="custom--input w-full"
-                        />
-                      </div>
-                    </div> */}
-                  </>
-                )}
-
-                {step === 2 && (
-                  <>
                     <h3 className="text-2xl font-semibold mb-2">Schedule</h3>
                     <div>
-                      <label className="mb-2 block">Schedule</label>
-                      <div className="flex gap-4">
-                        <label className="custom--radio">
-                          Tour
-                          <input
-                            type="radio"
-                            name="schedule.type"
-                            value="tour"
-                            checked={formik.values.schedule.type === "tour"}
-                            onChange={handleInput}
-                            className="w-4 h-4 mr-1"
-                          />
-                          <span className="radio-checkmark"></span>
-                        </label>
-                        <label className="custom--radio">
-                          Trial
-                          <input
-                            type="radio"
-                            name="schedule.type"
-                            value="trial"
-                            checked={formik.values.schedule.type === "trial"}
-                            onChange={handleInput}
-                            className="w-4 h-4 custom--radio mr-1"
-                          />
-                          <span className="radio-checkmark"></span>
-                        </label>
-                      </div>
-
-                      <div className="grid grid-cols-4 gap-4 mt-4">
+                      <div className="grid grid-cols-3 gap-4 mt-4">
+                        <div>
+                          <label className="mb-2 block">Schedule</label>
+                          <div className="flex gap-4">
+                            <label className="custom--radio">
+                              Tour
+                              <input
+                                type="radio"
+                                name="schedule.type"
+                                value="tour"
+                                checked={formik.values.schedule.type === "tour"}
+                                onChange={handleInput}
+                                className="w-4 h-4 mr-1"
+                              />
+                              <span className="radio-checkmark"></span>
+                            </label>
+                            <label className="custom--radio">
+                              Trial
+                              <input
+                                type="radio"
+                                name="schedule.type"
+                                value="trial"
+                                checked={
+                                  formik.values.schedule.type === "trial"
+                                }
+                                onChange={handleInput}
+                                className="w-4 h-4 custom--radio mr-1"
+                              />
+                              <span className="radio-checkmark"></span>
+                            </label>
+                          </div>
+                        </div>
                         <div>
                           <label className="mb-2 block">Date & Time</label>
                           <div className="custom--date flex-1">
@@ -830,40 +778,32 @@ const CreateLeadForm = ({ setLeadModal }) => {
                           </div>
                         </div>
 
-                        {formik.values.schedule.date &&
-                          formik.values.schedule.time && (
-                            <div className="mb-4">
-                              <label className="mb-2 block">Staff Name</label>
-                              <Select
-                                name="schedule.trainer"
-                                value={assignTrainers.find(
-                                  (opt) =>
-                                    opt.value === formik.values.schedule.trainer
-                                )}
-                                onChange={(option) =>
-                                  handleSelectSchedule(
-                                    "schedule.trainer",
-                                    option
-                                  )
-                                }
-                                options={getAvailableTrainers()}
-                                placeholder="Select available trainer"
-                                styles={customStyles}
-                                isDisabled={!getAvailableTrainers().length}
-                              />
-                              {!getAvailableTrainers().length && (
-                                <p className="text-sm text-red-500 mt-1">
-                                  No trainers available at this date and time.
-                                </p>
-                              )}
-                            </div>
+                        <div className="mb-4">
+                          <label className="mb-2 block">Staff Name</label>
+                          <Select
+                            name="schedule.trainer"
+                            value={assignTrainers.find(
+                              (opt) =>
+                                opt.value === formik.values.schedule.trainer
+                            )}
+                            onChange={(option) =>
+                              handleSelectSchedule("schedule.trainer", option)
+                            }
+                            options={getAvailableTrainers()}
+                            placeholder="Select available trainer"
+                            styles={customStyles}
+                            // isDisabled={!getAvailableTrainers().length}
+                          />
+                          {!getAvailableTrainers().length && (
+                            <p className="text-sm text-red-500 mt-1">
+                              No trainers available at this date and time.
+                            </p>
                           )}
+                        </div>
                       </div>
                     </div>
                   </>
                 )}
-
-              
               </div>
 
               <div

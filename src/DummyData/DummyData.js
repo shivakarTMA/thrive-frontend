@@ -294,7 +294,8 @@ export const leadsSources = [
 
 export const leadTypes = [
   { value: "walk-in", label: "Walk-in" },
-  { value: "phone", label: "Phone" },
+  { value: "in-bound", label: "In-bound" },
+  { value: "outbound", label: "Outbound" },
   { value: "email", label: "Email" },
   { value: "whatsApp", label: "WhatsApp" },
 ];
@@ -899,21 +900,37 @@ export const lostFoundData = [
 
 export const trainerAvailability = {
   shivakar: [
-    { date: "2025-05-22", time: "18:00:00" },
-    { date: "2025-05-25", time: "14:00:00" },
-    { date: "2025-05-25", time: "09:00:00" },
-    { date: "2025-05-25", time: "11:30:00" },
+    { date: "2025-05-01", time: "08:00:00" },
+    { date: "2025-05-03", time: "10:30:00" },
+    { date: "2025-05-07", time: "17:00:00" },
+    { date: "2025-05-10", time: "13:00:00" },
+    { date: "2025-05-15", time: "09:00:00" },
+    { date: "2025-05-20", time: "11:30:00" },
+    { date: "2025-05-25", time: "16:00:00" },
+    { date: "2025-05-30", time: "08:00:00" },
   ],
   esha: [
-    { date: "2025-05-22", time: "09:00:00" },
-    { date: "2025-05-22", time: "16:00:00" },
-    { date: "2025-05-22", time: "14:00:00" },
+    { date: "2025-05-02", time: "09:00:00" },
+    { date: "2025-05-06", time: "14:00:00" },
+    { date: "2025-05-08", time: "16:00:00" },
+    { date: "2025-05-13", time: "12:30:00" },
+    { date: "2025-05-17", time: "15:00:00" },
+    { date: "2025-05-21", time: "10:00:00" },
+    { date: "2025-05-24", time: "11:00:00" },
+    { date: "2025-05-29", time: "09:30:00" },
   ],
   arjun: [
-    { date: "2025-05-23", time: "10:00:00" },
-    { date: "2025-05-23", time: "15:30:00" },
+    { date: "2025-05-04", time: "10:00:00" },
+    { date: "2025-05-09", time: "15:30:00" },
+    { date: "2025-05-12", time: "08:30:00" },
+    { date: "2025-05-16", time: "14:00:00" },
+    { date: "2025-05-19", time: "13:00:00" },
+    { date: "2025-05-23", time: "11:00:00" },
+    { date: "2025-05-27", time: "09:00:00" },
+    { date: "2025-05-31", time: "10:30:00" },
   ],
 };
+
 
 
 export const todaySessions = [

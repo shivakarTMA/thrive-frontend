@@ -30,6 +30,7 @@ import { FaUserLarge } from "react-icons/fa6";
 import ProductModal from "../components/modal/ProductDetails";
 import { useSelector } from "react-redux";
 import ConfirmUnderAge from "../components/modal/ConfirmUnderAge";
+import StepProgressBar from "../components/common/StepProgressBar";
 
 const voucherList = [
   { code: "FIT10", discount: 10 },
@@ -438,6 +439,7 @@ const CreateMemberForm = ({ setMemberModal }) => {
           </div>
 
           <div className="flex-1 flex flex-col">
+             <StepProgressBar currentStep={step} totalSteps={stepValidationSchemas.length} />
             {/* <div className="flex gap-2 mb-4">
               <button
                 className={`px-4 py-2 rounded border ${
