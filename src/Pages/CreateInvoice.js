@@ -555,15 +555,15 @@ const CreateInvoice = ({ setInvoiceModal }) => {
               <hr />
               <div className="bg-[#f7f7f7] p-[20px] rounded-[10px]">
                 <h3 className="text-2xl font-semibold">Price Calculation</h3>
-                <div className="price--calculation my-5">
+                <div className="price--calculation2 my-5">
                   <div className="price--item">
-                    <p>
+                    <p className="flex items-center gap-2 justify-between mb-2 border-b pb-2">
                       Reg Fee:{" "}
                       <span className="font-bold">₹{regFee.toFixed(2)}</span>
                     </p>
                   </div>
                   <div className="price--item">
-                    <p>
+                    <p className="flex items-center gap-2 justify-between mb-2 border-b pb-2">
                       Total Service Fee:{" "}
                       <span className="font-bold">
                         ₹{serviceFee.toFixed(2)}
@@ -571,25 +571,25 @@ const CreateInvoice = ({ setInvoiceModal }) => {
                     </p>
                   </div>
                   <div className="price--item">
-                    <p>
+                    <p className="flex items-center gap-2 justify-between mb-2 border-b pb-2">
                       CGST (9%):{" "}
                       <span className="font-bold">₹{cgst.toFixed(2)}</span>
                     </p>
                   </div>
                   <div className="price--item">
-                    <p>
+                    <p className="flex items-center gap-2 justify-between mb-2 border-b pb-2">
                       SGST (9%):{" "}
                       <span className="font-bold">₹{sgst.toFixed(2)}</span>
                     </p>
                   </div>
                   <div className="price--item">
-                    <p>
+                    <p className="flex items-center gap-2 justify-between mb-2 border-b pb-2">
                       Subtotal:{" "}
                       <span className="font-bold">₹{subtotal.toFixed(2)}</span>
                     </p>
                   </div>
                 </div>
-                <p className="text-2xl font-semibold">
+                <p className="text-1xl font-semibold flex items-center gap-2 justify-between pb-2">
                   Total Payment:{" "}
                   <span className="font-bold">₹{total.toFixed(2)}</span>
                 </p>

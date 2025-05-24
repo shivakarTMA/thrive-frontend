@@ -46,10 +46,9 @@ const leadStatusOptionsMap = {
 };
 
 const serviceType = [
-  { value: "membership", label: "Membership" },
-  { value: "pt", label: "PT" },
-  { value: "gx", label: "GX" },
-  { value: "recreation", label: "Recreation" },
+  { value: "membership 1 month", label: "Membership 1 Month" },
+  { value: "membership 3 month", label: "Membership 3 Month" },
+  { value: "membership 6 month", label: "Membership 6 Month" },
 ];
 
 const validationSchema = Yup.object().shape({
