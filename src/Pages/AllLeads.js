@@ -164,9 +164,12 @@ const AllLeads = () => {
                   <td className="px-2 py-4">{row.staff}</td>
                   <td className="px-2 py-4">
                     <div className="flex gap-1">
-                      <Link to={`/edit-lead-details/${row.id}`} className="p-1">
+                      {/* <Link to={`/edit-lead-details/${row.id}`} className="p-1">
                         <LiaEdit className="text-2xl text-black" />
-                      </Link>
+                      </Link> */}
+                      <div onClick={() => setLeadModal(true)} className="p-1 cursor-pointer">
+                        <LiaEdit className="text-2xl text-black" />
+                      </div>
 
                       <button className="p-1">
                         <IoIosAddCircleOutline className="text-2xl text-black" />
