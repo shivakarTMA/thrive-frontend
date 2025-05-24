@@ -8,13 +8,6 @@ import { customStyles } from "../Helper/helper";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 
-// Sample select options (Replace with real ones if needed)
-const filterLead = [
-  { value: "all", label: "All" },
-  { value: "upcoming", label: "Upcoming" },
-  { value: "missed", label: "Missed" },
-  { value: "completed", label: "Completed" },
-];
 const noReasons = [
   { value: "expensive", label: "Expensive" },
   { value: "competition", label: "Competition" },
@@ -52,6 +45,8 @@ const serviceType = [
 const validationSchema = Yup.object().shape({
   calledBy: Yup.string().required("Call by is required"),
   callStatus: Yup.string().required("Call status is required"),
+  leadStatus: Yup.string().required("Lead Status is required"),
+  serviceType: Yup.string().required("Service Type is required"),
   notInterestedReason: Yup.string().when("callStatus", {
     is: "notinterested",
     then: () => Yup.string().required("Required"),
@@ -60,17 +55,6 @@ const validationSchema = Yup.object().shape({
     is: "enquiry follow-up",
     then: () => Yup.string().required("Schedule for is required"),
   }),
-  followUpDate: Yup.date()
-    .nullable()
-    .when("callStatus", {
-      is: (val) =>
-        val !== "sale" &&
-        val !== "did not put enquiry" &&
-        val !== "notinterested" &&
-        val !== "not relevant" &&
-        val !== "invalid number",
-      then: (schema) => schema.required("Follow date is required"),
-    }),
   discussion: Yup.string().required("Discussion is required"),
 });
 
@@ -78,12 +62,15 @@ const LeadFollowUp = () => {
   const { id } = useParams();
   const leadDetails = mockData.find((m) => m.id === parseInt(id));
   const [callLogs, setCallLogs] = useState([]);
+  const [filterStatus, setFilterStatus] = useState("");
+  const [startDate, setStartDate] = useState(null);
+  const [endDate, setEndDate] = useState(null);
 
   const formik = useFormik({
     initialValues: {
-      callStatus: "",
-      leadStatus: "",
-      serviceType: "",
+      callStatus: null,
+      leadStatus: null,
+      serviceType: null,
       notInterestedReason: "",
       trialType: "",
       trialDateTime: null,
@@ -97,17 +84,34 @@ const LeadFollowUp = () => {
       calledBy: "Nitin",
     },
     validationSchema,
-    onSubmit: (values, { resetForm }) => {
+    onSubmit: (values) => {
       const newEntry = {
         ...values,
         createdAt: new Date(),
-        updatedBy: "Rajat Sharma", // You can make this dynamic
-        leadSource: "Passing By", // Make dynamic if needed
+        updatedBy: "Rajat Sharma",
+        leadSource: "Passing By",
       };
 
       setCallLogs((prevLogs) => [newEntry, ...prevLogs]);
-      resetForm();
+
+      setCallLogs((prevLogs) => [newEntry, ...prevLogs]);
+      formik.resetForm();
     },
+  });
+
+  const filteredLogs = callLogs.filter((log) => {
+    // If filterStatus.value is empty string or null, show all logs
+    const matchesStatus =
+      !filterStatus || filterStatus.value === ""
+        ? true
+        : log.callStatus === filterStatus.value;
+
+    const logDate = log.trialDateTime ? new Date(log.trialDateTime) : null;
+
+    const matchesStart = startDate ? logDate >= startDate : true;
+    const matchesEnd = endDate ? logDate <= endDate : true;
+
+    return matchesStatus && matchesStart && matchesEnd;
   });
 
   const now = new Date();
@@ -169,7 +173,7 @@ const LeadFollowUp = () => {
                   </div>
                 )}
               </div>
-              
+
               <div>
                 <label className="mb-2 block">
                   Lead Call Status<span className="text-red-500">*</span>
@@ -177,12 +181,18 @@ const LeadFollowUp = () => {
                 <Select
                   name="callStatus"
                   options={callStatusOption}
+                  value={
+                    callStatusOption.find(
+                      (option) => option.value === formik.values.callStatus
+                    ) || null
+                  }
                   onChange={(option) =>
                     formik.setFieldValue("callStatus", option.value)
                   }
                   styles={customStyles}
                   placeholder="Lead Call Status"
                 />
+
                 {formik.errors?.callStatus && formik.touched?.callStatus && (
                   <div className="text-red-500 text-sm">
                     {formik.errors?.callStatus}
@@ -196,12 +206,18 @@ const LeadFollowUp = () => {
                 <Select
                   name="leadStatus"
                   options={leadStatus}
+                  value={
+                    leadStatus.find(
+                      (option) => option.value === formik.values.leadStatus
+                    ) || null
+                  }
                   onChange={(option) =>
                     formik.setFieldValue("leadStatus", option.value)
                   }
                   styles={customStyles}
                   placeholder="Lead Status"
                 />
+
                 {formik.errors?.leadStatus && formik.touched?.leadStatus && (
                   <div className="text-red-500 text-sm">
                     {formik.errors?.leadStatus}
@@ -215,12 +231,18 @@ const LeadFollowUp = () => {
                 <Select
                   name="serviceType"
                   options={serviceType}
+                  value={
+                    serviceType.find(
+                      (option) => option.value === formik.values.serviceType
+                    ) || null
+                  }
                   onChange={(option) =>
                     formik.setFieldValue("serviceType", option.value)
                   }
                   styles={customStyles}
                   placeholder="Service Type"
                 />
+
                 {formik.errors?.serviceType && formik.touched?.serviceType && (
                   <div className="text-red-500 text-sm">
                     {formik.errors?.serviceType}
@@ -237,9 +259,13 @@ const LeadFollowUp = () => {
                   <Select
                     name="notInterestedReason"
                     options={noReasons}
+                    value={noReasons.find(
+                      (option) =>
+                        option.value === formik.values.notInterestedReason
+                    )}
                     onChange={(option) => {
                       formik.setFieldValue("notInterestedReason", option.value);
-                      formik.setFieldTouched("notInterestedReason", true); // 👈 ADD THIS
+                      formik.setFieldTouched("notInterestedReason", true);
                     }}
                     styles={customStyles}
                     placeholder="Select Reason"
@@ -254,10 +280,31 @@ const LeadFollowUp = () => {
               </div>
             )}
 
-            {(formik.values?.callStatus === "trial scheduled" || formik.values?.callStatus === "tour scheduled") && (
-              <div className="w-full mt-3"> 
-                
+            {formik.values?.callStatus === "no answer" && (
+              <div className="mb-3 mt-3">
+                <label className="mb-2 block">Schedule a Follow Up</label>
+                <div className="custom--date">
+                  <DatePicker
+                    selected={formik.values.trialDateTime}
+                    onChange={(val) =>
+                      formik.setFieldValue("trialDateTime", val)
+                    }
+                    showTimeSelect
+                    timeFormat="hh:mm aa"
+                    dateFormat="MMMM d, yyyy hh:mm aa"
+                    placeholderText="Select follow-up date & time"
+                    className="border px-3 py-2 w-full"
+                    minDate={now}
+                    minTime={minTime}
+                    maxTime={maxTime}
+                  />
+                </div>
+              </div>
+            )}
 
+            {(formik.values?.callStatus === "trial scheduled" ||
+              formik.values?.callStatus === "tour scheduled") && (
+              <div className="w-full mt-3">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="mb-2 block">Staff Name</label>
@@ -272,7 +319,7 @@ const LeadFollowUp = () => {
                     />
                   </div>
                   <div>
-                    <label className="mb-2 block">Date & Time</label>
+                    <label className="mb-2 block">Schedule a Follow Up</label>
                     <div className="custom--date">
                       <DatePicker
                         selected={formik.values.trialDateTime}
@@ -290,7 +337,6 @@ const LeadFollowUp = () => {
                       />
                     </div>
                   </div>
-                  
                 </div>
               </div>
             )}
@@ -315,116 +361,6 @@ const LeadFollowUp = () => {
               )}
             </div>
 
-            {formik.values?.callStatus === "sale" ||
-            formik.values?.callStatus === "did not put enquiry" ||
-            formik.values?.callStatus === "notinterested" ||
-            formik.values?.callStatus === "not relevant" ||
-            formik.values?.callStatus === "invalid number" ? null : (
-              <>
-                <h3 className="font-semibold text-xl">Schedule follow-up</h3>
-                <div className="grid grid-cols-2 gap-4 my-3">
-                  <div>
-                    <label className="mb-2 block">
-                      Date & Time<span className="text-red-500">*</span>
-                    </label>
-                    <div className="custom--date">
-                      <DatePicker
-                        selected={selectedDateTime}
-                        onChange={(val) =>
-                          formik.setFieldValue("trialDateTime", val)
-                        }
-                        showTimeSelect
-                        timeFormat="hh:mm aa"
-                        dateFormat="MMMM d, yyyy hh:mm aa"
-                        placeholderText="Select follow-up date & time"
-                        className="border px-3 py-2 w-full"
-                        minDate={now}
-                        minTime={minTime}
-                        maxTime={maxTime}
-                      />
-
-                      {formik.errors?.followUpDate &&
-                        formik.touched?.followUpDate && (
-                          <div className="text-red-500 text-sm">
-                            {formik.errors.followUpDate}
-                          </div>
-                        )}
-                    </div>
-                  </div>
-                </div>
-              </>
-            )}
-            {/* Lead Temperature */}
-
-            <div className="mb-3">
-              <label className="mb-2 block">Lead Temperature</label>
-              <div className="flex gap-2">
-                <label className="custom--radio" style={{ color: "#00f" }}>
-                  Cold
-                  <input
-                    type="radio"
-                    name="temperature"
-                    value="cold"
-                    checked={formik.values.temperature === "cold"}
-                    className="w-4 h-4"
-                    onChange={formik.handleChange}
-                  />
-                  <span className="radio-checkmark cold"></span>
-                </label>
-                <label className="custom--radio" style={{ color: "#ffa500" }}>
-                  Warm
-                  <input
-                    type="radio"
-                    name="temperature"
-                    className="w-4 h-4"
-                    value="warm"
-                    checked={formik.values.temperature === "warm"}
-                    onChange={formik.handleChange}
-                  />
-                  <span className="radio-checkmark warm"></span>
-                </label>
-                <label className="custom--radio" style={{ color: "#f00" }}>
-                  Hot
-                  <input
-                    type="radio"
-                    name="temperature"
-                    className="w-4 h-4"
-                    value="hot"
-                    checked={formik.values.temperature === "hot"}
-                    onChange={formik.handleChange}
-                  />
-                  <span className="radio-checkmark hot"></span>
-                </label>
-              </div>
-            </div>
-
-            {/* Closure Date & Amount */}
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="mb-2 block">Expected Date of Closure</label>
-                <div className="custom--date">
-                  <DatePicker
-                    selected={formik.values.closureDate}
-                    onChange={(val) => formik.setFieldValue("closureDate", val)}
-                    dateFormat="dd MMM yyyy"
-                    placeholderText="Expected Closure Date"
-                    className="border px-3 py-2 w-full"
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="mb-2 block">Amount</label>
-                <input
-                  type="number"
-                  name="amount"
-                  value={formik.values.amount}
-                  onChange={formik.handleChange}
-                  placeholder="Amount"
-                  className="custom--input w-full number--appearance-none"
-                />
-              </div>
-            </div>
-
             {/* Buttons */}
             <div className="flex justify-end gap-2 mt-3">
               <button type="button" className="px-4 py-2 border rounded">
@@ -446,54 +382,37 @@ const LeadFollowUp = () => {
           <div className="flex gap-2 mb-3">
             <div className="grid grid-cols-3 gap-2">
               <Select
-                name="historyFilter"
-                onChange={(option) =>
-                  formik.setFieldValue("historyFilter", option)
-                }
-                options={filterLead}
+                options={[{ value: "", label: "All" }, ...callStatusOption]}
+                value={filterStatus}
+                onChange={setFilterStatus}
+                placeholder="Filter by Call Status"
                 styles={customStyles}
-                placeholder="Filter"
               />
+
               <div className="custom--date">
                 <DatePicker
-                  selected={formik.values.historyStartDate}
-                  onChange={(date) =>
-                    formik.setFieldValue("historyStartDate", date)
-                  }
-                  dateFormat="dd/MM/yyyy"
-                  placeholderText="From Date"
-                  className="border px-3 py-2"
+                  selected={startDate}
+                  onChange={setStartDate}
+                  placeholderText="Start Date"
+                  className="custom--input"
                 />
               </div>
               <div className="custom--date">
                 <DatePicker
-                  selected={formik.values.historyEndDate}
-                  onChange={(date) =>
-                    formik.setFieldValue("historyEndDate", date)
-                  }
-                  dateFormat="dd/MM/yyyy"
-                  placeholderText="To Date"
-                  className="border px-3 py-2"
+                  selected={endDate}
+                  onChange={setEndDate}
+                  placeholderText="End Date"
+                  className="custom--input"
                 />
               </div>
             </div>
-            <button
-              type="button"
-              className="px-4 py-2 bg-black text-white rounded"
-              onClick={() => {
-                // Add logic to filter history entries here
-                console.log("Filter data", {
-                  filter: formik.values.historyFilter,
-                  start: formik.values.historyStartDate,
-                  end: formik.values.historyEndDate,
-                });
-              }}
-            >
-              Go
-            </button>
           </div>
 
-          {callLogs.map((log, index) => (
+          {filteredLogs.length === 0 && (
+            <p className="text-gray-500">No call logs found.</p>
+          )}
+
+          {filteredLogs.map((log, index) => (
             <div
               key={index}
               className="border rounded p-4 w-full mb-3 calllogdetails"
@@ -501,160 +420,37 @@ const LeadFollowUp = () => {
               <div className="grid grid-cols-2 gap-2 mb-3">
                 <p className="border p-2 rounded">
                   <span className="text-sm font-semibold flex flex-col">
-                    Schedule Date:
+                    Called by:
                   </span>{" "}
-                  {log.followUpDate
-                    ? new Date(log.followUpDate).toLocaleString()
-                    : "—"}
+                  {log.calledBy}
                 </p>
                 <p className="border p-2 rounded">
                   <span className="text-sm font-semibold flex flex-col">
-                    Updated By:
-                  </span>{" "}
-                  {log.updatedBy}
-                </p>
-                <p className="border p-2 rounded">
-                  <span className="text-sm font-semibold flex flex-col">
-                    Lead Source:
-                  </span>{" "}
-                  {log.leadSource}
-                </p>
-                <p className="border p-2 rounded">
-                  <span className="text-sm font-semibold flex flex-col">
-                    Call Status:
+                    Lead Call Status
                   </span>{" "}
                   {log.callStatus}
                 </p>
+                <p className="border p-2 rounded">
+                  <span className="text-sm font-semibold flex flex-col">
+                    Followup:
+                  </span>{" "}
+                  {log.trialDateTime
+                    ? new Date(log.trialDateTime).toLocaleString()
+                    : "N/A"}
+                </p>
+                <p className="border p-2 rounded">
+                  <span className="text-sm font-semibold flex flex-col">
+                    Service:
+                  </span>{" "}
+                  {log.serviceType}
+                </p>
               </div>
               <div className="bg-gray-50 p-3 rounded">
-                <h3 className="text-sm font-semibold">Notes:</h3>
+                <h3 className="text-sm font-semibold">Remarks:</h3>
                 <p>{log.discussion}</p>
               </div>
             </div>
           ))}
-
-          {/* {callLogs.map((log, index) => (
-            <div
-              key={index}
-              className="border rounded p-4 w-full mb-3 calllogdetails"
-            >
-              <div className="grid grid-cols-2 gap-2 mb-3">
-                <p className="border p-2 rounded">
-                  <span className="text-sm font-semibold flex flex-col">
-                    Schedule Date:
-                  </span>{" "}
-                  {log.followUpDate
-                    ? new Date(log.followUpDate).toLocaleString()
-                    : "—"}
-                </p>
-                <p className="border p-2 rounded">
-                  <span className="text-sm font-semibold flex flex-col">
-                    Updated By:
-                  </span>{" "}
-                  {log.updatedBy}
-                </p>
-                <p className="border p-2 rounded">
-                  <span className="text-sm font-semibold flex flex-col">
-                    Lead Source:
-                  </span>{" "}
-                  {log.leadSource}
-                </p>
-                <p className="border p-2 rounded">
-                  <span className="text-sm font-semibold flex flex-col">
-                    Call Status:
-                  </span>{" "}
-                  {log.callStatus}
-                </p>
-
-                {log.callStatus === "notinterested" && (
-                  <p className="border p-2 rounded col-span-2">
-                    <span className="text-sm font-semibold flex flex-col">
-                      Not Interested Reason:
-                    </span>{" "}
-                    {log.notInterestedReason}
-                  </p>
-                )}
-
-                {log.callStatus === "trial scheduled" && (
-                  <>
-                    <p className="border p-2 rounded">
-                      <span className="text-sm font-semibold flex flex-col">
-                        Trial Type:
-                      </span>{" "}
-                      {log.trialType}
-                    </p>
-                    <p className="border p-2 rounded">
-                      <span className="text-sm font-semibold flex flex-col">
-                        Trial Date/Time:
-                      </span>{" "}
-                      {log.trialDateTime
-                        ? new Date(log.trialDateTime).toLocaleString()
-                        : "—"}
-                    </p>
-                    <p className="border p-2 rounded col-span-2">
-                      <span className="text-sm font-semibold flex flex-col">
-                        Assigned Staff:
-                      </span>{" "}
-                      {log.staffName}
-                    </p>
-                  </>
-                )}
-
-                {log.callStatus !== "sale" &&
-                  log.callStatus !== "notinterested" &&
-                  log.callStatus !== "not relevant" &&
-                  log.callStatus !== "did not put enquiry" &&
-                  log.callStatus !== "invalid number" && (
-                    <>
-                      <p className="border p-2 rounded">
-                        <span className="text-sm font-semibold flex flex-col">
-                          Follow-Up For:
-                        </span>{" "}
-                        {log.scheduleFor}
-                      </p>
-                      <p className="border p-2 rounded">
-                        <span className="text-sm font-semibold flex flex-col">
-                          Follow-Up Date:
-                        </span>{" "}
-                        {log.followUpDate
-                          ? new Date(log.followUpDate).toLocaleString()
-                          : "—"}
-                      </p>
-                    </>
-                  )}
-
-                {(log.temperature || log.closureDate || log.amount) && (
-                  <>
-                    <p className="border p-2 rounded">
-                      <span className="text-sm font-semibold flex flex-col">
-                        Lead Temperature:
-                      </span>{" "}
-                      {log.temperature || "—"}
-                    </p>
-                    <p className="border p-2 rounded">
-                      <span className="text-sm font-semibold flex flex-col">
-                        Expected Closure:
-                      </span>{" "}
-                      {log.closureDate
-                        ? new Date(log.closureDate).toLocaleDateString()
-                        : "—"}
-                    </p>
-                    <p className="border p-2 rounded">
-                      <span className="text-sm font-semibold flex flex-col">
-                        Amount:
-                      </span>{" "}
-                      {log.amount || "—"}
-                    </p>
-                  </>
-                )}
-              </div>
-
-              <div className="bg-gray-50 p-3 rounded">
-                <h3 className="text-sm font-semibold">Discussion Notes:</h3>
-                <p>{log.discussion || "No discussion entered."}</p>
-              </div>
-            </div>
-          ))} */}
         </div>
       </div>
     </div>
