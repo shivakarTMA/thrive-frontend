@@ -86,12 +86,13 @@ const MemberProfile = () => {
       <div className=" flex items-end justify-between gap-2 mb-0">
         <div className="title--breadcrumbs">
           <p className="text-sm">{`Home > Members > Member Profile`}</p>
+           <h1 className="text-3xl font-semibold">Member Profile</h1>
         </div>
       </div>
       <div className="flex">
         {/* Sidebar */}
         <aside className="w-full max-w-[250px]">
-          <h1 className="text-3xl font-semibold">Member Profile</h1>
+          {/* <h1 className="text-3xl font-semibold">Member Profile</h1> */}
           <div className="bg-secondarycolor p-4 rounded mt-6 space-y-1">
             {tabs.map((item) => (
               <div
@@ -112,7 +113,7 @@ const MemberProfile = () => {
 
         {/* Main Content */}
         <main className="flex-1 p-5 pt-0 pb-0">
-          <div className="flex items-center gap-2">
+          {/* <div className="flex items-center gap-2">
             <div className="flex flex-wrap bg-primarylight items-center border rounded p-2 seprator-horizontal gap-y-2">
               <button className="text-[14px] text-black seprator-item px-3">
                 Inter branch transfer
@@ -139,9 +140,9 @@ const MemberProfile = () => {
             <div>
               <GoPlusCircle className="text-3xl cursor-pointer text-primarycolor" />
             </div>
-          </div>
+          </div> */}
 
-          <div className="bg-secondarycolor p-4 rounded mt-6 h-[calc(100%-65px)]">
+          <div className="bg-secondarycolor p-4 rounded mt-6 ">
             {activeTab === "Profile Details" && (
               <ProfileDetails member={member} />
             )}
