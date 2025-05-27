@@ -760,6 +760,7 @@ const CreateLeadForm = ({ setLeadModal }) => {
                                 minDate={now} // disables all past days
                                 minTime={minTime} // disables past times today
                                 maxTime={maxTime}
+                                disabled={!formik.values.schedule.type} 
                               />
                             </div>
                           </div>
@@ -778,6 +779,7 @@ const CreateLeadForm = ({ setLeadModal }) => {
                               options={getAvailableTrainers()}
                               placeholder="Select available trainer"
                               styles={customStyles}
+                              isDisabled={!formik.values.schedule.type} 
                               // isDisabled={!getAvailableTrainers().length}
                             />
                             {!getAvailableTrainers().length && (

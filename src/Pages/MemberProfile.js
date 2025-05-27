@@ -6,53 +6,58 @@ import { membershipData, mockData } from "../DummyData/DummyData";
 import ProfileDetails from "../components/memberprofile/ProfileDetails";
 import { FaCrown } from "react-icons/fa";
 import { BsThreeDotsVertical } from "react-icons/bs";
+import ServiceCard from "../components/memberprofile/ServiceCard";
+import OrderHistory from "../components/memberprofile/OrderHistory";
+import CreateCallLogs from "../components/CreateCallLogs";
+import Appointments from "../components/memberprofile/Appointments";
+import Relations from "../components/memberprofile/Relations";
+import AttendanceData from "../components/memberprofile/AttendanceData";
+import WorkoutApp from "../components/memberprofile/WorkoutApp";
+
+
 
 const MemberProfile = () => {
   const { id } = useParams();
-  const scrollRef = useRef(null);
-  const isDragging = useRef(false);
-  const startX = useRef(0);
-  const scrollLeft = useRef(0);
-  useEffect(() => {
-    const slider = scrollRef.current;
+ 
+  //   const slider = scrollRef.current;
 
-    const handleMouseDown = (e) => {
-      isDragging.current = true;
-      slider.classList.add("cursor-grabbing");
-      startX.current = e.pageX - slider.offsetLeft;
-      scrollLeft.current = slider.scrollLeft;
-    };
+  //   const handleMouseDown = (e) => {
+  //     isDragging.current = true;
+  //     slider.classList.add("cursor-grabbing");
+  //     startX.current = e.pageX - slider.offsetLeft;
+  //     scrollLeft.current = slider.scrollLeft;
+  //   };
 
-    const handleMouseLeave = () => {
-      isDragging.current = false;
-      slider.classList.remove("cursor-grabbing");
-    };
+  //   const handleMouseLeave = () => {
+  //     isDragging.current = false;
+  //     slider.classList.remove("cursor-grabbing");
+  //   };
 
-    const handleMouseUp = () => {
-      isDragging.current = false;
-      slider.classList.remove("cursor-grabbing");
-    };
+  //   const handleMouseUp = () => {
+  //     isDragging.current = false;
+  //     slider.classList.remove("cursor-grabbing");
+  //   };
 
-    const handleMouseMove = (e) => {
-      if (!isDragging.current) return;
-      e.preventDefault();
-      const x = e.pageX - slider.offsetLeft;
-      const walk = (x - startX.current) * 1.5; // scroll-fastness
-      slider.scrollLeft = scrollLeft.current - walk;
-    };
+  //   const handleMouseMove = (e) => {
+  //     if (!isDragging.current) return;
+  //     e.preventDefault();
+  //     const x = e.pageX - slider.offsetLeft;
+  //     const walk = (x - startX.current) * 1.5; // scroll-fastness
+  //     slider.scrollLeft = scrollLeft.current - walk;
+  //   };
 
-    slider.addEventListener("mousedown", handleMouseDown);
-    slider.addEventListener("mouseleave", handleMouseLeave);
-    slider.addEventListener("mouseup", handleMouseUp);
-    slider.addEventListener("mousemove", handleMouseMove);
+  //   slider.addEventListener("mousedown", handleMouseDown);
+  //   slider.addEventListener("mouseleave", handleMouseLeave);
+  //   slider.addEventListener("mouseup", handleMouseUp);
+  //   slider.addEventListener("mousemove", handleMouseMove);
 
-    return () => {
-      slider.removeEventListener("mousedown", handleMouseDown);
-      slider.removeEventListener("mouseleave", handleMouseLeave);
-      slider.removeEventListener("mouseup", handleMouseUp);
-      slider.removeEventListener("mousemove", handleMouseMove);
-    };
-  }, []);
+  //   return () => {
+  //     slider.removeEventListener("mousedown", handleMouseDown);
+  //     slider.removeEventListener("mouseleave", handleMouseLeave);
+  //     slider.removeEventListener("mouseup", handleMouseUp);
+  //     slider.removeEventListener("mousemove", handleMouseMove);
+  //   };
+  // }, []);
 
   const tabs = [
     "Profile Details",
@@ -60,12 +65,12 @@ const MemberProfile = () => {
     "Order History",
     "Call Logs",
     "Appointments",
-    "Referrals",
-    "Family Members",
-    "Store",
-    "Documents",
+    "Relations",
+    // "Family Members",
+    // "Store",
+    // "Documents",
     "Attendance",
-    "Trial History",
+    // "Trial History",
     "Training",
   ];
   const [activeTab, setActiveTab] = useState("Profile Details");
@@ -140,46 +145,31 @@ const MemberProfile = () => {
             {activeTab === "Profile Details" && (
               <ProfileDetails member={member} />
             )}
+            {activeTab === "Service Card" && (
+              <ServiceCard member={member} />
+            )}
+            {activeTab === "Order History" && (
+              <OrderHistory member={member} />
+            )}
+            {activeTab === "Call Logs" && (
+              <CreateCallLogs details={member} />
+            )}
+            {activeTab === "Appointments" && (
+              <Appointments details={member} />
+            )}
+            {activeTab === "Relations" && (
+              <Relations details={member} />
+            )}
+            {activeTab === "Attendance" && (
+              <AttendanceData details={member} />
+            )}
+            {activeTab === "Training" && (
+              <WorkoutApp details={member} />
+            )}
           </div>
 
           {/* History */}
         </main>
-      </div>
-      <div>
-        <h3 className="text-xl font-semibold mb-3">History</h3>
-        <div
-          ref={scrollRef}
-          className="flex gap-4 overflow-auto pr-5 cursor-grab select-none hide--overflow"
-        >
-          {membershipData.map((membership, idx) => (
-            <div
-              key={idx}
-              className="bg-white border border-[5px] border-gray-300 p-4 rounded flex justify-between w-full min-w-[28%]"
-            >
-              <div className="flex w-full gap-2">
-                <div className="text-lg border rounded-sm h-[30px] w-[40px] flex items-center justify-center cursor-pointer">
-                  {membership.icon}
-                </div>
-                <div className="w-full">
-                  <div className="flex items-center gap-2 mb-2">
-                    <h4 className="font-semibold">{membership.title}</h4>
-                  </div>
-                  <p className="text-sm text-gray-600 border-b pb-2 mb-2 w-full">
-                    {membership.duration}
-                  </p>
-                  <ul className="text-xs mt-1 text-black space-y-2">
-                    {membership.features.map((feature, fIdx) => (
-                      <li key={fIdx}>{feature}</li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-              <div className="border rounded-sm h-[30px] w-[35px] flex items-center justify-center cursor-pointer">
-                <BsThreeDotsVertical />
-              </div>
-            </div>
-          ))}
-        </div>
       </div>
     </div>
   );

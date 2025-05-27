@@ -591,23 +591,14 @@ const CreateMemberForm = ({ setMemberModal }) => {
                             </label>
                             <div className="flex gap-2">
                               <label
-                                className={`flex items-center gap-2 px-4 py-2 rounded-[10px] border cursor-pointer shadow-sm transition
-                                                        ${
-                                                          formik.values
-                                                            .memberDetails
-                                                            .gender === "Male"
-                                                            ? "bg-black text-white border-black"
-                                                            : "bg-white text-gray-700 border-gray-300"
-                                                        }`}
+                                className={`flex items-center gap-2 px-4 py-2 rounded-[10px] border cursor-pointer shadow-sm transition ${ formik.values.memberDetails.gender === "male" ? "bg-black text-white border-black" : "bg-white text-gray-700 border-gray-300"}
+                                `}
                               >
                                 <input
                                   type="radio"
                                   name="memberDetails.gender"
-                                  value="Male"
-                                  checked={
-                                    formik.values.memberDetails.gender ===
-                                    "Male"
-                                  }
+                                  value="male"
+                                  checked={formik.values.memberDetails.gender === "male"}
                                   onChange={formik.handleChange}
                                   className="hidden"
                                 />
@@ -616,23 +607,13 @@ const CreateMemberForm = ({ setMemberModal }) => {
                               </label>
 
                               <label
-                                className={`flex items-center gap-2 px-4 py-2 rounded-[10px] border cursor-pointer shadow-sm transition
-                                                        ${
-                                                          formik.values
-                                                            .memberDetails
-                                                            .gender === "Female"
-                                                            ? "bg-black text-white border-black"
-                                                            : "bg-white text-gray-700 border-gray-300"
-                                                        }`}
+                                className={`flex items-center gap-2 px-4 py-2 rounded-[10px] border cursor-pointer shadow-sm transition ${ formik.values.memberDetails.gender === "female" ? "bg-black text-white border-black" : "bg-white text-gray-700 border-gray-300"}`}
                               >
                                 <input
                                   type="radio"
                                   name="memberDetails.gender"
-                                  value="Female"
-                                  checked={
-                                    formik.values.memberDetails.gender ===
-                                    "Female"
-                                  }
+                                  value="female"
+                                  checked={formik.values.memberDetails.gender === "female"}
                                   onChange={formik.handleChange}
                                   className="hidden"
                                 />

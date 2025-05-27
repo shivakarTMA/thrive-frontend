@@ -129,14 +129,21 @@ const ProfileDetails = ({ member }) => {
               <div className="relative">
                 <h3 className="font-semibold mb-3">Personal Details</h3>
                 <div className="flex text-sm gap-4 grid--profile--details">
+                  <div className="flex flex-col text-sm">
+                    <label className="font-semibold mb-2 block">Contact:</label>
+                    {profile.contact}
+                  </div>
+                  <div className="flex flex-col text-sm">
+                    <label className="font-semibold mb-2 block">Email:</label>
+                    {profile.email}
+                  </div>
+
                   {[
-                    ["Email", "email"],
                     ["DOB", "dob"],
                     ["Gender", "gender"],
                     ["Age", "age"],
                     ["Address", "address"],
                     ["Locality", "locality"],
-                    ["Contact", "contact"],
                   ].map(([label, key]) => (
                     <div className="flex flex-col text-sm" key={key}>
                       <label className="font-semibold mb-2 block">
@@ -317,7 +324,7 @@ const ProfileDetails = ({ member }) => {
                 </button>
               </div>
 
-<hr />
+              <hr />
               <h3 className="font-semibold mb-3">Fitness Log</h3>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
                 {medicalConditions.map((condition) => (
@@ -334,13 +341,12 @@ const ProfileDetails = ({ member }) => {
                         <span className="checkbox--custom--check"></span>
                       </label>
                     ) : (
-
                       <label className="custom--checkbox">
                         <input
-                         type="checkbox"
-                         checked={profile.conditions?.includes(condition)}
-                         readOnly
-                         disabled
+                          type="checkbox"
+                          checked={profile.conditions?.includes(condition)}
+                          readOnly
+                          disabled
                         />
                         <span className="checkbox--custom--check"></span>
                       </label>

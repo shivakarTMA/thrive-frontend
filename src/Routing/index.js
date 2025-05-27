@@ -28,7 +28,7 @@ import TasksFollowUps from "../Pages/PT/TasksFollowUps";
 import EditLeadDetails from "../Pages/EditLeadDetails";
 import ForgotPassword from "../components/common/ForgotPassword";
 import ResetPassword from "../components/common/ResetPassword";
-import LeadFollowUp from "../Pages/LeadFollowUp";
+import LeadCallLogs from "../Pages/LeadCallLogs";
 import ServicesLIst from "../Pages/ServicesLIst";
 import BookingService from "../Pages/BookingService";
 
@@ -113,7 +113,7 @@ export default function Routing() {
               path="/lead-follow-up/:id"
               element={
                 <PrivateRoute>
-                  <LeadFollowUp />
+                  <LeadCallLogs />
                 </PrivateRoute>
               }
             />
