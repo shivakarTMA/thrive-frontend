@@ -11,6 +11,7 @@ import CreateLeadForm from "./CreateLeadForm";
 import { Link } from "react-router-dom";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import { addYears, subYears } from "date-fns";
 
 const getUniqueOptions = (data, key) => {
   return Array.from(new Set(data.map((item) => item[key]))).map((val) => ({
@@ -18,6 +19,13 @@ const getUniqueOptions = (data, key) => {
     label: val,
   }));
 };
+
+const dateFilterOptions = [
+  { value: "today", label: "Today" },
+  { value: "last7", label: "Last 7 Days" },
+  { value: "monthTillDate", label: "Month Till Date" },
+  { value: "custom", label: "Custom Date" },
+];
 
 const leadStatusOptions = [
   "New",
@@ -48,8 +56,9 @@ const AllLeads = () => {
   const [selectedCallTag, setSelectedCallTag] = useState(null);
   const [selectedLeadStatus, setSelectedLeadStatus] = useState(null);
   const [selectedLeadType, setSelectedLeadType] = useState(null);
-  const [fromDate, setFromDate] = useState("");
-  const [toDate, setToDate] = useState("");
+  const [dateFilter, setDateFilter] = useState(null);
+  const [customFrom, setCustomFrom] = useState(null);
+  const [customTo, setCustomTo] = useState(null);
 
   const rowsPerPage = 5;
 
@@ -57,10 +66,10 @@ const AllLeads = () => {
     const [day, month, year] = row.createdOn.split("-");
     const createdOnDate = new Date(`${year}-${month}-${day}`);
 
-    const isAfterFromDate = fromDate
-      ? createdOnDate >= new Date(fromDate)
+    const isAfterFromDate = customFrom
+      ? createdOnDate >= new Date(customFrom)
       : true;
-    const isBeforeToDate = toDate ? createdOnDate <= new Date(toDate) : true;
+    const isBeforeToDate = customTo ? createdOnDate <= new Date(customTo) : true;
 
     return (
       Object.values(row).some((val) =>
@@ -144,27 +153,56 @@ const AllLeads = () => {
               onChange={setSelectedCallTag}
               isClearable
               styles={customStyles}
+              className="w-40"
             />
-            <div className="custom--date">
-              <DatePicker
-                selected={fromDate}
-                onChange={(date) => setFromDate(date)}
-                placeholderText="From Date"
-                className="border px-3 py-2 rounded"
-                dateFormat="dd-MM-yyyy"
-                isClearable
-              />
-            </div>
-            <div className="custom--date">
-              <DatePicker
-                selected={toDate}
-                onChange={(date) => setToDate(date)}
-                placeholderText="To Date"
-                className="border px-3 py-2 rounded"
-                dateFormat="dd-MM-yyyy"
-                isClearable
-              />
-            </div>
+
+            <Select
+              placeholder="Date Filter"
+              options={dateFilterOptions}
+              value={dateFilter}
+              onChange={(selected) => {
+                setDateFilter(selected);
+                if (selected?.value !== "custom") {
+                  setCustomFrom(null);
+                  setCustomTo(null);
+                }
+              }}
+              isClearable
+              styles={customStyles}
+            />
+
+            {dateFilter?.value === "custom" && (
+              <>
+                <div className="custom--date dob-format">
+                  <DatePicker
+                    selected={customFrom}
+                    onChange={(date) => setCustomFrom(date)}
+                    placeholderText="From Date"
+                    className="custom--input w-full max-w-[170px]"
+                    minDate={subYears(new Date(), 20)}
+                    maxDate={addYears(new Date(), 0)}
+                    dateFormat="dd-MM-yyyy"
+                    showMonthDropdown
+                    showYearDropdown
+                    dropdownMode="select"
+                  />
+                </div>
+                <div className="custom--date dob-format">
+                  <DatePicker
+                    selected={customTo}
+                    onChange={(date) => setCustomTo(date)}
+                    placeholderText="To Date"
+                    className="custom--input w-full max-w-[170px]"
+                    minDate={subYears(new Date(), 20)}
+                    maxDate={addYears(new Date(), 0)}
+                    showMonthDropdown
+                    showYearDropdown
+                    dropdownMode="select"
+                    dateFormat="dd-MM-yyyy"
+                  />
+                </div>
+              </>
+            )}        
           </div>
 
           <div className="flex items-center gap-2 border rounded-[50px] px-2 bg-white">

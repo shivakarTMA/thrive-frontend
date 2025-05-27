@@ -1,51 +1,103 @@
 import React, { useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import Select from "react-select";
+import { format } from "date-fns";
+import { customStyles } from "../../Helper/helper";
 
 const AttendanceData = () => {
-  const [clubFilter, setClubFilter] = useState("All");
+  const [clubFilter, setClubFilter] = useState({ value: "All", label: "All" });
   const [dateFilter, setDateFilter] = useState(null);
 
   const attendanceData = [
-    { memberId: "M001", memberName: "John Doe", clubId: "C001", date: "2025-05-25", punchIn: "08:00 AM", punchOut: "10:00 AM" },
-    { memberId: "M002", memberName: "Jane Smith", clubId: "C002", date: "2025-05-25", punchIn: "09:00 AM", punchOut: "11:00 AM" },
-    { memberId: "M003", memberName: "Alice Johnson", clubId: "C001", date: "2025-05-26", punchIn: "07:30 AM", punchOut: "09:00 AM" },
-    { memberId: "M004", memberName: "Bob Brown", clubId: "C003", date: "2025-05-26", punchIn: "10:00 AM", punchOut: "12:00 PM" },
-    { memberId: "M005", memberName: "Charlie White", clubId: "C002", date: "2025-05-27", punchIn: "06:00 AM", punchOut: "08:00 AM" },
+    {
+      memberId: "M001",
+      memberName: "John Doe",
+      clubId: "C001",
+      date: "2025-05-25",
+      punchIn: "08:00 AM",
+      punchOut: "10:00 AM",
+    },
+    {
+      memberId: "M002",
+      memberName: "Jane Smith",
+      clubId: "C002",
+      date: "2025-05-25",
+      punchIn: "09:00 AM",
+      punchOut: "11:00 AM",
+    },
+    {
+      memberId: "M003",
+      memberName: "Alice Johnson",
+      clubId: "C001",
+      date: "2025-05-26",
+      punchIn: "07:30 AM",
+      punchOut: "09:00 AM",
+    },
+    {
+      memberId: "M004",
+      memberName: "Bob Brown",
+      clubId: "C003",
+      date: "2025-05-26",
+      punchIn: "10:00 AM",
+      punchOut: "12:00 PM",
+    },
+    {
+      memberId: "M005",
+      memberName: "Charlie White",
+      clubId: "C002",
+      date: "2025-05-27",
+      punchIn: "06:00 AM",
+      punchOut: "08:00 AM",
+    },
   ];
 
-  const uniqueClubIds = [...new Set(attendanceData.map(item => item.clubId))];
+  // Create options for Select component
+  const clubOptions = [
+    { value: "All", label: "All" },
+    ...Array.from(new Set(attendanceData.map((item) => item.clubId))).map(
+      (clubId) => ({
+        value: clubId,
+        label: clubId,
+      })
+    ),
+  ];
 
+  // Apply filters
   const filteredData = attendanceData.filter((item) => {
-    const matchesClub = clubFilter === "All" || item.clubId === clubFilter;
-    const matchesDate = !dateFilter || item.date === dateFilter.toISOString().split("T")[0];
+    const matchesClub =
+      clubFilter.value === "All" || item.clubId === clubFilter.value;
+    const matchesDate =
+      !dateFilter || item.date === format(dateFilter, "yyyy-MM-dd");
     return matchesClub && matchesDate;
   });
-
   return (
     <div className="p-4 bg-white rounded shadow">
       <h2 className="text-xl font-semibold mb-4">Attendance</h2>
 
       {/* Filters */}
       <div className="flex items-center gap-4 mb-4">
-        <select
+        <Select
+          options={clubOptions}
           value={clubFilter}
-          onChange={(e) => setClubFilter(e.target.value)}
-          className="border px-3 py-2 rounded"
-        >
-          <option value="All">All Clubs</option>
-          {uniqueClubIds.map((id) => (
-            <option key={id} value={id}>{id}</option>
-          ))}
-        </select>
-
-        <DatePicker
-  selected={dateFilter}
-  onChange={(date) => setDateFilter(date)}
-  className="border px-3 py-2 rounded"
-  placeholderText="Select Date"
-  isClearable
-/>
+          onChange={(selectedOption) => setClubFilter(selectedOption)}
+          placeholder="Select Club ID"
+          className="w-40"
+          styles={customStyles}
+        />
+        <div className="custom--date">
+          <DatePicker
+            selected={dateFilter}
+            onChange={(date) => setDateFilter(date)}
+            className="border px-3 py-2 rounded"
+            placeholderText="Select Date"
+            isClearable
+            dateFormat="dd-MM-yyyy"
+            showMonthDropdown
+            showYearDropdown
+            dropdownMode="select"
+          />
+        </div>
       </div>
 
       {/* Table */}

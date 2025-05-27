@@ -155,6 +155,7 @@ const OrderHistory = () => {
           onChange={setCategory}
           placeholder="Select Category"
           styles={customStyles}
+          className="w-40"
         />
         <div className="custom--date">
           <DatePicker

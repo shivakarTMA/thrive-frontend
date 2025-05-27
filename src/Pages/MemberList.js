@@ -12,9 +12,12 @@ import {
   startOfToday,
   subDays,
   startOfMonth,
+  subYears,
+  addYears,
 } from "date-fns";
-import { LiaEdit } from "react-icons/lia";
 import { MdCall, MdModeEdit } from "react-icons/md";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 
 export const memberFilters = {
   membershipType: ["Gold", "Silver", "Platinum"],
@@ -39,13 +42,13 @@ const dateFilterOptions = [
 const MemberList = () => {
   const [search, setSearch] = useState("");
   const [membershipFilter, setMembershipFilter] = useState(null);
-  const [trainerTypeFilter, setTrainerTypeFilter] = useState(null); // ✅ renamed to trainerTypeFilter
+  const [trainerTypeFilter, setTrainerTypeFilter] = useState(null);
   const [fohFilter, setFohFilter] = useState(null);
   const [page, setPage] = useState(1);
   const rowsPerPage = 5;
   const [dateFilter, setDateFilter] = useState(null);
-  const [customFrom, setCustomFrom] = useState("");
-  const [customTo, setCustomTo] = useState("");
+  const [customFrom, setCustomFrom] = useState(null);
+  const [customTo, setCustomTo] = useState(null);
 
   const applyDateFilter = (memberDate) => {
     if (!dateFilter) return true;
@@ -65,15 +68,14 @@ const MemberList = () => {
       case "custom":
         if (!customFrom || !customTo) return true;
         return isWithinInterval(date, {
-          start: parseISO(customFrom),
-          end: parseISO(customTo),
+          start: customFrom,
+          end: customTo,
         });
       default:
         return true;
     }
   };
 
-  // ✅ Updated filtering logic
   const filteredData = memberMockData.filter((member) => {
     const matchesSearch =
       search === "" || member.name.toLowerCase().includes(search.toLowerCase());
@@ -99,27 +101,17 @@ const MemberList = () => {
   );
   const totalPages = Math.ceil(filteredData.length / rowsPerPage);
 
-  console.log("Date Filter Range:", { customFrom, customTo });
-  paginatedData.forEach((member) => {
-    const date = new Date(member.memberFrom);
-    console.log(
-      `Member ${member.name} joined on ${member.memberFrom}`,
-      date >= new Date(customFrom) && date <= new Date(customTo)
-    );
-  });
-
   return (
     <div className="page--content">
-      <div className=" flex items-end justify-between gap-2 mb-5">
-          <div className="title--breadcrumbs">
-            <p className="text-sm">{`Home > Members > All Members`}</p>
-            <h1 className="text-3xl font-semibold">All Members</h1>
-          </div>
+      <div className="flex items-end justify-between gap-2 mb-5">
+        <div className="title--breadcrumbs">
+          <p className="text-sm">Home &gt; Members &gt; All Members</p>
+          <h1 className="text-3xl font-semibold">All Members</h1>
         </div>
-        {/* end title */}
+      </div>
 
       <div className="flex w-full gap-2 justify-between items-center mb-4">
-        <div className="flex flex-1 gap-2 items-center">
+        <div className="flex flex-1 gap-2 items-center flex-wrap">
           <Select
             placeholder="Membership Type"
             options={getUniqueOptions(memberMockData, "membershipType")}
@@ -143,6 +135,7 @@ const MemberList = () => {
             onChange={setFohFilter}
             isClearable
             styles={customStyles}
+            className="w-40"
           />
           <Select
             placeholder="Date Filter"
@@ -151,8 +144,8 @@ const MemberList = () => {
             onChange={(selected) => {
               setDateFilter(selected);
               if (selected?.value !== "custom") {
-                setCustomFrom("");
-                setCustomTo("");
+                setCustomFrom(null);
+                setCustomTo(null);
               }
             }}
             isClearable
@@ -160,18 +153,34 @@ const MemberList = () => {
           />
           {dateFilter?.value === "custom" && (
             <>
-              <input
-                type="date"
-                className="custom--input w-full max-w-[170px]"
-                value={customFrom}
-                onChange={(e) => setCustomFrom(e.target.value)}
-              />
-              <input
-                type="date"
-                className="custom--input w-full max-w-[170px]"
-                value={customTo}
-                onChange={(e) => setCustomTo(e.target.value)}
-              />
+              <div className="custom--date dob-format">
+                <DatePicker
+                  selected={customFrom}
+                  onChange={(date) => setCustomFrom(date)}
+                  placeholderText="From Date"
+                  className="custom--input w-full max-w-[170px]"
+                  minDate={subYears(new Date(), 20)}
+                  maxDate={addYears(new Date(), 0)}
+                  dateFormat="dd-MM-yyyy"
+                  showMonthDropdown
+                  showYearDropdown
+                  dropdownMode="select"
+                />
+              </div>
+              <div className="custom--date dob-format">
+                <DatePicker
+                  selected={customTo}
+                  onChange={(date) => setCustomTo(date)}
+                  placeholderText="To Date"
+                  className="custom--input w-full max-w-[170px]"
+                  minDate={subYears(new Date(), 20)}
+                  maxDate={addYears(new Date(), 0)}
+                  showMonthDropdown
+                  showYearDropdown
+                  dropdownMode="select"
+                  dateFormat="dd-MM-yyyy"
+                />
+              </div>
             </>
           )}
         </div>
@@ -220,14 +229,10 @@ const MemberList = () => {
                 <td className="px-2 py-4">{member.fohAssigned}</td>
                 <td className="px-2 py-4">
                   <div className="flex gap-1">
-                    <Link
-                      to={`/member/${member.id}`}
-                      className="p-1"
-                    >
+                    <Link to={`/member/${member.id}`} className="p-1">
                       <MdModeEdit className="text-2xl text-black" />
                     </Link>
-
-                    <Link to={`#`} className="p-1">
+                    <Link to="#" className="p-1">
                       <MdCall className="text-2xl text-black" />
                     </Link>
                     <button className="p-1" title="Send Payment Link">
