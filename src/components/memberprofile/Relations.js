@@ -6,10 +6,6 @@ const Relations = () => {
 
   const referrerData = [
     { name: "John Doe", memberId: "123" },
-    { name: "Jane Smith", memberId: "456" },
-    { name: "Alice Johnson", memberId: "789" },
-    { name: "Bob Brown", memberId: "978" },
-    { name: "Charlie White", memberId: "654" },
   ];
 
   const referredBy = [
