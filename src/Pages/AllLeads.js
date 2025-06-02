@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+import Papa from "papaparse";
+import { useDropzone } from "react-dropzone";
 import { FaAngleLeft, FaAngleRight } from "react-icons/fa";
 import { IoIosAddCircleOutline, IoIosSearch } from "react-icons/io";
 import { FiPlus } from "react-icons/fi";
@@ -60,16 +62,24 @@ const AllLeads = () => {
   const [customFrom, setCustomFrom] = useState(null);
   const [customTo, setCustomTo] = useState(null);
 
+  const [allLeads, setAllLeads] = useState(mockData); // this replaces direct use of mockData
+  const [uploadErrors, setUploadErrors] = useState([]);
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [previewNewLeads, setPreviewNewLeads] = useState([]);
+  const [previewDuplicateLeads, setPreviewDuplicateLeads] = useState([]);
+
   const rowsPerPage = 5;
 
-  const filteredData = mockData.filter((row) => {
+  const filteredData = allLeads.filter((row) => {
     const [day, month, year] = row.createdOn.split("-");
     const createdOnDate = new Date(`${year}-${month}-${day}`);
 
     const isAfterFromDate = customFrom
       ? createdOnDate >= new Date(customFrom)
       : true;
-    const isBeforeToDate = customTo ? createdOnDate <= new Date(customTo) : true;
+    const isBeforeToDate = customTo
+      ? createdOnDate <= new Date(customTo)
+      : true;
 
     return (
       Object.values(row).some((val) =>
@@ -92,6 +102,71 @@ const AllLeads = () => {
 
   const totalPages = Math.ceil(filteredData.length / rowsPerPage);
 
+  const handleBulkUpload = (acceptedFiles) => {
+    const file = acceptedFiles[0];
+
+    Papa.parse(file, {
+      header: true,
+      skipEmptyLines: true,
+      complete: (results) => {
+        const existingPhones = new Set(
+          allLeads.map((lead) => lead.phoneNumber)
+        );
+        const newLeads = [];
+        const duplicates = [];
+        const errors = [];
+
+        results.data.forEach((row, idx) => {
+          const name = row["Name"]?.trim();
+          const phone = row["Phone Number"]?.trim();
+          const email = row["Email"]?.trim();
+
+          // Check required fields
+          if (!name || !phone || !email) {
+            errors.push({
+              row: idx + 2,
+              reason: "Missing Name, Phone, or Email",
+            });
+            return;
+          }
+
+          const isDuplicatePhone = existingPhones.has(phone);
+
+          const leadObj = {
+            id: allLeads.length + newLeads.length + 1,
+            enquiryId: `ENQ${allLeads.length + newLeads.length + 1000}`,
+            createdOn: new Date().toLocaleDateString("en-GB"),
+            name,
+            phoneNumber: phone,
+            email,
+            leadType: row["Lead Type"] || "Phone",
+            leadSource: row["Lead Source"] || "Unknown",
+            enquiryStage: row["Lead Status"] || "New",
+            lastUpdated: new Date().toLocaleDateString("en-GB"),
+            callTag: "Not Called",
+            staff: row["Staff"] || "Unassigned",
+          };
+
+          if (isDuplicatePhone) {
+            duplicates.push(leadObj); // Only duplicates by phone
+          } else {
+            newLeads.push(leadObj);
+          }
+        });
+
+        setUploadErrors(errors);
+        setPreviewNewLeads(newLeads);
+        setPreviewDuplicateLeads(duplicates);
+        setShowUploadModal(true);
+      },
+    });
+  };
+
+  const { getRootProps, getInputProps } = useDropzone({
+    onDrop: handleBulkUpload,
+    accept: ".csv",
+  });
+
   return (
     <>
       <div className="page--content">
@@ -101,6 +176,14 @@ const AllLeads = () => {
             <h1 className="text-3xl font-semibold">All Leads</h1>
           </div>
           <div className="flex items-end gap-2">
+            <div
+              {...getRootProps()}
+              className="px-4 py-2 bg-white text-black rounded flex items-center gap-2 cursor-pointer border"
+            >
+              {/* <input {...getInputProps()} /> */}
+              <FiPlus /> Bulk Upload
+            </div>
+
             <button
               onClick={() => setLeadModal(true)}
               type="button"
@@ -138,14 +221,6 @@ const AllLeads = () => {
               isClearable
               styles={customStyles}
             />
-            {/* <Select
-            placeholder="Service"
-            options={getUniqueOptions(mockData, "service")}
-            value={selectedService}
-            onChange={setSelectedService}
-            isClearable
-            styles={customStyles}
-          /> */}
             <Select
               placeholder="Staff"
               options={getUniqueOptions(mockData, "staff")}
@@ -202,7 +277,7 @@ const AllLeads = () => {
                   />
                 </div>
               </>
-            )}        
+            )}
           </div>
 
           <div className="flex items-center gap-2 border rounded-[50px] px-2 bg-white">
@@ -252,12 +327,15 @@ const AllLeads = () => {
                   <td className="px-2 py-4">{row.staff}</td>
                   <td className="px-2 py-4">
                     <div className="flex gap-1">
-                      <div
+                      {/* <div
                         onClick={() => setLeadModal(true)}
                         className="p-1 cursor-pointer"
                       >
                         <LiaEdit className="text-2xl text-black" />
-                      </div>
+                      </div> */}
+                      <Link to={`/edit-lead-details/${row.id}`} className="p-1">
+                        <LiaEdit className="text-2xl text-black" />
+                      </Link>
                       <Link to={`/lead-follow-up/${row.id}`} className="p-1">
                         <MdCall className="text-2xl text-black" />
                       </Link>
@@ -313,6 +391,92 @@ const AllLeads = () => {
       </div>
 
       {leadModal && <CreateLeadForm setLeadModal={setLeadModal} />}
+
+      {showUploadModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-30 z-50 flex items-center justify-center">
+          <div className="bg-white rounded-lg shadow-lg p-6 max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+            <h2 className="text-xl font-semibold mb-4">CSV Upload Preview</h2>
+
+            {previewDuplicateLeads.length > 0 && (
+              <div className="mb-4">
+                <h3 className="font-semibold text-red-600 mb-1">
+                  ❗ Duplicate Phone Numbers Found:
+                </h3>
+                <table className="w-full text-sm border">
+                  <thead className="bg-red-100">
+                    <tr>
+                      <th className="p-2 border">Name</th>
+                      <th className="p-2 border">Lead Type</th>
+                      <th className="p-2 border">Lead Source</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {previewDuplicateLeads.map((lead, idx) => (
+                      <tr key={idx}>
+                        <td className="p-2 border">{lead.name}</td>
+                        <td className="p-2 border">{lead.leadType}</td>
+                        <td className="p-2 border">{lead.leadSource}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {previewNewLeads.length > 0 && (
+              <div className="mb-4">
+                <h3 className="font-semibold text-green-700 mb-1">
+                  ✅ Leads Ready to Import:
+                </h3>
+                <table className="w-full text-sm border">
+                  <thead className="bg-green-100">
+                    <tr>
+                      <th className="p-2 border">Name</th>
+                      <th className="p-2 border">Lead Type</th>
+                      <th className="p-2 border">Lead Source</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {previewNewLeads.map((lead, idx) => (
+                      <tr key={idx}>
+                        <td className="p-2 border">{lead.name}</td>
+                        <td className="p-2 border">{lead.leadType}</td>
+                        <td className="p-2 border">{lead.leadSource}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            <div className="flex justify-end gap-4 mt-4">
+              <button
+                onClick={() => {
+                  setShowUploadModal(false);
+                  setPreviewNewLeads([]);
+                  setPreviewDuplicateLeads([]);
+                }}
+                className="px-4 py-2 rounded bg-gray-200 text-gray-800 hover:bg-gray-300"
+              >
+                Cancel
+              </button>
+              {previewDuplicateLeads.length > 0 ? null : (
+                <button
+                  onClick={() => {
+                    setAllLeads((prev) => [...prev, ...previewNewLeads]);
+                    setShowUploadModal(false);
+                    setPreviewNewLeads([]);
+                    setPreviewDuplicateLeads([]);
+                  }}
+                  className="px-4 py-2 rounded bg-black text-white hover:bg-gray-800"
+                >
+                  Confirm Upload
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };

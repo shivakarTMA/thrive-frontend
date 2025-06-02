@@ -49,24 +49,24 @@ const EditLeadDetails = () => {
   const formik = useFormik({
     initialValues: {
       personalDetails: {
-        name: lead.name || "",
-        email: lead.email || "",
-        contact: lead.contact || "",
-        gender: lead.gender || "",
-        dob: lead.dob || null,
-        address: lead.address || "",
+        name: lead?.name || "",
+        email: lead?.email || "",
+        contact: lead?.contact || "",
+        gender: lead?.gender || "",
+        dob: lead?.dob || null,
+        address: lead?.address || "",
       },
       leadInformation: {
-        enquiryDate: lead.enquiryDate || null,
-        service: lead.service || "",
-        leadType: lead.leadType || "",
-        companyName: lead.company || "",
-        leadSource: lead.leadSource || "",
+        // enquiryDate: lead.enquiryDate || null,
+        service: lead?.service || "",
+        leadType: lead?.leadType || "",
+        companyName: lead?.company || "",
+        leadSource: lead?.leadSource || "",
       },
       professionalInfoPrimaryContact: {
-        designation: lead.designation || "",
-        companyName: lead.companyName || "",
-        officialEmail: lead.officialEmail || "",
+        designation: lead?.designation || "",
+        companyName: lead?.companyName || "",
+        officialEmail: lead?.officialEmail || "",
       },
     },
     validationSchema,
@@ -232,7 +232,7 @@ const EditLeadDetails = () => {
             <hr />
             <h3 className="text-2xl font-semibold">Lead Information</h3>
             <div className="grid grid-cols-2 gap-4">
-              <div>
+              {/* <div>
                 <label className="mb-2 block">Enquiry Date</label>
                 <div className="custom--date">
                   <DatePicker
@@ -249,7 +249,7 @@ const EditLeadDetails = () => {
                   />
                   
                 </div>
-              </div>
+              </div> */}
 
               <div>
                 <label className="mb-2 block">Service Name</label>
