@@ -127,6 +127,10 @@ input.number--appearance-none[type="number"]::-webkit-outer-spin-button {
   background-color: #f00;
 }
 
+.input--icon {
+    padding-left: 40px !important;
+}
+
 
 .radio-checkmark:after {
   content: "";
