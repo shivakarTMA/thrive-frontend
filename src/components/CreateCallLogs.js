@@ -39,23 +39,31 @@ const callTypesOption = [
 const allLeadStatuses = [
   { value: "closed", label: "Closed" },
   { value: "lost", label: "Lost" },
-  { value: "opportunity", label: "Opportunity" },
 ];
 
-const leadStatusOptionsMap = {
-  "no answer": ["closed", "lost"],
-  "call again": ["closed", "lost"],
-  "future prospect": ["closed", "lost"],
-  "trial scheduled": ["opportunity"],
-  "tour scheduled": ["opportunity"],
-  "wrong number": ["lost"],
-  "not interested": ["closed", "lost"],
-};
+// const leadStatusOptionsMap = {
+//   "no answer": ["closed", "lost"],
+//   "call again": ["closed", "lost"],
+//   "future prospect": ["closed", "lost"],
+//   "trial scheduled": ["opportunity"],
+//   "tour scheduled": ["opportunity"],
+//   "wrong number": ["lost"],
+//   "not interested": ["closed", "lost"],
+// };
 
-const serviceType = [
-  { value: "membership 1 month", label: "Membership 1 Month" },
-  { value: "membership 3 month", label: "Membership 3 Month" },
-  { value: "membership 6 month", label: "Membership 6 Month" },
+// const serviceType = [
+//   { value: "membership 1 month", label: "Membership 1 Month" },
+//   { value: "membership 3 month", label: "Membership 3 Month" },
+//   { value: "membership 6 month", label: "Membership 6 Month" },
+// ];
+const leadStatusOptionsMap = [
+  { value: "new", label: "New" },
+  { value: "lead", label: "Lead" },
+  { value: "opportunity", label: "Opportunity" },
+  { value: "won", label: "Won" },
+  { value: "closed", label: "Closed" },
+  { value: "lost", label: "Lost" },
+  { value: "future prospect", label: "Future Prospect" },
 ];
 const irregularCallType = [
   { value: "Busy", label: "Busy" },
@@ -70,9 +78,7 @@ const validationSchema = Yup.object().shape({
   callStatus: Yup.string().when("$details", (details, schema) => {
     const isActive = details?.status === "active";
     return schema.required(
-      isActive
-        ? "Call status is required"
-        : "Call Type is required"
+      isActive ? "Call status is required" : "Call Type is required"
     );
   }),
   irregularCallType: Yup.string().when("callStatus", {
@@ -207,6 +213,10 @@ const CallLogs = ({ details }) => {
 
   const selectedCallStatus = formik.values.callStatus;
 
+  const filteredLeadStatusOptions = filteredLogs.length > 0
+  ? leadStatusOptionsMap.filter(option => option.value !== "new")
+  : leadStatusOptionsMap;
+
   const filteredLeadStatuses = selectedCallStatus
     ? allLeadStatuses.filter((status) =>
         leadStatusOptionsMap[selectedCallStatus]?.includes(status.value)
@@ -269,9 +279,7 @@ const CallLogs = ({ details }) => {
 
             <div>
               <label className="mb-2 block">
-                {details?.status === "active"
-                  ? "Call Type"
-                  : "Lead Call Status"}
+                {details?.status === "active" ? "Call Type" : "Call Status"}
                 <span className="text-red-500">*</span>
               </label>
               <Select
@@ -295,9 +303,7 @@ const CallLogs = ({ details }) => {
                 }
                 styles={customStyles}
                 placeholder={
-                  details?.status === "active"
-                    ? "Call Type"
-                    : "Lead Call Status"
+                  details?.status === "active" ? "Call Type" : "Call Status"
                 }
               />
 
@@ -345,7 +351,7 @@ const CallLogs = ({ details }) => {
                   <label className="mb-2 block">
                     Lead Status<span className="text-red-500">*</span>
                   </label>
-                  <Select
+                  {/* <Select
                     name="leadStatus"
                     options={filteredLeadStatuses}
                     value={
@@ -358,7 +364,22 @@ const CallLogs = ({ details }) => {
                     }
                     styles={customStyles}
                     placeholder="Lead Status"
-                  />
+                  /> */}
+
+                  <Select
+  name="leadStatus"
+  options={filteredLeadStatusOptions}
+  value={
+    filteredLeadStatusOptions.find(
+      (option) => option.value === formik.values.leadStatus
+    ) || null
+  }
+  onChange={(option) =>
+    formik.setFieldValue("leadStatus", option.value)
+  }
+  styles={customStyles}
+  placeholder="Lead Status"
+/>
 
                   {formik.errors?.leadStatus && formik.touched?.leadStatus && (
                     <div className="text-red-500 text-sm">
@@ -366,7 +387,7 @@ const CallLogs = ({ details }) => {
                     </div>
                   )}
                 </div>
-                <div>
+                {/* <div>
                   <label className="mb-2 block">
                     Service Type<span className="text-red-500">*</span>
                   </label>
@@ -391,69 +412,15 @@ const CallLogs = ({ details }) => {
                         {formik.errors?.serviceType}
                       </div>
                     )}
-                </div>
+                </div> */}
               </>
             )}
-          </div>
-          {formik.values?.callStatus === "not interested" && (
-            <div className="w-full mt-3">
-              <div>
-                <label className="mb-2 block">
-                  Not Interested Reason<span className="text-red-500">*</span>
-                </label>
-                <Select
-                  name="notInterestedReason"
-                  options={noReasons}
-                  value={noReasons.find(
-                    (option) =>
-                      option.value === formik.values.notInterestedReason
-                  )}
-                  onChange={(option) => {
-                    formik.setFieldValue("notInterestedReason", option.value);
-                    formik.setFieldTouched("notInterestedReason", true);
-                  }}
-                  styles={customStyles}
-                  placeholder="Select Reason"
-                />
-                {formik.errors?.notInterestedReason &&
-                  formik.touched?.notInterestedReason && (
-                    <div className="text-red-500 text-sm">
-                      {formik.errors.notInterestedReason}
-                    </div>
-                  )}
-              </div>
-            </div>
-          )}
-
-          {formik.values?.callStatus === "no answer" && (
-            <div className="mb-3 mt-3">
-              <label className="mb-2 block">Schedule a Follow Up</label>
-              <div className="custom--date">
-                <DatePicker
-                  selected={formik.values.scheduleFollowUp}
-                  onChange={(val) =>
-                    formik.setFieldValue("scheduleFollowUp", val)
-                  }
-                  showTimeSelect
-                  timeFormat="hh:mm aa"
-                  dateFormat="MMMM d, yyyy hh:mm aa"
-                  placeholderText="Select follow-up date & time"
-                  className="border px-3 py-2 w-full"
-                  minDate={now}
-                  minTime={minTime}
-                  maxTime={maxTime}
-                />
-              </div>
-            </div>
-          )}
-
-          {(formik.values?.callStatus === "trial scheduled" ||
-            formik.values?.callStatus === "tour scheduled") && (
-            <div className="w-full mt-3">
-              <div className="grid grid-cols-2 gap-4">
+            {(formik.values?.callStatus === "trial scheduled" ||
+              formik.values?.callStatus === "tour scheduled") && (
+              <>
                 <div>
                   <label className="mb-2 block">
-                    Staff Availability<span className="text-red-500">*</span>
+                    Date & Time <span className="text-red-500">*</span>
                   </label>
                   <div className="custom--date flex-1">
                     <DatePicker
@@ -476,7 +443,7 @@ const CallLogs = ({ details }) => {
                 </div>
                 <div>
                   <label className="mb-2 block">
-                    Assign Staff<span className="text-red-500">*</span>
+                    Assigned to<span className="text-red-500">*</span>
                   </label>
                   <Select
                     name="assginStaff"
@@ -494,7 +461,7 @@ const CallLogs = ({ details }) => {
                     </div>
                   )}
                 </div>
-                <div className="col-span-2">
+                <div>
                   <label className="mb-2 block">
                     Schedule a Follow Up
                     <span className="text-red-500">*</span>
@@ -522,9 +489,61 @@ const CallLogs = ({ details }) => {
                       )}
                   </div>
                 </div>
+              </>
+            )}
+
+            {formik.values?.callStatus === "no answer" && (
+              <div>
+                <label className="mb-2 block">Schedule a Follow Up</label>
+                <div className="custom--date">
+                  <DatePicker
+                    selected={formik.values.scheduleFollowUp}
+                    onChange={(val) =>
+                      formik.setFieldValue("scheduleFollowUp", val)
+                    }
+                    showTimeSelect
+                    timeFormat="hh:mm aa"
+                    dateFormat="MMMM d, yyyy hh:mm aa"
+                    placeholderText="Select follow-up date & time"
+                    className="border px-3 py-2 w-full"
+                    minDate={now}
+                    minTime={minTime}
+                    maxTime={maxTime}
+                  />
+                </div>
               </div>
-            </div>
-          )}
+            )}
+
+            {formik.values?.callStatus === "not interested" && (
+              <div>
+                <div>
+                  <label className="mb-2 block">
+                    Not Interested Reason<span className="text-red-500">*</span>
+                  </label>
+                  <Select
+                    name="notInterestedReason"
+                    options={noReasons}
+                    value={noReasons.find(
+                      (option) =>
+                        option.value === formik.values.notInterestedReason
+                    )}
+                    onChange={(option) => {
+                      formik.setFieldValue("notInterestedReason", option.value);
+                      formik.setFieldTouched("notInterestedReason", true);
+                    }}
+                    styles={customStyles}
+                    placeholder="Select Reason"
+                  />
+                  {formik.errors?.notInterestedReason &&
+                    formik.touched?.notInterestedReason && (
+                      <div className="text-red-500 text-sm">
+                        {formik.errors.notInterestedReason}
+                      </div>
+                    )}
+                </div>
+              </div>
+            )}
+          </div>
 
           {/* Discussion */}
           <div className="mb-3 mt-3">

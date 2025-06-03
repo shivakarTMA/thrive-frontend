@@ -965,7 +965,7 @@ const CreateMemberForm = ({ setMemberModal }) => {
                             type="text"
                             name="membershipDetails.leadOwner"
                             value={formik.values.membershipDetails.leadOwner}
-                            // onChange={formik.handleChange}
+                            onChange={formik.handleChange}
                             className="custom--input w-full"
                           />
                         </div>

@@ -26,7 +26,7 @@ import { useFormik } from "formik";
 import * as Yup from "yup";
 import { toast } from "react-toastify";
 import ConfirmUnderAge from "../components/modal/ConfirmUnderAge";
-import { FaListCheck, FaLocationDot } from "react-icons/fa6";
+import { FaCalendarDays, FaListCheck, FaLocationDot } from "react-icons/fa6";
 
 const assignTrainers = [
   { value: "shivakar", label: "Shivakar" },
@@ -66,7 +66,7 @@ const validationSchema = Yup.object({
   }),
 });
 
-const CreateLeadForm = ({ setLeadModal }) => {
+const CreateLeadForm = ({ setLeadModal, selectedLead }) => {
   const leadBoxRef = useRef(null);
   const [matchingUsers, setMatchingUsers] = useState([]);
   const now = new Date();
@@ -110,6 +110,38 @@ const CreateLeadForm = ({ setLeadModal }) => {
     },
   });
 
+  useEffect(() => {
+    if (selectedLead) {
+      // Map flat row data to nested formik structure if needed
+      formik.setValues({
+        personalDetails: {
+          name: selectedLead.name || "",
+          contactNumber: selectedLead.contact || "",
+          email: selectedLead.email || "",
+          gender: selectedLead.gender || "",
+          dob: selectedLead.dob || "",
+          address: selectedLead.address || "",
+        },
+        leadInformation: {
+          serviceName: selectedLead.serviceName?.toLowerCase() || "",
+          leadSource: selectedLead.leadSource || "",
+          leadSourceType: selectedLead.leadSourceType || "",
+          otherSource: selectedLead.otherSource || "",
+          leadType: selectedLead.leadType || "",
+          leadSubType: selectedLead.leadSubType || "",
+          companyName: selectedLead.companyName || "",
+          officialEmail: selectedLead.officialEmail || "",
+        },
+        schedule: {
+          type: selectedLead.scheduleType || "",
+          date: selectedLead.scheduleDate || null,
+          time: selectedLead.scheduleTime || null,
+          trainer: selectedLead.trainer || "",
+        },
+      });
+    }
+  }, [selectedLead]);
+
   const handleDobChange = (date) => {
     if (!date) return;
 
@@ -148,16 +180,22 @@ const CreateLeadForm = ({ setLeadModal }) => {
   const selectedDateTime = (() => {
     const { date, time } = formik.values.schedule;
     if (date && time) {
-      const fullDate = new Date(`${date}T${time}`);
-      return isNaN(fullDate.getTime()) ? now : fullDate;
+      const [year, month, day] = date.split("-").map(Number);
+      const [hours, minutes] = time.split(":").map(Number);
+      const fullDate = new Date(year, month - 1, day, hours, minutes);
+      return isNaN(fullDate.getTime()) ? null : fullDate;
     }
-    return now;
+    return null;
   })();
 
   const handleDateTrainerChange = (val) => {
     if (!val) return;
 
-    const dateOnly = val.toISOString().split("T")[0];
+    const year = val.getFullYear();
+    const month = (val.getMonth() + 1).toString().padStart(2, "0");
+    const day = val.getDate().toString().padStart(2, "0");
+    const dateOnly = `${year}-${month}-${day}`; // ✅ Local date
+
     const hours = val.getHours().toString().padStart(2, "0");
     const minutes = val.getMinutes().toString().padStart(2, "0");
     const timeOnly = `${hours}:${minutes}`;
@@ -167,7 +205,7 @@ const CreateLeadForm = ({ setLeadModal }) => {
   };
 
   const isTodaySelected =
-    selectedDateTime.toDateString() === now.toDateString();
+    selectedDateTime?.toDateString() === now.toDateString();
 
   const minTime = new Date(selectedDateTime);
   if (isTodaySelected) {
@@ -234,6 +272,10 @@ const CreateLeadForm = ({ setLeadModal }) => {
     setLeadModal(false);
   };
 
+  useEffect(() => {
+    console.log("Selected lead:", selectedLead);
+  }, [selectedLead]);
+
   return (
     <>
       <div
@@ -246,7 +288,9 @@ const CreateLeadForm = ({ setLeadModal }) => {
           onClick={(e) => e.stopPropagation()}
         >
           <div className="bg-white rounded-t-[10px] flex gap-3 items-center justify-between py-4 px-4 border-b">
-            <h2 className="text-xl font-semibold">Create a Lead</h2>
+            <h2 className="text-xl font-semibold">
+              {selectedLead ? "Edit Lead" : "Create a Lead"}
+            </h2>
             <div
               className="close--lead cursor-pointer"
               onClick={handleLeadModal}
@@ -345,7 +389,7 @@ const CreateLeadForm = ({ setLeadModal }) => {
                       <label className="mb-2 block">DOB</label>
 
                       <div className="custom--date dob-format relative">
-                        <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[333]">
+                        <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
                           <FaEnvelope />
                         </span>
                         <DatePicker
@@ -376,7 +420,7 @@ const CreateLeadForm = ({ setLeadModal }) => {
                         <label
                           className={`flex items-center gap-2 px-4 py-2 rounded-[10px] border cursor-pointer shadow-sm transition
                           ${
-                            formik.values.personalDetails.gender === "Male"
+                            formik.values.personalDetails.gender === "male"
                               ? "bg-black text-white border-black"
                               : "bg-white text-gray-700 border-gray-300"
                           }`}
@@ -384,9 +428,9 @@ const CreateLeadForm = ({ setLeadModal }) => {
                           <input
                             type="radio"
                             name="personalDetails.gender"
-                            value="Male"
+                            value="male"
                             checked={
-                              formik.values.personalDetails.gender === "Male"
+                              formik.values.personalDetails.gender === "male"
                             }
                             onChange={formik.handleChange}
                             className="hidden"
@@ -398,7 +442,7 @@ const CreateLeadForm = ({ setLeadModal }) => {
                         <label
                           className={`flex items-center gap-2 px-4 py-2 rounded-[10px] border cursor-pointer shadow-sm transition
                           ${
-                            formik.values.personalDetails.gender === "Female"
+                            formik.values.personalDetails.gender === "female"
                               ? "bg-black text-white border-black"
                               : "bg-white text-gray-700 border-gray-300"
                           }`}
@@ -406,9 +450,9 @@ const CreateLeadForm = ({ setLeadModal }) => {
                           <input
                             type="radio"
                             name="personalDetails.gender"
-                            value="Female"
+                            value="female"
                             checked={
-                              formik.values.personalDetails.gender === "Female"
+                              formik.values.personalDetails.gender === "female"
                             }
                             onChange={formik.handleChange}
                             className="hidden"
@@ -476,7 +520,7 @@ const CreateLeadForm = ({ setLeadModal }) => {
                     <div>
                       <label className="mb-2 block">Service Name</label>
                       <div className="relative">
-                        <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[333]">
+                        <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
                           <FaListCheck />
                         </span>
                         <Select
@@ -503,7 +547,7 @@ const CreateLeadForm = ({ setLeadModal }) => {
                         Lead Type<span className="text-red-500">*</span>
                       </label>
                       <div className="relative">
-                        <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[333]">
+                        <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
                           <FaListCheck />
                         </span>
                         <Select
@@ -536,7 +580,7 @@ const CreateLeadForm = ({ setLeadModal }) => {
                         Lead Source<span className="text-red-500">*</span>
                       </label>
                       <div className="relative">
-                        <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[333]">
+                        <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
                           <FaListCheck />
                         </span>
                         <Select
@@ -572,7 +616,7 @@ const CreateLeadForm = ({ setLeadModal }) => {
                           <span className="text-red-500">*</span>
                         </label>
                         <div className="relative">
-                          <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[333]">
+                          <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
                             <FaListCheck />
                           </span>
                           <Select
@@ -609,7 +653,7 @@ const CreateLeadForm = ({ setLeadModal }) => {
                           <span className="text-red-500">*</span>
                         </label>
                         <div className="relative">
-                          <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[333]">
+                          <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
                             <FaListCheck />
                           </span>
                           <input
@@ -629,99 +673,114 @@ const CreateLeadForm = ({ setLeadModal }) => {
                       </div>
                     )}
                   </div>
+                  {!selectedLead && (
+                    <>
+                      <hr className="my-3 mt-5" />
 
-                  <hr className="my-3 mt-5" />
-
-                  <h3 className="text-2xl font-semibold mb-2">Schedule</h3>
-                  <div>
-                    <div className="grid grid-cols-3 gap-4 mt-4">
+                      <h3 className="text-2xl font-semibold mb-2">Schedule</h3>
                       <div>
-                        <label className="mb-2 block">Schedule</label>
-                        <div className="flex gap-4">
-                          <label className="custom--radio">
-                            Tour
-                            <input
-                              type="radio"
-                              name="schedule.type"
-                              value="tour"
-                              checked={formik.values.schedule.type === "tour"}
-                              onChange={handleInput}
-                              className="w-4 h-4 mr-1"
-                            />
-                            <span className="radio-checkmark"></span>
-                          </label>
-                          <label className="custom--radio">
-                            Trial
-                            <input
-                              type="radio"
-                              name="schedule.type"
-                              value="trial"
-                              checked={formik.values.schedule.type === "trial"}
-                              onChange={handleInput}
-                              className="w-4 h-4 custom--radio mr-1"
-                            />
-                            <span className="radio-checkmark"></span>
-                          </label>
-                        </div>
-                      </div>
-                      <div>
-                        <label className="mb-2 block">Date & Time</label>
-                        <div className="custom--date flex-1 relative">
-                          <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[333]">
-                            <FaEnvelope />
-                          </span>
-                          <DatePicker
-                            selected={selectedDateTime}
-                            onChange={handleDateTrainerChange}
-                            showTimeSelect
-                            timeFormat="hh:mm aa" // ✅ 12-hour format
-                            dateFormat="MMMM d, yyyy hh:mm aa"
-                            placeholderText="Select date & time"
-                            className="border px-3 py-2 w-full input--icon"
-                            minDate={now} // disables all past days
-                            minTime={minTime} // disables past times today
-                            maxTime={maxTime}
-                            disabled={!formik.values.schedule.type}
-                          />
-                        </div>
-                      </div>
+                        <div className="grid grid-cols-3 gap-4 mt-4">
+                          <div>
+                            <label className="mb-2 block">Schedule</label>
+                            <div className="flex gap-4">
+                              <label className="custom--radio">
+                                Tour
+                                <input
+                                  type="radio"
+                                  name="schedule.type"
+                                  value="tour"
+                                  checked={
+                                    formik.values.schedule.type === "tour"
+                                  }
+                                  onChange={handleInput}
+                                  className="w-4 h-4 mr-1"
+                                />
+                                <span className="radio-checkmark"></span>
+                              </label>
+                              <label className="custom--radio">
+                                Trial
+                                <input
+                                  type="radio"
+                                  name="schedule.type"
+                                  value="trial"
+                                  checked={
+                                    formik.values.schedule.type === "trial"
+                                  }
+                                  onChange={handleInput}
+                                  className="w-4 h-4 custom--radio mr-1"
+                                />
+                                <span className="radio-checkmark"></span>
+                              </label>
+                            </div>
+                          </div>
+                          <div>
+                            <label className="mb-2 block">Date & Time</label>
+                            <div className="custom--date flex-1">
+                              <span className="absolute z-[1] mt-[15px] ml-[15px]">
+                                <FaCalendarDays />
+                              </span>
+                              <DatePicker
+                                selected={selectedDateTime}
+                                onChange={handleDateTrainerChange}
+                                showTimeSelect
+                                timeFormat="hh:mm aa" // ✅ 12-hour format
+                                dateFormat="MMMM d, yyyy hh:mm aa"
+                                placeholderText="Select date & time"
+                                className="border px-3 py-2 w-full input--icon"
+                                minDate={now} // disables all past days
+                                minTime={minTime} // disables past times today
+                                maxTime={maxTime}
+                                disabled={!formik.values.schedule.type}
+                              />
+                            </div>
+                          </div>
 
-                      <div className="mb-4">
-                        <label className="mb-2 block">Staff Name</label>
-                        <div className="relative">
-                          <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[333]">
-                            <FaListCheck />
-                          </span>
-                          <Select
-                            name="schedule.trainer"
-                            value={assignTrainers.find(
-                              (opt) =>
-                                opt.value === formik.values.schedule.trainer
+                          <div className="mb-4">
+                            <label className="mb-2 block">Staff Name</label>
+                            <div className="relative">
+                              <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
+                                <FaListCheck />
+                              </span>
+                              <Select
+                                name="schedule.trainer"
+                                value={assignTrainers.find(
+                                  (opt) =>
+                                    opt.value === formik.values.schedule.trainer
+                                )}
+                                onChange={(option) =>
+                                  handleSelectSchedule(
+                                    "schedule.trainer",
+                                    option
+                                  )
+                                }
+                                options={getAvailableTrainers()}
+                                placeholder="Select available trainer"
+                                styles={selectIcon}
+                                isDisabled={!formik.values.schedule.type}
+                                // isDisabled={!getAvailableTrainers().length}
+                              />
+                            </div>
+                            {!formik.values.schedule.type ? null : (
+                              <>
+                                {!getAvailableTrainers().length && (
+                                  <p className="text-sm text-red-500 mt-1">
+                                    No trainers available at this date and time.
+                                  </p>
+                                )}
+                              </>
                             )}
-                            onChange={(option) =>
-                              handleSelectSchedule("schedule.trainer", option)
-                            }
-                            options={getAvailableTrainers()}
-                            placeholder="Select available trainer"
-                            styles={selectIcon}
-                            isDisabled={!formik.values.schedule.type}
-                            // isDisabled={!getAvailableTrainers().length}
-                          />
+                          </div>
                         </div>
-                        {!getAvailableTrainers().length && (
-                          <p className="text-sm text-red-500 mt-1">
-                            No trainers available at this date and time.
-                          </p>
-                        )}
                       </div>
-                    </div>
-                  </div>
+                    </>
+                  )}
                 </div>
               </div>
 
               <div className={`flex gap-4 py-5 justify-end`}>
                 <button
                   type="button"
+                  onClick={handleLeadModal}
                   className="px-4 py-2 bg-transparent border border-white text-white font-semibold rounded max-w-[150px] w-full"
                 >
                   Cancel

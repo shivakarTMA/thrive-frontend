@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import Papa from "papaparse";
 import { useDropzone } from "react-dropzone";
 import { FaAngleLeft, FaAngleRight } from "react-icons/fa";
@@ -13,14 +13,21 @@ import CreateLeadForm from "./CreateLeadForm";
 import { Link } from "react-router-dom";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { addYears, subYears } from "date-fns";
+import {
+  addYears,
+  subYears,
+  startOfToday,
+  subDays,
+  startOfMonth,
+} from "date-fns";
+import FiltersPanel from "./MultiSelectFilter";
 
-const getUniqueOptions = (data, key) => {
-  return Array.from(new Set(data.map((item) => item[key]))).map((val) => ({
-    value: val,
-    label: val,
-  }));
-};
+// const getUniqueOptions = (data, key) => {
+//   return Array.from(new Set(data.map((item) => item[key]))).map((val) => ({
+//     value: val,
+//     label: val,
+//   }));
+// };
 
 const dateFilterOptions = [
   { value: "today", label: "Today" },
@@ -29,29 +36,11 @@ const dateFilterOptions = [
   { value: "custom", label: "Custom Date" },
 ];
 
-const leadStatusOptions = [
-  "New",
-  "Lead",
-  "Opportunity",
-  "Won",
-  "Closed",
-  "Lost",
-].map((val) => ({
-  value: val,
-  label: val,
-}));
-
-const leadTypeOptions = ["Walk-in", "Phone", "Email", "WhatsApp"].map(
-  (val) => ({
-    value: val,
-    label: val,
-  })
-);
-
 const AllLeads = () => {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [leadModal, setLeadModal] = useState(false);
+  const [selectedLead, setSelectedLead] = useState(null);
 
   const [selectedService, setSelectedService] = useState(null);
   const [selectedLeadSource, setSelectedLeadSource] = useState(null);
@@ -68,32 +57,79 @@ const AllLeads = () => {
   const [previewNewLeads, setPreviewNewLeads] = useState([]);
   const [previewDuplicateLeads, setPreviewDuplicateLeads] = useState([]);
 
+  const [selectedStaff, setSelectedStaff] = useState([]);
+
   const rowsPerPage = 5;
 
-  const filteredData = allLeads.filter((row) => {
-    const [day, month, year] = row.createdOn.split("-");
-    const createdOnDate = new Date(`${year}-${month}-${day}`);
+  useEffect(() => {
+    setPage(1); // Reset to page 1 when filters change
+  }, [selectedLeadStatus, selectedLeadType, selectedLeadSource, selectedStaff]);
 
-    const isAfterFromDate = customFrom
-      ? createdOnDate >= new Date(customFrom)
-      : true;
-    const isBeforeToDate = customTo
-      ? createdOnDate <= new Date(customTo)
-      : true;
+  const filteredData = useMemo(() => {
+    const today = startOfToday();
 
-    return (
-      Object.values(row).some((val) =>
-        String(val).toLowerCase().includes(search.toLowerCase())
-      ) &&
-      (!selectedService || row.service === selectedService.value) &&
-      (!selectedLeadSource || row.leadSource === selectedLeadSource.value) &&
-      (!selectedCallTag || row.staff === selectedCallTag.value) &&
-      (!selectedLeadStatus || row.enquiryStage === selectedLeadStatus.value) &&
-      (!selectedLeadType || row.leadType === selectedLeadType.value) &&
-      isAfterFromDate &&
-      isBeforeToDate
-    );
-  });
+    let fromDate = null;
+    let toDate = null;
+
+    switch (dateFilter?.value) {
+      case "today":
+        fromDate = today;
+        toDate = today;
+        break;
+      case "last7":
+        fromDate = subDays(today, 6);
+        toDate = today;
+        break;
+      case "monthTillDate":
+        fromDate = startOfMonth(today);
+        toDate = today;
+        break;
+      case "custom":
+        fromDate = customFrom;
+        toDate = customTo;
+        break;
+      default:
+        fromDate = null;
+        toDate = null;
+        break;
+    }
+
+    return mockData.filter((row) => {
+      // Parse createdOn from "DD-MM-YYYY"
+      const [day, month, year] = row.createdOn.split("-");
+      const createdOnDate = new Date(`${year}-${month}-${day}`);
+
+      const isAfterFromDate = fromDate
+        ? createdOnDate >= new Date(fromDate)
+        : true;
+      const isBeforeToDate = toDate ? createdOnDate <= new Date(toDate) : true;
+
+      return (
+        Object.values(row).some((val) =>
+          String(val).toLowerCase().includes(search.toLowerCase())
+        ) &&
+        (!selectedService || row.service === selectedService.value) &&
+        (!selectedLeadSource || row.leadSource === selectedLeadSource.value) &&
+        (!selectedCallTag || row.staff === selectedCallTag.value) &&
+        (!selectedLeadStatus ||
+          row.enquiryStage === selectedLeadStatus.value) &&
+        (!selectedLeadType || row.leadType === selectedLeadType.value) &&
+        isAfterFromDate &&
+        isBeforeToDate
+      );
+    });
+  }, [
+    mockData,
+    search,
+    selectedService,
+    selectedLeadSource,
+    selectedCallTag,
+    selectedLeadStatus,
+    selectedLeadType,
+    dateFilter,
+    customFrom,
+    customTo,
+  ]);
 
   const paginatedData = filteredData.slice(
     (page - 1) * rowsPerPage,
@@ -180,12 +216,15 @@ const AllLeads = () => {
               {...getRootProps()}
               className="px-4 py-2 bg-white text-black rounded flex items-center gap-2 cursor-pointer border"
             >
-              {/* <input {...getInputProps()} /> */}
+              <input {...getInputProps()} />
               <FiPlus /> Bulk Upload
             </div>
 
             <button
-              onClick={() => setLeadModal(true)}
+              onClick={() => {
+                setSelectedLead(null);
+                setLeadModal(true);
+              }}
               type="button"
               className="px-4 py-2 bg-black text-white rounded flex items-center gap-2"
             >
@@ -196,8 +235,18 @@ const AllLeads = () => {
 
         {/* Filters */}
         <div className="flex flex-wrap gap-3 mb-4 items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Select
+          <div className="flex items-center gap-2 flex-1">
+            <FiltersPanel
+              selectedLeadSource={selectedLeadSource}
+              setSelectedLeadSource={setSelectedLeadSource}
+              selectedLeadType={selectedLeadType}
+              setSelectedLeadType={setSelectedLeadType}
+              selectedLeadStatus={selectedLeadStatus}
+              setSelectedLeadStatus={setSelectedLeadStatus}
+              selectedCallTag={selectedCallTag}
+              setSelectedCallTag={setSelectedCallTag}
+            />
+            {/* <Select
               placeholder="Lead Status"
               options={leadStatusOptions}
               value={selectedLeadStatus}
@@ -229,7 +278,7 @@ const AllLeads = () => {
               isClearable
               styles={customStyles}
               className="w-40"
-            />
+            /> */}
 
             <Select
               placeholder="Date Filter"
@@ -327,15 +376,18 @@ const AllLeads = () => {
                   <td className="px-2 py-4">{row.staff}</td>
                   <td className="px-2 py-4">
                     <div className="flex gap-1">
-                      {/* <div
-                        onClick={() => setLeadModal(true)}
+                      <div
+                        onClick={() => {
+                          setSelectedLead(row);
+                          setLeadModal(true);
+                        }}
                         className="p-1 cursor-pointer"
                       >
                         <LiaEdit className="text-2xl text-black" />
-                      </div> */}
-                      <Link to={`/edit-lead-details/${row.id}`} className="p-1">
+                      </div>
+                      {/* <Link to={`/edit-lead-details/${row.id}`} className="p-1">
                         <LiaEdit className="text-2xl text-black" />
-                      </Link>
+                      </Link> */}
                       <Link to={`/lead-follow-up/${row.id}`} className="p-1">
                         <MdCall className="text-2xl text-black" />
                       </Link>
@@ -390,7 +442,12 @@ const AllLeads = () => {
         </div>
       </div>
 
-      {leadModal && <CreateLeadForm setLeadModal={setLeadModal} />}
+      {leadModal && (
+        <CreateLeadForm
+          setLeadModal={setLeadModal}
+          selectedLead={selectedLead}
+        />
+      )}
 
       {showUploadModal && (
         <div className="fixed inset-0 bg-black bg-opacity-30 z-50 flex items-center justify-center">
