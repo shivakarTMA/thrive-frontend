@@ -21,6 +21,12 @@ import {
   startOfMonth,
 } from "date-fns";
 import FiltersPanel from "./MultiSelectFilter";
+import { useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import { RiResetLeftFill } from "react-icons/ri";
+const useQuery = () => {
+  return new URLSearchParams(useLocation().search);
+};
 
 // const getUniqueOptions = (data, key) => {
 //   return Array.from(new Set(data.map((item) => item[key]))).map((val) => ({
@@ -37,6 +43,7 @@ const dateFilterOptions = [
 ];
 
 const AllLeads = () => {
+  const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [leadModal, setLeadModal] = useState(false);
@@ -52,18 +59,31 @@ const AllLeads = () => {
   const [customTo, setCustomTo] = useState(null);
 
   const [allLeads, setAllLeads] = useState(mockData); // this replaces direct use of mockData
-  const [uploadErrors, setUploadErrors] = useState([]);
+  // const [uploadErrors, setUploadErrors] = useState([]);
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [previewNewLeads, setPreviewNewLeads] = useState([]);
   const [previewDuplicateLeads, setPreviewDuplicateLeads] = useState([]);
 
-  const [selectedStaff, setSelectedStaff] = useState([]);
+  const query = useQuery();
+  const selectedStatus = query.get("leadStatus");
+  console.log(selectedStatus, "selectedStatus");
+
+  useEffect(() => {
+    if (selectedStatus) {
+      const filtered = mockData.filter(
+        (lead) => lead.leadStatus.toLowerCase() === selectedStatus.toLowerCase()
+      );
+      setAllLeads(filtered);
+    } else {
+      setAllLeads(mockData);
+    }
+  }, [selectedStatus]);
 
   const rowsPerPage = 5;
 
   useEffect(() => {
     setPage(1); // Reset to page 1 when filters change
-  }, [selectedLeadStatus, selectedLeadType, selectedLeadSource, selectedStaff]);
+  }, [selectedLeadStatus, selectedLeadType, selectedLeadSource]);
 
   const filteredData = useMemo(() => {
     const today = startOfToday();
@@ -94,7 +114,7 @@ const AllLeads = () => {
         break;
     }
 
-    return mockData.filter((row) => {
+    return allLeads.filter((row) => {
       // Parse createdOn from "DD-MM-YYYY"
       const [day, month, year] = row.createdOn.split("-");
       const createdOnDate = new Date(`${year}-${month}-${day}`);
@@ -112,14 +132,15 @@ const AllLeads = () => {
         (!selectedLeadSource || row.leadSource === selectedLeadSource.value) &&
         (!selectedCallTag || row.staff === selectedCallTag.value) &&
         (!selectedLeadStatus ||
-          row.enquiryStage === selectedLeadStatus.value) &&
+          row.leadStatus?.toLowerCase() ===
+            selectedLeadStatus.value?.toLowerCase()) &&
         (!selectedLeadType || row.leadType === selectedLeadType.value) &&
         isAfterFromDate &&
         isBeforeToDate
       );
     });
   }, [
-    mockData,
+    allLeads,
     search,
     selectedService,
     selectedLeadSource,
@@ -130,6 +151,8 @@ const AllLeads = () => {
     customFrom,
     customTo,
   ]);
+
+  console.log(selectedLeadStatus, "selectedLeadStatus");
 
   const paginatedData = filteredData.slice(
     (page - 1) * rowsPerPage,
@@ -190,7 +213,7 @@ const AllLeads = () => {
           }
         });
 
-        setUploadErrors(errors);
+        // setUploadErrors(errors);
         setPreviewNewLeads(newLeads);
         setPreviewDuplicateLeads(duplicates);
         setShowUploadModal(true);
@@ -246,39 +269,6 @@ const AllLeads = () => {
               selectedCallTag={selectedCallTag}
               setSelectedCallTag={setSelectedCallTag}
             />
-            {/* <Select
-              placeholder="Lead Status"
-              options={leadStatusOptions}
-              value={selectedLeadStatus}
-              onChange={setSelectedLeadStatus}
-              isClearable
-              styles={customStyles}
-            />
-            <Select
-              placeholder="Lead Type"
-              options={leadTypeOptions}
-              value={selectedLeadType}
-              onChange={setSelectedLeadType}
-              isClearable
-              styles={customStyles}
-            />
-            <Select
-              placeholder="Lead Source"
-              options={getUniqueOptions(mockData, "leadSource")}
-              value={selectedLeadSource}
-              onChange={setSelectedLeadSource}
-              isClearable
-              styles={customStyles}
-            />
-            <Select
-              placeholder="Staff"
-              options={getUniqueOptions(mockData, "staff")}
-              value={selectedCallTag}
-              onChange={setSelectedCallTag}
-              isClearable
-              styles={customStyles}
-              className="w-40"
-            /> */}
 
             <Select
               placeholder="Date Filter"
@@ -326,6 +316,16 @@ const AllLeads = () => {
                   />
                 </div>
               </>
+            )}
+
+            {selectedStatus && (
+              <button
+                onClick={() => navigate("/all-leads")}
+                className="px-4 py-2 bg-white text-black rounded flex items-center gap-2"
+              >
+                <RiResetLeftFill className="mt-[1px]" />
+                <span>Reset Filters</span>
+              </button>
             )}
           </div>
 

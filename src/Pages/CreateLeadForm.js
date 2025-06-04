@@ -10,6 +10,7 @@ import {
   FaUser,
   FaEnvelope,
   FaBuilding,
+  FaBirthdayCake,
 } from "react-icons/fa";
 import {
   servicesName,
@@ -390,7 +391,7 @@ const CreateLeadForm = ({ setLeadModal, selectedLead }) => {
 
                       <div className="custom--date dob-format relative">
                         <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
-                          <FaEnvelope />
+                          <FaBirthdayCake />
                         </span>
                         <DatePicker
                           selected={

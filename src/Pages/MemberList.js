@@ -18,6 +18,7 @@ import {
 import { MdCall, MdModeEdit } from "react-icons/md";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import { LiaEdit } from "react-icons/lia";
 
 export const memberFilters = {
   membershipType: ["Gold", "Silver", "Platinum"],
@@ -230,7 +231,7 @@ const MemberList = () => {
                 <td className="px-2 py-4">
                   <div className="flex gap-1">
                     <Link to={`/member/${member.id}`} className="p-1">
-                      <MdModeEdit className="text-2xl text-black" />
+                      <LiaEdit className="text-2xl text-black" />
                     </Link>
                     <Link to="#" className="p-1">
                       <MdCall className="text-2xl text-black" />
