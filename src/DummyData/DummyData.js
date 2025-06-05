@@ -243,61 +243,7 @@ export const trialScheduledUsers = [
   },
 ];
 
-export const leadsStatus = {
-  chart: {
-    type: "column",
-    height: 300,
-  },
-  title: {
-    text: "Leads Distribution by Status",
-    align: "left",
-    style: {
-      fontSize: "16px",
-      fontWeight: "600",
-    },
-  },
-  xAxis: {
-    categories: ["New", "Contacted", "Lost", "Trial Scheduled"],
-    title: {
-      text: null,
-    },
-    labels: {
-      style: {
-        fontSize: "10px",
-      },
-    },
-  },
-  yAxis: {
-    min: 0,
-    title: {
-      text: null,
-    },
-    gridLineColor: "#e5e5e5",
-  },
-  legend: {
-    enabled: false,
-  },
-  tooltip: {
-    pointFormat: "Count: <b>{point.y}</b>",
-  },
-  plotOptions: {
-    column: {
-      borderRadius: 3,
-      pointPadding: 0.2,
-      borderWidth: 0,
-      color: "#888888",
-    },
-  },
-  series: [
-    {
-      name: "Leads",
-      data: [75, 40, 60, 45],
-    },
-  ],
-  credits: {
-    enabled: false,
-  },
-};
+  
 
 export const groupClasses = {
   chart: {
@@ -497,12 +443,14 @@ export const mockData = [
   {
     id: 1,
     status: "active",
+    leadStatus:"new",
     serviceName: "Membership Plan",
     gender: "male",
     serviceVariation: "1 Month",
     ageGroup: "0-5 years",
     salesRep: "Kritika",
     memberManager: "Kritika",
+    assignedLead:"",
     generalTrainer: "Ravinder",
     leadSource: "Google",
     invoice: "Not Billed Members",
@@ -538,12 +486,14 @@ export const mockData = [
   {
     id: 2,
     status: "inactive",
+    leadStatus:"lost",
     serviceName: "Membership Plan",
     gender: "female",
     serviceVariation: "1 Month",
     ageGroup: "0-5 years",
     salesRep: "Kritika",
     memberManager: "Kritika",
+    assignedLead:"",
     generalTrainer: "Ravinder",
     leadSource: "Google",
     invoice: "Not Billed Members",
@@ -579,12 +529,14 @@ export const mockData = [
   {
     id: 3,
     status: "active",
+    leadStatus:"closed",
     serviceName: "Personal Training",
     gender: "Not Specified",
     serviceVariation: "1 Month",
     ageGroup: "0-5 years",
     salesRep: "Kritika",
     memberManager: "Ravinder",
+    assignedLead:"",
     generalTrainer: "Kritika",
     leadSource: "Corporate",
     invoice: "Not Billed Members",
@@ -617,12 +569,14 @@ export const mockData = [
   {
     id: 4,
     status: "active",
+    leadStatus:"closed",
     serviceName: "Membership Plan",
     gender: "female",
     serviceVariation: "6 Month",
     ageGroup: "5-8 years",
     salesRep: "Ravinder",
     memberManager: "Kritika",
+    assignedLead:"",
     generalTrainer: "Ravinder",
     leadSource: "Google",
     invoice: "Expired Invoice",
@@ -655,12 +609,14 @@ export const mockData = [
   {
     id: 5,
     status: "active",
+    leadStatus:"lost",
     serviceName: "Membership Plan",
     gender: "male",
     serviceVariation: "6 Month",
     ageGroup: "0-5 years",
     salesRep: "Kritika",
     memberManager: "Kritika",
+    assignedLead:"",
     generalTrainer: "Kritika",
     leadSource: "Email",
     invoice: "Not Billed Members",
@@ -693,12 +649,14 @@ export const mockData = [
   {
     id: 6,
     status: "active",
+    leadStatus:"won",
     serviceName: "Membership Plan",
     gender: "male",
     serviceVariation: "1 Month",
     ageGroup: "0-5 years",
     salesRep: "Kritika",
     memberManager: "Kritika",
+    assignedLead:"",
     generalTrainer: "Ravinder",
     leadSource: "Google",
     invoice: "Not Billed Members",
@@ -731,12 +689,14 @@ export const mockData = [
   {
     id: 7,
     status: "active",
+    leadStatus:"opportunity",
     serviceName: "Personal Training",
     gender: "female",
     serviceVariation: "6 Month",
     ageGroup: "5-8 years",
     salesRep: "Ravinder",
     memberManager: "Ravinder",
+    assignedLead:"",
     generalTrainer: "Kritika",
     leadSource: "Email",
     invoice: "Expired Invoice",
@@ -769,12 +729,14 @@ export const mockData = [
   {
     id: 8,
     status: "inactive",
+    leadStatus:"opportunity",
     serviceName: "Personal Training",
     gender: "female",
     serviceVariation: "6 Month",
     ageGroup: "5-8 years",
     salesRep: "Ravinder",
     memberManager: "Ravinder",
+    assignedLead:"assigned",
     generalTrainer: "Kritika",
     leadSource: "Email",
     invoice: "Expired Invoice",
@@ -807,12 +769,14 @@ export const mockData = [
   {
     id: 9,
     status: "inactive",
+    leadStatus:"lead",
     serviceName: "Membership Plan",
     gender: "female",
     serviceVariation: "6 Month",
     ageGroup: "5-8 years",
     salesRep: "Ravinder",
     memberManager: "Kritika",
+    assignedLead:"assigned",
     generalTrainer: "Ravinder",
     leadSource: "Google",
     invoice: "Expired Invoice",
@@ -845,12 +809,14 @@ export const mockData = [
   {
     id: 10,
     status: "inactive",
+    leadStatus:"new",
     serviceName: "Personal Training",
     gender: "male",
     serviceVariation: "6 Month",
     ageGroup: "0-5 years",
     salesRep: "Kritika",
     memberManager: "Kritika",
+    assignedLead:"assigned",
     generalTrainer: "Kritika",
     leadSource: "Email",
     invoice: "Not Billed Members",

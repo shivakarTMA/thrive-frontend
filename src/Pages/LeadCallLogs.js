@@ -1,11 +1,16 @@
-import React from "react";
-import { useParams } from "react-router-dom";
-import { mockData, trainerAvailability } from "../DummyData/DummyData";
+import React, { useEffect } from "react";
+import { useLocation, useParams } from "react-router-dom";
+import { assignedLeadsData, mockData, trainerAvailability } from "../DummyData/DummyData";
 import CreateCallLogs from "../components/CreateCallLogs";
 
 const LeadCallLogs = () => {
   const { id } = useParams();
-  const leadDetails = mockData.find((m) => m.id === parseInt(id));
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const action = queryParams.get("action");
+
+  const dataSource = action === "add-follow-up" ? assignedLeadsData : mockData;
+  const leadDetails = dataSource.find((m) => m.id === parseInt(id));
 
   return (
     <div className="page--content">

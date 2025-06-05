@@ -66,7 +66,7 @@ const AllLeads = () => {
 
   const query = useQuery();
   const selectedStatus = query.get("leadStatus");
-  console.log(selectedStatus, "selectedStatus");
+  const selectedView = query.get("view");
 
   useEffect(() => {
     if (selectedStatus) {
@@ -74,10 +74,15 @@ const AllLeads = () => {
         (lead) => lead.leadStatus.toLowerCase() === selectedStatus.toLowerCase()
       );
       setAllLeads(filtered);
+    } else if (selectedView === "assigned") {
+      const assigned = mockData.filter(
+        (lead) => lead.assignedLead && lead.assignedLead !== "unassigned"
+      );
+      setAllLeads(assigned);
     } else {
       setAllLeads(mockData);
     }
-  }, [selectedStatus]);
+  }, [selectedStatus, selectedView]);
 
   const rowsPerPage = 5;
 
@@ -318,7 +323,7 @@ const AllLeads = () => {
               </>
             )}
 
-            {selectedStatus && (
+            {(selectedStatus || selectedView) && (
               <button
                 onClick={() => navigate("/all-leads")}
                 className="px-4 py-2 bg-white text-black rounded flex items-center gap-2"

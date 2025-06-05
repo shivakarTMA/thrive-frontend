@@ -5,13 +5,10 @@ import Select from "react-select";
 import {
   followUpsData,
   trialScheduledUsers,
-  leadsStatus,
   groupClasses,
   assignedLeadsData,
 } from "../DummyData/DummyData";
-import {
-  customStyles,
-} from "../Helper/helper";
+import { customStyles } from "../Helper/helper";
 import { FaUserCircle } from "react-icons/fa";
 import ScrollableTabs from "../components/common/ScrollableTabs";
 import { GoPlusCircle } from "react-icons/go";
@@ -20,6 +17,7 @@ import HighchartsReact from "highcharts-react-official";
 import TrialUserCard from "../components/TrialUserCard";
 import DatePicker from "react-datepicker";
 import PendingOrderTable from "../components/PendingOrderTable";
+import { useNavigate } from "react-router-dom";
 
 const callOptions = [
   { value: "enquiry calls", label: "Enquiry Calls" },
@@ -47,12 +45,91 @@ const filterOptions = [
 const tabs = ["Scheduled", "Attempted", "Contacted", "Not Contacted", "Missed"];
 
 const Home = () => {
+  const navigate = useNavigate();
   const [selectedType, setSelectedType] = useState(callOptions[0]);
   const [filterData, setFilterData] = useState(filterOptions[0]);
   const [fromDate, setFromDate] = useState(null);
   const [toDate, setToDate] = useState(null);
   const [selectedTab, setSelectedTab] = useState("Scheduled");
   const [trialLeads, setTrialLeads] = useState(trialScheduledUsers);
+  const leadsStatus = {
+    chart: {
+      type: "column",
+      height: 300,
+    },
+    title: {
+      text: "Leads Distribution by Status",
+      align: "left",
+      style: {
+        fontSize: "16px",
+        fontWeight: "600",
+      },
+    },
+    xAxis: {
+      categories: ["New", "Contacted", "Lost", "Trial Scheduled"],
+      title: {
+        text: null,
+      },
+      labels: {
+        style: {
+          fontSize: "10px",
+        },
+      },
+    },
+    yAxis: {
+      min: 0,
+      title: {
+        text: null,
+      },
+      gridLineColor: "#e5e5e5",
+    },
+    legend: {
+      enabled: false,
+    },
+    tooltip: {
+      pointFormat: "Count: <b>{point.y}</b>",
+    },
+    plotOptions: {
+      column: {
+        borderRadius: 3,
+        pointPadding: 0.2,
+        borderWidth: 0,
+        cursor: "pointer",
+        color: {
+          linearGradient: { x1: 0, y1: 0, x2: 0, y2: 1 }, // vertical gradient
+          stops: [
+            [0, "#00BFFF"], // top color
+            [1, "#1E90FF"], // bottom color
+          ],
+        },
+      },
+      series: {
+        point: {
+          events: {
+            click: function () {
+              const statusMap = {
+                New: "new",
+                Contacted: "contacted",
+                Lost: "lost",
+                "Trial Scheduled": "trial scheduled",
+              };
+              const selectedStatus = statusMap[this.category];
+              navigate(`/all-leads?leadStatus=${selectedStatus}`);
+            },
+          },
+        },
+      },
+    },
+    series: [
+      {
+        name: "Leads",
+        data: [75, 40, 60, 45],
+      },
+    ],
+    credits: {
+      enabled: false,
+    },
+  };
   const [orders, setOrders] = useState([
     {
       id: "ORD001",
@@ -280,7 +357,7 @@ const Home = () => {
 
           <div className="top--side flex items-center gap-2 justify-between mt-5">
             <h2>Assigned Leads ({assignedLeadsData.length})</h2>
-            <Link to="#" className="underline text-blue-500">
+            <Link to={`/all-leads?view=assigned`} className="underline text-blue-500">
               View All
             </Link>
           </div>
@@ -312,7 +389,7 @@ const Home = () => {
                         </div>
                       </div>
                     </div>
-                    <Link to="#" className="text-2xl font-bold text-black">
+                    <Link to={`/lead-follow-up/${user.id}?action=add-follow-up`} className="text-2xl font-bold text-black">
                       <GoPlusCircle />
                     </Link>
                   </div>
@@ -320,21 +397,23 @@ const Home = () => {
             ) : (
               <p className="text-sm text-gray-500">No records found.</p>
             )}
+
+            {console.log(assignedLeadsData,'assignedLeadsData')}
           </div>
         </div>
       </div>
 
       <div className="border rounded p-4 w-full mt-2">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="font-semibold">Pending Orders {`(${orders.length})`}</h2>
+          <h2 className="font-semibold">
+            Pending Orders {`(${orders.length})`}
+          </h2>
           <a href="#" className="text-blue-500 underline text-sm">
             View All
           </a>
         </div>
         <PendingOrderTable setOrders={setOrders} orders={orders} />
       </div>
-
-      
     </div>
   );
 };
