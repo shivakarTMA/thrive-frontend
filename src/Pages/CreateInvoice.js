@@ -270,11 +270,11 @@ const CreateInvoice = ({ setInvoiceModal }) => {
         onClick={handleOverlayClick}
       >
         <div
-          className="min-h-[70vh]  w-full max-w-5xl border shadow bg-white mx-auto mt-[100px] mb-[100px] container--leadbox rounded-[10px] flex flex-col"
+          className="min-h-[70vh]  w-[95%] max-w-5xl mx-auto mt-[100px] mb-[100px] container--leadbox rounded-[10px] flex flex-col"
           ref={leadBoxRef}
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="flex gap-3 items-center justify-between p-6 border-b">
+          <div className="bg-white rounded-t-[10px] flex gap-3 items-center justify-between py-4 px-4 border-b">
             <h2 className="text-xl font-semibold">Create a Invoice</h2>
             <div
               className="close--lead cursor-pointer"
@@ -284,330 +284,343 @@ const CreateInvoice = ({ setInvoiceModal }) => {
             </div>
           </div>
 
-          <div className="p-6">
-            <form className="space-y-6" onSubmit={formik.handleSubmit}>
-              <h3 className="text-2xl font-semibold">Invoice Details</h3>
+          <div className="flex-1s flexs ">
+            <form onSubmit={formik.handleSubmit}>
+              <div className="flex bg-white rounded-b-[10px]">
+                <div className="p-6 flex-1">
+                  <h3 className="text-2xl font-semibold">Invoice Details</h3>
 
-              <div className="grid grid-cols-3 gap-4">
-                <div>
-                  <label className="mb-2 block">Invoice Date</label>
-                  <input
-                    name="invoiceDetails.invoiceDate"
-                    value={formik.values.invoiceDetails.invoiceDate}
-                    readOnly={true}
-                    className="custom--input w-full"
-                  />
-                </div>
-                <div>
-                  <label className="mb-2 block">Lead Owner</label>
-                  <input
-                    name="invoiceDetails.leadOwner"
-                    value={formik.values.invoiceDetails.leadOwner}
-                    // onChange={formik.handleChange}
-                    className="custom--input w-full"
-                    readOnly={true}
-                  />
-                  {formik.errors.invoiceDetails?.leadOwner &&
-                    formik.touched.invoiceDetails?.leadOwner && (
-                      <div className="text-red-500 text-sm">
-                        {formik.errors.invoiceDetails?.leadOwner}
-                      </div>
-                    )}
-                </div>
+                  <div className="grid grid-cols-3 gap-4">
+                    <div>
+                      <label className="mb-2 block">Invoice Date</label>
+                      <input
+                        name="invoiceDetails.invoiceDate"
+                        value={formik.values.invoiceDetails.invoiceDate}
+                        readOnly={true}
+                        className="custom--input w-full"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-2 block">Lead Owner</label>
+                      <input
+                        name="invoiceDetails.leadOwner"
+                        value={formik.values.invoiceDetails.leadOwner}
+                        // onChange={formik.handleChange}
+                        className="custom--input w-full"
+                        readOnly={true}
+                      />
+                      {formik.errors.invoiceDetails?.leadOwner &&
+                        formik.touched.invoiceDetails?.leadOwner && (
+                          <div className="text-red-500 text-sm">
+                            {formik.errors.invoiceDetails?.leadOwner}
+                          </div>
+                        )}
+                    </div>
 
-                <div className="relative">
-                  <label className="mb-2 block">Name/Mobile Number</label>
-                  <input
-                    name="invoiceDetails.memberName"
-                    value={formik.values.invoiceDetails.memberName}
-                    onChange={handleSearchInputChange}
-                    className="custom--input w-full"
-                    autoComplete="off"
-                  />
-                  {formik.errors.invoiceDetails?.memberName &&
-                    formik.touched.invoiceDetails?.memberName && (
-                      <div className="text-red-500 text-sm">
-                        {formik.errors.invoiceDetails?.memberName}
-                      </div>
-                    )}
+                    <div className="relative">
+                      <label className="mb-2 block">Name/Mobile Number</label>
+                      <input
+                        name="invoiceDetails.memberName"
+                        value={formik.values.invoiceDetails.memberName}
+                        onChange={handleSearchInputChange}
+                        className="custom--input w-full"
+                        autoComplete="off"
+                      />
+                      {formik.errors.invoiceDetails?.memberName &&
+                        formik.touched.invoiceDetails?.memberName && (
+                          <div className="text-red-500 text-sm">
+                            {formik.errors.invoiceDetails?.memberName}
+                          </div>
+                        )}
 
-                  {showSuggestions && (
-                    <ul className="absolute z-10 bg-white border border-gray-300 mt-1 rounded shadow w-full max-h-60 overflow-auto">
-                      {searchResults.map((entry) => (
-                        <li
-                          key={entry.id}
-                          onClick={() => handleSuggestionClick(entry)}
-                          className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
-                        >
-                          <span className="font-medium">{entry.name}</span> 
-                          {/* <span className="text-sm text-gray-500">
+                      {showSuggestions && (
+                        <ul className="absolute z-10 bg-white border border-gray-300 mt-1 rounded shadow w-full max-h-60 overflow-auto">
+                          {searchResults.map((entry) => (
+                            <li
+                              key={entry.id}
+                              onClick={() => handleSuggestionClick(entry)}
+                              className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                            >
+                              <span className="font-medium">{entry.name}</span>
+                              {/* <span className="text-sm text-gray-500">
                             {entry.contact}
                           </span> */}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-              </div>
-              <hr />
-
-              {formik.values.productInfo.map((product, index) => (
-                <div
-                  key={index}
-                  className="grid grid-cols-3 gap-4 mb-6 border pb-4 bg-gray-50 p-3 rounded"
-                >
-                  {/* Product Type */}
-                  <div>
-                    <label className="mb-2 block">Product Type</label>
-                    <Select
-                      name={`productInfo.${index}.productType`}
-                      value={servicesList.find(
-                        (s) => s.value === product.productType
+                            </li>
+                          ))}
+                        </ul>
                       )}
-                      onChange={(selected) =>
-                        formik.setFieldValue(
-                          `productInfo.${index}.productType`,
-                          selected?.value || ""
-                        )
-                      }
-                      options={servicesList}
-                      styles={customStyles}
-                    />
+                    </div>
                   </div>
 
-                  {/* Variation */}
-                  <div>
-                    <label className="mb-2 block">Variation</label>
+                  {formik.values.productInfo.map((product, index) => (
                     <div
-                      onClick={() => {
-                        if (!product.productType) {
-                          toast.warning("Please select a Product Type first.");
-                          return;
-                        }
-
-                        setSelectedProductType(product.productType); // <-- Track this for modal filtering
-                        setEditingProductIndex(index);
-                        setShowProductModal(true);
-                      }}
+                      key={index}
+                      className="grid grid-cols-3 gap-4 mb-6 border pb-4 bg-gray-50 p-3 rounded mt-4"
                     >
-                      <input
-                        name={`productInfo.${index}.serviceVariation`}
-                        value={product.serviceVariation}
-                        className="custom--input w-full"
-                        readOnly
-                      />
-                    </div>
-                  </div>
-
-                  {/* Start & Expiry Dates */}
-                  <div className="flex gap-3">
-                    <div>
-                      <label className="mb-2 block">Start date</label>
-                      <div className="custom--date">
-                        <DatePicker
-                          selected={
-                            product.startDate
-                              ? new Date(product.startDate)
-                              : null
+                      {/* Product Type */}
+                      <div>
+                        <label className="mb-2 block">Product Type</label>
+                        <Select
+                          name={`productInfo.${index}.productType`}
+                          value={servicesList.find(
+                            (s) => s.value === product.productType
+                          )}
+                          onChange={(selected) =>
+                            formik.setFieldValue(
+                              `productInfo.${index}.productType`,
+                              selected?.value || ""
+                            )
                           }
-                          onChange={(date) =>
-                            handleStartDateChange(date, index)
-                          }
-                          dateFormat="dd MMM yyyy"
-                          placeholderText="Select date"
-                          readOnly={!product.serviceVariation}
+                          options={servicesList}
+                          styles={customStyles}
                         />
                       </div>
-                    </div>
 
-                    <div>
-                      <label className="mb-2 block">Expiry date</label>
-                      <div className="custom--date">
-                        <DatePicker
-                          selected={
-                            product.endDate ? new Date(product.endDate) : null
+                      {/* Variation */}
+                      <div>
+                        <label className="mb-2 block">Variation</label>
+                        <div
+                          onClick={() => {
+                            if (!product.productType) {
+                              toast.warning(
+                                "Please select a Product Type first."
+                              );
+                              return;
+                            }
+
+                            setSelectedProductType(product.productType); // <-- Track this for modal filtering
+                            setEditingProductIndex(index);
+                            setShowProductModal(true);
+                          }}
+                        >
+                          <input
+                            name={`productInfo.${index}.serviceVariation`}
+                            value={product.serviceVariation}
+                            className="custom--input w-full"
+                            readOnly
+                          />
+                        </div>
+                      </div>
+
+                      {/* Start & Expiry Dates */}
+                      <div className="flex gap-3">
+                        <div>
+                          <label className="mb-2 block">Start date</label>
+                          <div className="custom--date">
+                            <DatePicker
+                              selected={
+                                product.startDate
+                                  ? new Date(product.startDate)
+                                  : null
+                              }
+                              onChange={(date) =>
+                                handleStartDateChange(date, index)
+                              }
+                              dateFormat="dd MMM yyyy"
+                              placeholderText="Select date"
+                              readOnly={!product.serviceVariation}
+                            />
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="mb-2 block">Expiry date</label>
+                          <div className="custom--date">
+                            <DatePicker
+                              selected={
+                                product.endDate
+                                  ? new Date(product.endDate)
+                                  : null
+                              }
+                              dateFormat="dd MMM yyyy"
+                              readOnly
+                              placeholderText="End date"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Duration */}
+                      <div>
+                        <label className="mb-2 block">Duration</label>
+                        <input
+                          name={`productInfo.${index}.duration`}
+                          value={product.duration}
+                          onChange={(e) =>
+                            formik.setFieldValue(
+                              `productInfo.${index}.duration`,
+                              e.target.value
+                            )
                           }
-                          dateFormat="dd MMM yyyy"
-                          readOnly
-                          placeholderText="End date"
+                          className="custom--input w-full"
                         />
                       </div>
+
+                      {/* Service Fee */}
+                      <div>
+                        <label className="mb-2 block">Service Fee</label>
+                        <input
+                          name={`productInfo.${index}.productAmount`}
+                          value={product.productAmount}
+                          className="custom--input w-full"
+                          readOnly={true}
+                        />
+                      </div>
+
+                      {/* Voucher Code (Per Product) */}
+                      <div>
+                        <label className="mb-2 block">Voucher Code</label>
+                        <div className="flex gap-0">
+                          <input
+                            name={`productInfo.${index}.discountCode`}
+                            type="text"
+                            value={product.discountCode || ""}
+                            onChange={(e) =>
+                              formik.setFieldValue(
+                                `productInfo.${index}.discountCode`,
+                                e.target.value
+                              )
+                            }
+                            placeholder="Enter voucher code"
+                            className="!rounded-r-[0px] custom--input w-full"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => handleApplyVoucher(index)}
+                            className="px-4 py-2 bg-black text-white rounded-r-[10px]"
+                          >
+                            Apply
+                          </button>
+                        </div>
+                        {product.voucherStatus === "success" && (
+                          <p className="text-green-600 text-sm mt-1">
+                            Voucher applied: {product.appliedVoucherCode} (
+                            {product.discountPercent}% off)
+                          </p>
+                        )}
+                        {product.voucherStatus === "error" && (
+                          <p className="text-red-600 text-sm mt-1">
+                            Invalid voucher code.
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Remove Button */}
+                      {index === 0 ? null : (
+                        <div className="col-span-3 flex justify-between">
+                          <button
+                            type="button"
+                            className="px-5 py-3 text-sm rounded bg-black text-white flex items-center justify-center gap-2"
+                            onClick={() => {
+                              const updated = [...formik.values.productInfo];
+                              updated.splice(index, 1);
+                              formik.setFieldValue("productInfo", updated);
+                            }}
+                          >
+                            <RiDeleteBin6Line />
+                            Remove
+                          </button>
+                        </div>
+                      )}
+
+                      {product.voucherStatus === "success" && (
+                        <div className="text-lg text-black">
+                          Final Price after discount:{" "}
+                          <strong>₹{product.finalAmount}</strong>
+                        </div>
+                      )}
                     </div>
-                  </div>
+                  ))}
 
-                  {/* Duration */}
-                  <div>
-                    <label className="mb-2 block">Duration</label>
-                    <input
-                      name={`productInfo.${index}.duration`}
-                      value={product.duration}
-                      onChange={(e) =>
-                        formik.setFieldValue(
-                          `productInfo.${index}.duration`,
-                          e.target.value
-                        )
-                      }
-                      className="custom--input w-full"
-                    />
-                  </div>
+                  <button
+                    type="button"
+                    className="px-5 py-3 text-sm rounded bg-black text-white flex items-center justify-center gap-2"
+                    onClick={() => {
+                      const newProduct = {
+                        productType: "",
+                        serviceVariation: "",
+                        startDate: "",
+                        endDate: "",
+                        sacCode: "",
+                        duration: "",
+                        productAmount: "",
+                        discount: "",
+                        productTotal: "",
+                      };
+                      formik.setFieldValue("productInfo", [
+                        ...formik.values.productInfo,
+                        newProduct,
+                      ]);
+                    }}
+                  >
+                    <FaPlus />
+                    Add Another Product
+                  </button>
 
-                  {/* Service Fee */}
-                  <div>
-                    <label className="mb-2 block">Service Fee</label>
-                    <input
-                      name={`productInfo.${index}.productAmount`}
-                      value={product.productAmount}
-                      className="custom--input w-full"
-                      readOnly={true}
-                    />
-                  </div>
-
-                  {/* Voucher Code (Per Product) */}
-                  <div>
-                    <label className="mb-2 block">Voucher Code</label>
-                    <div className="flex gap-0">
-                      <input
-                        name={`productInfo.${index}.discountCode`}
-                        type="text"
-                        value={product.discountCode || ""}
-                        onChange={(e) =>
-                          formik.setFieldValue(
-                            `productInfo.${index}.discountCode`,
-                            e.target.value
-                          )
-                        }
-                        placeholder="Enter voucher code"
-                        className="!rounded-r-[0px] custom--input w-full"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => handleApplyVoucher(index)}
-                        className="px-4 py-2 bg-black text-white rounded-r-[10px]"
-                      >
-                        Apply
-                      </button>
+                  <div className="bg-[#f7f7f7] p-[20px] rounded-[10px] mt-4">
+                    <h3 className="text-2xl font-semibold">
+                      Price Calculation
+                    </h3>
+                    <div className="price--calculation2 my-5">
+                      <div className="price--item">
+                        <p className="flex items-center gap-2 justify-between mb-2 border-b pb-2">
+                          Reg Fee:{" "}
+                          <span className="font-bold">
+                            ₹{regFee.toFixed(2)}
+                          </span>
+                        </p>
+                      </div>
+                      <div className="price--item">
+                        <p className="flex items-center gap-2 justify-between mb-2 border-b pb-2">
+                          Total Service Fee:{" "}
+                          <span className="font-bold">
+                            ₹{serviceFee.toFixed(2)}
+                          </span>
+                        </p>
+                      </div>
+                      <div className="price--item">
+                        <p className="flex items-center gap-2 justify-between mb-2 border-b pb-2">
+                          CGST (9%):{" "}
+                          <span className="font-bold">₹{cgst.toFixed(2)}</span>
+                        </p>
+                      </div>
+                      <div className="price--item">
+                        <p className="flex items-center gap-2 justify-between mb-2 border-b pb-2">
+                          SGST (9%):{" "}
+                          <span className="font-bold">₹{sgst.toFixed(2)}</span>
+                        </p>
+                      </div>
+                      <div className="price--item">
+                        <p className="flex items-center gap-2 justify-between mb-2 border-b pb-2">
+                          Subtotal:{" "}
+                          <span className="font-bold">
+                            ₹{subtotal.toFixed(2)}
+                          </span>
+                        </p>
+                      </div>
                     </div>
-                    {product.voucherStatus === "success" && (
-                      <p className="text-green-600 text-sm mt-1">
-                        Voucher applied: {product.appliedVoucherCode} (
-                        {product.discountPercent}% off)
-                      </p>
-                    )}
-                    {product.voucherStatus === "error" && (
-                      <p className="text-red-600 text-sm mt-1">
-                        Invalid voucher code.
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Remove Button */}
-                  {index === 0 ? null : (
-                    <div className="col-span-3 flex justify-between">
-                      <button
-                        type="button"
-                        className="px-5 py-3 text-sm rounded bg-black text-white flex items-center justify-center gap-2"
-                        onClick={() => {
-                          const updated = [...formik.values.productInfo];
-                          updated.splice(index, 1);
-                          formik.setFieldValue("productInfo", updated);
-                        }}
-                      >
-                        <RiDeleteBin6Line />
-                        Remove
-                      </button>
-                    </div>
-                  )}
-
-                  {product.voucherStatus === "success" && (
-                    <div className="text-lg text-black">
-                      Final Price after discount:{" "}
-                      <strong>₹{product.finalAmount}</strong>
-                    </div>
-                  )}
-                </div>
-              ))}
-
-              <button
-                type="button"
-                className="px-5 py-3 text-sm rounded bg-black text-white flex items-center justify-center gap-2"
-                onClick={() => {
-                  const newProduct = {
-                    productType: "",
-                    serviceVariation: "",
-                    startDate: "",
-                    endDate: "",
-                    sacCode: "",
-                    duration: "",
-                    productAmount: "",
-                    discount: "",
-                    productTotal: "",
-                  };
-                  formik.setFieldValue("productInfo", [
-                    ...formik.values.productInfo,
-                    newProduct,
-                  ]);
-                }}
-              >
-                <FaPlus />
-                Add Another Product
-              </button>
-
-              <hr />
-              <div className="bg-[#f7f7f7] p-[20px] rounded-[10px]">
-                <h3 className="text-2xl font-semibold">Price Calculation</h3>
-                <div className="price--calculation2 my-5">
-                  <div className="price--item">
-                    <p className="flex items-center gap-2 justify-between mb-2 border-b pb-2">
-                      Reg Fee:{" "}
-                      <span className="font-bold">₹{regFee.toFixed(2)}</span>
-                    </p>
-                  </div>
-                  <div className="price--item">
-                    <p className="flex items-center gap-2 justify-between mb-2 border-b pb-2">
-                      Total Service Fee:{" "}
-                      <span className="font-bold">
-                        ₹{serviceFee.toFixed(2)}
-                      </span>
-                    </p>
-                  </div>
-                  <div className="price--item">
-                    <p className="flex items-center gap-2 justify-between mb-2 border-b pb-2">
-                      CGST (9%):{" "}
-                      <span className="font-bold">₹{cgst.toFixed(2)}</span>
-                    </p>
-                  </div>
-                  <div className="price--item">
-                    <p className="flex items-center gap-2 justify-between mb-2 border-b pb-2">
-                      SGST (9%):{" "}
-                      <span className="font-bold">₹{sgst.toFixed(2)}</span>
-                    </p>
-                  </div>
-                  <div className="price--item">
-                    <p className="flex items-center gap-2 justify-between mb-2 border-b pb-2">
-                      Subtotal:{" "}
-                      <span className="font-bold">₹{subtotal.toFixed(2)}</span>
+                    <p className="text-1xl font-semibold flex items-center gap-2 justify-between pb-2">
+                      Total Payment:{" "}
+                      <span className="font-bold">₹{total.toFixed(2)}</span>
                     </p>
                   </div>
                 </div>
-                <p className="text-1xl font-semibold flex items-center gap-2 justify-between pb-2">
-                  Total Payment:{" "}
-                  <span className="font-bold">₹{total.toFixed(2)}</span>
-                </p>
               </div>
 
-              <div className="flex gap-4 justify-end">
+              <div className="flex gap-4 py-5 justify-end">
                 <button
                   type="button"
-                  className="px-4 py-2 border rounded"
+                  className="px-4 py-2 bg-transparent border border-white text-white font-semibold rounded max-w-[150px] w-full"
                   onClick={() => {
                     formik.resetForm();
+                    setInvoiceModal(false);
                   }}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-black text-white rounded"
+                  className="px-4 py-2 bg-white text-black font-semibold rounded max-w-[150px] w-full"
                 >
                   Make Payment
                 </button>

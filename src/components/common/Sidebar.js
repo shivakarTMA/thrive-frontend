@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { AiOutlineHome } from "react-icons/ai";
+import { AiOutlineHome, AiOutlineProduct } from "react-icons/ai";
 import { FiUsers, FiUserPlus } from "react-icons/fi";
-import { FaAngleDown } from "react-icons/fa6";
+import { FaAngleDown, FaCircle, FaRegBuilding } from "react-icons/fa6";
 import { Link, useLocation } from "react-router-dom";
 import { PiChartPieSlice, PiUserList } from "react-icons/pi";
 import { SlCalender } from "react-icons/sl";
@@ -15,36 +15,30 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
   const { accessToken } = useSelector((state) => state.auth);
   const userType = useSelector((state) => state.auth?.user?.userType);
 
-  // const [dropdownToggle, setDropdownToggle] = useState();
+  const [dropdownToggles, setDropdownToggles] = useState({});
 
-  // useEffect(() => {
-  //   if (toggleMenuBar) {
-  //     setDropdownToggle(false);
-  //   }
-  // }, [toggleMenuBar]);
+  const toggleMenu = (menuKey) => {
+    setDropdownToggles((prev) => ({
+      ...prev,
+      [menuKey]: !prev[menuKey],
+    }));
+    setToggleMenuBar(false);
+  };
 
-  // const toggleLeadsMenu = () => {
-  //   setDropdownToggle(!dropdownToggle);
-  //   setToggleMenuBar(false);
-  // };
+  useEffect(() => {
+    if (toggleMenuBar) {
+      setDropdownToggles({});
+    }
+  }, [toggleMenuBar]);
+
+  useEffect(() => {
+    setToggleMenuBar(false);
+    setDropdownToggles({});
+  }, [location.pathname]);
 
   // const handleLeadModal = () => {
   //   setLeadModal(true);
   // };
-
-  // useEffect(() => {
-  //   // Keep dropdown open if current path matches dropdown routes
-  //   const dropdownRoutes = ["/all-leads", "/create-lead"];
-  //   const isDropdownActive = dropdownRoutes.some((path) =>
-  //     location.pathname.startsWith(path)
-  //   );
-  //   setDropdownToggle(isDropdownActive);
-
-  //   // Close dropdown when menu bar is toggled
-  //   if (toggleMenuBar) {
-  //     setDropdownToggle(false);
-  //   }
-  // }, [location.pathname, toggleMenuBar]);
 
   return (
     <div className={`sidebar ${toggleMenuBar ? "activetoggle" : ""}`}>
@@ -145,13 +139,101 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
               <GoTools className="menu--icon" />
               <span className="nav-text">Operational Tools</span>
             </Link>
-            <Link to="/services-list/" className="nav-link mb-2">
+            {/* <Link to="/services-list/" className="nav-link mb-2">
+              <LuList className="menu--icon" />
+              <span className="nav-text">Services</span>
+            </Link> */}
+
+            {/* <div
+              className="nav-link d-flex justify-between align-items-center mb-2"
+              onClick={() => toggleMenu("services")}
+              style={{ cursor: "pointer" }}
+            >
+              <div className="flex items-center">
+                <LuList className="menu--icon" />
+                <span className="nav-text">Services</span>
+              </div>
+              <FaAngleDown
+                className={`downmenu transition ${
+                  dropdownToggles["services"] ? "rotate-[180deg]" : ""
+                }`}
+              />
+            </div>
+
+            {dropdownToggles["services"] && (
+              <div className="mt-2 pl-5 relative">
+                <div className="absolute h-[calc(100%-15px)] w-[2px] bg-white left-[25px] top-[8px]"></div>
+                <Link
+                  to="#"
+                  className="text-white flex items-center gap-[5px] mb-2"
+                >
+                  <FaCircle className="menu--icon !text-[12px]" />
+                  <span className="nav-text">All Services</span>
+                </Link>
+                <Link
+                  to="/create-service"
+                  className="text-white flex items-center gap-[5px] mb-2"
+                >
+                  <FaCircle className="menu--icon !text-[12px]" />
+                  <span className="nav-text">Create Service</span>
+                </Link>
+              </div>
+            )} */}
+
+            {/* Products Menu */}
+            {/* <div
+              className="nav-link d-flex justify-between align-items-center mb-2"
+              onClick={() => toggleMenu("products")}
+              style={{ cursor: "pointer" }}
+            >
+              <div className="flex items-center">
+                <AiOutlineProduct className="menu--icon" />
+                <span className="nav-text">Products</span>
+              </div>
+              <FaAngleDown
+                className={`downmenu transition ${
+                  dropdownToggles["products"] ? "rotate-[180deg]" : ""
+                }`}
+              />
+            </div>
+
+            {dropdownToggles["products"] && (
+              <div className="mt-2 pl-5 relative">
+                <div className="absolute h-[calc(100%-15px)] w-[2px] bg-white left-[25px] top-[8px]"></div>
+                <Link
+                  to="#"
+                  className="text-white flex items-center gap-[5px] mb-2"
+                >
+                  <FaCircle className="menu--icon !text-[12px]" />
+                  <span className="nav-text">All Products</span>
+                </Link>
+                <Link
+                  to="/create-product"
+                  className="text-white flex items-center gap-[5px] mb-2"
+                >
+                  <FaCircle className="menu--icon !text-[12px]" />
+                  <span className="nav-text">Create Product</span>
+                </Link>
+              </div>
+            )} */}
+            <Link to="/products" className="nav-link mb-2">
+              <AiOutlineProduct className="menu--icon" />
+              <span className="nav-text">Products</span>
+            </Link>
+            <Link to="/services-addons" className="nav-link mb-2">
               <LuList className="menu--icon" />
               <span className="nav-text">Services</span>
             </Link>
+            <Link to="/companies" className="nav-link mb-2">
+              <FaRegBuilding className="menu--icon" />
+              <span className="nav-text">Companies</span>
+            </Link>
+            <Link to="/staff" className="nav-link mb-2">
+              <FiUsers className="menu--icon" />
+              <span className="nav-text">Staff</span>
+            </Link>
             <Link to="#" className="nav-link mb-2">
               <PiChartPieSlice className="menu--icon" />
-
               <span className="nav-text">Reports</span>
             </Link>
           </>

@@ -301,9 +301,7 @@ const CreateLeadForm = ({ setLeadModal, selectedLead }) => {
           </div>
 
           <div className="flex-1s flexs ">
-            <form
-              // className="space-y-6 flex-1 flex flex-col justify-between"
-              onSubmit={formik.handleSubmit}
+            <form onSubmit={formik.handleSubmit}
             >
               <div className="flex bg-white rounded-b-[10px]">
                 <div className="p-6 flex-1">

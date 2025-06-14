@@ -31,6 +31,13 @@ import ResetPassword from "../components/common/ResetPassword";
 import LeadCallLogs from "../Pages/LeadCallLogs";
 import ServicesLIst from "../Pages/ServicesLIst";
 import BookingService from "../Pages/BookingService";
+import CreateProduct from "../components/Products/CreateProduct";
+import CreateService from "../components/Services/CreateService";
+import CompanyList from "../components/Companies/CompanyList";
+import ProductsList from "../components/Products/ProductsList";
+import ServicesAddons from "../components/Services/ServicesAddons";
+import StaffList from "../components/Staff/StaffList";
+
 
 export default function Routing() {
   const { accessToken } = useSelector((state) => state.auth);
@@ -130,6 +137,38 @@ export default function Routing() {
               element={
                 <PrivateRoute>
                   <BookingService />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/products"
+              element={
+                <PrivateRoute>
+                  <ProductsList />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/companies"
+              element={
+                <PrivateRoute>
+                  <CompanyList />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/services-addons"
+              element={
+                <PrivateRoute>
+                  <ServicesAddons />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/staff"
+              element={
+                <PrivateRoute>
+                  <StaffList />
                 </PrivateRoute>
               }
             />

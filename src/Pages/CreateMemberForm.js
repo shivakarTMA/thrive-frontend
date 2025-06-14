@@ -23,7 +23,7 @@ import {
   formatTime,
   selectIcon,
 } from "../Helper/helper";
-import { IoCloseCircle } from "react-icons/io5";
+import { IoCloseCircle, IoDocumentSharp, IoKey } from "react-icons/io5";
 import { Formik, Field, Form, ErrorMessage, useFormik } from "formik";
 import * as Yup from "yup";
 import {
@@ -50,6 +50,11 @@ const voucherList = [
   { code: "FIT10", discount: 10 },
   { code: "WELCOME20", discount: 20 },
   { code: "SUMMER25", discount: 25 },
+];
+
+const SelectOptions = [
+  { value: "yes", label: "Yes" },
+  { value: "no", label: "No" },
 ];
 
 const stepValidationSchemas = [
@@ -122,6 +127,12 @@ const leadSourceTypes = [
   { value: "instagram", label: "Instagram" },
   { value: "others", label: "Others" },
 ];
+const kycDocumentsOptions = [
+  { value: "Aadhar Card", label: "Aadhar Card" },
+  { value: "PAN Card", label: "PAN Card" },
+  { value: "Passport", label: "Passport" },
+  { value: "Voter ID", label: "Voter ID" },
+];
 
 const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
   const [activeTab, setActiveTab] = useState("personal");
@@ -158,6 +169,9 @@ const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
       leadSourceType: "",
       otherSource: "",
       leadType: "",
+      multiClubAccess: "",
+      kycSubmitted: "",
+      kycDocuments: [],
     },
     professionalInformation: {
       designation: "",
@@ -207,33 +221,34 @@ const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
   });
 
   useEffect(() => {
-  if (selectedLeadMember) {
-    formik.setValues({
-      memberDetails: {
-        profileImage: selectedLeadMember.profileImage || "",
-        name: selectedLeadMember.name || "",
-        contactNumber: selectedLeadMember.contact || "",
-        email: selectedLeadMember.email || "",
-        gender: selectedLeadMember.gender || "",
-        dob: selectedLeadMember.dob || null,
-        address: selectedLeadMember.address || "",
-      },
-      leadInformation: {
-        leadSource: selectedLeadMember.leadSource || "",
-        leadSourceType: selectedLeadMember.leadSourceType || "",
-        otherSource: selectedLeadMember.otherSource || "",
-        leadType: selectedLeadMember.leadType || "",
-      },
-      professionalInformation: {
-        designation: selectedLeadMember.designation || "",
-        companyName: selectedLeadMember.companyName || "",
-        officialEmail: selectedLeadMember.officialEmail || "",
-      },
-    
-    });
-  }
-}, [selectedLeadMember]);
-
+    if (selectedLeadMember) {
+      formik.setValues({
+        memberDetails: {
+          profileImage: selectedLeadMember.profileImage || "",
+          name: selectedLeadMember.name || "",
+          contactNumber: selectedLeadMember.contact || "",
+          email: selectedLeadMember.email || "",
+          gender: selectedLeadMember.gender || "",
+          dob: selectedLeadMember.dob || null,
+          address: selectedLeadMember.address || "",
+        },
+        leadInformation: {
+          leadSource: selectedLeadMember.leadSource || "",
+          leadSourceType: selectedLeadMember.leadSourceType || "",
+          otherSource: selectedLeadMember.otherSource || "",
+          leadType: selectedLeadMember.leadType || "",
+          multiClubAccess: selectedLeadMember.multiClubAccess || "",
+          kycSubmitted: selectedLeadMember.kycSubmitted || "",
+          kycDocuments: selectedLeadMember.kycDocuments || [],
+        },
+        professionalInformation: {
+          designation: selectedLeadMember.designation || "",
+          companyName: selectedLeadMember.companyName || "",
+          officialEmail: selectedLeadMember.officialEmail || "",
+        },
+      });
+    }
+  }, [selectedLeadMember]);
 
   const handleNextStep = async () => {
     const errors = await formik.validateForm();
@@ -834,7 +849,7 @@ const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
                           "social media" && (
                           <div>
                             <label className="mb-2 block">
-                              Lead Sub-Source
+                              Social Media
                               <span className="text-red-500">*</span>
                             </label>
                             <div className="relative">
@@ -865,6 +880,84 @@ const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
                                   {formik.errors.leadInformation.leadSourceType}
                                 </div>
                               )}
+                          </div>
+                        )}
+                        <div>
+                          <label className="mb-2 block">
+                            Multi Club Access
+                          </label>
+                          <div className="relative">
+                            <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
+                              <IoKey />
+                            </span>
+                            <Select
+                              name="leadInformation.multiClubAccess"
+                              value={SelectOptions.find(
+                                (opt) =>
+                                  opt.value ===
+                                  formik.values.leadInformation.multiClubAccess
+                              )}
+                              onChange={(option) =>
+                                formik.setFieldValue(
+                                  "leadInformation.multiClubAccess",
+                                  option.value
+                                )
+                              }
+                              options={SelectOptions}
+                              styles={selectIcon}
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <label className="mb-2 block">KYC Submitted ?</label>
+                          <div className="relative">
+                            <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
+                              <IoKey />
+                            </span>
+                            <Select
+                              name="leadInformation.kycSubmitted"
+                              value={SelectOptions.find(
+                                (opt) =>
+                                  opt.value ===
+                                  formik.values.leadInformation.kycSubmitted
+                              )}
+                              onChange={(option) =>
+                                formik.setFieldValue(
+                                  "leadInformation.kycSubmitted",
+                                  option.value
+                                )
+                              }
+                              options={SelectOptions}
+                              styles={selectIcon}
+                            />
+                          </div>
+                        </div>
+                        {formik.values.leadInformation.kycSubmitted ===
+                          "yes" && (
+                          <div>
+                            <label className="mb-2 block">KYC Documents</label>
+                            <div className="relative">
+                              <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
+                                <IoDocumentSharp />
+                              </span>
+                              <Select
+                                name="leadInformation.kycDocuments"
+                                options={kycDocumentsOptions}
+                                isMulti
+                                value={kycDocumentsOptions.filter((option) =>
+                                  formik.values.leadInformation.kycDocuments.includes(
+                                    option.value
+                                  )
+                                )}
+                                onChange={(selectedOptions) =>
+                                  formik.setFieldValue(
+                                    "leadInformation.kycDocuments",
+                                    selectedOptions.map((opt) => opt.value)
+                                  )
+                                }
+                                styles={selectIcon} // your existing styles
+                              />
+                            </div>
                           </div>
                         )}
                       </div>
@@ -898,18 +991,25 @@ const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
                         <div>
                           <label className="mb-2 block">Company</label>
                           <div className="relative">
-                            <span className="absolute top-[50%] translate-y-[-50%] left-[15px]">
+                            <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
                               <FaBuilding />
                             </span>
-                            <input
-                              type="text"
+                            <Select
                               name="professionalInformation.companyName"
-                              value={
-                                formik.values.professionalInformation
-                                  .companyName
+                              value={companies.find(
+                                (opt) =>
+                                  opt.value ===
+                                  formik.values.professionalInformation
+                                    .companyName
+                              )}
+                              onChange={(option) =>
+                                formik.setFieldValue(
+                                  "professionalInformation.companyName",
+                                  option.value
+                                )
                               }
-                              onChange={formik.handleChange}
-                              className="custom--input w-full input--icon"
+                              options={companies}
+                              styles={selectIcon}
                             />
                           </div>
 
@@ -1185,7 +1285,10 @@ const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
                         </div>
                         <div>
                           <label className="mb-2 block">Product Name</label>
-                          <div  className="relative" onClick={() => setShowProductModal(true)}>
+                          <div
+                            className="relative"
+                            onClick={() => setShowProductModal(true)}
+                          >
                             <span className="absolute top-[50%] translate-y-[-50%] left-[15px]">
                               <FaListCheck />
                             </span>
@@ -1245,15 +1348,15 @@ const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
                             <span className="absolute top-[50%] translate-y-[-50%] left-[12px]">
                               <IoIosTime className="text-xl" />
                             </span>
-                          <input
-                            name="productDetails.servicesDuration"
-                            value={
-                              formik.values.productDetails.servicesDuration
-                            }
-                            onChange={formik.handleChange}
-                            className="custom--input w-full input--icon"
-                          />
-                        </div>
+                            <input
+                              name="productDetails.servicesDuration"
+                              value={
+                                formik.values.productDetails.servicesDuration
+                              }
+                              onChange={formik.handleChange}
+                              className="custom--input w-full input--icon"
+                            />
+                          </div>
                         </div>
 
                         <div>
@@ -1262,13 +1365,13 @@ const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
                             <span className="absolute top-[50%] translate-y-[-50%] left-[12px]">
                               <LuIndianRupee className="text-xl" />
                             </span>
-                          <input
-                            name="productDetails.amount"
-                            value={formik.values.productDetails.amount}
-                            readOnly={true}
-                            className="custom--input w-full input--icon"
-                          />
-                        </div>
+                            <input
+                              name="productDetails.amount"
+                              value={formik.values.productDetails.amount}
+                              readOnly={true}
+                              className="custom--input w-full input--icon"
+                            />
+                          </div>
                         </div>
                       </div>
 
