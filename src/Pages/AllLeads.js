@@ -8,7 +8,7 @@ import { LiaEdit } from "react-icons/lia";
 import { MdCall } from "react-icons/md";
 import Select from "react-select";
 import { customStyles } from "../Helper/helper";
-import { mockData } from "../DummyData/DummyData";
+import { leadList } from "../DummyData/DummyData";
 import CreateLeadForm from "./CreateLeadForm";
 import { Link } from "react-router-dom";
 import DatePicker from "react-datepicker";
@@ -23,7 +23,10 @@ import {
 import FiltersPanel from "./MultiSelectFilter";
 import { useLocation } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
-import { RiResetLeftFill } from "react-icons/ri";
+import { RiCalendarScheduleLine, RiResetLeftFill } from "react-icons/ri";
+import { TbArrowsExchange } from "react-icons/tb";
+import Tooltip from "../components/common/Tooltip";
+import CreateMemberForm from "./CreateMemberForm";
 const useQuery = () => {
   return new URLSearchParams(useLocation().search);
 };
@@ -48,17 +51,20 @@ const AllLeads = () => {
   const [page, setPage] = useState(1);
   const [leadModal, setLeadModal] = useState(false);
   const [selectedLead, setSelectedLead] = useState(null);
+  const [memberModal, setMemberModal] = useState(false);
+  const [selectedLeadMember, setSelectedLeadMember] = useState(null);
 
   const [selectedService, setSelectedService] = useState(null);
   const [selectedLeadSource, setSelectedLeadSource] = useState(null);
   const [selectedCallTag, setSelectedCallTag] = useState(null);
   const [selectedLeadStatus, setSelectedLeadStatus] = useState(null);
-  const [selectedLeadType, setSelectedLeadType] = useState(null);
+  const [selectedLeadStage, setSelectedLeadStage] = useState(null);
+  const [selectedLastCallType, setSelectedLastCallType] = useState(null);
   const [dateFilter, setDateFilter] = useState(null);
   const [customFrom, setCustomFrom] = useState(null);
   const [customTo, setCustomTo] = useState(null);
 
-  const [allLeads, setAllLeads] = useState(mockData); // this replaces direct use of mockData
+  const [allLeads, setAllLeads] = useState(leadList); // this replaces direct use of leadList
   // const [uploadErrors, setUploadErrors] = useState([]);
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [previewNewLeads, setPreviewNewLeads] = useState([]);
@@ -70,17 +76,17 @@ const AllLeads = () => {
 
   useEffect(() => {
     if (selectedStatus) {
-      const filtered = mockData.filter(
+      const filtered = leadList.filter(
         (lead) => lead.leadStatus.toLowerCase() === selectedStatus.toLowerCase()
       );
       setAllLeads(filtered);
     } else if (selectedView === "assigned") {
-      const assigned = mockData.filter(
+      const assigned = leadList.filter(
         (lead) => lead.assignedLead && lead.assignedLead !== "unassigned"
       );
       setAllLeads(assigned);
     } else {
-      setAllLeads(mockData);
+      setAllLeads(leadList);
     }
   }, [selectedStatus, selectedView]);
 
@@ -88,7 +94,7 @@ const AllLeads = () => {
 
   useEffect(() => {
     setPage(1); // Reset to page 1 when filters change
-  }, [selectedLeadStatus, selectedLeadType, selectedLeadSource]);
+  }, [selectedLeadStatus, selectedLeadStage, selectedLeadSource]);
 
   const filteredData = useMemo(() => {
     const today = startOfToday();
@@ -135,11 +141,11 @@ const AllLeads = () => {
         ) &&
         (!selectedService || row.service === selectedService.value) &&
         (!selectedLeadSource || row.leadSource === selectedLeadSource.value) &&
-        (!selectedCallTag || row.staff === selectedCallTag.value) &&
+        (!selectedCallTag || row.leadOwner === selectedCallTag.value) &&
         (!selectedLeadStatus ||
           row.leadStatus?.toLowerCase() ===
             selectedLeadStatus.value?.toLowerCase()) &&
-        (!selectedLeadType || row.leadType === selectedLeadType.value) &&
+        (!selectedLeadStage || row.leadStage === selectedLeadStage.value) &&
         isAfterFromDate &&
         isBeforeToDate
       );
@@ -151,7 +157,7 @@ const AllLeads = () => {
     selectedLeadSource,
     selectedCallTag,
     selectedLeadStatus,
-    selectedLeadType,
+    selectedLeadStage,
     dateFilter,
     customFrom,
     customTo,
@@ -267,12 +273,14 @@ const AllLeads = () => {
             <FiltersPanel
               selectedLeadSource={selectedLeadSource}
               setSelectedLeadSource={setSelectedLeadSource}
-              selectedLeadType={selectedLeadType}
-              setSelectedLeadType={setSelectedLeadType}
+              selectedLeadStage={selectedLeadStage}
+              selectedLastCallType={selectedLastCallType}
+              setSelectedLeadStage={setSelectedLeadStage}
               selectedLeadStatus={selectedLeadStatus}
               setSelectedLeadStatus={setSelectedLeadStatus}
               selectedCallTag={selectedCallTag}
               setSelectedCallTag={setSelectedCallTag}
+              setSelectedLastCallType={setSelectedLastCallType}
             />
 
             <Select
@@ -351,36 +359,41 @@ const AllLeads = () => {
           <table className="w-full text-sm text-left text-gray-500">
             <thead className="text-xs text-gray-700 uppercase bg-gray-50">
               <tr>
-                <th className="px-2 py-4">#</th>
+                {/* <th className="px-2 py-4">#</th> */}
                 <th className="px-2 py-4">Lead ID</th>
                 <th className="px-2 py-4">Created on</th>
+                <th className="px-2 py-4">Last Updated</th>
                 <th className="px-2 py-4">Name</th>
-                <th className="px-2 py-4">Lead Type</th>
                 <th className="px-2 py-4">Lead Source</th>
                 <th className="px-2 py-4">Lead Status</th>
-                <th className="px-2 py-4">Last Updated</th>
-                <th className="px-2 py-4">Lead Call Status</th>
-                <th className="px-2 py-4">Staff</th>
-                <th className="px-2 py-4">Action</th>
+                <th className="px-2 py-4">Lead Stage</th>
+                <th className="px-2 py-4">Last Call Status</th>
+                <th className="px-2 py-4">Lead Owner</th>
+                {/* <th className="px-2 py-4">Action</th> */}
               </tr>
             </thead>
             <tbody>
               {paginatedData.map((row, idx) => (
-                <tr key={row.id} className="bg-white border-b hover:bg-gray-50">
-                  <td className="px-2 py-4">
-                    {idx + 1 + (page - 1) * rowsPerPage}
-                  </td>
-                  <td className="px-2 py-4">{row.enquiryId}</td>
-                  <td className="px-2 py-4">{row.createdOn}</td>
-                  <td className="px-2 py-4">{row.name}</td>
-                  <td className="px-2 py-4">{row.leadType}</td>
-                  <td className="px-2 py-4">{row.leadSource}</td>
-                  <td className="px-2 py-4">{row.enquiryStage}</td>
-                  <td className="px-2 py-4">{row.lastUpdated}</td>
-                  <td className="px-2 py-4">{row.callTag}</td>
-                  <td className="px-2 py-4">{row.staff}</td>
-                  <td className="px-2 py-4">
-                    <div className="flex gap-1">
+                <tr
+                  key={row.id}
+                  className="group bg-white border-b hover:bg-gray-50 relative transition duration-700"
+                >
+                  <td className="px-2 py-4">{row?.leadId}</td>
+                  <td className="px-2 py-4">{row?.createdOn}</td>
+                  <td className="px-2 py-4">{row?.lastUpdated}</td>
+                  <td className="px-2 py-4">{row?.name}</td>
+                  <td className="px-2 py-4">{row?.leadSource}</td>
+                  <td className="px-2 py-4">{row?.leadStatus}</td>
+                  <td className="px-2 py-4">{row?.leadStage}</td>
+                  <td className="px-2 py-4">{row?.lastCallStatus}</td>
+                  <td className="px-2 py-4">{row?.leadOwner}</td>
+
+                  <div className="absolute hidden group-hover:flex gap-2 items-center right-0 bg-white h-full top-0 w-full flex items-center justify-end bg-[#f9fafb] pr-5 transition duration-700">
+                    <Tooltip
+                      id={`tooltip-edit-${row.id}`}
+                      content="Edit Lead"
+                      place="top"
+                    >
                       <div
                         onClick={() => {
                           setSelectedLead(row);
@@ -388,19 +401,60 @@ const AllLeads = () => {
                         }}
                         className="p-1 cursor-pointer"
                       >
-                        <LiaEdit className="text-2xl text-black" />
+                        <LiaEdit className="text-[25px] text-black" />
                       </div>
-                      {/* <Link to={`/edit-lead-details/${row.id}`} className="p-1">
-                        <LiaEdit className="text-2xl text-black" />
-                      </Link> */}
-                      <Link to={`/lead-follow-up/${row.id}`} className="p-1">
-                        <MdCall className="text-2xl text-black" />
-                      </Link>
-                      <button className="p-1" title="Send Payment Link">
-                        <IoIosAddCircleOutline className="text-2xl text-black" />
-                      </button>
-                    </div>
-                  </td>
+                    </Tooltip>
+                    <Tooltip
+                      id={`tooltip-call-${row.id}`}
+                      content="Add Call log"
+                      place="top"
+                    >
+                      <div className="p-1 cursor-pointer">
+                        <Link to={`/lead-follow-up/${row.id}`} className="p-0">
+                          <MdCall className="text-[25px] text-black" />
+                        </Link>
+                      </div>
+                    </Tooltip>
+                    <Tooltip
+                      id={`tooltip-convert-${row.id}`}
+                      content="Convert to member"
+                      place="top"
+                    >
+                      <div
+                        onClick={() => {
+                          setSelectedLeadMember(row);
+                          setMemberModal(true);
+                        }}
+                        className="p-1 cursor-pointer"
+                      >
+                        <TbArrowsExchange className="text-[25px] text-black" />
+                      </div>
+                    </Tooltip>
+                    <Tooltip
+                      id={`tooltip-schedule-${row.id}`}
+                      content="Schedule Tour / Trial"
+                      place="top"
+                    >
+                      <div className="p-1 cursor-pointer">
+                        <Link to={`/lead-follow-up/${row.id}?action=schedule-tour-trial`} className="p-0">
+                          <RiCalendarScheduleLine className="text-[25px] text-black" />
+                        </Link>
+                      </div>
+                    </Tooltip>
+
+                    <Tooltip
+                      id={`tooltip-send-${row.id}`}
+                      content="Send Payment Link"
+                      html
+                      place="top"
+                    >
+                      <div className="p-1 cursor-pointer">
+                        <button className="p-0">
+                          <IoIosAddCircleOutline className="text-[25px] text-black" />
+                        </button>
+                      </div>
+                    </Tooltip>
+                  </div>
                 </tr>
               ))}
             </tbody>
@@ -538,6 +592,13 @@ const AllLeads = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {memberModal && (
+        <CreateMemberForm
+          selectedLeadMember={selectedLeadMember}
+          setMemberModal={setMemberModal}
+        />
       )}
     </>
   );

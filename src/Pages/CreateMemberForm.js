@@ -123,7 +123,7 @@ const leadSourceTypes = [
   { value: "others", label: "Others" },
 ];
 
-const CreateMemberForm = ({ setMemberModal }) => {
+const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
   const [activeTab, setActiveTab] = useState("personal");
   const [profileImage, setProfileImage] = useState("");
   const [showProductModal, setShowProductModal] = useState(false);
@@ -205,6 +205,35 @@ const CreateMemberForm = ({ setMemberModal }) => {
       }
     },
   });
+
+  useEffect(() => {
+  if (selectedLeadMember) {
+    formik.setValues({
+      memberDetails: {
+        profileImage: selectedLeadMember.profileImage || "",
+        name: selectedLeadMember.name || "",
+        contactNumber: selectedLeadMember.contact || "",
+        email: selectedLeadMember.email || "",
+        gender: selectedLeadMember.gender || "",
+        dob: selectedLeadMember.dob || null,
+        address: selectedLeadMember.address || "",
+      },
+      leadInformation: {
+        leadSource: selectedLeadMember.leadSource || "",
+        leadSourceType: selectedLeadMember.leadSourceType || "",
+        otherSource: selectedLeadMember.otherSource || "",
+        leadType: selectedLeadMember.leadType || "",
+      },
+      professionalInformation: {
+        designation: selectedLeadMember.designation || "",
+        companyName: selectedLeadMember.companyName || "",
+        officialEmail: selectedLeadMember.officialEmail || "",
+      },
+    
+    });
+  }
+}, [selectedLeadMember]);
+
 
   const handleNextStep = async () => {
     const errors = await formik.validateForm();

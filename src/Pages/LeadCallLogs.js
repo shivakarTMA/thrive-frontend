@@ -21,7 +21,7 @@ const LeadCallLogs = () => {
         </div>
       </div>
 
-      <CreateCallLogs details={leadDetails} />
+      <CreateCallLogs details={leadDetails} action={action} />
     </div>
   );
 };

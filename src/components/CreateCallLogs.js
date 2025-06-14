@@ -122,7 +122,7 @@ const validationSchema = Yup.object().shape({
   discussion: Yup.string().required("Discussion is required"),
 });
 
-const CallLogs = ({ details }) => {
+const CallLogs = ({ details, action }) => {
   const [callLogs, setCallLogs] = useState([]);
   const [filterStatus, setFilterStatus] = useState("");
   const [startDate, setStartDate] = useState(null);
@@ -213,9 +213,10 @@ const CallLogs = ({ details }) => {
 
   const selectedCallStatus = formik.values.callStatus;
 
-  const filteredLeadStatusOptions = filteredLogs.length > 0
-  ? leadStatusOptionsMap.filter(option => option.value !== "new")
-  : leadStatusOptionsMap;
+  const filteredLeadStatusOptions =
+    filteredLogs.length > 0
+      ? leadStatusOptionsMap.filter((option) => option.value !== "new")
+      : leadStatusOptionsMap;
 
   const filteredLeadStatuses = selectedCallStatus
     ? allLeadStatuses.filter((status) =>
@@ -245,6 +246,12 @@ const CallLogs = ({ details }) => {
   maxTime.setHours(23, 59, 59, 999);
 
   console.log("Formik Errors (if any):", formik.errors);
+
+  useEffect(() => {
+    if (action === "schedule-tour-trial") {
+      formik.setFieldValue("callStatus", "trial scheduled");
+    }
+  }, [action]);
 
   return (
     <div className="grid grid-cols-2 gap-4">
@@ -282,30 +289,26 @@ const CallLogs = ({ details }) => {
                 {details?.status === "active" ? "Call Type" : "Call Status"}
                 <span className="text-red-500">*</span>
               </label>
-              <Select
-                name="callStatus"
-                options={
-                  details?.status === "active"
-                    ? callTypesOption
-                    : callStatusOption
-                }
-                value={
-                  details?.status === "active"
-                    ? callTypesOption.find(
-                        (option) => option.value === formik.values.callStatus
-                      ) || null
-                    : callStatusOption.find(
-                        (option) => option.value === formik.values.callStatus
-                      ) || null
-                }
-                onChange={(option) =>
-                  formik.setFieldValue("callStatus", option.value)
-                }
-                styles={customStyles}
-                placeholder={
-                  details?.status === "active" ? "Call Type" : "Call Status"
-                }
-              />
+               <Select
+      name="callStatus"
+      options={
+        details?.status === "active" ? callTypesOption : callStatusOption
+      }
+      value={
+        details?.status === "active"
+          ? callTypesOption.find(
+              (option) => option.value === formik.values.callStatus
+            ) || null
+          : callStatusOption.find(
+              (option) => option.value === formik.values.callStatus
+            ) || null
+      }
+      onChange={(option) => formik.setFieldValue("callStatus", option.value)}
+      styles={customStyles}
+      placeholder={
+        details?.status === "active" ? "Call Type" : "Call Status"
+      }
+    />
 
               {formik.errors?.callStatus && formik.touched?.callStatus && (
                 <div className="text-red-500 text-sm">
@@ -367,19 +370,19 @@ const CallLogs = ({ details }) => {
                   /> */}
 
                   <Select
-  name="leadStatus"
-  options={filteredLeadStatusOptions}
-  value={
-    filteredLeadStatusOptions.find(
-      (option) => option.value === formik.values.leadStatus
-    ) || null
-  }
-  onChange={(option) =>
-    formik.setFieldValue("leadStatus", option.value)
-  }
-  styles={customStyles}
-  placeholder="Lead Status"
-/>
+                    name="leadStatus"
+                    options={filteredLeadStatusOptions}
+                    value={
+                      filteredLeadStatusOptions.find(
+                        (option) => option.value === formik.values.leadStatus
+                      ) || null
+                    }
+                    onChange={(option) =>
+                      formik.setFieldValue("leadStatus", option.value)
+                    }
+                    styles={customStyles}
+                    placeholder="Lead Status"
+                  />
 
                   {formik.errors?.leadStatus && formik.touched?.leadStatus && (
                     <div className="text-red-500 text-sm">

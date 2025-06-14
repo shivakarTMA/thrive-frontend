@@ -8,12 +8,14 @@ import { customStyles } from "../Helper/helper";
 export default function FiltersPanel({
   selectedLeadSource,
   setSelectedLeadSource,
-  selectedLeadType,
-  setSelectedLeadType,
+  selectedLeadStage,
+  selectedLastCallType,
+  setSelectedLeadStage,
   selectedLeadStatus,
   setSelectedLeadStatus,
   selectedCallTag,
   setSelectedCallTag,
+  setSelectedLastCallType,
 }) {
   const [showFilters, setShowFilters] = useState(false);
   const panelRef = useRef(null);
@@ -36,44 +38,66 @@ export default function FiltersPanel({
     };
   }, [showFilters]);
 
-  const leadSourceOptions = [
-    { label: "Hoardings", value: "Hoardings" },
-    { label: "Google", value: "Google" },
-    { label: "Social Media", value: "Social Media" },
-    { label: "Referral", value: "Referral" },
-    { label: "Corporate", value: "Corporate" },
-    { label: "Word of Mouth", value: "Word of Mouth" },
-    { label: "Thrive App", value: "Thrive App" },
-    { label: "Website", value: "Website" },
-    { label: "Events / Campaigns", value: "Events / Campaigns" },
-    { label: "Corporate Outreach", value: "Corporate Outreach" },
-    { label: "QR Code", value: "QR Code" },
-  ];
-
-  const leadTypeOptions = [
-    { label: "Walk-in", value: "walk-in" },
-    { label: "Phone", value: "phone" },
-    { label: "Email", value: "email" },
-    { label: "WhatsApp", value: "whatsApp" },
-  ];
-
   const leadStatusOptions = [
-    { label: "New", value: "new" },
-    { label: "Lead", value: "lead" },
-    { label: "Opportunity", value: "opportunity" },
-    { label: "Won", value: "won" },
-    { label: "Closed", value: "closed" },
-    { label: "Lost", value: "lost" },
+    { label: "Open", value: "Open" },
+    { label: "In Progress", value: "In Progress" },
+    { label: "Closed", value: "Closed" },
+    { label: "Lost", value: "Lost" },
   ];
 
-  const staffOptions = [
-    { label: "John", value: "John" },
-    { label: "Preeti", value: "Preeti" },
+  const leadSourceOptions = [
+    { label: "Website", value: "Website" },
+    { label: "Referral", value: "Referral" },
+    { label: "Social Media", value: "Social Media" },
+    { label: "Email Campaign", value: "Email Campaign" },
+    { label: "LinkedIn", value: "LinkedIn" },
+    { label: "Google Ads", value: "Google Ads" },
+    { label: "Facebook Ads", value: "Facebook Ads" },
+    { label: "Direct Visit", value: "Direct Visit" },
+    { label: "Cold Call", value: "Cold Call" },
+    { label: "Trade Show", value: "Trade Show" },
+  ];
+
+  const leadStageOptions = [
+    { label: "Enquiry", value: "Enquiry" },
+    { label: "Trial Scheduled", value: "Trial Scheduled" },
+    { label: "Post Trial", value: "Post Trial" },
+    { label: "Won", value: "Won" },
+    { label: "Lost", value: "Lost" },
+  ];
+
+  const lastCallStatusOptions = [
+    { label: "New", value: "New" },
+    { label: "Trial Scheduled", value: "Trial Scheduled" },
+    { label: "Won", value: "Won" },
+    { label: "Post Trial Follow-up", value: "Post Trial Follow-up" },
+    { label: "Not Interested", value: "Not Interested" },
+    { label: "Follow-up", value: "Follow-up" },
+    { label: "Busy Tone", value: "Busy Tone" },
+    {
+      label: "Switched Off/ Out of Reach",
+      value: "Switched Off/ Out of Reach",
+    },
+    { label: "Future Prospect", value: "Future Prospect" },
+    { label: "No Answer", value: "No Answer" },
+  ];
+
+  const leadOwnerOptions = [
+    { label: "Alice Johnson", value: "Alice Johnson" },
+    { label: "Bob Thompson", value: "Bob Thompson" },
+    { label: "Cara White", value: "Cara White" },
+    { label: "Derek Miles", value: "Derek Miles" },
+    { label: "Emily Watson", value: "Emily Watson" },
+    { label: "Nina Brown", value: "Nina Brown" },
+    { label: "Zack Lee", value: "Zack Lee" },
+    { label: "Linda Marks", value: "Linda Marks" },
+    { label: "Raj Mehta", value: "Raj Mehta" },
+    { label: "Sofia Green", value: "Sofia Green" },
   ];
 
   const resetFilters = () => {
     setSelectedLeadSource(null);
-    setSelectedLeadType(null);
+    setSelectedLeadStage(null);
     setSelectedLeadStatus(null);
     setSelectedCallTag(null);
   };
@@ -94,21 +118,7 @@ export default function FiltersPanel({
             <IoTriangle />
           </div>
           <div className="p-4">
-            <div className="flex flex-col gap-4 min-w-[200px]">
-              {/* Lead Status */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Lead Status
-                </label>
-                <Select
-                  value={selectedLeadStatus}
-                  onChange={setSelectedLeadStatus}
-                  options={leadStatusOptions}
-                  // isClearable
-                  placeholder="Select Lead Status"
-                  styles={customStyles}
-                />
-              </div>
+            <div className="grid grid-cols-2 gap-4 min-w-[500px]">
               {/* Lead Source */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -123,33 +133,60 @@ export default function FiltersPanel({
                   styles={customStyles}
                 />
               </div>
+              {/* Lead Status */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Lead Status
+                </label>
+                <Select
+                  value={selectedLeadStatus}
+                  onChange={setSelectedLeadStatus}
+                  options={leadStatusOptions}
+                  // isClearable
+                  placeholder="Select Lead Status"
+                  styles={customStyles}
+                />
+              </div>
 
               {/* Lead Type */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Lead Type
+                  Lead Stage
                 </label>
                 <Select
-                  value={selectedLeadType}
-                  onChange={setSelectedLeadType}
-                  options={leadTypeOptions}
+                  value={selectedLeadStage}
+                  onChange={setSelectedLeadStage}
+                  options={leadStageOptions}
+                  // isClearable
+                  placeholder="Select Lead Type"
+                  styles={customStyles}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Last Call Status
+                </label>
+                <Select
+                  value={selectedLastCallType}
+                  onChange={setSelectedLastCallType}
+                  options={lastCallStatusOptions}
                   // isClearable
                   placeholder="Select Lead Type"
                   styles={customStyles}
                 />
               </div>
 
-              {/* Staff */}
+              {/* Lead Owner */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Staff
+                  Lead Owner
                 </label>
                 <Select
                   value={selectedCallTag}
                   onChange={setSelectedCallTag}
-                  options={staffOptions}
+                  options={leadOwnerOptions}
                   // isClearable
-                  placeholder="Select Staff"
+                  placeholder="Select Lead Owner"
                   styles={customStyles}
                 />
               </div>

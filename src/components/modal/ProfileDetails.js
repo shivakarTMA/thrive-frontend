@@ -1,6 +1,5 @@
 import React, { useRef } from "react";
 import { IoCloseCircle } from "react-icons/io5";
-import { useSelector } from "react-redux";
 
 const ProfileDetails = ({ profile, setProfileModal }) => {
   console.log(profile, "profile");

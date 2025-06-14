@@ -165,6 +165,140 @@ export const followUpsData = [
   },
 ];
 
+export const leadList = [
+  {
+  id:1,
+  leadId: "L001",
+  createdOn: "01-06-2025",
+  lastUpdated: "08-06-2025",
+  name: "John Doe",
+  leadSource: "Website",
+  leadStatus: "Open",
+  leadStage: "Enquiry",
+  lastCallStatus: "New",
+  leadOwner: "Alice Johnson",
+  action: "Follow Up"
+},
+{
+  id:2,
+  leadId: "L002",
+  createdOn: "02-06-2025",
+  lastUpdated: "09-06-2025",
+  name: "Jane Smith",
+  leadSource: "Referral",
+  leadStatus: "In Progress",
+  leadStage: "Trial Scheduled",
+  lastCallStatus: "Trial Scheduled",
+  leadOwner: "Bob Thompson",
+  action: "Schedule Demo"
+},
+{
+  id:3,
+  leadId: "L003",
+  createdOn: "03-06-2025",
+  lastUpdated: "06-06-2025",
+  name: "Sam Lee",
+  leadSource: "Social Media",
+  leadStatus: "Closed",
+  leadStage: "Won",
+  lastCallStatus: "Won",
+  leadOwner: "Cara White",
+  action: "Send Invoice"
+},
+{
+  id:4,
+  leadId: "L004",
+  createdOn: "04-06-2025",
+  lastUpdated: "07-06-2025",
+  name: "Mike Chen",
+  leadSource: "Email Campaign",
+  leadStatus: "Open",
+  leadStage: "Post Trial",
+  lastCallStatus: "Post Trial Follow-up",
+  leadOwner: "Derek Miles",
+  action: "Call Back"
+},
+{
+  id:5,
+  leadId: "L005",
+  createdOn: "05-06-2025",
+  lastUpdated: "08-06-2025",
+  name: "Anna Patel",
+  leadSource: "LinkedIn",
+  leadStatus: "Lost",
+  leadStage: "Lost",
+  lastCallStatus: "Not Interested",
+  leadOwner: "Emily Watson",
+  action: "Mark as Lost"
+},
+{
+  id:6,
+  leadId: "L006",
+  createdOn: "06-06-2025",
+  lastUpdated: "09-06-2025",
+  name: "Carlos Rivera",
+  leadSource: "Google Ads",
+  leadStatus: "Open",
+  leadStage: "Enquiry",
+  lastCallStatus: "Follow-up",
+  leadOwner: "Nina Brown",
+  action: "Send Email"
+},
+{
+  id:7,
+  leadId: "L007",
+  createdOn: "07-06-2025",
+  lastUpdated: "09-06-2025",
+  name: "Fatima Noor",
+  leadSource: "Facebook Ads",
+  leadStatus: "In Progress",
+  leadStage: "Trial Scheduled",
+  lastCallStatus: "Busy Tone",
+  leadOwner: "Zack Lee",
+  action: "Retry Call"
+},
+{
+  id:8,
+  leadId: "L008",
+  createdOn: "08-06-2025",
+  lastUpdated: "09-06-2025",
+  name: "George Knight",
+  leadSource: "Direct Visit",
+  leadStatus: "Closed",
+  leadStage: "Won",
+  lastCallStatus: "Switched Off/ Out of Reach",
+  leadOwner: "Linda Marks",
+  action: "Send Contract"
+},
+{
+  id:9,
+  leadId: "L009",
+  createdOn: "01-06-2025",
+  lastUpdated: "04-06-2025",
+  name: "Isabella Rossi",
+  leadSource: "Cold Call",
+  leadStatus: "Open",
+  leadStage: "Enquiry",
+  lastCallStatus: "Future Prospect",
+  leadOwner: "Raj Mehta",
+  action: "Nurture Lead"
+},
+{
+  id:10,
+  leadId: "L010",
+  createdOn: "09-06-2025",
+  lastUpdated: "09-06-2025",
+  name: "Tom Berg",
+  leadSource: "Trade Show",
+  leadStatus: "In Progress",
+  leadStage: "Post Trial",
+  lastCallStatus: "No Answer",
+  leadOwner: "Sofia Green",
+  action: "Send Reminder"
+},
+
+]
+
 export const assignedLeadsData = [
   {
     id: 1,
