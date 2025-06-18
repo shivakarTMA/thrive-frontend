@@ -9,18 +9,6 @@ const OrderHistory = () => {
   const [dateFrom, setDateFrom] = useState(null);
   const [dateTo, setDateTo] = useState(null);
 
-  const getCategoryFromService = (service) => {
-    if (service.includes("Membership")) return "Membership";
-    if (service.includes("PT") || service.includes("Coaching")) return "Sports";
-    if (service.includes("Cafe")) return "Cafe Items";
-    if (service.includes("Merchandise")) return "Merchandise";
-    if (service.includes("Spa")) return "Spa";
-    if (service.includes("Physiotherapy")) return "Physiotherapy";
-    if (service.includes("NC")) return "NC";
-    if (service.includes("GX")) return "GX";
-    return "Other";
-  };
-
   const orders = [
     {
       orderId: "ORD001",
@@ -219,34 +207,50 @@ const OrderHistory = () => {
 
   return (
     <div className="p-4 bg-white rounded shadow">
-      <div className="flex flex-wrap items-center gap-4 mb-4">
+      {/* Filters */}
+      <div className="flex flex-wrap items-center gap-2 mb-4">
         <Select
           options={categoryOptions}
           value={category}
           onChange={setCategory}
           placeholder="Select Category"
           styles={customStyles}
-          className="w-40"
+            className="w-40"
         />
-        <div className="custom--date">
+        <div className="custom--date dob-format">
           <DatePicker
+            isClearable
             selected={dateFrom}
-            onChange={(date) => setDateFrom(date)}
-            className="border px-3 py-2 rounded"
+            onChange={(date) => {
+              setDateFrom(date);
+              if (!date) setDateTo(null);
+            }}
+            showMonthDropdown
+            showYearDropdown
+            maxDate={new Date()}
+            dateFormat="dd MMM yyyy"
+            dropdownMode="select"
             placeholderText="From date"
+            className="custom--input w-full"
           />
         </div>
-        <span>to</span>
-        <div className="custom--date">
+        <div className="custom--date dob-format">
           <DatePicker
+            isClearable
             selected={dateTo}
             onChange={(date) => setDateTo(date)}
-            className="border px-3 py-2 rounded"
+            showMonthDropdown
+            showYearDropdown
+            maxDate={new Date()}
+            dateFormat="dd MMM yyyy"
+            dropdownMode="select"
             placeholderText="To date"
+            className="custom--input w-full"
           />
         </div>
       </div>
 
+      {/* Table */}
       <div className="overflow-auto">
         <table className="min-w-full border border-gray-300 text-sm">
           <thead className="bg-gray-100 text-left">
@@ -257,10 +261,6 @@ const OrderHistory = () => {
               <th className="border px-3 py-2">Category</th>
               <th className="border px-3 py-2">Center</th>
               <th className="border px-3 py-2">Amount</th>
-              {/* <th className="border px-3 py-2">Tax</th>
-              <th className="border px-3 py-2">Net</th>
-              <th className="border px-3 py-2">Paid</th>
-              <th className="border px-3 py-2">Reward Points</th> */}
               <th className="border px-3 py-2">Duration</th>
               <th className="border px-3 py-2">Payment Mode</th>
               <th className="border px-3 py-2">Status</th>
@@ -268,24 +268,28 @@ const OrderHistory = () => {
             </tr>
           </thead>
           <tbody>
-            {filteredOrders.map((order) => (
-              <tr key={order.orderId}>
-                <td className="border px-3 py-2">{order.orderId}</td>
-                <td className="border px-3 py-2">{order.date}</td>
-                <td className="border px-3 py-2">{order.service}</td>
-                <td className="border px-3 py-2">{order.category}</td>
-                <td className="border px-3 py-2">{order.centerName}</td>
-                <td className="border px-3 py-2">₹{order.amount}</td>
-                {/* <td className="border px-3 py-2">₹{order.tax}</td>
-                <td className="border px-3 py-2">₹{order.net}</td>
-                <td className="border px-3 py-2">₹{order.paid}</td>
-                <td className="border px-3 py-2">{order.rewardPoints}</td> */}
-                <td className="border px-3 py-2">{order.duration}</td>
-                <td className="border px-3 py-2">{order.paymentMode}</td>
-                <td className="border px-3 py-2">{order.orderStatus}</td>
-                <td className="border px-3 py-2">{order.orderId}</td>
+            {filteredOrders.length > 0 ? (
+              filteredOrders.map((order) => (
+                <tr key={order.orderId} className="hover:bg-gray-50">
+                  <td className="border px-3 py-2">{order.orderId}</td>
+                  <td className="border px-3 py-2">{order.date}</td>
+                  <td className="border px-3 py-2">{order.service}</td>
+                  <td className="border px-3 py-2">{order.category}</td>
+                  <td className="border px-3 py-2">{order.centerName}</td>
+                  <td className="border px-3 py-2">₹{order.amount}</td>
+                  <td className="border px-3 py-2">{order.duration || "-"}</td>
+                  <td className="border px-3 py-2">{order.paymentMode}</td>
+                  <td className="border px-3 py-2">{order.orderStatus}</td>
+                  <td className="border px-3 py-2">{order.invoiceNumber}</td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="10" className="text-center py-4 text-gray-500">
+                  No orders found.
+                </td>
               </tr>
-            ))}
+            )}
           </tbody>
         </table>
       </div>

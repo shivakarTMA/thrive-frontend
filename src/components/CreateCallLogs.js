@@ -41,21 +41,6 @@ const allLeadStatuses = [
   { value: "lost", label: "Lost" },
 ];
 
-// const leadStatusOptionsMap = {
-//   "no answer": ["closed", "lost"],
-//   "call again": ["closed", "lost"],
-//   "future prospect": ["closed", "lost"],
-//   "trial scheduled": ["opportunity"],
-//   "tour scheduled": ["opportunity"],
-//   "wrong number": ["lost"],
-//   "not interested": ["closed", "lost"],
-// };
-
-// const serviceType = [
-//   { value: "membership 1 month", label: "Membership 1 Month" },
-//   { value: "membership 3 month", label: "Membership 3 Month" },
-//   { value: "membership 6 month", label: "Membership 6 Month" },
-// ];
 const leadStatusOptionsMap = [
   { value: "new", label: "New" },
   { value: "lead", label: "Lead" },

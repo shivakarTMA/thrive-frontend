@@ -13,12 +13,11 @@ import Appointments from "../components/memberprofile/Appointments";
 import Relations from "../components/memberprofile/Relations";
 import AttendanceData from "../components/memberprofile/AttendanceData";
 import WorkoutApp from "../components/memberprofile/WorkoutApp";
-
-
+import PaymentHistory from "../components/memberprofile/PaymentHistory";
 
 const MemberProfile = () => {
   const { id } = useParams();
- 
+
   //   const slider = scrollRef.current;
 
   //   const handleMouseDown = (e) => {
@@ -66,7 +65,7 @@ const MemberProfile = () => {
     "Payment History",
     "Call Logs",
     "Appointments",
-    "Relations",
+    "Referrals",
     // "Family Members",
     // "Store",
     // "Documents",
@@ -80,30 +79,28 @@ const MemberProfile = () => {
 
   if (!member) return <p>Member not found</p>;
 
-  
-
   return (
     <div className="page--content">
       <div className=" flex items-end justify-between gap-2 mb-0">
         <div className="title--breadcrumbs">
           <p className="text-sm">{`Home > Members > Member Profile`}</p>
-           <h1 className="text-3xl font-semibold">Member Profile</h1>
+          <h1 className="text-3xl font-semibold">Member Profile</h1>
         </div>
       </div>
-      <div className="flex">
+      <div className="flexs">
         {/* Sidebar */}
-        <aside className="w-full max-w-[250px]">
+        <aside className="w-full">
           {/* <h1 className="text-3xl font-semibold">Member Profile</h1> */}
-          <div className="bg-secondarycolor p-4 rounded mt-6 space-y-1">
+          <div className="mt-6 flex flex-wrap items-center">
             {tabs.map((item) => (
               <div
                 key={item}
                 onClick={() => setActiveTab(item)}
-                className={`px-4 py-1.5 rounded cursor-pointer transition 
+                className={`px-3 py-1.5 rounded cursor-pointer transition 
                 ${
                   activeTab === item
                     ? "bg-primarycolor text-white"
-                    : "bg-primarylight hover:text-white hover:bg-primarycolor"
+                    : "hover:text-primarycolor"
                 }`}
               >
                 {item}
@@ -113,68 +110,22 @@ const MemberProfile = () => {
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 p-5 pt-0 pb-0">
-          {/* <div className="flex items-center gap-2">
-            <div className="flex flex-wrap bg-primarylight items-center border rounded p-2 seprator-horizontal gap-y-2">
-              <button className="text-[14px] text-black seprator-item px-3">
-                Inter branch transfer
-              </button>
-              <button className="text-[14px] text-black seprator-item px-3">
-                Print profile
-              </button>
-              <button className="text-[14px] text-black seprator-item px-3">
-                Add Advance Payment
-              </button>
-              <button className="text-[14px] text-black seprator-item px-3">
-                New Invoice
-              </button>
-              <button className="text-[14px] text-black seprator-item px-3">
-                New Call
-              </button>
-              <button className="text-[14px] text-black seprator-item px-3">
-                New appointment
-              </button>
-              <button className="text-[14px] text-black seprator-item px-3">
-                Send Payment Link
-              </button>
-            </div>
-            <div>
-              <GoPlusCircle className="text-3xl cursor-pointer text-primarycolor" />
-            </div>
-          </div> */}
 
-          <div className="bg-secondarycolor p-4 rounded mt-6 ">
-            {activeTab === "Profile Details" && (
-              <ProfileDetails member={member} />
-            )}
-            {activeTab === "Service Card" && (
-              <ServiceCard member={member} />
-            )}
-            {activeTab === "Order History" && (
-              <OrderHistory member={member} />
-            )}
-            {activeTab === "Payment History" && (
-              <OrderHistory member={member} />
-            )}
-            {activeTab === "Call Logs" && (
-              <CreateCallLogs details={member} />
-            )}
-            {activeTab === "Appointments" && (
-              <Appointments details={member} />
-            )}
-            {activeTab === "Relations" && (
-              <Relations details={member} />
-            )}
-            {activeTab === "Attendance" && (
-              <AttendanceData details={member} />
-            )}
-            {activeTab === "Training" && (
-              <WorkoutApp details={member} />
-            )}
-          </div>
-
-          {/* History */}
-        </main>
+        <div className="bg-secondarycolor p-4 rounded mt-4 ">
+          {activeTab === "Profile Details" && (
+            <ProfileDetails member={member} />
+          )}
+          {activeTab === "Service Card" && <ServiceCard member={member} />}
+          {activeTab === "Order History" && <OrderHistory member={member} />}
+          {activeTab === "Payment History" && (
+            <PaymentHistory member={member} />
+          )}
+          {activeTab === "Call Logs" && <CreateCallLogs details={member} />}
+          {activeTab === "Appointments" && <Appointments details={member} />}
+          {activeTab === "Referrals" && <Relations details={member} />}
+          {activeTab === "Attendance" && <AttendanceData details={member} />}
+          {activeTab === "Training" && <WorkoutApp details={member} />}
+        </div>
       </div>
     </div>
   );

@@ -178,6 +178,7 @@ const ProfileDetails = ({ member }) => {
                   dob:
                 </label>
                 {editMode ? (
+                  <div className="custom--date dob-format">
                   <DatePicker
                     selected={parseDOB(profile.dob)}
                     onChange={(date) =>
@@ -196,6 +197,7 @@ const ProfileDetails = ({ member }) => {
                     placeholderText="Select date"
                     className="custom--input w-full"
                   />
+                  </div>
                 ) : (
                   <span>{profile.dob || "—"}</span>
                 )}
