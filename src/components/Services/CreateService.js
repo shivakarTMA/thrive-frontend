@@ -12,9 +12,9 @@ import { MdCurrencyRupee } from "react-icons/md";
 import { PiCoinsFill } from "react-icons/pi";
 
 const serviceTypeOptions = [
-  { value: "personal_training", label: "Personal Training" },
-  { value: "group_class", label: "Group Class" },
-  { value: "online_program", label: "Online Program" },
+  { value: "personal training", label: "Personal Training" },
+  { value: "group class", label: "Group Class" },
+  { value: "online program", label: "Online Program" },
 ];
 const taxTypeOptions = [
   { value: "gst", label: "GST (Goods and Services Tax)" },
@@ -79,34 +79,41 @@ const validationSchema = Yup.object({
   listingStatus: Yup.string().required("Listing Status is required"),
 });
 
-const CreateService = ({ setShowModal }) => {
+const CreateService = ({ setShowModal, onExerciseCreated, initialData }) => {
+  console.log(initialData, "initialData");
   const leadBoxRef = useRef(null);
   const formik = useFormik({
     initialValues: {
-      centreName: "",
-      serviceType: "",
-      serviceName: "",
-      serviceImage: "",
-      shortDescription: "",
-      longDescription: "",
-      duration: "",
-      sessions: "",
-      tags: [],
-      trainerName: "",
-      mrp: "",
-      sellingPrice: "",
-      taxType: "",
-      thriveCoins: "",
-      listingStatus: "",
+      centreName: initialData?.centreName || "",
+      serviceType: initialData?.serviceType || "",
+      serviceName: initialData?.serviceName || "",
+      serviceImage: initialData?.serviceImage || "",
+      shortDescription: initialData?.shortDescription || "",
+      longDescription: initialData?.longDescription || "",
+      duration: initialData?.duration || "",
+      sessions: initialData?.sessions || "",
+      tags: initialData?.tags || [],
+      trainerName: initialData?.trainerName || "",
+      mrp: initialData?.mrp || "",
+      sellingPrice: initialData?.sellingPrice || "",
+      taxType: initialData?.taxType || "",
+      thriveCoins: initialData?.thriveCoins || "",
+      listingStatus: initialData?.listingStatus || "",
     },
     validationSchema,
     onSubmit: (values) => {
-      console.log("Form Submitted:", {
+      // console.log("Form Submitted:", {
+      //   ...values,
+      //   serviceImage: values.serviceImage?.name || "No file selected",
+      // });
+      // setShowModal(false);
+      // toast.success("Created Successfully");
+      const dataToSend = {
         ...values,
-        serviceImage: values.serviceImage?.name || "No file selected",
-      });
+        id: initialData?.id || Date.now(), // Preserve ID for edit mode
+      };
+      onExerciseCreated(dataToSend);
       setShowModal(false);
-      toast.success("Created Successfully");
     },
   });
 
@@ -143,7 +150,7 @@ const CreateService = ({ setShowModal }) => {
                 <div className="grid grid-cols-3 gap-4">
                   {/* Centre Name */}
                   <div>
-                    <label className="mb-2 block">Centre Name</label>
+                    <label className="mb-2 block">Centre Name<span className="text-red-500">*</span></label>
                     <div className="relative">
                       <span className="absolute top-[50%] translate-y-[-50%] left-[15px]">
                         <FaListCheck />
@@ -166,13 +173,16 @@ const CreateService = ({ setShowModal }) => {
 
                   {/* Service Type (React Select) */}
                   <div>
-                    <label className="mb-2 block">Service Type</label>
+                    <label className="mb-2 block">Service Type<span className="text-red-500">*</span></label>
                     <div className="relative">
                       <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
                         <FaListCheck />
                       </span>
-                      <Select
+                       <Select
                         options={serviceTypeOptions}
+                        value={serviceTypeOptions.find(
+                          (option) => option.value === formik.values.serviceType
+                        )}
                         onChange={(option) =>
                           formik.setFieldValue("serviceType", option?.value)
                         }
@@ -192,7 +202,7 @@ const CreateService = ({ setShowModal }) => {
 
                   {/* Service Name */}
                   <div>
-                    <label className="mb-2 block">Service Name</label>
+                    <label className="mb-2 block">Service Name<span className="text-red-500">*</span></label>
                     <div className="relative">
                       <span className="absolute top-[50%] translate-y-[-50%] left-[15px]">
                         <FaListCheck />
@@ -200,7 +210,7 @@ const CreateService = ({ setShowModal }) => {
                       <input
                         type="text"
                         name="serviceName"
-                        className="custom--input w-full"
+                        className="custom--input w-full input--icon"
                         value={formik.values.serviceName}
                         onChange={formik.handleChange}
                         onBlur={formik.handleBlur}
@@ -216,7 +226,7 @@ const CreateService = ({ setShowModal }) => {
 
                   {/* Service Image Upload */}
                   <div>
-                    <label className="mb-2 block">Service Image</label>
+                    <label className="mb-2 block">Service Image<span className="text-red-500">*</span></label>
                     <div className="relative">
                       <span className="absolute top-[50%] translate-y-[-50%] left-[15px]">
                         <FaImage />
@@ -250,7 +260,7 @@ const CreateService = ({ setShowModal }) => {
                   <div>
                     <label className="mb-2 block">
                       Service Duration (Days)
-                    </label>
+                    <span className="text-red-500">*</span></label>
                     <div className="relative">
                       <span className="absolute top-[50%] translate-y-[-50%] left-[15px]">
                         <IoTimeSharp />
@@ -258,7 +268,7 @@ const CreateService = ({ setShowModal }) => {
                       <input
                         type="number"
                         name="duration"
-                        className="custom--input w-full"
+                        className="custom--input w-full input--icon"
                         value={formik.values.duration}
                         onChange={formik.handleChange}
                         onBlur={formik.handleBlur}
@@ -275,7 +285,7 @@ const CreateService = ({ setShowModal }) => {
                   <div>
                     <label className="mb-2 block">
                       No of Sessions (Optional)
-                    </label>
+                    <span className="text-red-500">*</span></label>
                     <div className="relative">
                       <span className="absolute top-[50%] translate-y-[-50%] left-[15px]">
                         <FaListCheck />
@@ -283,7 +293,7 @@ const CreateService = ({ setShowModal }) => {
                       <input
                         type="number"
                         name="sessions"
-                        className="custom--input w-full"
+                        className="custom--input w-full input--icon"
                         value={formik.values.sessions}
                         onChange={formik.handleChange}
                         onBlur={formik.handleBlur}
@@ -298,29 +308,29 @@ const CreateService = ({ setShowModal }) => {
 
                   {/* Tags */}
                   <div>
-                    <label className="mb-2 block">Tags</label>
+                    <label className="mb-2 block">Tags<span className="text-red-500">*</span></label>
                     <div className="relative">
                       <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
                         <IoPricetagSharp />
                       </span>
-                    <CreatableSelect
-                      isMulti
-                      options={tagOptions}
-                      value={formik.values.tags.map((tag) => ({
-                        value: tag,
-                        label: tag,
-                      }))}
-                      onChange={(selected) =>
-                        formik.setFieldValue(
-                          "tags",
-                          selected.map((item) => item.value)
-                        )
-                      }
-                      onBlur={() => formik.setFieldTouched("tags", true)}
-                      styles={selectIcon}
-                    />
+                      <CreatableSelect
+                        isMulti
+                        options={tagOptions}
+                        value={formik.values.tags.map((tag) => ({
+                          value: tag,
+                          label: tag,
+                        }))}
+                        onChange={(selected) =>
+                          formik.setFieldValue(
+                            "tags",
+                            selected.map((item) => item.value)
+                          )
+                        }
+                        onBlur={() => formik.setFieldTouched("tags", true)}
+                        styles={selectIcon}
+                      />
                     </div>
-                    
+
                     {formik.touched.tags && formik.errors.tags && (
                       <p className="text-red-500 text-sm">
                         {formik.errors.tags}
@@ -332,19 +342,19 @@ const CreateService = ({ setShowModal }) => {
                   <div>
                     <label className="mb-2 block">
                       Trainer Name (Optional)
-                    </label>
+                    <span className="text-red-500">*</span></label>
                     <div className="relative">
                       <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
                         <FaListCheck />
                       </span>
-                    <input
-                      type="text"
-                      name="trainerName"
-                      className="custom--input w-full input--icon"
-                      value={formik.values.trainerName}
-                      onChange={formik.handleChange}
-                      onBlur={formik.handleBlur}
-                    />
+                      <input
+                        type="text"
+                        name="trainerName"
+                        className="custom--input w-full input--icon"
+                        value={formik.values.trainerName}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                      />
                     </div>
                     {formik.touched.trainerName &&
                       formik.errors.trainerName && (
@@ -356,19 +366,19 @@ const CreateService = ({ setShowModal }) => {
 
                   {/* MRP */}
                   <div>
-                    <label className="mb-2 block">MRP</label>
+                    <label className="mb-2 block">MRP<span className="text-red-500">*</span></label>
                     <div className="relative">
                       <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
                         <MdCurrencyRupee />
                       </span>
-                    <input
-                      type="number"
-                      name="mrp"
-                      className="custom--input w-full input--icon"
-                      value={formik.values.mrp}
-                      onChange={formik.handleChange}
-                      onBlur={formik.handleBlur}
-                    />
+                      <input
+                        type="number"
+                        name="mrp"
+                        className="custom--input w-full input--icon"
+                        value={formik.values.mrp}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                      />
                     </div>
                     {formik.touched.mrp && formik.errors.mrp && (
                       <p className="text-red-500 text-sm mt-1">
@@ -379,19 +389,19 @@ const CreateService = ({ setShowModal }) => {
 
                   {/* Selling Price */}
                   <div>
-                    <label className="mb-2 block">Selling Price</label>
+                    <label className="mb-2 block">Selling Price<span className="text-red-500">*</span></label>
                     <div className="relative">
                       <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
                         <MdCurrencyRupee />
                       </span>
-                    <input
-                      type="number"
-                      name="sellingPrice"
-                      className="custom--input w-full input--icon"
-                      value={formik.values.sellingPrice}
-                      onChange={formik.handleChange}
-                      onBlur={formik.handleBlur}
-                    />
+                      <input
+                        type="number"
+                        name="sellingPrice"
+                        className="custom--input w-full input--icon"
+                        value={formik.values.sellingPrice}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                      />
                     </div>
                     {formik.touched.sellingPrice &&
                       formik.errors.sellingPrice && (
@@ -403,14 +413,17 @@ const CreateService = ({ setShowModal }) => {
 
                   {/* Tax Type */}
                   <div>
-                    <label className="mb-2 block">Tax Type</label>
-                   
+                    <label className="mb-2 block">Tax Type<span className="text-red-500">*</span></label>
+
                     <div className="relative">
                       <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
                         <FaListCheck />
                       </span>
-                      <Select
+                       <Select
                         options={taxTypeOptions}
+                        value={taxTypeOptions.find(
+                          (option) => option.value === formik.values.taxType
+                        )}
                         onChange={(option) =>
                           formik.setFieldValue("taxType", option?.value)
                         }
@@ -429,19 +442,19 @@ const CreateService = ({ setShowModal }) => {
 
                   {/* Thrive Coins */}
                   <div>
-                    <label className="mb-2 block">Thrive Coins</label>
+                    <label className="mb-2 block">Thrive Coins<span className="text-red-500">*</span></label>
                     <div className="relative">
                       <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
                         <PiCoinsFill />
                       </span>
-                    <input
-                      type="number"
-                      name="thriveCoins"
-                      className="custom--input w-full"
-                      value={formik.values.thriveCoins}
-                      onChange={formik.handleChange}
-                      onBlur={formik.handleBlur}
-                    />
+                      <input
+                        type="number"
+                        name="thriveCoins"
+                        className="custom--input w-full input--icon"
+                        value={formik.values.thriveCoins}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                      />
                     </div>
                     {formik.touched.thriveCoins &&
                       formik.errors.thriveCoins && (
@@ -453,21 +466,24 @@ const CreateService = ({ setShowModal }) => {
 
                   {/* Listing Status */}
                   <div>
-                    <label className="mb-2 block">Listing Status</label>
+                    <label className="mb-2 block">Listing Status<span className="text-red-500">*</span></label>
                     <div className="relative">
                       <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
                         <FaListCheck />
                       </span>
-                    <Select
-                      options={listingStatusOptions}
-                      onChange={(option) =>
-                        formik.setFieldValue("listingStatus", option?.value)
-                      }
-                      onBlur={() =>
-                        formik.setFieldTouched("listingStatus", true)
-                      }
-                      styles={selectIcon}
-                    />
+                      <Select
+                        options={listingStatusOptions}
+                        value={listingStatusOptions.find(
+                          (option) => option.value === formik.values.listingStatus
+                        )}
+                        onChange={(option) =>
+                          formik.setFieldValue("listingStatus", option?.value)
+                        }
+                        onBlur={() =>
+                          formik.setFieldTouched("listingStatus", true)
+                        }
+                        styles={selectIcon}
+                      />
                     </div>
                     {formik.touched.listingStatus &&
                       formik.errors.listingStatus && (
@@ -478,7 +494,7 @@ const CreateService = ({ setShowModal }) => {
                   </div>
                   {/* Short Description */}
                   <div>
-                    <label className="mb-2 block">Short Description</label>
+                    <label className="mb-2 block">Short Description<span className="text-red-500">*</span></label>
                     <textarea
                       name="shortDescription"
                       className="custom--input w-full"
@@ -496,7 +512,7 @@ const CreateService = ({ setShowModal }) => {
 
                   {/* Long Description */}
                   <div>
-                    <label className="mb-2 block">Long Description</label>
+                    <label className="mb-2 block">Long Description<span className="text-red-500">*</span></label>
                     <textarea
                       name="longDescription"
                       className="custom--input w-full"

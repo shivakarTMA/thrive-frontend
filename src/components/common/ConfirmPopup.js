@@ -8,13 +8,13 @@ const ConfirmPopup = ({ message, onConfirm, onCancel }) => {
         <div className="flex justify-center gap-4">
           <button
             onClick={onConfirm}
-            className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+            className="bg-black text-white px-4 py-2 rounded max-w-[100px] w-full"
           >
             Yes
           </button>
           <button
             onClick={onCancel}
-            className="bg-gray-300 text-black px-4 py-2 rounded hover:bg-gray-400"
+            className="bg-gray-300 text-black px-4 py-2 rounded max-w-[100px] w-full"
           >
             No
           </button>

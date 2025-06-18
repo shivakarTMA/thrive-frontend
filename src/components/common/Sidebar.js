@@ -8,6 +8,7 @@ import { SlCalender } from "react-icons/sl";
 import { IoBarChartOutline } from "react-icons/io5";
 import { GoTools } from "react-icons/go";
 import { LuList } from "react-icons/lu";
+import { CgGym } from "react-icons/cg";
 import { useSelector } from "react-redux";
 
 const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
@@ -232,10 +233,14 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
               <FiUsers className="menu--icon" />
               <span className="nav-text">Staff</span>
             </Link>
-            <Link to="#" className="nav-link mb-2">
+            <Link to="/exercises" className="nav-link mb-2">
+              <CgGym className="menu--icon" />
+              <span className="nav-text">Exercises</span>
+            </Link>
+            {/* <Link to="#" className="nav-link mb-2">
               <PiChartPieSlice className="menu--icon" />
               <span className="nav-text">Reports</span>
-            </Link>
+            </Link> */}
           </>
         )}
 

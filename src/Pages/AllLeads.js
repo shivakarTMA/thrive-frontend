@@ -388,7 +388,7 @@ const AllLeads = () => {
                   <td className="px-2 py-4">{row?.lastCallStatus}</td>
                   <td className="px-2 py-4">{row?.leadOwner}</td>
 
-                  <div className="absolute hidden group-hover:flex gap-2 items-center right-0 bg-white h-full top-0 w-full flex items-center justify-end bg-[#f9fafb] pr-5 transition duration-700">
+                  <div className="absolute hidden group-hover:flex gap-2 items-center right-0 h-full top-0 w-full flex items-center justify-end bg-[linear-gradient(269deg,_#ffffff_30%,_transparent)] pr-5 transition duration-700">
                     <Tooltip
                       id={`tooltip-edit-${row.id}`}
                       content="Edit Lead"
@@ -436,7 +436,10 @@ const AllLeads = () => {
                       place="top"
                     >
                       <div className="p-1 cursor-pointer">
-                        <Link to={`/lead-follow-up/${row.id}?action=schedule-tour-trial`} className="p-0">
+                        <Link
+                          to={`/lead-follow-up/${row.id}?action=schedule-tour-trial`}
+                          className="p-0"
+                        >
                           <RiCalendarScheduleLine className="text-[25px] text-black" />
                         </Link>
                       </div>

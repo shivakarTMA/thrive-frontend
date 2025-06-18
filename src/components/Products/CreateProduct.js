@@ -54,30 +54,38 @@ const validationSchema = Yup.object({
   listingStatus: Yup.string().required("Listing Status is required"),
 });
 
-const CreateProduct = ({ setShowModal }) => {
+const CreateProduct = ({ setShowModal, onProductCreated, initialData }) => {
+  console.log(initialData, "initialData");
   const leadBoxRef = useRef(null);
 
   const formik = useFormik({
     initialValues: {
-      centreName: "",
-      productType: "",
-      productName: "",
-      productImage: "",
-      shortDescription: "",
-      longDescription: "",
-      quantity: "",
-      mrp: "",
-      sellingPrice: "",
-      taxType: "",
-      thriveCoins: "",
-      listingStatus: "",
+      centreName: initialData?.centreName || "",
+      productType: initialData?.productType || "",
+      productName: initialData?.productName || "",
+      productImage: initialData?.productImage || "",
+      shortDescription: initialData?.shortDescription || "",
+      longDescription: initialData?.longDescription || "",
+      quantity: initialData?.quantity || "",
+      mrp: initialData?.mrp || "",
+      sellingPrice: initialData?.sellingPrice || "",
+      taxType: initialData?.taxType || "",
+      thriveCoins: initialData?.thriveCoins || "",
+      listingStatus: initialData?.listingStatus || "",
     },
     validationSchema,
     onSubmit: (values) => {
-      console.log("Form Submitted:", values);
-      console.log("Formik Errors (if any):", formik.errors);
+      // console.log("Form Submitted:", values);
+      // console.log("Formik Errors (if any):", formik.errors);
+      // setShowModal(false);
+      // toast.success("Created Successfully");
+
+      const dataToSend = {
+        ...values,
+        id: initialData?.id || Date.now(), // Preserve ID for edit mode
+      };
+      onProductCreated(dataToSend);
       setShowModal(false);
-      toast.success("Created Successfully");
     },
   });
 
@@ -115,7 +123,7 @@ const CreateProduct = ({ setShowModal }) => {
                   {/* Centre Name */}
                   <div>
                     <label className="mb-2 block">
-                      Centre Name
+                      Centre Name<span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
                       <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
@@ -140,7 +148,7 @@ const CreateProduct = ({ setShowModal }) => {
                   {/* Product Type (React Select) */}
                   <div>
                     <label className="mb-2 block">
-                      Product Type
+                      Product Type<span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
                       <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
@@ -148,6 +156,9 @@ const CreateProduct = ({ setShowModal }) => {
                       </span>
                       <Select
                         options={productTypeOptions}
+                        value={productTypeOptions.find(
+                          (option) => option.value === formik.values.productType
+                        )}
                         onChange={(option) =>
                           formik.setFieldValue("productType", option?.value)
                         }
@@ -168,7 +179,7 @@ const CreateProduct = ({ setShowModal }) => {
                   {/* Product Name */}
                   <div>
                     <label className="mb-2 block">
-                      Product Name
+                      Product Name<span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
                       <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
@@ -194,7 +205,7 @@ const CreateProduct = ({ setShowModal }) => {
                   {/* Product Image */}
                   <div>
                     <label className="mb-2 block">
-                      Product Image
+                      Product Image<span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
                       <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
@@ -227,7 +238,9 @@ const CreateProduct = ({ setShowModal }) => {
 
                   {/* Quantity */}
                   <div>
-                    <label className="mb-2 block">Quantity</label>
+                    <label className="mb-2 block">
+                      Quantity<span className="text-red-500">*</span>
+                    </label>
                     <div className="relative">
                       <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
                         <FaListCheck />
@@ -250,7 +263,9 @@ const CreateProduct = ({ setShowModal }) => {
 
                   {/* MRP */}
                   <div>
-                    <label className="mb-2 block">MRP</label>
+                    <label className="mb-2 block">
+                      MRP<span className="text-red-500">*</span>
+                    </label>
                     <div className="relative">
                       <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
                         <MdCurrencyRupee />
@@ -274,7 +289,7 @@ const CreateProduct = ({ setShowModal }) => {
                   {/* Selling Price */}
                   <div>
                     <label className="mb-2 block">
-                      Selling Price
+                      Selling Price<span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
                       <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
@@ -299,7 +314,9 @@ const CreateProduct = ({ setShowModal }) => {
 
                   {/* Tax Type */}
                   <div>
-                    <label className="mb-2 block">Tax Type</label>
+                    <label className="mb-2 block">
+                      Tax Type<span className="text-red-500">*</span>
+                    </label>
                     <div className="relative">
                       <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
                         <FaListCheck />
@@ -323,7 +340,7 @@ const CreateProduct = ({ setShowModal }) => {
                   {/* Thrive Coins */}
                   <div>
                     <label className="mb-2 block">
-                      Thrive Coins
+                      Thrive Coins<span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
                       <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
@@ -349,22 +366,27 @@ const CreateProduct = ({ setShowModal }) => {
                   {/* Listing Status (React Select) */}
                   <div>
                     <label className="mb-2 block">
-                      Listing Status
+                      Listing Status<span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
-                                          <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
-                                            <FaListCheck />
-                                          </span>
-                    <Select
-                      options={listingStatusOptions}
-                      onChange={(option) =>
-                        formik.setFieldValue("listingStatus", option?.value)
-                      }
-                      onBlur={() =>
-                        formik.setFieldTouched("listingStatus", true)
-                      }
-                      styles={selectIcon}
-                    />
+                      <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
+                        <FaListCheck />
+                      </span>
+
+                      <Select
+                        options={listingStatusOptions}
+                        value={listingStatusOptions.find(
+                          (option) =>
+                            option.value === formik.values.listingStatus
+                        )}
+                        onChange={(option) =>
+                          formik.setFieldValue("listingStatus", option?.value)
+                        }
+                        onBlur={() =>
+                          formik.setFieldTouched("listingStatus", true)
+                        }
+                        styles={selectIcon}
+                      />
                     </div>
                     {formik.touched.listingStatus &&
                       formik.errors.listingStatus && (
@@ -376,7 +398,7 @@ const CreateProduct = ({ setShowModal }) => {
                   {/* Short Description */}
                   <div>
                     <label className="mb-2 block">
-                      Short Description
+                      Short Description<span className="text-red-500">*</span>
                     </label>
                     <textarea
                       name="shortDescription"
@@ -396,7 +418,7 @@ const CreateProduct = ({ setShowModal }) => {
                   {/* Long Description */}
                   <div>
                     <label className="mb-2 block">
-                      Long Description
+                      Long Description<span className="text-red-500">*</span>
                     </label>
                     <textarea
                       name="longDescription"

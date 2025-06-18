@@ -7,61 +7,66 @@ import { selectIcon } from "../../Helper/helper";
 import CreatableSelect from "react-select/creatable";
 import { toast } from "react-toastify";
 import PhoneInput, { isValidPhoneNumber } from "react-phone-number-input";
-import { FaEnvelope, FaListCheck, FaRegBuilding, FaUser } from "react-icons/fa6";
+import {
+  FaEnvelope,
+  FaListCheck,
+  FaRegBuilding,
+  FaUser,
+} from "react-icons/fa6";
 import { MdInsertPhoto } from "react-icons/md";
 
 const roleOptions = [
-  { value: "Admin", label: "Admin" },
-  { value: "Manager", label: "Manager" },
-  { value: "FOH", label: "FOH" },
-  { value: "PT", label: "PT" },
-  { value: "GT", label: "GT" },
-  { value: "Nutritionist", label: "Nutritionist" },
-  { value: "Spa", label: "Spa" },
-  { value: "Salon", label: "Salon" },
-  { value: "Housekeeping", label: "Housekeeping" },
-  { value: "Others", label: "Others" },
+  { value: "admin", label: "Admin" },
+  { value: "manager", label: "Manager" },
+  { value: "foh", label: "FOH" },
+  { value: "pt", label: "PT" },
+  { value: "gt", label: "GT" },
+  { value: "nutritionist", label: "Nutritionist" },
+  { value: "spa", label: "Spa" },
+  { value: "salon", label: "Salon" },
+  { value: "housekeeping", label: "Housekeeping" },
+  { value: "others", label: "Others" },
 ];
 
 const centerOptions = [
-  { value: "Center1", label: "Center 1" },
-  { value: "Center2", label: "Center 2" },
-  { value: "Center3", label: "Center 3" },
+  { value: "center1", label: "Center 1" },
+  { value: "center2", label: "Center 2" },
+  { value: "center3", label: "Center 3" },
 ];
 
 const serviceOptions = [
-  { value: "PT", label: "Personal Training" },
-  { value: "BCA", label: "BCA" },
-  { value: "Nutrition", label: "Nutrition" },
-  { value: "Massage", label: "Massage" },
-  { value: "Haircut", label: "Haircut" },
+  { value: "pt", label: "Personal Training" },
+  { value: "bca", label: "BCA" },
+  { value: "nutrition", label: "Nutrition" },
+  { value: "massage", label: "Massage" },
+  { value: "haircut", label: "Haircut" },
 ];
 
 const tagOptions = [
-  { value: "Weight Loss", label: "Weight Loss" },
-  { value: "HIIT", label: "HIIT" },
-  { value: "Strength", label: "Strength" },
-  { value: "Wellness", label: "Wellness" },
-  { value: "Cardio", label: "Cardio" },
+  { value: "weight Loss", label: "Weight Loss" },
+  { value: "hiit", label: "HIIT" },
+  { value: "strength", label: "Strength" },
+  { value: "wellness", label: "Wellness" },
+  { value: "cardio", label: "Cardio" },
 ];
 
 const yesNoOptions = [
-  { value: true, label: "Yes" },
-  { value: false, label: "No" },
+  { value: "active", label: "Active" },
+  { value: "inactive", label: "Inactive" },
 ];
-
-const roleAllowsAppFields = ["PT", "GT", "Nutritionist", "Spa", "Salon"];
 
 const validationSchema = Yup.object({
   fullName: Yup.string().required("Full Name is required"),
   email: Yup.string().email("Invalid email").required("Email is required"),
   phoneNumber: Yup.string()
-    .matches(/^\d{10}$/, "Enter a valid 10-digit phone number")
-    .required("Phone number is required"),
+    .required("Contact number is required")
+    .test("is-valid-phone", "Invalid phone number", function (value) {
+      return isValidPhoneNumber(value || "");
+    }),
   role: Yup.string().required("Role is required"),
   assignedCenters: Yup.array().min(1, "At least one center must be selected"),
   profilePicture: Yup.mixed().when("showOnApp", {
-    is: true,
+    is: "active",
     then: () =>
       Yup.mixed()
         .required("Profile Picture is required")
@@ -72,53 +77,62 @@ const validationSchema = Yup.object({
     otherwise: () => Yup.mixed().notRequired(),
   }),
   shortDescription: Yup.string().when("showOnApp", {
-    is: true,
+    is: "active",
     then: () => Yup.string().required("Short Description is required"),
   }),
   longDescription: Yup.string().when("showOnApp", {
-    is: true,
+    is: "active",
     then: () => Yup.string().required("Long Description is required"),
   }),
   tags: Yup.array().when("showOnApp", {
-    is: true,
+    is: "active",
     then: () => Yup.array().of(Yup.string()).min(1, "Tags are required"),
   }),
   serviceMapping: Yup.array().when("showOnApp", {
-    is: true,
+    is: "active",
     then: () =>
       Yup.array().of(Yup.string()).min(1, "Select at least one service"),
     otherwise: () => Yup.array().notRequired(),
   }),
 });
 
-const CreateStaff = ({ setShowModal }) => {
+const CreateStaff = ({ setShowModal, onExerciseCreated, initialData }) => {
+  console.log(initialData, "initialData");
   const leadBoxRef = useRef(null);
 
   const initialValues = {
-    fullName: "",
-    email: "",
-    phoneNumber: "",
-    role: "",
-    assignedCenters: [],
-    showOnApp: false,
-    profilePicture: null,
-    shortDescription: "",
-    longDescription: "",
-    tags: [],
-    serviceMapping: [],
+    fullName: initialData?.fullName || "",
+    email: initialData?.email || "",
+    phoneNumber: initialData?.phoneNumber || "",
+    role: initialData?.role || "",
+    assignedCenters: initialData?.assignedCenters || [],
+    staffStatus: initialData?.staffStatus || "active",
+    showOnApp: initialData?.showOnApp || "inactive",
+    profilePicture: initialData?.serviceImage || "",
+    shortDescription: initialData?.shortDescription || "",
+    longDescription: initialData?.longDescription || "",
+    tags: initialData?.tags || [],
+    serviceMapping: initialData?.serviceMapping || [],
   };
 
   const formik = useFormik({
     initialValues,
     validationSchema,
     onSubmit: (values) => {
-      console.log("Submitted Staff Data:", values);
+      // console.log("Submitted Staff Data:", values);
+      // setShowModal(false);
+      // toast.success("Created Successfully");
+      console.log("Formik Errors (if any):", formik.errors);
+      const dataToSend = {
+        ...values,
+        id: initialData?.id || Date.now(), // Preserve ID for edit mode
+      };
+      onExerciseCreated(dataToSend);
       setShowModal(false);
-      toast.success("Created Successfully");
     },
   });
 
-  const showAppFields = roleAllowsAppFields.includes(formik.values.role);
+  console.log(initialValues,'initialValues')
 
   const handleOverlayClick = (e) => {
     if (leadBoxRef.current && !leadBoxRef.current.contains(e.target)) {
@@ -157,7 +171,9 @@ const CreateStaff = ({ setShowModal }) => {
                 <div className="grid lg:grid-cols-3 md:grid-cols-2 gap-4">
                   {/* Full Name */}
                   <div>
-                    <label className="mb-2 block">Full Name</label>
+                    <label className="mb-2 block">
+                      Full Name<span className="text-red-500">*</span>
+                    </label>
                     <div className="relative">
                       <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
                         <FaUser />
@@ -180,7 +196,9 @@ const CreateStaff = ({ setShowModal }) => {
 
                   {/* Email */}
                   <div>
-                    <label className="mb-2 block">Email</label>
+                    <label className="mb-2 block">
+                      Email<span className="text-red-500">*</span>
+                    </label>
                     <div className="relative">
                       <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
                         <FaEnvelope />
@@ -203,7 +221,9 @@ const CreateStaff = ({ setShowModal }) => {
 
                   {/* Phone Number */}
                   <div>
-                    <label className="mb-2 block">Phone Number</label>
+                    <label className="mb-2 block">
+                      Phone Number<span className="text-red-500">*</span>
+                    </label>
                     <PhoneInput
                       name="phoneNumber"
                       value={formik.values.phoneNumber}
@@ -222,13 +242,18 @@ const CreateStaff = ({ setShowModal }) => {
 
                   {/* Role */}
                   <div>
-                    <label className="mb-2 block">Role</label>
+                    <label className="mb-2 block">
+                      Role<span className="text-red-500">*</span>
+                    </label>
                     <div className="relative">
                       <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
                         <FaUser />
                       </span>
                       <Select
                         options={roleOptions}
+                        value={roleOptions.find(
+                          (option) => option.value === formik.values.role
+                        )}
                         onChange={(option) =>
                           formik.setFieldValue("role", option?.value)
                         }
@@ -245,14 +270,19 @@ const CreateStaff = ({ setShowModal }) => {
 
                   {/* Assigned Centers */}
                   <div>
-                    <label className="mb-2 block">Assigned Center(s)</label>
+                    <label className="mb-2 block">
+                      Assigned Center(s)<span className="text-red-500">*</span>
+                    </label>
                     <div className="relative">
                       <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
                         <FaRegBuilding />
                       </span>
                       <Select
-                        options={centerOptions}
                         isMulti
+                        options={centerOptions}
+                        value={centerOptions.filter((option) =>
+                          formik.values.assignedCenters.includes(option.value)
+                        )}
                         onChange={(selected) =>
                           formik.setFieldValue(
                             "assignedCenters",
@@ -274,47 +304,50 @@ const CreateStaff = ({ setShowModal }) => {
                   </div>
 
                   {/* Show on App */}
-                  {showAppFields && (
-                    <div>
-                      <label className="mb-2 block">Show on App</label>
-                      <div className="relative">
-                        <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
-                          <IoAppsSharp />
-                        </span>
-                        <Select
-                          options={yesNoOptions}
-                          value={yesNoOptions.find(
-                            (o) => o.value === formik.values.showOnApp
-                          )}
-                          onChange={(option) =>
-                            formik.setFieldValue("showOnApp", option.value)
-                          }
-                          styles={selectIcon}
-                        />
-                      </div>
+
+                  <div>
+                    <label className="mb-2 block">
+                      Show on App<span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
+                        <IoAppsSharp />
+                      </span>
+                      <Select
+                        options={yesNoOptions}
+                        value={yesNoOptions.find(
+                          (option) => option.value === formik.values.showOnApp
+                        )}
+                        onChange={(option) =>
+                          formik.setFieldValue("showOnApp", option?.value)
+                        }
+                        onBlur={() => formik.setFieldTouched("showOnApp", true)}
+                        styles={selectIcon}
+                      />
                     </div>
-                  )}
+                  </div>
 
                   {/* Conditionally rendered fields */}
-                  {showAppFields && formik.values.showOnApp && (
+                 {formik.values?.showOnApp === "active" && (
                     <>
                       {/* Profile Picture */}
                       <div>
-                        <label className="mb-2 block">Profile Picture</label>
+                        <label className="mb-2 block">
+                          Profile Picture<span className="text-red-500">*</span>
+                        </label>
                         <div className="relative">
                           <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
                             <MdInsertPhoto />
                           </span>
+
                           <input
                             type="file"
                             name="profilePicture"
                             accept="image/*"
-                            onChange={(e) =>
-                              formik.setFieldValue(
-                                "profilePicture",
-                                e.target.files[0]
-                              )
-                            }
+                            onChange={(event) => {
+                              const file = event.currentTarget.files[0];
+                              formik.setFieldValue("profilePicture", file);
+                            }}
                             className="custom--input w-full input--icon"
                           />
                         </div>
@@ -328,7 +361,9 @@ const CreateStaff = ({ setShowModal }) => {
 
                       {/* Tags */}
                       <div>
-                        <label className="mb-2 block">Tags</label>
+                        <label className="mb-2 block">
+                          Tags<span className="text-red-500">*</span>
+                        </label>
                         <div className="relative">
                           <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
                             <IoPricetagSharp />
@@ -359,7 +394,9 @@ const CreateStaff = ({ setShowModal }) => {
 
                       {/* Service Mapping */}
                       <div>
-                        <label className="mb-2 block">Service Mapping</label>
+                        <label className="mb-2 block">
+                          Service Mapping<span className="text-red-500">*</span>
+                        </label>
                         <div className="relative">
                           <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
                             <FaListCheck />
@@ -394,7 +431,10 @@ const CreateStaff = ({ setShowModal }) => {
 
                       {/* Short Description */}
                       <div>
-                        <label className="mb-2 block">Short Description</label>
+                        <label className="mb-2 block">
+                          Short Description
+                          <span className="text-red-500">*</span>
+                        </label>
                         <textarea
                           name="shortDescription"
                           className="custom--input w-full"
@@ -412,7 +452,10 @@ const CreateStaff = ({ setShowModal }) => {
 
                       {/* Long Description */}
                       <div>
-                        <label className="mb-2 block">Long Description</label>
+                        <label className="mb-2 block">
+                          Long Description
+                          <span className="text-red-500">*</span>
+                        </label>
                         <textarea
                           name="longDescription"
                           className="custom--input w-full"

@@ -37,6 +37,7 @@ import CompanyList from "../components/Companies/CompanyList";
 import ProductsList from "../components/Products/ProductsList";
 import ServicesAddons from "../components/Services/ServicesAddons";
 import StaffList from "../components/Staff/StaffList";
+import ExercisesList from "../components/Exercises/ExercisesList";
 
 
 export default function Routing() {
@@ -169,6 +170,14 @@ export default function Routing() {
               element={
                 <PrivateRoute>
                   <StaffList />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/exercises"
+              element={
+                <PrivateRoute>
+                  <ExercisesList />
                 </PrivateRoute>
               }
             />
