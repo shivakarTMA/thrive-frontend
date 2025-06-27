@@ -10,6 +10,7 @@ import { GoTools } from "react-icons/go";
 import { LuList } from "react-icons/lu";
 import { CgGym } from "react-icons/cg";
 import { useSelector } from "react-redux";
+import { TbGymnastics } from "react-icons/tb";
 
 const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
   const location = useLocation();
@@ -145,41 +146,7 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
               <span className="nav-text">Services</span>
             </Link> */}
 
-            {/* <div
-              className="nav-link d-flex justify-between align-items-center mb-2"
-              onClick={() => toggleMenu("services")}
-              style={{ cursor: "pointer" }}
-            >
-              <div className="flex items-center">
-                <LuList className="menu--icon" />
-                <span className="nav-text">Services</span>
-              </div>
-              <FaAngleDown
-                className={`downmenu transition ${
-                  dropdownToggles["services"] ? "rotate-[180deg]" : ""
-                }`}
-              />
-            </div>
-
-            {dropdownToggles["services"] && (
-              <div className="mt-2 pl-5 relative">
-                <div className="absolute h-[calc(100%-15px)] w-[2px] bg-white left-[25px] top-[8px]"></div>
-                <Link
-                  to="#"
-                  className="text-white flex items-center gap-[5px] mb-2"
-                >
-                  <FaCircle className="menu--icon !text-[12px]" />
-                  <span className="nav-text">All Services</span>
-                </Link>
-                <Link
-                  to="/create-service"
-                  className="text-white flex items-center gap-[5px] mb-2"
-                >
-                  <FaCircle className="menu--icon !text-[12px]" />
-                  <span className="nav-text">Create Service</span>
-                </Link>
-              </div>
-            )} */}
+            
 
             {/* Products Menu */}
             {/* <div
@@ -200,17 +167,17 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
 
             {dropdownToggles["products"] && (
               <div className="mt-2 pl-5 relative">
-                <div className="absolute h-[calc(100%-15px)] w-[2px] bg-white left-[25px] top-[8px]"></div>
+                <div className="absolute h-[calc(100%-15px)] w-[2px] bg-white left-[23px] top-[8px]"></div>
                 <Link
                   to="#"
-                  className="text-white flex items-center gap-[5px] mb-2"
+                  className="text-white flex items-center gap-[5px] mb-2 text-sm"
                 >
                   <FaCircle className="menu--icon !text-[12px]" />
                   <span className="nav-text">All Products</span>
                 </Link>
                 <Link
                   to="/create-product"
-                  className="text-white flex items-center gap-[5px] mb-2"
+                  className="text-white flex items-center gap-[5px] mb-2 text-sm"
                 >
                   <FaCircle className="menu--icon !text-[12px]" />
                   <span className="nav-text">Create Product</span>
@@ -237,6 +204,41 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
               <CgGym className="menu--icon" />
               <span className="nav-text">Exercises</span>
             </Link>
+            <div
+              className="nav-link d-flex justify-between align-items-center mb-2"
+              onClick={() => toggleMenu("workoutplans")}
+              style={{ cursor: "pointer" }}
+            >
+              <div className="flex items-center">
+                <TbGymnastics className="menu--icon" />
+                <span className="nav-text">Workout Plans</span>
+              </div>
+              <FaAngleDown
+                className={`downmenu transition ${
+                  dropdownToggles["workoutplans"] ? "rotate-[180deg]" : ""
+                }`}
+              />
+            </div>
+
+            {dropdownToggles["workoutplans"] && (
+              <div className="mt-2 pl-5 relative">
+                <div className="absolute h-[calc(100%-15px)] w-[2px] bg-white left-[23px] top-[8px]"></div>
+                <Link
+                  to="/workout-plans"
+                  className="text-white flex items-center gap-[5px] mb-2 text-sm"
+                >
+                  <FaCircle className="menu--icon !text-[10px]" />
+                  <span className="nav-text">All Workout Plans</span>
+                </Link>
+                <Link
+                  to="/create-workout-plan"
+                  className="text-white flex items-center gap-[5px] mb-2 text-sm"
+                >
+                  <FaCircle className="menu--icon !text-[10px]" />
+                  <span className="nav-text">Create Workout Plan</span>
+                </Link>
+              </div>
+            )}
             {/* <Link to="#" className="nav-link mb-2">
               <PiChartPieSlice className="menu--icon" />
               <span className="nav-text">Reports</span>

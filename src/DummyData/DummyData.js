@@ -1,5 +1,35 @@
 import { FaCrown } from "react-icons/fa";
 
+export const workoutPlansList = [
+  {
+      id: 1,
+      exerciseCategory: "Strength Training",
+      numberOfDays: 5,
+      workoutName: "Bench Press",
+      centerName: "Downtown Gym",
+      createdDate: "2025-06-18",
+      createdBy: "Admin",
+    },
+    {
+      id: 2,
+      exerciseCategory: "Cardio",
+      numberOfDays: 5,
+      workoutName: "Treadmill",
+      centerName: "Fitness Center",
+      createdDate: "2025-06-15",
+      createdBy: "Admin",
+    },
+    {
+      id: 3,
+      exerciseCategory: "Flexibility",
+      numberOfDays: 5,
+      workoutName: "Yoga Stretch",
+      centerName: "Zen Studio",
+      createdDate: "2025-06-10",
+      createdBy: "Admin",
+    },
+]
+
 export const memberMockData = [
   {
     id: 1,

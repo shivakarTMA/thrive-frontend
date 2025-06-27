@@ -38,6 +38,8 @@ import ProductsList from "../components/Products/ProductsList";
 import ServicesAddons from "../components/Services/ServicesAddons";
 import StaffList from "../components/Staff/StaffList";
 import ExercisesList from "../components/Exercises/ExercisesList";
+import WorkoutPlanList from "../components/WorkoutPlan/WorkoutPlanList";
+import CreateWorkoutplan from "../components/WorkoutPlan/CreateWorkoutplan";
 
 
 export default function Routing() {
@@ -178,6 +180,30 @@ export default function Routing() {
               element={
                 <PrivateRoute>
                   <ExercisesList />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/workout-plans"
+              element={
+                <PrivateRoute>
+                  <WorkoutPlanList />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/create-workout-plan"
+              element={
+                <PrivateRoute>
+                  <CreateWorkoutplan />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/create-workout-plan/:id"
+              element={
+                <PrivateRoute>
+                  <CreateWorkoutplan />
                 </PrivateRoute>
               }
             />
