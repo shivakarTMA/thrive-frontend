@@ -40,6 +40,7 @@ import StaffList from "../components/Staff/StaffList";
 import ExercisesList from "../components/Exercises/ExercisesList";
 import WorkoutPlanList from "../components/WorkoutPlan/WorkoutPlanList";
 import CreateWorkoutplan from "../components/WorkoutPlan/CreateWorkoutplan";
+import DietPlanList from "../components/DietPlan/DietPlanList";
 
 
 export default function Routing() {
@@ -204,6 +205,14 @@ export default function Routing() {
               element={
                 <PrivateRoute>
                   <CreateWorkoutplan />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/diet-plan/"
+              element={
+                <PrivateRoute>
+                  <DietPlanList />
                 </PrivateRoute>
               }
             />

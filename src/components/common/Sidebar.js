@@ -3,7 +3,7 @@ import { AiOutlineHome, AiOutlineProduct } from "react-icons/ai";
 import { FiUsers, FiUserPlus } from "react-icons/fi";
 import { FaAngleDown, FaCircle, FaRegBuilding } from "react-icons/fa6";
 import { Link, useLocation } from "react-router-dom";
-import { PiChartPieSlice, PiUserList } from "react-icons/pi";
+import { PiBowlFood, PiChartPieSlice, PiUserList } from "react-icons/pi";
 import { SlCalender } from "react-icons/sl";
 import { IoBarChartOutline } from "react-icons/io5";
 import { GoTools } from "react-icons/go";
@@ -239,10 +239,10 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                 </Link>
               </div>
             )}
-            {/* <Link to="#" className="nav-link mb-2">
-              <PiChartPieSlice className="menu--icon" />
-              <span className="nav-text">Reports</span>
-            </Link> */}
+            <Link to="/diet-plan" className="nav-link mb-2">
+              <PiBowlFood className="menu--icon" />
+              <span className="nav-text">Diet Plan</span>
+            </Link>
           </>
         )}
 
