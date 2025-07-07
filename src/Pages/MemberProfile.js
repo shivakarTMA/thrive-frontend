@@ -1,11 +1,7 @@
-import React, { useEffect, useRef, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { GoPlusCircle } from "react-icons/go";
-import { FiEdit2 } from "react-icons/fi";
-import { membershipData, mockData } from "../DummyData/DummyData";
+import React, { useState } from "react";
+import { useParams } from "react-router-dom";
+import { mockData } from "../DummyData/DummyData";
 import ProfileDetails from "../components/memberprofile/ProfileDetails";
-import { FaCrown } from "react-icons/fa";
-import { BsThreeDotsVertical } from "react-icons/bs";
 import ServiceCard from "../components/memberprofile/ServiceCard";
 import OrderHistory from "../components/memberprofile/OrderHistory";
 import CreateCallLogs from "../components/CreateCallLogs";
@@ -17,46 +13,6 @@ import PaymentHistory from "../components/memberprofile/PaymentHistory";
 
 const MemberProfile = () => {
   const { id } = useParams();
-
-  //   const slider = scrollRef.current;
-
-  //   const handleMouseDown = (e) => {
-  //     isDragging.current = true;
-  //     slider.classList.add("cursor-grabbing");
-  //     startX.current = e.pageX - slider.offsetLeft;
-  //     scrollLeft.current = slider.scrollLeft;
-  //   };
-
-  //   const handleMouseLeave = () => {
-  //     isDragging.current = false;
-  //     slider.classList.remove("cursor-grabbing");
-  //   };
-
-  //   const handleMouseUp = () => {
-  //     isDragging.current = false;
-  //     slider.classList.remove("cursor-grabbing");
-  //   };
-
-  //   const handleMouseMove = (e) => {
-  //     if (!isDragging.current) return;
-  //     e.preventDefault();
-  //     const x = e.pageX - slider.offsetLeft;
-  //     const walk = (x - startX.current) * 1.5; // scroll-fastness
-  //     slider.scrollLeft = scrollLeft.current - walk;
-  //   };
-
-  //   slider.addEventListener("mousedown", handleMouseDown);
-  //   slider.addEventListener("mouseleave", handleMouseLeave);
-  //   slider.addEventListener("mouseup", handleMouseUp);
-  //   slider.addEventListener("mousemove", handleMouseMove);
-
-  //   return () => {
-  //     slider.removeEventListener("mousedown", handleMouseDown);
-  //     slider.removeEventListener("mouseleave", handleMouseLeave);
-  //     slider.removeEventListener("mouseup", handleMouseUp);
-  //     slider.removeEventListener("mousemove", handleMouseMove);
-  //   };
-  // }, []);
 
   const tabs = [
     "Profile Details",
@@ -74,7 +30,6 @@ const MemberProfile = () => {
     "Training",
   ];
   const [activeTab, setActiveTab] = useState("Profile Details");
-  const navigate = useNavigate();
   const member = mockData.find((m) => m.id === parseInt(id));
 
   if (!member) return <p>Member not found</p>;

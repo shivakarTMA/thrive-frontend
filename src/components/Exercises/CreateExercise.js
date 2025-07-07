@@ -113,7 +113,7 @@ const CreateExercise = ({ setShowModal, onExerciseCreated, initialData }) => {
                   {/* Product Type (React Select) */}
                   <div>
                     <label className="mb-2 block">
-                      Product Type<span className="text-red-500">*</span>
+                      Exercise Category<span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
                       <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">

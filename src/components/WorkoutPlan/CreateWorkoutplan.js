@@ -16,226 +16,251 @@ const CreateWorkoutPlan = () => {
   const { id } = useParams();
   const workoutPlan = workoutPlansList.find((item) => item.id === parseInt(id));
 
+  console.log(workoutPlan, "workoutPlanshviakar");
+
   const [step, setStep] = useState(1);
-  const [routineName, setRoutineName] = useState("New Routine");
-  const [description, setDescription] = useState("");
-  const [workoutType, setWorkoutType] = useState("multiple");
-  const [numDays, setNumDays] = useState(1);
-  const [days, setDays] = useState([]);
+  const [data, setData] = useState({
+    workoutName: workoutPlan?.workoutName || "",
+    description: "",
+    workoutType: "multiple",
+    numDays: 1,
+    days: [],
+  });
+
   const [activeDayIndex, setActiveDayIndex] = useState(0);
   const [showExercises, setShowExercises] = useState(false);
   const [copiedDay, setCopiedDay] = useState(null);
   const [errors, setErrors] = useState({});
 
-  const handleWorkoutTypeChange = (value) => {
-    setWorkoutType(value);
-    if (value === "single") setNumDays(1);
-  };
-
-  const initializeDays = () => {
-    const generatedDays = Array.from({ length: numDays }, (_, i) => ({
-      name: `Day ${i + 1}`,
-      exercises: [],
-      isRestDay: false,
-    }));
-    setDays(generatedDays);
-    setActiveDayIndex(0);
-  };
   const handleNextClick = (e) => {
     e.preventDefault();
     const newErrors = {};
-    if (!routineName.trim()) {
-      newErrors.routineName = "Workout name is required.";
+    if (!data.workoutName.trim()) {
+      newErrors.workoutName = "Workout name is required.";
     }
-    if (!description.trim()) {
+    if (!data.description.trim()) {
       newErrors.description = "Description is required.";
     }
-
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
     }
+    setData((prev) => {
+      const currentLength = prev.days.length;
+      let updatedDays;
 
-    // Clear errors and proceed
-    setErrors({});
-    setDays((prevDays) => {
-      const currentLength = prevDays.length;
-      if (currentLength === numDays) return prevDays;
-
-      if (currentLength < numDays) {
-        // Add new days
+      if (currentLength === prev.numDays) return prev;
+      if (currentLength < prev.numDays) {
         const additionalDays = Array.from(
-          { length: numDays - currentLength },
+          { length: prev.numDays - currentLength },
           (_, i) => ({
             name: `Day ${currentLength + i + 1}`,
             exercises: [],
             isRestDay: false,
           })
         );
-        return [...prevDays, ...additionalDays];
+        updatedDays = [...prev.days, ...additionalDays];
       } else {
-        // Truncate extra days
-        return prevDays.slice(0, numDays);
+        updatedDays = prev.days.slice(0, prev.numDays);
       }
+
+      return { ...prev, days: updatedDays };
     });
+     setErrors({});
     setStep(2);
   };
 
-  const handleFormSubmit = (e) => {
-    e.preventDefault();
-    const generatedDays = Array.from({ length: numDays }, (_, i) => ({
-      name: `Day ${i + 1}`,
-      exercises: [],
-    }));
-    setDays(generatedDays);
-    setActiveDayIndex(0);
-  };
-
   const handleExerciseAdd = (exercise) => {
-    const updatedDays = [...days];
-    const targetDay = updatedDays[activeDayIndex];
-    targetDay.exercises.push({
-      ...exercise,
-      isSelected: false,
-      setExercise: "",
-      groupType: null,
-      groupId: null,
-      workoutTag: "",
-      image:
-        "https://media.theeverygirl.com/wp-content/uploads/2020/07/little-things-you-can-do-for-a-better-workout-the-everygirl-1.jpg",
-      notes: "",
-      sets: [
-        {
-          weight: "",
-          reps: "",
-          distance: "",
-          duration: "",
-          rest: "",
-          notes: "",
-        },
-      ],
+    setData((prev) => {
+      const updatedDays = [...prev.days];
+      const targetDay = updatedDays[activeDayIndex];
+      targetDay.exercises.push({
+        ...exercise,
+        isSelected: false,
+        setExercise: "",
+        groupType: null,
+        groupId: null,
+        workoutTag: "",
+        image:
+          "https://media.theeverygirl.com/wp-content/uploads/2020/07/little-things-you-can-do-for-a-better-workout-the-everygirl-1.jpg",
+        notes: "",
+        sets: [
+          {
+            weight: "",
+            reps: "",
+            distance: "",
+            duration: "",
+            rest: "",
+            notes: "",
+          },
+        ],
+      });
+      return { ...prev, days: updatedDays };
     });
-    setDays(updatedDays);
   };
 
   const handleSetChange = (dayIdx, exIdx, setIdx, field, value) => {
-    const updatedDays = [...days];
-    updatedDays[dayIdx].exercises[exIdx].sets[setIdx][field] = value;
-    setDays(updatedDays);
+    setData((prev) => {
+      const updatedDays = [...prev.days];
+      updatedDays[dayIdx].exercises[exIdx].sets[setIdx][field] = value;
+      return { ...prev, days: updatedDays };
+    });
   };
 
-  const handleCopyDay = (dayIndex) => {
-    setCopiedDay({ ...days[dayIndex] });
-  };
-
-  const handlePasteDay = (targetIndex) => {
-    if (!copiedDay) return;
-    const newDays = [...days];
-    newDays[targetIndex] = {
-      ...newDays[targetIndex],
-      exercises: copiedDay.exercises.map((ex) => ({ ...ex })),
-    };
-    setDays(newDays);
-  };
-
-  const handleGroupSelected = (type) => {
-    const updatedDays = [...days];
-    const selectedExercises = updatedDays[activeDayIndex].exercises.filter(
-      (ex) => ex.isSelected
-    );
-    const groupId = `group-${Date.now()}`;
-    updatedDays[activeDayIndex].exercises = updatedDays[
-      activeDayIndex
-    ].exercises.map((ex) =>
-      ex.isSelected
-        ? { ...ex, groupType: type, groupId, isSelected: false }
-        : ex
-    );
-    setDays(updatedDays);
-  };
-
-  const handleUngroup = (groupId) => {
-    const updatedDays = [...days];
-    updatedDays[activeDayIndex].exercises = updatedDays[
-      activeDayIndex
-    ].exercises.map((ex) =>
-      ex.groupId === groupId ? { ...ex, groupId: null, groupType: null } : ex
-    );
-    setDays(updatedDays);
-  };
-
-  const handleClearDay = (dayIdx) => {
-    const updatedDays = [...days];
-    updatedDays[dayIdx].exercises = [];
-    setDays(updatedDays);
-  };
-
-  const handleDeleteExercise = (dayIndex, exerciseId) => {
-    const updatedDays = [...days];
-    const day = updatedDays[dayIndex];
-    const exerciseIndex = day.exercises.findIndex((ex) => ex.id === exerciseId);
-
-    if (exerciseIndex !== -1) {
-      day.exercises.splice(exerciseIndex, 1);
-      setDays(updatedDays);
-    }
-  };
-
-  const handleSaveWorkoutPlan = () => {
-    const workoutPlan = {
-      name: routineName,
-      description,
-      workoutType,
-      numDays,
-      days,
-    };
-    console.log("Workout Plan:", workoutPlan);
-    // You could also send this to an API here
-  };
-
-  const toggleExerciseSelect = (exIdx) => {
-    const updatedDays = [...days];
-    updatedDays[activeDayIndex].exercises[exIdx].isSelected =
-      !updatedDays[activeDayIndex].exercises[exIdx].isSelected;
-    setDays(updatedDays);
+  const handleDeleteExercise = (dayIdx, exId) => {
+    setData((prev) => {
+      const updatedDays = [...prev.days];
+      updatedDays[dayIdx].exercises = updatedDays[dayIdx].exercises.filter(
+        (ex) => ex.id !== exId
+      );
+      return { ...prev, days: updatedDays };
+    });
   };
 
   const handleExerciseFieldChange = (dayIdx, exIdx, field, value) => {
-    const updatedDays = [...days];
-    updatedDays[dayIdx].exercises[exIdx][field] = value;
-    setDays(updatedDays);
+    setData((prev) => {
+      const updatedDays = [...prev.days];
+      updatedDays[dayIdx].exercises[exIdx][field] = value;
+      return { ...prev, days: updatedDays };
+    });
   };
 
-  const handleAddRestTime = (dayIndex) => {
-    const updatedDays = [...days];
-    const newRestBlock = {
-      id: Date.now() + Math.random(),
-      type: "rest",
-      name: "Rest Time",
-      rest: true,
-      isRestBlock: true,
-      sets: [
-        {
-          rest: "",
-        },
-      ],
+  const toggleExerciseSelect = (exIdx) => {
+    setData((prev) => {
+      const updatedDays = [...prev.days];
+      updatedDays[activeDayIndex].exercises[exIdx].isSelected =
+        !updatedDays[activeDayIndex].exercises[exIdx].isSelected;
+      return { ...prev, days: updatedDays };
+    });
+  };
+
+  const handleGroupSelected = (type) => {
+    setData((prev) => {
+      const updatedDays = [...prev.days];
+      const selectedExercises = updatedDays[activeDayIndex].exercises.filter(
+        (ex) => ex.isSelected
+      );
+      const groupId = `group-${Date.now()}`;
+      updatedDays[activeDayIndex].exercises = updatedDays[
+        activeDayIndex
+      ].exercises.map((ex) =>
+        ex.isSelected
+          ? { ...ex, groupType: type, groupId, isSelected: false }
+          : ex
+      );
+      return { ...prev, days: updatedDays };
+    });
+  };
+
+  const handleUngroup = (groupId) => {
+    setData((prev) => {
+      const updatedDays = [...prev.days];
+      updatedDays[activeDayIndex].exercises = updatedDays[
+        activeDayIndex
+      ].exercises.map((ex) =>
+        ex.groupId === groupId ? { ...ex, groupId: null, groupType: null } : ex
+      );
+      return { ...prev, days: updatedDays };
+    });
+  };
+
+  const handleClearDay = (dayIdx) => {
+    setData((prev) => {
+      const updatedDays = [...prev.days];
+      updatedDays[dayIdx] = {
+        ...updatedDays[dayIdx],
+        isRestDay: false,
+        exercises: [],
+      };
+      return { ...prev, days: updatedDays };
+    });
+  };
+
+  const handleCopyDay = (dayIdx) => {
+    const dayToCopy = data.days[dayIdx];
+    setCopiedDay(JSON.parse(JSON.stringify(dayToCopy)));
+  };
+
+  const handlePasteDay = (dayIdx) => {
+    if (!copiedDay) return;
+    setData((prev) => {
+      const updatedDays = [...prev.days];
+      updatedDays[dayIdx] = {
+        ...copiedDay,
+        name: updatedDays[dayIdx].name,
+      };
+      return { ...prev, days: updatedDays };
+    });
+  };
+
+  const handleAddRestTime = (dayIdx) => {
+    setData((prev) => {
+      const updatedDays = [...prev.days];
+      updatedDays[dayIdx].exercises.push({
+        type: "rest",
+        duration: 60,
+      });
+      return { ...prev, days: updatedDays };
+    });
+  };
+
+  const handleToggleRestDay = (dayIdx, isRest) => {
+    setData((prev) => {
+      const updatedDays = [...prev.days];
+      updatedDays[dayIdx] = {
+        ...updatedDays[dayIdx],
+        isRestDay: isRest,
+        exercises: isRest ? [] : updatedDays[dayIdx].exercises,
+      };
+      return { ...prev, days: updatedDays };
+    });
+  };
+
+  const handleSaveWorkoutPlan = () => {
+    if (!data.workoutName || !data.description) return;
+    const workoutPayload = {
+      ...data,
+      createdAt: new Date().toISOString(),
     };
-    updatedDays[dayIndex].exercises.push(newRestBlock);
-    setDays(updatedDays);
+    console.log("Submitting workout plan:", workoutPayload);
   };
 
-  const handleToggleRestDay = (dayIndex, markAsRest) => {
-    const updatedDays = [...days];
-    updatedDays[dayIndex].isRestDay = markAsRest;
+const handleFormSubmit = (e) => {
+  e.preventDefault();
 
-    // When marking as rest day, clear all exercises
-    if (markAsRest) {
-      updatedDays[dayIndex].exercises = [];
-    }
+  const newErrors = {};
+  if (!data.workoutName.trim()) {
+    newErrors.workoutName = "Workout name is required.";
+  }
+  if (!data.description.trim()) {
+    newErrors.description = "Description is required.";
+  }
 
-    setDays(updatedDays);
-  };
+  if (Object.keys(newErrors).length > 0) {
+    setErrors(newErrors);
+    return;
+  }
 
+  // Generate days inside `data.days` instead of separate `days` state
+  const generatedDays = Array.from({ length: data.numDays }, (_, i) => ({
+    name: `Day ${i + 1}`,
+    exercises: [],
+    isRestDay: false,
+  }));
+
+  setData((prev) => ({
+    ...prev,
+    days: generatedDays,
+  }));
+
+  setActiveDayIndex(0);
+  setErrors({});
+  setStep(2); // move to next step
+};
+
+
+
+  
   const renderGroupedExercises = (groupId, groupType, groupExercises) => (
     <div className="border p-3 rounded mb-3 bg-gray-100">
       <div className="flex justify-between items-center mb-2">
@@ -489,6 +514,8 @@ const CreateWorkoutPlan = () => {
     </div>
   );
 
+  console.log(data, "data");
+
   return (
     <div className="p-6">
       <h1 className="text-2xl font-semibold mb-4">Create Workout Plan</h1>
@@ -498,12 +525,14 @@ const CreateWorkoutPlan = () => {
             <label className="block text-sm font-medium">Workout Name</label>
             <input
               type="text"
-              value={routineName}
-              onChange={(e) => setRoutineName(e.target.value)}
+              value={data?.workoutName}
+              onChange={(e) =>
+                setData((prev) => ({ ...prev, workoutName: e.target.value }))
+              }
               className="border px-3 py-2 w-full rounded"
             />
-            {errors.routineName && (
-              <p className="text-red-500 text-sm">{errors.routineName}</p>
+            {errors.workoutName && (
+              <p className="text-red-500 text-sm">{errors.workoutName}</p>
             )}
           </div>
 
@@ -511,8 +540,10 @@ const CreateWorkoutPlan = () => {
             <label className="block text-sm font-medium">Description</label>
             <textarea
               rows="2"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              value={data.description}
+              onChange={(e) =>
+                setData((prev) => ({ ...prev, description: e.target.value }))
+              }
               className="border px-3 py-2 w-full rounded"
             />
             {errors.description && (
@@ -523,8 +554,11 @@ const CreateWorkoutPlan = () => {
           <div>
             <label className="block text-sm font-medium">Workout Type</label>
             <select
-              value={workoutType}
-              onChange={(e) => handleWorkoutTypeChange(e.target.value)}
+              value={data.workoutType}
+              onChange={(e) => {
+                const newType = e.target.value;
+                setData((prev) => ({ ...prev, workoutType: newType }));
+              }}
               className="border px-3 py-2 w-full rounded"
             >
               <option value="multiple">Workout Plan (Multiple Days)</option>
@@ -537,9 +571,14 @@ const CreateWorkoutPlan = () => {
             <input
               type="number"
               min={1}
-              value={numDays}
-              onChange={(e) => setNumDays(Number(e.target.value))}
-              disabled={workoutType === "single"}
+              value={data.numDays}
+              onChange={(e) =>
+                setData((prev) => ({
+                  ...prev,
+                  numDays: Number(e.target.value),
+                }))
+              }
+              disabled={data.workoutType === "single"}
               className="border px-3 py-2 w-full rounded number--appearance-none"
             />
           </div>
@@ -555,12 +594,12 @@ const CreateWorkoutPlan = () => {
       )}
       {step === 2 && (
         <>
-          {days.length > 0 && (
+          {data.days.length > 0 && (
             <>
               <div className="w-full mb-4">
                 <div className="flex flex-col gap-2">
                   <div className="grid grid-cols-7 gap-2 mt-2">
-                    {days.map((day, idx) => (
+                    {data.days.map((day, idx) => (
                       <button
                         key={idx}
                         onClick={() => setActiveDayIndex(idx)}
@@ -624,7 +663,7 @@ const CreateWorkoutPlan = () => {
                     </button>
                   </div>
 
-                  {!days[activeDayIndex].isRestDay && (
+                  {!data.days[activeDayIndex].isRestDay && (
                     <div className="flex items-center gap-1">
                       <button
                         type="button"
@@ -644,7 +683,7 @@ const CreateWorkoutPlan = () => {
                 </div>
 
                 {(() => {
-                  const currentDay = days[activeDayIndex];
+                  const currentDay = data.days[activeDayIndex];
 
                   // 🛑 If the day is marked as a rest day, just show a message and "Remove" button
                   if (currentDay.isRestDay) {
