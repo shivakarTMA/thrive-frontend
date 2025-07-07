@@ -21,7 +21,7 @@ const CompanyList = () => {
       city: Yup.string().required("City is required"),
     }),
     onSubmit: (values, { resetForm }) => {
-      setCompanies([...companies, values]);
+      console.log("Form Submitted", values);
       resetForm();
       setShowModal(false);
       toast.success("Created Successfully");
