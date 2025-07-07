@@ -12,12 +12,16 @@ const CompanyList = () => {
   const formik = useFormik({
     initialValues: {
       companyName: "",
+      state: "",
+      city: "",
     },
     validationSchema: Yup.object({
       companyName: Yup.string().required("Company name is required"),
+      state: Yup.string().required("State is required"),
+      city: Yup.string().required("City is required"),
     }),
     onSubmit: (values, { resetForm }) => {
-      setCompanies([...companies, values.companyName]);
+      setCompanies([...companies, values]);
       resetForm();
       setShowModal(false);
       toast.success("Created Successfully");
@@ -90,6 +94,42 @@ const CompanyList = () => {
                   </p>
                 )}
               </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="mb-4">
+                  <label className="mb-2 block">City</label>
+                  <input
+                    type="text"
+                    name="city"
+                    value={formik.values.city}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    className="custom--input w-full"
+                  />
+                  {formik.touched.city && formik.errors.city && (
+                    <p className="text-red-500 text-sm mt-1">
+                      {formik.errors.city}
+                    </p>
+                  )}
+                </div>
+
+                <div className="mb-4">
+                  <label className="mb-2 block">State</label>
+                  <input
+                    type="text"
+                    name="state"
+                    value={formik.values.state}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    className="custom--input w-full"
+                  />
+                  {formik.touched.state && formik.errors.state && (
+                    <p className="text-red-500 text-sm mt-1">
+                      {formik.errors.state}
+                    </p>
+                  )}
+                </div>
+              </div>
+
               <div className="flex justify-end gap-2">
                 <button
                   type="button"
