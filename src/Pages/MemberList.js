@@ -19,6 +19,7 @@ import { MdCall, MdModeEdit } from "react-icons/md";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { LiaEdit } from "react-icons/lia";
+import Tooltip from "../components/common/Tooltip";
 
 export const memberFilters = {
   membershipType: ["Gold", "Silver", "Platinum"],
@@ -209,14 +210,13 @@ const MemberList = () => {
               <th className="px-4 py-4">Member Till</th>
               <th className="px-4 py-4">Trainer</th>
               <th className="px-4 py-4">FOH Assigned</th>
-              <th className="px-4 py-4">Action</th>
             </tr>
           </thead>
           <tbody>
             {paginatedData.map((member, index) => (
               <tr
                 key={member.id}
-                className="bg-white border-b hover:bg-gray-50"
+                className="group bg-white border-b relative hover:bg-gray-50"
               >
                 <td className="px-2 py-4">
                   {index + 1 + (page - 1) * rowsPerPage}
@@ -228,19 +228,45 @@ const MemberList = () => {
                 <td className="px-2 py-4">{member.memberTill}</td>
                 <td className="px-2 py-4">{member.trainer}</td>
                 <td className="px-2 py-4">{member.fohAssigned}</td>
-                <td className="px-2 py-4">
+                <div className="absolute hidden group-hover:flex gap-2 items-center right-0 h-full top-0 w-full flex items-center justify-end bg-[linear-gradient(269deg,_#ffffff_30%,_transparent)] pr-5 transition duration-700">
                   <div className="flex gap-1">
-                    <Link to={`/member/${member.id}`} className="p-1">
-                      <LiaEdit className="text-2xl text-black" />
-                    </Link>
-                    <Link to="#" className="p-1">
-                      <MdCall className="text-2xl text-black" />
-                    </Link>
-                    <button className="p-1" title="Send Payment Link">
-                      <IoIosAddCircleOutline className="text-2xl text-black" />
-                    </button>
+                     <Tooltip
+                      id={`edit-member-${member.id}`}
+                      content="Edit Member"
+                      place="top"
+                    >
+                      <div className="p-1 cursor-pointer">
+                        <Link to={`/member/${member.id}`} className="p-0">
+                          <LiaEdit className="text-[25px] text-black" />
+                        </Link>
+                      </div>
+                    </Tooltip>
+
+                    <Tooltip
+                      id={`member-call-${member.id}`}
+                      content="Call Logs"
+                      place="top"
+                    >
+                      <div className="p-1 cursor-pointer">
+                        <Link to="#" className="p-0">
+                          <MdCall className="text-[25px] text-black" />
+                        </Link>
+                      </div>
+                    </Tooltip>
+
+                    <Tooltip
+                      id={`send-payment-${member.id}`}
+                      content="Send Payment Link"
+                      place="top"
+                    >
+                      <div className="p-1 cursor-pointer">
+                        <Link to="#" className="p-0">
+                          <IoIosAddCircleOutline className="text-[25px] text-black" />
+                        </Link>
+                      </div>
+                    </Tooltip>
                   </div>
-                </td>
+                </div>
               </tr>
             ))}
           </tbody>
