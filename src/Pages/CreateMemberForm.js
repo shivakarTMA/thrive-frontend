@@ -560,46 +560,23 @@ const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
                               countryCallingCodeEditable={false}
                               className="custom--input w-full custom--phone"
                             />
-
-                            {duplicateError
-                              ? showDuplicateModal && (
-                                  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                                    <div className="bg-white p-6 rounded shadow-lg max-w-sm w-full text-center">
-                                      <h2 className="text-lg font-semibold text-red-600 mb-4">
-                                        Duplicate Entry
-                                      </h2>
-                                      <p className="text-sm text-gray-700 mb-6">
-                                        {duplicateError}
-                                      </p>
-                                      <button
-                                        onClick={() => {
-                                          setShowDuplicateModal(false);
-                                          setHasDismissedDuplicateModal(true);
-                                        }}
-                                        className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
-                                      >
-                                        Close
-                                      </button>
+                            {!duplicateError && matchingUsers.length > 0 && (
+                              <div className="border mt-2 bg-white shadow rounded p-2 max-h-40 overflow-y-auto z-10 absolute w-full">
+                                {matchingUsers.map((user) => (
+                                  <div
+                                    key={user.id}
+                                    className="p-2 cursor-pointer text-sm flex items-center gap-2 hover:bg-gray-100"
+                                    onClick={() => handleUserSelect(user)}
+                                  >
+                                    <div>
+                                      <div className="font-medium">
+                                        {user.name}
+                                      </div>
                                     </div>
                                   </div>
-                                )
-                              : matchingUsers.length > 0 && (
-                                  <div className="border mt-2 bg-white shadow rounded p-2 max-h-40 overflow-y-auto z-10 absolute w-full">
-                                    {matchingUsers.map((user) => (
-                                      <div
-                                        key={user.id}
-                                        className="p-2 cursor-pointer text-sm flex items-center gap-2"
-                                        onClick={() => handleUserSelect(user)}
-                                      >
-                                        <div>
-                                          <div className="font-medium">
-                                            {user.name}
-                                          </div>
-                                        </div>
-                                      </div>
-                                    ))}
-                                  </div>
-                                )}
+                                ))}
+                              </div>
+                            )}
 
                             {formik.errors.memberDetails?.contactNumber &&
                               formik.touched.memberDetails?.contactNumber && (
@@ -1485,6 +1462,26 @@ const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
           onConfirm={confirmDob}
           onCancel={cancelDob}
         />
+      )}
+
+      {duplicateError && showDuplicateModal && (
+        <div className="fixed h-full inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]">
+          <div className="bg-white p-6 rounded shadow-lg max-w-sm w-full text-center">
+            <h2 className="text-lg font-semibold text-red-600 mb-4">
+              Duplicate Entry
+            </h2>
+            <p className="text-sm text-gray-700 mb-6">{duplicateError}</p>
+            <button
+              onClick={() => {
+                setShowDuplicateModal(false);
+                setHasDismissedDuplicateModal(true);
+              }}
+              className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+            >
+              Close
+            </button>
+          </div>
+        </div>
       )}
     </>
   );

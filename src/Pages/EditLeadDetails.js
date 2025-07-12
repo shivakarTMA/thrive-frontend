@@ -147,6 +147,7 @@ const EditLeadDetails = () => {
                   international
                   defaultCountry="IN"
                   className="custom--input w-full custom--phone"
+                  countryCallingCodeEditable={false}
                 />
                 {formik.errors.personalDetails?.contact &&
                   formik.touched.personalDetails?.contact && (

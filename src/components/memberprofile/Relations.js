@@ -154,6 +154,7 @@ const Relations = () => {
                     international
                     defaultCountry="IN"
                     className="custom--input w-full custom--phone"
+                    countryCallingCodeEditable={false}
                   />
                   {formik.touched.phone && formik.errors.phone && (
                     <p className="text-red-500 text-xs">{formik.errors.phone}</p>

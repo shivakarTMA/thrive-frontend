@@ -143,34 +143,14 @@ const ProfileDetails = ({ member }) => {
                 <label className="font-semibold mb-2 block capitalize">
                   contact:
                 </label>
-                {editMode ? (
-                  <input
-                    type="text"
-                    name="contact"
-                    value={profile.contact || ""}
-                    onChange={handleChange}
-                    className="custom--input w-full"
-                  />
-                ) : (
-                  <span>{profile.contact || "—"}</span>
-                )}
+                <span>{profile.contact || "—"}</span>
               </div>
 
               <div className="flex flex-col text-sm">
                 <label className="font-semibold mb-2 block capitalize">
                   email:
                 </label>
-                {editMode ? (
-                  <input
-                    type="text"
-                    name="email"
-                    value={profile.email || ""}
-                    onChange={handleChange}
-                    className="custom--input w-full"
-                  />
-                ) : (
-                  <span>{profile.email || "—"}</span>
-                )}
+                <span>{profile.email || "—"}</span>
               </div>
 
               <div className="flex flex-col text-sm">

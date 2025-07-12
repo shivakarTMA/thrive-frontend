@@ -73,6 +73,10 @@ const CreateLeadForm = ({ setLeadModal, selectedLead }) => {
   const now = new Date();
   const [showUnderageModal, setShowUnderageModal] = useState(false);
   const [pendingDob, setPendingDob] = useState(null);
+  const [duplicateError, setDuplicateError] = useState("");
+  const [showDuplicateModal, setShowDuplicateModal] = useState(false);
+  const [hasDismissedDuplicateModal, setHasDismissedDuplicateModal] =
+      useState(false);
 
   const initialValues = {
     personalDetails: {
@@ -105,6 +109,13 @@ const CreateLeadForm = ({ setLeadModal, selectedLead }) => {
     initialValues,
     validationSchema,
     onSubmit: (values) => {
+      
+     if (duplicateError) {
+        // console.warn("Duplicate number detected:", duplicateError);
+        setShowDuplicateModal(true);
+        return;
+      }
+
       toast.success("Lead created successfully!");
       setLeadModal(false);
       console.log("Submitting full form", values);
@@ -220,6 +231,7 @@ const CreateLeadForm = ({ setLeadModal, selectedLead }) => {
 
   const handlePhoneChange = (value) => {
     formik.setFieldValue("personalDetails.contactNumber", value);
+     setHasDismissedDuplicateModal(false);
   };
 
   const handlePhoneBlur = () => {
@@ -234,6 +246,14 @@ const CreateLeadForm = ({ setLeadModal, selectedLead }) => {
         return userContact === inputValue; // 👈 exact match only
       });
       setMatchingUsers(matches);
+      if (matches.length > 0) {
+        setDuplicateError(
+          "This phone number already exists"
+        );
+         if (!hasDismissedDuplicateModal) {
+          setShowDuplicateModal(true);
+        }
+      }
     } else {
       setMatchingUsers([]);
     }
@@ -321,6 +341,7 @@ const CreateLeadForm = ({ setLeadModal, selectedLead }) => {
                         onBlur={handlePhoneBlur}
                         international
                         defaultCountry="IN"
+                        countryCallingCodeEditable={false}
                         className="custom--input w-full custom--phone"
                       />
 
@@ -804,6 +825,25 @@ const CreateLeadForm = ({ setLeadModal, selectedLead }) => {
           onConfirm={confirmDob}
           onCancel={cancelDob}
         />
+      )}
+      {duplicateError && showDuplicateModal && (
+        <div className="fixed h-full inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]">
+          <div className="bg-white p-6 rounded shadow-lg max-w-sm w-full text-center">
+            <h2 className="text-lg font-semibold text-red-600 mb-4">
+              Duplicate Entry
+            </h2>
+            <p className="text-sm text-gray-700 mb-6">{duplicateError}</p>
+            <button
+              onClick={() => {
+                setShowDuplicateModal(false);
+                setHasDismissedDuplicateModal(true);
+              }}
+              className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+            >
+              Close
+            </button>
+          </div>
+        </div>
       )}
     </>
   );

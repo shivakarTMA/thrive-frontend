@@ -9,6 +9,7 @@ import { customStyles } from "../../Helper/helper";
 // import CreateProduct from "./CreateProduct";
 import Switch from "react-switch";
 import CreateGroupClass from "./CreateGroupClass";
+import BookingList from "./BookingList";
 
 const trainerList = [
   { value: "vishal", label: "Vishal" },
@@ -25,9 +26,43 @@ const listingStatusOptions = [
   { value: "active", label: "Active" },
   { value: "inactive", label: "Inactive" },
 ];
+const bookings = [
+  {
+    classId: 1,
+    memberId: "M101",
+    bookingStatus: "Booked",
+    bookingChannel: "App",
+    bookedOn: "2025-07-05",
+    cancelledOn: null,
+    booking_date: "2025-07-10",
+    booking_start_time: "07:00 AM",
+  },
+  {
+    classId: 1,
+    memberId: "M102",
+    bookingStatus: "Cancelled",
+    bookingChannel: "CRM",
+    bookedOn: "2025-07-05",
+    cancelledOn: "2025-07-07",
+    booking_date: "2025-07-10",
+    booking_start_time: "07:00 AM",
+  },
+  {
+    classId: 2,
+    memberId: "M201",
+    bookingStatus: "Booked",
+    bookingChannel: "App",
+    bookedOn: "2025-07-06",
+    cancelledOn: null,
+    booking_date: "2025-07-12",
+    booking_start_time: "06:30 PM",
+  },
+];
 
 const AllGroupClasses = () => {
   const [showModal, setShowModal] = useState(false);
+  const [viewingClassId, setViewingClassId] = useState(null);
+  const [selectedClass, setSelectedClass] = useState(null);
   const [submittedClasses, setSubmittedClasses] = useState([
     {
       id: 1,
@@ -179,7 +214,9 @@ const AllGroupClasses = () => {
     // Toast after state update logic
     toast.success(`Product marked as ${newStatus}`);
   };
-  console.log(submittedClasses, "submittedClasses");
+  const handleViewClick = (row) => {
+    setSelectedClass((prev) => (prev?.id === row.id ? null : row));
+  };
 
   return (
     <div className="page--content">
@@ -312,7 +349,10 @@ const AllGroupClasses = () => {
                       content="View Class"
                       place="left"
                     >
-                      <div className="p-1 cursor-pointer">
+                      <div
+                        onClick={() => handleViewClick(row)}
+                        className="p-1 cursor-pointer"
+                      >
                         <FaEye className="text-[25px] text-black" />
                       </div>
                     </Tooltip>
@@ -369,6 +409,14 @@ const AllGroupClasses = () => {
           initialData={editingClasses}
         />
       )}
+     {selectedClass && (
+  <BookingList
+    bookings={bookings}
+    classId={selectedClass.id}
+    classTitle={selectedClass.classTitle}
+    onClose={() => setSelectedClass(null)}
+  />
+)}
     </div>
   );
 };
