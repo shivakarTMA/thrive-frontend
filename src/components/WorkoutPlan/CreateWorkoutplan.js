@@ -12,6 +12,11 @@ const workoutTagOptions = [
   { value: "cooldown", label: "Cool Down" },
 ];
 
+const workoutTypeOptions = [
+  { value: "multiple", label: "Workout Plan (Multiple Days)" },
+  { value: "single", label: "Workout (One Day)" },
+];
+
 const CreateWorkoutPlan = () => {
   const { id } = useParams();
   const workoutPlan = workoutPlansList.find((item) => item.id === parseInt(id));
@@ -66,7 +71,7 @@ const CreateWorkoutPlan = () => {
 
       return { ...prev, days: updatedDays };
     });
-     setErrors({});
+    setErrors({});
     setStep(2);
   };
 
@@ -225,42 +230,39 @@ const CreateWorkoutPlan = () => {
     console.log("Submitting workout plan:", workoutPayload);
   };
 
-const handleFormSubmit = (e) => {
-  e.preventDefault();
+  const handleFormSubmit = (e) => {
+    e.preventDefault();
 
-  const newErrors = {};
-  if (!data.workoutName.trim()) {
-    newErrors.workoutName = "Workout name is required.";
-  }
-  if (!data.description.trim()) {
-    newErrors.description = "Description is required.";
-  }
+    const newErrors = {};
+    if (!data.workoutName.trim()) {
+      newErrors.workoutName = "Workout name is required.";
+    }
+    if (!data.description.trim()) {
+      newErrors.description = "Description is required.";
+    }
 
-  if (Object.keys(newErrors).length > 0) {
-    setErrors(newErrors);
-    return;
-  }
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
 
-  // Generate days inside `data.days` instead of separate `days` state
-  const generatedDays = Array.from({ length: data.numDays }, (_, i) => ({
-    name: `Day ${i + 1}`,
-    exercises: [],
-    isRestDay: false,
-  }));
+    // Generate days inside `data.days` instead of separate `days` state
+    const generatedDays = Array.from({ length: data.numDays }, (_, i) => ({
+      name: `Day ${i + 1}`,
+      exercises: [],
+      isRestDay: false,
+    }));
 
-  setData((prev) => ({
-    ...prev,
-    days: generatedDays,
-  }));
+    setData((prev) => ({
+      ...prev,
+      days: generatedDays,
+    }));
 
-  setActiveDayIndex(0);
-  setErrors({});
-  setStep(2); // move to next step
-};
+    setActiveDayIndex(0);
+    setErrors({});
+    setStep(2); // move to next step
+  };
 
-
-
-  
   const renderGroupedExercises = (groupId, groupType, groupExercises) => (
     <div className="border p-3 rounded mb-3 bg-gray-100">
       <div className="flex justify-between items-center mb-2">
@@ -522,7 +524,7 @@ const handleFormSubmit = (e) => {
       {step === 1 && (
         <form onSubmit={handleFormSubmit} className="space-y-4 mb-6">
           <div>
-            <label className="block text-sm font-medium">Workout Name</label>
+            <label className="block mb-2">Workout Name</label>
             <input
               type="text"
               value={data?.workoutName}
@@ -537,7 +539,7 @@ const handleFormSubmit = (e) => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium">Description</label>
+            <label className="block mb-2">Description</label>
             <textarea
               rows="2"
               value={data.description}
@@ -552,22 +554,25 @@ const handleFormSubmit = (e) => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium">Workout Type</label>
-            <select
-              value={data.workoutType}
-              onChange={(e) => {
-                const newType = e.target.value;
-                setData((prev) => ({ ...prev, workoutType: newType }));
+            <label className="block mb-2">Workout Type</label>
+            <Select
+              options={workoutTypeOptions}
+              value={workoutTypeOptions.find(
+                (opt) => opt.value === data.workoutType
+              )}
+              onChange={(selectedOption) => {
+                setData((prev) => ({
+                  ...prev,
+                  workoutType: selectedOption.value,
+                  numDays: selectedOption.value === "single" ? 1 : prev.numDays,
+                }));
               }}
-              className="border px-3 py-2 w-full rounded"
-            >
-              <option value="multiple">Workout Plan (Multiple Days)</option>
-              <option value="single">Workout (One Day)</option>
-            </select>
+              styles={customStyles}
+            />
           </div>
 
           <div>
-            <label className="block text-sm font-medium">No. of Days</label>
+            <label className="block mb-2">No. of Days</label>
             <input
               type="number"
               min={1}

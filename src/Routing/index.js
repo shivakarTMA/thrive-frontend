@@ -41,6 +41,7 @@ import ExercisesList from "../components/Exercises/ExercisesList";
 import WorkoutPlanList from "../components/WorkoutPlan/WorkoutPlanList";
 import CreateWorkoutplan from "../components/WorkoutPlan/CreateWorkoutplan";
 import DietPlanList from "../components/DietPlan/DietPlanList";
+import AllGroupClasses from "../components/groupclass/AllGroupClasses";
 
 
 export default function Routing() {
@@ -213,6 +214,14 @@ export default function Routing() {
               element={
                 <PrivateRoute>
                   <DietPlanList />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/group-classes/"
+              element={
+                <PrivateRoute>
+                  <AllGroupClasses />
                 </PrivateRoute>
               }
             />

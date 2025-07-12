@@ -11,6 +11,7 @@ import { LuList } from "react-icons/lu";
 import { CgGym } from "react-icons/cg";
 import { useSelector } from "react-redux";
 import { TbGymnastics } from "react-icons/tb";
+import { FaLayerGroup } from "react-icons/fa";
 
 const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
   const location = useLocation();
@@ -242,6 +243,10 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
             <Link to="/diet-plan" className="nav-link mb-2">
               <PiBowlFood className="menu--icon" />
               <span className="nav-text">Diet Plan</span>
+            </Link>
+            <Link to="/group-classes" className="nav-link mb-2">
+              <FaLayerGroup className="menu--icon" />
+              <span className="nav-text">Group Classes</span>
             </Link>
           </>
         )}

@@ -54,7 +54,7 @@ const CreateDietPlan = ({ setShowModal, onDietPlanCreated, initialData }) => {
 
   return (
     <div
-      className="fixed top-0 left-0 z-[999] w-full h-full bg-black bg-opacity-60"
+      className="fixed top-0 left-0 z-[999] w-full h-full bg-black bg-opacity-60 bg--blur"
       onClick={handleOverlayClick}
     >
       <div

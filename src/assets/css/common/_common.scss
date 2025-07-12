@@ -281,3 +281,7 @@ input:-webkit-autofill:active{
 }
 
 .react-datepicker__close-icon::after {background-color: #000;}
+
+.bg--blur{
+  backdrop-filter: blur(0px);
+}

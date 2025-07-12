@@ -266,7 +266,7 @@ const CreateInvoice = ({ setInvoiceModal }) => {
   return (
     <>
       <div
-        className="create--lead--container overflow-auto hide--overflow fixed top-0 left-0 z-[999] w-full bg-black bg-opacity-60 h-full"
+        className="bg--blur create--lead--container overflow-auto hide--overflow fixed top-0 left-0 z-[999] w-full bg-black bg-opacity-60 h-full"
         onClick={handleOverlayClick}
       >
         <div
@@ -297,7 +297,7 @@ const CreateInvoice = ({ setInvoiceModal }) => {
                         name="invoiceDetails.invoiceDate"
                         value={formik.values.invoiceDetails.invoiceDate}
                         readOnly={true}
-                        className="custom--input w-full"
+                        className="custom--input w-full bg-[#fafafa] pointer-events-none"
                       />
                     </div>
                     <div>
@@ -305,9 +305,9 @@ const CreateInvoice = ({ setInvoiceModal }) => {
                       <input
                         name="invoiceDetails.leadOwner"
                         value={formik.values.invoiceDetails.leadOwner}
-                        // onChange={formik.handleChange}
+                        onChange={formik.handleChange}
                         className="custom--input w-full"
-                        readOnly={true}
+                        // readOnly={true}
                       />
                       {formik.errors.invoiceDetails?.leadOwner &&
                         formik.touched.invoiceDetails?.leadOwner && (
@@ -433,8 +433,9 @@ const CreateInvoice = ({ setInvoiceModal }) => {
                                   : null
                               }
                               dateFormat="dd MMM yyyy"
-                              readOnly
                               placeholderText="End date"
+                              readOnly={true}
+                              className="bg-[#fafafa] pointer-events-none"
                             />
                           </div>
                         </div>
@@ -452,7 +453,8 @@ const CreateInvoice = ({ setInvoiceModal }) => {
                               e.target.value
                             )
                           }
-                          className="custom--input w-full"
+                          readOnly={true}
+                          className="custom--input w-full bg-[#fafafa] pointer-events-none"
                         />
                       </div>
 
@@ -462,7 +464,7 @@ const CreateInvoice = ({ setInvoiceModal }) => {
                         <input
                           name={`productInfo.${index}.productAmount`}
                           value={product.productAmount}
-                          className="custom--input w-full"
+                          className="custom--input w-full bg-[#fafafa] pointer-events-none"
                           readOnly={true}
                         />
                       </div>

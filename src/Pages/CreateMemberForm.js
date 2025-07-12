@@ -481,7 +481,7 @@ const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
   return (
     <>
       <div
-        className="create--lead--container overflow-auto hide--overflow fixed top-0 left-0 z-[999] w-full bg-black bg-opacity-60 h-full"
+        className="bg--blur create--lead--container overflow-auto hide--overflow fixed top-0 left-0 z-[999] w-full bg-black bg-opacity-60 h-full"
         onClick={handleOverlayClick}
       >
         <div
@@ -1187,7 +1187,7 @@ const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
                               name="membershipDetails.state"
                               value={formik.values.membershipDetails.state}
                               readOnly={true}
-                              className="custom--input w-full input--icon"
+                              className="custom--input w-full input--icon bg-[#fafafa] pointer-events-none"
                             />
                           </div>
                         </div>
@@ -1203,7 +1203,7 @@ const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
                               name="membershipDetails.country"
                               value={formik.values.membershipDetails.country}
                               readOnly={true}
-                              className="custom--input w-full input--icon"
+                              className="custom--input w-full input--icon bg-[#fafafa] pointer-events-none"
                             />
                           </div>
                         </div>
@@ -1227,7 +1227,7 @@ const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
                               name="invoiceDetails.invoiceDate"
                               value={formik.values.invoiceDetails.invoiceDate}
                               readOnly={true}
-                              className="custom--input w-full input--icon"
+                              className="custom--input w-full input--icon bg-[#fafafa] pointer-events-none"
                             />
                           </div>
                         </div>
@@ -1241,7 +1241,7 @@ const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
                               name="membershipDetails.leadOwner"
                               value={formik.values.membershipDetails.leadOwner}
                               // onChange={handleInput}
-                              className="custom--input w-full input--icon"
+                              className="custom--input w-full input--icon bg-[#fafafa] pointer-events-none"
                               readOnly={true}
                             />
                           </div>
@@ -1257,7 +1257,7 @@ const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
                               name="invoiceDetails.memberName"
                               value={formik.values.invoiceDetails.memberName}
                               // onChange={handleInput}
-                              className="custom--input w-full input--icon"
+                              className="custom--input w-full input--icon bg-[#fafafa] pointer-events-none"
                               readOnly={true}
                             />
                           </div>
@@ -1279,7 +1279,7 @@ const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
                               value={formik.values.productType}
                               // onChange={handleInput}
                               readOnly={true}
-                              className="custom--input w-full capitalize input--icon"
+                              className="custom--input w-full capitalize input--icon bg-[#fafafa] pointer-events-none"
                             />
                           </div>
                         </div>
@@ -1354,7 +1354,8 @@ const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
                                 formik.values.productDetails.servicesDuration
                               }
                               onChange={formik.handleChange}
-                              className="custom--input w-full input--icon"
+                              className="custom--input w-full input--icon bg-[#fafafa] pointer-events-none"
+                              readOnly={true}
                             />
                           </div>
                         </div>
@@ -1369,7 +1370,7 @@ const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
                               name="productDetails.amount"
                               value={formik.values.productDetails.amount}
                               readOnly={true}
-                              className="custom--input w-full input--icon"
+                              className="custom--input w-full input--icon bg-[#fafafa] pointer-events-none"
                             />
                           </div>
                         </div>

@@ -17,7 +17,7 @@ const ProfileDetails = ({ profile, setProfileModal }) => {
 
   return (
     <div
-      className="create--lead--container fixed top-0 left-0 z-[999] w-full bg-black bg-opacity-60 h-full"
+      className="bg--blur create--lead--container fixed top-0 left-0 z-[999] w-full bg-black bg-opacity-60 h-full"
       onClick={handleOverlayClick}
     >
       <div
