@@ -15,7 +15,6 @@ import Home from "../Pages/Home";
 import AllLeads from "../Pages/AllLeads";
 import MemberList from "../Pages/MemberList";
 import MemberProfile from "../Pages/MemberProfile";
-import AllLostFound from "../Pages/AllLostFound";
 
 // PT Pages
 import PtHome from "../Pages/PT/Home";
@@ -42,6 +41,7 @@ import WorkoutPlanList from "../components/WorkoutPlan/WorkoutPlanList";
 import CreateWorkoutplan from "../components/WorkoutPlan/CreateWorkoutplan";
 import DietPlanList from "../components/DietPlan/DietPlanList";
 import AllGroupClasses from "../components/groupclass/AllGroupClasses";
+import AllLostFound from "../components/lostfound/AllLostFound";
 
 
 export default function Routing() {
