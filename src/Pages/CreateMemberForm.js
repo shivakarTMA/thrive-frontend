@@ -27,6 +27,7 @@ import { IoCloseCircle, IoDocumentSharp, IoKey } from "react-icons/io5";
 import { Formik, Field, Form, ErrorMessage, useFormik } from "formik";
 import * as Yup from "yup";
 import {
+  FaBirthdayCake,
   FaBriefcase,
   FaBuilding,
   FaCamera,
@@ -403,25 +404,11 @@ const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
   const handleDobChange = (date) => {
     if (!date) return;
 
-    const today = new Date();
-    const birthDate = new Date(date);
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const monthDiff = today.getMonth() - birthDate.getMonth();
-
-    if (
-      monthDiff < 0 ||
-      (monthDiff === 0 && today.getDate() < birthDate.getDate())
-    ) {
-      age--;
-    }
-
-    if (age < 18) {
-      setPendingDob(date);
-      setShowUnderageModal(true);
-    } else {
-      formik.setFieldValue("memberDetails.dob", date);
-    }
+    formik.setFieldValue("memberDetails.dob", date);
   };
+
+  const fifteenYearsAgo = new Date();
+  fifteenYearsAgo.setFullYear(fifteenYearsAgo.getFullYear() - 15);
 
   const confirmDob = () => {
     formik.setFieldValue("memberDetails.dob", pendingDob);
@@ -698,8 +685,9 @@ const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
                             </label>
                             <div className="custom--date dob-format relative">
                               <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
-                                <FaEnvelope />
+                                <FaBirthdayCake />
                               </span>
+
                               <DatePicker
                                 selected={
                                   formik.values.memberDetails.dob
@@ -711,20 +699,21 @@ const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
                                 onChange={handleDobChange}
                                 showMonthDropdown
                                 showYearDropdown
-                                maxDate={new Date()}
-                                dateFormat="dd MMM yyyy"
                                 dropdownMode="select"
+                                maxDate={fifteenYearsAgo} // 👈 allow dates only up to 15 years ago
+                                dateFormat="dd MMM yyyy"
+                                yearDropdownItemNumber={100} // 👈 show 100 years (optional)
                                 placeholderText="Select date"
-                                className=" input--icon"
+                                className="input--icon"
                               />
-
-                              {formik.errors.memberDetails?.dob &&
+                              
+                            </div>
+                            {formik.errors.memberDetails?.dob &&
                                 formik.touched.memberDetails?.dob && (
                                   <div className="text-red-500 text-sm">
                                     {formik.errors.memberDetails.dob}
                                   </div>
                                 )}
-                            </div>
                           </div>
 
                           <div className="col-span-3dd">
@@ -976,8 +965,7 @@ const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
                               value={companies.find(
                                 (opt) =>
                                   opt.value ===
-                                  formik.values.professionalInformation
-                                    .companyName
+                                  formik.values.professionalInformation.companyName
                               )}
                               onChange={(option) =>
                                 formik.setFieldValue(

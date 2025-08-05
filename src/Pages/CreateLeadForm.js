@@ -18,6 +18,7 @@ import {
   leadTypes,
   trainerAvailability,
   mockData,
+  companies,
   // leadSubTypes,
 } from "../DummyData/DummyData";
 
@@ -76,7 +77,7 @@ const CreateLeadForm = ({ setLeadModal, selectedLead }) => {
   const [duplicateError, setDuplicateError] = useState("");
   const [showDuplicateModal, setShowDuplicateModal] = useState(false);
   const [hasDismissedDuplicateModal, setHasDismissedDuplicateModal] =
-      useState(false);
+    useState(false);
 
   const initialValues = {
     personalDetails: {
@@ -109,8 +110,7 @@ const CreateLeadForm = ({ setLeadModal, selectedLead }) => {
     initialValues,
     validationSchema,
     onSubmit: (values) => {
-      
-     if (duplicateError) {
+      if (duplicateError) {
         // console.warn("Duplicate number detected:", duplicateError);
         setShowDuplicateModal(true);
         return;
@@ -157,25 +157,11 @@ const CreateLeadForm = ({ setLeadModal, selectedLead }) => {
   const handleDobChange = (date) => {
     if (!date) return;
 
-    const today = new Date();
-    const birthDate = new Date(date);
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const monthDiff = today.getMonth() - birthDate.getMonth();
-
-    if (
-      monthDiff < 0 ||
-      (monthDiff === 0 && today.getDate() < birthDate.getDate())
-    ) {
-      age--;
-    }
-
-    if (age < 18) {
-      setPendingDob(date);
-      setShowUnderageModal(true);
-    } else {
-      formik.setFieldValue("personalDetails.dob", date);
-    }
+    formik.setFieldValue("personalDetails.dob", date);
   };
+
+  const fifteenYearsAgo = new Date();
+  fifteenYearsAgo.setFullYear(fifteenYearsAgo.getFullYear() - 15);
 
   const confirmDob = () => {
     formik.setFieldValue("personalDetails.dob", pendingDob);
@@ -231,7 +217,7 @@ const CreateLeadForm = ({ setLeadModal, selectedLead }) => {
 
   const handlePhoneChange = (value) => {
     formik.setFieldValue("personalDetails.contactNumber", value);
-     setHasDismissedDuplicateModal(false);
+    setHasDismissedDuplicateModal(false);
   };
 
   const handlePhoneBlur = () => {
@@ -247,10 +233,8 @@ const CreateLeadForm = ({ setLeadModal, selectedLead }) => {
       });
       setMatchingUsers(matches);
       if (matches.length > 0) {
-        setDuplicateError(
-          "This phone number already exists"
-        );
-         if (!hasDismissedDuplicateModal) {
+        setDuplicateError("This phone number already exists");
+        if (!hasDismissedDuplicateModal) {
           setShowDuplicateModal(true);
         }
       }
@@ -321,8 +305,7 @@ const CreateLeadForm = ({ setLeadModal, selectedLead }) => {
           </div>
 
           <div className="flex-1s flexs ">
-            <form onSubmit={formik.handleSubmit}
-            >
+            <form onSubmit={formik.handleSubmit}>
               <div className="flex bg-white rounded-b-[10px]">
                 <div className="p-6 flex-1">
                   <h3 className="text-2xl font-semibold mb-2">
@@ -423,11 +406,12 @@ const CreateLeadForm = ({ setLeadModal, selectedLead }) => {
                           onChange={handleDobChange}
                           showMonthDropdown
                           showYearDropdown
-                          maxDate={new Date()}
-                          dateFormat="dd MMM yyyy"
                           dropdownMode="select"
+                          maxDate={fifteenYearsAgo} // 👈 allow dates only up to 15 years ago
+                          dateFormat="dd MMM yyyy"
+                          yearDropdownItemNumber={100} // 👈 show 100 years (optional)
                           placeholderText="Select date"
-                          className=" input--icon"
+                          className="input--icon"
                         />
                       </div>
                     </div>
@@ -486,20 +470,29 @@ const CreateLeadForm = ({ setLeadModal, selectedLead }) => {
                     <div>
                       <label className="mb-2 block">Company</label>
                       <div className="relative">
-                        <span className="absolute top-[50%] translate-y-[-50%] left-[15px]">
+                        <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
                           <FaBuilding />
                         </span>
 
-                        <input
-                          type="text"
+                        <Select
                           name="leadInformation.companyName"
-                          value={formik.values.leadInformation.companyName}
-                          onChange={formik.handleChange}
-                          className="custom--input w-full input--icon"
+                          value={companies.find(
+                            (opt) =>
+                              opt.value ===
+                              formik.values.leadInformation.companyName
+                          )}
+                          onChange={(option) =>
+                            formik.setFieldValue(
+                              "leadInformation.companyName",
+                              option.value
+                            )
+                          }
+                          options={companies}
+                          styles={selectIcon}
                         />
                       </div>
                     </div>
-                    <div>
+                    {/* <div>
                       <label className="mb-2 block">Official Email Id</label>
                       <div className="relative">
                         <span className="absolute top-[50%] translate-y-[-50%] left-[15px]">
@@ -513,9 +506,9 @@ const CreateLeadForm = ({ setLeadModal, selectedLead }) => {
                           className="custom--input w-full input--icon"
                         />
                       </div>
-                    </div>
+                    </div> */}
 
-                    <div className="col-span-2">
+                    <div className="col-span-3">
                       <label className="mb-2 block">Address</label>
                       <div className="relative">
                         <span className="absolute top-[50%] translate-y-[-50%] left-[15px]">
