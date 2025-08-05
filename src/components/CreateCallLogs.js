@@ -260,7 +260,7 @@ const CallLogs = ({ details, action }) => {
                 onChange={formik.handleChange}
                 placeholder="Called By"
                 className="custom--input w-full"
-                readOnly={true}
+                // readOnly={true}
               />
               {formik.errors.calledBy && formik.touched.calledBy && (
                 <div className="text-red-500 text-sm">
