@@ -99,10 +99,10 @@ const validationSchema = Yup.object().shape({
     is: "trial scheduled" || "tour scheduled",
     then: () => Yup.string().required("Staff Name is required"),
   }),
-  trialDateTime: Yup.string().when("callStatus", {
-    is: "trial scheduled" || "tour scheduled",
-    then: () => Yup.string().required("Follow-up Date & Time is required"),
-  }),
+  // trialDateTime: Yup.string().when("callStatus", {
+  //   is: "trial scheduled" || "tour scheduled",
+  //   then: () => Yup.string().required("Follow-up Date & Time is required"),
+  // }),
 
   discussion: Yup.string().required("Discussion is required"),
 });
@@ -441,7 +441,6 @@ const CallLogs = ({ details, action }) => {
                     }}
                     placeholder="Assign Staff"
                     styles={customStyles}
-                    // isDisabled={filteredStaffOptions.length === 0}
                   />
                   {formik.errors.assginStaff && formik.touched.assginStaff && (
                     <div className="text-red-500 text-sm">
@@ -452,7 +451,7 @@ const CallLogs = ({ details, action }) => {
                 <div>
                   <label className="mb-2 block">
                     Schedule a Follow Up
-                    <span className="text-red-500">*</span>
+                    {/* <span className="text-red-500">*</span> */}
                   </label>
                   <div className="custom--date">
                     <DatePicker
@@ -469,12 +468,12 @@ const CallLogs = ({ details, action }) => {
                       minTime={minTime} // disables past times today
                       maxTime={maxTime}
                     />
-                    {formik.errors.trialDateTime &&
+                    {/* {formik.errors.trialDateTime &&
                       formik.touched.trialDateTime && (
                         <div className="text-red-500 text-sm">
                           Schedule a Follow Up is required
                         </div>
-                      )}
+                      )} */}
                   </div>
                 </div>
               </>

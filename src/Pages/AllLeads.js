@@ -70,6 +70,8 @@ const AllLeads = () => {
   const [previewNewLeads, setPreviewNewLeads] = useState([]);
   const [previewDuplicateLeads, setPreviewDuplicateLeads] = useState([]);
 
+  console.log(allLeads,'allLeads')
+
   const query = useQuery();
   const selectedStatus = query.get("leadStatus");
   const selectedView = query.get("view");
@@ -170,7 +172,9 @@ const AllLeads = () => {
     page * rowsPerPage
   );
 
+  
   const totalPages = Math.ceil(filteredData.length / rowsPerPage);
+  console.log(filteredData,'filteredData')
 
   const handleBulkUpload = (acceptedFiles) => {
     const file = acceptedFiles[0];

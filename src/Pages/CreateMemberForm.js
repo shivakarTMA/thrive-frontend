@@ -46,6 +46,7 @@ import StepProgressBar from "../components/common/StepProgressBar";
 import { RiDiscountPercentFill } from "react-icons/ri";
 import { IoIosTime } from "react-icons/io";
 import { LuIndianRupee } from "react-icons/lu";
+import { toast } from "react-toastify";
 
 const voucherList = [
   { code: "FIT10", discount: 10 },
@@ -117,7 +118,7 @@ const stepValidationSchemas = [
   Yup.object({
     invoiceDetails: Yup.object({
       invoiceDate: Yup.string().required("Invoice Date is required"),
-      leadOwner: Yup.string().required("Lead Owner is required"),
+      // leadOwner: Yup.string().required("Lead Owner is required"),
       memberName: Yup.string().required("Member Name is required"),
     }),
   }),
@@ -136,6 +137,7 @@ const kycDocumentsOptions = [
 ];
 
 const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
+  console.log(selectedLeadMember,'selectedLeadMember')
   const [activeTab, setActiveTab] = useState("personal");
   const [profileImage, setProfileImage] = useState("");
   const [showProductModal, setShowProductModal] = useState(false);
@@ -215,6 +217,8 @@ const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
     onSubmit: (values) => {
       if (step === stepValidationSchemas.length - 1) {
         console.log("Submitting full form", values);
+         toast.success("Member created successfully!");
+         setMemberModal(false)
       } else {
         setStep(step + 1);
       }
@@ -247,6 +251,7 @@ const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
           companyName: selectedLeadMember.companyName || "",
           officialEmail: selectedLeadMember.officialEmail || "",
         },
+        productType: "membership plan",
       });
     }
   }, [selectedLeadMember]);
@@ -464,6 +469,8 @@ const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
   const handleLeadModal = () => {
     setMemberModal(false);
   };
+
+  console.log(formik.values, 'formik')
 
   return (
     <>
@@ -946,8 +953,7 @@ const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
                               type="email"
                               name="professionalInformation.designation"
                               value={
-                                formik.values.professionalInformation
-                                  .designation
+                                formik.values?.professionalInformation?.designation
                               }
                               onChange={formik.handleChange}
                               className="custom--input w-full input--icon"
@@ -965,7 +971,7 @@ const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
                               value={companies.find(
                                 (opt) =>
                                   opt.value ===
-                                  formik.values.professionalInformation.companyName
+                                  formik.values?.professionalInformation?.companyName
                               )}
                               onChange={(option) =>
                                 formik.setFieldValue(
@@ -1001,8 +1007,7 @@ const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
                               type="email"
                               name="professionalInformation.officialEmail"
                               value={
-                                formik.values.professionalInformation
-                                  .officialEmail
+                                formik.values?.professionalInformation?.officialEmail
                               }
                               onChange={formik.handleChange}
                               className="custom--input w-full input--icon"
@@ -1015,7 +1020,7 @@ const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
                       <h3 className="text-2xl font-semibold mb-2">
                         Emergency Contact
                       </h3>
-                      {formik.values.emergencyContacts.map((contact, index) => (
+                      {formik.values?.emergencyContacts?.map((contact, index) => (
                         <div
                           key={index}
                           className="grid grid-cols-3 gap-4 mb-4 border p-4 rounded-lg"
@@ -1029,7 +1034,7 @@ const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
                               <input
                                 type="text"
                                 name={`emergencyContacts.${index}.name`}
-                                value={contact.name}
+                                value={contact?.name}
                                 onChange={formik.handleChange}
                                 className="custom--input w-full input--icon"
                               />
@@ -1040,7 +1045,7 @@ const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
                             <label className="mb-2 block">Number</label>
                             <PhoneInput
                               name={`emergencyContacts.${index}.contact`}
-                              value={contact.contact}
+                              value={contact?.contact}
                               onChange={(value) =>
                                 handleEmergancyPhone(value, index)
                               }
@@ -1060,7 +1065,7 @@ const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
                               <input
                                 type="text"
                                 name={`emergencyContacts.${index}.relationship`}
-                                value={contact.relationship}
+                                value={contact?.relationship}
                                 onChange={formik.handleChange}
                                 className="custom--input w-full input--icon"
                               />
@@ -1068,7 +1073,7 @@ const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
                           </div>
 
                           <div className="col-span-3 flex justify-end mt-2">
-                            {formik.values.emergencyContacts.length > 1 && (
+                            {formik.values?.emergencyContacts?.length > 1 && (
                               <button
                                 type="button"
                                 onClick={() => handleRemoveContact(index)}
@@ -1103,7 +1108,7 @@ const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
                             <input
                               type="text"
                               name="membershipDetails.leadOwner"
-                              value={formik.values.membershipDetails.leadOwner}
+                              value={formik.values?.membershipDetails?.leadOwner}
                               onChange={formik.handleChange}
                               className="custom--input w-full input--icon"
                             />
@@ -1120,7 +1125,7 @@ const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
                               value={centreInfo.find(
                                 (opt) =>
                                   opt.value ===
-                                  formik.values.membershipDetails.centre
+                                  formik.values?.membershipDetails?.centre
                               )}
                               onChange={(option) => {
                                 formik.setFieldValue(
@@ -1150,7 +1155,7 @@ const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
                             <input
                               type="text"
                               name="membershipDetails.state"
-                              value={formik.values.membershipDetails.state}
+                              value={formik.values?.membershipDetails?.state}
                               readOnly={true}
                               className="custom--input w-full input--icon bg-[#fafafa] pointer-events-none"
                             />
@@ -1166,7 +1171,7 @@ const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
                             <input
                               type="text"
                               name="membershipDetails.country"
-                              value={formik.values.membershipDetails.country}
+                              value={formik.values?.membershipDetails?.country}
                               readOnly={true}
                               className="custom--input w-full input--icon bg-[#fafafa] pointer-events-none"
                             />
@@ -1190,7 +1195,7 @@ const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
                             </span>
                             <input
                               name="invoiceDetails.invoiceDate"
-                              value={formik.values.invoiceDetails.invoiceDate}
+                              value={formik.values?.invoiceDetails?.invoiceDate}
                               readOnly={true}
                               className="custom--input w-full input--icon bg-[#fafafa] pointer-events-none"
                             />
@@ -1204,7 +1209,7 @@ const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
                             </span>
                             <input
                               name="membershipDetails.leadOwner"
-                              value={formik.values.membershipDetails.leadOwner}
+                              value={formik.values?.membershipDetails?.leadOwner}
                               // onChange={handleInput}
                               className="custom--input w-full input--icon bg-[#fafafa] pointer-events-none"
                               readOnly={true}
@@ -1220,7 +1225,7 @@ const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
                             </span>
                             <input
                               name="invoiceDetails.memberName"
-                              value={formik.values.invoiceDetails.memberName}
+                              value={formik.values?.invoiceDetails?.memberName}
                               // onChange={handleInput}
                               className="custom--input w-full input--icon bg-[#fafafa] pointer-events-none"
                               readOnly={true}
@@ -1241,7 +1246,7 @@ const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
                             </span>
                             <input
                               name="productType"
-                              value={formik.values.productType}
+                              value={formik.values?.productType}
                               // onChange={handleInput}
                               readOnly={true}
                               className="custom--input w-full capitalize input--icon bg-[#fafafa] pointer-events-none"
@@ -1259,7 +1264,7 @@ const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
                             </span>
                             <input
                               name="productDetails.productName"
-                              value={formik.values.productDetails.productName}
+                              value={formik.values?.productDetails?.productName}
                               // onChange={handleInput}
                               className="custom--input w-full input--icon"
                               readOnly={true}
@@ -1296,8 +1301,8 @@ const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
                           </div>
                           {voucherStatus === "success" && (
                             <p className="text-green-600 text-sm mt-1">
-                              Voucher applied: {selectedVoucher.code} (
-                              {selectedVoucher.discount}% off)
+                              Voucher applied: {selectedVoucher?.code} (
+                              {selectedVoucher?.discount}% off)
                             </p>
                           )}
                           {voucherStatus === "error" && (
@@ -1316,7 +1321,7 @@ const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
                             <input
                               name="productDetails.servicesDuration"
                               value={
-                                formik.values.productDetails.servicesDuration
+                                formik.values?.productDetails?.servicesDuration
                               }
                               onChange={formik.handleChange}
                               className="custom--input w-full input--icon bg-[#fafafa] pointer-events-none"
@@ -1333,7 +1338,7 @@ const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
                             </span>
                             <input
                               name="productDetails.amount"
-                              value={formik.values.productDetails.amount}
+                              value={formik.values?.productDetails?.amount}
                               readOnly={true}
                               className="custom--input w-full input--icon bg-[#fafafa] pointer-events-none"
                             />
