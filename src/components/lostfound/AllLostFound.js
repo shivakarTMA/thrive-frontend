@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { FaAngleLeft, FaAngleRight } from "react-icons/fa";
+import { FaAngleLeft, FaAngleRight, FaCheck } from "react-icons/fa";
 import { FiPlus } from "react-icons/fi";
 import { IoIosSearch } from "react-icons/io";
 import Select from "react-select";
@@ -26,7 +26,7 @@ const AllLostFound = () => {
   const [lostItemName, setLostItemName] = useState(null);
   const [selectedStatus, setSelectedStatus] = useState(null);
   const [selectedClub, setSelectedClub] = useState(null);
-    const [dateRange, setDateRange] = useState([null, null]);
+  const [dateRange, setDateRange] = useState([null, null]);
   const [startDate, endDate] = dateRange;
   const rowsPerPage = 5;
 
@@ -51,17 +51,28 @@ const AllLostFound = () => {
   const filteredData = data.filter((row) => {
     const matchesSearch =
       row.item.toLowerCase().includes(search.toLowerCase()) ||
-      row?.returnedInfo?.memberName?.toLowerCase()?.includes(search.toLowerCase());
+      row?.returnedInfo?.memberName
+        ?.toLowerCase()
+        ?.includes(search.toLowerCase());
 
     const matchesItem = !lostItemName || row.item === lostItemName.value;
-    const matchesStatus = !selectedStatus || row.status === selectedStatus.value;
+    const matchesStatus =
+      !selectedStatus || row.status === selectedStatus.value;
     const matchesClub = !selectedClub || row.clubName === selectedClub.value;
     const matchesDateRange =
-      (!startDate || new Date(row.date) >= startDate) &&
-      (!endDate || new Date(row.date) <= endDate);
+      (!startDate ||
+        new Date(row.date).setHours(0, 0, 0, 0) >=
+          startDate.setHours(0, 0, 0, 0)) &&
+      (!endDate ||
+        new Date(row.date).setHours(0, 0, 0, 0) <=
+          endDate.setHours(0, 0, 0, 0));
 
     return (
-      matchesSearch && matchesItem && matchesStatus && matchesClub && matchesDateRange
+      matchesSearch &&
+      matchesItem &&
+      matchesStatus &&
+      matchesClub &&
+      matchesDateRange
     );
   });
 
@@ -119,15 +130,24 @@ const AllLostFound = () => {
             isClearable
             styles={customStyles}
           />
+          <div className="custom--date dob-format">
           <DatePicker
-            selectsRange
-            startDate={startDate}
-            endDate={endDate}
-            onChange={(update) => setDateRange(update)}
+            selected={startDate}
+            onChange={(date) => setDateRange([date, endDate])}
+            placeholderText="Start Date"
+            className="px-3 py-2 border rounded custom-datepicker max-w-[160px]"
             isClearable
-            placeholderText="Select date range"
-            className="input--icon px-3 py-2 border rounded"
           />
+          </div>
+           <div className="custom--date dob-format">
+          <DatePicker
+            selected={endDate}
+            onChange={(date) => setDateRange([startDate, date])}
+            placeholderText="End Date"
+            className="px-3 py-2 border rounded custom-datepicker max-w-[160px]"
+            isClearable
+          />
+          </div>
         </div>
 
         <div className="flex items-center gap-2 border rounded-[50px] px-2 bg-white">
@@ -162,18 +182,29 @@ const AllLostFound = () => {
                 key={row.id}
                 className="bg-white border-b hover:bg-gray-50 border-gray-200"
               >
-                <td className="px-2 py-4">{idx + 1 + (page - 1) * rowsPerPage}</td>
+                <td className="px-2 py-4">
+                  {idx + 1 + (page - 1) * rowsPerPage}
+                </td>
                 <td className="px-2 py-4">{row.item}</td>
                 <td className="px-2 py-4">
-                  <span className={`px-2 py-1 rounded text-white text-xs ${
-                    row.status === "Lost" ? "bg-red-500" : "bg-green-500"
-                  }`}>{row.status}</span>
+                  <span
+                    className={`px-2 py-1 rounded text-white text-xs ${
+                      row.status === "Lost" ? "bg-red-500" : "bg-green-500"
+                    }`}
+                  >
+                    {row.status}
+                  </span>
                 </td>
                 <td className="px-2 py-4">{row.date}</td>
                 <td className="px-2 py-4">{row.description}</td>
                 <td className="px-2 py-4">
                   {row.itemImage && (
-                    <img src={row.itemImage} alt="item" width={40} height={40} />
+                    <img
+                      src={row.itemImage}
+                      alt="item"
+                      width={40}
+                      height={40}
+                    />
                   )}
                 </td>
                 <td className="px-2 py-4">{row.clubName}</td>
@@ -181,9 +212,10 @@ const AllLostFound = () => {
                   {row.status === "Lost" ? (
                     <button
                       onClick={() => handleMarkAsReturned(row)}
-                      className="text-blue-600 underline text-sm"
+                      className="px-4 py-2 bg-black text-white rounded flex items-center gap-2"
                     >
-                      Mark as Returned
+                      <FaCheck />
+                      <span>Mark as Returned</span>
                     </button>
                   ) : (
                     "--"
@@ -197,7 +229,9 @@ const AllLostFound = () => {
 
       <div className="flex justify-between items-center mt-4 gap-2">
         <p className="text-gray-700">
-          Showing {filteredData.length === 0 ? 0 : (page - 1) * rowsPerPage + 1} to {Math.min(page * rowsPerPage, filteredData.length)} of {filteredData.length} entries
+          Showing {filteredData.length === 0 ? 0 : (page - 1) * rowsPerPage + 1}{" "}
+          to {Math.min(page * rowsPerPage, filteredData.length)} of{" "}
+          {filteredData.length} entries
         </p>
         <div className="flex items-center gap-2">
           <button
@@ -211,7 +245,9 @@ const AllLostFound = () => {
             <button
               key={i}
               onClick={() => setPage(i + 1)}
-              className={`px-3 py-1 border rounded ${page === i + 1 ? "bg-gray-200" : ""}`}
+              className={`px-3 py-1 border rounded ${
+                page === i + 1 ? "bg-gray-200" : ""
+              }`}
             >
               {i + 1}
             </button>

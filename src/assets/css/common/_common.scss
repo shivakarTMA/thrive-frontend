@@ -285,3 +285,16 @@ input:-webkit-autofill:active{
 .bg--blur{
   backdrop-filter: blur(0px);
 }
+
+.react-datepicker__close-icon {
+  right: 10px; /* adjust position if needed */
+  color: white; /* change this to any color you like */
+  filter: none; /* ensure no grayscale filter is applied */
+}
+
+.react-datepicker__close-icon::after {
+  background-color: black !important;
+  color: white !important; /* this is the actual “×” icon */
+  font-size: 16px;
+  padding-bottom: 5px;
+}
