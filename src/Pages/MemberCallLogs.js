@@ -10,10 +10,10 @@ import { useFormik } from "formik";
 import * as Yup from "yup";
 
 const callTypeOption = [
-  { value: "cross-sell call", label: "Cross-sell call" },
-  { value: "feedback call", label: "Feedback call" },
-  { value: "induction call", label: "Induction call" },
-  { value: "assessment call", label: "Assessment call" },
+  { value: "cross-sell call", label: "Cross-sell Call" },
+  { value: "feedback call", label: "Feedback Call" },
+  { value: "induction call", label: "Induction Call" },
+  { value: "assessment call", label: "Assessment Call" },
   { value: "welcome call", label: "Welcome Call" },
   { value: "courtesy call", label: "Courtesy Call" },
   { value: "upgrade call", label: "Upgrade Call" },
