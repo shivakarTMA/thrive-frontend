@@ -541,25 +541,31 @@ const LeadCallLogs = () => {
               </p>
               <p className="border p-2 rounded">
                 <span className="text-sm font-semibold flex flex-col">
-                  Lead Call Status
+                  Call Status
                 </span>{" "}
                 {log.callStatus}
               </p>
-              <p className="border p-2 rounded">
+                <p className="border p-2 rounded">
+                <span className="text-sm font-semibold flex flex-col">
+                  Lead Status
+                </span>{" "}
+                {log.leadStatus}
+              </p>
+              {/* <p className="border p-2 rounded">
                     <span className="text-sm font-semibold flex flex-col">
                       Follow Up:
                     </span>{" "}
                     {log.trialDateTime
                       ? new Date(log.trialDateTime).toLocaleString()
                       : "N/A"}
-                  </p>
+                  </p> */}
 
-                  <p className="border p-2 rounded">
+                  {/* <p className="border p-2 rounded">
                     <span className="text-sm font-semibold flex flex-col">
                       Service:
                     </span>{" "}
                     {log.serviceType ? log.serviceType : "N/A"}
-                  </p>
+                  </p> */}
             </div>
             <div className="bg-gray-50 p-3 rounded">
               <h3 className="text-sm font-semibold">Remarks:</h3>
