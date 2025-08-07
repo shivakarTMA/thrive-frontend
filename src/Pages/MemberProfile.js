@@ -1,10 +1,9 @@
 import React, { useState } from "react";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { mockData } from "../DummyData/DummyData";
 import ProfileDetails from "../components/memberprofile/ProfileDetails";
 import ServiceCard from "../components/memberprofile/ServiceCard";
 import OrderHistory from "../components/memberprofile/OrderHistory";
-import CreateCallLogs from "../components/CreateCallLogs";
 import Appointments from "../components/memberprofile/Appointments";
 import Relations from "../components/memberprofile/Relations";
 import AttendanceData from "../components/memberprofile/AttendanceData";
@@ -19,14 +18,10 @@ const MemberProfile = () => {
     "Service Card",
     "Order History",
     "Payment History",
-    "Call Logs",
+    // "Call Logs",
     "Appointments",
     "Referrals",
-    // "Family Members",
-    // "Store",
-    // "Documents",
     "Attendance",
-    // "Trial History",
     "Training",
   ];
   const [activeTab, setActiveTab] = useState("Profile Details");
@@ -47,20 +42,32 @@ const MemberProfile = () => {
         <aside className="w-full">
           {/* <h1 className="text-3xl font-semibold">Member Profile</h1> */}
           <div className="mt-6 flex flex-wrap items-center">
-            {tabs.map((item) => (
-              <div
-                key={item}
-                onClick={() => setActiveTab(item)}
-                className={`px-3 py-1.5 rounded cursor-pointer transition 
-                ${
-                  activeTab === item
-                    ? "bg-primarycolor text-white"
-                    : "hover:text-primarycolor"
-                }`}
-              >
-                {item}
-              </div>
-            ))}
+            <div className="mt-6 flex flex-wrap items-center">
+              {tabs.map((item, index) => (
+                <React.Fragment key={item}>
+                  <div
+                    onClick={() => setActiveTab(item)}
+                    className={`px-3 py-1.5 rounded cursor-pointer transition 
+                      ${
+                        activeTab === item
+                          ? "bg-primarycolor text-white"
+                          : "hover:text-primarycolor"
+                      }`}
+                    >
+                    {item}
+                  </div>
+
+                  {item === "Payment History" && (
+                    <Link
+                      to={`/member-follow-up/${member.id}`}
+                      className="px-3 py-1.5 rounded hover:text-primarycolor transition"
+                    >
+                      Call Logs
+                    </Link>
+                  )}
+                </React.Fragment>
+              ))}
+            </div>
           </div>
         </aside>
 
@@ -75,7 +82,6 @@ const MemberProfile = () => {
           {activeTab === "Payment History" && (
             <PaymentHistory member={member} />
           )}
-          {activeTab === "Call Logs" && <CreateCallLogs details={member} />}
           {activeTab === "Appointments" && <Appointments details={member} />}
           {activeTab === "Referrals" && <Relations details={member} />}
           {activeTab === "Attendance" && <AttendanceData details={member} />}
