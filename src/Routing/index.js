@@ -42,6 +42,7 @@ import CreateWorkoutplan from "../components/WorkoutPlan/CreateWorkoutplan";
 import DietPlanList from "../components/DietPlan/DietPlanList";
 import AllGroupClasses from "../components/groupclass/AllGroupClasses";
 import AllLostFound from "../components/lostfound/AllLostFound";
+import MemberCallLogs from "../Pages/MemberCallLogs";
 
 
 export default function Routing() {
@@ -126,6 +127,14 @@ export default function Routing() {
               element={
                 <PrivateRoute>
                   <LeadCallLogs />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/member-follow-up/:id"
+              element={
+                <PrivateRoute>
+                  <MemberCallLogs />
                 </PrivateRoute>
               }
             />

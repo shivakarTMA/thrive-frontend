@@ -248,7 +248,7 @@ const MemberList = () => {
                       place="top"
                     >
                       <div className="p-1 cursor-pointer">
-                        <Link to="#" className="p-0">
+                        <Link to={`/member-follow-up/${member.id}`} className="p-0">
                           <MdCall className="text-[25px] text-black" />
                         </Link>
                       </div>
