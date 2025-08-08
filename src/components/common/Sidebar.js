@@ -5,7 +5,7 @@ import { FaAngleDown, FaCircle, FaRegBuilding } from "react-icons/fa6";
 import { Link, useLocation } from "react-router-dom";
 import { PiBowlFood, PiChartPieSlice, PiUserList } from "react-icons/pi";
 import { SlCalender } from "react-icons/sl";
-import { IoBarChartOutline } from "react-icons/io5";
+import { IoBarChartOutline, IoSettingsOutline } from "react-icons/io5";
 import { GoTools } from "react-icons/go";
 import { LuList } from "react-icons/lu";
 import { CgGym } from "react-icons/cg";
@@ -193,10 +193,10 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
               <LuList className="menu--icon" />
               <span className="nav-text">Services</span>
             </Link>
-            <Link to="/companies" className="nav-link mb-2">
+            {/* <Link to="/companies" className="nav-link mb-2">
               <FaRegBuilding className="menu--icon" />
               <span className="nav-text">Companies</span>
-            </Link>
+            </Link> */}
             <Link to="/staff" className="nav-link mb-2">
               <FiUsers className="menu--icon" />
               <span className="nav-text">Staff</span>
@@ -248,6 +248,34 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
               <FaLayerGroup className="menu--icon" />
               <span className="nav-text">Group Classes</span>
             </Link>
+            <div
+              className="nav-link d-flex justify-between align-items-center mb-2"
+              onClick={() => toggleMenu("settingmodules")}
+              style={{ cursor: "pointer" }}
+            >
+              <div className="flex items-center">
+                <IoSettingsOutline className="menu--icon" />
+                <span className="nav-text">Settings</span>
+              </div>
+              <FaAngleDown
+                className={`downmenu transition ${
+                  dropdownToggles["settingmodules"] ? "rotate-[180deg]" : ""
+                }`}
+              />
+            </div>
+
+            {dropdownToggles["settingmodules"] && (
+              <div className="mt-2 pl-5 relative">
+                <div className="absolute h-[calc(100%-15px)] w-[2px] bg-white left-[23px] top-[8px]"></div>
+                <Link
+                  to="/companies"
+                  className="text-white flex items-center gap-[5px] mb-2 text-sm"
+                >
+                  <FaCircle className="menu--icon !text-[10px]" />
+                  <span className="nav-text">Companies</span>
+                </Link>
+              </div>
+            )}
           </>
         )}
 

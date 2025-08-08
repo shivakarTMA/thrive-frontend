@@ -306,7 +306,7 @@ const CreateLeadForm = ({ setLeadModal, selectedLead }) => {
 
           <div className="flex-1s flexs ">
             <form onSubmit={formik.handleSubmit}>
-              <div className="flex bg-white rounded-b-[10px]">
+              <div div className="flex bg-white rounded-b-[10px]">
                 <div className="p-6 flex-1">
                   <h3 className="text-2xl font-semibold mb-2">
                     Personal Details
