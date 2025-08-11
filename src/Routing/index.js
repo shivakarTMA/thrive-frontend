@@ -43,6 +43,10 @@ import DietPlanList from "../components/DietPlan/DietPlanList";
 import AllGroupClasses from "../components/groupclass/AllGroupClasses";
 import AllLostFound from "../components/lostfound/AllLostFound";
 import MemberCallLogs from "../Pages/MemberCallLogs";
+import ClubList from "../components/Club/ClubList";
+import OptionList from "../components/OptionList/OptionList";
+import RoleList from "../components/RoleList/RoleList";
+import ModuleList from "../components/ModuleList/ModuleList";
 
 
 export default function Routing() {
@@ -167,6 +171,38 @@ export default function Routing() {
               element={
                 <PrivateRoute>
                   <CompanyList />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/club"
+              element={
+                <PrivateRoute>
+                  <ClubList />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/option-list"
+              element={
+                <PrivateRoute>
+                  <OptionList />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/role-list"
+              element={
+                <PrivateRoute>
+                  <RoleList />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/module-list"
+              element={
+                <PrivateRoute>
+                  <ModuleList />
                 </PrivateRoute>
               }
             />

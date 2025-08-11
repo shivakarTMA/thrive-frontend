@@ -7,15 +7,16 @@ import Select from "react-select";
 import { selectIcon } from "../../Helper/helper";
 import PhoneInput from "react-phone-number-input";
 
-const CreateCompany = ({
+const CreateClub = ({
   setShowModal,
-  editingCompany,
+  editingClub,
   formik,
   handleOverlayClick,
   leadBoxRef,
   handlePhoneChange,
   indianStates,
 }) => {
+  console.log(formik,'formik')
   return (
     <div
       className="bg--blur create--lead--container overflow-auto hide--overflow fixed top-0 left-0 z-[999] w-full bg-black bg-opacity-60 h-full"
@@ -28,7 +29,7 @@ const CreateCompany = ({
       >
         <div className="bg-white rounded-t-[10px] flex gap-3 items-center justify-between py-4 px-4 border-b">
           <h2 className="text-xl font-semibold">
-            {editingCompany ? "Edit Company" : "Create Company"}
+            {editingClub ? "Edit Club" : "Create Club"}
           </h2>
           <div
             className="close--lead cursor-pointer"
@@ -48,7 +49,7 @@ const CreateCompany = ({
                 <div className="grid grid-cols-3 gap-4">
                   <div>
                     <label className="mb-2 block">
-                      Company Logo
+                      Club Logo
                     </label>
                     <input
                       type="file"
@@ -70,7 +71,7 @@ const CreateCompany = ({
                   {/* Company Name */}
                   <div>
                     <label className="mb-2 block">
-                      Company Name<span className="text-red-500">*</span>
+                      Club Name<span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
                       <span className="absolute top-[50%] translate-y-[-50%] left-[15px]">
@@ -95,7 +96,7 @@ const CreateCompany = ({
                   {/* Email */}
                   <div>
                     <label className="mb-2 block">
-                      Company Email<span className="text-red-500">*</span>
+                      Club Email<span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
                       <span className="absolute top-[50%] translate-y-[-50%] left-[15px]">
@@ -241,35 +242,10 @@ const CreateCompany = ({
                     )}
                   </div>
 
-                  {/* GST */}
-                  <div>
-                    <label className="mb-2 block">
-                      Company GST No<span className="text-red-500">*</span>
-                    </label>
-                    <div className="relative">
-                      <span className="absolute top-[50%] translate-y-[-50%] left-[15px]">
-                        <GrDocument />
-                      </span>
-                      <input
-                        type="text"
-                        name="gstno"
-                        value={formik.values.gstno}
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
-                        className="custom--input w-full input--icon"
-                      />
-                    </div>
-                    {formik.touched.gstno && formik.errors.gstno && (
-                      <p className="text-red-500 text-sm mt-1">
-                        {formik.errors.gstno}
-                      </p>
-                    )}
-                  </div>
-
                   {/* Status */}
                   <div>
                     <label className="mb-2 block">
-                      Company Status<span className="text-red-500">*</span>
+                      Club Status<span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
                       <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[10]">
@@ -301,7 +277,7 @@ const CreateCompany = ({
                   </div>
 
                   {/* Address */}
-                  <div className="col-span-2">
+                  <div className="col-span-3">
                     <label className="mb-2 block">Physical Address</label>
                     <div className="relative">
                       <span className="absolute top-[15px] left-[15px]">
@@ -336,7 +312,7 @@ const CreateCompany = ({
                 type="submit"
                 className="px-4 py-2 bg-white text-black font-semibold rounded max-w-[150px] w-full"
               >
-                {editingCompany ? "Update" : "Submit"}
+                {editingClub ? "Update" : "Submit"}
               </button>
             </div>
           </form>
@@ -346,4 +322,4 @@ const CreateCompany = ({
   );
 };
 
-export default CreateCompany;
+export default CreateClub;
