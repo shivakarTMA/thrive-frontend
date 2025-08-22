@@ -47,6 +47,7 @@ import ClubList from "../components/Club/ClubList";
 import OptionList from "../components/OptionList/OptionList";
 import RoleList from "../components/RoleList/RoleList";
 import ModuleList from "../components/ModuleList/ModuleList";
+import ChallengeList from "../components/ChallengeList/ChallengeList";
 
 
 export default function Routing() {
@@ -203,6 +204,14 @@ export default function Routing() {
               element={
                 <PrivateRoute>
                   <ModuleList />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/challenge-list"
+              element={
+                <PrivateRoute>
+                  <ChallengeList />
                 </PrivateRoute>
               }
             />

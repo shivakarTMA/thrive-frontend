@@ -126,3 +126,9 @@ export const customStyles = {
     return new Date(`${year}-${month}-${day}`);
   };
   
+  export function formatDate(dateString) {
+  if (!dateString) return "";
+  const date = new Date(dateString);
+  if (isNaN(date)) return "";
+  return date.toISOString().split("T")[0]; // yyyy-MM-dd
+}

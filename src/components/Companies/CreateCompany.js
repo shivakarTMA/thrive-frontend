@@ -16,6 +16,19 @@ const CreateCompany = ({
   handlePhoneChange,
   indianStates,
 }) => {
+  console.log(formik.values, "value data");
+
+  const handleLogoChange = (event) => {
+    const file = event.currentTarget.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        formik.setFieldValue("logo", reader.result); // base64 string
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   return (
     <div
       className="bg--blur create--lead--container overflow-auto hide--overflow fixed top-0 left-0 z-[999] w-full bg-black bg-opacity-60 h-full"
@@ -47,24 +60,21 @@ const CreateCompany = ({
               <div className="p-6 flex-1">
                 <div className="grid grid-cols-3 gap-4">
                   <div>
-                    <label className="mb-2 block">
-                      Company Logo
-                    </label>
+                    <label className="mb-2 block">Company Logo</label>
                     <input
                       type="file"
                       accept="image/*"
-                      onChange={(event) => {
-                        const file = event.currentTarget.files[0];
-                        formik.setFieldValue("logo", file);
-                      }}
+                      onChange={handleLogoChange}
                       className="custom--input w-full"
                     />
                     {/* {formik.values.logo && (
-                      <img
-                        src={URL.createObjectURL(formik.values.logo)}
-                        alt="Logo Preview"
-                        className="mt-2 h-16 w-16 object-cover rounded"
-                      />
+                      <div className="mt-2">
+                        <img
+                          src={formik.values.logo}
+                          alt="Logo Preview"
+                          className="w-32 h-32 object-cover rounded"
+                        />
+                      </div>
                     )} */}
                   </div>
                   {/* Company Name */}

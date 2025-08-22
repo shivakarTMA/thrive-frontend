@@ -29,6 +29,8 @@ import * as Yup from "yup";
 import { toast } from "react-toastify";
 import ConfirmUnderAge from "../components/modal/ConfirmUnderAge";
 import { FaCalendarDays, FaListCheck, FaLocationDot } from "react-icons/fa6";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchOptionList } from "../Redux/Reducers/optionListSlice";
 
 const assignTrainers = [
   { value: "shivakar", label: "Shivakar" },
@@ -78,6 +80,13 @@ const CreateLeadForm = ({ setLeadModal, selectedLead }) => {
   const [showDuplicateModal, setShowDuplicateModal] = useState(false);
   const [hasDismissedDuplicateModal, setHasDismissedDuplicateModal] =
     useState(false);
+
+  const dispatch = useDispatch();
+  const { lists, loading } = useSelector((state) => state.optionList);
+
+  useEffect(() => {
+    dispatch(fetchOptionList("Company"));
+  }, [dispatch]);
 
   const initialValues = {
     personalDetails: {
@@ -476,7 +485,12 @@ const CreateLeadForm = ({ setLeadModal, selectedLead }) => {
 
                         <Select
                           name="leadInformation.companyName"
-                          value={companies.find(
+                          // value={companies.find(
+                          //   (opt) =>
+                          //     opt.value ===
+                          //     formik.values.leadInformation.companyName
+                          // )}
+                          value={lists["Company"]?.find(
                             (opt) =>
                               opt.value ===
                               formik.values.leadInformation.companyName
@@ -487,7 +501,9 @@ const CreateLeadForm = ({ setLeadModal, selectedLead }) => {
                               option.value
                             )
                           }
-                          options={companies}
+                          // options={companies}
+                          options={lists["Company"] || []}
+                          isLoading={loading}
                           styles={selectIcon}
                         />
                       </div>

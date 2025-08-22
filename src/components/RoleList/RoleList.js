@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { FiPlus } from "react-icons/fi";
 import { useFormik } from "formik";
 import * as Yup from "yup";
@@ -7,12 +7,64 @@ import Tooltip from "../common/Tooltip";
 import { LiaEdit } from "react-icons/lia";
 import { FaCircle } from "react-icons/fa6";
 import CreateRole from "./CreateRole";
+import { apiAxios } from "../../config/config";
+import { IoSearchOutline } from "react-icons/io5";
+import Select from "react-select";
+import { customStyles } from "../../Helper/helper";
 
 const RoleList = () => {
   const [showModal, setShowModal] = useState(false);
   const [role, setRole] = useState([]);
   const [editingOption, setEditingOption] = useState(null);
   const leadBoxRef = useRef(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState(null);
+  const [selectedType, setSelectedType] = useState(null);
+    const [optionTypes, setOptionTypes] = useState([]);
+
+  const fetchRole = async (search = "") => {
+    try {
+      const res = await apiAxios().get("/role/list", {
+        params: search ? { search } : {},
+      });
+      let data = res.data?.data || res.data || [];
+      // ✅ Filter by selected type
+      if (selectedType?.value) {
+        data = data.filter(
+          (item) => item.name === selectedType.value
+        );
+      }
+
+      if (statusFilter?.value) {
+        data = data.filter((item) => item.status === statusFilter.value);
+      }
+      setRole(data);
+
+      const types = [
+        ...new Set(
+          (res.data?.data || [])
+            .map((item) => item.name)
+            .filter(Boolean)
+        ),
+      ];
+      setOptionTypes(types.map((type) => ({ label: type, value: type })));
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to fetch companies");
+    }
+  };
+
+  useEffect(() => {
+    fetchRole();
+  }, []);
+
+  useEffect(() => {
+    const delayDebounce = setTimeout(() => {
+      fetchRole(searchTerm);
+    }, 300);
+
+    return () => clearTimeout(delayDebounce);
+  }, [searchTerm,selectedType, statusFilter]);
 
   const handleOverlayClick = (e) => {
     if (leadBoxRef.current && !leadBoxRef.current.contains(e.target)) {
@@ -20,7 +72,7 @@ const RoleList = () => {
     }
   };
 
-  console.log(role,'role')
+  console.log(role, "role");
 
   const formik = useFormik({
     initialValues: {
@@ -32,16 +84,25 @@ const RoleList = () => {
       name: Yup.string().required("Role name is required"),
       status: Yup.string().required("Status is required"),
     }),
-    onSubmit: (values, { resetForm }) => {
-      if (editingOption) {
-        setRole((prev) =>
-          prev.map((c) => (c.id === editingOption.id ? { ...c, ...values } : c))
-        );
-        toast.success("Updated Successfully");
-      } else {
-        const newCompany = { id: Date.now(), ...values };
-        setRole((prev) => [...prev, newCompany]);
-        toast.success("Created Successfully");
+    onSubmit: async (values, { resetForm }) => {
+      try {
+        const payload = { ...values};
+
+        if (editingOption && editingOption.id) {
+          // Update
+          await apiAxios().put(`/role/${editingOption.id}`, payload);
+          toast.success("Updated Successfully");
+        } else {
+          // Create
+          await apiAxios().post("/role/create", payload);
+          toast.success("Created Successfully");
+        }
+
+        // 🔄 Re-fetch after save
+        fetchRole();
+      } catch (err) {
+        console.error(err);
+        toast.error("Failed to save role");
       }
 
       resetForm();
@@ -72,11 +133,52 @@ const RoleList = () => {
         </div>
       </div>
 
+      <div className="flex gap-3 mb-4">
+        <div className="mb-4 w-full max-w-[200px]">
+          <div className="relative">
+            <span className="absolute top-[50%] translate-y-[-50%] left-[15px]">
+              <IoSearchOutline />
+            </span>
+            <input
+              type="text"
+              placeholder="Search companies..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="custom--input w-full input--icon"
+            />
+          </div>
+        </div>
+        <div className="w-full max-w-[200px]">
+          <Select
+            placeholder="Filter by Type"
+            options={optionTypes}
+            value={selectedType}
+            onChange={(option) => setSelectedType(option)}
+            isClearable
+            styles={customStyles}
+          />
+        </div>
+        {/* Status filter */}
+        <div className="w-full max-w-[200px]">
+          <Select
+            placeholder="Filter by Status"
+            options={[
+              { label: "Active", value: "ACTIVE" },
+              { label: "Inactive", value: "INACTIVE" },
+            ]}
+            value={statusFilter}
+            onChange={(option) => setStatusFilter(option)}
+            isClearable
+            styles={customStyles}
+          />
+        </div>
+      </div>
+
       <div className="relative overflow-x-auto">
         <table className="w-full text-sm text-left text-gray-500">
           <thead className="text-xs text-gray-700 uppercase bg-gray-50">
             <tr>
-              <th className="px-2 py-4">Role ID</th>
+              {/* <th className="px-2 py-4">Role ID</th> */}
               <th className="px-2 py-4">Name</th>
               <th className="px-2 py-4">Description</th>
               <th className="px-2 py-4">Status</th>
@@ -96,7 +198,7 @@ const RoleList = () => {
                   key={company.id || index}
                   className="group bg-white border-b hover:bg-gray-50 relative transition duration-700"
                 >
-                  <td className="px-2 py-4">{company?.id || "—"}</td>
+                  {/* <td className="px-2 py-4">{company?.id || "—"}</td> */}
                   <td className="px-2 py-4">{company?.name}</td>
                   <td>{company.description ?? "—"}</td>
                   <td className="px-2 py-4">
@@ -116,22 +218,22 @@ const RoleList = () => {
                   </td>
                   <td className="px-2 py-4">
                     <div className="w-fit">
-                    <Tooltip
-                      id={`tooltip-edit-${company.id || index}`}
-                      content="Edit Club"
-                      place="left"
-                    >
-                      <div
-                        className="p-1 cursor-pointer"
-                        onClick={() => {
-                          setEditingOption(company);
-                          formik.setValues(company);
-                          setShowModal(true);
-                        }}
+                      <Tooltip
+                        id={`tooltip-edit-${company.id || index}`}
+                        content="Edit Club"
+                        place="left"
                       >
-                        <LiaEdit className="text-[25px] text-black" />
-                      </div>
-                    </Tooltip>
+                        <div
+                          className="p-1 cursor-pointer"
+                          onClick={() => {
+                            setEditingOption(company);
+                            formik.setValues(company);
+                            setShowModal(true);
+                          }}
+                        >
+                          <LiaEdit className="text-[25px] text-black" />
+                        </div>
+                      </Tooltip>
                     </div>
                   </td>
                 </tr>
@@ -148,6 +250,7 @@ const RoleList = () => {
           formik={formik}
           handleOverlayClick={handleOverlayClick}
           leadBoxRef={leadBoxRef}
+          optionTypes={optionTypes}
         />
       )}
     </div>

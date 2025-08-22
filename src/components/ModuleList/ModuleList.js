@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { FiPlus } from "react-icons/fi";
 import { useFormik } from "formik";
 import * as Yup from "yup";
@@ -7,12 +7,47 @@ import Tooltip from "../common/Tooltip";
 import { LiaEdit } from "react-icons/lia";
 import { FaCircle } from "react-icons/fa6";
 import CreateModule from "./CreateModule";
+import { apiAxios } from "../../config/config";
+import { IoSearchOutline } from "react-icons/io5";
+import Select from "react-select";
+import { customStyles } from "../../Helper/helper";
 
 const ModuleList = () => {
   const [showModal, setShowModal] = useState(false);
   const [module, setModule] = useState([]);
   const [editingOption, setEditingOption] = useState(null);
   const leadBoxRef = useRef(null);
+
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState(null);
+
+  const fetchModuleList = async (search = "") => {
+    try {
+      const res = await apiAxios().get("/module/list", {
+        params: search ? { search } : {},
+      });
+      let data = res.data?.data || res.data || [];
+      if (statusFilter?.value) {
+        data = data.filter((item) => item.status === statusFilter.value);
+      }
+      setModule(data);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to fetch companies");
+    }
+  };
+
+  useEffect(() => {
+    fetchModuleList();
+  }, []);
+
+  useEffect(() => {
+    const delayDebounce = setTimeout(() => {
+      fetchModuleList(searchTerm);
+    }, 300);
+
+    return () => clearTimeout(delayDebounce);
+  }, [searchTerm, statusFilter]);
 
   const handleOverlayClick = (e) => {
     if (leadBoxRef.current && !leadBoxRef.current.contains(e.target)) {
@@ -32,25 +67,53 @@ const ModuleList = () => {
       name: Yup.string().required("Module name is required"),
       status: Yup.string().required("Status is required"),
     }),
-    onSubmit: (values, { resetForm }) => {
-      const now = new Date().toISOString(); // ISO format, easy to format later
+    // onSubmit: (values, { resetForm }) => {
+    //   const now = new Date().toISOString(); // ISO format, easy to format later
 
-      if (editingOption) {
-        setModule((prev) =>
-          prev.map((c) =>
-            c.id === editingOption.id ? { ...c, ...values, updated_at: now } : c
-          )
-        );
-        toast.success("Updated Successfully");
-      } else {
-        const newCompany = {
-          id: Date.now(),
+    //   if (editingOption) {
+    //     setModule((prev) =>
+    //       prev.map((c) =>
+    //         c.id === editingOption.id ? { ...c, ...values, updated_at: now } : c
+    //       )
+    //     );
+    //     toast.success("Updated Successfully");
+    //   } else {
+    //     const newCompany = {
+    //       id: Date.now(),
+    //       ...values,
+    //       created_at: now,
+    //       updated_at: now,
+    //     };
+    //     setModule((prev) => [...prev, newCompany]);
+    //     toast.success("Created Successfully");
+    //   }
+
+    //   resetForm();
+    //   setEditingOption(null);
+    //   setShowModal(false);
+    // },
+     onSubmit: async (values, { resetForm }) => {
+      try {
+        const payload = {
           ...values,
-          created_at: now,
-          updated_at: now,
+          state: values.state?.value || values.state,
         };
-        setModule((prev) => [...prev, newCompany]);
-        toast.success("Created Successfully");
+
+        if (editingOption && editingOption.id) {
+          // Update
+          await apiAxios().put(`/module/${editingOption.id}`, payload);
+          toast.success("Updated Successfully");
+        } else {
+          // Create
+          await apiAxios().post("/module/create", payload);
+          toast.success("Created Successfully");
+        }
+
+        // 🔄 Re-fetch after save
+        fetchModuleList();
+      } catch (err) {
+        console.error(err);
+        toast.error("Failed to save module");
       }
 
       resetForm();
@@ -78,6 +141,37 @@ const ModuleList = () => {
           >
             <FiPlus /> Create Module
           </button>
+        </div>
+      </div>
+
+       <div className="flex gap-3 mb-4">
+        <div className="mb-4 w-full max-w-[200px]">
+          <div className="relative">
+            <span className="absolute top-[50%] translate-y-[-50%] left-[15px]">
+              <IoSearchOutline />
+            </span>
+            <input
+              type="text"
+              placeholder="Search companies..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="custom--input w-full input--icon"
+            />
+          </div>
+        </div>
+        {/* Status filter */}
+        <div className="w-full max-w-[200px]">
+          <Select
+            placeholder="Filter by Status"
+            options={[
+              { label: "Active", value: "ACTIVE" },
+              { label: "Inactive", value: "INACTIVE" },
+            ]}
+            value={statusFilter}
+            onChange={(option) => setStatusFilter(option)}
+            isClearable
+            styles={customStyles}
+          />
         </div>
       </div>
 

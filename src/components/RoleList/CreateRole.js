@@ -19,29 +19,34 @@ const CreateRole = ({
   formik,
   handleOverlayClick,
   leadBoxRef,
+  optionTypes = [],
 }) => {
-  const [availableTags, setAvailableTags] = useState(tagOptions);
+  const [availableTags, setAvailableTags] = useState(optionTypes);
+
+  // useEffect(() => {
+  //   if (
+  //     formik.values.name &&
+  //     !availableTags.some((opt) => opt.value === formik.values.name)
+  //   ) {
+  //     setAvailableTags((prev) => [
+  //       ...prev,
+  //       {
+  //         value: formik.values.name,
+  //         label: formik.values.name,
+  //       },
+  //     ]);
+  //   }
+  // }, [formik.values.name, availableTags]);
 
   useEffect(() => {
-    if (
-      formik.values.name &&
-      !availableTags.some((opt) => opt.value === formik.values.name)
-    ) {
-      setAvailableTags((prev) => [
-        ...prev,
-        {
-          value: formik.values.name,
-          label: formik.values.name,
-        },
-      ]);
-    }
-  }, [formik.values.name, availableTags]);
+    setAvailableTags(optionTypes); // update when parent prop changes
+  }, [optionTypes]);
 
   const handleTagChange = (newValue, actionMeta) => {
     if (actionMeta.action === "create-option") {
       const newTag = {
         label: newValue.label,
-        value: newValue.label.toLowerCase(),
+        value: newValue.label,
       };
       setAvailableTags((prev) => [...prev, newTag]);
       formik.setFieldValue("name", newTag.value);

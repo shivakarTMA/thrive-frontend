@@ -5,13 +5,8 @@ import { LuPlug } from "react-icons/lu";
 import Select from "react-select";
 import { selectIcon } from "../../Helper/helper";
 import CreatableSelect from "react-select/creatable";
-
-const tagOptions = [
-  { value: "cardio", label: "Cardio" },
-  { value: "hiit", label: "HIIT" },
-  { value: "yoga", label: "Yoga" },
-  { value: "strength", label: "Strength" },
-];
+import { toast } from "react-toastify";
+import { apiAxios } from "../../config/config";
 
 const CreateOption = ({
   setShowModal,
@@ -19,41 +14,51 @@ const CreateOption = ({
   formik,
   handleOverlayClick,
   leadBoxRef,
+  optionTypes = [],
 }) => {
-  const [availableTags, setAvailableTags] = useState(tagOptions);
+  const [availableTags, setAvailableTags] = useState(optionTypes);
 
   useEffect(() => {
-    if (
-      formik.values.option_list_type &&
-      !availableTags.some(opt => opt.value === formik.values.option_list_type)
-    ) {
-      setAvailableTags(prev => [
-        ...prev,
-        {
-          value: formik.values.option_list_type,
-          label: formik.values.option_list_type
-        }
-      ]);
-    }
-  }, [formik.values.option_list_type, availableTags]);
+    setAvailableTags(optionTypes); // update when parent prop changes
+  }, [optionTypes]);
 
-  const handleTagChange = (newValue, actionMeta) => {
-    if (actionMeta.action === "create-option") {
-      const newTag = {
-        label: newValue.label,
-        value: newValue.label.toLowerCase(),
-      };
-      setAvailableTags((prev) => [...prev, newTag]);
-      formik.setFieldValue("option_list_type", newTag.value);
-    } else {
-      formik.setFieldValue(
-        "option_list_type",
-        newValue ? newValue.value : ""
-      );
-    }
-  };
+  // useEffect(() => {
+  //   if (
+  //     formik.values.option_list_type &&
+  //     !availableTags.some(opt => opt.value === formik.values.option_list_type)
+  //   ) {
+  //     setAvailableTags(prev => [
+  //       ...prev,
+  //       {
+  //         value: formik.values.option_list_type,
+  //         label: formik.values.option_list_type
+  //       }
+  //     ]);
+  //   }
+  // }, [formik.values.option_list_type, availableTags]);
 
-  console.log(formik.values,'formik')
+const handleTagChange = (newValue, actionMeta) => {
+  if (actionMeta.action === "create-option") {
+    // Transform: "employee category" -> "EMPLOYEE_CATEGORY"
+    const formattedValue = newValue.label
+      .trim()
+      .toUpperCase()
+      .replace(/\s+/g, "_");
+
+    const newTag = {
+      label: newValue.label, // Keep the user-friendly label
+      value: formattedValue, // Store uppercase underscore version
+    };
+
+    setAvailableTags((prev) => [...prev, newTag]);
+    formik.setFieldValue("option_list_type", newTag.value);
+  } else {
+    formik.setFieldValue("option_list_type", newValue ? newValue.value : "");
+  }
+};
+
+
+  console.log(formik.values, "formik");
 
   return (
     <div
@@ -132,6 +137,7 @@ const CreateOption = ({
                         onChange={handleTagChange}
                         styles={selectIcon}
                         isClearable
+                        isDisabled={editingOption ? true : false}
                       />
                     </div>
                     {formik.touched.option_list_type &&

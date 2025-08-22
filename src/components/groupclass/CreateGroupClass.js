@@ -165,7 +165,7 @@ const CreateGroupClass = ({ onClassCreated, initialData, setShowModal }) => {
     if (actionMeta.action === "create-option") {
       const newTag = {
         label: newValue[newValue.length - 1].label,
-        value: newValue[newValue.length - 1].label.toLowerCase(),
+        value: newValue[newValue.length - 1].label,
       };
       setAvailableTags((prev) => [...prev, newTag]);
       formik.setFieldValue("classTags", [...newValue.slice(0, -1), newTag]);
