@@ -14,6 +14,7 @@ import { apiAxios } from "../../config/config";
 import { IoSearchOutline } from "react-icons/io5";
 import Select from "react-select";
 import { customStyles } from "../../Helper/helper";
+import Pagination from "../common/Pagination";
 
 const indianStates = [
   { label: "Haryana", value: "Haryana" },
@@ -66,20 +67,34 @@ const ClubList = () => {
   const leadBoxRef = useRef(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState(null);
-  const fetchClubs = async (search = "") => {
+
+  const [page, setPage] = useState(1);
+  const [rowsPerPage] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+
+    const fetchClubs = async (search = "", currentPage = page) => {
     try {
       const res = await apiAxios().get("/club/list", {
-        params: search ? { search } : {},
+        params: {
+          page: currentPage,
+          limit: rowsPerPage,
+          ...(search ? { search } : {}),
+        },
       });
-      let data = res.data?.data || res.data || [];
-      // ✅ Filter by status
+
+      let data = res.data?.data || [];
       if (statusFilter?.value) {
         data = data.filter((item) => item.status === statusFilter.value);
       }
+
       setClub(data);
+      setPage(res.data?.currentPage || 1);
+      setTotalPages(res.data?.totalPage || 1);
+      setTotalCount(res.data?.totalCount || data.length);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch options");
+      toast.error("Failed to fetch club");
     }
   };
 
@@ -90,6 +105,7 @@ const ClubList = () => {
   useEffect(() => {
     const delayDebounce = setTimeout(() => {
       fetchClubs(searchTerm);
+      setPage(1);
     }, 300);
 
     return () => clearTimeout(delayDebounce);
@@ -114,7 +130,7 @@ const ClubList = () => {
       state: indianStates[0],
       country: "India",
       zipcode: "",
-      status: "ACTIVE",
+      status: "",
     },
     validationSchema: Yup.object({
       name: Yup.string().required("Club name is required"),
@@ -327,6 +343,18 @@ const ClubList = () => {
           </tbody>
         </table>
       </div>
+
+      <Pagination
+        page={page}
+        totalPages={totalPages}
+        rowsPerPage={rowsPerPage}
+        totalCount={totalCount}
+        currentDataLength={club.length}
+        onPageChange={(newPage) => {
+          setPage(newPage);
+          fetchClubs(searchTerm, newPage);
+        }}
+      />
 
       {showModal && (
         <CreateClub

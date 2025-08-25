@@ -6,43 +6,33 @@ import { toast } from "react-toastify";
 import Tooltip from "../common/Tooltip";
 import { LiaEdit } from "react-icons/lia";
 import { FaCircle } from "react-icons/fa6";
-import CreateModule from "./CreateModule";
+import CreateOnBoardingScreen from "./CreateOnBoardingScreen";
 import { apiAxios } from "../../config/config";
 import { IoSearchOutline } from "react-icons/io5";
 import Select from "react-select";
-import { customStyles, formatDate } from "../../Helper/helper";
-import Pagination from "../common/Pagination";
+import { customStyles } from "../../Helper/helper";
 
-const ModuleList = () => {
+const OnBoardingScreen = () => {
   const [showModal, setShowModal] = useState(false);
   const [module, setModule] = useState([]);
   const [editingOption, setEditingOption] = useState(null);
   const leadBoxRef = useRef(null);
+
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState(null);
 
-  const [page, setPage] = useState(1);
-  const [rowsPerPage] = useState(10);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalCount, setTotalCount] = useState(0);
+  const [file, setFile] = useState(null);
 
-  const fetchModuleList = async (search = "", currentPage = page) => {
+  const fetchOnBoardingScreen = async (search = "") => {
     try {
-      const res = await apiAxios().get("/module/list", {
-        params: {
-          page: currentPage,
-          limit: rowsPerPage,
-          ...(search ? { search } : {}),
-        }
+      const res = await apiAxios().get("/onboarding-screen/list", {
+        params: search ? { search } : {},
       });
       let data = res.data?.data || res.data || [];
       if (statusFilter?.value) {
         data = data.filter((item) => item.status === statusFilter.value);
       }
       setModule(data);
-      setPage(res.data?.currentPage || 1);
-      setTotalPages(res.data?.totalPage || 1);
-      setTotalCount(res.data?.totalCount || data.length);
     } catch (err) {
       console.error(err);
       toast.error("Failed to fetch companies");
@@ -50,13 +40,12 @@ const ModuleList = () => {
   };
 
   useEffect(() => {
-    fetchModuleList();
+    fetchOnBoardingScreen();
   }, []);
 
   useEffect(() => {
     const delayDebounce = setTimeout(() => {
-      fetchModuleList(searchTerm);
-      setPage(1);
+      fetchOnBoardingScreen(searchTerm);
     }, 300);
 
     return () => clearTimeout(delayDebounce);
@@ -68,65 +57,55 @@ const ModuleList = () => {
     }
   };
 
-  console.log(module, "module");
+  console.log(searchTerm, "searchTerm");
 
   const formik = useFormik({
     initialValues: {
-      name: "",
-      description: "",
+      title: "",
+      screen_image: "",
+      position: null,
       status: "",
     },
     validationSchema: Yup.object({
-      name: Yup.string().required("Module name is required"),
+      title: Yup.string().required("Title is required"),
+      screen_image: Yup.string().required("Screen image is required"),
+      position: Yup.number().required("Position is required"),
       status: Yup.string().required("Status is required"),
     }),
-    // onSubmit: (values, { resetForm }) => {
-    //   const now = new Date().toISOString(); // ISO format, easy to format later
-
-    //   if (editingOption) {
-    //     setModule((prev) =>
-    //       prev.map((c) =>
-    //         c.id === editingOption.id ? { ...c, ...values, updated_at: now } : c
-    //       )
-    //     );
-    //     toast.success("Updated Successfully");
-    //   } else {
-    //     const newCompany = {
-    //       id: Date.now(),
-    //       ...values,
-    //       created_at: now,
-    //       updated_at: now,
-    //     };
-    //     setModule((prev) => [...prev, newCompany]);
-    //     toast.success("Created Successfully");
-    //   }
-
-    //   resetForm();
-    //   setEditingOption(null);
-    //   setShowModal(false);
-    // },
-     onSubmit: async (values, { resetForm }) => {
+    onSubmit: async (values, { resetForm }) => {
       try {
-        const payload = {
-          ...values,
-          state: values.state?.value || values.state,
-        };
+        const formData = new FormData();
+        formData.append("title", values.title);
+        formData.append("position", values.position);
+        formData.append("status", values.status);
+
+        // if file exists, append it (instead of just file name)
+        if (values.screen_image instanceof File) {
+          formData.append("file", values.screen_image);
+        }
 
         if (editingOption && editingOption.id) {
           // Update
-          await apiAxios().put(`/module/${editingOption.id}`, payload);
+          await apiAxios().put(
+            `/onboarding-screen/${editingOption.id}`,
+            formData,
+            {
+              headers: { "Content-Type": "multipart/form-data" },
+            }
+          );
           toast.success("Updated Successfully");
         } else {
           // Create
-          await apiAxios().post("/module/create", payload);
+          await apiAxios().post("/onboarding-screen/create", formData, {
+            headers: { "Content-Type": "multipart/form-data" },
+          });
           toast.success("Created Successfully");
         }
 
-        // 🔄 Re-fetch after save
-        fetchModuleList();
+        fetchOnBoardingScreen();
       } catch (err) {
-        console.error(err);
-        toast.error("Failed to save module");
+        console.error("API Error:", err.response?.data || err.message);
+        toast.error("Failed to save onboarding");
       }
 
       resetForm();
@@ -139,8 +118,8 @@ const ModuleList = () => {
     <div className="page--content">
       <div className="flex items-end justify-between gap-2 mb-5">
         <div className="title--breadcrumbs">
-          <p className="text-sm">{`Home > All Module`}</p>
-          <h1 className="text-3xl font-semibold">All Module</h1>
+          <p className="text-sm">{`Home > All On Boarding`}</p>
+          <h1 className="text-3xl font-semibold">All On Boarding</h1>
         </div>
         <div className="flex items-end gap-2">
           <button
@@ -152,12 +131,12 @@ const ModuleList = () => {
               setShowModal(true);
             }}
           >
-            <FiPlus /> Create Module
+            <FiPlus /> Create On Boarding
           </button>
         </div>
       </div>
 
-       <div className="flex gap-3 mb-4">
+      <div className="flex gap-3 mb-4">
         <div className="mb-4 w-full max-w-[200px]">
           <div className="relative">
             <span className="absolute top-[50%] translate-y-[-50%] left-[15px]">
@@ -165,7 +144,7 @@ const ModuleList = () => {
             </span>
             <input
               type="text"
-              placeholder="Search companies..."
+              placeholder="Search on boarding..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="custom--input w-full input--icon"
@@ -193,11 +172,10 @@ const ModuleList = () => {
           <thead className="text-xs text-gray-700 uppercase bg-gray-50">
             <tr>
               {/* <th className="px-2 py-4">Module ID</th> */}
-              <th className="px-2 py-4">Name</th>
-              <th className="px-2 py-4">Description</th>
+              <th className="px-2 py-4">Image</th>
+              <th className="px-2 py-4">Title</th>
+              <th className="px-2 py-4">Position</th>
               <th className="px-2 py-4">Status</th>
-              <th className="px-2 py-4">Created At</th>
-              <th className="px-2 py-4">Updated At</th>
               <th className="px-2 py-4">Action</th>
             </tr>
           </thead>
@@ -205,48 +183,48 @@ const ModuleList = () => {
             {module.length === 0 ? (
               <tr>
                 <td colSpan="8" className="text-center py-4">
-                  No module added yet.
+                  No boarding added yet.
                 </td>
               </tr>
             ) : (
-              module.map((company, index) => (
+              module.map((item, index) => (
                 <tr
-                  key={company.id || index}
+                  key={item.id || index}
                   className="group bg-white border-b hover:bg-gray-50 relative transition duration-700"
                 >
-                  {/* <td className="px-2 py-4">{company?.id || "—"}</td> */}
-                  <td className="px-2 py-4">{company?.name}</td>
-                  <td>{company.description ?? "—"}</td>
+                  {/* <td className="px-2 py-4">{item?.id || "—"}</td> */}
+                  <td>
+                    <img src={item.screen_image} className="w-14" />
+                  </td>
+                  <td className="px-2 py-4">{item?.title}</td>
+                  <td>{item.position}</td>
                   <td className="px-2 py-4">
                     <div
                       className={`flex gap-1 items-center ${
-                        company?.status === "ACTIVE"
+                        item?.status === "ACTIVE"
                           ? "text-green-500"
                           : "text-red-500"
                       }`}
                     >
                       <FaCircle />
-                      {company?.status
-                        ? company.status.charAt(0) +
-                          company.status.slice(1).toLowerCase()
+                      {item?.status
+                        ? item.status.charAt(0) +
+                          item.status.slice(1).toLowerCase()
                         : ""}
                     </div>
                   </td>
-                  <td>{formatDate(company.createdAt)}</td>
-                  <td>{formatDate(company.updatedAt)}</td>
-
                   <td className="px-2 py-4">
                     <div className="w-fit">
                       <Tooltip
-                        id={`tooltip-edit-${company.id || index}`}
+                        id={`tooltip-edit-${item.id || index}`}
                         content="Edit Club"
                         place="left"
                       >
                         <div
                           className="p-1 cursor-pointer"
                           onClick={() => {
-                            setEditingOption(company);
-                            formik.setValues(company);
+                            setEditingOption(item);
+                            formik.setValues(item);
                             setShowModal(true);
                           }}
                         >
@@ -262,29 +240,18 @@ const ModuleList = () => {
         </table>
       </div>
 
-      <Pagination
-        page={page}
-        totalPages={totalPages}
-        rowsPerPage={rowsPerPage}
-        totalCount={totalCount}
-        currentDataLength={module.length}
-        onPageChange={(newPage) => {
-          setPage(newPage);
-          fetchModuleList(searchTerm, newPage);
-        }}
-      />
-
       {showModal && (
-        <CreateModule
+        <CreateOnBoardingScreen
           setShowModal={setShowModal}
           editingOption={editingOption}
           formik={formik}
           handleOverlayClick={handleOverlayClick}
           leadBoxRef={leadBoxRef}
+          setFile={setFile}
         />
       )}
     </div>
   );
 };
 
-export default ModuleList;
+export default OnBoardingScreen;

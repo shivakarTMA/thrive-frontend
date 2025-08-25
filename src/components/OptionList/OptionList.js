@@ -11,6 +11,7 @@ import { apiAxios } from "../../config/config";
 import { IoSearchOutline } from "react-icons/io5";
 import Select from "react-select";
 import { customStyles } from "../../Helper/helper";
+import Pagination from "../common/Pagination";
 
 const OptionList = () => {
   const [editOptionModal, setEditOptionModal] = useState(false);
@@ -21,42 +22,37 @@ const OptionList = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedType, setSelectedType] = useState(null);
   const [statusFilter, setStatusFilter] = useState(null);
-
   const [optionTypes, setOptionTypes] = useState([]);
 
-  const fetchOptions = async (search = "") => {
+  const [page, setPage] = useState(1);
+  const [rowsPerPage] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+
+  const fetchOptions = async (search = "", currentPage = page) => {
     try {
       const res = await apiAxios().get("/option-list/get", {
-        params: search ? { search } : {},
+        params: {
+          page: currentPage,
+          limit: rowsPerPage,
+          ...(search ? { search } : {}),
+        },
       });
 
       let data = res.data?.data || res.data || [];
-
-      // ✅ Filter by selected type
       if (selectedType?.value) {
         data = data.filter(
           (item) => item.option_list_type === selectedType.value
         );
       }
-
-      // ✅ Filter by status
       if (statusFilter?.value) {
         data = data.filter((item) => item.status === statusFilter.value);
       }
 
-      // ✅ Sort: push items with position=0 or null to bottom
-      // data = [...data].sort((a, b) => {
-      //   const posA = a.position || 0;
-      //   const posB = b.position || 0;
-      //   if (posA === 0 && posB === 0) return 0;
-      //   if (posA === 0) return 1;
-      //   if (posB === 0) return -1;
-      //   return posA - posB;
-      // });
-
       setOption(data);
-
-      // Extract unique option_list_type values for filter dropdown
+      setPage(res.data?.currentPage || 1);
+      setTotalPages(res.data?.totalPage || 1);
+      setTotalCount(res.data?.totalCount || data.length);
       const types = [
         ...new Set(
           (res.data?.data || [])
@@ -80,6 +76,7 @@ const OptionList = () => {
   useEffect(() => {
     const delayDebounce = setTimeout(() => {
       fetchOptions(searchTerm);
+      setPage(1);
     }, 300);
 
     return () => clearTimeout(delayDebounce);
@@ -261,6 +258,18 @@ const OptionList = () => {
           </tbody>
         </table>
       </div>
+
+      <Pagination
+        page={page}
+        totalPages={totalPages}
+        rowsPerPage={rowsPerPage}
+        totalCount={totalCount}
+        currentDataLength={option.length}
+        onPageChange={(newPage) => {
+          setPage(newPage);
+          fetchOptions(searchTerm, newPage);
+        }}
+      />
 
       {showModal && (
         <CreateClub

@@ -302,6 +302,20 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                   <FaCircle className="menu--icon !text-[10px]" />
                   <span className="nav-text">Module List</span>
                 </Link>
+                <Link
+                  to="/challenge-list"
+                  className="text-white flex items-center gap-[5px] mb-2 text-sm"
+                >
+                  <FaCircle className="menu--icon !text-[10px]" />
+                  <span className="nav-text">Challenge List</span>
+                </Link>
+                <Link
+                  to="/on-boarding-list"
+                  className="text-white flex items-center gap-[5px] mb-2 text-sm"
+                >
+                  <FaCircle className="menu--icon !text-[10px]" />
+                  <span className="nav-text">On Boarding List</span>
+                </Link>
               </div>
             )}
           </>

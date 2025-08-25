@@ -8,11 +8,12 @@ import "react-phone-number-input/style.css";
 import Tooltip from "../common/Tooltip";
 import { LiaEdit } from "react-icons/lia";
 import CreateCompany from "./CreateCompany";
-import { FaCircle } from "react-icons/fa6";
+import { FaAngleLeft, FaAngleRight, FaCircle } from "react-icons/fa6";
 import { apiAxios } from "../../config/config";
 import { IoSearchOutline } from "react-icons/io5";
 import Select from "react-select";
 import { customStyles } from "../../Helper/helper";
+import Pagination from "../common/Pagination";
 
 const indianStates = [
   { label: "Haryana", value: "Haryana" },
@@ -66,33 +67,56 @@ const CompanyList = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState(null);
 
-  const fetchCompanies = async (search = "") => {
+ const [page, setPage] = useState(1);
+  const [rowsPerPage] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+
+  const fetchCompanies = async (search = "", currentPage = page) => {
     try {
       const res = await apiAxios().get("/company/list", {
-        params: search ? { search } : {},
+        params: {
+          page: currentPage,
+          limit: rowsPerPage,
+          ...(search ? { search } : {}),
+        },
       });
-      let data = res.data?.data || res.data || [];
+
+      let data = res.data?.data || [];
       if (statusFilter?.value) {
         data = data.filter((item) => item.status === statusFilter.value);
       }
+
       setCompanies(data);
+      setPage(res.data?.currentPage || 1);
+      setTotalPages(res.data?.totalPage || 1);
+      setTotalCount(res.data?.totalCount || data.length);
     } catch (err) {
       console.error(err);
       toast.error("Failed to fetch companies");
     }
   };
 
+
   useEffect(() => {
     fetchCompanies();
   }, []);
 
-  useEffect(() => {
+useEffect(() => {
     const delayDebounce = setTimeout(() => {
-      fetchCompanies(searchTerm);
+      fetchCompanies(searchTerm, 1);
+      setPage(1);
     }, 300);
 
     return () => clearTimeout(delayDebounce);
   }, [searchTerm, statusFilter]);
+
+  // const handlePageChange = (page) => {
+  //   if (page >= 1 && page <= totalPage) {
+  //     setCurrentPage(page);
+  //     fetchCompanies(searchTerm, page);
+  //   }
+  // };
 
   const handleOverlayClick = (e) => {
     if (leadBoxRef.current && !leadBoxRef.current.contains(e.target)) {
@@ -112,7 +136,7 @@ const CompanyList = () => {
       country: "India",
       zipcode: "",
       gstno: "",
-      status: "ACTIVE",
+      status: "",
     },
     validationSchema: Yup.object({
       name: Yup.string().required("Company name is required"),
@@ -229,7 +253,6 @@ const CompanyList = () => {
         <table className="w-full text-sm text-left text-gray-500">
           <thead className="text-xs text-gray-700 uppercase bg-gray-50">
             <tr>
-              {/* <th className="px-2 py-4">Company ID</th> */}
               <th className="px-2 py-4">Name</th>
               <th className="px-2 py-4">Email</th>
               <th className="px-2 py-4">City</th>
@@ -252,7 +275,6 @@ const CompanyList = () => {
                   key={company.id || index}
                   className="group bg-white border-b hover:bg-gray-50 relative transition duration-700"
                 >
-                  {/* <td className="px-2 py-4">{company?.id || "—"}</td> */}
                   <td className="px-2 py-4">{company?.name}</td>
                   <td className="px-2 py-4">{company?.email}</td>
                   <td className="px-2 py-4">{company?.city}</td>
@@ -305,6 +327,21 @@ const CompanyList = () => {
           </tbody>
         </table>
       </div>
+
+    <Pagination
+      page={page}
+      totalPages={totalPages}
+      rowsPerPage={rowsPerPage}
+      totalCount={totalCount}
+      currentDataLength={companies.length}
+      onPageChange={(newPage) => {
+        setPage(newPage);
+        fetchCompanies(searchTerm, newPage);
+      }}
+    />
+
+
+
 
       {showModal && (
         <CreateCompany

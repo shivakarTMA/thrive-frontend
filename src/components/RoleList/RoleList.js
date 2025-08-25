@@ -11,6 +11,7 @@ import { apiAxios } from "../../config/config";
 import { IoSearchOutline } from "react-icons/io5";
 import Select from "react-select";
 import { customStyles } from "../../Helper/helper";
+import Pagination from "../common/Pagination";
 
 const RoleList = () => {
   const [showModal, setShowModal] = useState(false);
@@ -20,39 +21,69 @@ const RoleList = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState(null);
   const [selectedType, setSelectedType] = useState(null);
-    const [optionTypes, setOptionTypes] = useState([]);
+  const [optionTypes, setOptionTypes] = useState([]);
 
-  const fetchRole = async (search = "") => {
+  const [page, setPage] = useState(1);
+  const [rowsPerPage] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+
+  const fetchRole = async (search = "", currentPage = page) => {
     try {
       const res = await apiAxios().get("/role/list", {
-        params: search ? { search } : {},
+        params: {
+          page: currentPage,
+          limit: rowsPerPage,
+          ...(search ? { search } : {}),
+        },
       });
-      let data = res.data?.data || res.data || [];
-      // ✅ Filter by selected type
-      if (selectedType?.value) {
-        data = data.filter(
-          (item) => item.name === selectedType.value
-        );
-      }
 
+      let data = res.data?.data || [];
       if (statusFilter?.value) {
         data = data.filter((item) => item.status === statusFilter.value);
       }
-      setRole(data);
 
-      const types = [
-        ...new Set(
-          (res.data?.data || [])
-            .map((item) => item.name)
-            .filter(Boolean)
-        ),
-      ];
-      setOptionTypes(types.map((type) => ({ label: type, value: type })));
+      setRole(data);
+      setPage(res.data?.currentPage || 1);
+      setTotalPages(res.data?.totalPage || 1);
+      setTotalCount(res.data?.totalCount || data.length);
     } catch (err) {
       console.error(err);
       toast.error("Failed to fetch companies");
     }
   };
+
+  // const fetchRole = async (search = "") => {
+  //   try {
+  //     const res = await apiAxios().get("/role/list", {
+  //       params: search ? { search } : {},
+  //     });
+  //     let data = res.data?.data || res.data || [];
+  //     // ✅ Filter by selected type
+  //     if (selectedType?.value) {
+  //       data = data.filter(
+  //         (item) => item.name === selectedType.value
+  //       );
+  //     }
+
+  //     if (statusFilter?.value) {
+  //       data = data.filter((item) => item.status === statusFilter.value);
+  //     }
+  //     setRole(data);
+
+  //     const types = [
+  //       ...new Set(
+  //         (res.data?.data || [])
+  //           .map((item) => item.name)
+  //           .filter(Boolean)
+  //       ),
+  //     ];
+  //     setOptionTypes(types.map((type) => ({ label: type, value: type })));
+  //   } catch (err) {
+  //     console.error(err);
+  //     toast.error("Failed to fetch companies");
+  //   }
+  // };
 
   useEffect(() => {
     fetchRole();
@@ -61,6 +92,7 @@ const RoleList = () => {
   useEffect(() => {
     const delayDebounce = setTimeout(() => {
       fetchRole(searchTerm);
+      setPage(1);
     }, 300);
 
     return () => clearTimeout(delayDebounce);
@@ -78,7 +110,7 @@ const RoleList = () => {
     initialValues: {
       name: "",
       description: "",
-      status: "ACTIVE",
+      status: "",
     },
     validationSchema: Yup.object({
       name: Yup.string().required("Role name is required"),
@@ -242,6 +274,18 @@ const RoleList = () => {
           </tbody>
         </table>
       </div>
+
+      <Pagination
+        page={page}
+        totalPages={totalPages}
+        rowsPerPage={rowsPerPage}
+        totalCount={totalCount}
+        currentDataLength={role.length}
+        onPageChange={(newPage) => {
+          setPage(newPage);
+          fetchRole(searchTerm, newPage);
+        }}
+      />
 
       {showModal && (
         <CreateRole

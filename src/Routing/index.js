@@ -48,6 +48,7 @@ import OptionList from "../components/OptionList/OptionList";
 import RoleList from "../components/RoleList/RoleList";
 import ModuleList from "../components/ModuleList/ModuleList";
 import ChallengeList from "../components/ChallengeList/ChallengeList";
+import OnBoardingScreen from "../components/OnBoardingScreen/OnBoardingScreen";
 
 
 export default function Routing() {
@@ -212,6 +213,14 @@ export default function Routing() {
               element={
                 <PrivateRoute>
                   <ChallengeList />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/on-boarding-list"
+              element={
+                <PrivateRoute>
+                  <OnBoardingScreen />
                 </PrivateRoute>
               }
             />
