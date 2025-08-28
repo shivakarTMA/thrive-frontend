@@ -29,7 +29,8 @@ const validationSchema = Yup.object({
   productType: Yup.string().required("Product Type is required"),
 });
 
-const CreateInvoice = ({ setInvoiceModal }) => {
+const CreateInvoice = ({ setInvoiceModal, leadPaymentSend }) => {
+  console.log(leadPaymentSend, "leadPaymentSend");
   const [showProductModal, setShowProductModal] = useState(false);
   const [editingProductIndex, setEditingProductIndex] = useState(null);
   const { user } = useSelector((state) => state.auth);
@@ -371,7 +372,16 @@ const CreateInvoice = ({ setInvoiceModal }) => {
                               selected?.value || ""
                             )
                           }
-                          options={servicesList}
+                          options={
+                            leadPaymentSend
+                              ? [
+                                  {
+                                    value: "membership plan",
+                                    label: "Membership Plan",
+                                  },
+                                ]
+                              : servicesList
+                          }
                           styles={customStyles}
                         />
                       </div>
@@ -534,30 +544,32 @@ const CreateInvoice = ({ setInvoiceModal }) => {
                     </div>
                   ))}
 
-                  <button
-                    type="button"
-                    className="px-5 py-3 text-sm rounded bg-black text-white flex items-center justify-center gap-2"
-                    onClick={() => {
-                      const newProduct = {
-                        productType: "",
-                        serviceVariation: "",
-                        startDate: "",
-                        endDate: "",
-                        sacCode: "",
-                        duration: "",
-                        productAmount: "",
-                        discount: "",
-                        productTotal: "",
-                      };
-                      formik.setFieldValue("productInfo", [
-                        ...formik.values.productInfo,
-                        newProduct,
-                      ]);
-                    }}
-                  >
-                    <FaPlus />
-                    Add Another Product
-                  </button>
+                  {!leadPaymentSend && (
+                    <button
+                      type="button"
+                      className="px-5 py-3 text-sm rounded bg-black text-white flex items-center justify-center gap-2"
+                      onClick={() => {
+                        const newProduct = {
+                          productType: "",
+                          serviceVariation: "",
+                          startDate: "",
+                          endDate: "",
+                          sacCode: "",
+                          duration: "",
+                          productAmount: "",
+                          discount: "",
+                          productTotal: "",
+                        };
+                        formik.setFieldValue("productInfo", [
+                          ...formik.values.productInfo,
+                          newProduct,
+                        ]);
+                      }}
+                    >
+                      <FaPlus />
+                      Add Another Product
+                    </button>
+                  )}
 
                   <div className="bg-[#f7f7f7] p-[20px] rounded-[10px] mt-4">
                     <h3 className="text-2xl font-semibold">

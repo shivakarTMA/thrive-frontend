@@ -51,15 +51,17 @@ const CreateClub = ({
                     <label className="mb-2 block">
                       Club Logo
                     </label>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={(event) => {
-                        const file = event.currentTarget.files[0];
-                        formik.setFieldValue("logo", file);
-                      }}
-                      className="custom--input w-full"
-                    />
+                     <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                          const file = e.target.files[0];
+                          if (file) {
+                            formik.setFieldValue("logo", file);
+                          }
+                        }}
+                        className="custom--input w-full"
+                      />
                     {/* {formik.values.logo && (
                       <img
                         src={URL.createObjectURL(formik.values.logo)}

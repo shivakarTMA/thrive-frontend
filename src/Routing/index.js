@@ -49,6 +49,7 @@ import RoleList from "../components/RoleList/RoleList";
 import ModuleList from "../components/ModuleList/ModuleList";
 import ChallengeList from "../components/ChallengeList/ChallengeList";
 import OnBoardingScreen from "../components/OnBoardingScreen/OnBoardingScreen";
+import SplashScreen from "../components/SplashScreen/SplashScreen";
 
 
 export default function Routing() {
@@ -221,6 +222,14 @@ export default function Routing() {
               element={
                 <PrivateRoute>
                   <OnBoardingScreen />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/splash-screen"
+              element={
+                <PrivateRoute>
+                  <SplashScreen />
                 </PrivateRoute>
               }
             />

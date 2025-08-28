@@ -31,6 +31,8 @@ import ConfirmUnderAge from "../components/modal/ConfirmUnderAge";
 import { FaCalendarDays, FaListCheck, FaLocationDot } from "react-icons/fa6";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchOptionList } from "../Redux/Reducers/optionListSlice";
+import { apiAxios } from "../config/config";
+import CreatableSelect from "react-select/creatable";
 
 const assignTrainers = [
   { value: "shivakar", label: "Shivakar" },
@@ -55,6 +57,7 @@ const validationSchema = Yup.object({
       .test("is-valid-phone", "Invalid phone number", function (value) {
         return isValidPhoneNumber(value || "");
       }),
+    email: Yup.string().required("Email is required"),
   }),
   leadInformation: Yup.object({
     leadSource: Yup.string().required("Lead Source is required"),
@@ -68,6 +71,19 @@ const validationSchema = Yup.object({
       then: () => Yup.string().required("This is required"),
     }),
   }),
+  schedule: Yup.object().shape({
+    type: Yup.string().nullable(),
+    date: Yup.date().when("type", {
+      is: (val) => val === "tour" || val === "trial",
+      then: (schema) => schema.required("Date & Time is required"),
+      otherwise: (schema) => schema.nullable(),
+    }),
+    trainer: Yup.string().when("type", {
+      is: (val) => val === "tour" || val === "trial",
+      then: (schema) => schema.required("Staff Name is required"),
+      otherwise: (schema) => schema.nullable(),
+    }),
+  }),
 });
 
 const CreateLeadForm = ({ setLeadModal, selectedLead }) => {
@@ -78,8 +94,33 @@ const CreateLeadForm = ({ setLeadModal, selectedLead }) => {
   const [pendingDob, setPendingDob] = useState(null);
   const [duplicateError, setDuplicateError] = useState("");
   const [showDuplicateModal, setShowDuplicateModal] = useState(false);
+  const [duplicateEmailError, setDuplicateEmailError] = useState("");
+  const [showDuplicateEmailModal, setShowDuplicateEmailModal] = useState(false);
   const [hasDismissedDuplicateModal, setHasDismissedDuplicateModal] =
     useState(false);
+  const [companyOptions, setCompanyOptions] = useState([]);
+
+  const fetchCompanies = async (search = "") => {
+    try {
+      const res = await apiAxios().get("/company/list", {
+        params: search ? { search } : {},
+      });
+
+      const data = res.data?.data || [];
+      const options = data.map((company) => ({
+        value: company.id,
+        label: company.name,
+      }));
+      setCompanyOptions(options);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to fetch companies");
+    }
+  };
+
+  useEffect(() => {
+    fetchCompanies();
+  }, []);
 
   const dispatch = useDispatch();
   const { lists, loading } = useSelector((state) => state.optionList);
@@ -119,9 +160,9 @@ const CreateLeadForm = ({ setLeadModal, selectedLead }) => {
     initialValues,
     validationSchema,
     onSubmit: (values) => {
-      if (duplicateError) {
-        // console.warn("Duplicate number detected:", duplicateError);
-        setShowDuplicateModal(true);
+      if (duplicateError || duplicateEmailError) {
+        setShowDuplicateModal(!!duplicateError);
+        setShowDuplicateEmailModal(!!duplicateEmailError);
         return;
       }
 
@@ -166,7 +207,25 @@ const CreateLeadForm = ({ setLeadModal, selectedLead }) => {
   const handleDobChange = (date) => {
     if (!date) return;
 
-    formik.setFieldValue("personalDetails.dob", date);
+    const today = new Date();
+    const age = today.getFullYear() - date.getFullYear();
+    const monthDiff = today.getMonth() - date.getMonth();
+    const dayDiff = today.getDate() - date.getDate();
+
+    const adjustedAge =
+      monthDiff < 0 || (monthDiff === 0 && dayDiff < 0) ? age - 1 : age;
+
+    if (adjustedAge < 15) {
+      toast.error("Age must be at least 15 years");
+      return;
+    }
+
+    if (adjustedAge >= 15 && adjustedAge < 18) {
+      setPendingDob(date);
+      setShowUnderageModal(true);
+    } else {
+      formik.setFieldValue("personalDetails.dob", date);
+    }
   };
 
   const fifteenYearsAgo = new Date();
@@ -240,15 +299,44 @@ const CreateLeadForm = ({ setLeadModal, selectedLead }) => {
         const userContact = user.contact?.replace(/\s/g, "");
         return userContact === inputValue; // 👈 exact match only
       });
+
       setMatchingUsers(matches);
+
       if (matches.length > 0) {
         setDuplicateError("This phone number already exists");
         if (!hasDismissedDuplicateModal) {
           setShowDuplicateModal(true);
         }
+      } else {
+        // ✅ No matches, clear error
+        setDuplicateError("");
+        setShowDuplicateModal(false);
       }
     } else {
+      // ✅ Clear state when input is empty or too short
       setMatchingUsers([]);
+      setDuplicateError("");
+      setShowDuplicateModal(false);
+    }
+  };
+
+  const handleEmailBlur = () => {
+    const inputValue = formik.values.personalDetails.email
+      ?.trim()
+      .toLowerCase();
+
+    if (inputValue) {
+      const matches = mockData.filter(
+        (user) => user.email?.trim().toLowerCase() === inputValue
+      );
+      if (matches.length > 0) {
+        setDuplicateEmailError("This email already exists");
+        if (!hasDismissedDuplicateModal) {
+          setShowDuplicateEmailModal(true);
+        }
+      } else {
+        setDuplicateEmailError("");
+      }
     }
   };
 
@@ -337,18 +425,9 @@ const CreateLeadForm = ({ setLeadModal, selectedLead }) => {
                         className="custom--input w-full custom--phone"
                       />
 
-                      {matchingUsers.length > 0 && (
-                        <div className="border mt-2 bg-white shadow rounded p-2 max-h-40 overflow-y-auto z-10 absolute w-full">
-                          {matchingUsers.map((user) => (
-                            <div
-                              key={user.id}
-                              className="p-2 flex items-center gap-2"
-                            >
-                              <div>
-                                <div className="font-medium">{user.name}</div>
-                              </div>
-                            </div>
-                          ))}
+                      {duplicateError && showDuplicateModal && (
+                        <div className="text-red-500 text-sm">
+                          Duplicate Entry
                         </div>
                       )}
 
@@ -383,7 +462,9 @@ const CreateLeadForm = ({ setLeadModal, selectedLead }) => {
                     </div>
 
                     <div>
-                      <label className="mb-2 block">Email</label>
+                      <label className="mb-2 block">
+                        Email<span className="text-red-500">*</span>
+                      </label>
                       <div className="relative">
                         <span className="absolute top-[50%] translate-y-[-50%] left-[15px]">
                           <FaEnvelope />
@@ -393,9 +474,20 @@ const CreateLeadForm = ({ setLeadModal, selectedLead }) => {
                           name="personalDetails.email"
                           value={formik.values.personalDetails.email}
                           onChange={formik.handleChange}
+                          onBlur={handleEmailBlur}
                           className="custom--input w-full input--icon"
                         />
                       </div>
+                      {duplicateEmailError && showDuplicateEmailModal && (
+                        <div className="text-red-500 text-sm">
+                          Duplicate email entry
+                        </div>
+                      )}
+                      {formik.errors.personalDetails?.email && (
+                        <div className="text-red-500 text-sm">
+                          {formik.errors.personalDetails.email}
+                        </div>
+                      )}
                     </div>
                     <div>
                       <label className="mb-2 block">DOB</label>
@@ -485,12 +577,7 @@ const CreateLeadForm = ({ setLeadModal, selectedLead }) => {
 
                         <Select
                           name="leadInformation.companyName"
-                          // value={companies.find(
-                          //   (opt) =>
-                          //     opt.value ===
-                          //     formik.values.leadInformation.companyName
-                          // )}
-                          value={lists["Company"]?.find(
+                          value={companyOptions.find(
                             (opt) =>
                               opt.value ===
                               formik.values.leadInformation.companyName
@@ -501,8 +588,7 @@ const CreateLeadForm = ({ setLeadModal, selectedLead }) => {
                               option.value
                             )
                           }
-                          // options={companies}
-                          options={lists["Company"] || []}
+                          options={companyOptions} // 👈 dynamic options
                           isLoading={loading}
                           styles={selectIcon}
                         />
@@ -547,7 +633,7 @@ const CreateLeadForm = ({ setLeadModal, selectedLead }) => {
                   </h3>
                   <div className="grid grid-cols-3 gap-4">
                     <div>
-                      <label className="mb-2 block">Service Name</label>
+                      <label className="mb-2 block">Interested In</label>
                       <div className="relative">
                         <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
                           <FaListCheck />
@@ -743,7 +829,7 @@ const CreateLeadForm = ({ setLeadModal, selectedLead }) => {
                             </div>
                           </div>
                           <div>
-                            <label className="mb-2 block">Date & Time</label>
+                            <label className="mb-2 block">Date & Time{formik.values.schedule.type === "trial" || formik.values.schedule.type === "tour" ? <span className="text-red-500">*</span> : '' } </label>
                             <div className="custom--date flex-1">
                               <span className="absolute z-[1] mt-[15px] ml-[15px]">
                                 <FaCalendarDays />
@@ -762,10 +848,16 @@ const CreateLeadForm = ({ setLeadModal, selectedLead }) => {
                                 disabled={!formik.values.schedule.type}
                               />
                             </div>
+                            {formik.touched.schedule?.date &&
+                              formik.errors.schedule?.date && (
+                                <p className="text-sm text-red-500 mt-1">
+                                  {formik.errors.schedule.date}
+                                </p>
+                              )}
                           </div>
 
                           <div className="mb-4">
-                            <label className="mb-2 block">Staff Name</label>
+                            <label className="mb-2 block">Staff Name{formik.values.schedule.type === "trial" || formik.values.schedule.type === "tour" ? <span className="text-red-500">*</span> : '' }</label>
                             <div className="relative">
                               <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
                                 <FaListCheck />
@@ -789,15 +881,27 @@ const CreateLeadForm = ({ setLeadModal, selectedLead }) => {
                                 // isDisabled={!getAvailableTrainers().length}
                               />
                             </div>
-                            {!formik.values.schedule.type ? null : (
-                              <>
-                                {!getAvailableTrainers().length && (
-                                  <p className="text-sm text-red-500 mt-1">
-                                    No trainers available at this date and time.
-                                  </p>
-                                )}
-                              </>
-                            )}
+                            {formik.values.schedule.type &&
+                              formik.values.schedule.date &&
+                              formik.values.schedule.time && (
+                                <>
+                                  {" "}
+                                  {!getAvailableTrainers().length && (
+                                    <p className="text-sm text-red-500 mt-1">
+                                      {" "}
+                                      No trainers available at this date and
+                                      time.{" "}
+                                    </p>
+                                  )}{" "}
+                                </>
+                              )}{" "}
+                            {formik.touched.schedule?.trainer &&
+                              formik.errors.schedule?.trainer && (
+                                <p className="text-sm text-red-500 mt-1">
+                                  {" "}
+                                  {formik.errors.schedule.trainer}{" "}
+                                </p>
+                              )}
                           </div>
                         </div>
                       </div>
@@ -830,29 +934,10 @@ const CreateLeadForm = ({ setLeadModal, selectedLead }) => {
       {showUnderageModal && (
         <ConfirmUnderAge
           title="Underage Confirmation"
-          message="Lead's age is less than 18. Do you still wish to continue?"
+          message="This lead is a minor (under 18 years old). Do you still wish to proceed?"
           onConfirm={confirmDob}
           onCancel={cancelDob}
         />
-      )}
-      {duplicateError && showDuplicateModal && (
-        <div className="fixed h-full inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]">
-          <div className="bg-white p-6 rounded shadow-lg max-w-sm w-full text-center">
-            <h2 className="text-lg font-semibold text-red-600 mb-4">
-              Duplicate Entry
-            </h2>
-            <p className="text-sm text-gray-700 mb-6">{duplicateError}</p>
-            <button
-              onClick={() => {
-                setShowDuplicateModal(false);
-                setHasDismissedDuplicateModal(true);
-              }}
-              className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
-            >
-              Close
-            </button>
-          </div>
-        </div>
       )}
     </>
   );

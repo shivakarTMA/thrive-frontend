@@ -61,12 +61,17 @@ const CreateCompany = ({
                 <div className="grid grid-cols-3 gap-4">
                   <div>
                     <label className="mb-2 block">Company Logo</label>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleLogoChange}
-                      className="custom--input w-full"
-                    />
+                     <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                          const file = e.target.files[0];
+                          if (file) {
+                            formik.setFieldValue("logo", file);
+                          }
+                        }}
+                        className="custom--input w-full"
+                      />
                     {/* {formik.values.logo && (
                       <div className="mt-2">
                         <img

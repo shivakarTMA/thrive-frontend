@@ -27,6 +27,7 @@ import { RiCalendarScheduleLine, RiResetLeftFill } from "react-icons/ri";
 import { TbArrowsExchange } from "react-icons/tb";
 import Tooltip from "../components/common/Tooltip";
 import CreateMemberForm from "./CreateMemberForm";
+import CreateInvoice from "./CreateInvoice";
 const useQuery = () => {
   return new URLSearchParams(useLocation().search);
 };
@@ -52,7 +53,9 @@ const AllLeads = () => {
   const [leadModal, setLeadModal] = useState(false);
   const [selectedLead, setSelectedLead] = useState(null);
   const [memberModal, setMemberModal] = useState(false);
+  const [invoiceModal, setInvoiceModal] = useState(false);
   const [selectedLeadMember, setSelectedLeadMember] = useState(null);
+  const [leadPaymentSend, setLeadPaymentSend] = useState(null);
 
   const [selectedService, setSelectedService] = useState(null);
   const [selectedLeadSource, setSelectedLeadSource] = useState(null);
@@ -215,7 +218,7 @@ const AllLeads = () => {
             email,
             leadType: row["Lead Type"] || "Phone",
             leadSource: row["Lead Source"] || "Unknown",
-            enquiryStage: row["Lead Status"] || "New",
+            leadStatus: row["Lead Status"] || "New",
             lastUpdated: new Date().toLocaleDateString("en-GB"),
             callTag: "Not Called",
             staff: row["Staff"] || "Unassigned",
@@ -452,13 +455,16 @@ const AllLeads = () => {
                     <Tooltip
                       id={`tooltip-send-${row.id}`}
                       content="Send Payment Link"
-                      html
                       place="top"
                     >
-                      <div className="p-1 cursor-pointer">
-                        <button className="p-0">
-                          <IoIosAddCircleOutline className="text-[25px] text-black" />
-                        </button>
+                      <div
+                        onClick={() => {
+                          setLeadPaymentSend(row);
+                          setInvoiceModal(true);
+                        }}
+                        className="p-1 cursor-pointer"
+                      >
+                        <IoIosAddCircleOutline className="text-[25px] text-black" />
                       </div>
                     </Tooltip>
                   </div>
@@ -528,23 +534,33 @@ const AllLeads = () => {
                 <table className="w-full text-sm border">
                   <thead className="bg-red-100">
                     <tr>
-                      <th className="p-2 border">Name</th>
+                     <th className="p-2 border">Name</th>
+                      <th className="p-2 border">Phone Number</th>
+                      <th className="p-2 border">Email</th>
                       <th className="p-2 border">Lead Type</th>
                       <th className="p-2 border">Lead Source</th>
+                      <th className="p-2 border">Lead Status</th>
+                      <th className="p-2 border">Staff</th>
                     </tr>
                   </thead>
                   <tbody>
                     {previewDuplicateLeads.map((lead, idx) => (
                       <tr key={idx}>
-                        <td className="p-2 border">{lead.name}</td>
-                        <td className="p-2 border">{lead.leadType}</td>
-                        <td className="p-2 border">{lead.leadSource}</td>
+                           <td className="p-2 border">{lead?.name}</td>
+                        <td className="p-2 border">{lead?.phone}</td>
+                        <td className="p-2 border">{lead?.email}</td>
+                        <td className="p-2 border">{lead?.leadType}</td>
+                        <td className="p-2 border">{lead?.leadSource}</td>
+                        <td className="p-2 border">{lead?.leadStatus}</td>
+                        <td className="p-2 border">{lead?.staff}</td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
             )}
+
+            {console.log(previewDuplicateLeads,'previewNewLeads')}
 
             {previewNewLeads.length > 0 && (
               <div className="mb-4">
@@ -555,16 +571,24 @@ const AllLeads = () => {
                   <thead className="bg-green-100">
                     <tr>
                       <th className="p-2 border">Name</th>
+                      <th className="p-2 border">Phone Number</th>
+                      <th className="p-2 border">Email</th>
                       <th className="p-2 border">Lead Type</th>
                       <th className="p-2 border">Lead Source</th>
+                      <th className="p-2 border">Lead Status</th>
+                      <th className="p-2 border">Staff</th>
                     </tr>
                   </thead>
                   <tbody>
                     {previewNewLeads.map((lead, idx) => (
                       <tr key={idx}>
-                        <td className="p-2 border">{lead.name}</td>
-                        <td className="p-2 border">{lead.leadType}</td>
-                        <td className="p-2 border">{lead.leadSource}</td>
+                        <td className="p-2 border">{lead?.name}</td>
+                        <td className="p-2 border">{lead?.phone}</td>
+                        <td className="p-2 border">{lead?.email}</td>
+                        <td className="p-2 border">{lead?.leadType}</td>
+                        <td className="p-2 border">{lead?.leadSource}</td>
+                        <td className="p-2 border">{lead?.leadStatus}</td>
+                        <td className="p-2 border">{lead?.staff}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -605,6 +629,12 @@ const AllLeads = () => {
         <CreateMemberForm
           selectedLeadMember={selectedLeadMember}
           setMemberModal={setMemberModal}
+        />
+      )}
+      {invoiceModal && (
+        <CreateInvoice
+          leadPaymentSend={leadPaymentSend}
+          setInvoiceModal={setInvoiceModal}
         />
       )}
     </>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import axios from "axios";
 import { FiPlus } from "react-icons/fi";
 import { FaAngleLeft, FaAngleRight } from "react-icons/fa";
 import { toast } from "react-toastify";
@@ -8,6 +9,7 @@ import Select from "react-select";
 import { customStyles } from "../../Helper/helper";
 import CreateStaff from "./CreateStaff";
 import Switch from "react-switch";
+import { apiAxios } from "../../config/config";
 
 const roleTypeOptions = [
   { value: "admin", label: "Admin" },
@@ -37,24 +39,44 @@ const listingStatusOptions = [
   { value: "inactive", label: "Inactive" },
 ];
 
-const ServicesAddons = () => {
+const StaffList = () => {
   const [showModal, setShowModal] = useState(false);
   const [submittedServices, setSubmittedServices] = useState([]);
   const [editingService, setEditingService] = useState(null);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedServiceType, setSelectedServiceType] = useState(null);
-
-  const centreNameOptions = Array.from(
-    new Set(submittedServices.map((p) => p.centreName))
-  ).map((name) => ({ value: name, label: name }));
-
   const [selectedCentre, setSelectedCentre] = useState(null);
   const [selectedStaffStatus, setSelectedStaffStatus] = useState(null);
   const [selectedAppStatus, setSelectedAppStatus] = useState(null);
 
   const [page, setPage] = useState(1);
   const rowsPerPage = 5;
+
+  // 🚀 Fetch staff list from API
+  useEffect(() => {
+    const fetchStaff = async () => {
+      try {
+        const response = await apiAxios().get("/staff/list");
+        if (response.data?.status) {
+          const staffList = response.data.data.map((staff) => ({
+            id: staff.id,
+            fullName: staff.name,
+            email: staff.email,
+            role: staff.designation || "N/A",
+            assignedCenters: ["Center 1"], // dummy data until API provides
+            staffStatus: "active", // default until API provides
+            showOnApp: "inactive", // default until API provides
+          }));
+          setSubmittedServices(staffList);
+        }
+      } catch (error) {
+        console.error("Error fetching staff:", error);
+        toast.error("Failed to fetch staff");
+      }
+    };
+    fetchStaff();
+  }, []);
 
   // Reset page when filters change
   useEffect(() => {
@@ -100,6 +122,7 @@ const ServicesAddons = () => {
     page * rowsPerPage
   );
 
+  // Add / Update staff locally (replace with POST/PUT API when available)
   const handleProductCreated = (productData) => {
     if (editingService) {
       setSubmittedServices((prev) =>
@@ -117,6 +140,7 @@ const ServicesAddons = () => {
     setEditingService(null);
   };
 
+  // Toggle staff status / showOnApp
   const handleStatusToggle = (productId, key) => {
     let newStatus = "";
 
@@ -137,8 +161,6 @@ const ServicesAddons = () => {
       } marked as ${newStatus}`
     );
   };
-
-  console.log(paginatedData, "paginatedData");
 
   return (
     <div className="page--content">
@@ -161,7 +183,6 @@ const ServicesAddons = () => {
 
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-2 mb-4">
-        {/* Product Name Search */}
         <input
           type="text"
           value={searchTerm}
@@ -170,7 +191,6 @@ const ServicesAddons = () => {
           className="custom--input w-full max-w-[210px]"
         />
 
-        {/* Product Type */}
         <Select
           options={roleTypeOptions}
           value={selectedServiceType}
@@ -181,7 +201,6 @@ const ServicesAddons = () => {
           className="min-w-[150px]"
         />
 
-        {/* Centre Name */}
         <Select
           options={centerOptions}
           value={selectedCentre}
@@ -192,7 +211,6 @@ const ServicesAddons = () => {
           className="min-w-[150px]"
         />
 
-        {/* App Status */}
         <Select
           options={appStatusOptions}
           value={selectedAppStatus}
@@ -202,7 +220,7 @@ const ServicesAddons = () => {
           styles={customStyles}
           className="min-w-[150px]"
         />
-        {/* Staff Status */}
+
         <Select
           options={listingStatusOptions}
           value={selectedStaffStatus}
@@ -256,20 +274,6 @@ const ServicesAddons = () => {
                     className="custom-switch"
                   />
                 </td>
-                {/* <td className="px-2 py-4">
-                  <Switch
-                    onChange={() => handleStatusToggle(row.id, "showOnApp")}
-                    checked={row.showOnApp === "active"}
-                    uncheckedIcon={false}
-                    checkedIcon={false}
-                    onColor="#000"
-                    offColor="#e5e7eb"
-                    handleDiameter={22}
-                    height={25}
-                    width={50}
-                    className="custom-switch"
-                  />
-                </td> */}
                 <td className="px-2 py-4">
                   <span
                     className={`px-3 py-1 rounded-full text-sm font-medium ${
@@ -355,4 +359,4 @@ const ServicesAddons = () => {
   );
 };
 
-export default ServicesAddons;
+export default StaffList;

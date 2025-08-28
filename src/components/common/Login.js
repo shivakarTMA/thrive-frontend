@@ -19,7 +19,6 @@ const dummyUsers = [
     name: "Admin User",
     email: "admin@gmail.com",
     number: "1234567890",
-    password: "admin123",
     userType: "ADMIN",
     otp: "1234",
     token: "admin-token",
@@ -29,7 +28,6 @@ const dummyUsers = [
     name: "FOH User",
     email: "foh@gmail.com",
     number: "1111111111",
-    password: "foh123",
     userType: "FOH",
     otp: "1111",
     token: "foh-token",
@@ -39,7 +37,6 @@ const dummyUsers = [
     name: "PT User",
     email: "pt@gmail.com",
     number: "2222222222",
-    password: "pt123",
     userType: "PT",
     otp: "2222",
     token: "pt-token",
@@ -49,7 +46,6 @@ const dummyUsers = [
     name: "GT User",
     email: "gt@gmail.com",
     number: "3333333333",
-    password: "gt123",
     userType: "GT",
     otp: "3333",
     token: "gt-token",
@@ -59,7 +55,6 @@ const dummyUsers = [
     name: "Nutritionist",
     email: "nutritionist@gmail.com",
     number: "4444444444",
-    password: "nutri123",
     userType: "NUTRITION",
     otp: "4444",
     token: "nutrition-token",
@@ -72,7 +67,7 @@ const Login = (props) => {
   const { accessToken } = useSelector((state) => state.auth);
   const { setLoading } = props;
 
-  const [data, setData] = useState({ number: "", password: "", otp: "" });
+  const [data, setData] = useState({ identifier: "", otp: "" });
   const [step, setStep] = useState(1);
   const [currentUser, setCurrentUser] = useState(null);
 
@@ -94,15 +89,18 @@ const Login = (props) => {
     e.preventDefault();
 
     if (step === 1) {
+      const input = data.identifier.trim().toLowerCase();
       const foundUser = dummyUsers.find(
-        (user) => user.number === data.number && user.password === data.password
+        (user) =>
+          user.number === input || user.email.toLowerCase() === input
       );
+
       if (foundUser) {
         setCurrentUser(foundUser);
         toast.success(`OTP sent to ${foundUser.name}`);
         setStep(2);
       } else {
-        toast.error("Invalid number or password");
+        toast.error("Invalid phone number or email");
       }
     } else if (step === 2) {
       if (data.otp === currentUser.otp) {
@@ -136,13 +134,13 @@ const Login = (props) => {
         <form onSubmit={handleSubmit} className="space-y-3">
           {step === 1 && (
             <>
-              {/* Phone Number */}
+              {/* Identifier Field */}
               <div>
                 <label
-                  htmlFor="number"
+                  htmlFor="identifier"
                   className="block text-sm font-medium text-gray-900"
                 >
-                  Phone Number
+                  Phone Number or Email
                 </label>
                 <div className="mt-2">
                   <div className="filter--input--search flex items-center bg-white rounded-[5px] h-[45px] border border-bordergray px-[15px]">
@@ -150,53 +148,17 @@ const Login = (props) => {
                       <FaPhoneAlt />
                     </span>
                     <input
-                      id="number"
-                      name="number"
-                      type="tel"
-                      value={data.number}
-                      onChange={handleChange}
-                      required
-                      className="block w-full rounded-md border-0 py-1.5 px-4 text-gray-900 focus:outline-none sm:text-sm number--appearance-none"
-                      placeholder="Enter your number"
-                      pattern="[0-9]{10}"
-                      minLength={10}
-                      maxLength={10}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Password */}
-              <div>
-                <label
-                  htmlFor="password"
-                  className="block text-sm font-medium text-gray-900"
-                >
-                  Password
-                </label>
-                <div className="mt-2">
-                  <div className="filter--input--search flex items-center bg-white rounded-[5px] h-[45px] border border-bordergray px-[15px]">
-                    <span className="border-r border-bordergray pr-[15px]">
-                      <RiLockPasswordFill />
-                    </span>
-                    <input
-                      id="password"
-                      name="password"
-                      type="password"
-                      value={data.password}
+                      id="identifier"
+                      name="identifier"
+                      type="text"
+                      value={data.identifier}
                       onChange={handleChange}
                       required
                       className="block w-full rounded-md border-0 py-1.5 px-4 text-gray-900 focus:outline-none sm:text-sm"
-                      placeholder="Enter your password"
+                      placeholder="Enter your phone number or email"
                     />
                   </div>
                 </div>
-              </div>
-
-              <div>
-                <Link to="/forgot-password" className="text-sm underline">
-                  Forgot Password
-                </Link>
               </div>
             </>
           )}

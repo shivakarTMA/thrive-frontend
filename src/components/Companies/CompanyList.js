@@ -124,72 +124,89 @@ useEffect(() => {
     }
   };
 
-  const formik = useFormik({
-    initialValues: {
-      logo: "",
-      name: "",
-      email: "",
-      phone: "",
-      address: "",
-      city: "",
-      state: indianStates[0],
-      country: "India",
-      zipcode: "",
-      gstno: "",
-      status: "",
-    },
-    validationSchema: Yup.object({
-      name: Yup.string().required("Company name is required"),
-      email: Yup.string().required("Company email is required"),
-      phone: Yup.string()
-        .required("Contact number is required")
-        .test("is-valid-phone", "Invalid contact number", (value) => {
-          if (!value) return false;
-          return isValidPhoneNumber(value);
-        }),
-      city: Yup.string().required("City is required"),
-      state: Yup.mixed()
-        .test(
-          "is-valid-state",
-          "State/Province is required",
-          (value) =>
-            value && (typeof value === "object" || typeof value === "string")
-        )
-        .required("State/Province is required"),
-      country: Yup.string().required("Country is required"),
-      zipcode: Yup.string().required("ZIP or Postal is required"),
-      gstno: Yup.string().required("Company GST No. is required"),
-      status: Yup.string().required("Status is required"),
-    }),
-    onSubmit: async (values, { resetForm }) => {
-      try {
-        const payload = {
-          ...values,
-          state: values.state?.value || values.state,
-        };
+const formik = useFormik({
+  initialValues: {
+    logo: "",
+    name: "",
+    email: "",
+    phone: "",
+    address: "",
+    city: "",
+    state: indianStates[0],
+    country: "India",
+    zipcode: "",
+    gstno: "",
+    status: "",
+  },
+  validationSchema: Yup.object({
+    name: Yup.string().required("Company name is required"),
+    email: Yup.string().required("Company email is required"),
+    phone: Yup.string()
+      .required("Contact number is required")
+      .test("is-valid-phone", "Invalid contact number", (value) => {
+        if (!value) return false;
+        return isValidPhoneNumber(value);
+      }),
+    city: Yup.string().required("City is required"),
+    state: Yup.mixed()
+      .test(
+        "is-valid-state",
+        "State/Province is required",
+        (value) =>
+          value && (typeof value === "object" || typeof value === "string")
+      )
+      .required("State/Province is required"),
+    country: Yup.string().required("Country is required"),
+    zipcode: Yup.string().required("ZIP or Postal is required"),
+    gstno: Yup.string().required("Company GST No. is required"),
+    status: Yup.string().required("Status is required"),
+  }),
+  onSubmit: async (values, { resetForm }) => {
+    try {
+      const formData = new FormData();
+      formData.append("name", values.name);
+      formData.append("email", values.email);
+      formData.append("phone", values.phone?.startsWith("+") ? values.phone.slice(1) : values.phone);
+      formData.append("address", values.address);
+      formData.append("city", values.city);
+      formData.append("state", values.state?.value || values.state);
+      formData.append("country", values.country);
+      formData.append("zipcode", values.zipcode);
+      formData.append("gstno", values.gstno);
+      formData.append("status", values.status);
 
-        if (editingCompany && editingCompany.id) {
-          // Update
-          await apiAxios().put(`/company/${editingCompany.id}`, payload);
-          toast.success("Updated Successfully");
-        } else {
-          // Create
-          await apiAxios().post("/company/create", payload);
-          toast.success("Created Successfully");
-        }
-
-        // 🔄 Re-fetch after save
-        fetchCompanies();
-      } catch (err) {
-        console.error(err);
-        toast.error("Failed to save company");
+      // ✅ Append logo file if uploaded
+      if (values.logo instanceof File) {
+        formData.append("logo", values.logo);
       }
 
-      resetForm();
-      setEditingCompany(null);
-      setShowModal(false);
-    },
-  });
+      if (editingCompany && editingCompany.id) {
+        // Update
+        await apiAxios().put(`/company/${editingCompany.id}`, formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+        toast.success("Updated Successfully");
+      } else {
+        // Create
+        await apiAxios().post("/company/create", formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+        toast.success("Created Successfully");
+      }
+
+      // 🔄 Re-fetch after save
+      fetchCompanies();
+    } catch (err) {
+      console.error("API Error:", err.response?.data || err.message);
+      toast.error("Failed to save company");
+    }
+
+    resetForm();
+    setEditingCompany(null);
+    setShowModal(false);
+  },
+});
+
 
   const handlePhoneChange = (value) => {
     formik.setFieldValue("phone", value);

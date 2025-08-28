@@ -316,6 +316,13 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                   <FaCircle className="menu--icon !text-[10px]" />
                   <span className="nav-text">On Boarding List</span>
                 </Link>
+                <Link
+                  to="/splash-screen"
+                  className="text-white flex items-center gap-[5px] mb-2 text-sm"
+                >
+                  <FaCircle className="menu--icon !text-[10px]" />
+                  <span className="nav-text">Splash Screen</span>
+                </Link>
               </div>
             )}
           </>

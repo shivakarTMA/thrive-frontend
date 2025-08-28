@@ -4,6 +4,7 @@ import { FaFilter } from "react-icons/fa";
 import { RiResetLeftFill } from "react-icons/ri";
 import { IoTriangle } from "react-icons/io5";
 import { customStyles } from "../Helper/helper";
+import { leadsSources } from "../DummyData/DummyData";
 
 export default function FiltersPanel({
   selectedLeadSource,
@@ -39,23 +40,13 @@ export default function FiltersPanel({
   }, [showFilters]);
 
   const leadStatusOptions = [
-    { label: "Open", value: "Open" },
-    { label: "In Progress", value: "In Progress" },
-    { label: "Closed", value: "Closed" },
-    { label: "Lost", value: "Lost" },
-  ];
-
-  const leadSourceOptions = [
-    { label: "Website", value: "Website" },
-    { label: "Referral", value: "Referral" },
-    { label: "Social Media", value: "Social Media" },
-    { label: "Email Campaign", value: "Email Campaign" },
-    { label: "LinkedIn", value: "LinkedIn" },
-    { label: "Google Ads", value: "Google Ads" },
-    { label: "Facebook Ads", value: "Facebook Ads" },
-    { label: "Direct Visit", value: "Direct Visit" },
-    { label: "Cold Call", value: "Cold Call" },
-    { label: "Trade Show", value: "Trade Show" },
+  { value: "new", label: "New" },
+  { value: "lead", label: "Lead" },
+  { value: "opportunity", label: "Opportunity" },
+  { value: "won", label: "Won" },
+  { value: "closed", label: "Closed" },
+  { value: "lost", label: "Lost" },
+  { value: "future prospect", label: "Future Prospect" },
   ];
 
   const leadStageOptions = [
@@ -64,22 +55,17 @@ export default function FiltersPanel({
     { label: "Post Trial", value: "Post Trial" },
     { label: "Won", value: "Won" },
     { label: "Lost", value: "Lost" },
+    { label: "Closed", value: "Closed" },
   ];
 
   const lastCallStatusOptions = [
-    { label: "New", value: "New" },
-    { label: "Trial Scheduled", value: "Trial Scheduled" },
-    { label: "Won", value: "Won" },
-    { label: "Post Trial Follow-up", value: "Post Trial Follow-up" },
-    { label: "Not Interested", value: "Not Interested" },
-    { label: "Follow-up", value: "Follow-up" },
-    { label: "Busy Tone", value: "Busy Tone" },
-    {
-      label: "Switched Off/ Out of Reach",
-      value: "Switched Off/ Out of Reach",
-    },
-    { label: "Future Prospect", value: "Future Prospect" },
-    { label: "No Answer", value: "No Answer" },
+{ value: "new", label: "New" },
+  { value: "lead", label: "Lead" },
+  { value: "opportunity", label: "Opportunity" },
+  { value: "won", label: "Won" },
+  { value: "closed", label: "Closed" },
+  { value: "lost", label: "Lost" },
+  { value: "future prospect", label: "Future Prospect" },
   ];
 
   const leadOwnerOptions = [
@@ -127,7 +113,7 @@ export default function FiltersPanel({
                 <Select
                   value={selectedLeadSource}
                   onChange={setSelectedLeadSource}
-                  options={leadSourceOptions}
+                  options={leadsSources}
                   // isClearable
                   placeholder="Select Lead Source"
                   styles={customStyles}
