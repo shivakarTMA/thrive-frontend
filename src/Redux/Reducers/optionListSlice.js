@@ -17,15 +17,10 @@ export const fetchOptionList = createAsyncThunk(
 
     let data = res.data?.data || [];
 
+    console.log(data,'Options list')
+
     data = data.filter(item => item.status === "ACTIVE");
 
-    // Sort: position ASC if exists, otherwise by name
-    // data = data.sort((a, b) => {
-    //   if (a.position != null && b.position != null) {
-    //     return a.position - b.position;
-    //   }
-    //   return a.name.localeCompare(b.name);
-    // });
      data = data.sort((a, b) => {
       const aHasPosition = a.position && a.position > 0;
       const bHasPosition = b.position && b.position > 0;
@@ -41,6 +36,7 @@ export const fetchOptionList = createAsyncThunk(
     return {
       type: optionListType,
       options: data.map(item => ({
+        ...item,
         label: item.name,
         value: item.name
       })),
@@ -52,7 +48,7 @@ export const fetchOptionList = createAsyncThunk(
 const optionListSlice = createSlice({
   name: "optionList",
   initialState: {
-    lists: {}, // { "List Type 1": [...], "Status List": [...] }
+    lists: {},
     loading: false,
     error: null,
   },

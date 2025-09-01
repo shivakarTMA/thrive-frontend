@@ -28,7 +28,7 @@ const validationSchema = Yup.object({
             return isValidPhoneNumber(value || "");
           }),
   email: Yup.string().email("Invalid email").required("Email is required"),
-  relationship: Yup.object().required("Relationship is required"),
+  // relationship: Yup.object().required("Relationship is required"),
 });
 
 const Relations = () => {
@@ -68,7 +68,8 @@ const Relations = () => {
     },
   });
 
-  const columns = ["Name", "Relationship", "Referred On", "Current Status"];
+  const columns = ["Name", "Referred On", "Current Status"];
+  // const columns = ["Name", "Relationship", "Referred On", "Current Status"];
 
   return (
     <div className="p-4 bg-white rounded shadow">
@@ -97,7 +98,7 @@ const Relations = () => {
               referredBy.map((item, idx) => (
                 <tr key={idx}>
                   <td className="border px-3 py-2">{item.name}</td>
-                  <td className="border px-3 py-2">{item.relationship}</td>
+                  {/* <td className="border px-3 py-2">{item.relationship}</td> */}
                   <td className="border px-3 py-2">{item.referredOn}</td>
                   <td className="border px-3 py-2">{item.status}</td>
                 </tr>
@@ -115,7 +116,7 @@ const Relations = () => {
 
       {isModalOpen && (
         <div className="fixed top-0 left-0 z-[999] w-full h-full bg-black bg-opacity-60 overflow-auto">
-          <div className="min-h-[70vh] w-[95%] max-w-2xl mx-auto mt-[100px] mb-[100px] rounded-[10px] flex flex-col">
+          <div className="min-h-[70vh] w-[95%] max-w-sm mx-auto mt-[100px] mb-[100px] rounded-[10px] flex flex-col">
             <div className="bg-white rounded-t-[10px] flex justify-between items-center py-4 px-4 border-b">
               <h2 className="text-xl font-semibold">Refer Someone</h2>
               <div className="cursor-pointer" onClick={() => setIsModalOpen(false)}>
@@ -124,7 +125,7 @@ const Relations = () => {
             </div>
 
             <form onSubmit={formik.handleSubmit} className="bg-white rounded-b-[10px] p-6 space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4">
                 <div>
                   <label className="mb-2 block">Name<span className="text-red-500">*</span></label>
                   <div className="relative">
@@ -181,7 +182,7 @@ const Relations = () => {
                   </div>
                 </div>
 
-                <div>
+                {/* <div>
                   <label className="mb-2 block">Relationship<span className="text-red-500">*</span></label>
                    <div className="relative">
                     <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
@@ -198,7 +199,7 @@ const Relations = () => {
                   {formik.touched.relationship && formik.errors.relationship && (
                     <p className="text-red-500 text-xs">{formik.errors.relationship}</p>
                   )}
-                </div>
+                </div> */}
               </div>
 
               <div className="flex justify-end">

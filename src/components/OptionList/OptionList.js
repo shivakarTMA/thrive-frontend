@@ -36,46 +36,51 @@ const OptionList = () => {
           page: currentPage,
           limit: rowsPerPage,
           ...(search ? { search } : {}),
+          ...(selectedType?.value ? { optionListType: selectedType.value } : {}),
+          ...(statusFilter?.value ? { status: statusFilter.value } : {}),
         },
       });
 
       let data = res.data?.data || res.data || [];
-      if (selectedType?.value) {
-        data = data.filter(
-          (item) => item.option_list_type === selectedType.value
-        );
-      }
-      if (statusFilter?.value) {
-        data = data.filter((item) => item.status === statusFilter.value);
-      }
 
       setOption(data);
       setPage(res.data?.currentPage || 1);
       setTotalPages(res.data?.totalPage || 1);
       setTotalCount(res.data?.totalCount || data.length);
-      const types = [
-        ...new Set(
-          (res.data?.data || [])
-            .map((item) => item.option_list_type)
-            .filter(Boolean)
-        ),
-      ];
-      setOptionTypes(types.map((type) => ({ label: type, value: type })));
+
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch companies");
+      toast.error("Failed to fetch options");
     }
   };
+
+  const fetchOptionTypes = async () => {
+  try {
+    const res = await apiAxios().get("/option-list/type");
+    const types = res.data?.data || [];
+
+    setOptionTypes(
+      types.map((item) => ({
+        label: item.option_list_type,
+        value: item.option_list_type,
+      }))
+    );
+  } catch (err) {
+    console.error(err);
+    toast.error("Failed to fetch option types");
+  }
+};
 
   // 🔄 Run on first load
   useEffect(() => {
     fetchOptions();
+    fetchOptionTypes();
   }, []);
 
   // 🔄 Run when search/type/status changes
   useEffect(() => {
     const delayDebounce = setTimeout(() => {
-      fetchOptions(searchTerm);
+      fetchOptions(searchTerm, 1);
       setPage(1);
     }, 300);
 
@@ -115,7 +120,7 @@ const OptionList = () => {
         fetchOptions();
       } catch (err) {
         console.error(err);
-        toast.error("Failed to save company");
+        toast.error("Failed to save option");
       }
 
       resetForm();

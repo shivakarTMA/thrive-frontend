@@ -4,7 +4,7 @@ import Logo from "../../assets/images/DLF-Thrive-New-Logo-1-White.png";
 import { RiLockPasswordFill } from "react-icons/ri";
 import { toast } from "react-toastify";
 
-const ResetPassword = (props) => {
+const SetPassword = (props) => {
   // const { setLoading } = props;
 
   const [password, setPassword] = useState("");
@@ -108,4 +108,4 @@ const ResetPassword = (props) => {
   );
 };
 
-export default IsLoadingHOC(ResetPassword);
+export default IsLoadingHOC(SetPassword);

@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { FaCamera } from "react-icons/fa";
+import React, { useEffect, useRef, useState } from "react";
+import { FaCamera, FaRegImage } from "react-icons/fa";
 import { FiEdit2, FiSave } from "react-icons/fi";
 import Select from "react-select";
 import { customStyles } from "../../Helper/helper";
@@ -7,6 +7,8 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { parse, isValid, format } from "date-fns";
 import { leadsSources, leadTypes } from "../../DummyData/DummyData";
+import Webcam from "react-webcam";
+import { IoCheckmark, IoClose } from "react-icons/io5";
 
 const parseDOB = (dateStr) => {
   const parsed = parse(dateStr, "dd-MM-yyyy", new Date());
@@ -17,10 +19,25 @@ const parseDateTime = (dateStr) => {
   return isValid(parsed) ? parsed : null;
 };
 
+const fields = [
+  { label: "Personal Information", value: true },
+  { label: "Consent to terms", value: true },
+  { label: "Emergency Contact", value: false },
+  { label: "KYC Submission", value: false },
+  { label: "Parq Information", value: false },
+];
+
+// Count completed fields
+const completedCount = fields.filter((f) => f.value).length;
+
+// Calculate percentage (each field = 20%)
+const completionPercentage = (completedCount / fields.length) * 100;
+
 const ProfileDetails = ({ member }) => {
   const [editMode, setEditMode] = useState(false);
   const [profile, setProfile] = useState(member);
-  console.log(profile, "profile");
+  const [showModal, setShowModal] = useState(false);
+  const webcamRef = useRef(null);
 
   const SelectOptions = [
     { value: "yes", label: "Yes" },
@@ -53,11 +70,20 @@ const ProfileDetails = ({ member }) => {
     }));
   };
 
-  const handleImageChange = (e) => {
+  // Capture from webcam
+  const capturePhoto = () => {
+    const imageSrc = webcamRef.current.getScreenshot();
+    setProfile((prev) => ({ ...prev, profileImage: imageSrc }));
+    setShowModal(false);
+  };
+
+  // Handle file upload
+  const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
       const imageUrl = URL.createObjectURL(file);
       setProfile((prev) => ({ ...prev, profileImage: imageUrl }));
+      setShowModal(false);
     }
   };
 
@@ -71,25 +97,85 @@ const ProfileDetails = ({ member }) => {
     <div className="bg-primarylight p-4 rounded">
       <div className="flex gap-6">
         {/* Left section - Image & Basic Info */}
-        <div className="w-full lg:max-w-[200px]">
+        <div className="w-full lg:max-w-[220px]">
           <div className="w-full h-[255px] bg-primarycolor mb-2 rounded relative">
             <img
               src={profile.profileImage}
               alt="Profile"
               className="w-full h-full object-cover object-center"
             />
+            {/* Camera button */}
             <div className="absolute bottom-[-10px] right-[-10px]">
               <label className="cursor-pointer w-[45px] h-[45px] flex items-center justify-center bg-white rounded-full shadow">
-                <FaCamera className="text-2xl" />
-                <input
+                <FaCamera
+                  className="text-2xl"
+                  onClick={() => setShowModal(true)}
+                />
+                {/* <input
                   type="file"
                   accept="image/*"
                   onChange={handleImageChange}
                   className="hidden"
-                />
+                /> */}
               </label>
             </div>
           </div>
+          <div className="progress-container">
+            <div
+              className="progress-bar"
+              style={{ width: `${completionPercentage}%` }}
+            >
+              <span className="progress-text text-sm">
+                {Math.round(completionPercentage)}%
+              </span>
+            </div>
+          </div>
+
+          {/* Webcam Modal */}
+          {showModal && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+              <div className="bg-white p-4 rounded-lg shadow-lg flex flex-col items-center">
+                {/* Webcam Preview */}
+                <Webcam
+                  ref={webcamRef}
+                  screenshotFormat="image/jpeg"
+                  className="rounded-lg"
+                  videoConstraints={{
+                    facingMode: "user", // use front camera
+                  }}
+                />
+
+                {/* Action buttons */}
+                <div className="flex gap-3 mt-4 items-center justify-between w-full">
+                  <div className="flex gap-3 items-center">
+                    <button
+                      onClick={capturePhoto}
+                      className="px-4 py-2 bg-black text-white rounded flex items-center gap-2"
+                    >
+                      <FaCamera /> Take Photo
+                    </button>
+
+                    <label className="px-4 py-2 bg-black text-white rounded flex items-center gap-2">
+                      <FaRegImage /> Upload Image
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                        className="hidden"
+                      />
+                    </label>
+                  </div>
+
+                  <button
+                    onClick={() => setShowModal(false)}
+                    className="px-4 py-2 bg-black text-white rounded flex items-center gap-2"
+                  >
+                    <IoClose /> Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           <div className="text-xs text-left mt-3">
             <p className="mb-2 text-sm">
@@ -105,13 +191,10 @@ const ProfileDetails = ({ member }) => {
 
           <div className="text-xs text-left mt-3 border rounded p-3 bg-primarycolor text-white">
             <p className="mb-2 text-sm">
-              <strong>Referred By</strong>
+              <strong>Referred By: Puneet Kumar</strong>
             </p>
             <p className="mb-2 text-sm">
               <strong>Referrer ID:</strong> 123456789
-            </p>
-            <p className="mb-2 text-sm">
-              <strong>Referrer Name:</strong> Shivakar
             </p>
           </div>
         </div>
@@ -159,24 +242,24 @@ const ProfileDetails = ({ member }) => {
                 </label>
                 {editMode ? (
                   <div className="custom--date dob-format">
-                  <DatePicker
-                    selected={parseDOB(profile.dob)}
-                    onChange={(date) =>
-                      handleChange({
-                        target: {
-                          name: "dob",
-                          value: date ? format(date, "dd-MM-yyyy") : "",
-                        },
-                      })
-                    }
-                    showMonthDropdown
-                    showYearDropdown
-                    maxDate={new Date()}
-                    dateFormat="dd MMM yyyy"
-                    dropdownMode="select"
-                    placeholderText="Select date"
-                    className="custom--input w-full"
-                  />
+                    <DatePicker
+                      selected={parseDOB(profile.dob)}
+                      onChange={(date) =>
+                        handleChange({
+                          target: {
+                            name: "dob",
+                            value: date ? format(date, "dd-MM-yyyy") : "",
+                          },
+                        })
+                      }
+                      showMonthDropdown
+                      showYearDropdown
+                      maxDate={new Date()}
+                      dateFormat="dd MMM yyyy"
+                      dropdownMode="select"
+                      placeholderText="Select date"
+                      className="custom--input w-full"
+                    />
                   </div>
                 ) : (
                   <span>{profile.dob || "—"}</span>
@@ -236,7 +319,7 @@ const ProfileDetails = ({ member }) => {
 
               <div className="flex flex-col text-sm">
                 <label className="font-semibold mb-2 block capitalize">
-                  locality:
+                  Location:
                 </label>
                 {editMode ? (
                   <input
@@ -309,85 +392,31 @@ const ProfileDetails = ({ member }) => {
                   <span>{profile?.leadInformation?.leadSource || "—"}</span>
                 )}
               </p>
+            </div>
+          </div>
 
-              <p className="flex flex-col">
-                <label className="font-semibold mb-2 block">
-                  Multi Club Access:
-                </label>
-                {editMode ? (
-                  <Select
-                    name="multiClubAccess"
-                    value={SelectOptions.find(
-                      (opt) =>
-                        opt.value === profile?.leadInformation?.multiClubAccess
-                    )}
-                    onChange={(option) =>
-                      handleNestedChange("multiClubAccess", option.value)
-                    }
-                    options={SelectOptions}
-                    styles={customStyles}
-                  />
-                ) : (
-                  <span>
-                    {profile?.leadInformation?.multiClubAccess || "—"}
-                  </span>
-                )}
-              </p>
-
-              <p className="flex flex-col">
-                <label className="font-semibold mb-2 block">
-                  KYC Submitted:
-                </label>
-                {editMode ? (
-                  <Select
-                    name="kycSubmitted"
-                    value={SelectOptions.find(
-                      (opt) =>
-                        opt.value === profile?.leadInformation?.kycSubmitted
-                    )}
-                    onChange={(option) =>
-                      handleNestedChange("kycSubmitted", option.value)
-                    }
-                    options={SelectOptions}
-                    styles={customStyles}
-                  />
-                ) : (
-                  <span>{profile?.leadInformation?.kycSubmitted || "—"}</span>
-                )}
-              </p>
-
-              {profile?.leadInformation?.kycSubmitted === "yes" && (
-                <p className="flex flex-col col-span-2">
-                  <label className="font-semibold mb-2 block">
-                    KYC Documents:
+          <hr />
+          {/* Professional Info */}
+          <div>
+            <h3 className="font-semibold mb-3">Professional Information</h3>
+            <div className="grid--profile--details text-sm gap-4">
+              {["company", "designation", "officialEmail"].map((field) => (
+                <p className="flex flex-col" key={field}>
+                  <label className="font-semibold mb-2 block capitalize">
+                    {field}:
                   </label>
                   {editMode ? (
-                    <Select
-                      isMulti
-                      name="kycDocuments"
-                      value={(profile?.leadInformation?.kycDocuments || []).map(
-                        (val) =>
-                          kycDocumentsOptions.find((opt) => opt.value === val)
-                      )}
-                      onChange={(selectedOptions) =>
-                        handleNestedChange(
-                          "kycDocuments",
-                          selectedOptions.map((opt) => opt.value)
-                        )
-                      }
-                      options={kycDocumentsOptions}
-                      styles={customStyles}
-                      isClearable={false}
+                    <input
+                      name={field}
+                      value={profile[field] || ""}
+                      onChange={handleChange}
+                      className="custom--input w-full"
                     />
                   ) : (
-                    <span>
-                      {(profile?.leadInformation?.kycDocuments || []).join(
-                        ", "
-                      ) || "—"}
-                    </span>
+                    <span>{profile[field] || "—"}</span>
                   )}
                 </p>
-              )}
+              ))}
             </div>
           </div>
 
@@ -397,7 +426,7 @@ const ProfileDetails = ({ member }) => {
           <div>
             <h3 className="font-semibold mb-3">Emergency Contact</h3>
             <div className="grid--profile--details text-sm gap-4">
-              {["emergencyContact", "emergencyNumber", "emergencyRelation"].map(
+              {["emergencyName", "emergencyContact", "emergencyRelation"].map(
                 (field) => (
                   <p className="flex flex-col" key={field}>
                     <label className="font-semibold mb-2 block capitalize">
@@ -418,77 +447,52 @@ const ProfileDetails = ({ member }) => {
               )}
             </div>
           </div>
-
           <hr />
 
           {/* Professional Info */}
           <div>
-            <h3 className="font-semibold mb-3">Professional Information</h3>
-            <div className="grid--profile--details text-sm gap-4">
-              {["designation", "company", "officialEmail"].map((field) => (
-                <p className="flex flex-col" key={field}>
-                  <label className="font-semibold mb-2 block capitalize">
-                    {field}:
-                  </label>
-                  {editMode ? (
-                    <input
-                      name={field}
-                      value={profile[field] || ""}
-                      onChange={handleChange}
-                      className="custom--input w-full"
-                    />
-                  ) : (
-                    <span>{profile[field] || "—"}</span>
-                  )}
-                </p>
-              ))}
-            </div>
-          </div>
-          <hr />
-
-          {/* Professional Info */}
-          <div>
-            <h3 className="font-semibold mb-3">Additional Information</h3>
+            <h3 className="font-semibold mb-3">Profile Completion</h3>
             <div className="grid--profile--details text-sm gap-4">
               <p className="flex flex-col">
                 <label className="font-semibold mb-2 block">
-                  Consent Provided:
+                  Personal Information:
                 </label>
-                {editMode ? (
-                  <Select
-                    name="consentProvided"
-                    value={SelectOptions.find(
-                      (opt) =>
-                        opt.value === profile?.leadInformation?.consentProvided
-                    )}
-                    onChange={(option) =>
-                      handleNestedChange("consentProvided", option.value)
-                    }
-                    options={SelectOptions}
-                    styles={customStyles}
-                  />
-                ) : (
-                  <span>
-                    {profile?.leadInformation?.consentProvided || "—"}
-                  </span>
-                )}
+                <span className="bg-green-500 text-white w-auto flex items-center justify-center max-w-fit px-3 py-1 rounded">
+                  <IoCheckmark /> Yes
+                </span>
               </p>
 
               <p className="flex flex-col">
                 <label className="font-semibold mb-2 block">
-                  Consent Timestamp:
+                  Consent to terms:
                 </label>
-               <span>
-                    14-02-1988
-                  </span>
+                <span className="bg-red-500 text-white w-auto flex items-center justify-center max-w-fit px-3 py-1 rounded">
+                  <IoClose /> No
+                </span>
               </p>
               <p className="flex flex-col">
                 <label className="font-semibold mb-2 block">
-                  Trainer Information:
+                  Emergency Contact:
                 </label>
-               <span>
-                    Shivakar(GT)
-                  </span>
+                <span className="bg-red-500 text-white w-auto flex items-center justify-center max-w-fit px-3 py-1 rounded">
+                  <IoClose /> No
+                </span>
+              </p>
+              <p className="flex flex-col">
+                <label className="font-semibold mb-2 block">
+                  KYC Submission:
+                </label>
+                <span className="bg-red-500 text-white w-auto flex items-center justify-center max-w-fit px-3 py-1 rounded">
+                  <IoClose /> No
+                </span>
+              </p>
+              <p className="flex flex-col">
+                <label className="font-semibold mb-2 block">
+                  Parq Information:
+                </label>
+                <span className="bg-red-500 text-white w-auto flex items-center justify-center max-w-fit px-3 py-1 rounded">
+                  <IoClose /> No
+                </span>
               </p>
             </div>
           </div>

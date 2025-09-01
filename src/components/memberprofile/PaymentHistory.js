@@ -27,92 +27,102 @@ const PaymentHistory = () => {
   ];
 
   const paymentHistory = [
-    {
-      orderId: "ORD001",
-      date: "15/5/25",
-      name: "Alice",
-      service: "Membership - 3 months",
-      category: "Membership",
-      centerName: "Downtown Center",
-      amount: 4000,
-      tax: 720,
-      net: 4720,
-      paid: 4720,
-      rewardPoints: 40,
-      paymentMode: "Credit Card",
-      duration: "3 months",
-      invoiceNumber: "INV001",
-      orderStatus: "Paid",
-    },
-    {
-      orderId: "ORD002",
-      date: "10/4/25",
-      name: "Bob",
-      service: "Spa - Full Body Massage",
-      category: "Spa",
-      centerName: "Wellness Hub",
-      amount: 2000,
-      tax: 360,
-      net: 2360,
-      paid: 2360,
-      rewardPoints: 20,
-      paymentMode: "UPI",
-      duration: "1 session",
-      invoiceNumber: "INV002",
-      orderStatus: "Paid",
-    },
-    {
-      orderId: "ORD003",
-      date: "5/4/25",
-      name: "Charlie",
-      service: "Cafe Items - Coffee",
-      category: "Cafe Items",
-      centerName: "Café Corner",
-      amount: 150,
-      tax: 27,
-      net: 177,
-      paid: 177,
-      rewardPoints: 2,
-      paymentMode: "Cash",
-      duration: "N/A",
-      invoiceNumber: "INV003",
-      orderStatus: "Paid",
-    },
-    {
-      orderId: "ORD004",
-      date: "1/5/25",
-      name: "Diana",
-      service: "Physiotherapy - Back Pain",
-      category: "Physiotherapy",
-      centerName: "HealthFirst",
-      amount: 3000,
-      tax: 540,
-      net: 3540,
-      paid: 3540,
-      rewardPoints: 30,
-      paymentMode: "Credit Card",
-      duration: "2 sessions",
-      invoiceNumber: "INV004",
-      orderStatus: "Paid",
-    },
-    {
-      orderId: "ORD005",
-      date: "12/5/25",
-      name: "Eve",
-      service: "Merchandise - Yoga Mat",
-      category: "Merchandise",
-      centerName: "FitStore",
-      amount: 500,
-      tax: 90,
-      net: 590,
-      paid: 590,
-      rewardPoints: 5,
-      paymentMode: "Debit Card",
-      duration: "N/A",
-      invoiceNumber: "INV005",
-      orderStatus: "Paid",
-    },
-  ];
+  {
+    orderId: "ORD001",
+    date: "15/5/25",
+    name: "Alice",
+    service: "Membership - 3 months",
+    category: "Membership",
+    centerName: "Downtown Center",
+    amount: 4000,
+    tax: 720,
+    net: 4720,
+    paid: 4720,
+    rewardPoints: 40,
+    paymentMode: "Credit Card",
+    duration: "3 months",
+    invoiceNumber: "INV001",
+    orderStatus: "Paid",
+    tds: 472,
+    pending: 0
+  },
+  {
+    orderId: "ORD002",
+    date: "10/4/25",
+    name: "Bob",
+    service: "Spa - Full Body Massage",
+    category: "Spa",
+    centerName: "Wellness Hub",
+    amount: 2000,
+    tax: 360,
+    net: 2360,
+    paid: 2360,
+    rewardPoints: 20,
+    paymentMode: "UPI",
+    duration: "1 session",
+    invoiceNumber: "INV002",
+    orderStatus: "Paid",
+    tds: 236,
+    pending: 0
+  },
+  {
+    orderId: "ORD003",
+    date: "5/4/25",
+    name: "Charlie",
+    service: "Cafe Items - Coffee",
+    category: "Cafe Items",
+    centerName: "Café Corner",
+    amount: 150,
+    tax: 27,
+    net: 177,
+    paid: 177,
+    rewardPoints: 2,
+    paymentMode: "Cash",
+    duration: "N/A",
+    invoiceNumber: "INV003",
+    orderStatus: "Paid",
+    tds: 18,
+    pending: 0
+  },
+  {
+    orderId: "ORD004",
+    date: "1/5/25",
+    name: "Diana",
+    service: "Physiotherapy - Back Pain",
+    category: "Physiotherapy",
+    centerName: "HealthFirst",
+    amount: 3000,
+    tax: 540,
+    net: 3540,
+    paid: 3540,
+    rewardPoints: 30,
+    paymentMode: "Credit Card",
+    duration: "2 sessions",
+    invoiceNumber: "INV004",
+    orderStatus: "Paid",
+    tds: 354,
+    pending: 0
+  },
+  {
+    orderId: "ORD005",
+    date: "12/5/25",
+    name: "Eve",
+    service: "Merchandise - Yoga Mat",
+    category: "Merchandise",
+    centerName: "FitStore",
+    amount: 500,
+    tax: 90,
+    net: 590,
+    paid: 590,
+    rewardPoints: 5,
+    paymentMode: "Debit Card",
+    duration: "N/A",
+    invoiceNumber: "INV005",
+    orderStatus: "Paid",
+    tds: 59,
+    pending: 0
+  }
+];
 
   const filteredOrders = useMemo(() => {
     return paymentHistory.filter((order) => {
@@ -233,8 +243,10 @@ const PaymentHistory = () => {
               <th className="border px-3 py-2">Tax</th>
               <th className="border px-3 py-2">Net</th>
               <th className="border px-3 py-2">Paid</th>
-              <th className="border px-3 py-2">Mode of Payment</th>
-              <th className="border px-3 py-2">Paid Invoice & Receipt</th>
+              <th className="border px-3 py-2">TDS Amount</th>
+              <th className="border px-3 py-2">Pending</th>
+              <th className="border px-3 py-2">Mode</th>
+              {/* <th className="border px-3 py-2">Paid Invoice & Receipt</th> */}
               <th className="border px-3 py-2">Action Items</th>
             </tr>
           </thead>
@@ -248,8 +260,10 @@ const PaymentHistory = () => {
                   <td className="border px-3 py-2">₹{order.tax}</td>
                   <td className="border px-3 py-2">₹{order.net}</td>
                   <td className="border px-3 py-2">₹{order.paid}</td>
+                  <td className="border px-3 py-2">₹{order.tds}</td>
+                  <td className="border px-3 py-2">₹{order.pending}</td>
                   <td className="border px-3 py-2">{order.paymentMode}</td>
-                  <td className="border px-3 py-2">
+                  {/* <td className="border px-3 py-2">
                     <div className="flex items-center gap-2">
                       <Tooltip content="Download Receipt">
                         <button
@@ -268,7 +282,7 @@ const PaymentHistory = () => {
                         </button>
                       </Tooltip>
                     </div>
-                  </td>
+                  </td> */}
                   <td className="border px-3 py-2">
                     <div className="flex items-center gap-2">
                       <Tooltip content="View Invoice">

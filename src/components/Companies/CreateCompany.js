@@ -110,7 +110,7 @@ const CreateCompany = ({
                   {/* Email */}
                   <div>
                     <label className="mb-2 block">
-                      Company Email<span className="text-red-500">*</span>
+                      Company Email
                     </label>
                     <div className="relative">
                       <span className="absolute top-[50%] translate-y-[-50%] left-[15px]">
@@ -125,17 +125,17 @@ const CreateCompany = ({
                         className="custom--input w-full input--icon"
                       />
                     </div>
-                    {formik.touched.email && formik.errors.email && (
+                    {/* {formik.touched.email && formik.errors.email && (
                       <p className="text-red-500 text-sm mt-1">
                         {formik.errors.email}
                       </p>
-                    )}
+                    )} */}
                   </div>
 
                   {/* Phone */}
                   <div>
                     <label className="mb-2 block">
-                      Contact Number<span className="text-red-500">*</span>
+                      Contact Number
                     </label>
                     <PhoneInput
                       name="phone"
@@ -147,17 +147,17 @@ const CreateCompany = ({
                       countryCallingCodeEditable={false}
                       className="custom--input w-full custom--phone"
                     />
-                    {formik.touched.phone && formik.errors.phone && (
+                    {/* {formik.touched.phone && formik.errors.phone && (
                       <p className="text-red-500 text-sm mt-1">
                         {formik.errors.phone}
                       </p>
-                    )}
+                    )} */}
                   </div>
 
                   {/* City */}
                   <div>
                     <label className="mb-2 block">
-                      City<span className="text-red-500">*</span>
+                      City
                     </label>
                     <div className="relative">
                       <span className="absolute top-[50%] translate-y-[-50%] left-[15px]">
@@ -172,17 +172,17 @@ const CreateCompany = ({
                         className="custom--input w-full input--icon"
                       />
                     </div>
-                    {formik.touched.city && formik.errors.city && (
+                    {/* {formik.touched.city && formik.errors.city && (
                       <p className="text-red-500 text-sm mt-1">
                         {formik.errors.city}
                       </p>
-                    )}
+                    )} */}
                   </div>
 
                   {/* State */}
                   <div>
                     <label className="mb-2 block">
-                      State/Province<span className="text-red-500">*</span>
+                      State/Province
                     </label>
                     <div className="relative">
                       <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[10]">
@@ -199,17 +199,17 @@ const CreateCompany = ({
                         styles={selectIcon}
                       />
                     </div>
-                    {formik.touched.state && formik.errors.state && (
+                    {/* {formik.touched.state && formik.errors.state && (
                       <p className="text-red-500 text-sm mt-1">
                         {formik.errors.state}
                       </p>
-                    )}
+                    )} */}
                   </div>
 
                   {/* Country */}
                   <div>
                     <label className="mb-2 block">
-                      Country<span className="text-red-500">*</span>
+                      Country
                     </label>
                     <div className="relative">
                       <span className="absolute top-[50%] translate-y-[-50%] left-[15px]">
@@ -224,17 +224,17 @@ const CreateCompany = ({
                         className="custom--input w-full input--icon"
                       />
                     </div>
-                    {formik.touched.country && formik.errors.country && (
+                    {/* {formik.touched.country && formik.errors.country && (
                       <p className="text-red-500 text-sm mt-1">
                         {formik.errors.country}
                       </p>
-                    )}
+                    )} */}
                   </div>
 
                   {/* Zip */}
                   <div>
                     <label className="mb-2 block">
-                      Zip or Postal Code<span className="text-red-500">*</span>
+                      Zip or Postal Code
                     </label>
                     <div className="relative">
                       <span className="absolute top-[50%] translate-y-[-50%] left-[15px]">
@@ -249,17 +249,17 @@ const CreateCompany = ({
                         className="custom--input w-full input--icon"
                       />
                     </div>
-                    {formik.touched.zipcode && formik.errors.zipcode && (
+                    {/* {formik.touched.zipcode && formik.errors.zipcode && (
                       <p className="text-red-500 text-sm mt-1">
                         {formik.errors.zipcode}
                       </p>
-                    )}
+                    )} */}
                   </div>
 
                   {/* GST */}
                   <div>
                     <label className="mb-2 block">
-                      Company GST No<span className="text-red-500">*</span>
+                      Company GST No.
                     </label>
                     <div className="relative">
                       <span className="absolute top-[50%] translate-y-[-50%] left-[15px]">
@@ -274,17 +274,17 @@ const CreateCompany = ({
                         className="custom--input w-full input--icon"
                       />
                     </div>
-                    {formik.touched.gstno && formik.errors.gstno && (
+                    {/* {formik.touched.gstno && formik.errors.gstno && (
                       <p className="text-red-500 text-sm mt-1">
                         {formik.errors.gstno}
                       </p>
-                    )}
+                    )} */}
                   </div>
 
                   {/* Status */}
                   <div>
                     <label className="mb-2 block">
-                      Company Status<span className="text-red-500">*</span>
+                      Company Status
                     </label>
                     <div className="relative">
                       <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[10]">
@@ -308,11 +308,11 @@ const CreateCompany = ({
                         className="!capitalize"
                       />
                     </div>
-                    {formik.touched.status && formik.errors.status && (
+                    {/* {formik.touched.status && formik.errors.status && (
                       <p className="text-red-500 text-sm mt-1">
                         {formik.errors.status}
                       </p>
-                    )}
+                    )} */}
                   </div>
 
                   {/* Address */}

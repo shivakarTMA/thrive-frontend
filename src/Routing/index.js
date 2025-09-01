@@ -26,7 +26,7 @@ import ReportsIncentives from "../Pages/PT/ReportsIncentives";
 import TasksFollowUps from "../Pages/PT/TasksFollowUps";
 import EditLeadDetails from "../Pages/EditLeadDetails";
 import ForgotPassword from "../components/common/ForgotPassword";
-import ResetPassword from "../components/common/ResetPassword";
+import SetPassword from "../components/common/SetPassword";
 import LeadCallLogs from "../Pages/LeadCallLogs";
 import ServicesLIst from "../Pages/ServicesLIst";
 import BookingService from "../Pages/BookingService";
@@ -62,7 +62,7 @@ export default function Routing() {
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/forgot-password" element={<ForgotPassword />} /> 
-          <Route path="/reset-password" element={<ResetPassword />} /> 
+          <Route path="/set-password" element={<SetPassword />} /> 
           <Route path="*" element={<Navigate to="/login" />} />
         </Routes>
       </Router>
@@ -75,7 +75,7 @@ export default function Routing() {
         {/* Common Login Route */}
         <Route path="/login" element={<Login />} />
         <Route path="/forgot-password" element={<ForgotPassword />} /> 
-        <Route path="/reset-password" element={<ResetPassword />} /> 
+        <Route path="/set-password" element={<SetPassword />} /> 
 
         {/* FOH Routes */}
         {userType === "FOH" && (

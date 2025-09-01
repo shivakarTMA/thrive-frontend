@@ -9,6 +9,7 @@ import Relations from "../components/memberprofile/Relations";
 import AttendanceData from "../components/memberprofile/AttendanceData";
 import WorkoutApp from "../components/memberprofile/WorkoutApp";
 import PaymentHistory from "../components/memberprofile/PaymentHistory";
+import KycForm from "../components/memberprofile/KycForm";
 
 const MemberProfile = () => {
   const { id } = useParams();
@@ -23,18 +24,21 @@ const MemberProfile = () => {
     "Referrals",
     "Attendance",
     "Training",
+    "Kyc Submission",
   ];
   const [activeTab, setActiveTab] = useState("Profile Details");
   const member = mockData.find((m) => m.id === parseInt(id));
 
   if (!member) return <p>Member not found</p>;
 
+  console.log(member,'member')
+
   return (
     <div className="page--content">
       <div className=" flex items-end justify-between gap-2 mb-0">
         <div className="title--breadcrumbs">
-          <p className="text-sm">{`Home > Members > Member Profile`}</p>
-          <h1 className="text-3xl font-semibold">Member Profile</h1>
+          <p className="text-sm">{`Home > Members > ${member?.name} Profile`}</p>
+          <h1 className="text-3xl font-semibold">{member?.name} Profile</h1>
         </div>
       </div>
       <div className="flexs">
@@ -77,6 +81,7 @@ const MemberProfile = () => {
           {activeTab === "Profile Details" && (
             <ProfileDetails member={member} />
           )}
+          {activeTab === "Kyc Submission" && <KycForm member={member} />}
           {activeTab === "Service Card" && <ServiceCard member={member} />}
           {activeTab === "Order History" && <OrderHistory member={member} />}
           {activeTab === "Payment History" && (

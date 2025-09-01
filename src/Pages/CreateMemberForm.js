@@ -85,11 +85,6 @@ const stepValidationSchemas = [
     leadInformation: Yup.object({
       leadSource: Yup.string().required("Lead Source is required"),
       leadType: Yup.string().required("Lead Type is required"),
-    }),
-
-    leadInformation: Yup.object({
-      leadSource: Yup.string().required("Lead Source is required"),
-      leadType: Yup.string().required("Lead Type is required"),
       leadSourceType: Yup.string().when("leadSource", {
         is: (val) => ["social media", "events / campaigns"].includes(val),
         then: () => Yup.string().required("This is required"),
@@ -100,20 +95,20 @@ const stepValidationSchemas = [
       }),
     }),
   }),
-
   Yup.object({
-    // professionalInformation: Yup.object({
-    //   companyName: Yup.string().required("Company Name is required"),
-    // }),
-
-    emergencyContact: Yup.object({
-      contact: Yup.string()
-        .nullable()
-        .test("is-valid-phone", "Invalid phone number", function (value) {
-          if (!value) return true; // allow empty but validate if present
-          return isValidPhoneNumber(value);
-        }),
-    }),
+    emergencyContacts: Yup.array()
+      .of(
+        Yup.object({
+          name: Yup.string().required("Name is required"),
+          contact: Yup.string()
+            .required("Contact number is required")
+            .test("is-valid-phone", "Invalid phone number", function (value) {
+              return isValidPhoneNumber(value || "");
+            }),
+          relationship: Yup.string().required("Relationship is required"),
+        })
+      )
+      .min(1, "At least one emergency contact is required"),
   }),
   Yup.object({
     invoiceDetails: Yup.object({
@@ -137,7 +132,7 @@ const kycDocumentsOptions = [
 ];
 
 const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
-  console.log(selectedLeadMember,'selectedLeadMember')
+  console.log(selectedLeadMember, "selectedLeadMember");
   const [activeTab, setActiveTab] = useState("personal");
   const [profileImage, setProfileImage] = useState("");
   const [showProductModal, setShowProductModal] = useState(false);
@@ -171,6 +166,7 @@ const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
       leadSource: "",
       leadSourceType: "",
       otherSource: "",
+      serviceName: "",
       leadType: "",
       multiClubAccess: "",
       kycSubmitted: "",
@@ -217,8 +213,8 @@ const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
     onSubmit: (values) => {
       if (step === stepValidationSchemas.length - 1) {
         console.log("Submitting full form", values);
-         toast.success("Member created successfully!");
-         setMemberModal(false)
+        toast.success("Member created successfully!");
+        setMemberModal(false);
       } else {
         setStep(step + 1);
       }
@@ -259,11 +255,8 @@ const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
   const handleNextStep = async () => {
     const errors = await formik.validateForm();
 
-    // ✅ Check for form validation errors
     if (Object.keys(errors).length === 0) {
-      // ✅ Block if duplicateError exists
       if (duplicateError) {
-        // console.warn("Duplicate number detected:", duplicateError);
         setShowDuplicateModal(true);
         return;
       }
@@ -274,18 +267,29 @@ const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
         setStep(step + 1);
       }
     } else {
-      console.log("Validation Errors:", errors);
+      console.log("Validation Errors (object):", errors); // ✅ full nested error object
 
-      // Mark current step fields as touched
-      const touchedFields = {};
-      Object.keys(errors).forEach((section) => {
-        touchedFields[section] = {};
-        Object.keys(errors[section] || {}).forEach((field) => {
-          touchedFields[section][field] = true;
-        });
-      });
+      // Handle nested touched including arrays
+      const markTouched = (obj) => {
+        if (Array.isArray(obj)) {
+          return obj.map((item) => markTouched(item));
+        } else if (typeof obj === "object" && obj !== null) {
+          const touchedObj = {};
+          Object.keys(obj).forEach((key) => {
+            touchedObj[key] = markTouched(obj[key]);
+          });
+          return touchedObj;
+        } else {
+          return true;
+        }
+      };
+
+      const touchedFields = markTouched(errors);
 
       formik.setTouched(touchedFields);
+
+      // Return both touched and errors if needed
+      return { errors, touched: touchedFields };
     }
   };
 
@@ -347,8 +351,9 @@ const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
   };
 
   const handleAddContact = () => {
+    const currentContacts = formik.values.emergencyContacts || [];
     formik.setFieldValue("emergencyContacts", [
-      ...formik.values.emergencyContacts,
+      ...currentContacts,
       { name: "", contact: "", relationship: "" },
     ]);
   };
@@ -470,7 +475,7 @@ const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
     setMemberModal(false);
   };
 
-  console.log(formik.values, 'formik')
+  console.log(formik.values, "formik");
 
   return (
     <>
@@ -713,14 +718,13 @@ const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
                                 placeholderText="Select date"
                                 className="input--icon"
                               />
-                              
                             </div>
                             {formik.errors.memberDetails?.dob &&
-                                formik.touched.memberDetails?.dob && (
-                                  <div className="text-red-500 text-sm">
-                                    {formik.errors.memberDetails.dob}
-                                  </div>
-                                )}
+                              formik.touched.memberDetails?.dob && (
+                                <div className="text-red-500 text-sm">
+                                  {formik.errors.memberDetails.dob}
+                                </div>
+                              )}
                           </div>
 
                           <div className="col-span-3dd">
@@ -753,6 +757,31 @@ const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
                         Lead Information
                       </h3>
                       <div className="grid grid-cols-3 gap-4">
+                        <div>
+                          <label className="mb-2 block">Interested In</label>
+                          <div className="relative">
+                            <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
+                              <FaListCheck />
+                            </span>
+                            <Select
+                              name="leadInformation.serviceName"
+                              value={servicesName.find(
+                                (opt) =>
+                                  opt.value ===
+                                  formik.values.leadInformation.serviceName
+                              )}
+                              onChange={(option) =>
+                                formik.setFieldValue(
+                                  "leadInformation.serviceName",
+                                  option.value
+                                )
+                              }
+                              options={servicesName}
+                              styles={selectIcon}
+                              className="pl-[]"
+                            />
+                          </div>
+                        </div>
                         <div>
                           <label className="mb-2 block">
                             Lead Type<span className="text-red-500">*</span>
@@ -855,7 +884,7 @@ const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
                               )}
                           </div>
                         )}
-                        <div>
+                        {/* <div>
                           <label className="mb-2 block">
                             Multi Club Access
                           </label>
@@ -932,7 +961,7 @@ const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
                               />
                             </div>
                           </div>
-                        )}
+                        )} */}
                       </div>
                     </>
                   )}
@@ -953,7 +982,8 @@ const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
                               type="email"
                               name="professionalInformation.designation"
                               value={
-                                formik.values?.professionalInformation?.designation
+                                formik.values?.professionalInformation
+                                  ?.designation
                               }
                               onChange={formik.handleChange}
                               className="custom--input w-full input--icon"
@@ -971,7 +1001,8 @@ const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
                               value={companies.find(
                                 (opt) =>
                                   opt.value ===
-                                  formik.values?.professionalInformation?.companyName
+                                  formik.values?.professionalInformation
+                                    ?.companyName
                               )}
                               onChange={(option) =>
                                 formik.setFieldValue(
@@ -1007,7 +1038,8 @@ const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
                               type="email"
                               name="professionalInformation.officialEmail"
                               value={
-                                formik.values?.professionalInformation?.officialEmail
+                                formik.values?.professionalInformation
+                                  ?.officialEmail
                               }
                               onChange={formik.handleChange}
                               className="custom--input w-full input--icon"
@@ -1020,71 +1052,106 @@ const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
                       <h3 className="text-2xl font-semibold mb-2">
                         Emergency Contact
                       </h3>
-                      {formik.values?.emergencyContacts?.map((contact, index) => (
-                        <div
-                          key={index}
-                          className="grid grid-cols-3 gap-4 mb-4 border p-4 rounded-lg"
-                        >
-                          <div>
-                            <label className="mb-2 block">Name</label>
-                            <div className="custom--date dob-format relative">
-                              <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
-                                <FaUser />
-                              </span>
-                              <input
-                                type="text"
-                                name={`emergencyContacts.${index}.name`}
-                                value={contact?.name}
-                                onChange={formik.handleChange}
-                                className="custom--input w-full input--icon"
+                      {formik.values?.emergencyContacts?.map(
+                        (contact, index) => (
+                          <div
+                            key={index}
+                            className="grid grid-cols-3 gap-4 mb-4 border p-4 rounded-lg"
+                          >
+                            <div>
+                              <label className="mb-2 block">Name</label>
+                              <div className="custom--date dob-format relative">
+                                <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
+                                  <FaUser />
+                                </span>
+                                <input
+                                  type="text"
+                                  name={`emergencyContacts.${index}.name`}
+                                  value={contact?.name}
+                                  onChange={formik.handleChange}
+                                  className="custom--input w-full input--icon"
+                                />
+                              </div>
+                              {formik.errors.emergencyContacts?.[index]?.name &&
+                                formik.touched.emergencyContacts?.[index]
+                                  ?.name && (
+                                  <div className="text-red-500 text-sm">
+                                    {
+                                      formik.errors.emergencyContacts[index]
+                                        .name
+                                    }
+                                    asdfasdf
+                                  </div>
+                                )}
+                            </div>
+
+                            <div>
+                              <label className="mb-2 block">Number</label>
+                              <PhoneInput
+                                name={`emergencyContacts.${index}.contact`}
+                                value={contact?.contact}
+                                onChange={(value) =>
+                                  handleEmergancyPhone(value, index)
+                                }
+                                international
+                                defaultCountry="IN"
+                                countryCallingCodeEditable={false}
+                                className="custom--input w-full custom--phone"
                               />
+                              {formik.errors.emergencyContacts?.[index]
+                                ?.contact &&
+                                formik.touched.emergencyContacts?.[index]
+                                  ?.contact && (
+                                  <div className="text-red-500 text-sm">
+                                    {
+                                      formik.errors.emergencyContacts[index]
+                                        .contact
+                                    }
+                                  </div>
+                                )}
+                            </div>
+
+                            <div>
+                              <label className="mb-2 block">Relationship</label>
+                              <div className="custom--date dob-format relative">
+                                <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
+                                  <FaLink />
+                                </span>
+                                <input
+                                  type="text"
+                                  name={`emergencyContacts.${index}.relationship`}
+                                  value={contact?.relationship}
+                                  onChange={formik.handleChange}
+                                  className="custom--input w-full input--icon"
+                                />
+                              </div>
+                              {formik.errors.emergencyContacts?.[index]
+                                ?.relationship &&
+                                formik.touched.emergencyContacts?.[index]
+                                  ?.relationship && (
+                                  <div className="text-red-500 text-sm">
+                                    {
+                                      formik.errors.emergencyContacts[index]
+                                        .relationship
+                                    }
+                                  </div>
+                                )}
+                            </div>
+
+                            <div className="col-span-3 flex justify-end mt-2">
+                              {formik.values?.emergencyContacts?.length > 1 && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveContact(index)}
+                                  className="text-red-500"
+                                >
+                                  Remove
+                                </button>
+                              )}
                             </div>
                           </div>
-
-                          <div>
-                            <label className="mb-2 block">Number</label>
-                            <PhoneInput
-                              name={`emergencyContacts.${index}.contact`}
-                              value={contact?.contact}
-                              onChange={(value) =>
-                                handleEmergancyPhone(value, index)
-                              }
-                              international
-                              defaultCountry="IN"
-                              countryCallingCodeEditable={false}
-                              className="custom--input w-full custom--phone"
-                            />
-                          </div>
-
-                          <div>
-                            <label className="mb-2 block">Relationship</label>
-                            <div className="custom--date dob-format relative">
-                              <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
-                                <FaLink />
-                              </span>
-                              <input
-                                type="text"
-                                name={`emergencyContacts.${index}.relationship`}
-                                value={contact?.relationship}
-                                onChange={formik.handleChange}
-                                className="custom--input w-full input--icon"
-                              />
-                            </div>
-                          </div>
-
-                          <div className="col-span-3 flex justify-end mt-2">
-                            {formik.values?.emergencyContacts?.length > 1 && (
-                              <button
-                                type="button"
-                                onClick={() => handleRemoveContact(index)}
-                                className="text-red-500"
-                              >
-                                Remove
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      ))}
+                        )
+                      )}
 
                       <button
                         type="button"
@@ -1108,7 +1175,9 @@ const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
                             <input
                               type="text"
                               name="membershipDetails.leadOwner"
-                              value={formik.values?.membershipDetails?.leadOwner}
+                              value={
+                                formik.values?.membershipDetails?.leadOwner
+                              }
                               onChange={formik.handleChange}
                               className="custom--input w-full input--icon"
                             />
@@ -1209,7 +1278,9 @@ const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
                             </span>
                             <input
                               name="membershipDetails.leadOwner"
-                              value={formik.values?.membershipDetails?.leadOwner}
+                              value={
+                                formik.values?.membershipDetails?.leadOwner
+                              }
                               // onChange={handleInput}
                               className="custom--input w-full input--icon bg-[#fafafa] pointer-events-none"
                               readOnly={true}

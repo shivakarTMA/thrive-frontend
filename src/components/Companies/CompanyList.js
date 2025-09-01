@@ -136,30 +136,30 @@ const formik = useFormik({
     country: "India",
     zipcode: "",
     gstno: "",
-    status: "",
+    status: "ACTIVE",
   },
   validationSchema: Yup.object({
     name: Yup.string().required("Company name is required"),
-    email: Yup.string().required("Company email is required"),
-    phone: Yup.string()
-      .required("Contact number is required")
-      .test("is-valid-phone", "Invalid contact number", (value) => {
-        if (!value) return false;
-        return isValidPhoneNumber(value);
-      }),
-    city: Yup.string().required("City is required"),
-    state: Yup.mixed()
-      .test(
-        "is-valid-state",
-        "State/Province is required",
-        (value) =>
-          value && (typeof value === "object" || typeof value === "string")
-      )
-      .required("State/Province is required"),
-    country: Yup.string().required("Country is required"),
-    zipcode: Yup.string().required("ZIP or Postal is required"),
-    gstno: Yup.string().required("Company GST No. is required"),
-    status: Yup.string().required("Status is required"),
+    // email: Yup.string().required("Company email is required"),
+    // phone: Yup.string()
+    //   .required("Contact number is required")
+    //   .test("is-valid-phone", "Invalid contact number", (value) => {
+    //     if (!value) return false;
+    //     return isValidPhoneNumber(value);
+    //   }),
+    // city: Yup.string().required("City is required"),
+    // state: Yup.mixed()
+    //   .test(
+    //     "is-valid-state",
+    //     "State/Province is required",
+    //     (value) =>
+    //       value && (typeof value === "object" || typeof value === "string")
+    //   )
+    //   .required("State/Province is required"),
+    // country: Yup.string().required("Country is required"),
+    // zipcode: Yup.string().required("ZIP or Postal is required"),
+    // gstno: Yup.string().required("Company GST No. is required"),
+    // status: Yup.string().required("Status is required"),
   }),
   onSubmit: async (values, { resetForm }) => {
     try {

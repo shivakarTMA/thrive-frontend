@@ -9,9 +9,7 @@ import { leadsSources } from "../DummyData/DummyData";
 export default function FiltersPanel({
   selectedLeadSource,
   setSelectedLeadSource,
-  selectedLeadStage,
   selectedLastCallType,
-  setSelectedLeadStage,
   selectedLeadStatus,
   setSelectedLeadStatus,
   selectedCallTag,
@@ -49,15 +47,6 @@ export default function FiltersPanel({
   { value: "future prospect", label: "Future Prospect" },
   ];
 
-  const leadStageOptions = [
-    { label: "Enquiry", value: "Enquiry" },
-    { label: "Trial Scheduled", value: "Trial Scheduled" },
-    { label: "Post Trial", value: "Post Trial" },
-    { label: "Won", value: "Won" },
-    { label: "Lost", value: "Lost" },
-    { label: "Closed", value: "Closed" },
-  ];
-
   const lastCallStatusOptions = [
 { value: "new", label: "New" },
   { value: "lead", label: "Lead" },
@@ -83,9 +72,9 @@ export default function FiltersPanel({
 
   const resetFilters = () => {
     setSelectedLeadSource(null);
-    setSelectedLeadStage(null);
     setSelectedLeadStatus(null);
     setSelectedCallTag(null);
+    setSelectedLastCallType(null)
   };
 
   return (
@@ -134,20 +123,6 @@ export default function FiltersPanel({
                 />
               </div>
 
-              {/* Lead Type */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Lead Stage
-                </label>
-                <Select
-                  value={selectedLeadStage}
-                  onChange={setSelectedLeadStage}
-                  options={leadStageOptions}
-                  // isClearable
-                  placeholder="Select Lead Type"
-                  styles={customStyles}
-                />
-              </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Last Call Status

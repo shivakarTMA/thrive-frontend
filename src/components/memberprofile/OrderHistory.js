@@ -259,11 +259,12 @@ const OrderHistory = () => {
               <th className="border px-3 py-2">Date</th>
               <th className="border px-3 py-2">Product/Service</th>
               <th className="border px-3 py-2">Category</th>
-              <th className="border px-3 py-2">Center</th>
-              <th className="border px-3 py-2">Amount</th>
               <th className="border px-3 py-2">Duration</th>
-              <th className="border px-3 py-2">Payment Mode</th>
+              <th className="border px-3 py-2">Amount</th>
+              <th className="border px-3 py-2">Tax</th>
+              <th className="border px-3 py-2">Net Paid</th>
               <th className="border px-3 py-2">Status</th>
+              <th className="border px-3 py-2">Payment Mode</th>
               <th className="border px-3 py-2">Invoice No.</th>
             </tr>
           </thead>
@@ -275,11 +276,12 @@ const OrderHistory = () => {
                   <td className="border px-3 py-2">{order.date}</td>
                   <td className="border px-3 py-2">{order.service}</td>
                   <td className="border px-3 py-2">{order.category}</td>
-                  <td className="border px-3 py-2">{order.centerName}</td>
-                  <td className="border px-3 py-2">₹{order.amount}</td>
                   <td className="border px-3 py-2">{order.duration || "-"}</td>
-                  <td className="border px-3 py-2">{order.paymentMode}</td>
+                  <td className="border px-3 py-2">₹{order.amount}</td>
+                  <td className="border px-3 py-2">₹{order.tax}</td>
+                  <td className="border px-3 py-2">₹{order.net}</td>
                   <td className="border px-3 py-2">{order.orderStatus}</td>
+                  <td className="border px-3 py-2">{order.paymentMode}</td>
                   <td className="border px-3 py-2">{order.invoiceNumber}</td>
                 </tr>
               ))

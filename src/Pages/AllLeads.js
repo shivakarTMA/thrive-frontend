@@ -1,14 +1,14 @@
 import React, { useEffect, useMemo, useState } from "react";
 import Papa from "papaparse";
 import { useDropzone } from "react-dropzone";
-import { FaAngleLeft, FaAngleRight } from "react-icons/fa";
+import { FaAngleLeft, FaAngleRight, FaCircle } from "react-icons/fa";
 import { IoIosAddCircleOutline, IoIosSearch } from "react-icons/io";
 import { FiPlus } from "react-icons/fi";
 import { LiaEdit } from "react-icons/lia";
 import { MdCall } from "react-icons/md";
 import Select from "react-select";
-import { customStyles } from "../Helper/helper";
-import { leadList } from "../DummyData/DummyData";
+import { customStyles, formatAutoDate } from "../Helper/helper";
+import { assignLead, leadList } from "../DummyData/DummyData";
 import CreateLeadForm from "./CreateLeadForm";
 import { Link } from "react-router-dom";
 import DatePicker from "react-datepicker";
@@ -28,16 +28,13 @@ import { TbArrowsExchange } from "react-icons/tb";
 import Tooltip from "../components/common/Tooltip";
 import CreateMemberForm from "./CreateMemberForm";
 import CreateInvoice from "./CreateInvoice";
+import SendPaymentLink from "./SendPaymentLink";
+import { toast } from "react-toastify";
+import { apiAxios } from "../config/config";
+import Pagination from "../components/common/Pagination";
 const useQuery = () => {
   return new URLSearchParams(useLocation().search);
 };
-
-// const getUniqueOptions = (data, key) => {
-//   return Array.from(new Set(data.map((item) => item[key]))).map((val) => ({
-//     value: val,
-//     label: val,
-//   }));
-// };
 
 const dateFilterOptions = [
   { value: "today", label: "Today" },
@@ -48,36 +45,144 @@ const dateFilterOptions = [
 
 const AllLeads = () => {
   const navigate = useNavigate();
-  const [search, setSearch] = useState("");
-  const [page, setPage] = useState(1);
+  const [searchTerm, setSearchTerm] = useState("");
   const [leadModal, setLeadModal] = useState(false);
   const [selectedLead, setSelectedLead] = useState(null);
   const [memberModal, setMemberModal] = useState(false);
   const [invoiceModal, setInvoiceModal] = useState(false);
   const [selectedLeadMember, setSelectedLeadMember] = useState(null);
+  const [sendPaymentModal, setSendPaymentModal] = useState(false);
   const [leadPaymentSend, setLeadPaymentSend] = useState(null);
+  const [activeTab, setActiveTab] = useState("Allleads");
+
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [assignedOwners, setAssignedOwners] = useState({});
+  const [bulkOwner, setBulkOwner] = useState(null);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const [selectedService, setSelectedService] = useState(null);
   const [selectedLeadSource, setSelectedLeadSource] = useState(null);
   const [selectedCallTag, setSelectedCallTag] = useState(null);
   const [selectedLeadStatus, setSelectedLeadStatus] = useState(null);
-  const [selectedLeadStage, setSelectedLeadStage] = useState(null);
   const [selectedLastCallType, setSelectedLastCallType] = useState(null);
   const [dateFilter, setDateFilter] = useState(null);
   const [customFrom, setCustomFrom] = useState(null);
   const [customTo, setCustomTo] = useState(null);
 
-  const [allLeads, setAllLeads] = useState(leadList); // this replaces direct use of leadList
-  // const [uploadErrors, setUploadErrors] = useState([]);
+  const [masterLeads, setMasterLeads] = useState([]);
+  const [allLeads, setAllLeads] = useState([]);
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [previewNewLeads, setPreviewNewLeads] = useState([]);
   const [previewDuplicateLeads, setPreviewDuplicateLeads] = useState([]);
 
-  console.log(allLeads,'allLeads')
+  const [page, setPage] = useState(1);
+  const [rowsPerPage] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
 
   const query = useQuery();
   const selectedStatus = query.get("leadStatus");
   const selectedView = query.get("view");
+
+  const handleCheckboxChange = (id) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
+  };
+
+  const handleSelectAll = () => {
+    if (selectedIds.length === allLeads.length) {
+      setSelectedIds([]); // Unselect all
+    } else {
+      setSelectedIds(allLeads.map((row) => row.id)); // Select all
+    }
+  };
+
+  const ownerOptions = [
+    {
+      label: "FOH", // Group label
+      options: [
+        { value: "shivakar", label: "Shivakar" },
+        { value: "divakar", label: "Divakar" },
+        { value: "parbhakar", label: "Parbhakar" },
+      ],
+    },
+    {
+      label: "PT", // Group label
+      options: [
+        { value: "nitin", label: "Nitin" },
+        { value: "esha", label: "Esha" },
+      ],
+    },
+  ];
+
+  // Handle assigning owner to single lead
+  const handleAssignOwner = (leadId, selectedOption) => {
+    setAssignedOwners((prev) => ({
+      ...prev,
+      [leadId]: selectedOption, // Save owner for each lead
+    }));
+  };
+
+  // Handle bulk assigning owner to selected leads only
+  const handleBulkAssign = (selectedOption) => {
+    setBulkOwner(selectedOption); // Store selected option
+    const updatedAssignments = { ...assignedOwners };
+    selectedIds.forEach((id) => {
+      updatedAssignments[id] = selectedOption; // Assign same owner to all selected leads
+    });
+    setAssignedOwners(updatedAssignments);
+  };
+
+  // Handle submit bulk assignment
+  const handleSubmitAssign = () => {
+    if (!bulkOwner) return; // Prevent submission without owner
+    setShowConfirm(true); // Show confirmation popup
+  };
+
+  // Confirm assignment
+  const confirmAssign = () => {
+    console.log("Assigned Leads:", selectedIds); // Log selected lead IDs
+    console.log("Assigned Owner:", bulkOwner); // Log assigned owner
+    setShowConfirm(false); // Close popup
+    setSelectedIds([]); // Clear selection
+    setBulkOwner(null); // Clear bulk owner
+  };
+
+  const fetchLeadList = async (search = "", currentPage = page) => {
+    try {
+      const res = await apiAxios().get("/lead/list", {
+        params: {
+          page: currentPage,
+          limit: rowsPerPage,
+          ...(search ? { search } : {}),
+        },
+      });
+      let data = res.data?.data || res.data || [];
+
+      setMasterLeads(data);
+      setAllLeads(data);
+      setPage(res.data?.currentPage || 1);
+      setTotalPages(res.data?.totalPage || 1);
+      setTotalCount(res.data?.totalCount || data.length);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to fetch lead");
+    }
+  };
+
+  useEffect(() => {
+    fetchLeadList();
+  }, []);
+
+  useEffect(() => {
+    const delayDebounce = setTimeout(() => {
+      fetchLeadList(searchTerm, 1);
+      setPage(1);
+    }, 300);
+
+    return () => clearTimeout(delayDebounce);
+  }, [searchTerm]);
 
   useEffect(() => {
     if (selectedStatus) {
@@ -95,89 +200,112 @@ const AllLeads = () => {
     }
   }, [selectedStatus, selectedView]);
 
-  const rowsPerPage = 5;
-
   useEffect(() => {
-    setPage(1); // Reset to page 1 when filters change
-  }, [selectedLeadStatus, selectedLeadStage, selectedLeadSource]);
+    let filtered = [...masterLeads];
 
-  const filteredData = useMemo(() => {
-    const today = startOfToday();
-
-    let fromDate = null;
-    let toDate = null;
-
-    switch (dateFilter?.value) {
-      case "today":
-        fromDate = today;
-        toDate = today;
-        break;
-      case "last7":
-        fromDate = subDays(today, 6);
-        toDate = today;
-        break;
-      case "monthTillDate":
-        fromDate = startOfMonth(today);
-        toDate = today;
-        break;
-      case "custom":
-        fromDate = customFrom;
-        toDate = customTo;
-        break;
-      default:
-        fromDate = null;
-        toDate = null;
-        break;
+    if (selectedStatus) {
+      filtered = filtered.filter(
+        (lead) =>
+          lead.lead_status?.toLowerCase() === selectedStatus.toLowerCase()
+      );
     }
 
-    return allLeads.filter((row) => {
-      // Parse createdOn from "DD-MM-YYYY"
-      const [day, month, year] = row.createdOn.split("-");
-      const createdOnDate = new Date(`${year}-${month}-${day}`);
-
-      const isAfterFromDate = fromDate
-        ? createdOnDate >= new Date(fromDate)
-        : true;
-      const isBeforeToDate = toDate ? createdOnDate <= new Date(toDate) : true;
-
-      return (
-        Object.values(row).some((val) =>
-          String(val).toLowerCase().includes(search.toLowerCase())
-        ) &&
-        (!selectedService || row.service === selectedService.value) &&
-        (!selectedLeadSource || row.leadSource === selectedLeadSource.value) &&
-        (!selectedCallTag || row.leadOwner === selectedCallTag.value) &&
-        (!selectedLeadStatus ||
-          row.leadStatus?.toLowerCase() ===
-            selectedLeadStatus.value?.toLowerCase()) &&
-        (!selectedLeadStage || row.leadStage === selectedLeadStage.value) &&
-        isAfterFromDate &&
-        isBeforeToDate
+    if (selectedView === "assigned") {
+      filtered = filtered.filter(
+        (lead) => lead.assignedLead && lead.assignedLead !== "unassigned"
       );
-    });
+    }
+
+    if (selectedLeadSource) {
+      filtered = filtered.filter(
+        (lead) =>
+          lead.lead_source?.toLowerCase() ===
+          selectedLeadSource.value.toLowerCase()
+      );
+    }
+
+    if (selectedLeadStatus) {
+      filtered = filtered.filter(
+        (lead) =>
+          lead.lead_status?.toLowerCase() ===
+          selectedLeadStatus.value.toLowerCase()
+      );
+    }
+
+    if (selectedCallTag) {
+      filtered = filtered.filter(
+        (lead) =>
+          lead.callTag?.toLowerCase() === selectedCallTag.value.toLowerCase()
+      );
+    }
+
+    if (selectedLastCallType) {
+      filtered = filtered.filter(
+        (lead) =>
+          lead.last_call_status?.toLowerCase() ===
+          selectedLastCallType.value.toLowerCase()
+      );
+    }
+
+    if (dateFilter?.value) {
+      const today = new Date();
+      let fromDate = null;
+      let toDate = null;
+
+      if (dateFilter.value === "today") {
+        fromDate = new Date(today.setHours(0, 0, 0, 0));
+        toDate = new Date();
+      }
+
+      if (dateFilter.value === "last7") {
+        fromDate = new Date();
+        fromDate.setDate(today.getDate() - 7);
+        toDate = new Date();
+      }
+
+      if (dateFilter.value === "monthTillDate") {
+        fromDate = new Date(today.getFullYear(), today.getMonth(), 1);
+        toDate = new Date();
+      }
+
+      if (dateFilter.value === "custom" && customFrom && customTo) {
+        fromDate = new Date(customFrom.setHours(0, 0, 0, 0));
+        toDate = new Date(customTo.setHours(23, 59, 59, 999));
+      }
+
+      if (fromDate && toDate) {
+        filtered = filtered.filter((lead) => {
+          const createdDate = new Date(lead.createdAt);
+          return createdDate >= fromDate && createdDate <= toDate;
+        });
+      }
+    }
+
+    // simple search term (local filtering)
+    if (searchTerm) {
+      filtered = filtered.filter(
+        (lead) =>
+          lead.firstname?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          lead.lastname?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          lead.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          lead.phoneNumber?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    setAllLeads(filtered);
   }, [
-    allLeads,
-    search,
-    selectedService,
+    masterLeads,
+    selectedStatus,
+    selectedView,
     selectedLeadSource,
-    selectedCallTag,
     selectedLeadStatus,
-    selectedLeadStage,
+    selectedCallTag,
+    selectedLastCallType,
     dateFilter,
     customFrom,
     customTo,
+    searchTerm,
   ]);
-
-  console.log(selectedLeadStatus, "selectedLeadStatus");
-
-  const paginatedData = filteredData.slice(
-    (page - 1) * rowsPerPage,
-    page * rowsPerPage
-  );
-
-  
-  const totalPages = Math.ceil(filteredData.length / rowsPerPage);
-  console.log(filteredData,'filteredData')
 
   const handleBulkUpload = (acceptedFiles) => {
     const file = acceptedFiles[0];
@@ -280,9 +408,7 @@ const AllLeads = () => {
             <FiltersPanel
               selectedLeadSource={selectedLeadSource}
               setSelectedLeadSource={setSelectedLeadSource}
-              selectedLeadStage={selectedLeadStage}
               selectedLastCallType={selectedLastCallType}
-              setSelectedLeadStage={setSelectedLeadStage}
               selectedLeadStatus={selectedLeadStatus}
               setSelectedLeadStatus={setSelectedLeadStatus}
               selectedCallTag={selectedCallTag}
@@ -353,165 +479,356 @@ const AllLeads = () => {
             <IoIosSearch className="text-xl" />
             <input
               type="text"
-              value={search}
               placeholder="Search"
-              onChange={(e) => setSearch(e.target.value)}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full max-w-xs px-3 py-2 border-none rounded-[50px] focus:outline-none"
             />
           </div>
         </div>
 
-        {/* Table */}
-        <div className="relative overflow-x-auto">
-          <table className="w-full text-sm text-left text-gray-500">
-            <thead className="text-xs text-gray-700 uppercase bg-gray-50">
-              <tr>
-                {/* <th className="px-2 py-4">#</th> */}
-                <th className="px-2 py-4">Lead ID</th>
-                <th className="px-2 py-4">Created on</th>
-                <th className="px-2 py-4">Last Updated</th>
-                <th className="px-2 py-4">Name</th>
-                <th className="px-2 py-4">Lead Source</th>
-                <th className="px-2 py-4">Lead Status</th>
-                <th className="px-2 py-4">Lead Stage</th>
-                <th className="px-2 py-4">Last Call Status</th>
-                <th className="px-2 py-4">Lead Owner</th>
-                {/* <th className="px-2 py-4">Action</th> */}
-              </tr>
-            </thead>
-            <tbody>
-              {paginatedData.map((row, idx) => (
-                <tr
-                  key={row.id}
-                  className="group bg-white border-b hover:bg-gray-50 relative transition duration-700"
-                >
-                  <td className="px-2 py-4">{row?.leadId}</td>
-                  <td className="px-2 py-4">{row?.createdOn}</td>
-                  <td className="px-2 py-4">{row?.lastUpdated}</td>
-                  <td className="px-2 py-4">{row?.name}</td>
-                  <td className="px-2 py-4">{row?.leadSource}</td>
-                  <td className="px-2 py-4">{row?.leadStatus}</td>
-                  <td className="px-2 py-4">{row?.leadStage}</td>
-                  <td className="px-2 py-4">{row?.lastCallStatus}</td>
-                  <td className="px-2 py-4">{row?.leadOwner}</td>
-
-                  <div className="absolute hidden group-hover:flex gap-2 items-center right-0 h-full top-0 w-full flex items-center justify-end bg-[linear-gradient(269deg,_#ffffff_30%,_transparent)] pr-5 transition duration-700">
-                    <Tooltip
-                      id={`tooltip-edit-${row.id}`}
-                      content="Edit Lead"
-                      place="top"
-                    >
-                      <div
-                        onClick={() => {
-                          setSelectedLead(row);
-                          setLeadModal(true);
-                        }}
-                        className="p-1 cursor-pointer"
-                      >
-                        <LiaEdit className="text-[25px] text-black" />
-                      </div>
-                    </Tooltip>
-                    <Tooltip
-                      id={`tooltip-call-${row.id}`}
-                      content="Add Call log"
-                      place="top"
-                    >
-                      <div className="p-1 cursor-pointer">
-                        <Link to={`/lead-follow-up/${row.id}`} className="p-0">
-                          <MdCall className="text-[25px] text-black" />
-                        </Link>
-                      </div>
-                    </Tooltip>
-                    <Tooltip
-                      id={`tooltip-convert-${row.id}`}
-                      content="Convert to member"
-                      place="top"
-                    >
-                      <div
-                        onClick={() => {
-                          setSelectedLeadMember(row);
-                          setMemberModal(true);
-                        }}
-                        className="p-1 cursor-pointer"
-                      >
-                        <TbArrowsExchange className="text-[25px] text-black" />
-                      </div>
-                    </Tooltip>
-                    <Tooltip
-                      id={`tooltip-schedule-${row.id}`}
-                      content="Schedule Tour / Trial"
-                      place="top"
-                    >
-                      <div className="p-1 cursor-pointer">
-                        <Link
-                          to={`/lead-follow-up/${row.id}?action=schedule-tour-trial`}
-                          className="p-0"
-                        >
-                          <RiCalendarScheduleLine className="text-[25px] text-black" />
-                        </Link>
-                      </div>
-                    </Tooltip>
-
-                    <Tooltip
-                      id={`tooltip-send-${row.id}`}
-                      content="Send Payment Link"
-                      place="top"
-                    >
-                      <div
-                        onClick={() => {
-                          setLeadPaymentSend(row);
-                          setInvoiceModal(true);
-                        }}
-                        className="p-1 cursor-pointer"
-                      >
-                        <IoIosAddCircleOutline className="text-[25px] text-black" />
-                      </div>
-                    </Tooltip>
-                  </div>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Pagination */}
-        <div className="flex justify-between items-center mt-4 gap-2">
-          <p className="text-gray-700">
-            Showing{" "}
-            {filteredData.length === 0 ? 0 : (page - 1) * rowsPerPage + 1} to{" "}
-            {Math.min(page * rowsPerPage, filteredData.length)} of{" "}
-            {filteredData.length} entries
-          </p>
-          <div className="flex items-center gap-2">
+        {selectedIds.length > 0 && (
+          <div className="flex items-center gap-3 mb-3">
+            <span className="font-medium text-gray-700">
+              Assign {selectedIds.length} selected lead(s) to:
+            </span>
+            <Select
+              options={ownerOptions}
+              value={bulkOwner}
+              onChange={handleBulkAssign}
+              placeholder="Assign Owner"
+              styles={customStyles}
+            />
             <button
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-              disabled={page === 1}
-              className="px-3 py-2 border rounded disabled:opacity-50"
+              onClick={handleSubmitAssign}
+              className="px-4 py-2 bg-black text-white rounded flex items-center gap-2"
             >
-              <FaAngleLeft />
-            </button>
-            <div className="flex gap-2">
-              {Array.from({ length: totalPages }).map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => setPage(i + 1)}
-                  className={`px-3 py-1 border rounded ${
-                    page === i + 1 ? "bg-gray-200" : ""
-                  }`}
-                >
-                  {i + 1}
-                </button>
-              ))}
-            </div>
-            <button
-              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-              disabled={page === totalPages}
-              className="px-3 py-2 border rounded disabled:opacity-50"
-            >
-              <FaAngleRight />
+              Submit
             </button>
           </div>
+        )}
+
+        {showConfirm && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white p-6 rounded-xl shadow-lg w-96 text-center">
+              <h2 className="text-lg font-semibold mb-4">Confirm Assignment</h2>
+              <p className="mb-4">
+                Are you sure you want to assign{" "}
+                <strong>{selectedIds.length}</strong> lead(s) to{" "}
+                <strong>{bulkOwner?.label}</strong>?
+              </p>
+              <div className="flex justify-center gap-4">
+                <button
+                  onClick={() => setShowConfirm(false)}
+                  className="px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-100"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmAssign}
+                  className="px-4 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700"
+                >
+                  Confirm
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div className="flex gap-3 mb-3 items-center">
+          <button
+            onClick={() => setActiveTab("Allleads")}
+            className={`flex items-center gap-1 ${activeTab == 'Allleads' ? 'text-black underline': 'text-gray-500'}`}
+          >
+            <FaCircle className="text-[10px]" />
+            All Leads
+          </button>
+          <button
+            onClick={() => setActiveTab("Assignleads")}
+            className={`flex items-center gap-1 ${activeTab == 'Assignleads' ? 'text-black underline': 'text-gray-500'}`}
+          >
+            <FaCircle className="text-[10px]" />
+            Assign Leads
+          </button>
         </div>
+
+        {/* Table */}
+        {activeTab == "Allleads" && (
+          <>
+            <div className="relative overflow-x-auto">
+              <table className="w-full text-sm text-left text-gray-500">
+                <thead className="text-xs text-gray-700 uppercase bg-gray-50">
+                  <tr>
+                    <th className="px-2 py-4">#</th>
+                    {/* <th className="px-2 py-4">Lead ID</th> */}
+                    <th className="px-2 py-4">Created on</th>
+                    <th className="px-2 py-4">Last Updated</th>
+                    <th className="px-2 py-4">Name</th>
+                    <th className="px-2 py-4">Lead Source</th>
+                    <th className="px-2 py-4">Lead Status</th>
+                    <th className="px-2 py-4">Last Call Status</th>
+                    <th className="px-2 py-4">Lead Owner</th>
+                    {/* <th className="px-2 py-4">Action</th> */}
+                  </tr>
+                </thead>
+                <tbody>
+                  {allLeads.map((row, id) => (
+                    <tr
+                      key={row.id}
+                      className="group bg-white border-b hover:bg-gray-50 relative transition duration-700"
+                    >
+                      <td className="px-2 py-4">
+                        <input
+                          type="checkbox"
+                          checked={selectedIds.includes(row.id)}
+                          onChange={() => handleCheckboxChange(row.id)}
+                        />
+                      </td>
+                      <td className="px-2 py-4">
+                        {formatAutoDate(row?.createdAt)}
+                      </td>
+                      <td className="px-2 py-4">
+                        {formatAutoDate(row?.updatedAt)}
+                      </td>
+                      <td className="px-2 py-4">
+                        {row?.firstname} {row?.lastname}
+                      </td>
+                      <td className="px-2 py-4">
+                        {row?.lead_source == null ? "--" : row?.lead_source}
+                      </td>
+                      <td className="px-2 py-4">
+                        {row?.lead_status == null ? "--" : row?.lead_status}
+                      </td>
+                      <td className="px-2 py-4">
+                        {row?.last_call_status == null
+                          ? "--"
+                          : row?.last_call_status}
+                      </td>
+                      <td className="px-2 py-4">
+                        {row?.created_by == null ? "--" : row?.created_by}
+                      </td>
+
+                      <div className="absolute hidden group-hover:flex gap-2 items-center right-0 h-full top-0 w-[80%] flex items-center justify-end bg-[linear-gradient(269deg,_#ffffff_30%,_transparent)] pr-5 transition duration-700">
+                        <Tooltip
+                          id={`tooltip-edit-${row.id}`}
+                          content="Edit Lead"
+                          place="top"
+                        >
+                          <div
+                            onClick={() => {
+                              setSelectedLead(row);
+                              setLeadModal(true);
+                            }}
+                            className="p-1 cursor-pointer"
+                          >
+                            <LiaEdit className="text-[25px] text-black" />
+                          </div>
+                        </Tooltip>
+                        <Tooltip
+                          id={`tooltip-call-${row.id}`}
+                          content="Add Call log"
+                          place="top"
+                        >
+                          <div className="p-1 cursor-pointer">
+                            <Link
+                              to={`/lead-follow-up/${row.id}`}
+                              className="p-0"
+                            >
+                              <MdCall className="text-[25px] text-black" />
+                            </Link>
+                          </div>
+                        </Tooltip>
+                        <Tooltip
+                          id={`tooltip-convert-${row.id}`}
+                          content="Convert to member"
+                          place="top"
+                        >
+                          <div
+                            onClick={() => {
+                              setSelectedLeadMember(row);
+                              setMemberModal(true);
+                            }}
+                            className="p-1 cursor-pointer"
+                          >
+                            <TbArrowsExchange className="text-[25px] text-black" />
+                          </div>
+                        </Tooltip>
+                        <Tooltip
+                          id={`tooltip-schedule-${row.id}`}
+                          content="Schedule Tour / Trial"
+                          place="top"
+                        >
+                          <div className="p-1 cursor-pointer">
+                            <Link
+                              to={`/lead-follow-up/${row.id}?action=schedule-tour-trial`}
+                              className="p-0"
+                            >
+                              <RiCalendarScheduleLine className="text-[25px] text-black" />
+                            </Link>
+                          </div>
+                        </Tooltip>
+
+                        <Tooltip
+                          id={`tooltip-send-${row.id}`}
+                          content="Send Payment Link"
+                          place="top"
+                        >
+                          <div
+                            onClick={() => {
+                              setLeadPaymentSend(row);
+                              setSendPaymentModal(true);
+                            }}
+                            className="p-1 cursor-pointer"
+                          >
+                            <IoIosAddCircleOutline className="text-[25px] text-black" />
+                          </div>
+                        </Tooltip>
+                      </div>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            {/* Pagination */}
+            <Pagination
+              page={page}
+              totalPages={totalPages}
+              rowsPerPage={rowsPerPage}
+              totalCount={totalCount}
+              currentDataLength={allLeads.length}
+              onPageChange={(newPage) => {
+                setPage(newPage);
+                fetchLeadList(searchTerm, newPage);
+              }}
+            />
+          </>
+        )}
+        {activeTab == "Assignleads" && (
+          <div className="relative overflow-x-auto">
+            <table className="w-full text-sm text-left text-gray-500">
+              <thead className="text-xs text-gray-700 uppercase bg-gray-50">
+                <tr>
+                  <th className="px-2 py-4">Created on</th>
+                  <th className="px-2 py-4">Last Updated</th>
+                  <th className="px-2 py-4">Name</th>
+                  <th className="px-2 py-4">Lead Source</th>
+                  <th className="px-2 py-4">Lead Status</th>
+                  <th className="px-2 py-4">Last Call Status</th>
+                  <th className="px-2 py-4">Lead Owner</th>
+                </tr>
+              </thead>
+              <tbody>
+                {assignLead.map((row, id) => (
+                  <tr
+                    key={row.id}
+                    className="group bg-white border-b hover:bg-gray-50 relative transition duration-700"
+                  >
+                    <td className="px-2 py-4">
+                      {formatAutoDate(row?.createdAt)}
+                    </td>
+                    <td className="px-2 py-4">
+                      {formatAutoDate(row?.updatedAt)}
+                    </td>
+                    <td className="px-2 py-4">
+                      {row?.firstname} {row?.lastname}
+                    </td>
+                    <td className="px-2 py-4">
+                      {row?.lead_source == null ? "--" : row?.lead_source}
+                    </td>
+                    <td className="px-2 py-4">
+                      {row?.lead_status == null ? "--" : row?.lead_status}
+                    </td>
+                    <td className="px-2 py-4">
+                      {row?.last_call_status == null
+                        ? "--"
+                        : row?.last_call_status}
+                    </td>
+                    <td className="px-2 py-4">
+                      {row?.created_by == null ? "--" : row?.created_by}
+                    </td>
+
+                    <div className="absolute hidden group-hover:flex gap-2 items-center right-0 h-full top-0 w-[80%] flex items-center justify-end bg-[linear-gradient(269deg,_#ffffff_30%,_transparent)] pr-5 transition duration-700">
+                      <Tooltip
+                        id={`tooltip-edit-${row.id}`}
+                        content="Edit Lead"
+                        place="top"
+                      >
+                        <div
+                          onClick={() => {
+                            setSelectedLead(row);
+                            setLeadModal(true);
+                          }}
+                          className="p-1 cursor-pointer"
+                        >
+                          <LiaEdit className="text-[25px] text-black" />
+                        </div>
+                      </Tooltip>
+                      <Tooltip
+                        id={`tooltip-call-${row.id}`}
+                        content="Add Call log"
+                        place="top"
+                      >
+                        <div className="p-1 cursor-pointer">
+                          <Link
+                            to={`/lead-follow-up/${row.id}`}
+                            className="p-0"
+                          >
+                            <MdCall className="text-[25px] text-black" />
+                          </Link>
+                        </div>
+                      </Tooltip>
+                      <Tooltip
+                        id={`tooltip-convert-${row.id}`}
+                        content="Convert to member"
+                        place="top"
+                      >
+                        <div
+                          onClick={() => {
+                            setSelectedLeadMember(row);
+                            setMemberModal(true);
+                          }}
+                          className="p-1 cursor-pointer"
+                        >
+                          <TbArrowsExchange className="text-[25px] text-black" />
+                        </div>
+                      </Tooltip>
+                      <Tooltip
+                        id={`tooltip-schedule-${row.id}`}
+                        content="Schedule Tour / Trial"
+                        place="top"
+                      >
+                        <div className="p-1 cursor-pointer">
+                          <Link
+                            to={`/lead-follow-up/${row.id}?action=schedule-tour-trial`}
+                            className="p-0"
+                          >
+                            <RiCalendarScheduleLine className="text-[25px] text-black" />
+                          </Link>
+                        </div>
+                      </Tooltip>
+
+                      <Tooltip
+                        id={`tooltip-send-${row.id}`}
+                        content="Send Payment Link"
+                        place="top"
+                      >
+                        <div
+                          onClick={() => {
+                            setLeadPaymentSend(row);
+                            setSendPaymentModal(true);
+                          }}
+                          className="p-1 cursor-pointer"
+                        >
+                          <IoIosAddCircleOutline className="text-[25px] text-black" />
+                        </div>
+                      </Tooltip>
+                    </div>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       {leadModal && (
@@ -534,7 +851,7 @@ const AllLeads = () => {
                 <table className="w-full text-sm border">
                   <thead className="bg-red-100">
                     <tr>
-                     <th className="p-2 border">Name</th>
+                      <th className="p-2 border">Name</th>
                       <th className="p-2 border">Phone Number</th>
                       <th className="p-2 border">Email</th>
                       <th className="p-2 border">Lead Type</th>
@@ -546,7 +863,7 @@ const AllLeads = () => {
                   <tbody>
                     {previewDuplicateLeads.map((lead, idx) => (
                       <tr key={idx}>
-                           <td className="p-2 border">{lead?.name}</td>
+                        <td className="p-2 border">{lead?.name}</td>
                         <td className="p-2 border">{lead?.phone}</td>
                         <td className="p-2 border">{lead?.email}</td>
                         <td className="p-2 border">{lead?.leadType}</td>
@@ -560,7 +877,7 @@ const AllLeads = () => {
               </div>
             )}
 
-            {console.log(previewDuplicateLeads,'previewNewLeads')}
+            {console.log(previewDuplicateLeads, "previewNewLeads")}
 
             {previewNewLeads.length > 0 && (
               <div className="mb-4">
@@ -635,6 +952,12 @@ const AllLeads = () => {
         <CreateInvoice
           leadPaymentSend={leadPaymentSend}
           setInvoiceModal={setInvoiceModal}
+        />
+      )}
+      {sendPaymentModal && (
+        <SendPaymentLink
+          leadPaymentSend={leadPaymentSend}
+          setSendPaymentModal={setSendPaymentModal}
         />
       )}
     </>

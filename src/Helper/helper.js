@@ -144,3 +144,29 @@ export function formatAutoDate(dateString) {
 
   return `${day}-${month}-${year}`;
 }
+
+export const sanitizePayload = (obj) => {
+  const cleaned = { ...obj };
+  Object.keys(cleaned).forEach((key) => {
+    if (cleaned[key] === "" || cleaned[key] === null) {
+      delete cleaned[key];
+    }
+  });
+  return cleaned;
+};
+
+// Convert company ID to company name
+export const getCompanyNameById = (companies, companyId, otherCompanyName) => {
+  if (companyId === "OTHER") {
+    return otherCompanyName || "";
+  }
+  return companies.find((c) => c.value === companyId)?.label || "";
+};
+
+// Convert company name to company ID
+export const getCompanyIdByName = (companies, companyName) => {
+  if (companyName === "OTHER") {
+    return "OTHER";
+  }
+  return companies.find((c) => c.label === companyName)?.value || "";
+};
