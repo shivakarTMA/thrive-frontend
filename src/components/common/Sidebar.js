@@ -107,8 +107,7 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
           </div>
         )} */}
 
-        {accessToken && userType === "FOH" && (
-          <>
+    
             <Link
               to="/all-leads"
               className={`nav-link mb-2 ${
@@ -189,10 +188,10 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
               <AiOutlineProduct className="menu--icon" />
               <span className="nav-text">Products</span>
             </Link>
-            <Link to="/services-addons" className="nav-link mb-2">
+            {/* <Link to="/services-addons" className="nav-link mb-2">
               <LuList className="menu--icon" />
               <span className="nav-text">Services</span>
-            </Link>
+            </Link> */}
             {/* <Link to="/companies" className="nav-link mb-2">
               <FaRegBuilding className="menu--icon" />
               <span className="nav-text">Companies</span>
@@ -330,10 +329,16 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                   <FaCircle className="menu--icon !text-[10px]" />
                   <span className="nav-text">Studio</span>
                 </Link>
+                <Link
+                  to="/services"
+                  className="text-white flex items-center gap-[5px] mb-2 text-sm"
+                >
+                  <FaCircle className="menu--icon !text-[10px]" />
+                  <span className="nav-text">Services</span>
+                </Link>
               </div>
             )}
-          </>
-        )}
+      
 
         {accessToken && userType === "PT" && (
           <>

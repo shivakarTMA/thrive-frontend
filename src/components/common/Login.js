@@ -1,5 +1,6 @@
+// Import necessary React and utility libraries
 import React, { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import IsLoadingHOC from "./IsLoadingHOC";
 import { useDispatch, useSelector } from "react-redux";
@@ -11,56 +12,9 @@ import {
 import { FaPhoneAlt } from "react-icons/fa";
 import { RiLockPasswordFill } from "react-icons/ri";
 import Logo from "../../assets/images/DLF-Thrive-New-Logo-1-White.png";
+import { apiAxios } from "../../config/config";
 
-// Dummy user data
-const dummyUsers = [
-  {
-    id: 1,
-    name: "Admin User",
-    email: "admin@gmail.com",
-    number: "1234567890",
-    userType: "ADMIN",
-    otp: "1234",
-    token: "admin-token",
-  },
-  {
-    id: 2,
-    name: "FOH User",
-    email: "foh@gmail.com",
-    number: "1111111111",
-    userType: "FOH",
-    otp: "1111",
-    token: "foh-token",
-  },
-  {
-    id: 3,
-    name: "PT User",
-    email: "pt@gmail.com",
-    number: "2222222222",
-    userType: "PT",
-    otp: "2222",
-    token: "pt-token",
-  },
-  {
-    id: 4,
-    name: "GT User",
-    email: "gt@gmail.com",
-    number: "3333333333",
-    userType: "GT",
-    otp: "3333",
-    token: "gt-token",
-  },
-  {
-    id: 5,
-    name: "Nutritionist",
-    email: "nutritionist@gmail.com",
-    number: "4444444444",
-    userType: "NUTRITION",
-    otp: "4444",
-    token: "nutrition-token",
-  },
-];
-
+// Login component
 const Login = (props) => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -71,12 +25,14 @@ const Login = (props) => {
   const [step, setStep] = useState(1);
   const [currentUser, setCurrentUser] = useState(null);
 
+  // Redirect to home if already logged in
   useEffect(() => {
     if (accessToken) {
       navigate("/");
     }
   }, [accessToken]);
 
+  // Handle input change
   const handleChange = (e) => {
     const { name, value } = e.target;
     setData((prev) => ({
@@ -85,32 +41,55 @@ const Login = (props) => {
     }));
   };
 
-  const handleSubmit = (e) => {
+  // Handle submit for login and OTP verification
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (step === 1) {
-      const input = data.identifier.trim().toLowerCase();
-      const foundUser = dummyUsers.find(
-        (user) =>
-          user.number === input || user.email.toLowerCase() === input
-      );
+      try {
+        setLoading(true);
+        // Send request to /staff/login with mobile
+        const response = await apiAxios().post("staff/login", {
+          mobile: data.identifier,
+        });
 
-      if (foundUser) {
-        setCurrentUser(foundUser);
-        toast.success(`OTP sent to ${foundUser.name}`);
-        setStep(2);
-      } else {
-        toast.error("Invalid phone number or email");
+        if (response.data.status) {
+          setCurrentUser({ mobile: data.identifier });
+          toast.success(response.data.message || "OTP sent successfully");
+          setStep(2);
+        } else {
+          toast.error(response.data.message || "Failed to send OTP");
+        }
+      } catch (error) {
+        toast.error(
+          error.response?.data?.message || "Invalid phone number or email"
+        );
+      } finally {
+        setLoading(false);
       }
     } else if (step === 2) {
-      if (data.otp === currentUser.otp) {
-        dispatch(setAccessToken(currentUser.token));
-        dispatch(setuser(currentUser));
-        dispatch(setIsAuthenticated(true));
-        toast.success(`Welcome ${currentUser.userType}`);
-        navigate("/");
-      } else {
-        toast.error("Invalid OTP");
+      try {
+        setLoading(true);
+        // Send request to /staff/verify-otp with mobile and OTP
+        const response = await apiAxios().post("staff/verify-otp", {
+          mobile: currentUser.mobile,
+          otp: data.otp,
+        });
+
+        if (response.data.status) {
+          const result = response.data.data;
+          dispatch(setAccessToken(result.token));
+          dispatch(setuser(result));
+          dispatch(setIsAuthenticated(true));
+          toast.success(response.data.message || "Login successful");
+          navigate("/");
+        } else {
+          toast.error(response.data.message || "Invalid OTP");
+        }
+      } catch (error) {
+        toast.error(error.response?.data?.message || "Invalid OTP");
+      } finally {
+        setLoading(false);
       }
     }
   };
@@ -133,34 +112,31 @@ const Login = (props) => {
       <div className="sm:mx-auto sm:w-full sm:max-w-sm login--form--admin">
         <form onSubmit={handleSubmit} className="space-y-3">
           {step === 1 && (
-            <>
-              {/* Identifier Field */}
-              <div>
-                <label
-                  htmlFor="identifier"
-                  className="block text-sm font-medium text-gray-900"
-                >
-                  Phone Number or Email
-                </label>
-                <div className="mt-2">
-                  <div className="filter--input--search flex items-center bg-white rounded-[5px] h-[45px] border border-bordergray px-[15px]">
-                    <span className="border-r border-bordergray pr-[15px]">
-                      <FaPhoneAlt />
-                    </span>
-                    <input
-                      id="identifier"
-                      name="identifier"
-                      type="text"
-                      value={data.identifier}
-                      onChange={handleChange}
-                      required
-                      className="block w-full rounded-md border-0 py-1.5 px-4 text-gray-900 focus:outline-none sm:text-sm"
-                      placeholder="Enter your phone number or email"
-                    />
-                  </div>
+            <div>
+              <label
+                htmlFor="identifier"
+                className="block text-sm font-medium text-gray-900"
+              >
+                Phone Number
+              </label>
+              <div className="mt-2">
+                <div className="filter--input--search flex items-center bg-white rounded-[5px] h-[45px] border border-bordergray px-[15px]">
+                  <span className="border-r border-bordergray pr-[15px]">
+                    <FaPhoneAlt />
+                  </span>
+                  <input
+                    id="identifier"
+                    name="identifier"
+                    type="text"
+                    value={data.identifier}
+                    onChange={handleChange}
+                    required
+                    className="block w-full rounded-md border-0 py-1.5 px-4 text-gray-900 focus:outline-none sm:text-sm"
+                    placeholder="Enter your phone number"
+                  />
                 </div>
               </div>
-            </>
+            </div>
           )}
 
           {step === 2 && (
@@ -185,8 +161,8 @@ const Login = (props) => {
                     required
                     className="block w-full rounded-md border-0 py-1.5 px-4 text-gray-900 focus:outline-none sm:text-sm"
                     placeholder="Enter your OTP"
-                    minLength={4}
-                    maxLength={4}
+                    minLength={6}
+                    maxLength={6}
                   />
                 </div>
               </div>

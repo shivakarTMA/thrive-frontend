@@ -1,29 +1,38 @@
+// Import React and necessary hooks
 import React, { useEffect, useRef, useState } from "react";
+// Import icons and utilities
 import { FiPlus } from "react-icons/fi";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { toast } from "react-toastify";
 import Tooltip from "../common/Tooltip";
 import { LiaEdit } from "react-icons/lia";
-import { FaCircle } from "react-icons/fa6";
-import CreateStudio from "./CreateStudio";
+import CreateService from "./CreateService";
 import { apiAxios } from "../../config/config";
 import { IoSearchOutline } from "react-icons/io5";
 import Select from "react-select";
 import { customStyles } from "../../Helper/helper";
 
-const Studio = () => {
+// Main Services component
+const Services = () => {
+  // State to control modal visibility
   const [showModal, setShowModal] = useState(false);
+  // State to hold list of services
   const [module, setModule] = useState([]);
+  // State to hold list of clubs
   const [club, setClub] = useState([]);
+  // State to hold list of studios
+  const [studio, setStudio] = useState([]);
+  // State to hold editing option data
   const [editingOption, setEditingOption] = useState(null);
+  // Ref to handle modal close on outside click
   const leadBoxRef = useRef(null);
-
+  // State for search input
   const [searchTerm, setSearchTerm] = useState("");
+  // State for status filter
   const [statusFilter, setStatusFilter] = useState(null);
 
-  const [file, setFile] = useState(null);
-
+  // Function to fetch clubs
   const fetchClub = async (search = "") => {
     try {
       const res = await apiAxios().get("/club/list", {
@@ -40,9 +49,27 @@ const Studio = () => {
     }
   };
 
+  // Function to fetch studios
   const fetchStudio = async (search = "") => {
     try {
       const res = await apiAxios().get("/studio/list", {
+        params: search ? { search } : {},
+      });
+      let data = res.data?.data || res.data || [];
+      if (statusFilter?.value) {
+        data = data.filter((item) => item.status === statusFilter.value);
+      }
+      setStudio(data);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to fetch companies");
+    }
+  };
+
+  // Function to fetch services
+  const fetchServices = async (search = "") => {
+    try {
+      const res = await apiAxios().get("/service/list", {
         params: search ? { search } : {},
       });
       let data = res.data?.data || res.data || [];
@@ -56,62 +83,124 @@ const Studio = () => {
     }
   };
 
+  // Handle edit service action
+  const handleEdit = (id) => {
+    const data = module.find((item) => item.id === id);
+
+    if (data) {
+      setEditingOption(data);
+
+      formik.setValues({
+        id: data.id || "",
+        name: data.name || "",
+        // Keep existing image if already present
+        image: data.image || null,
+        club_id: data.club_id || "",
+        studio_id: data.studio_id || "",
+        type: data.type || "",
+        position: data.position || "",
+        status: data.status || "ACTIVE",
+      });
+
+      setShowModal(true);
+    } else {
+      toast.error("Service not found in list");
+    }
+  };
+
+  // Load initial data
   useEffect(() => {
-    fetchStudio();
+    fetchServices();
     fetchClub();
+    fetchStudio();
   }, []);
 
-  const clubOptions = club?.map(item => ({
-    label: item.name,  // Show club name
-    value: item.id     // Store club_id as ID
-  })) || [];
+  // Prepare dropdown options for clubs
+  const clubOptions =
+    club?.map((item) => ({
+      label: item.name,
+      value: item.id,
+    })) || [];
 
-  console.log(clubOptions,'clubOptions')
+  // Prepare dropdown options for studios
+  const studioOptions =
+    studio?.map((item) => ({
+      label: item.name,
+      value: item.id,
+    })) || [];
 
-
+  // Debounced search for services
   useEffect(() => {
     const delayDebounce = setTimeout(() => {
-      fetchStudio(searchTerm);
+      fetchServices(searchTerm);
     }, 300);
-
     return () => clearTimeout(delayDebounce);
   }, [searchTerm, statusFilter]);
 
+  // Handle overlay click to close modal
   const handleOverlayClick = (e) => {
     if (leadBoxRef.current && !leadBoxRef.current.contains(e.target)) {
       setShowModal(false);
     }
   };
 
-  console.log(searchTerm, "searchTerm");
-
+  // Formik initialization
   const formik = useFormik({
     initialValues: {
+      image: null,
       name: "",
       club_id: "",
-      position: null,
-      status: "",
+      studio_id: "",
+      type: "",
+      position: "",
+      status: "ACTIVE",
     },
     validationSchema: Yup.object({
+      image: Yup.mixed().test(
+        "required-image",
+        "Image is required",
+        function (value) {
+          if (!editingOption) {
+            return value !== null;
+          }
+          return true;
+        }
+      ),
       name: Yup.string().required("Title is required"),
       club_id: Yup.string().required("Club is required"),
-      position: Yup.number().required("Position is required"),
+      studio_id: Yup.string().required("Studio is required"),
+      type: Yup.string().required("Type is required"),
+      position: Yup.string().required("Position is required"),
       status: Yup.string().required("Status is required"),
     }),
     onSubmit: async (values, { resetForm }) => {
       try {
+        // Create form data for API request
+        const formData = new FormData();
 
-        const payload = { ...values };
-
-       if (editingOption && editingOption.id) {
-            await apiAxios().put(`/studio/${editingOption.id}`, payload);
-            toast.success("Updated Successfully");
+        Object.keys(values).forEach((key) => {
+          // Only append image if it's a new file
+          if (key === "image") {
+            if (values.image && typeof values.image !== "string") {
+              formData.append("image", values.image);
+            }
           } else {
-            await apiAxios().post("/studio/create", payload);
-            toast.success("Created Successfully");
+            formData.append(key, values[key]);
           }
+        });
+        if (editingOption && editingOption.id) {
+          await apiAxios().put(`/service/${editingOption.id}`, formData, {
+            headers: { "Content-Type": "multipart/form-data" },
+          });
+          toast.success("Updated Successfully");
+        } else {
+          await apiAxios().post("/service/create", formData, {
+            headers: { "Content-Type": "multipart/form-data" },
+          });
+          toast.success("Created Successfully");
+        }
 
-        fetchStudio();
+        fetchServices();
       } catch (err) {
         console.error("API Error:", err.response?.data || err.message);
         toast.error("Failed to save onboarding");
@@ -125,28 +214,28 @@ const Studio = () => {
 
   return (
     <div className="page--content">
+      {/* Header Section */}
       <div className="flex items-end justify-between gap-2 mb-5">
         <div className="title--breadcrumbs">
-          <p className="text-sm">{`Home > All Studio`}</p>
-          <h1 className="text-3xl font-semibold">All Studio</h1>
+          <p className="text-sm">{`Home > All Services`}</p>
+          <h1 className="text-3xl font-semibold">All Services</h1>
         </div>
-  
-          <div className="flex items-end gap-2">
-            <button
-              type="button"
-              className="px-4 py-2 bg-black text-white rounded flex items-center gap-2"
-              onClick={() => {
-                setEditingOption(null);
-                formik.resetForm();
-                setShowModal(true);
-              }}
-            >
-              <FiPlus /> Create Studio
-            </button>
-          </div>
-        
+        <div className="flex items-end gap-2">
+          <button
+            type="button"
+            className="px-4 py-2 bg-black text-white rounded flex items-center gap-2"
+            onClick={() => {
+              setEditingOption(null);
+              formik.resetForm();
+              setShowModal(true);
+            }}
+          >
+            <FiPlus /> Create Services
+          </button>
+        </div>
       </div>
 
+      {/* Search and Filter Section */}
       <div className="flex gap-3 mb-4">
         <div className="mb-4 w-full max-w-[250px]">
           <div className="relative">
@@ -155,7 +244,7 @@ const Studio = () => {
             </span>
             <input
               type="text"
-              placeholder="Search Studio..."
+              placeholder="Search Services..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="custom--input w-full input--icon"
@@ -177,15 +266,15 @@ const Studio = () => {
         </div>
       </div>
 
+      {/* Table Section */}
       <div className="relative overflow-x-auto">
         <table className="w-full text-sm text-left text-gray-500">
           <thead className="text-xs text-gray-700 uppercase bg-gray-50">
             <tr>
-              {/* <th className="px-2 py-4">Module ID</th> */}
-              <th className="px-2 py-4">Club Name</th>
+              <th className="px-2 py-4">Image</th>
               <th className="px-2 py-4">Name</th>
-              <th className="px-2 py-4">Position</th>
-              <th className="px-2 py-4">Status</th>
+              <th className="px-2 py-4">Club Name</th>
+              <th className="px-2 py-4">Studio Name</th>
               <th className="px-2 py-4">Action</th>
             </tr>
           </thead>
@@ -193,7 +282,7 @@ const Studio = () => {
             {module.length === 0 ? (
               <tr>
                 <td colSpan="8" className="text-center py-4">
-                  No Studio added yet.
+                  No Services added yet.
                 </td>
               </tr>
             ) : (
@@ -202,27 +291,19 @@ const Studio = () => {
                   key={item.id || index}
                   className="group bg-white border-b hover:bg-gray-50 relative transition duration-700"
                 >
-                  {/* <td className="px-2 py-4">{item?.id || "—"}</td> */}
-                  <td className="px-2 py-4">
-                    {item?.club_name}
+                  <td>
+                    {item.image ? (
+                      <img
+                        src={item.image}
+                        className="w-14 h-14 object-cover"
+                      />
+                    ) : (
+                      "--"
+                    )}
                   </td>
                   <td className="px-2 py-4">{item?.name}</td>
-                  <td>{item.position}</td>
-                  <td className="px-2 py-4">
-                    <div
-                      className={`flex gap-1 items-center ${
-                        item?.status === "ACTIVE"
-                          ? "text-green-500"
-                          : "text-red-500"
-                      }`}
-                    >
-                      <FaCircle />
-                      {item?.status
-                        ? item.status.charAt(0) +
-                          item.status.slice(1).toLowerCase()
-                        : ""}
-                    </div>
-                  </td>
+                  <td className="px-2 py-4">{item?.club_name}</td>
+                  <td className="px-2 py-4">{item?.studio_name}</td>
                   <td className="px-2 py-4">
                     <div className="w-fit">
                       <Tooltip
@@ -232,11 +313,7 @@ const Studio = () => {
                       >
                         <div
                           className="p-1 cursor-pointer"
-                          onClick={() => {
-                            setEditingOption(item);
-                            formik.setValues(item);
-                            setShowModal(true);
-                          }}
+                          onClick={() => handleEdit(item.id)}
                         >
                           <LiaEdit className="text-[25px] text-black" />
                         </div>
@@ -250,18 +327,20 @@ const Studio = () => {
         </table>
       </div>
 
+      {/* Modal for Create/Update Service */}
       {showModal && (
-        <CreateStudio
+        <CreateService
           setShowModal={setShowModal}
           editingOption={editingOption}
           formik={formik}
           handleOverlayClick={handleOverlayClick}
           leadBoxRef={leadBoxRef}
           clubOptions={clubOptions}
+          studioOptions={studioOptions}
         />
       )}
     </div>
   );
 };
 
-export default Studio;
+export default Services;

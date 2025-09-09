@@ -51,6 +51,7 @@ import ChallengeList from "../components/ChallengeList/ChallengeList";
 import OnBoardingScreen from "../components/OnBoardingScreen/OnBoardingScreen";
 import SplashScreen from "../components/SplashScreen/SplashScreen";
 import Studio from "../components/Studio/Studio";
+import Services from "../components/ServicesNew/Services";
 
 
 export default function Routing() {
@@ -79,7 +80,7 @@ export default function Routing() {
         <Route path="/set-password" element={<SetPassword />} /> 
 
         {/* FOH Routes */}
-        {userType === "FOH" && (
+        {/* {userType === "FOH" && (
           <>
             <Route
               path="/"
@@ -243,6 +244,14 @@ export default function Routing() {
               }
             />
             <Route
+              path="/services"
+              element={
+                <PrivateRoute>
+                  <Services />
+                </PrivateRoute>
+              }
+            />
+            <Route
               path="/services-addons"
               element={
                 <PrivateRoute>
@@ -307,7 +316,241 @@ export default function Routing() {
               }
             />
           </>
-        )}
+        )} */}
+
+        <Route
+              path="/"
+              element={
+                <PrivateRoute>
+                  <Home />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/all-leads"
+              element={
+                <PrivateRoute>
+                  <AllLeads />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/edit-lead-details/:id"
+              element={
+                <PrivateRoute>
+                  <EditLeadDetails />
+                </PrivateRoute>
+              }
+            />
+
+            <Route
+              path="/all-members"
+              element={
+                <PrivateRoute>
+                  <MemberList />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/member/:id"
+              element={
+                <PrivateRoute>
+                  <MemberProfile />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/lost-found"
+              element={
+                <PrivateRoute>
+                  <AllLostFound />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/lead-follow-up/:id"
+              element={
+                <PrivateRoute>
+                  <LeadCallLogs />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/member-follow-up/:id"
+              element={
+                <PrivateRoute>
+                  <MemberCallLogs />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/services-list/"
+              element={
+                <PrivateRoute>
+                  <ServicesLIst />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/book-service/:id"
+              element={
+                <PrivateRoute>
+                  <BookingService />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/products"
+              element={
+                <PrivateRoute>
+                  <ProductsList />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/companies"
+              element={
+                <PrivateRoute>
+                  <CompanyList />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/club"
+              element={
+                <PrivateRoute>
+                  <ClubList />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/option-list"
+              element={
+                <PrivateRoute>
+                  <OptionList />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/role-list"
+              element={
+                <PrivateRoute>
+                  <RoleList />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/module-list"
+              element={
+                <PrivateRoute>
+                  <ModuleList />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/challenge-list"
+              element={
+                <PrivateRoute>
+                  <ChallengeList />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/on-boarding-list"
+              element={
+                <PrivateRoute>
+                  <OnBoardingScreen />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/splash-screen"
+              element={
+                <PrivateRoute>
+                  <SplashScreen />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/studio"
+              element={
+                <PrivateRoute>
+                  <Studio />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/services"
+              element={
+                <PrivateRoute>
+                  <Services />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/services-addons"
+              element={
+                <PrivateRoute>
+                  <ServicesAddons />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/staff"
+              element={
+                <PrivateRoute>
+                  <StaffList />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/exercises"
+              element={
+                <PrivateRoute>
+                  <ExercisesList />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/workout-plans"
+              element={
+                <PrivateRoute>
+                  <WorkoutPlanList />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/create-workout-plan"
+              element={
+                <PrivateRoute>
+                  <CreateWorkoutplan />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/create-workout-plan/:id"
+              element={
+                <PrivateRoute>
+                  <CreateWorkoutplan />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/diet-plan/"
+              element={
+                <PrivateRoute>
+                  <DietPlanList />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/group-classes/"
+              element={
+                <PrivateRoute>
+                  <AllGroupClasses />
+                </PrivateRoute>
+              }
+            />
 
         {/* PT Routes */}
         {userType === "PT" && (

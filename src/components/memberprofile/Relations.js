@@ -28,7 +28,7 @@ const validationSchema = Yup.object({
             return isValidPhoneNumber(value || "");
           }),
   email: Yup.string().email("Invalid email").required("Email is required"),
-  // relationship: Yup.object().required("Relationship is required"),
+  relationship: Yup.object().required("Relationship is required"),
 });
 
 const Relations = () => {
@@ -68,15 +68,15 @@ const Relations = () => {
     },
   });
 
-  const columns = ["Name", "Referred On", "Current Status"];
-  // const columns = ["Name", "Relationship", "Referred On", "Current Status"];
+  // const columns = ["Name", "Referred On", "Current Status"];
+  const columns = ["Name", "Relationship", "Referred On", "Current Status"];
 
   return (
     <div className="p-4 bg-white rounded shadow">
       <div className="flex justify-end mb-3">
         <button
           onClick={() => setIsModalOpen(true)}
-          className="px-4 py-2 bg-black text-white rounded flex items-center gap-2"
+          className="px-4 py-2 bg-white text-black flex items-center gap-2 cursor-pointer"
         >
          <FiPlus /> Add Referral
         </button>
@@ -98,7 +98,7 @@ const Relations = () => {
               referredBy.map((item, idx) => (
                 <tr key={idx}>
                   <td className="border px-3 py-2">{item.name}</td>
-                  {/* <td className="border px-3 py-2">{item.relationship}</td> */}
+                  <td className="border px-3 py-2">{item.relationship}</td>
                   <td className="border px-3 py-2">{item.referredOn}</td>
                   <td className="border px-3 py-2">{item.status}</td>
                 </tr>
@@ -182,7 +182,7 @@ const Relations = () => {
                   </div>
                 </div>
 
-                {/* <div>
+                <div>
                   <label className="mb-2 block">Relationship<span className="text-red-500">*</span></label>
                    <div className="relative">
                     <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
@@ -199,7 +199,7 @@ const Relations = () => {
                   {formik.touched.relationship && formik.errors.relationship && (
                     <p className="text-red-500 text-xs">{formik.errors.relationship}</p>
                   )}
-                </div> */}
+                </div>
               </div>
 
               <div className="flex justify-end">

@@ -34,7 +34,7 @@ import ConfirmUnderAge from "../components/modal/ConfirmUnderAge";
 import { FaCalendarDays, FaListCheck, FaLocationDot } from "react-icons/fa6";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchOptionList } from "../Redux/Reducers/optionListSlice";
-import { apiAxios } from "../config/config";
+import { apiAxios, authAxios } from "../config/config";
 
 // Trainer assignment options
 const assignTrainers = [
@@ -52,7 +52,7 @@ const leadSourceTypes = [
 ];
 
 const validationSchema = Yup.object({
-  firstname: Yup.string().required("First Name is required"),
+  full_name: Yup.string().required("Full Name is required"),
   mobile: Yup.string()
     .required("Contact number is required")
     .test("is-valid-phone", "Invalid phone number", function (value) {
@@ -151,8 +151,7 @@ const CreateLeadForm = ({ setLeadModal, selectedLead }) => {
   // ✅ Initial form values
   const initialValues = {
     id: "",
-    firstname: "",
-    lastname: "",
+    full_name:"",
     mobile: "",
     country_code: "",
     phoneFull: "",
@@ -224,7 +223,7 @@ const CreateLeadForm = ({ setLeadModal, selectedLead }) => {
           await apiAxios().put(`/lead/${values.id}`, payload); // 👈 FIXED
           toast.success("Lead updated successfully!");
         } else {
-          await apiAxios().post("/lead/create", payload);
+          await authAxios().post("/lead/create", payload);
           toast.success("Lead created successfully!");
         }
 
@@ -241,8 +240,7 @@ const CreateLeadForm = ({ setLeadModal, selectedLead }) => {
     if (selectedLead) {
       formik.setValues({
         id: selectedLead.id || "",
-        firstname: selectedLead.firstname || "",
-        lastname: selectedLead.lastname || "",
+        full_name: selectedLead.full_name || "",
         mobile: selectedLead.mobile || "",
         country_code: selectedLead.country_code || "",
         phoneFull: selectedLead.country_code
@@ -468,44 +466,25 @@ const CreateLeadForm = ({ setLeadModal, selectedLead }) => {
                     </div>
                     <div>
                       <label className="mb-2 block">
-                        First Name<span className="text-red-500">*</span>
+                        Full Name<span className="text-red-500">*</span>
                       </label>
                       <div className="relative">
                         <span className="absolute top-[50%] translate-y-[-50%] left-[15px]">
                           <FaUser />
                         </span>
                         <input
-                          name="firstname"
-                          value={formik.values.firstname}
+                          name="full_name"
+                          value={formik.values.full_name}
                           onChange={formik.handleChange}
                           className="custom--input w-full input--icon"
                         />
                       </div>
-                      {formik.errors?.firstname &&
-                        formik.touched?.firstname && (
+                      {formik.errors?.full_name &&
+                        formik.touched?.full_name && (
                           <div className="text-red-500 text-sm">
-                            {formik.errors.firstname}
+                            {formik.errors.full_name}
                           </div>
                         )}
-                    </div>
-                    <div>
-                      <label className="mb-2 block">Last Name</label>
-                      <div className="relative">
-                        <span className="absolute top-[50%] translate-y-[-50%] left-[15px]">
-                          <FaUser />
-                        </span>
-                        <input
-                          name="lastname"
-                          value={formik.values.lastname}
-                          onChange={formik.handleChange}
-                          className="custom--input w-full input--icon"
-                        />
-                      </div>
-                      {formik.errors?.lastname && formik.touched?.lastname && (
-                        <div className="text-red-500 text-sm">
-                          {formik.errors.lastname}
-                        </div>
-                      )}
                     </div>
 
                     <div>

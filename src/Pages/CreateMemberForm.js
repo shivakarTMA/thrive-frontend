@@ -4,27 +4,11 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import "react-phone-number-input/style.css";
 import PhoneInput, { isValidPhoneNumber } from "react-phone-number-input";
-
-import {
-  servicesName,
-  leadsSources,
-  leadTypes,
-  companies,
-  trainerAvailability,
-  mockData,
-  leadSubTypes,
-  centreInfo,
-} from "../DummyData/DummyData";
-
-import {
-  convertToISODate,
-  customStyles,
-  formatDateTime,
-  formatTime,
-  selectIcon,
-} from "../Helper/helper";
-import { IoCloseCircle, IoDocumentSharp, IoKey } from "react-icons/io5";
-import { Formik, Field, Form, ErrorMessage, useFormik } from "formik";
+import { parsePhoneNumberFromString } from "libphonenumber-js";
+import { companies, centreInfo } from "../DummyData/DummyData";
+import { selectIcon } from "../Helper/helper";
+import { IoBan, IoCloseCircle } from "react-icons/io5";
+import { useFormik } from "formik";
 import * as Yup from "yup";
 import {
   FaBirthdayCake,
@@ -38,15 +22,23 @@ import {
   FaUser,
   FaUserTie,
 } from "react-icons/fa";
-import { FaListCheck, FaLocationDot, FaUserLarge } from "react-icons/fa6";
+import {
+  FaListCheck,
+  FaLocationDot,
+  FaRegImage,
+  FaUserLarge,
+} from "react-icons/fa6";
 import ProductModal from "../components/modal/ProductDetails";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import ConfirmUnderAge from "../components/modal/ConfirmUnderAge";
-import StepProgressBar from "../components/common/StepProgressBar";
 import { RiDiscountPercentFill } from "react-icons/ri";
 import { IoIosTime } from "react-icons/io";
 import { LuIndianRupee } from "react-icons/lu";
 import { toast } from "react-toastify";
+import { apiAxios } from "../config/config";
+import { fetchOptionList } from "../Redux/Reducers/optionListSlice";
+import Webcam from "react-webcam";
+import { IoCheckmark, IoClose } from "react-icons/io5";
 
 const voucherList = [
   { code: "FIT10", discount: 10 },
@@ -54,48 +46,38 @@ const voucherList = [
   { code: "SUMMER25", discount: 25 },
 ];
 
-const SelectOptions = [
-  { value: "yes", label: "Yes" },
-  { value: "no", label: "No" },
-];
-
 const stepValidationSchemas = [
   // ✅ Step 0: Full set of required fields
   Yup.object({
-    memberDetails: Yup.object({
-      name: Yup.string()
-        .min(3, "Name must be at least 3 characters")
-        .required("Name is required"),
-      contactNumber: Yup.string()
-        .required("Contact number is required")
-        .test("is-valid-phone", "Invalid phone number", function (value) {
-          return isValidPhoneNumber(value || "");
-        }),
-      email: Yup.string()
-        .email("Invalid email format")
-        .required("Email is required"),
-      gender: Yup.string().required("Gender is required"),
-      dob: Yup.string()
-        .nullable()
-        .required("Date of birth is required")
-        .max(new Date(), "Date of birth cannot be in the future"),
-      address: Yup.string().required("Address is required"),
-    }),
-
-    leadInformation: Yup.object({
-      leadSource: Yup.string().required("Lead Source is required"),
-      leadType: Yup.string().required("Lead Type is required"),
-      leadSourceType: Yup.string().when("leadSource", {
-        is: (val) => ["social media", "events / campaigns"].includes(val),
-        then: () => Yup.string().required("This is required"),
+    full_name: Yup.string().required("First Name is required"),
+    email: Yup.string()
+      .email("Invalid email format")
+      .required("Email is required"),
+    gender: Yup.string().required("Gender is required"),
+    mobile: Yup.string()
+      .required("Contact number is required")
+      .test("is-valid-phone", "Invalid phone number", function (value) {
+        const { country_code } = this.parent;
+        if (!value || !country_code) return false;
+        const phoneNumber = parsePhoneNumberFromString(
+          "+" + country_code + value
+        );
+        return phoneNumber?.isValid() || false;
       }),
-      otherSource: Yup.string().when("leadSourceType", {
-        is: "others",
-        then: () => Yup.string().required("This is required"),
-      }),
+    date_of_birth: Yup.string()
+      .nullable()
+      .required("Date of birth is required")
+      .max(new Date(), "Date of birth cannot be in the future"),
+    location: Yup.string().required("Location is required"),
+    lead_source: Yup.string().required("Lead Source is required"),
+    lead_type: Yup.string().required("Lead Type is required"),
+    platform: Yup.string().when("lead_source", {
+      is: (val) => ["Social Media", "Events/Campaigns"].includes(val),
+      then: () => Yup.string().required("This is required"),
     }),
   }),
   Yup.object({
+    company_name: Yup.string().required("Company is required"),
     emergencyContacts: Yup.array()
       .of(
         Yup.object({
@@ -120,24 +102,20 @@ const stepValidationSchemas = [
 ];
 
 const leadSourceTypes = [
-  { value: "facebook", label: "Facebook" },
-  { value: "instagram", label: "Instagram" },
-  { value: "others", label: "Others" },
-];
-const kycDocumentsOptions = [
-  { value: "Aadhar Card", label: "Aadhar Card" },
-  { value: "PAN Card", label: "PAN Card" },
-  { value: "Passport", label: "Passport" },
-  { value: "Voter ID", label: "Voter ID" },
+  { value: "Facebook", label: "Facebook" },
+  { value: "Instagram", label: "Instagram" },
+  { value: "Others", label: "Others" },
 ];
 
 const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
-  console.log(selectedLeadMember, "selectedLeadMember");
-  const [activeTab, setActiveTab] = useState("personal");
+  const [allLeads, setAllLeads] = useState([]);
   const [profileImage, setProfileImage] = useState("");
+  const [showModal, setShowModal] = useState(false);
+  const webcamRef = useRef(null);
   const [showProductModal, setShowProductModal] = useState(false);
   const [step, setStep] = useState(0);
   const { user } = useSelector((state) => state.auth);
+  const [companyOptions, setCompanyOptions] = useState([]);
 
   const [voucherInput, setVoucherInput] = useState("");
   const [voucherStatus, setVoucherStatus] = useState(null); // "success", "error", or null
@@ -152,26 +130,44 @@ const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
   const [showUnderageModal, setShowUnderageModal] = useState(false);
   const [pendingDob, setPendingDob] = useState(null);
 
+  // Redux state
+  const dispatch = useDispatch();
+  const { lists, loading } = useSelector((state) => state.optionList);
+
+  // Fetch option lists
+  useEffect(() => {
+    dispatch(fetchOptionList("LEAD_SOURCE"));
+    dispatch(fetchOptionList("LEAD_TYPE"));
+    dispatch(fetchOptionList("INTERESTED_IN"));
+    dispatch(fetchOptionList("RELATIONSHIP"));
+  }, [dispatch]);
+
+  // Extract Redux lists
+  const leadsSources = lists["LEAD_SOURCE"] || [];
+  const leadTypes = lists["LEAD_TYPE"] || [];
+  const servicesName = lists["INTERESTED_IN"] || [];
+  const relationList = lists["RELATIONSHIP"] || [];
+
   const initialValues = {
-    memberDetails: {
-      profileImage: "",
-      name: "",
-      contactNumber: "",
-      email: "",
-      gender: "",
-      dob: null,
-      address: "",
-    },
-    leadInformation: {
-      leadSource: "",
-      leadSourceType: "",
-      otherSource: "",
-      serviceName: "",
-      leadType: "",
-      multiClubAccess: "",
-      kycSubmitted: "",
-      kycDocuments: [],
-    },
+    id: "",
+    full_name: "",
+    profile_pic: "",
+    mobile: "",
+    country_code: "",
+    phoneFull: "",
+    email: "",
+    gender: "",
+    date_of_birth: "",
+    address: "",
+    location: "",
+    company_name: "",
+    interested_in: "",
+    lead_source: "",
+    lead_type: "",
+    platform: "",
+    schedule: "",
+    schedule_date_time: "",
+    staff_name: "",
     professionalInformation: {
       designation: "",
       companyName: "",
@@ -185,14 +181,14 @@ const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
       },
     ],
     membershipDetails: {
-      leadOwner: user?.name,
-      centre: "",
-      state: "",
-      country: "",
+      leadOwner: "Shivakar",
+      centre: "Gurugram",
+      state: "Haryana",
+      country: "India",
     },
     invoiceDetails: {
       invoiceDate: "",
-      leadOwner: user?.name,
+      leadOwner: "Shivakar",
       memberName: "",
     },
     productType: "membership plan",
@@ -206,15 +202,35 @@ const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
     voucherCode: "",
     discount: 0,
   };
-
   const formik = useFormik({
     initialValues,
     validationSchema: stepValidationSchemas[step],
-    onSubmit: (values) => {
+    enableReinitialize: true,
+    onSubmit: async (values) => {
       if (step === stepValidationSchemas.length - 1) {
-        console.log("Submitting full form", values);
-        toast.success("Member created successfully!");
-        setMemberModal(false);
+        try {
+          const formData = new FormData();
+          Object.keys(values).forEach((key) => {
+            formData.append(key, values[key]);
+          });
+
+          // If selectedLeadMember exists, update using PUT request
+          if (selectedLeadMember && selectedLeadMember.id) {
+           await apiAxios().put(`/member/convert/lead/${selectedLeadMember.id}`, formData, {
+            headers: { "Content-Type": "multipart/form-data" },
+          });
+            toast.success("Member created successfully!");
+          } else {
+            // Otherwise handle as a normal new form submission
+            console.log("Submitting full form", values);
+            toast.success("Member created successfully!");
+          }
+
+          setMemberModal(false);
+        } catch (error) {
+          toast.error("Failed to create member. Please try again.");
+          console.log(error, "error");
+        }
       } else {
         setStep(step + 1);
       }
@@ -223,34 +239,117 @@ const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
 
   useEffect(() => {
     if (selectedLeadMember) {
+      const dobIso = selectedLeadMember.date_of_birth
+        ? new Date(selectedLeadMember.date_of_birth).toISOString()
+        : "";
+
       formik.setValues({
-        memberDetails: {
-          profileImage: selectedLeadMember.profileImage || "",
-          name: selectedLeadMember.name || "",
-          contactNumber: selectedLeadMember.contact || "",
-          email: selectedLeadMember.email || "",
-          gender: selectedLeadMember.gender || "",
-          dob: selectedLeadMember.dob || null,
-          address: selectedLeadMember.address || "",
+        id: selectedLeadMember.id || "",
+        profile_pic: selectedLeadMember.profile_pic || "",
+        full_name: selectedLeadMember.full_name || "",
+        mobile: selectedLeadMember.mobile || "",
+        country_code: selectedLeadMember.country_code || "",
+        phoneFull: selectedLeadMember.country_code
+          ? `+${selectedLeadMember.country_code}${selectedLeadMember.mobile}`
+          : "",
+        email: selectedLeadMember.email || "",
+        gender: selectedLeadMember.gender || "",
+        date_of_birth: dobIso,
+        address: selectedLeadMember.address || "",
+        location: selectedLeadMember.location || "",
+        company_name: selectedLeadMember.company_name || "",
+        interested_in: selectedLeadMember.interested_in || "",
+        lead_source: selectedLeadMember.lead_source || "",
+        lead_type: selectedLeadMember.lead_type || "",
+        platform: selectedLeadMember.platform || "",
+        schedule: selectedLeadMember.schedule || "",
+        schedule_date_time: selectedLeadMember.schedule_date_time
+          ? new Date(selectedLeadMember.schedule_date_time).toISOString()
+          : "",
+        staff_name: selectedLeadMember.staff_name || "",
+        membershipDetails: {
+          leadOwner: "Shivakar",
+          centre: "Gurugram",
+          state: "Haryana",
+          country: "India",
         },
-        leadInformation: {
-          leadSource: selectedLeadMember.leadSource || "",
-          leadSourceType: selectedLeadMember.leadSourceType || "",
-          otherSource: selectedLeadMember.otherSource || "",
-          leadType: selectedLeadMember.leadType || "",
-          multiClubAccess: selectedLeadMember.multiClubAccess || "",
-          kycSubmitted: selectedLeadMember.kycSubmitted || "",
-          kycDocuments: selectedLeadMember.kycDocuments || [],
-        },
-        professionalInformation: {
-          designation: selectedLeadMember.designation || "",
-          companyName: selectedLeadMember.companyName || "",
-          officialEmail: selectedLeadMember.officialEmail || "",
+        invoiceDetails: {
+          invoiceDate: "",
+          leadOwner: "Shivakar",
+          memberName: selectedLeadMember.full_name,
         },
         productType: "membership plan",
       });
     }
   }, [selectedLeadMember]);
+
+  const fetchLeadList = async () => {
+    try {
+      const res = await apiAxios().get("/lead/list");
+      let data = res.data?.data || res.data || [];
+      setAllLeads(data);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to fetch lead");
+    }
+  };
+  // Fetch companies
+  const fetchCompanies = async (search = "") => {
+    try {
+      const res = await apiAxios().get("/company/list", {
+        params: search ? { search } : {},
+      });
+      const data = res.data?.data || [];
+      const options = data.map((company) => ({
+        value: company.id,
+        label: company.name,
+      }));
+      setCompanyOptions(options);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to fetch companies");
+    }
+  };
+
+  useEffect(() => {
+    fetchLeadList();
+    fetchCompanies();
+  }, []);
+
+  // Utility: Convert base64 to File
+  const base64ToFile = (base64String, fileName) => {
+    const arr = base64String.split(",");
+    const mime = arr[0].match(/:(.*?);/)[1];
+    const bstr = atob(arr[1]);
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
+    while (n--) {
+      u8arr[n] = bstr.charCodeAt(n);
+    }
+    return new File([u8arr], fileName, { type: mime });
+  };
+
+  // Capture from webcam
+  const capturePhoto = () => {
+    const imageSource = webcamRef.current.getScreenshot();
+    if (imageSource) {
+      const file = base64ToFile(imageSource, "profile_pic.jpg"); // Convert to file
+      setProfileImage(URL.createObjectURL(file));
+      formik.setFieldValue("profile_pic", file); // Set file in formik
+      setShowModal(false);
+    }
+  };
+
+  // Handle file upload
+  const handleImageUpload = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      const imageUrl = URL.createObjectURL(file);
+      setProfileImage(imageUrl);
+      formik.setFieldValue("profile_pic", file);
+      setShowModal(false);
+    }
+  };
 
   const handleNextStep = async () => {
     const errors = await formik.validateForm();
@@ -371,89 +470,61 @@ const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
   };
 
   const handlePhoneChange = (value) => {
-    formik.setFieldValue("memberDetails.contactNumber", value);
+    formik.setFieldValue("phoneFull", value);
+    if (!value) {
+      formik.setFieldValue("mobile", "");
+      formik.setFieldValue("country_code", "");
+      return;
+    }
+    const phoneNumber = parsePhoneNumberFromString(value);
+    if (phoneNumber) {
+      formik.setFieldValue("mobile", phoneNumber.nationalNumber);
+      formik.setFieldValue("country_code", phoneNumber.countryCallingCode);
+    }
     setHasDismissedDuplicateModal(false);
   };
 
-  const handleCheckDublicate = () => {
-    const inputValue = formik.values.memberDetails.contactNumber?.replace(
-      /\s/g,
-      ""
-    );
-
-    if (inputValue && inputValue.length >= 5) {
-      const matches = mockData.filter((user) => {
-        const userContact = user.contact?.replace(/\s/g, "");
-        return userContact === inputValue;
-      });
-
-      setMatchingUsers(matches);
-
-      const activeMatch = matches.find((user) => user.status === "active");
-
-      if (activeMatch) {
-        setDuplicateError(
-          "That a member with this phone number already exists"
-        );
-        //   setDuplicateError(
-        //   `Member "${activeMatch.name}" is already registered with this number`
-        // );
-
-        if (!hasDismissedDuplicateModal) {
-          setShowDuplicateModal(true);
-        }
-      } else {
-        setDuplicateError("");
+  const handlePhoneBlur = () => {
+    const { mobile, country_code } = formik.values;
+    if (!mobile || !country_code) return;
+    const inputCode = country_code.replace("+", "");
+    const inputMobile = mobile.replace(/\s/g, "");
+    const matches = allLeads.filter((user) => {
+      const userCode = (user.country_code || "").replace("+", "");
+      const userMobile = (user.mobile || "").replace(/\s/g, "");
+      return userCode === inputCode && userMobile === inputMobile;
+    });
+    setMatchingUsers(matches);
+    if (matches.length > 0) {
+      setDuplicateError("This phone number already exists");
+      if (!hasDismissedDuplicateModal) {
+        setShowDuplicateModal(true);
       }
     } else {
-      setMatchingUsers([]);
       setDuplicateError("");
+      setShowDuplicateModal(false);
     }
   };
 
   const handleDobChange = (date) => {
     if (!date) return;
 
-    formik.setFieldValue("memberDetails.dob", date);
+    formik.setFieldValue("date_of_birth", date);
   };
 
   const fifteenYearsAgo = new Date();
   fifteenYearsAgo.setFullYear(fifteenYearsAgo.getFullYear() - 15);
 
   const confirmDob = () => {
-    formik.setFieldValue("memberDetails.dob", pendingDob);
+    formik.setFieldValue("date_of_birth", pendingDob);
     setShowUnderageModal(false);
     setPendingDob(null);
   };
 
   const cancelDob = () => {
-    formik.setFieldValue("memberDetails.dob", "");
+    formik.setFieldValue("date_of_birth", "");
     setShowUnderageModal(false);
     setPendingDob(null);
-  };
-
-  const handleUserSelect = (user) => {
-    formik.setFieldValue("memberDetails.name", user.name);
-    formik.setFieldValue("memberDetails.email", user.email);
-    formik.setFieldValue("memberDetails.gender", user.gender);
-    formik.setFieldValue("memberDetails.dob", user.dob);
-    formik.setFieldValue("memberDetails.address", user.address);
-    formik.setFieldValue("memberDetails.contactNumber", user.contact);
-
-    formik.setFieldValue(
-      "leadInformation.leadSource",
-      user.leadSource.toLowerCase()
-    );
-
-    // Set leadType as a single value (no need for an array)
-    formik.setFieldValue(
-      "leadInformation.leadType",
-      user.leadType.toLowerCase()
-    );
-    console.log(matchingUsers);
-    console.log(user);
-
-    setMatchingUsers([]);
   };
 
   const handleImageChange = (e) => {
@@ -461,7 +532,7 @@ const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
     if (file) {
       const imageUrl = URL.createObjectURL(file);
       setProfileImage(imageUrl);
-      formik.setFieldValue("memberDetails.profileImage", file);
+      formik.setFieldValue("profile_pic", file);
     }
   };
 
@@ -475,8 +546,6 @@ const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
     setMemberModal(false);
   };
 
-  console.log(formik.values, "formik");
-
   return (
     <>
       <div
@@ -489,7 +558,7 @@ const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
           onClick={(e) => e.stopPropagation()}
         >
           <div className="bg-white rounded-t-[10px] flex gap-3 items-center justify-between py-4 px-4 border-b">
-            <h2 className="text-xl font-semibold">Create a Member</h2>
+            <h2 className="text-xl font-semibold">{selectedLeadMember ? 'Convert a Member' : 'Create a Member'}</h2>
             <div
               className="close--lead cursor-pointer"
               onClick={handleLeadModal}
@@ -516,9 +585,13 @@ const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
                         Member Details
                       </h3>
                       <div className="flex gap-4">
-                        <div className="max-w-[200px] h-[200px] w-full relative">
+                        <div
+                          className="max-w-[200px] h-[200px] w-full relative cursor-pointer"
+                          onClick={() => setShowModal(true)}
+                        >
                           {profileImage ? (
                             <img
+                              name="profile_pic"
                               src={profileImage} // optional fallback
                               alt="Profile Preview"
                               width={200}
@@ -534,15 +607,62 @@ const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
                           <div className="absolute bottom-[-10px] right-[-10px]">
                             <label className="cursor-pointer w-[45px] h-[45px] flex items-center justify-center bg-white text-sm px-2 py-1 rounded-full shadow">
                               <FaCamera className="text-2xl" />
-                              <input
+                              {/* <input
                                 type="file"
                                 accept="image/*"
                                 onChange={handleImageChange}
                                 className="hidden"
-                              />
+                              /> */}
                             </label>
                           </div>
                         </div>
+
+                        {/* Webcam Modal */}
+                        {showModal && (
+                          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                            <div className="bg-white p-4 rounded-lg shadow-lg flex flex-col items-center">
+                              {/* Webcam Preview */}
+                              <Webcam
+                                ref={webcamRef}
+                                screenshotFormat="image/jpeg"
+                                className="rounded-lg"
+                                videoConstraints={{
+                                  facingMode: "user", // use front camera
+                                }}
+                              />
+
+                              {/* Action buttons */}
+                              <div className="flex gap-3 mt-4 items-center justify-between w-full">
+                                <div className="flex gap-3 items-center">
+                                  <button
+                                    onClick={capturePhoto}
+                                    className="px-4 py-2 bg-black text-white rounded flex items-center gap-2"
+                                  >
+                                    <FaCamera /> Take Photo
+                                  </button>
+
+                                  <label className="px-4 py-2 bg-black text-white rounded flex items-center gap-2">
+                                    <FaRegImage /> Upload Image
+                                    <input
+                                      type="file"
+                                      accept="image/*"
+                                      onChange={handleImageUpload}
+                                      className="hidden"
+                                    />
+                                  </label>
+                                </div>
+
+                                <button
+                                  onClick={() => setShowModal(false)}
+                                  className="px-4 py-2 bg-black text-white rounded flex items-center gap-2"
+                                >
+                                  <IoClose /> Cancel
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
                         <div className="grid grid-cols-3 gap-4">
                           <div className="relative">
                             <label className="mb-2 block">
@@ -550,16 +670,16 @@ const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
                               <span className="text-red-500">*</span>
                             </label>
                             <PhoneInput
-                              name="memberDetails.contactNumber"
-                              value={formik.values.memberDetails.contactNumber}
+                              name="phoneFull"
+                              value={formik.values.phoneFull} // 👈 use phoneFull for UI binding
                               onChange={handlePhoneChange}
-                              onBlur={handleCheckDublicate}
+                              onBlur={handlePhoneBlur}
                               international
                               defaultCountry="IN"
                               countryCallingCodeEditable={false}
                               className="custom--input w-full custom--phone"
                             />
-                            {!duplicateError && matchingUsers.length > 0 && (
+                            {/* {!duplicateError && matchingUsers.length > 0 && (
                               <div className="border mt-2 bg-white shadow rounded p-2 max-h-40 overflow-y-auto z-10 absolute w-full">
                                 {matchingUsers.map((user) => (
                                   <div
@@ -575,12 +695,18 @@ const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
                                   </div>
                                 ))}
                               </div>
+                            )} */}
+
+                            {duplicateError && showDuplicateModal && (
+                              <div className="text-red-500 text-sm">
+                                Duplicate Entry
+                              </div>
                             )}
 
-                            {formik.errors.memberDetails?.contactNumber &&
-                              formik.touched.memberDetails?.contactNumber && (
+                            {formik.errors?.mobile &&
+                              formik.touched?.mobile && (
                                 <div className="text-red-500 text-sm">
-                                  {formik.errors.memberDetails.contactNumber}
+                                  {formik.errors.mobile}
                                 </div>
                               )}
                           </div>
@@ -592,18 +718,17 @@ const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
                               <span className="absolute top-[50%] translate-y-[-50%] left-[15px]">
                                 <FaUser />
                               </span>
-
                               <input
-                                name="memberDetails.name"
-                                value={formik.values.memberDetails.name}
+                                name="full_name"
+                                value={formik.values.full_name}
                                 onChange={formik.handleChange}
                                 className="custom--input w-full input--icon"
                               />
                             </div>
-                            {formik.errors.memberDetails?.name &&
-                              formik.touched.memberDetails?.name && (
+                            {formik.errors?.full_name &&
+                              formik.touched?.full_name && (
                                 <div className="text-red-500 text-sm">
-                                  {formik.errors.memberDetails.name}
+                                  {formik.errors.full_name}
                                 </div>
                               )}
                           </div>
@@ -618,41 +743,38 @@ const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
                               </span>
                               <input
                                 type="email"
-                                name="memberDetails.email"
-                                value={formik.values.memberDetails.email}
+                                name="email"
+                                value={formik.values.email}
                                 onChange={formik.handleChange}
                                 className="custom--input w-full input--icon"
                               />
                             </div>
-                            {formik.errors.memberDetails?.email &&
-                              formik.touched.memberDetails?.email && (
-                                <div className="text-red-500 text-sm">
-                                  {formik.errors.memberDetails.email}
-                                </div>
-                              )}
+                            {formik.errors?.email && formik.touched?.email && (
+                              <div className="text-red-500 text-sm">
+                                {formik.errors.email}
+                              </div>
+                            )}
                           </div>
 
                           <div>
-                            <label className="mb-2 block">
+                            <label className="mb-2 block font-medium text-gray-700">
                               Gender<span className="text-red-500">*</span>
                             </label>
                             <div className="flex gap-2 flex-wrap">
                               <label
-                                className={`flex items-center gap-2 px-4 py-2 rounded-[10px] border cursor-pointer shadow-sm transition ${
-                                  formik.values.memberDetails.gender === "male"
-                                    ? "bg-black text-white border-black"
-                                    : "bg-white text-gray-700 border-gray-300"
-                                }
-                                `}
+                                className={`flex items-center gap-2 px-4 py-2 rounded-[10px] border cursor-pointer shadow-sm transition
+                                                   ${
+                                                     formik.values.gender ===
+                                                     "MALE"
+                                                       ? "bg-black text-white border-black"
+                                                       : "bg-white text-gray-700 border-gray-300"
+                                                   }`}
                               >
                                 <input
                                   type="radio"
-                                  name="memberDetails.gender"
-                                  value="male"
-                                  checked={
-                                    formik.values.memberDetails.gender ===
-                                    "male"
-                                  }
+                                  name="gender"
+                                  value="MALE"
+                                  checked={formik.values.gender === "MALE"}
                                   onChange={formik.handleChange}
                                   className="hidden"
                                 />
@@ -661,34 +783,48 @@ const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
                               </label>
 
                               <label
-                                className={`flex items-center gap-2 px-4 py-2 rounded-[10px] border cursor-pointer shadow-sm transition ${
-                                  formik.values.memberDetails.gender ===
-                                  "female"
-                                    ? "bg-black text-white border-black"
-                                    : "bg-white text-gray-700 border-gray-300"
-                                }`}
+                                className={`flex items-center gap-2 px-4 py-2 rounded-[10px] border cursor-pointer shadow-sm transition
+                                                   ${
+                                                     formik.values.gender ===
+                                                     "FEMALE"
+                                                       ? "bg-black text-white border-black"
+                                                       : "bg-white text-gray-700 border-gray-300"
+                                                   }`}
                               >
                                 <input
                                   type="radio"
-                                  name="memberDetails.gender"
-                                  value="female"
-                                  checked={
-                                    formik.values.memberDetails.gender ===
-                                    "female"
-                                  }
+                                  name="gender"
+                                  value="FEMALE"
+                                  checked={formik.values.gender === "FEMALE"}
                                   onChange={formik.handleChange}
                                   className="hidden"
                                 />
                                 <FaFemale />
                                 Female
                               </label>
+                              <label
+                                className={`flex items-center gap-2 px-4 py-2 rounded-[10px] border cursor-pointer shadow-sm transition
+                                                   ${
+                                                     formik.values.gender ===
+                                                     "NOTDISCLOSE"
+                                                       ? "bg-black text-white border-black"
+                                                       : "bg-white text-gray-700 border-gray-300"
+                                                   }`}
+                              >
+                                <input
+                                  type="radio"
+                                  name="gender"
+                                  value="NOTDISCLOSE"
+                                  checked={
+                                    formik.values.gender === "NOTDISCLOSE"
+                                  }
+                                  onChange={formik.handleChange}
+                                  className="hidden"
+                                />
+                                <IoBan />
+                                Not to Disclose
+                              </label>
                             </div>
-                            {formik.errors.memberDetails?.gender &&
-                              formik.touched.memberDetails?.gender && (
-                                <div className="text-red-500 text-sm">
-                                  {formik.errors.memberDetails.gender}
-                                </div>
-                              )}
                           </div>
 
                           <div>
@@ -702,50 +838,68 @@ const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
 
                               <DatePicker
                                 selected={
-                                  formik.values.memberDetails.dob
-                                    ? convertToISODate(
-                                        formik.values.memberDetails.dob
-                                      )
+                                  formik.values.date_of_birth
+                                    ? new Date(formik.values.date_of_birth) // convert back to Date here
                                     : null
                                 }
                                 onChange={handleDobChange}
                                 showMonthDropdown
                                 showYearDropdown
                                 dropdownMode="select"
-                                maxDate={fifteenYearsAgo} // 👈 allow dates only up to 15 years ago
+                                maxDate={fifteenYearsAgo}
                                 dateFormat="dd MMM yyyy"
-                                yearDropdownItemNumber={100} // 👈 show 100 years (optional)
+                                yearDropdownItemNumber={100}
                                 placeholderText="Select date"
                                 className="input--icon"
                               />
                             </div>
-                            {formik.errors.memberDetails?.dob &&
-                              formik.touched.memberDetails?.dob && (
+                            {formik.errors?.date_of_birth &&
+                              formik.touched?.date_of_birth && (
                                 <div className="text-red-500 text-sm">
-                                  {formik.errors.memberDetails.dob}
+                                  {formik.errors.date_of_birth}
                                 </div>
                               )}
                           </div>
 
-                          <div className="col-span-3dd">
+                          <div className="col-span-2">
+                            <label className="mb-2 block">Address</label>
+                            <div className="relative">
+                              <span className="absolute top-[50%] translate-y-[-50%] left-[15px]">
+                                <FaLocationDot />
+                              </span>
+                              <input
+                                name="address"
+                                value={formik.values.address}
+                                onChange={formik.handleChange}
+                                className="custom--input w-full input--icon"
+                              />
+                            </div>
+                            {formik.errors?.address &&
+                              formik.touched?.address && (
+                                <div className="text-red-500 text-sm">
+                                  {formik.errors.address}
+                                </div>
+                              )}
+                          </div>
+                          <div>
                             <label className="mb-2 block">
-                              Address<span className="text-red-500">*</span>
+                              Location<span className="text-red-500">*</span>
                             </label>
                             <div className="relative">
                               <span className="absolute top-[50%] translate-y-[-50%] left-[15px]">
                                 <FaLocationDot />
                               </span>
                               <input
-                                name="memberDetails.address"
-                                value={formik.values.memberDetails.address}
+                                name="location"
+                                value={formik.values.location}
                                 onChange={formik.handleChange}
                                 className="custom--input w-full input--icon"
                               />
                             </div>
-                            {formik.errors.memberDetails?.address &&
-                              formik.touched.memberDetails?.address && (
+                            {formik.errors?.location &&
+                              formik.touched?.location && (
                                 <div className="text-red-500 text-sm">
-                                  {formik.errors.memberDetails.address}
+                                  {formik.errors.location}
                                 </div>
                               )}
                           </div>
@@ -764,15 +918,14 @@ const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
                               <FaListCheck />
                             </span>
                             <Select
-                              name="leadInformation.serviceName"
+                              name="interested_in"
                               value={servicesName.find(
                                 (opt) =>
-                                  opt.value ===
-                                  formik.values.leadInformation.serviceName
+                                  opt.value === formik.values.interested_in
                               )}
                               onChange={(option) =>
                                 formik.setFieldValue(
-                                  "leadInformation.serviceName",
+                                  "interested_in",
                                   option.value
                                 )
                               }
@@ -791,26 +944,21 @@ const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
                               <FaListCheck />
                             </span>
                             <Select
-                              name="leadInformation.leadType"
+                              name="lead_type"
                               value={leadTypes.find(
-                                (opt) =>
-                                  opt.value ===
-                                  formik.values.leadInformation.leadType
+                                (opt) => opt.value === formik.values.lead_type
                               )}
                               onChange={(option) =>
-                                formik.setFieldValue(
-                                  "leadInformation.leadType",
-                                  option.value
-                                )
+                                formik.setFieldValue("lead_type", option.value)
                               }
                               options={leadTypes}
                               styles={selectIcon}
                             />
                           </div>
-                          {formik.errors.leadInformation?.leadType &&
-                            formik.touched.leadInformation?.leadType && (
+                          {formik.errors?.lead_type &&
+                            formik.touched?.lead_type && (
                               <div className="text-red-500 text-sm">
-                                {formik.errors.leadInformation.leadType}
+                                {formik.errors.lead_type}
                               </div>
                             )}
                         </div>
@@ -824,15 +972,13 @@ const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
                               <FaListCheck />
                             </span>
                             <Select
-                              name="leadInformation.leadSource"
+                              name="lead_source"
                               value={leadsSources.find(
-                                (opt) =>
-                                  opt.value ===
-                                  formik.values.leadInformation.leadSource
+                                (opt) => opt.value === formik.values.lead_source
                               )}
                               onChange={(option) =>
                                 formik.setFieldValue(
-                                  "leadInformation.leadSource",
+                                  "lead_source",
                                   option.value
                                 )
                               }
@@ -840,18 +986,17 @@ const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
                               styles={selectIcon}
                             />
                           </div>
-                          {formik.errors.leadInformation?.leadSource &&
-                            formik.touched.leadInformation?.leadSource && (
+                          {formik.errors?.lead_source &&
+                            formik.touched?.lead_source && (
                               <div className="text-red-500 text-sm">
-                                {formik.errors.leadInformation.leadSource}
+                                {formik.errors.lead_source}
                               </div>
                             )}
                         </div>
-                        {formik.values.leadInformation.leadSource ===
-                          "social media" && (
+                        {formik.values.lead_source === "Social Media" && (
                           <div>
                             <label className="mb-2 block">
-                              Social Media
+                              Lead Sub-Source
                               <span className="text-red-500">*</span>
                             </label>
                             <div className="relative">
@@ -859,27 +1004,21 @@ const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
                                 <FaListCheck />
                               </span>
                               <Select
-                                name="leadInformation.leadSourceType"
+                                name="platform"
                                 value={leadSourceTypes.find(
-                                  (opt) =>
-                                    opt.value ===
-                                    formik.values.leadInformation.leadSourceType
+                                  (opt) => opt.value === formik.values.platform
                                 )}
                                 onChange={(option) =>
-                                  formik.setFieldValue(
-                                    "leadInformation.leadSourceType",
-                                    option.value
-                                  )
+                                  formik.setFieldValue("platform", option.value)
                                 }
                                 options={leadSourceTypes}
                                 styles={selectIcon}
                               />
                             </div>
-                            {formik.errors.leadInformation?.leadSourceType &&
-                              formik.touched.leadInformation
-                                ?.leadSourceType && (
+                            {formik.errors?.platform &&
+                              formik.touched?.platform && (
                                 <div className="text-red-500 text-sm">
-                                  {formik.errors.leadInformation.leadSourceType}
+                                  {formik.errors.platform}
                                 </div>
                               )}
                           </div>
@@ -991,41 +1130,45 @@ const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
                           </div>
                         </div>
                         <div>
-                          <label className="mb-2 block">Company</label>
+                          <label className="mb-2 block">
+                            Company<span className="text-red-500">*</span>
+                          </label>
                           <div className="relative">
                             <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
                               <FaBuilding />
                             </span>
                             <Select
-                              name="professionalInformation.companyName"
-                              value={companies.find(
-                                (opt) =>
-                                  opt.value ===
-                                  formik.values?.professionalInformation
-                                    ?.companyName
-                              )}
-                              onChange={(option) =>
-                                formik.setFieldValue(
-                                  "professionalInformation.companyName",
-                                  option.value
-                                )
+                              name="company_name"
+                              value={
+                                companyOptions.find(
+                                  (opt) =>
+                                    opt.value === formik.values.company_name
+                                ) ||
+                                (formik.values.company_name && {
+                                  value: formik.values.company_name,
+                                  label: formik.values.company_name,
+                                }) // ✅ fallback for raw string
                               }
-                              options={companies}
+                              onChange={(option) => {
+                                formik.setFieldValue(
+                                  "company_name",
+                                  option.value
+                                );
+                              }}
+                              options={companyOptions}
+                              isLoading={loading}
                               styles={selectIcon}
                             />
                           </div>
 
-                          {/* {formik.errors.professionalInformation?.companyName &&
-                          formik.touched.professionalInformation
-                            ?.companyName && (
-                            <div className="text-red-500 text-sm">
-                              {
-                                formik.errors.professionalInformation
-                                  .companyName
-                              }
-                            </div>
-                          )} */}
+                          {formik.errors?.company_name &&
+                            formik.touched?.company_name && (
+                              <div className="text-red-500 text-sm">
+                                {formik.errors.company_name}
+                              </div>
+                            )}
                         </div>
+
                         <div>
                           <label className="mb-2 block">
                             Official Email Id
@@ -1058,6 +1201,7 @@ const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
                             key={index}
                             className="grid grid-cols-3 gap-4 mb-4 border p-4 rounded-lg"
                           >
+                            {/* Name Field */}
                             <div>
                               <label className="mb-2 block">Name</label>
                               <div className="custom--date dob-format relative">
@@ -1072,19 +1216,20 @@ const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
                                   className="custom--input w-full input--icon"
                                 />
                               </div>
-                              {formik.errors.emergencyContacts?.[index]?.name &&
-                                formik.touched.emergencyContacts?.[index]
+                              {formik.errors?.emergencyContacts?.[index]
+                                ?.name &&
+                                formik.touched?.emergencyContacts?.[index]
                                   ?.name && (
                                   <div className="text-red-500 text-sm">
                                     {
                                       formik.errors.emergencyContacts[index]
                                         .name
                                     }
-                                    asdfasdf
                                   </div>
                                 )}
                             </div>
 
+                            {/* Contact Number Field */}
                             <div>
                               <label className="mb-2 block">Number</label>
                               <PhoneInput
@@ -1092,15 +1237,15 @@ const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
                                 value={contact?.contact}
                                 onChange={(value) =>
                                   handleEmergancyPhone(value, index)
-                                }
+                                } // Ensure this function handles formik update
                                 international
                                 defaultCountry="IN"
                                 countryCallingCodeEditable={false}
                                 className="custom--input w-full custom--phone"
                               />
-                              {formik.errors.emergencyContacts?.[index]
+                              {formik.errors?.emergencyContacts?.[index]
                                 ?.contact &&
-                                formik.touched.emergencyContacts?.[index]
+                                formik.touched?.emergencyContacts?.[index]
                                   ?.contact && (
                                   <div className="text-red-500 text-sm">
                                     {
@@ -1111,23 +1256,32 @@ const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
                                 )}
                             </div>
 
+                            {/* Relationship Field */}
                             <div>
                               <label className="mb-2 block">Relationship</label>
                               <div className="custom--date dob-format relative">
                                 <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
                                   <FaLink />
                                 </span>
-                                <input
-                                  type="text"
+                                <Select
                                   name={`emergencyContacts.${index}.relationship`}
-                                  value={contact?.relationship}
-                                  onChange={formik.handleChange}
-                                  className="custom--input w-full input--icon"
+                                  value={relationList.find(
+                                    (opt) =>
+                                      opt.value === formik.values.lead_source
+                                  )}
+                                  onChange={(option) =>
+                                    formik.setFieldValue(
+                                      `emergencyContacts.${index}.relationship`,
+                                      option.value
+                                    )
+                                  }
+                                  options={relationList}
+                                  styles={selectIcon}
                                 />
                               </div>
-                              {formik.errors.emergencyContacts?.[index]
+                              {formik.errors?.emergencyContacts?.[index]
                                 ?.relationship &&
-                                formik.touched.emergencyContacts?.[index]
+                                formik.touched?.emergencyContacts?.[index]
                                   ?.relationship && (
                                   <div className="text-red-500 text-sm">
                                     {
@@ -1138,6 +1292,7 @@ const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
                                 )}
                             </div>
 
+                            {/* Remove Button */}
                             <div className="col-span-3 flex justify-end mt-2">
                               {formik.values?.emergencyContacts?.length > 1 && (
                                 <button
@@ -1178,40 +1333,24 @@ const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
                               value={
                                 formik.values?.membershipDetails?.leadOwner
                               }
-                              onChange={formik.handleChange}
-                              className="custom--input w-full input--icon"
+                              readOnly={true}
+                              className="custom--input w-full input--icon bg-[#fafafa] pointer-events-none"
                             />
                           </div>
                         </div>
                         <div>
-                          <label className="mb-2 block">Centre Details</label>
+                          <label className="mb-2 block">Club</label>
+
                           <div className="relative">
                             <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
                               <FaBuilding />
                             </span>
-                            <Select
+                            <input
+                              type="text"
                               name="membershipDetails.centre"
-                              value={centreInfo.find(
-                                (opt) =>
-                                  opt.value ===
-                                  formik.values?.membershipDetails?.centre
-                              )}
-                              onChange={(option) => {
-                                formik.setFieldValue(
-                                  "membershipDetails.centre",
-                                  option.value
-                                );
-                                formik.setFieldValue(
-                                  "membershipDetails.state",
-                                  option.state
-                                );
-                                formik.setFieldValue(
-                                  "membershipDetails.country",
-                                  option.country
-                                );
-                              }}
-                              options={centreInfo}
-                              styles={selectIcon}
+                              value={formik.values?.membershipDetails?.centre}
+                              readOnly={true}
+                              className="custom--input w-full input--icon bg-[#fafafa] pointer-events-none"
                             />
                           </div>
                         </div>

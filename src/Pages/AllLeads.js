@@ -171,9 +171,9 @@ const AllLeads = () => {
     }
   };
 
-  useEffect(() => {
-    fetchLeadList();
-  }, []);
+useEffect(() => {
+  fetchLeadList();
+}, []);
 
   useEffect(() => {
     const delayDebounce = setTimeout(() => {
@@ -591,7 +591,7 @@ const AllLeads = () => {
                         {formatAutoDate(row?.updatedAt)}
                       </td>
                       <td className="px-2 py-4">
-                        {row?.firstname} {row?.lastname}
+                        {row?.full_name}
                       </td>
                       <td className="px-2 py-4">
                         {row?.lead_source == null ? "--" : row?.lead_source}
