@@ -131,9 +131,14 @@ const Login = (props) => {
                     value={data.identifier}
                     onChange={handleChange}
                     required
+                    minLength={10}        // Minimum 10 characters
+                    maxLength={10}        // Maximum 10 characters
+                    pattern="\d{10}"      // Only allow digits
+                    title="Phone number must be exactly 10 digits"
                     className="block w-full rounded-md border-0 py-1.5 px-4 text-gray-900 focus:outline-none sm:text-sm"
                     placeholder="Enter your phone number"
                   />
+
                 </div>
               </div>
             </div>
