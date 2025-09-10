@@ -54,16 +54,14 @@ const stepValidationSchemas = [
       .email("Invalid email format")
       .required("Email is required"),
     gender: Yup.string().required("Gender is required"),
-    mobile: Yup.string()
-      .required("Contact number is required")
-      .test("is-valid-phone", "Invalid phone number", function (value) {
-        const { country_code } = this.parent;
-        if (!value || !country_code) return false;
-        const phoneNumber = parsePhoneNumberFromString(
-          "+" + country_code + value
-        );
-        return phoneNumber?.isValid() || false;
-      }),
+   mobile: Yup.string()
+        .required("Contact number is required")
+        .test("is-valid-phone", "Invalid phone number", function (value) {
+          const { country_code } = this.parent;
+          if (!value || !country_code) return false;
+          const phoneNumber = parsePhoneNumberFromString("+" + country_code + value);
+          return phoneNumber?.isValid() || false;
+        }),
     date_of_birth: Yup.string()
       .nullable()
       .required("Date of birth is required")
@@ -108,6 +106,7 @@ const leadSourceTypes = [
 ];
 
 const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
+  console.log(selectedLeadMember,'selectedLeadMember')
   const [allLeads, setAllLeads] = useState([]);
   const [profileImage, setProfileImage] = useState("");
   const [showModal, setShowModal] = useState(false);
@@ -247,14 +246,14 @@ const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
         id: selectedLeadMember.id || "",
         profile_pic: selectedLeadMember.profile_pic || "",
         full_name: selectedLeadMember.full_name || "",
-        // mobile: selectedLeadMember.mobile || "",
+        mobile: selectedLeadMember.country_code
+          ? selectedLeadMember.mobile
+          : "",
         country_code: selectedLeadMember.country_code || "",
-        // phoneFull: selectedLeadMember.country_code
-        //   ? `${selectedLeadMember.country_code}${selectedLeadMember.mobile}` // ✅ fixed
-        //   : "",
-          phoneFull: selectedLeadMember.country_code
-  ? `+${selectedLeadMember.country_code}${selectedLeadMember.mobile}` // add the "+"
-  : "",
+        phoneFull: selectedLeadMember.country_code
+          ? `+${selectedLeadMember.country_code}${selectedLeadMember.mobile}`
+          : "",
+        country_code: selectedLeadMember.country_code || "",
         email: selectedLeadMember.email || "",
         gender: selectedLeadMember.gender || "NOTDISCLOSE",
         date_of_birth: dobIso,
@@ -285,6 +284,8 @@ const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
       });
     }
   }, [selectedLeadMember]);
+
+  console.log(selectedLeadMember,'SHIVAKAR')
 
   const fetchLeadList = async () => {
     try {
@@ -354,7 +355,7 @@ const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
     }
   };
 
-  const handleNextStep = async () => {
+const handleNextStep = async () => {
     const errors = await formik.validateForm();
 
     if (Object.keys(errors).length === 0) {
@@ -369,28 +370,20 @@ const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
         setStep(step + 1);
       }
     } else {
-      console.log("Validation Errors (object):", errors); // ✅ full nested error object
-
-      // Handle nested touched including arrays
+      // Mark all nested fields as touched
       const markTouched = (obj) => {
-        if (Array.isArray(obj)) {
-          return obj.map((item) => markTouched(item));
-        } else if (typeof obj === "object" && obj !== null) {
+        if (Array.isArray(obj)) return obj.map((item) => markTouched(item));
+        else if (typeof obj === "object" && obj !== null) {
           const touchedObj = {};
           Object.keys(obj).forEach((key) => {
             touchedObj[key] = markTouched(obj[key]);
           });
           return touchedObj;
-        } else {
-          return true;
-        }
+        } else return true;
       };
 
       const touchedFields = markTouched(errors);
-
       formik.setTouched(touchedFields);
-
-      // Return both touched and errors if needed
       return { errors, touched: touchedFields };
     }
   };
@@ -472,7 +465,7 @@ const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
     formik.setFieldValue("emergencyContacts", updated);
   };
 
-  const handlePhoneChange = (value) => {
+ const handlePhoneChange = (value) => {
     formik.setFieldValue("phoneFull", value);
     if (!value) {
       formik.setFieldValue("mobile", "");
@@ -484,30 +477,26 @@ const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
       formik.setFieldValue("mobile", phoneNumber.nationalNumber);
       formik.setFieldValue("country_code", phoneNumber.countryCallingCode);
     }
-    setHasDismissedDuplicateModal(false);
+    setDuplicateError(false);
   };
 
-  const handlePhoneBlur = () => {
-    const { mobile, country_code } = formik.values;
+   const handlePhoneBlur = () => {
+    const { id, mobile, country_code } = formik.values;
     if (!mobile || !country_code) return;
+
     const inputCode = country_code.replace("+", "");
     const inputMobile = mobile.replace(/\s/g, "");
+
     const matches = allLeads.filter((user) => {
+      if (user.id === id) return false; // Skip current member
       const userCode = (user.country_code || "").replace("+", "");
       const userMobile = (user.mobile || "").replace(/\s/g, "");
       return userCode === inputCode && userMobile === inputMobile;
     });
-    setMatchingUsers(matches);
-    if (matches.length > 0) {
-      setDuplicateError("This phone number already exists");
-      if (!hasDismissedDuplicateModal) {
-        setShowDuplicateModal(true);
-      }
-    } else {
-      setDuplicateError("");
-      setShowDuplicateModal(false);
-    }
+
+    if (matches.length > 0) setDuplicateError(true);
   };
+
 
   const handleDobChange = (date) => {
     if (!date) return;
