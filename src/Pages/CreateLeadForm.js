@@ -338,29 +338,34 @@ const CreateLeadForm = ({ setLeadModal, selectedLead }) => {
     formik.setFieldValue("mobile", phoneNumber.nationalNumber);
     formik.setFieldValue("country_code", phoneNumber.countryCallingCode);
   }
+   formik.setFieldError("mobile", "");
 };
 
 
   const handlePhoneBlur = () => {
-    const { mobile, country_code } = formik.values;
-    if (!mobile || !country_code) return;
+    formik.setFieldTouched("mobile", true);
+    const { id, mobile, country_code } = formik.values;
+    if (!mobile || !country_code) {
+      formik.setFieldError("mobile", "Invalid phone number");
+      return;
+    }
+    const phoneNumber = parsePhoneNumberFromString("+" + country_code + mobile);
+    if (!phoneNumber || !phoneNumber.isValid()) {
+      formik.setFieldError("mobile", "Invalid phone number");
+      return;
+    } else {
+      formik.setFieldError("mobile", ""); // Clear invalid error
+    }
     const inputCode = country_code.replace("+", "");
     const inputMobile = mobile.replace(/\s/g, "");
-    const matches = allLeads.filter((user) => {
+     const matches = allLeads.filter((user) => {
+      if (user.id === id) return false; // Skip current member
       const userCode = (user.country_code || "").replace("+", "");
       const userMobile = (user.mobile || "").replace(/\s/g, "");
       return userCode === inputCode && userMobile === inputMobile;
     });
-    setMatchingUsers(matches);
-    if (matches.length > 0) {
-      setDuplicateError("This phone number already exists");
-      if (!hasDismissedDuplicateModal) {
-        setShowDuplicateModal(true);
-      }
-    } else {
-      setDuplicateError("");
-      setShowDuplicateModal(false);
-    }
+
+    if (matches.length > 0) setDuplicateError(true);
   };
 
   const handleEmailBlur = () => {
@@ -452,17 +457,17 @@ const CreateLeadForm = ({ setLeadModal, selectedLead }) => {
                         className="custom--input w-full custom--phone"
                       />
 
-                      {duplicateError && showDuplicateModal && (
+                      {/* {duplicateError && showDuplicateModal && (
                         <div className="text-red-500 text-sm">
                           Duplicate Entry
                         </div>
-                      )}
+                      )} */}
 
-                      {formik.errors?.mobile && formik.touched?.mobile && (
-                        <div className="text-red-500 text-sm">
-                          {formik.errors.mobile}
-                        </div>
-                      )}
+                       {((formik.errors?.mobile && formik.touched?.mobile) || duplicateError) && (
+                          <div className="text-red-500 text-sm">
+                            {formik.errors?.mobile || duplicateError}
+                          </div>
+                        )}
                     </div>
                     <div>
                       <label className="mb-2 block">
