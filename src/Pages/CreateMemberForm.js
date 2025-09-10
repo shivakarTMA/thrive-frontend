@@ -249,9 +249,12 @@ const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
         full_name: selectedLeadMember.full_name || "",
         // mobile: selectedLeadMember.mobile || "",
         country_code: selectedLeadMember.country_code || "",
-        phoneFull: selectedLeadMember.country_code
-          ? `${selectedLeadMember.country_code}${selectedLeadMember.mobile}` // ✅ fixed
-          : "",
+        // phoneFull: selectedLeadMember.country_code
+        //   ? `${selectedLeadMember.country_code}${selectedLeadMember.mobile}` // ✅ fixed
+        //   : "",
+          phoneFull: selectedLeadMember.country_code
+  ? `+${selectedLeadMember.country_code}${selectedLeadMember.mobile}` // add the "+"
+  : "",
         email: selectedLeadMember.email || "",
         gender: selectedLeadMember.gender || "NOTDISCLOSE",
         date_of_birth: dobIso,

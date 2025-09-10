@@ -15,15 +15,10 @@ import {
 } from "react-icons/fa";
 import {
   trainerAvailability,
-  companies,
-  // leadSubTypes,
 } from "../DummyData/DummyData";
 
 import {
-  convertToISODate,
-  customStyles,
   getCompanyNameById,
-  sanitizePayload,
   selectIcon,
 } from "../Helper/helper";
 import { IoBan, IoCloseCircle } from "react-icons/io5";
@@ -215,7 +210,14 @@ const CreateLeadForm = ({ setLeadModal, selectedLead }) => {
           ? new Date(values.schedule_date_time).toISOString()
           : "";
 
-        console.log(values, "valuesshivakar");
+         if (values.phoneFull) {
+  const phoneNumber = parsePhoneNumberFromString(values.phoneFull);
+  if (phoneNumber) {
+    payload.country_code = phoneNumber.countryCallingCode; // e.g. "91"
+    payload.mobile = phoneNumber.nationalNumber; // e.g. "9865987869"
+  }
+}
+
 
         // ✅ Update if id exists
         if (values.id) {
@@ -243,8 +245,8 @@ const CreateLeadForm = ({ setLeadModal, selectedLead }) => {
         mobile: selectedLead.mobile || "",
         country_code: selectedLead.country_code || "",
         phoneFull: selectedLead.country_code
-      ? `${selectedLead.country_code}${selectedLead.mobile}` // ✅ fixed
-      : "",
+  ? `+${selectedLead.country_code}${selectedLead.mobile}` // add the "+"
+  : "",
         email: selectedLead.email || "",
         gender: selectedLead.gender || "NOTDISCLOSE",
         date_of_birth: selectedLead.date_of_birth
@@ -265,6 +267,8 @@ const CreateLeadForm = ({ setLeadModal, selectedLead }) => {
       });
     }
   }, [selectedLead]);
+
+  console.log(selectedLead,'selectedLead')
 
   const handleDobChange = (date) => {
     if (!date) return;
@@ -323,18 +327,19 @@ const CreateLeadForm = ({ setLeadModal, selectedLead }) => {
   maxTime.setHours(22, 0, 0, 0);
 
   const handlePhoneChange = (value) => {
-    formik.setFieldValue("phoneFull", value);
-    if (!value) {
-      formik.setFieldValue("mobile", "");
-      formik.setFieldValue("country_code", "");
-      return;
-    }
-    const phoneNumber = parsePhoneNumberFromString(value);
-    if (phoneNumber) {
-      formik.setFieldValue("mobile", phoneNumber.nationalNumber);
-      formik.setFieldValue("country_code", phoneNumber.countryCallingCode);
-    }
-  };
+  formik.setFieldValue("phoneFull", value);
+  if (!value) {
+    formik.setFieldValue("mobile", "");
+    formik.setFieldValue("country_code", "");
+    return;
+  }
+  const phoneNumber = parsePhoneNumberFromString(value);
+  if (phoneNumber) {
+    formik.setFieldValue("mobile", phoneNumber.nationalNumber);
+    formik.setFieldValue("country_code", phoneNumber.countryCallingCode);
+  }
+};
+
 
   const handlePhoneBlur = () => {
     const { mobile, country_code } = formik.values;
@@ -399,10 +404,6 @@ const CreateLeadForm = ({ setLeadModal, selectedLead }) => {
   const handleLeadModal = () => {
     setLeadModal(false);
   };
-
-  // useEffect(() => {
-  //   console.log("Selected lead:", selectedLead);
-  // }, [selectedLead]);
 
   return (
     <>
