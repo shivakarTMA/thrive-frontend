@@ -231,7 +231,7 @@ const CreateLeadForm = ({ setLeadModal, selectedLead }) => {
         setLeadModal(false);
       } catch (err) {
         console.error("❌ API Error:", err.response?.data || err.message);
-        toast.error(err.response?.data?.message);
+        toast.error(err.response?.data?.message || err.message);
       }
     },
   });
@@ -368,19 +368,18 @@ const CreateLeadForm = ({ setLeadModal, selectedLead }) => {
     if (matches.length > 0) setDuplicateError(true);
   };
 
-  const handleEmailBlur = () => {
+const handleEmailBlur = () => {
     const inputValue = formik.values.email?.trim().toLowerCase();
+    const { id } = formik.values;
     if (inputValue) {
       const matches = allLeads.filter(
-        (user) => user.email?.trim().toLowerCase() === inputValue
+        (user) => user.email?.trim().toLowerCase() === inputValue && user.id !== id
       );
       if (matches.length > 0) {
         setDuplicateEmailError("This email already exists");
-        if (!hasDismissedDuplicateModal) {
-          setShowDuplicateEmailModal(true);
-        }
       } else {
         setDuplicateEmailError("");
+        setShowDuplicateEmailModal(false);
       }
     }
   };
