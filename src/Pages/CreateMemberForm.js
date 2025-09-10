@@ -227,8 +227,9 @@ const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
 
           setMemberModal(false);
         } catch (error) {
-          toast.error("Failed to create member. Please try again.");
+          // toast.error("Failed to create member. Please try again.");
           console.log(error, "error");
+          toast.error(error.response?.data?.message);
         }
       } else {
         setStep(step + 1);

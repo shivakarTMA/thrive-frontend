@@ -231,7 +231,7 @@ const CreateLeadForm = ({ setLeadModal, selectedLead }) => {
         setLeadModal(false);
       } catch (err) {
         console.error("❌ API Error:", err.response?.data || err.message);
-        toast.error("Something went wrong while saving lead!");
+        toast.error(err.response?.data?.message);
       }
     },
   });
