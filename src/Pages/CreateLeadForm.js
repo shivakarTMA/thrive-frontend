@@ -81,7 +81,6 @@ const validationSchema = Yup.object({
 });
 
 const CreateLeadForm = ({ setLeadModal, selectedLead }) => {
-  // Local state management
   const [allLeads, setAllLeads] = useState([]);
   const leadBoxRef = useRef(null);
   const [matchingUsers, setMatchingUsers] = useState([]);
@@ -244,10 +243,10 @@ const CreateLeadForm = ({ setLeadModal, selectedLead }) => {
         mobile: selectedLead.mobile || "",
         country_code: selectedLead.country_code || "",
         phoneFull: selectedLead.country_code
-          ? `+${selectedLead.country_code}${selectedLead.mobile}`
-          : "",
+      ? `${selectedLead.country_code}${selectedLead.mobile}` // ✅ fixed
+      : "",
         email: selectedLead.email || "",
-        gender: selectedLead.gender || "",
+        gender: selectedLead.gender || "NOTDISCLOSE",
         date_of_birth: selectedLead.date_of_birth
           ? new Date(selectedLead.date_of_birth).toISOString() // always ISO string
           : "",

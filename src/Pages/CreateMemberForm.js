@@ -247,13 +247,13 @@ const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
         id: selectedLeadMember.id || "",
         profile_pic: selectedLeadMember.profile_pic || "",
         full_name: selectedLeadMember.full_name || "",
-        mobile: selectedLeadMember.mobile || "",
+        // mobile: selectedLeadMember.mobile || "",
         country_code: selectedLeadMember.country_code || "",
         phoneFull: selectedLeadMember.country_code
-          ? `+${selectedLeadMember.country_code}${selectedLeadMember.mobile}`
+          ? `${selectedLeadMember.country_code}${selectedLeadMember.mobile}` // ✅ fixed
           : "",
         email: selectedLeadMember.email || "",
-        gender: selectedLeadMember.gender || "",
+        gender: selectedLeadMember.gender || "NOTDISCLOSE",
         date_of_birth: dobIso,
         address: selectedLeadMember.address || "",
         location: selectedLeadMember.location || "",

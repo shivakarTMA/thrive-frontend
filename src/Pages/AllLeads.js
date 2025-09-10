@@ -90,14 +90,6 @@ const AllLeads = () => {
     );
   };
 
-  const handleSelectAll = () => {
-    if (selectedIds.length === allLeads.length) {
-      setSelectedIds([]); // Unselect all
-    } else {
-      setSelectedIds(allLeads.map((row) => row.id)); // Select all
-    }
-  };
-
   const ownerOptions = [
     {
       label: "FOH", // Group label
@@ -115,14 +107,6 @@ const AllLeads = () => {
       ],
     },
   ];
-
-  // Handle assigning owner to single lead
-  const handleAssignOwner = (leadId, selectedOption) => {
-    setAssignedOwners((prev) => ({
-      ...prev,
-      [leadId]: selectedOption, // Save owner for each lead
-    }));
-  };
 
   // Handle bulk assigning owner to selected leads only
   const handleBulkAssign = (selectedOption) => {
@@ -171,9 +155,9 @@ const AllLeads = () => {
     }
   };
 
-useEffect(() => {
-  fetchLeadList();
-}, []);
+  useEffect(() => {
+    fetchLeadList();
+  }, []);
 
   useEffect(() => {
     const delayDebounce = setTimeout(() => {
@@ -538,14 +522,20 @@ useEffect(() => {
         <div className="flex gap-3 mb-3 items-center">
           <button
             onClick={() => setActiveTab("Allleads")}
-            className={`flex items-center gap-1 ${activeTab == 'Allleads' ? 'text-black underline': 'text-gray-500'}`}
+            className={`flex items-center gap-1 ${
+              activeTab == "Allleads" ? "text-black underline" : "text-gray-500"
+            }`}
           >
             <FaCircle className="text-[10px]" />
             All Leads
           </button>
           <button
             onClick={() => setActiveTab("Assignleads")}
-            className={`flex items-center gap-1 ${activeTab == 'Assignleads' ? 'text-black underline': 'text-gray-500'}`}
+            className={`flex items-center gap-1 ${
+              activeTab == "Assignleads"
+                ? "text-black underline"
+                : "text-gray-500"
+            }`}
           >
             <FaCircle className="text-[10px]" />
             Assign Leads
@@ -590,9 +580,7 @@ useEffect(() => {
                       <td className="px-2 py-4">
                         {formatAutoDate(row?.updatedAt)}
                       </td>
-                      <td className="px-2 py-4">
-                        {row?.full_name}
-                      </td>
+                      <td className="px-2 py-4">{row?.full_name}</td>
                       <td className="px-2 py-4">
                         {row?.lead_source == null ? "--" : row?.lead_source}
                       </td>
@@ -876,8 +864,6 @@ useEffect(() => {
                 </table>
               </div>
             )}
-
-            {console.log(previewDuplicateLeads, "previewNewLeads")}
 
             {previewNewLeads.length > 0 && (
               <div className="mb-4">
