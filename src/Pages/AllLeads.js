@@ -60,16 +60,15 @@ const AllLeads = () => {
   const [bulkOwner, setBulkOwner] = useState(null);
   const [showConfirm, setShowConfirm] = useState(false);
 
-  const [selectedService, setSelectedService] = useState(null);
   const [selectedLeadSource, setSelectedLeadSource] = useState(null);
-  const [selectedCallTag, setSelectedCallTag] = useState(null);
   const [selectedLeadStatus, setSelectedLeadStatus] = useState(null);
   const [selectedLastCallType, setSelectedLastCallType] = useState(null);
+  const [selectedCallTag, setSelectedCallTag] = useState(null);
+
   const [dateFilter, setDateFilter] = useState(null);
   const [customFrom, setCustomFrom] = useState(null);
   const [customTo, setCustomTo] = useState(null);
 
-  const [masterLeads, setMasterLeads] = useState([]);
   const [allLeads, setAllLeads] = useState([]);
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [previewNewLeads, setPreviewNewLeads] = useState([]);
@@ -133,25 +132,56 @@ const AllLeads = () => {
     setBulkOwner(null); // Clear bulk owner
   };
 
-  const fetchLeadList = async (search = "", currentPage = page) => {
+  const fetchLeadList = async (search = searchTerm, currentPage = page) => {
     try {
-      const res = await apiAxios().get("/lead/list", {
-        params: {
-          page: currentPage,
-          limit: rowsPerPage,
-          ...(search ? { search } : {}),
-        },
-      });
-      let data = res.data?.data || res.data || [];
+      const params = {
+        page: currentPage,
+        limit: rowsPerPage,
+      };
 
-      setMasterLeads(data);
+      // Search param
+      if (search) params.search = search;
+
+      // Lead Source
+      if (selectedLeadSource?.value) {
+        params.lead_source = selectedLeadSource.value;
+      }
+
+      // Lead Status
+      if (selectedLeadStatus?.value) {
+        params.lead_status = selectedLeadStatus.value;
+      }
+
+      // Last Call Status
+      if (selectedLastCallType?.value) {
+        params.last_call_status = selectedLastCallType.value;
+      }
+
+      // Lead Owner
+      if (selectedCallTag?.value) {
+        params.created_by = selectedCallTag.value;
+      }
+
+      // Date Filter
+      if (dateFilter?.value && dateFilter.value !== "custom") {
+        params.dateFilter = dateFilter.value; // today, last_7_days, etc.
+      } else if (dateFilter?.value === "custom" && customFrom && customTo) {
+        params.startDate = customFrom.toISOString().split("T")[0];
+        params.endDate = customTo.toISOString().split("T")[0];
+      }
+
+      const res = await apiAxios().get("/lead/list", { params });
+
+      const responseData = res.data;
+      const data = responseData?.data || [];
+
       setAllLeads(data);
-      setPage(res.data?.currentPage || 1);
-      setTotalPages(res.data?.totalPage || 1);
-      setTotalCount(res.data?.totalCount || data.length);
+      setPage(responseData?.currentPage || 1);
+      setTotalPages(responseData?.totalPage || 1);
+      setTotalCount(responseData?.totalCount || data.length);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch lead");
+      toast.error("Failed to fetch leads");
     }
   };
 
@@ -169,126 +199,15 @@ const AllLeads = () => {
   }, [searchTerm]);
 
   useEffect(() => {
-    if (selectedStatus) {
-      const filtered = leadList.filter(
-        (lead) => lead.leadStatus.toLowerCase() === selectedStatus.toLowerCase()
-      );
-      setAllLeads(filtered);
-    } else if (selectedView === "assigned") {
-      const assigned = leadList.filter(
-        (lead) => lead.assignedLead && lead.assignedLead !== "unassigned"
-      );
-      setAllLeads(assigned);
-    } else {
-      setAllLeads(leadList);
-    }
-  }, [selectedStatus, selectedView]);
-
-  useEffect(() => {
-    let filtered = [...masterLeads];
-
-    if (selectedStatus) {
-      filtered = filtered.filter(
-        (lead) =>
-          lead.lead_status?.toLowerCase() === selectedStatus.toLowerCase()
-      );
-    }
-
-    if (selectedView === "assigned") {
-      filtered = filtered.filter(
-        (lead) => lead.assignedLead && lead.assignedLead !== "unassigned"
-      );
-    }
-
-    if (selectedLeadSource) {
-      filtered = filtered.filter(
-        (lead) =>
-          lead.lead_source?.toLowerCase() ===
-          selectedLeadSource.value.toLowerCase()
-      );
-    }
-
-    if (selectedLeadStatus) {
-      filtered = filtered.filter(
-        (lead) =>
-          lead.lead_status?.toLowerCase() ===
-          selectedLeadStatus.value.toLowerCase()
-      );
-    }
-
-    if (selectedCallTag) {
-      filtered = filtered.filter(
-        (lead) =>
-          lead.callTag?.toLowerCase() === selectedCallTag.value.toLowerCase()
-      );
-    }
-
-    if (selectedLastCallType) {
-      filtered = filtered.filter(
-        (lead) =>
-          lead.last_call_status?.toLowerCase() ===
-          selectedLastCallType.value.toLowerCase()
-      );
-    }
-
-    if (dateFilter?.value) {
-      const today = new Date();
-      let fromDate = null;
-      let toDate = null;
-
-      if (dateFilter.value === "today") {
-        fromDate = new Date(today.setHours(0, 0, 0, 0));
-        toDate = new Date();
-      }
-
-      if (dateFilter.value === "last7") {
-        fromDate = new Date();
-        fromDate.setDate(today.getDate() - 7);
-        toDate = new Date();
-      }
-
-      if (dateFilter.value === "monthTillDate") {
-        fromDate = new Date(today.getFullYear(), today.getMonth(), 1);
-        toDate = new Date();
-      }
-
-      if (dateFilter.value === "custom" && customFrom && customTo) {
-        fromDate = new Date(customFrom.setHours(0, 0, 0, 0));
-        toDate = new Date(customTo.setHours(23, 59, 59, 999));
-      }
-
-      if (fromDate && toDate) {
-        filtered = filtered.filter((lead) => {
-          const createdDate = new Date(lead.createdAt);
-          return createdDate >= fromDate && createdDate <= toDate;
-        });
-      }
-    }
-
-    // simple search term (local filtering)
-    if (searchTerm) {
-      filtered = filtered.filter(
-        (lead) =>
-          lead.firstname?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          lead.lastname?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          lead.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          lead.phoneNumber?.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-
-    setAllLeads(filtered);
+    fetchLeadList(searchTerm, 1);
   }, [
-    masterLeads,
-    selectedStatus,
-    selectedView,
     selectedLeadSource,
     selectedLeadStatus,
-    selectedCallTag,
     selectedLastCallType,
+    selectedCallTag,
     dateFilter,
     customFrom,
     customTo,
-    searchTerm,
   ]);
 
   const handleBulkUpload = (acceptedFiles) => {
