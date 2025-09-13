@@ -265,8 +265,8 @@ const CreateLeadForm = ({ setLeadModal, selectedLead, onLeadUpdate }) => {
         email: selectedLead.email || "",
         gender: selectedLead.gender || "NOTDISCLOSE",
         date_of_birth: selectedLead.date_of_birth
-          ? new Date(selectedLead.date_of_birth).toISOString() // always ISO string
-          : "",
+        ? new Date(selectedLead.date_of_birth).toISOString()
+        : null,
         address: selectedLead.address || "",
         location: selectedLead.location || "",
         company_name: selectedLead.company_name || "",
@@ -283,7 +283,55 @@ const CreateLeadForm = ({ setLeadModal, selectedLead, onLeadUpdate }) => {
     }
   }, [selectedLead]);
 
-  const handleDobChange = (date) => {
+  
+
+
+const calculateAge = (dob) => {
+  const today = new Date();
+  const birthDate = new Date(dob);
+  let age = today.getFullYear() - birthDate.getFullYear();
+  const m = today.getMonth() - birthDate.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+    age--;
+  }
+  return age;
+};
+
+const fifteenYearsAgo = new Date();
+fifteenYearsAgo.setFullYear(fifteenYearsAgo.getFullYear() - 15);
+
+// useEffect for selectedLead
+useEffect(() => {
+  if (selectedLead) {
+    formik.setValues({
+      id: selectedLead.id || "",
+      full_name: selectedLead.full_name || "",
+      mobile: selectedLead.mobile || "",
+      country_code: selectedLead.country_code || "",
+      phoneFull: selectedLead.country_code
+        ? `+${selectedLead.country_code}${selectedLead.mobile}`
+        : "",
+      email: selectedLead.email || "",
+      gender: selectedLead.gender || "NOTDISCLOSE",
+      date_of_birth: selectedLead.date_of_birth ? new Date(selectedLead.date_of_birth).toISOString() : null,
+      address: selectedLead.address || "",
+      location: selectedLead.location || "",
+      company_name: selectedLead.company_name || "",
+      interested_in: selectedLead.interested_in || "",
+      lead_source: selectedLead.lead_source || "",
+      lead_type: selectedLead.lead_type || "",
+      platform: selectedLead.platform || "",
+      schedule: selectedLead.schedule || "",
+      schedule_date_time: selectedLead.schedule_date_time
+        ? new Date(selectedLead.schedule_date_time).toISOString()
+        : "",
+      staff_name: selectedLead.staff_name || "",
+    });
+  }
+}, [selectedLead]);
+
+// Handle manual date selection
+const handleDobChange = (date) => {
     if (!date) return;
     const today = new Date();
     const age =
@@ -303,20 +351,17 @@ const CreateLeadForm = ({ setLeadModal, selectedLead, onLeadUpdate }) => {
     }
   };
 
-  const fifteenYearsAgo = new Date();
-  fifteenYearsAgo.setFullYear(fifteenYearsAgo.getFullYear() - 15);
+const confirmDob = () => {
+  formik.setFieldValue("date_of_birth", pendingDob);
+  setShowUnderageModal(false);
+  setPendingDob(null);
+};
 
-  const confirmDob = () => {
-    formik.setFieldValue("date_of_birth", pendingDob);
-    setShowUnderageModal(false);
-    setPendingDob(null);
-  };
-
-  const cancelDob = () => {
-    formik.setFieldValue("date_of_birth", "");
-    setShowUnderageModal(false);
-    setPendingDob(null);
-  };
+const cancelDob = () => {
+  formik.setFieldValue("date_of_birth", "");
+  setShowUnderageModal(false);
+  setPendingDob(null);
+};
 
   const handleInput = (e) => {
     const { name, value } = e.target;
