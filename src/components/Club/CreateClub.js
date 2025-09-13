@@ -127,7 +127,11 @@ const CreateClub = ({
                     </label>
                     <PhoneInput
                       name="phone"
-                      value={formik.values.phone}
+                       value={
+                        formik.values.phone
+                          ? (formik.values.phone.startsWith("+") ? formik.values.phone : `+${formik.values.phone}`)
+                          : ""
+                      }
                       onChange={handlePhoneChange}
                       onBlur={() => formik.setFieldTouched("phone", true)}
                       international

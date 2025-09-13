@@ -62,6 +62,7 @@ input.number--appearance-none[type="number"]::-webkit-outer-spin-button {
   border: 1px solid #c5c5c5;
   padding: 10px 15px;
   border-radius: 10px;
+  font-size: 15px;
 }
 
 .custom--date .react-datepicker-wrapper {
@@ -128,9 +129,8 @@ input.number--appearance-none[type="number"]::-webkit-outer-spin-button {
 }
 
 .input--icon {
-    padding-left: 40px !important;
+  padding-left: 40px !important;
 }
-
 
 .radio-checkmark:after {
   content: "";
@@ -202,7 +202,6 @@ input.number--appearance-none[type="number"]::-webkit-outer-spin-button {
   background-color: #f00;
 }
 
-
 .checkbox--custom--check:after {
   content: "";
   position: absolute;
@@ -240,12 +239,12 @@ input.number--appearance-none[type="number"]::-webkit-outer-spin-button {
 
 .grid--profile--details {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px,1fr));
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
 }
 
 .price--calculation {
   display: grid;
-  grid-template-columns: repeat(auto-fit,minmax(250px,1fr));
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 10px;
   .price--item {
     border: 1px solid #ccc;
@@ -258,31 +257,35 @@ input.number--appearance-none[type="number"]::-webkit-outer-spin-button {
 .dob-format h2.react-datepicker__current-month {
   display: none;
 }
-.custom--slider .slick-next{
+.custom--slider .slick-next {
   right: 0;
 }
-.custom--slider .slick-prev{
+.custom--slider .slick-prev {
   left: 0;
   z-index: 1;
 }
-.custom--slider .slick-next, .custom--slider .slick-prev {
-    width: 45px;
+.custom--slider .slick-next,
+.custom--slider .slick-prev {
+  width: 45px;
 }
 
-.custom--slider .slick-next:before, .custom--slider .slick-prev:before {
-    font-size: 35px;
+.custom--slider .slick-next:before,
+.custom--slider .slick-prev:before {
+  font-size: 35px;
 }
 
 input:-webkit-autofill,
-input:-webkit-autofill:hover, 
-input:-webkit-autofill:focus, 
-input:-webkit-autofill:active{
-    -webkit-box-shadow: 0 0 0 30px white inset !important;
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px white inset !important;
 }
 
-.react-datepicker__close-icon::after {background-color: #000;}
+.react-datepicker__close-icon::after {
+  background-color: #000;
+}
 
-.bg--blur{
+.bg--blur {
   backdrop-filter: blur(0px);
 }
 
@@ -325,4 +328,94 @@ input:-webkit-autofill:active{
 
 .progress-text {
   padding: 0 10px;
+}
+
+.custom--checkbox--2 {
+  position: relative;
+  padding-left: 0;
+
+  & input {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+    height: 25px;
+    width: 25px;
+    left: 0;
+    top: 0;
+    z-index: 1;
+  }
+
+  .checkmark--custom {
+    height: 25px;
+    width: 25px;
+    background-color: #e4e4e4;
+    border-radius: 5px;
+    display: block;
+
+    &:after {
+      content: "";
+      position: absolute;
+      display: none;
+    }
+  }
+
+  &:hover input ~ .checkmark--custom {
+    background-color: #ccc;
+  }
+
+  & input:checked ~ .checkmark--custom {
+    background-color: #000;
+  }
+
+  & input:checked ~ .checkmark--custom:after {
+    display: block;
+  }
+
+  & .checkmark--custom:after {
+    left: 9px;
+    top: 4px;
+    width: 7px;
+    height: 13px;
+    border: solid #fff;
+    border-width: 0 3px 3px 0;
+    -webkit-transform: rotate(45deg);
+    -ms-transform: rotate(45deg);
+    transform: rotate(45deg);
+  }
+}
+
+.btn--tab {
+  position: relative;
+  border-radius: 10px 10px 0px 0px;
+  background: var(--btnColor);
+
+  &:before {
+    content: "";
+    width: calc(100% - 3px);
+    height: calc(100% - 1px);
+    background: #fff;
+    position: absolute;
+    bottom: 0px;
+    left: 50%;
+    border-radius: 10px 10px 0px 0px;
+    transform: translateX(-50%);
+  }
+}
+
+.box--shadow{
+  box-shadow: 0px 1px 4px 0px #0000001A;
+}
+
+.bg--color{
+    background: var(--btnColor);
+}
+
+.custom--btn {
+    border-radius: 50px;
+    padding: 12px 15px;
+    color: #fff;
+    cursor: pointer;
+    max-width: 200px;
+    width: 100%;
+    text-align: center;
 }

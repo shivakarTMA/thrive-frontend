@@ -1,79 +1,73 @@
 import React, { useEffect, useRef, useState } from "react";
-import { FaCamera, FaRegImage } from "react-icons/fa";
-import { FiEdit2, FiSave } from "react-icons/fi";
+import PhoneInput from "react-phone-number-input";
+import DatePicker from "react-datepicker";
 import Select from "react-select";
 import { customStyles } from "../../Helper/helper";
-import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
-import { parse, isValid, format } from "date-fns";
-import { leadsSources, leadTypes } from "../../DummyData/DummyData";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchOptionList } from "../../Redux/Reducers/optionListSlice";
+import DummyProfile from "../../assets/images/dummy-profile.png";
+import { CiCamera } from "react-icons/ci";
 import Webcam from "react-webcam";
 import { IoCheckmark, IoClose } from "react-icons/io5";
+import { FaRegImage } from "react-icons/fa";
 
-const parseDOB = (dateStr) => {
-  const parsed = parse(dateStr, "dd-MM-yyyy", new Date());
-  return isValid(parsed) ? parsed : null;
-};
-const parseDateTime = (dateStr) => {
-  const parsed = new Date(dateStr);
-  return isValid(parsed) ? parsed : null;
-};
-
-const fields = [
-  { label: "Personal Information", value: true },
-  { label: "Consent to terms", value: true },
-  { label: "Emergency Contact", value: false },
-  { label: "KYC Submission", value: false },
-  { label: "Parq Information", value: false },
-];
-
-// Count completed fields
-const completedCount = fields.filter((f) => f.value).length;
-
-// Calculate percentage (each field = 20%)
-const completionPercentage = (completedCount / fields.length) * 100;
-
-const ProfileDetails = ({ member }) => {
-  const [editMode, setEditMode] = useState(false);
-  const [profile, setProfile] = useState(member);
+const ProfileDetails = () => {
   const [showModal, setShowModal] = useState(false);
   const webcamRef = useRef(null);
+  const [formData, setFormData] = useState({
+    profileImage: DummyProfile,
+    contactNumber: "+919875646241",
+    fullName: "Rohan Agarwal",
+    dob: "01 Jan 2000",
+    gender: "MALE",
+    email: "rohan.agarwal@gmail.com",
+    location: "Gurugram, Haryana",
+    address: "Plot 2, Landmark Tower, South City 1, Block 6, Sector 41",
+    leadOwner: "rohan.agarwal@gmail.com",
+    leadType: "Select",
+    leadSource: "Select",
+    company: "Google India",
+    designation: "UI/UX Designer",
+    officialEmail: "",
+    emergencyName: "Aarav Agarwal",
+    emergencyContact: "+919875646000",
+    emergencyEmail: "",
+  });
 
-  const SelectOptions = [
-    { value: "yes", label: "Yes" },
-    { value: "no", label: "No" },
-  ];
-
-  const kycDocumentsOptions = [
-    { value: "Aadhar Card", label: "Aadhar Card" },
-    { value: "PAN Card", label: "PAN Card" },
-    { value: "Passport", label: "Passport" },
-    { value: "Voter ID", label: "Voter ID" },
-  ];
-
-  useEffect(() => {
-    setProfile(member);
-  }, [member]);
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setProfile((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleNestedChange = (field, value) => {
-    setProfile((prev) => ({
+  const handleInputChange = (field, value) => {
+    setFormData((prev) => ({
       ...prev,
-      leadInformation: {
-        ...prev.leadInformation,
-        [field]: value,
-      },
+      [field]: value,
     }));
   };
+
+  // Lead source types
+  const genderOptions = [
+    { value: "MALE", label: "Male" },
+    { value: "FEMALE", label: "Female" },
+    { value: "NOTDISCLOSE", label: "Not to Disclose" },
+  ];
+
+  // Redux state
+  const dispatch = useDispatch();
+  const { lists, loading } = useSelector((state) => state.optionList);
+
+  // Fetch option lists
+  useEffect(() => {
+    dispatch(fetchOptionList("LEAD_SOURCE"));
+    dispatch(fetchOptionList("LEAD_TYPE"));
+    dispatch(fetchOptionList("INTERESTED_IN"));
+  }, [dispatch]);
+
+  // Extract Redux lists
+  const leadsSources = lists["LEAD_SOURCE"] || [];
+  const leadTypes = lists["LEAD_TYPE"] || [];
+  const servicesName = lists["INTERESTED_IN"] || [];
 
   // Capture from webcam
   const capturePhoto = () => {
     const imageSrc = webcamRef.current.getScreenshot();
-    setProfile((prev) => ({ ...prev, profileImage: imageSrc }));
+    setFormData((prev) => ({ ...prev, profileImage: imageSrc }));
     setShowModal(false);
   };
 
@@ -82,419 +76,486 @@ const ProfileDetails = ({ member }) => {
     const file = e.target.files[0];
     if (file) {
       const imageUrl = URL.createObjectURL(file);
-      setProfile((prev) => ({ ...prev, profileImage: imageUrl }));
+      setFormData((prev) => ({ ...prev, profileImage: imageUrl }));
       setShowModal(false);
     }
   };
 
-  const handleSave = () => {
-    // Optional: Trigger backend save here
-    console.log("Saved profile:", profile);
-    setEditMode(false);
-  };
-
   return (
-    <div className="bg-primarylight p-4 rounded">
-      <div className="flex gap-6">
-        {/* Left section - Image & Basic Info */}
-        <div className="w-full lg:max-w-[220px]">
-          <div className="w-full h-[255px] bg-primarycolor mb-2 rounded relative">
-            <img
-              src={profile.profileImage}
-              alt="Profile"
-              className="w-full h-full object-cover object-center"
-            />
-            {/* Camera button */}
-            <div className="absolute bottom-[-10px] right-[-10px]">
-              <label className="cursor-pointer w-[45px] h-[45px] flex items-center justify-center bg-white rounded-full shadow">
-                <FaCamera
-                  className="text-2xl"
+    <div className="min-h-screen">
+      <div className="flex gap-5">
+        {/* Left Sidebar */}
+        <div className="w-full max-w-[280px]">
+          <div className="bg-white p-4 rounded-[10px] w-full box--shadow">
+            {/* Profile Image and Progress */}
+            <div className="text-center mb-6">
+              <div className="w-full bg-gray-100 rounded-lg mx-auto mb-4 overflow-hidden relative group">
+                <img
+                  src={formData.profileImage}
+                  alt="Profile"
+                  className="w-full h-[300px] object-cover"
+                />
+                <div
+                  className="opacity-0 bg-black bg-opacity-25 flex items-center justify-center absolute w-full h-full top-0 left-0 opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity duration-300"
                   onClick={() => setShowModal(true)}
-                />
-                {/* <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageChange}
-                  className="hidden"
-                /> */}
-              </label>
-            </div>
-          </div>
-          <div className="progress-container">
-            <div
-              className="progress-bar"
-              style={{ width: `${completionPercentage}%` }}
-            >
-              <span className="progress-text text-sm">
-                {Math.round(completionPercentage)}%
-              </span>
-            </div>
-          </div>
-
-          {/* Webcam Modal */}
-          {showModal && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-              <div className="bg-white p-4 rounded-lg shadow-lg flex flex-col items-center">
-                {/* Webcam Preview */}
-                <Webcam
-                  ref={webcamRef}
-                  screenshotFormat="image/jpeg"
-                  className="rounded-lg"
-                  videoConstraints={{
-                    facingMode: "user", // use front camera
-                  }}
-                />
-
-                {/* Action buttons */}
-                <div className="flex gap-3 mt-4 items-center justify-between w-full">
-                  <div className="flex gap-3 items-center">
-                    <button
-                      onClick={capturePhoto}
-                      className="px-4 py-2 bg-black text-white rounded flex items-center gap-2"
-                    >
-                      <FaCamera /> Take Photo
-                    </button>
-
-                    <label className="px-4 py-2 bg-black text-white rounded flex items-center gap-2">
-                      <FaRegImage /> Upload Image
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleImageUpload}
-                        className="hidden"
-                      />
-                    </label>
+                >
+                  <div className="bg-white bg-opacity-25 w-[60px] h-[60px] flex items-center justify-center rounded-full">
+                    <CiCamera className="text-white text-4xl" />
                   </div>
+                </div>
+              </div>
 
-                  <button
-                    onClick={() => setShowModal(false)}
-                    className="px-4 py-2 bg-black text-white rounded flex items-center gap-2"
-                  >
-                    <IoClose /> Cancel
-                  </button>
+              {/* Webcam Modal */}
+              {showModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                  <div className="bg-white p-4 rounded-lg shadow-lg flex flex-col items-center">
+                    {/* Webcam Preview */}
+                    <Webcam
+                      ref={webcamRef}
+                      screenshotFormat="image/jpeg"
+                      className="rounded-lg"
+                      videoConstraints={{
+                        facingMode: "user", // use front camera
+                      }}
+                    />
+
+                    {/* Action buttons */}
+                    <div className="flex gap-3 mt-4 items-center justify-between w-full">
+                      <div className="flex gap-3 items-center">
+                        <button
+                          onClick={capturePhoto}
+                          className="px-4 py-2 bg-black text-white rounded flex items-center gap-2"
+                        >
+                          <CiCamera /> Take Photo
+                        </button>
+
+                        <label className="px-4 py-2 bg-black text-white rounded flex items-center gap-2">
+                          <FaRegImage /> Upload Image
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleImageUpload}
+                            className="hidden"
+                          />
+                        </label>
+                      </div>
+
+                      <button
+                        onClick={() => setShowModal(false)}
+                        className="px-4 py-2 bg-black text-white rounded flex items-center gap-2"
+                      >
+                        <IoClose /> Cancel
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div className="mb-4 flex items-center gap-2 justify-between">
+                <div className="text-lg font-bold text-gray-900">
+                  Profile Completion
+                </div>
+                <div className="text-lg font-bold text-gray-900">40%</div>
+              </div>
+
+              <div className="progress--bar bg-[#E5E5E5] rounded-full h-[10px] w-full">
+                <div
+                  className="bg--color w-full rounded-full h-full"
+                  style={{ width: "40%" }}
+                ></div>
+              </div>
+            </div>
+
+            {/* Details Section */}
+            <div className="border-t border-t-[#D4D4D4] py-5">
+              <div className="text-md font-semibold text-black mb-2">
+                Details:
+              </div>
+              <div className="space-y-1">
+                <div className="flex justify-between">
+                  <span className="text-[#6F6F6F] font-[500] text-[15px]">
+                    Membership ID:
+                  </span>
+                  <span className="text-[#6F6F6F] font-[500] text-[15px]">
+                    TL317432
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-[#6F6F6F] font-[500] text-[15px]">
+                    Centre ID:
+                  </span>
+                  <span className="text-[#6F6F6F] font-[500] text-[15px]">
+                    032661
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-[#6F6F6F] font-[500] text-[15px]">
+                    Centre Name:
+                  </span>
+                  <span className="text-[#6F6F6F] font-[500] text-[15px]">
+                    Club 5, Gurugram
+                  </span>
                 </div>
               </div>
             </div>
-          )}
 
-          <div className="text-xs text-left mt-3">
-            <p className="mb-2 text-sm">
-              <strong>Membership IDs:</strong> 1234566
-            </p>
-            <p className="mb-2 text-sm">
-              <strong>Centre ID:</strong> 098567
-            </p>
-            <p className="mb-2 text-sm">
-              <strong>Centre Name:</strong> Gurugram
-            </p>
-          </div>
-
-          <div className="text-xs text-left mt-3 border rounded p-3 bg-primarycolor text-white">
-            <p className="mb-2 text-sm">
-              <strong>Referred By: Puneet Kumar</strong>
-            </p>
-            <p className="mb-2 text-sm">
-              <strong>Referrer ID:</strong> 123456789
-            </p>
+            {/* Referred By Section */}
+            <div className="border-t border-t-[#D4D4D4] pt-5">
+              <div className="text-md font-semibold text-black mb-2">
+                Referred By:
+              </div>
+              <div className="space-y-1">
+                <div className="flex justify-between">
+                  <span className="text-[#6F6F6F] font-[500] text-[15px]">
+                    Name:
+                  </span>
+                  <span className="text-[#6F6F6F] font-[500] text-[15px]">
+                    Mohit Kumar
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-[#6F6F6F] font-[500] text-[15px]">
+                    Referrer ID:
+                  </span>
+                  <span className="text-[#6F6F6F] font-[500] text-[15px]">
+                    TL317362
+                  </span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Right section - All Details */}
-        <div className="flex-1 space-y-4">
-          {/* Personal Details */}
-          <div className="relative">
-            <h3 className="font-semibold mb-3">Personal Details</h3>
-            <div className="grid--profile--details text-sm gap-4">
-              <div className="flex flex-col text-sm">
-                <label className="font-semibold mb-2 block capitalize">
-                  name:
-                </label>
-                {editMode ? (
+        {/* Main Content */}
+        <div className="w-full">
+          <div className="bg-white p-6 rounded-[10px] box--shadow w-full">
+            {/* Basic Information */}
+            <div className="border-b border-b[#D4D4D4] pb-5">
+              <h2 className="text-xl font-semibold text-gray-900 mb-6">
+                Basic Information
+              </h2>
+
+              <div className="grid grid-cols-4 gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-black mb-2">
+                    Contact Number<span className="text-red-500">*</span>
+                  </label>
+                  <PhoneInput
+                    name="text"
+                    value={formData.contactNumber}
+                    onChange={(e) =>
+                      handleInputChange("contactNumber", e.target.value)
+                    }
+                    international
+                    defaultCountry="IN"
+                    countryCallingCodeEditable={false}
+                    className="custom--input w-full custom--phone"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-black mb-2">
+                    Full Name<span className="text-red-500">*</span>
+                  </label>
                   <input
                     type="text"
-                    name="name"
-                    value={profile.name || ""}
-                    onChange={handleChange}
+                    value={formData.fullName}
+                    onChange={(e) =>
+                      handleInputChange("fullName", e.target.value)
+                    }
                     className="custom--input w-full"
                   />
-                ) : (
-                  <span>{profile.name || "—"}</span>
-                )}
-              </div>
+                </div>
 
-              <div className="flex flex-col text-sm">
-                <label className="font-semibold mb-2 block capitalize">
-                  contact:
-                </label>
-                <span>{profile.contact || "—"}</span>
-              </div>
-
-              <div className="flex flex-col text-sm">
-                <label className="font-semibold mb-2 block capitalize">
-                  email:
-                </label>
-                <span>{profile.email || "—"}</span>
-              </div>
-
-              <div className="flex flex-col text-sm">
-                <label className="font-semibold mb-2 block capitalize">
-                  dob:
-                </label>
-                {editMode ? (
-                  <div className="custom--date dob-format">
+                <div>
+                  <label className="block text-sm font-medium text-black mb-2">
+                    DOB<span className="text-red-500">*</span>
+                  </label>
+                  <div className="custom--date dob-format relative">
                     <DatePicker
-                      selected={parseDOB(profile.dob)}
-                      onChange={(date) =>
-                        handleChange({
-                          target: {
-                            name: "dob",
-                            value: date ? format(date, "dd-MM-yyyy") : "",
-                          },
-                        })
-                      }
+                      value={formData.dob}
+                      onChange={(value) => handleInputChange("dob", value)}
                       showMonthDropdown
                       showYearDropdown
-                      maxDate={new Date()}
-                      dateFormat="dd MMM yyyy"
                       dropdownMode="select"
+                      dateFormat="dd MMM yyyy"
+                      yearDropdownItemNumber={100}
                       placeholderText="Select date"
-                      className="custom--input w-full"
                     />
                   </div>
-                ) : (
-                  <span>{profile.dob || "—"}</span>
-                )}
-              </div>
-
-              <div className="flex flex-col text-sm">
-                <label className="font-semibold mb-2 block capitalize">
-                  gender:
-                </label>
-                {editMode ? (
-                  <input
-                    type="text"
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-black mb-2">
+                    Gender<span className="text-red-500">*</span>
+                  </label>
+                  <Select
                     name="gender"
-                    value={profile.gender || ""}
-                    onChange={handleChange}
+                    value={formData.gender}
+                    options={genderOptions}
+                    onChange={(value) => handleInputChange("gender", value)}
+                    styles={customStyles}
+                    className="!capitalize"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-black mb-2">
+                    Email<span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => handleInputChange("email", e.target.value)}
                     className="custom--input w-full"
                   />
-                ) : (
-                  <span>{profile.gender || "—"}</span>
-                )}
-              </div>
+                </div>
 
-              <div className="flex flex-col text-sm">
-                <label className="font-semibold mb-2 block capitalize">
-                  age:
-                </label>
-                {editMode ? (
+                <div>
+                  <label className="block text-sm font-medium text-black mb-2">
+                    Location<span className="text-red-500">*</span>
+                  </label>
                   <input
                     type="text"
-                    name="age"
-                    value={profile.age || ""}
-                    onChange={handleChange}
+                    value={formData.location}
+                    onChange={(e) =>
+                      handleInputChange("location", e.target.value)
+                    }
                     className="custom--input w-full"
                   />
-                ) : (
-                  <span>{profile.age || "—"}</span>
-                )}
-              </div>
+                </div>
 
-              <div className="flex flex-col text-sm">
-                <label className="font-semibold mb-2 block capitalize">
-                  address:
-                </label>
-                {editMode ? (
-                  <input
-                    type="text"
-                    name="address"
-                    value={profile.address || ""}
-                    onChange={handleChange}
+                <div className="col-span-2">
+                  <label className="block text-sm font-medium text-black mb-2">
+                    Address
+                  </label>
+                  <textarea
+                    value={formData.address}
+                    onChange={(e) =>
+                      handleInputChange("address", e.target.value)
+                    }
+                    rows={1}
                     className="custom--input w-full"
                   />
-                ) : (
-                  <span>{profile.address || "—"}</span>
-                )}
-              </div>
-
-              <div className="flex flex-col text-sm">
-                <label className="font-semibold mb-2 block capitalize">
-                  Location:
-                </label>
-                {editMode ? (
-                  <input
-                    type="text"
-                    name="locality"
-                    value={profile.locality || ""}
-                    onChange={handleChange}
-                    className="custom--input w-full"
-                  />
-                ) : (
-                  <span>{profile.locality || "—"}</span>
-                )}
+                </div>
               </div>
             </div>
-            <button
-              className="absolute top-0 right-0 text-primarycolor border border-primarycolor bg-white px-2 py-1 rounded-lg flex items-center gap-2"
-              onClick={() => (editMode ? handleSave() : setEditMode(true))}
-            >
-              {editMode ? "Save" : "Edit"} {editMode ? <FiSave /> : <FiEdit2 />}
-            </button>
-          </div>
 
-          <hr />
+            {/* Lead Information */}
+            <div className="border-b border-b[#D4D4D4] pb-5 pt-5">
+              <h2 className="text-xl font-semibold text-gray-900 mb-6">
+                Lead Information
+              </h2>
 
-          {/* Lead Information */}
-          <div>
-            <h3 className="font-semibold mb-3">Lead Information</h3>
-            <div className="grid--profile--details text-sm gap-4">
-              <p className="flex flex-col">
-                <label className="font-semibold mb-2 block">Lead Owner:</label>
-                <span>{profile.staff || "—"}</span>
-              </p>
+              <div className="grid grid-cols-4 gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-black mb-2">
+                    Lead Owner<span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="email"
+                    value={formData.leadOwner}
+                    onChange={(e) =>
+                      handleInputChange("leadOwner", e.target.value)
+                    }
+                    disabled={true}
+                    className="custom--input w-full"
+                  />
+                </div>
 
-              <p className="flex flex-col">
-                <label className="font-semibold mb-2 block">Lead Type:</label>
-                {editMode ? (
+                <div>
+                  <label className="block text-sm font-medium text-black mb-2">
+                    Interested In
+                  </label>
                   <Select
                     name="leadType"
-                    value={leadTypes.find(
-                      (opt) => opt.value === profile?.leadInformation?.leadType
-                    )}
-                    onChange={(option) =>
-                      handleNestedChange("leadType", option.value)
-                    }
-                    options={leadTypes}
+                    value={formData.leadType}
+                    options={servicesName}
+                    onChange={(value) => handleInputChange("leadType", value)}
                     styles={customStyles}
+                    className="!capitalize"
                   />
-                ) : (
-                  <span>{profile?.leadInformation?.leadType || "—"}</span>
-                )}
-              </p>
-
-              <p className="flex flex-col">
-                <label className="font-semibold mb-2 block">Lead Source:</label>
-
-                {editMode ? (
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-black mb-2">
+                    Lead Type<span className="text-red-500">*</span>
+                  </label>
+                  <Select
+                    name="leadType"
+                    value={formData.leadType}
+                    options={leadTypes}
+                    onChange={(value) => handleInputChange("leadType", value)}
+                    styles={customStyles}
+                    className="!capitalize"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-black mb-2">
+                    Lead Source<span className="text-red-500">*</span>
+                  </label>
                   <Select
                     name="leadSource"
-                    value={leadsSources.find(
-                      (opt) =>
-                        opt.value === profile?.leadInformation?.leadSource
-                    )}
-                    onChange={(option) =>
-                      handleNestedChange("leadSource", option.value)
-                    }
-                    options={leadsSources}
+                    value={leadsSources}
+                    onChange={(value) => handleInputChange("leadSource", value)}
                     styles={customStyles}
+                    className="!capitalize"
                   />
-                ) : (
-                  <span>{profile?.leadInformation?.leadSource || "—"}</span>
-                )}
-              </p>
+                </div>
+              </div>
             </div>
-          </div>
 
-          <hr />
-          {/* Professional Info */}
-          <div>
-            <h3 className="font-semibold mb-3">Professional Information</h3>
-            <div className="grid--profile--details text-sm gap-4">
-              {["company", "designation", "officialEmail"].map((field) => (
-                <p className="flex flex-col" key={field}>
-                  <label className="font-semibold mb-2 block capitalize">
-                    {field}:
+            {/* Professional Information */}
+            <div className="border-b border-b[#D4D4D4] pb-5 pt-5">
+              <h2 className="text-xl font-semibold text-gray-900 mb-6">
+                Professional Information
+              </h2>
+
+              <div className="grid grid-cols-4 gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-black mb-2">
+                    Company<span className="text-red-500">*</span>
                   </label>
-                  {editMode ? (
-                    <input
-                      name={field}
-                      value={profile[field] || ""}
-                      onChange={handleChange}
-                      className="custom--input w-full"
-                    />
-                  ) : (
-                    <span>{profile[field] || "—"}</span>
-                  )}
-                </p>
-              ))}
+                  <input
+                    type="text"
+                    value={formData.company}
+                    onChange={(e) =>
+                      handleInputChange("company", e.target.value)
+                    }
+                    className="custom--input w-full"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-black mb-2">
+                    Designation
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.designation}
+                    onChange={(e) =>
+                      handleInputChange("designation", e.target.value)
+                    }
+                    className="custom--input w-full"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-black mb-2">
+                    Official Email
+                  </label>
+                  <input
+                    type="email"
+                    value={formData.officialEmail}
+                    onChange={(e) =>
+                      handleInputChange("officialEmail", e.target.value)
+                    }
+                    className="custom--input w-full"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Emergency Contact */}
+            <div className="pb-5 pt-5">
+              <h2 className="text-xl font-semibold text-gray-900 mb-6">
+                Emergency Contact
+              </h2>
+
+              <div className="grid grid-cols-4 gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-black mb-2">
+                    Full Name<span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.emergencyName}
+                    onChange={(e) =>
+                      handleInputChange("emergencyName", e.target.value)
+                    }
+                    className="custom--input w-full"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-black mb-2">
+                    Contact<span className="text-red-500">*</span>
+                  </label>
+                  <PhoneInput
+                    name="text"
+                    value={formData.emergencyContact}
+                    onChange={(e) =>
+                      handleInputChange("emergencyContact", e.target.value)
+                    }
+                    international
+                    defaultCountry="IN"
+                    countryCallingCodeEditable={false}
+                    className="custom--input w-full custom--phone"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-black mb-2">
+                    Official Email
+                  </label>
+                  <input
+                    type="email"
+                    value={formData.emergencyEmail}
+                    onChange={(e) =>
+                      handleInputChange("emergencyEmail", e.target.value)
+                    }
+                    className="custom--input w-full"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Profile Completion */}
+            <div className="bg-[#F1F1F1] p-5 mt-5 rounded-[10px]">
+              <h2 className="text-xl font-semibold text-gray-900 mb-6 border-b border-b-[#D4D4D4] pb-3">
+                Profile Completion
+              </h2>
+
+              <div className="grid grid-cols-4 gap-6">
+                <div className="flex items-center space-x-3">
+                  <div className="w-8 h-8 rounded-full bg--color flex items-center justify-center">
+                    <IoCheckmark className="w-5 h-5 text-white" />
+                  </div>
+                  <span className="text-sm font-medium text-gray-700">
+                    Personal Information
+                  </span>
+                </div>
+
+                <div className="flex items-center space-x-3">
+                  <div className="w-8 h-8 rounded-full bg-[#D4D4D4] flex items-center justify-center">
+                    <IoCheckmark className="w-5 h-5 text-white" />
+                  </div>
+                  <span className="text-sm font-medium text-gray-700">
+                    Consent on terms
+                  </span>
+                </div>
+
+                <div className="flex items-center space-x-3">
+                  <div className="w-8 h-8 rounded-full bg--color flex items-center justify-center">
+                    <IoCheckmark className="w-5 h-5 text-white" />
+                  </div>
+                  <span className="text-sm font-medium text-gray-700">
+                    ParQ Information
+                  </span>
+                </div>
+
+                <div className="flex items-center space-x-3">
+                  <div className="w-8 h-8 rounded-full bg-[#D4D4D4] flex items-center justify-center">
+                    <IoCheckmark className="w-5 h-5 text-white" />
+                  </div>
+                  <span className="text-sm font-medium text-gray-700">
+                    KYC Submission
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
-
-          <hr />
-
-          {/* Emergency Contact */}
-          <div>
-            <h3 className="font-semibold mb-3">Emergency Contact</h3>
-            <div className="grid--profile--details text-sm gap-4">
-              {["emergencyName", "emergencyContact", "emergencyRelation"].map(
-                (field) => (
-                  <p className="flex flex-col" key={field}>
-                    <label className="font-semibold mb-2 block capitalize">
-                      {field.replace("emergency", "")}:
-                    </label>
-                    {editMode ? (
-                      <input
-                        name={field}
-                        value={profile[field] || ""}
-                        onChange={handleChange}
-                        className="custom--input w-full"
-                      />
-                    ) : (
-                      <span>{profile[field] || "—"}</span>
-                    )}
-                  </p>
-                )
-              )}
-            </div>
-          </div>
-          <hr />
-
-          {/* Professional Info */}
-          <div>
-            <h3 className="font-semibold mb-3">Profile Completion</h3>
-            <div className="grid--profile--details text-sm gap-4">
-              <p className="flex flex-col">
-                <label className="font-semibold mb-2 block">
-                  Personal Information:
-                </label>
-                <span className="bg-green-500 text-white w-auto flex items-center justify-center max-w-fit px-3 py-1 rounded">
-                  <IoCheckmark /> Yes
-                </span>
-              </p>
-
-              <p className="flex flex-col">
-                <label className="font-semibold mb-2 block">
-                  Consent to terms:
-                </label>
-                <span className="bg-red-500 text-white w-auto flex items-center justify-center max-w-fit px-3 py-1 rounded">
-                  <IoClose /> No
-                </span>
-              </p>
-              <p className="flex flex-col">
-                <label className="font-semibold mb-2 block">
-                  Emergency Contact:
-                </label>
-                <span className="bg-red-500 text-white w-auto flex items-center justify-center max-w-fit px-3 py-1 rounded">
-                  <IoClose /> No
-                </span>
-              </p>
-              <p className="flex flex-col">
-                <label className="font-semibold mb-2 block">
-                  KYC Submission:
-                </label>
-                <span className="bg-red-500 text-white w-auto flex items-center justify-center max-w-fit px-3 py-1 rounded">
-                  <IoClose /> No
-                </span>
-              </p>
-              <p className="flex flex-col">
-                <label className="font-semibold mb-2 block">
-                  Parq Information:
-                </label>
-                <span className="bg-red-500 text-white w-auto flex items-center justify-center max-w-fit px-3 py-1 rounded">
-                  <IoClose /> No
-                </span>
-              </p>
-            </div>
+          {/* Save Button */}
+          <div className="flex justify-end mt-5">
+            <button className="bg--color custom--btn">SAVE CHANGES</button>
           </div>
         </div>
       </div>

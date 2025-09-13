@@ -6,13 +6,13 @@ import { toast } from "react-toastify";
 import Tooltip from "../common/Tooltip";
 import { LiaEdit } from "react-icons/lia";
 import { FaCircle } from "react-icons/fa6";
-import CreateStudio from "./CreateStudio";
+import CreateSubscriptionPlan from "./CreateSubscriptionPlan";
 import { apiAxios } from "../../config/config";
 import { IoSearchOutline } from "react-icons/io5";
 import Select from "react-select";
 import { customStyles } from "../../Helper/helper";
 
-const Studio = () => {
+const SubscriptionPlan = () => {
   const [showModal, setShowModal] = useState(false);
   const [module, setModule] = useState([]);
   const [club, setClub] = useState([]);
@@ -22,28 +22,25 @@ const Studio = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState(null);
 
-  const [file, setFile] = useState(null);
-
   const fetchClub = async (search = "") => {
     try {
       const res = await apiAxios().get("/club/list", {
         params: search ? { search } : {},
       });
       let data = res.data?.data || res.data || [];
-      const activeClub = data.filter(item => item.status === "ACTIVE");
       if (statusFilter?.value) {
         data = data.filter((item) => item.status === statusFilter.value);
       }
-      setClub(activeClub);
+      setClub(data);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch companies");
+      toast.error("Failed to fetch club");
     }
   };
 
-  const fetchStudio = async (search = "") => {
+  const fetchSubscription = async (search = "") => {
     try {
-      const res = await apiAxios().get("/studio/list", {
+      const res = await apiAxios().get("/subscription-plan/list", {
         params: search ? { search } : {},
       });
       let data = res.data?.data || res.data || [];
@@ -53,26 +50,26 @@ const Studio = () => {
       setModule(data);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch studio");
+      toast.error("Failed to fetch subscription");
     }
   };
 
   useEffect(() => {
-    fetchStudio();
+    fetchSubscription();
     fetchClub();
   }, []);
 
-  const clubOptions = club?.map(item => ({
-    label: item.name,  // Show club name
-    value: item.id     // Store club_id as ID
-  })) || [];
+  const clubOptions =
+    club?.map((item) => ({
+      label: item.name, // Show club name
+      value: item.id, // Store club_id as ID
+    })) || [];
 
-  console.log(clubOptions,'clubOptions')
-
+  console.log(clubOptions, "clubOptions");
 
   useEffect(() => {
     const delayDebounce = setTimeout(() => {
-      fetchStudio(searchTerm);
+      fetchSubscription(searchTerm);
     }, 300);
 
     return () => clearTimeout(delayDebounce);
@@ -88,31 +85,44 @@ const Studio = () => {
 
   const formik = useFormik({
     initialValues: {
-      name: "",
+      title: "",
+      description: "",
       club_id: "",
-      position: null,
-      status: "",
+      duration_type: "",
+      duration_value: "",
+      booking_type: "",
+      amount: "",
+      discount: "",
+      total_amount: "",
+      gst: "",
+      gst_amount: "",
+      final_amount: "",
+      status: "ACTIVE",
+      position: "",
+      club_name: "",
     },
     validationSchema: Yup.object({
-      name: Yup.string().required("Title is required"),
+      title: Yup.string().required("Title is required"),
       club_id: Yup.string().required("Club is required"),
       position: Yup.number().required("Position is required"),
       status: Yup.string().required("Status is required"),
     }),
     onSubmit: async (values, { resetForm }) => {
       try {
-
         const payload = { ...values };
 
-       if (editingOption && editingOption.id) {
-            await apiAxios().put(`/studio/${editingOption.id}`, payload);
-            toast.success("Updated Successfully");
-          } else {
-            await apiAxios().post("/studio/create", payload);
-            toast.success("Created Successfully");
-          }
+        if (editingOption && editingOption.id) {
+          await apiAxios().put(
+            `/subscription-plan/${editingOption.id}`,
+            payload
+          );
+          toast.success("Updated Successfully");
+        } else {
+          await apiAxios().post("/subscription-plan/create", payload);
+          toast.success("Created Successfully");
+        }
 
-        fetchStudio();
+        fetchSubscription();
       } catch (err) {
         console.error("API Error:", err.response?.data || err.message);
         toast.error("Failed to save onboarding");
@@ -128,24 +138,23 @@ const Studio = () => {
     <div className="page--content">
       <div className="flex items-end justify-between gap-2 mb-5">
         <div className="title--breadcrumbs">
-          <p className="text-sm">{`Home > All Studio`}</p>
-          <h1 className="text-3xl font-semibold">All Studio</h1>
+          <p className="text-sm">{`Home > Subscription Plan`}</p>
+          <h1 className="text-3xl font-semibold">Subscription Plan</h1>
         </div>
-  
-          <div className="flex items-end gap-2">
-            <button
-              type="button"
-              className="px-4 py-2 bg-black text-white rounded flex items-center gap-2"
-              onClick={() => {
-                setEditingOption(null);
-                formik.resetForm();
-                setShowModal(true);
-              }}
-            >
-              <FiPlus /> Create Studio
-            </button>
-          </div>
-        
+
+        <div className="flex items-end gap-2">
+          <button
+            type="button"
+            className="px-4 py-2 bg-black text-white rounded flex items-center gap-2"
+            onClick={() => {
+              setEditingOption(null);
+              formik.resetForm();
+              setShowModal(true);
+            }}
+          >
+            <FiPlus /> Create Plan
+          </button>
+        </div>
       </div>
 
       <div className="flex gap-3 mb-4">
@@ -183,9 +192,13 @@ const Studio = () => {
           <thead className="text-xs text-gray-700 uppercase bg-gray-50">
             <tr>
               {/* <th className="px-2 py-4">Module ID</th> */}
+              <th className="px-2 py-4">Title</th>
               <th className="px-2 py-4">Club Name</th>
-              <th className="px-2 py-4">Name</th>
-              <th className="px-2 py-4">Position</th>
+              <th className="px-2 py-4">Duration Type</th>
+              <th className="px-2 py-4">Duration Value</th>
+              <th className="px-2 py-4">Booking Type</th>
+              <th className="px-2 py-4">Final Amount</th>
+              {/* <th className="px-2 py-4">Position</th> */}
               <th className="px-2 py-4">Status</th>
               <th className="px-2 py-4">Action</th>
             </tr>
@@ -204,11 +217,13 @@ const Studio = () => {
                   className="group bg-white border-b hover:bg-gray-50 relative transition duration-700"
                 >
                   {/* <td className="px-2 py-4">{item?.id || "—"}</td> */}
-                  <td className="px-2 py-4">
-                    {item?.club_name}
-                  </td>
-                  <td className="px-2 py-4">{item?.name}</td>
-                  <td>{item.position}</td>
+                  <td className="px-2 py-4">{item?.title}</td>
+                  <td className="px-2 py-4">{item?.club_name}</td>
+                  <td className="px-2 py-4">{item?.duration_type}</td>
+                  <td className="px-2 py-4">{item?.duration_value}</td>
+                  <td className="px-2 py-4">{item?.booking_type}</td>
+                  <td className="px-2 py-4">₹{item?.final_amount}</td>
+                  {/* <td>{item.position}</td> */}
                   <td className="px-2 py-4">
                     <div
                       className={`flex gap-1 items-center ${
@@ -252,7 +267,7 @@ const Studio = () => {
       </div>
 
       {showModal && (
-        <CreateStudio
+        <CreateSubscriptionPlan
           setShowModal={setShowModal}
           editingOption={editingOption}
           formik={formik}
@@ -265,4 +280,4 @@ const Studio = () => {
   );
 };
 
-export default Studio;
+export default SubscriptionPlan;

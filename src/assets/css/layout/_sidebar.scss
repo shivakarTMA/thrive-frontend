@@ -1,5 +1,5 @@
 .sidebar {
-  background-color: #212529;
+  background: linear-gradient(180deg, #000000 0%, #474747 100%);
   min-height: 100vh;
   position: fixed;
   width: 250px;
@@ -63,6 +63,7 @@
 
 .side--content--area{
     transition: 0.3s;
+    // background-color: var(--bgContent);
 }
 
 .sidebar.activetoggle .nav-link {

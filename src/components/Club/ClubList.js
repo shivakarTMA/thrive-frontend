@@ -186,6 +186,8 @@ const ClubList = () => {
         toast.success("Created Successfully");
       }
 
+      setShowModal(false);
+
       // 🔄 Re-fetch after save
       fetchClubs();
     } catch (err) {

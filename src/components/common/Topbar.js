@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { FaUserCircle } from "react-icons/fa";
 import { GoPlusCircle } from "react-icons/go";
-import { IoIosSearch } from "react-icons/io";
+import { IoIosArrowDown, IoIosSearch } from "react-icons/io";
 import { LuBell } from "react-icons/lu";
 import { RiBarChartHorizontalLine } from "react-icons/ri";
 import { LiaFileInvoiceSolid } from "react-icons/lia";
@@ -20,6 +20,9 @@ import CreateLeadForm from "../../Pages/CreateLeadForm";
 import CreateMemberForm from "../../Pages/CreateMemberForm";
 import CreateInvoice from "../../Pages/CreateInvoice";
 import ProfileDetails from "../modal/ProfileDetails";
+import ToggleMenu from "../../assets/images/togglemenu.svg";
+import quickLinksImg from "../../assets/images/quicklinks.svg";
+import notificationBell from "../../assets/images/bellnotification.svg";
 
 const Topbar = ({ setToggleMenuBar, toggleMenuBar }) => {
   const dispatch = useDispatch();
@@ -79,22 +82,23 @@ const Topbar = ({ setToggleMenuBar, toggleMenuBar }) => {
   return (
     <>
       <section className="top--bar p-3 border-b border-b-[#000]">
-        <div className="inner--container flex justify-between">
+        <div className="inner--container flex justify-between gap-3">
           {/* Left Section */}
-          <div className="topbar--left flex items-center gap-3">
+          <div className="topbar--left flex items-center gap-3 w-full">
             <div className="toggle--bar" onClick={handleToggleMenu}>
-              <RiBarChartHorizontalLine className="text-2xl cursor-pointer" />
+              {/* <RiBarChartHorizontalLine className="text-2xl cursor-pointer" /> */}
+              <img src={ToggleMenu} className="cursor-pointer w-8" />
             </div>
 
-            <div className="search--topbar relative">
-              <div className="flex items-center gap-2 border rounded px-2 bg-white">
+            <div className="search--topbar relative w-full">
+              <div className="flex items-center gap-2 border rounded px-2 bg-white rounded-[10px]">
                 <IoIosSearch className="text-xl" />
                 <input
                   type="text"
                   value={searchItem}
                   onChange={handleInputChange}
-                  placeholder="Type to search"
-                  className="outline-none py-1"
+                  placeholder="Search"
+                  className="outline-none py-1 min-h-[45px]"
                 />
               </div>
 
@@ -125,8 +129,9 @@ const Topbar = ({ setToggleMenuBar, toggleMenuBar }) => {
           {/* Right Section */}
           <div className="top--bar--menu flex items-center gap-3">
             <div className="relative">
-              <GoPlusCircle
-                className="text-2xl cursor-pointer"
+              <img
+                src={quickLinksImg}
+                className="cursor-pointer w-8"
                 onClick={() => toggleDropdown("quicklinks")}
               />
               {user?.userType == "PT" ? null : (
@@ -158,13 +163,24 @@ const Topbar = ({ setToggleMenuBar, toggleMenuBar }) => {
                 </DropdownMenu>
               )}
             </div>
-            <LuBell className="text-2xl cursor-pointer" />
+
+            <img src={notificationBell} className="cursor-pointer w-8" />
 
             <div className="relative">
-              <FaUserCircle
-                className="text-2xl cursor-pointer"
-                onClick={() => toggleDropdown("profile")}
-              />
+
+              <div className="flex items-center gap-1 cursor-pointer" onClick={() => toggleDropdown("profile")}>
+                <div
+                  className="profileview w-9 h-9 text-sm rounded-full flex items-center justify-center text-white"
+                  
+                  style={{
+                    background:
+                      "linear-gradient(161.54deg, #527DDD 0.51%, #001136 119.51%)",
+                  }}
+                >
+                  <p>AM</p>
+                </div>
+                <IoIosArrowDown />
+              </div>
 
               <DropdownMenu
                 isOpen={activeDropdown === "profile"}
@@ -200,7 +216,9 @@ const Topbar = ({ setToggleMenuBar, toggleMenuBar }) => {
       {leadModal && <CreateLeadForm setLeadModal={setLeadModal} />}
       {memberModal && <CreateMemberForm setMemberModal={setMemberModal} />}
       {invoiceModal && <CreateInvoice setInvoiceModal={setInvoiceModal} />}
-      {profileModal && <ProfileDetails setProfileModal={setProfileModal} profile={user} />}
+      {profileModal && (
+        <ProfileDetails setProfileModal={setProfileModal} profile={user} />
+      )}
     </>
   );
 };

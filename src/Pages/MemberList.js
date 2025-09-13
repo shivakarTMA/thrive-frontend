@@ -1,7 +1,7 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { FaAngleLeft, FaAngleRight } from "react-icons/fa";
 import Select from "react-select";
-import { customStyles } from "../Helper/helper";
+import { customStyles, formatAutoDate } from "../Helper/helper";
 import { memberMockData } from "../DummyData/DummyData";
 import { Link } from "react-router-dom";
 import { IoIosAddCircleOutline, IoIosSearch } from "react-icons/io";
@@ -20,6 +20,8 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { LiaEdit } from "react-icons/lia";
 import Tooltip from "../components/common/Tooltip";
+import { apiAxios } from "../config/config";
+import { toast } from "react-toastify";
 
 export const memberFilters = {
   membershipType: ["Gold", "Silver", "Platinum"],
@@ -43,65 +45,164 @@ const dateFilterOptions = [
 
 const MemberList = () => {
   const [search, setSearch] = useState("");
+  const [memberList, setMemberList] = useState([]);
   const [membershipFilter, setMembershipFilter] = useState(null);
   const [trainerTypeFilter, setTrainerTypeFilter] = useState(null);
   const [fohFilter, setFohFilter] = useState(null);
-  const [page, setPage] = useState(1);
-  const rowsPerPage = 5;
   const [dateFilter, setDateFilter] = useState(null);
   const [customFrom, setCustomFrom] = useState(null);
   const [customTo, setCustomTo] = useState(null);
 
-  const applyDateFilter = (memberDate) => {
-    if (!dateFilter) return true;
-    const date = parseISO(memberDate);
-    const today = startOfToday();
+  const [page, setPage] = useState(1);
+  const [rowsPerPage] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
 
-    switch (dateFilter.value) {
-      case "today":
-        return format(date, "yyyy-MM-dd") === format(today, "yyyy-MM-dd");
-      case "last7":
-        return isWithinInterval(date, { start: subDays(today, 6), end: today });
-      case "monthTillDate":
-        return isWithinInterval(date, {
-          start: startOfMonth(today),
-          end: today,
-        });
-      case "custom":
-        if (!customFrom || !customTo) return true;
-        return isWithinInterval(date, {
-          start: customFrom,
-          end: customTo,
-        });
-      default:
-        return true;
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [assignedOwners, setAssignedOwners] = useState({});
+  const [bulkOwner, setBulkOwner] = useState(null);
+  const [showConfirm, setShowConfirm] = useState(false);
+
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState(null);
+
+  const fetchMemberList = async (search = searchTerm, currentPage = page) => {
+    try {
+      const params = {
+        page: currentPage,
+        limit: rowsPerPage,
+      };
+      // Search param
+      if (search) params.search = search;
+
+      const res = await apiAxios().get("/member/list", { params });
+
+      const responseData = res.data;
+      const data = responseData?.data || [];
+
+      setMemberList(data);
+      setPage(responseData?.currentPage || 1);
+      setTotalPages(responseData?.totalPage || 1);
+      setTotalCount(responseData?.totalCount || data.length);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to fetch member");
     }
   };
 
-  const filteredData = memberMockData.filter((member) => {
-    const matchesSearch =
-      search === "" || member.name.toLowerCase().includes(search.toLowerCase());
-    const matchesMembership =
-      !membershipFilter || member.membershipType === membershipFilter.value;
-    const matchesTrainerType =
-      !trainerTypeFilter || member.trainerType === trainerTypeFilter.value;
-    const matchesFoh = !fohFilter || member.fohAssigned === fohFilter.value;
-    const matchesDate = applyDateFilter(member.memberFrom);
+  useEffect(() => {
+    fetchMemberList();
+  }, [memberList]);
 
-    return (
-      matchesSearch &&
-      matchesMembership &&
-      matchesTrainerType &&
-      matchesFoh &&
-      matchesDate
+  console.log(memberList, "memberList");
+  useEffect(() => {
+    const delayDebounce = setTimeout(() => {
+      fetchMemberList(searchTerm, 1);
+      setPage(1);
+    }, 300);
+
+    return () => clearTimeout(delayDebounce);
+  }, [searchTerm]);
+
+  const handleCheckboxChange = (id) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
     );
-  });
+  };
 
-  const paginatedData = filteredData.slice(
-    (page - 1) * rowsPerPage,
-    page * rowsPerPage
-  );
-  const totalPages = Math.ceil(filteredData.length / rowsPerPage);
+  const ownerOptions = [
+    {
+      label: "FOH", // Group label
+      options: [
+        { value: "shivakar", label: "Shivakar" },
+        { value: "divakar", label: "Divakar" },
+        { value: "parbhakar", label: "Parbhakar" },
+      ],
+    },
+    {
+      label: "PT", // Group label
+      options: [
+        { value: "nitin", label: "Nitin" },
+        { value: "esha", label: "Esha" },
+      ],
+    },
+  ];
+
+  // Handle bulk assigning owner to selected leads only
+  const handleBulkAssign = (selectedOption) => {
+    setBulkOwner(selectedOption); // Store selected option
+    const updatedAssignments = { ...assignedOwners };
+    selectedIds.forEach((id) => {
+      updatedAssignments[id] = selectedOption; // Assign same owner to all selected leads
+    });
+    setAssignedOwners(updatedAssignments);
+  };
+
+  // Handle submit bulk assignment
+  const handleSubmitAssign = () => {
+    if (!bulkOwner) return; // Prevent submission without owner
+    setShowConfirm(true); // Show confirmation popup
+  };
+
+  // Confirm assignment
+  const confirmAssign = () => {
+    console.log("Assigned Leads:", selectedIds); // Log selected lead IDs
+    console.log("Assigned Owner:", bulkOwner); // Log assigned owner
+    setShowConfirm(false); // Close popup
+    setSelectedIds([]); // Clear selection
+    setBulkOwner(null); // Clear bulk owner
+  };
+
+  // const applyDateFilter = (memberDate) => {
+  //   if (!dateFilter) return true;
+  //   const date = parseISO(memberDate);
+  //   const today = startOfToday();
+
+  //   switch (dateFilter.value) {
+  //     case "today":
+  //       return format(date, "yyyy-MM-dd") === format(today, "yyyy-MM-dd");
+  //     case "last7":
+  //       return isWithinInterval(date, { start: subDays(today, 6), end: today });
+  //     case "monthTillDate":
+  //       return isWithinInterval(date, {
+  //         start: startOfMonth(today),
+  //         end: today,
+  //       });
+  //     case "custom":
+  //       if (!customFrom || !customTo) return true;
+  //       return isWithinInterval(date, {
+  //         start: customFrom,
+  //         end: customTo,
+  //       });
+  //     default:
+  //       return true;
+  //   }
+  // };
+
+  // const filteredData = memberMockData.filter((member) => {
+  //   const matchesSearch =
+  //     search === "" || member.name.toLowerCase().includes(search.toLowerCase());
+  //   const matchesMembership =
+  //     !membershipFilter || member.membershipType === membershipFilter.value;
+  //   const matchesTrainerType =
+  //     !trainerTypeFilter || member.trainerType === trainerTypeFilter.value;
+  //   const matchesFoh = !fohFilter || member.fohAssigned === fohFilter.value;
+  //   const matchesDate = applyDateFilter(member.memberFrom);
+
+  //   return (
+  //     matchesSearch &&
+  //     matchesMembership &&
+  //     matchesTrainerType &&
+  //     matchesFoh &&
+  //     matchesDate
+  //   );
+  // });
+
+  // const paginatedData = filteredData.slice(
+  //   (page - 1) * rowsPerPage,
+  //   page * rowsPerPage
+  // );
+  // const totalPages = Math.ceil(filteredData.length / rowsPerPage);
 
   return (
     <div className="page--content">
@@ -113,7 +214,7 @@ const MemberList = () => {
       </div>
 
       <div className="flex w-full gap-2 justify-between items-center mb-4">
-        <div className="flex flex-1 gap-2 items-center flex-wrap">
+        {/* <div className="flex flex-1 gap-2 items-center flex-wrap">
           <Select
             placeholder="Membership Type"
             options={getUniqueOptions(memberMockData, "membershipType")}
@@ -185,77 +286,144 @@ const MemberList = () => {
               </div>
             </>
           )}
-        </div>
+        </div> */}
         <div className="flex items-center gap-2 border rounded-[50px] px-2 bg-white">
           <IoIosSearch className="text-xl" />
           <input
             type="text"
-            value={search}
             placeholder="Search"
-            onChange={(e) => setSearch(e.target.value)}
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full max-w-xs px-3 py-2 border-none rounded-[50px] focus:outline-none"
           />
         </div>
       </div>
+      {selectedIds.length > 0 && (
+        <div className="flex items-center gap-3 mb-3">
+          <span className="font-medium text-gray-700">
+            Assign {selectedIds.length} selected member(s) to:
+          </span>
+          <Select
+            options={ownerOptions}
+            value={bulkOwner}
+            onChange={handleBulkAssign}
+            placeholder="Assign Owner"
+            styles={customStyles}
+          />
+          <button
+            onClick={handleSubmitAssign}
+            className="px-4 py-2 bg-black text-white rounded flex items-center gap-2"
+          >
+            Submit
+          </button>
+        </div>
+      )}
+
+      {showConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-xl shadow-lg w-96 text-center">
+            <h2 className="text-lg font-semibold mb-4">Confirm Assignment</h2>
+            <p className="mb-4">
+              Are you sure you want to assign{" "}
+              <strong>{selectedIds.length}</strong> lead(s) to{" "}
+              <strong>{bulkOwner?.label}</strong>?
+            </p>
+            <div className="flex justify-center gap-4">
+              <button
+                onClick={() => setShowConfirm(false)}
+                className="px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-100"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmAssign}
+                className="px-4 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700"
+              >
+                Confirm
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="relative overflow-x-auto">
         <table className="w-full text-sm text-left text-gray-500">
           <thead className="text-xs text-gray-700 uppercase bg-gray-50">
             <tr>
-              <th className="px-4 py-4">#</th>
-              <th className="px-4 py-4">Member ID</th>
-              <th className="px-4 py-4">Member Name</th>
-              <th className="px-4 py-4">Membership Type</th>
-              <th className="px-4 py-4">Member From</th>
-              <th className="px-4 py-4">Member Till</th>
-              <th className="px-4 py-4">Trainer</th>
-              <th className="px-4 py-4">FOH Assigned</th>
+              <th className="px-2 py-4">#</th>
+              <th className="px-2 py-4">Created on</th>
+              <th className="px-2 py-4">Last Updated</th>
+              <th className="px-2 py-4">Member Name</th>
+              <th className="px-2 py-4">Membership Type</th>
+              <th className="px-2 py-4">Member From</th>
+              <th className="px-2 py-4">Member Till</th>
+              <th className="px-2 py-4">Trainer</th>
+              <th className="px-2 py-4">FOH Assigned</th>
             </tr>
           </thead>
           <tbody>
-            {paginatedData.map((member, index) => (
+            {memberList.map((member, index) => (
               <tr
                 key={member.id}
                 className="group bg-white border-b relative hover:bg-gray-50"
               >
-                <td className="px-2 py-4">
+                {/* <td className="px-2 py-4">
                   {index + 1 + (page - 1) * rowsPerPage}
+                </td> */}
+                <td className="px-2 py-4">
+                  <div className="flex items-center custom--checkbox--2">
+                    <input
+                      type="checkbox"
+                      className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                      checked={selectedIds.includes(member.id)}
+                      onChange={() => handleCheckboxChange(member.id)}
+                    />
+                    <span className="checkmark--custom"></span>
+                  </div>
                 </td>
-                <td className="px-2 py-4">{member.memberId}</td>
-                <td className="px-2 py-4">{member.name}</td>
-                <td className="px-2 py-4">{member.membershipType}</td>
-                <td className="px-2 py-4">{member.memberFrom}</td>
-                <td className="px-2 py-4">{member.memberTill}</td>
-                <td className="px-2 py-4">{member.trainer}</td>
-                <td className="px-2 py-4">{member.fohAssigned}</td>
-                <div className="absolute hidden group-hover:flex gap-2 items-center right-0 h-full top-0 w-full flex items-center justify-end bg-[linear-gradient(269deg,_#ffffff_30%,_transparent)] pr-5 transition duration-700">
+                <td className="px-2 py-4">
+                  {formatAutoDate(member?.createdAt)}
+                </td>
+                <td className="px-2 py-4">
+                  {formatAutoDate(member?.updatedAt)}
+                </td>
+                <td className="px-2 py-4">{member?.full_name}</td>
+                <td className="px-2 py-4">{member?.membershipType}</td>
+                <td className="px-2 py-4">{member?.memberFrom}</td>
+                <td className="px-2 py-4">{member?.memberTill}</td>
+                <td className="px-2 py-4">{member?.trainer}</td>
+                <td className="px-2 py-4">{member?.fohAssigned}</td>
+                <div className="absolute hidden group-hover:flex gap-2 items-center right-0 h-full top-0 w-[50%] flex items-center justify-end bg-[linear-gradient(269deg,_#ffffff_30%,_transparent)] pr-5 transition duration-700">
                   <div className="flex gap-1">
-                     <Tooltip
-                      id={`edit-member-${member.id}`}
+                    <Tooltip
+                      id={`edit-member-${member?.id}`}
                       content="Edit Member"
                       place="top"
                     >
                       <div className="p-1 cursor-pointer">
-                        <Link to={`/member/${member.id}`} className="p-0">
+                        <Link to={`/member/${member?.id}`} className="p-0">
                           <LiaEdit className="text-[25px] text-black" />
                         </Link>
                       </div>
                     </Tooltip>
 
                     <Tooltip
-                      id={`member-call-${member.id}`}
+                      id={`member-call-${member?.id}`}
                       content="Call Logs"
                       place="top"
                     >
                       <div className="p-1 cursor-pointer">
-                        <Link to={`/member-follow-up/${member.id}`} className="p-0">
+                        <Link
+                          to={`/member-follow-up/${member?.id}`}
+                          className="p-0"
+                        >
                           <MdCall className="text-[25px] text-black" />
                         </Link>
                       </div>
                     </Tooltip>
 
                     <Tooltip
-                      id={`send-payment-${member.id}`}
+                      id={`send-payment-${member?.id}`}
                       content="Send Payment Link"
                       place="top"
                     >
@@ -271,44 +439,9 @@ const MemberList = () => {
             ))}
           </tbody>
         </table>
-        {paginatedData.length === 0 && (
+        {memberList.length === 0 && (
           <p className="text-center p-4">No matching members found.</p>
         )}
-      </div>
-
-      <div className="mt-4 flex justify-between items-center">
-        <div>
-          Showing {filteredData.length === 0 ? 0 : (page - 1) * rowsPerPage + 1}{" "}
-          to {Math.min(page * rowsPerPage, filteredData.length)} of{" "}
-          {filteredData.length}
-        </div>
-        <div className="flex gap-2">
-          <button
-            onClick={() => setPage(Math.max(page - 1, 1))}
-            disabled={page === 1}
-            className="px-3 py-1 border rounded disabled:opacity-50"
-          >
-            Prev
-          </button>
-          {Array.from({ length: totalPages }, (_, i) => (
-            <button
-              key={i}
-              onClick={() => setPage(i + 1)}
-              className={`px-3 py-1 border rounded ${
-                page === i + 1 ? "bg-gray-300" : ""
-              }`}
-            >
-              {i + 1}
-            </button>
-          ))}
-          <button
-            onClick={() => setPage(Math.min(page + 1, totalPages))}
-            disabled={page === totalPages}
-            className="px-3 py-1 border rounded disabled:opacity-50"
-          >
-            Next
-          </button>
-        </div>
       </div>
     </div>
   );

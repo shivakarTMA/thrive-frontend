@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { mockData } from "../DummyData/DummyData";
 import ProfileDetails from "../components/memberprofile/ProfileDetails";
@@ -9,62 +9,81 @@ import Relations from "../components/memberprofile/Relations";
 import AttendanceData from "../components/memberprofile/AttendanceData";
 import WorkoutApp from "../components/memberprofile/WorkoutApp";
 import PaymentHistory from "../components/memberprofile/PaymentHistory";
-import KycForm from "../components/memberprofile/KycForm";
+import KYCSubmission from "../components/memberprofile/KYCSubmission";
+import { apiAxios } from "../config/config";
+import { toast } from "react-toastify";
+import HealthProfile from "../components/memberprofile/HealthProfile";
 
 const MemberProfile = () => {
   const { id } = useParams();
-
+  const [activeTab, setActiveTab] = useState("Profile Details");
+  const [memberDetails, setMemberDetails] = useState([]);
+  const member = memberDetails.find((m) => m.id === parseInt(id));
   const tabs = [
     "Profile Details",
     "Service Card",
     "Order History",
     "Payment History",
-    // "Call Logs",
     "Appointments",
     "Referrals",
     "Attendance",
     "Training",
     "Kyc Submission",
+    "Health Profile",
   ];
-  const [activeTab, setActiveTab] = useState("Profile Details");
-  const member = mockData.find((m) => m.id === parseInt(id));
+  const fetchMemberList = async (search = "") => {
+    try {
+      const res = await apiAxios().get("/member/list", {
+        params: search ? { search } : {},
+      });
+      let data = res.data?.data || res.data || [];
+      setMemberDetails(data);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to fetch member");
+    }
+  };
+
+  useEffect(() => {
+    fetchMemberList();
+  }, []);
 
   if (!member) return <p>Member not found</p>;
-
-  console.log(member,'member')
 
   return (
     <div className="page--content">
       <div className=" flex items-end justify-between gap-2 mb-0">
         <div className="title--breadcrumbs">
-          <p className="text-sm">{`Home > Members > ${member?.name} Profile`}</p>
-          <h1 className="text-3xl font-semibold">{member?.name} Profile</h1>
+          <p className="text-sm">{`Home > Members > ${member?.full_name} Profile`}</p>
+          <h1 className="text-3xl font-semibold">{member?.full_name} Profile</h1>
         </div>
       </div>
       <div className="flexs">
         {/* Sidebar */}
         <aside className="w-full">
           {/* <h1 className="text-3xl font-semibold">Member Profile</h1> */}
-          <div className="mt-6 flex flex-wrap items-center">
-            <div className="mt-6 flex flex-wrap items-center">
+          <div className="mt-6 flex flex-wrap items-center overflow-auto">
+            <div className="mt-0 flex items-center border-b border-b-[#D4D4D4]">
               {tabs.map((item, index) => (
                 <React.Fragment key={item}>
                   <div
                     onClick={() => setActiveTab(item)}
-                    className={`px-3 py-1.5 rounded cursor-pointer transition 
+                    className={`w-fit min-w-[fit-content] cursor-pointer
                       ${
                         activeTab === item
-                          ? "bg-primarycolor text-white"
-                          : "hover:text-primarycolor"
+                          ? "btn--tab"
+                          : ""
                       }`}
-                    >
-                    {item}
+                  >
+                    <div className="px-4 py-3 z-[1] relative text-[14px]">
+                      {item}
+                    </div>
                   </div>
 
                   {item === "Payment History" && (
                     <Link
                       to={`/member-follow-up/${member.id}`}
-                      className="px-3 py-1.5 rounded hover:text-primarycolor transition"
+                      className="w-fit min-w-[fit-content] text-[15px] px-3 py-1.5 rounded hover:text-primarycolor transition"
                     >
                       Call Logs
                     </Link>
@@ -77,11 +96,11 @@ const MemberProfile = () => {
 
         {/* Main Content */}
 
-        <div className="bg-secondarycolor p-4 rounded mt-4 ">
+        <div className="mt-4 ">
           {activeTab === "Profile Details" && (
             <ProfileDetails member={member} />
           )}
-          {activeTab === "Kyc Submission" && <KycForm member={member} />}
+          {activeTab === "Kyc Submission" && <KYCSubmission member={member} />}
           {activeTab === "Service Card" && <ServiceCard member={member} />}
           {activeTab === "Order History" && <OrderHistory member={member} />}
           {activeTab === "Payment History" && (
@@ -91,6 +110,7 @@ const MemberProfile = () => {
           {activeTab === "Referrals" && <Relations details={member} />}
           {activeTab === "Attendance" && <AttendanceData details={member} />}
           {activeTab === "Training" && <WorkoutApp details={member} />}
+          {activeTab === "Health Profile" && <HealthProfile details={member} />}
         </div>
       </div>
     </div>

@@ -187,7 +187,7 @@ const AllLeads = () => {
 
   useEffect(() => {
     fetchLeadList();
-  }, []);
+  }, [allLeads]);
 
   useEffect(() => {
     const delayDebounce = setTimeout(() => {
@@ -487,11 +487,15 @@ const AllLeads = () => {
                       className="group bg-white border-b hover:bg-gray-50 relative transition duration-700"
                     >
                       <td className="px-2 py-4">
-                        <input
-                          type="checkbox"
-                          checked={selectedIds.includes(row.id)}
-                          onChange={() => handleCheckboxChange(row.id)}
-                        />
+                        <div className="flex items-center custom--checkbox--2">
+                          <input
+                            type="checkbox"
+                            className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                             checked={selectedIds.includes(row.id)}
+                              onChange={() => handleCheckboxChange(row.id)}
+                          />
+                          <span className="checkmark--custom"></span>
+                        </div>
                       </td>
                       <td className="px-2 py-4">
                         {formatAutoDate(row?.createdAt)}
@@ -515,7 +519,7 @@ const AllLeads = () => {
                         {row?.created_by == null ? "--" : row?.created_by}
                       </td>
 
-                      <div className="absolute hidden group-hover:flex gap-2 items-center right-0 h-full top-0 w-[80%] flex items-center justify-end bg-[linear-gradient(269deg,_#ffffff_30%,_transparent)] pr-5 transition duration-700">
+                      <div className="absolute hidden group-hover:flex gap-2 items-center right-0 h-full top-0 w-[50%] flex items-center justify-end bg-[linear-gradient(269deg,_#ffffff_30%,_transparent)] pr-5 transition duration-700">
                         <Tooltip
                           id={`tooltip-edit-${row.id}`}
                           content="Edit Lead"
@@ -851,6 +855,7 @@ const AllLeads = () => {
         <CreateMemberForm
           selectedLeadMember={selectedLeadMember}
           setMemberModal={setMemberModal}
+          setSelectedLead={setSelectedLead}
         />
       )}
       {invoiceModal && (

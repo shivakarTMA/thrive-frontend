@@ -13,14 +13,9 @@ import {
   FaBuilding,
   FaBirthdayCake,
 } from "react-icons/fa";
-import {
-  trainerAvailability,
-} from "../DummyData/DummyData";
+import { trainerAvailability } from "../DummyData/DummyData";
 
-import {
-  getCompanyNameById,
-  selectIcon,
-} from "../Helper/helper";
+import { getCompanyNameById, selectIcon } from "../Helper/helper";
 import { IoBan, IoCloseCircle } from "react-icons/io5";
 import { useFormik } from "formik";
 import * as Yup from "yup";
@@ -145,7 +140,7 @@ const CreateLeadForm = ({ setLeadModal, selectedLead }) => {
   // ✅ Initial form values
   const initialValues = {
     id: "",
-    full_name:"",
+    full_name: "",
     mobile: "",
     country_code: "",
     phoneFull: "",
@@ -177,11 +172,11 @@ const CreateLeadForm = ({ setLeadModal, selectedLead }) => {
         return;
       }
 
-      let companyName = "";
       let payload = {};
       try {
+        // ✅ Handle company name or ID properly
+        let companyName = "";
         if (values.company_name === "OTHER" && values.otherCompanyName) {
-          // Create new company if Other selected
           const formData = new FormData();
           formData.append("name", values.otherCompanyName);
           const res = await apiAxios().post("/company/create", formData, {
@@ -191,7 +186,6 @@ const CreateLeadForm = ({ setLeadModal, selectedLead }) => {
           const { otherCompanyName, ...rest } = values;
           payload = { ...rest, company_name: companyName };
         } else {
-          // Use existing company
           companyName = getCompanyNameById(
             companyOptions,
             values.company_name,
@@ -201,33 +195,53 @@ const CreateLeadForm = ({ setLeadModal, selectedLead }) => {
           payload = { ...rest, company_name: companyName };
         }
 
-        // ✅ Normalize dates
+        // ✅ Normalize dates (null if not set)
         payload.date_of_birth = values.date_of_birth
-          ? new Date(values.date_of_birth).toISOString().split("T")[0] // YYYY-MM-DD
-          : "";
+          ? new Date(values.date_of_birth).toISOString().split("T")[0]
+          : null;
 
         payload.schedule_date_time = values.schedule_date_time
           ? new Date(values.schedule_date_time).toISOString()
-          : "";
+          : null;
 
-         if (values.phoneFull) {
-  const phoneNumber = parsePhoneNumberFromString(values.phoneFull);
-  if (phoneNumber) {
-    payload.country_code = phoneNumber.countryCallingCode; // e.g. "91"
-    payload.mobile = phoneNumber.nationalNumber; // e.g. "9865987869"
-  }
-}
-
-
-        // ✅ Update if id exists
-        if (values.id) {
-          await apiAxios().put(`/lead/${values.id}`, payload); // 👈 FIXED
-          toast.success("Lead updated successfully!");
+        // ✅ Normalize phone
+        if (values.phoneFull) {
+          const phoneNumber = parsePhoneNumberFromString(values.phoneFull);
+          if (phoneNumber) {
+            payload.country_code = phoneNumber.countryCallingCode;
+            payload.mobile = phoneNumber.nationalNumber;
+          }
         } else {
-          await authAxios().post("/lead/create", payload);
-          toast.success("Lead created successfully!");
+          payload.country_code = null;
+          payload.mobile = null;
         }
 
+        // ✅ Replace empty strings with null
+        // Object.keys(payload).forEach((key) => {
+        //   if (payload[key] === "") {
+        //     payload[key] = null;
+        //   }
+        // });
+
+        // ✅ Update or create
+        if (values.id) {
+          await apiAxios().put(`/lead/${values.id}`, payload);
+          toast.success("Lead updated successfully!");
+          setAllLeads((prev) =>
+            prev.map((lead) =>
+              lead.id === values.id
+                ? { ...lead, ...payload, id: values.id }
+                : lead
+            )
+          );
+        } else {
+          const res = await authAxios().post("/lead/create", payload);
+          toast.success("Lead created successfully!");
+          setAllLeads((prev) => [
+            ...prev,
+            { ...payload, id: res.data.id }, // use new ID from backend
+          ]);
+        }
         setLeadModal(false);
       } catch (err) {
         console.error("❌ API Error:", err.response?.data || err.message);
@@ -237,7 +251,6 @@ const CreateLeadForm = ({ setLeadModal, selectedLead }) => {
   });
 
   useEffect(() => {
-    console.log(selectedLead, "dddde");
     if (selectedLead) {
       formik.setValues({
         id: selectedLead.id || "",
@@ -245,8 +258,8 @@ const CreateLeadForm = ({ setLeadModal, selectedLead }) => {
         mobile: selectedLead.mobile || "",
         country_code: selectedLead.country_code || "",
         phoneFull: selectedLead.country_code
-  ? `+${selectedLead.country_code}${selectedLead.mobile}` // add the "+"
-  : "",
+          ? `+${selectedLead.country_code}${selectedLead.mobile}` // add the "+"
+          : "",
         email: selectedLead.email || "",
         gender: selectedLead.gender || "NOTDISCLOSE",
         date_of_birth: selectedLead.date_of_birth
@@ -267,8 +280,6 @@ const CreateLeadForm = ({ setLeadModal, selectedLead }) => {
       });
     }
   }, [selectedLead]);
-
-  console.log(selectedLead,'selectedLead')
 
   const handleDobChange = (date) => {
     if (!date) return;
@@ -327,60 +338,100 @@ const CreateLeadForm = ({ setLeadModal, selectedLead }) => {
   maxTime.setHours(22, 0, 0, 0);
 
   const handlePhoneChange = (value) => {
-  formik.setFieldValue("phoneFull", value);
-  if (!value) {
-    formik.setFieldValue("mobile", "");
-    formik.setFieldValue("country_code", "");
-    return;
-  }
-  const phoneNumber = parsePhoneNumberFromString(value);
-  if (phoneNumber) {
-    formik.setFieldValue("mobile", phoneNumber.nationalNumber);
-    formik.setFieldValue("country_code", phoneNumber.countryCallingCode);
-  }
-   formik.setFieldError("mobile", "");
-};
+    formik.setFieldValue("phoneFull", value);
+    if (!value) {
+      formik.setFieldValue("mobile", "");
+      formik.setFieldValue("country_code", "");
+      return;
+    }
+    const phoneNumber = parsePhoneNumberFromString(value);
+    if (phoneNumber) {
+      formik.setFieldValue("mobile", phoneNumber.nationalNumber);
+      formik.setFieldValue("country_code", phoneNumber.countryCallingCode);
+    }
+    formik.setFieldError("mobile", "");
+  };
 
-
+  // Handle phone blur (validation and duplicate check)
   const handlePhoneBlur = () => {
     formik.setFieldTouched("mobile", true);
     const { id, mobile, country_code } = formik.values;
+
+    // If incomplete
     if (!mobile || !country_code) {
       formik.setFieldError("mobile", "Invalid phone number");
       return;
     }
+
+    // Validate phone
     const phoneNumber = parsePhoneNumberFromString("+" + country_code + mobile);
     if (!phoneNumber || !phoneNumber.isValid()) {
       formik.setFieldError("mobile", "Invalid phone number");
       return;
     } else {
-      formik.setFieldError("mobile", ""); // Clear invalid error
+      formik.setFieldError("mobile", "");
     }
+
     const inputCode = country_code.replace("+", "");
     const inputMobile = mobile.replace(/\s/g, "");
-     const matches = allLeads.filter((user) => {
-      if (user.id === id) return false; // Skip current member
+
+    // Find duplicates
+    const matches = allLeads.filter((user) => {
       const userCode = (user.country_code || "").replace("+", "");
       const userMobile = (user.mobile || "").replace(/\s/g, "");
+
+      // ✅ Condition 1: Same ID & same phone → allow
+      if (
+        user.id === id &&
+        userCode === inputCode &&
+        userMobile === inputMobile
+      ) {
+        return false;
+      }
+
+      // ✅ Condition 2: Same ID but different phone → still check other leads
+      if (
+        user.id === id &&
+        (userCode !== inputCode || userMobile !== inputMobile)
+      ) {
+        return false; // Skip self, let other users decide
+      }
+
+      // ✅ Other users: duplicate if phone matches
       return userCode === inputCode && userMobile === inputMobile;
     });
 
-    if (matches.length > 0) setDuplicateError(true);
+    if (matches.length > 0) {
+      setDuplicateError("This phone number already exists");
+      setShowDuplicateModal(true);
+    } else {
+      setDuplicateError("");
+      setShowDuplicateModal(false);
+    }
   };
 
-const handleEmailBlur = () => {
+  const handleEmailBlur = () => {
     const inputValue = formik.values.email?.trim().toLowerCase();
     const { id } = formik.values;
-    if (inputValue) {
-      const matches = allLeads.filter(
-        (user) => user.email?.trim().toLowerCase() === inputValue && user.id !== id
-      );
-      if (matches.length > 0) {
-        setDuplicateEmailError("This email already exists");
-      } else {
-        setDuplicateEmailError("");
-        setShowDuplicateEmailModal(false);
-      }
+
+    // 👇 Clear error if field is empty
+    if (!inputValue) {
+      setDuplicateEmailError("");
+      setShowDuplicateEmailModal(false);
+      return;
+    }
+
+    const matches = allLeads.filter(
+      (user) =>
+        user.email?.trim().toLowerCase() === inputValue && user.id !== id
+    );
+
+    if (matches.length > 0) {
+      setDuplicateEmailError("This email already exists");
+      setShowDuplicateEmailModal(true);
+    } else {
+      setDuplicateEmailError("");
+      setShowDuplicateEmailModal(false);
     }
   };
 
@@ -456,17 +507,12 @@ const handleEmailBlur = () => {
                         className="custom--input w-full custom--phone"
                       />
 
-                      {/* {duplicateError && showDuplicateModal && (
+                      {((formik.errors?.mobile && formik.touched?.mobile) ||
+                        duplicateError) && (
                         <div className="text-red-500 text-sm">
-                          Duplicate Entry
+                          {formik.errors?.mobile || duplicateError}
                         </div>
-                      )} */}
-
-                       {((formik.errors?.mobile && formik.touched?.mobile) || duplicateError) && (
-                          <div className="text-red-500 text-sm">
-                            {formik.errors?.mobile || duplicateError}
-                          </div>
-                        )}
+                      )}
                     </div>
                     <div>
                       <label className="mb-2 block">
@@ -508,7 +554,7 @@ const handleEmailBlur = () => {
                       </div>
                       {duplicateEmailError && showDuplicateEmailModal && (
                         <div className="text-red-500 text-sm">
-                          Duplicate email entry
+                          {duplicateEmailError}
                         </div>
                       )}
                     </div>

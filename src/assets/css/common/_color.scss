@@ -1,3 +1,7 @@
+body {
+  font-family: 'Roboto', sans-serif;
+}
+
 :root{
     --lightgray:#f5f5f5;
     --black:#000000;
@@ -5,4 +9,6 @@
     --white:#ffffff;
     --lightcolor:#838383;
     --border:#D9D9D9;
+    --bgContent:#F1F1F1;
+    --btnColor:linear-gradient(297deg, #EC71BC 6.42%, #009EB2 88.6%);
 }

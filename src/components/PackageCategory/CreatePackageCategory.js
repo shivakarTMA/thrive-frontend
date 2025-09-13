@@ -5,13 +5,12 @@ import { LuPlug } from "react-icons/lu";
 import Select from "react-select";
 import { selectIcon } from "../../Helper/helper";
 
-const CreateStudio = ({
+const CreatePackageCategory = ({
   setShowModal,
   editingOption,
   formik,
   handleOverlayClick,
   leadBoxRef,
-  clubOptions,
 }) => {
   return (
     <div
@@ -25,7 +24,7 @@ const CreateStudio = ({
       >
         <div className="bg-white rounded-t-[10px] flex gap-3 items-center justify-between py-4 px-4 border-b">
           <h2 className="text-xl font-semibold">
-            {editingOption ? "Edit On Boarding" : "Create On Boarding"}
+            {editingOption ? "Edit Category" : "Create Category"}
           </h2>
           <div
             className="close--lead cursor-pointer"
@@ -45,32 +44,6 @@ const CreateStudio = ({
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="mb-2 block">
-                      Club<span className="text-red-500">*</span>
-                    </label>
-                    <div className="relative">
-                      <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[10]">
-                        <FaListUl />
-                      </span>
-                      <Select
-                        name="club_id"
-                        value={
-                          clubOptions.find(option => option.value === formik.values.club_id) || null
-                        }
-                        options={clubOptions}
-                        onChange={(option) => formik.setFieldValue("club_id", option.value)}
-                        onBlur={() => formik.setFieldTouched("club_id", true)}
-                        styles={selectIcon}
-                        className="!capitalize"
-                      />
-                    </div>
-                    {formik.touched.club_id && formik.errors.club_id && (
-                      <p className="text-red-500 text-sm mt-1">
-                        {formik.errors.club_id}
-                      </p>
-                    )}
-                  </div>
-                  <div>
-                    <label className="mb-2 block">
                       Title<span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
@@ -79,18 +52,43 @@ const CreateStudio = ({
                       </span>
                       <input
                         type="text"
-                        name="name"
-                        value={formik.values.name}
+                        name="title"
+                        value={formik.values.title}
                         onChange={formik.handleChange}
                         onBlur={formik.handleBlur}
                         className="custom--input w-full input--icon"
                       />
                     </div>
-                    {formik.touched.name && formik.errors.name && (
+                    {formik.touched.title && formik.errors.title && (
                       <p className="text-red-500 text-sm mt-1">
-                        Name is required
+                        Title is required
                       </p>
                     )}
+                  </div>
+
+                  <div className="">
+                    <label className="mb-2 block">
+                      Screen Image<span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                          const file = e.target.files[0];
+                          if (file) {
+                            formik.setFieldValue("icon", file);
+                          }
+                        }}
+                        className="custom--input w-full"
+                      />
+                    </div>
+                    {formik.touched.icon &&
+                      formik.errors.icon && (
+                        <p className="text-red-500 text-sm mt-1">
+                          {formik.errors.icon}
+                        </p>
+                      )}
                   </div>
 
                   <div className="">
@@ -180,4 +178,4 @@ const CreateStudio = ({
   );
 };
 
-export default CreateStudio;
+export default CreatePackageCategory;

@@ -52,6 +52,9 @@ import OnBoardingScreen from "../components/OnBoardingScreen/OnBoardingScreen";
 import SplashScreen from "../components/SplashScreen/SplashScreen";
 import Studio from "../components/Studio/Studio";
 import Services from "../components/ServicesNew/Services";
+import PackageCategoryList from "../components/PackageCategory/PackageCategoryList";
+import SubscriptionPlan from "../components/SubscriptionPlan/SubscriptionPlan";
+import PackagesList from "../components/PackagesList/PackagesList";
 
 
 export default function Routing() {
@@ -484,6 +487,30 @@ export default function Routing() {
               element={
                 <PrivateRoute>
                   <Services />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/packages"
+              element={
+                <PrivateRoute>
+                  <PackagesList />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/package-category"
+              element={
+                <PrivateRoute>
+                  <PackageCategoryList />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/subscription-plan"
+              element={
+                <PrivateRoute>
+                  <SubscriptionPlan />
                 </PrivateRoute>
               }
             />
