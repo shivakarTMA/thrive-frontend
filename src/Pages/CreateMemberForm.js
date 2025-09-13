@@ -105,7 +105,7 @@ const leadSourceTypes = [
   { value: "Others", label: "Others" },
 ];
 
-const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
+const CreateMemberForm = ({ setMemberModal, selectedLeadMember, onLeadUpdate }) => {
   console.log(selectedLeadMember,'selectedLeadMember')
   const [allLeads, setAllLeads] = useState([]);
   const [profileImage, setProfileImage] = useState("");
@@ -175,7 +175,7 @@ const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
     emergencyContacts: [
       {
         name: "",
-        contact: "",
+        phone: "",
         relationship: "",
       },
     ],
@@ -226,6 +226,7 @@ const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
           }
 
           setMemberModal(false);
+          onLeadUpdate()
         } catch (error) {
           // toast.error("Failed to create member. Please try again.");
           console.log(error, "error");
@@ -286,7 +287,6 @@ const CreateMemberForm = ({ setMemberModal, selectedLeadMember }) => {
     }
   }, [selectedLeadMember]);
 
-  console.log(selectedLeadMember,'SHIVAKAR')
 
   const fetchLeadList = async () => {
     try {
@@ -450,7 +450,7 @@ const handleNextStep = async () => {
     const currentContacts = formik.values.emergencyContacts || [];
     formik.setFieldValue("emergencyContacts", [
       ...currentContacts,
-      { name: "", contact: "", relationship: "" },
+      { name: "", phone: "", relationship: "" },
     ]);
   };
 
@@ -462,7 +462,7 @@ const handleNextStep = async () => {
 
   const handleEmergancyPhone = (value, index) => {
     const updated = [...formik.values.emergencyContacts];
-    updated[index].contact = value;
+    updated[index].phone = value;
     formik.setFieldValue("emergencyContacts", updated);
   };
 
@@ -1189,7 +1189,7 @@ const handleNextStep = async () => {
                         Emergency Contact
                       </h3>
                       {formik.values?.emergencyContacts?.map(
-                        (contact, index) => (
+                        (phone, index) => (
                           <div
                             key={index}
                             className="grid grid-cols-3 gap-4 mb-4 border p-4 rounded-lg"
@@ -1204,7 +1204,7 @@ const handleNextStep = async () => {
                                 <input
                                   type="text"
                                   name={`emergencyContacts.${index}.name`}
-                                  value={contact?.name}
+                                  value={phone?.name}
                                   onChange={formik.handleChange}
                                   className="custom--input w-full input--icon"
                                 />
@@ -1226,8 +1226,8 @@ const handleNextStep = async () => {
                             <div>
                               <label className="mb-2 block">Number</label>
                               <PhoneInput
-                                name={`emergencyContacts.${index}.contact`}
-                                value={contact?.contact}
+                                name={`emergencyContacts.${index}.phone`}
+                                value={phone?.phone}
                                 onChange={(value) =>
                                   handleEmergancyPhone(value, index)
                                 } // Ensure this function handles formik update
@@ -1237,13 +1237,13 @@ const handleNextStep = async () => {
                                 className="custom--input w-full custom--phone"
                               />
                               {formik.errors?.emergencyContacts?.[index]
-                                ?.contact &&
+                                ?.phone &&
                                 formik.touched?.emergencyContacts?.[index]
-                                  ?.contact && (
+                                  ?.phone && (
                                   <div className="text-red-500 text-sm">
                                     {
                                       formik.errors.emergencyContacts[index]
-                                        .contact
+                                        .phone
                                     }
                                   </div>
                                 )}

@@ -185,9 +185,14 @@ const AllLeads = () => {
     }
   };
 
+
+  const handleLeadUpdate = () => {  
+    fetchLeadList();  
+  };  
+
   useEffect(() => {
     fetchLeadList();
-  }, [allLeads]);
+  }, []);
 
   useEffect(() => {
     const delayDebounce = setTimeout(() => {
@@ -746,6 +751,7 @@ const AllLeads = () => {
         <CreateLeadForm
           setLeadModal={setLeadModal}
           selectedLead={selectedLead}
+          onLeadUpdate={handleLeadUpdate}
         />
       )}
 
@@ -856,6 +862,7 @@ const AllLeads = () => {
           selectedLeadMember={selectedLeadMember}
           setMemberModal={setMemberModal}
           setSelectedLead={setSelectedLead}
+          onLeadUpdate={handleLeadUpdate}
         />
       )}
       {invoiceModal && (

@@ -70,7 +70,7 @@ const validationSchema = Yup.object({
   }),
 });
 
-const CreateLeadForm = ({ setLeadModal, selectedLead }) => {
+const CreateLeadForm = ({ setLeadModal, selectedLead, onLeadUpdate }) => {
   const [allLeads, setAllLeads] = useState([]);
   const leadBoxRef = useRef(null);
   const [matchingUsers, setMatchingUsers] = useState([]);
@@ -243,6 +243,8 @@ const CreateLeadForm = ({ setLeadModal, selectedLead }) => {
           ]);
         }
         setLeadModal(false);
+        // ✅ Trigger parent refresh  
+        onLeadUpdate();
       } catch (err) {
         console.error("❌ API Error:", err.response?.data || err.message);
         toast.error(err.response?.data?.message || err.message);
