@@ -127,7 +127,6 @@ const ConvertMemberForm = ({
   const [selectedVoucher, setSelectedVoucher] = useState(null);
 
   const leadBoxRef = useRef(null);
-  const [matchingUsers, setMatchingUsers] = useState([]);
   const [duplicateError, setDuplicateError] = useState("");
   const [showDuplicateModal, setShowDuplicateModal] = useState(false);
   const [hasDismissedDuplicateModal, setHasDismissedDuplicateModal] =
@@ -221,13 +220,33 @@ const ConvertMemberForm = ({
 
           // If selectedLeadMember exists, update using PUT request
           if (selectedLeadMember && selectedLeadMember.id) {
-            await apiAxios().put(
+            // ✅ Update existing member
+            const memberResponse = await apiAxios().put(
               `/member/convert/lead/${selectedLeadMember.id}`,
               formData,
-              {
-                headers: { "Content-Type": "multipart/form-data" },
-              }
+              { headers: { "Content-Type": "multipart/form-data" } }
             );
+
+            // ✅ Get member_id from response (or use selectedLeadMember.id if API doesn't return)
+            const memberId =
+              memberResponse.data?.member_id || selectedLeadMember.id;
+
+            if (values.emergencyContacts?.length > 0) {
+              for (const contact of values.emergencyContacts) {
+                if (contact.name && contact.phone) {
+                  await apiAxios().post("/member-emergency-contact/create", {
+                    member_id: memberId,
+                    name: contact.name,
+                    relationship: contact.relationship,
+                    phone: contact.phone,
+                    alt_phone: contact.alt_phone || "",
+                    email: contact.email || "",
+                    address: contact.address || "",
+                  });
+                }
+              }
+            }
+
             toast.success("Member created successfully!");
           } else {
             // Otherwise handle as a normal new form submission
@@ -1140,7 +1159,9 @@ const ConvertMemberForm = ({
                         >
                           {/* Name Field */}
                           <div>
-                            <label className="mb-2 block">Name<span className="text-red-500">*</span></label>
+                            <label className="mb-2 block">
+                              Name<span className="text-red-500">*</span>
+                            </label>
                             <div className="custom--date dob-format relative">
                               <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
                                 <FaUser />
@@ -1164,7 +1185,9 @@ const ConvertMemberForm = ({
 
                           {/* Contact Number Field */}
                           <div>
-                            <label className="mb-2 block">Number<span className="text-red-500">*</span></label>
+                            <label className="mb-2 block">
+                              Number<span className="text-red-500">*</span>
+                            </label>
                             <PhoneInput
                               name={`emergencyContacts.${index}.phone`}
                               value={phone?.phone}
@@ -1187,7 +1210,10 @@ const ConvertMemberForm = ({
 
                           {/* Relationship Field */}
                           <div>
-                            <label className="mb-2 block">Relationship<span className="text-red-500">*</span></label>
+                            <label className="mb-2 block">
+                              Relationship
+                              <span className="text-red-500">*</span>
+                            </label>
                             <div className="custom--date dob-format relative">
                               <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
                                 <FaLink />
