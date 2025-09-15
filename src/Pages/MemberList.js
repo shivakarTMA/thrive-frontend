@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { FaAngleLeft, FaAngleRight } from "react-icons/fa";
+import { FaAngleLeft, FaAngleRight, FaCircle } from "react-icons/fa";
 import Select from "react-select";
 import { customStyles, formatAutoDate } from "../Helper/helper";
 import { memberMockData } from "../DummyData/DummyData";
@@ -22,6 +22,9 @@ import { LiaEdit } from "react-icons/lia";
 import Tooltip from "../components/common/Tooltip";
 import { apiAxios } from "../config/config";
 import { toast } from "react-toastify";
+import Pagination from "../components/common/Pagination";
+import { FiPlus } from "react-icons/fi";
+import CreateMemberForm from "./CreateMemberForm";
 
 export const memberFilters = {
   membershipType: ["Gold", "Silver", "Platinum"],
@@ -52,6 +55,7 @@ const MemberList = () => {
   const [dateFilter, setDateFilter] = useState(null);
   const [customFrom, setCustomFrom] = useState(null);
   const [customTo, setCustomTo] = useState(null);
+  const [memberModal, setMemberModal] = useState(false);
 
   const [page, setPage] = useState(1);
   const [rowsPerPage] = useState(10);
@@ -92,7 +96,11 @@ const MemberList = () => {
 
   useEffect(() => {
     fetchMemberList();
-  }, [memberList]);
+  }, []);
+
+  const handleMemberUpdate = () => {  
+    fetchMemberList();  
+  };
 
   console.log(memberList, "memberList");
   useEffect(() => {
@@ -205,12 +213,24 @@ const MemberList = () => {
   // const totalPages = Math.ceil(filteredData.length / rowsPerPage);
 
   return (
+    <>
     <div className="page--content">
       <div className="flex items-end justify-between gap-2 mb-5">
         <div className="title--breadcrumbs">
           <p className="text-sm">Home &gt; Members &gt; All Members</p>
           <h1 className="text-3xl font-semibold">All Members</h1>
         </div>
+        <div className="flex items-end gap-2">
+            <button
+              onClick={() => {
+                setMemberModal(true);
+              }}
+              type="button"
+              className="px-4 py-2 bg-black text-white rounded flex items-center gap-2"
+            >
+              <FiPlus /> Add New Member
+            </button>
+          </div>
       </div>
 
       <div className="flex w-full gap-2 justify-between items-center mb-4">
@@ -351,14 +371,11 @@ const MemberList = () => {
           <thead className="text-xs text-gray-700 uppercase bg-gray-50">
             <tr>
               <th className="px-2 py-4">#</th>
-              <th className="px-2 py-4">Created on</th>
-              <th className="px-2 py-4">Last Updated</th>
               <th className="px-2 py-4">Member Name</th>
-              <th className="px-2 py-4">Membership Type</th>
-              <th className="px-2 py-4">Member From</th>
-              <th className="px-2 py-4">Member Till</th>
-              <th className="px-2 py-4">Trainer</th>
-              <th className="px-2 py-4">FOH Assigned</th>
+              <th className="px-2 py-4">Membership Duration</th>
+              <th className="px-2 py-4">Membership Status</th>
+              <th className="px-2 py-4">Expiry Date</th>
+              <th className="px-2 py-4">Trainer Name</th>
             </tr>
           </thead>
           <tbody>
@@ -381,18 +398,23 @@ const MemberList = () => {
                     <span className="checkmark--custom"></span>
                   </div>
                 </td>
+                <td className="px-2 py-4">{member?.full_name}</td>
                 <td className="px-2 py-4">
-                  {formatAutoDate(member?.createdAt)}
+                  {/* {formatAutoDate(member?.createdAt)} */}
+                  6 Months
                 </td>
+                <td className="px-2 py-4">
+                  <div className="flex gap-1 items-center text-green-500">
+                  <FaCircle /> Active
+                  </div>
+                  </td>
                 <td className="px-2 py-4">
                   {formatAutoDate(member?.updatedAt)}
                 </td>
-                <td className="px-2 py-4">{member?.full_name}</td>
-                <td className="px-2 py-4">{member?.membershipType}</td>
-                <td className="px-2 py-4">{member?.memberFrom}</td>
+                <td className="px-2 py-4">{member?.trainer ? member?.trainer : '--'}</td>
+                {/* <td className="px-2 py-4">{member?.memberFrom}</td>
                 <td className="px-2 py-4">{member?.memberTill}</td>
-                <td className="px-2 py-4">{member?.trainer}</td>
-                <td className="px-2 py-4">{member?.fohAssigned}</td>
+                <td className="px-2 py-4">{member?.fohAssigned}</td> */}
                 <div className="absolute hidden group-hover:flex gap-2 items-center right-0 h-full top-0 w-[50%] flex items-center justify-end bg-[linear-gradient(269deg,_#ffffff_30%,_transparent)] pr-5 transition duration-700">
                   <div className="flex gap-1">
                     <Tooltip
@@ -443,7 +465,28 @@ const MemberList = () => {
           <p className="text-center p-4">No matching members found.</p>
         )}
       </div>
+
+      {/* Pagination */}
+      <Pagination
+        page={page}
+        totalPages={totalPages}
+        rowsPerPage={rowsPerPage}
+        totalCount={totalCount}
+        currentDataLength={memberList.length}
+        onPageChange={(newPage) => {
+          setPage(newPage);
+          fetchMemberList(searchTerm, newPage);
+        }}
+      />
     </div>
+
+    {memberModal && (
+        <CreateMemberForm
+          setMemberModal={setMemberModal}
+          onMemberUpdate={handleMemberUpdate}
+        />
+      )}
+    </>
   );
 };
 

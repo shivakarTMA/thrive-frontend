@@ -98,7 +98,7 @@ const OptionList = () => {
       name: "",
       option_list_type: "",
       position: "",
-      status: "",
+      status: "ACTIVE",
     },
     validationSchema: Yup.object({
       name: Yup.string().required("Option name is required"),

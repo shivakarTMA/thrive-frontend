@@ -8,131 +8,24 @@ import { assignedLeadsData, mockData } from "../DummyData/DummyData";
 import { customStyles } from "../Helper/helper";
 import { useFormik } from "formik";
 import * as Yup from "yup";
-
-const callTypeOption = [
-  { value: "cross-sell call", label: "Cross-sell Call" },
-  { value: "feedback call", label: "Feedback Call" },
-  { value: "induction call", label: "Induction Call" },
-  { value: "assessment call", label: "Assessment Call" },
-  { value: "welcome call", label: "Welcome Call" },
-  { value: "courtesy call", label: "Courtesy Call" },
-  { value: "upgrade call", label: "Upgrade Call" },
-  { value: "payment call", label: "Payment Call" },
-  { value: "renewal call", label: "Renewal Call" },
-  { value: "birthday call", label: "Birthday Call" },
-  { value: "inbound calls", label: "Inbound Calls" },
-  { value: "anniversary calls", label: "Anniversary Calls" },
-  { value: "irregular member", label: "Irregular Member" },
-];
-
-const crossSellCall = [
-  {
-    value: "cross-sales trial scheduled",
-    label: "Cross-sales trial scheduled",
-  },
-  {
-    value: "cross-sales trial follow-up",
-    label: "Cross-sales trial follow-up",
-  },
-  { value: "not interested", label: "Not Interested" },
-  { value: "future prospect", label: "Future Prospect" },
-  { value: "callback", label: "Callback" },
-  { value: "no answer", label: "No Answer" },
-  {
-    value: "switched-off / out of reach",
-    label: "Switched-off / Out of Reach",
-  },
-  { value: "invalid number", label: "Invalid Number" },
-  { value: "busy tone", label: "Busy Tone" },
-];
-
-const invoicesService = [
-  {
-    value: "membership plan - one month plan",
-    label: "Membership Plan - One Month Plan",
-  },
-];
-
-const feedbackCall = [
-  { value: "successful", label: "Successful" },
-  { value: "callback", label: "Callback" },
-  { value: "no answer", label: "No answer" },
-  { value: "switched off/ out of reach", label: "Switched Off/ Out of Reach" },
-  { value: "busy tone", label: "Busy Tone" },
-  { value: "invalid number", label: "Invalid number" },
-];
-
-const paymentCall = [
-  { value: "collected", label: "Collected" },
-  { value: "callback", label: "Callback" },
-  { value: "busy tone", label: "Busy Tone" },
-  { value: "switched off/ out of reach", label: "Switched Off/ Out of Reach" },
-  { value: "no answer", label: "No answer" },
-  { value: "invalid number", label: "Invalid number" },
-];
-
-const renewalCall = [
-  { value: "renewed", label: "Renewed" },
-  { value: "not interested", label: "Not Interested" },
-  { value: "future prospect", label: "Future Prospect" },
-  { value: "callback", label: "Callback" },
-  { value: "no answer", label: "No answer" },
-  { value: "switched off/ out of reach", label: "Switched Off/ Out of Reach" },
-  { value: "invalid number", label: "Invalid number" },
-  { value: "busy tone", label: "Busy Tone" },
-];
-
-const inboundCall = [
-  { value: "complaint", label: "Complaint" },
-  { value: "query", label: "Query" },
-  { value: "query answered", label: "Query Answered" },
-  { value: "callback", label: "Callback" },
-  { value: "feedback", label: "Feedback" },
-  { value: "others", label: "Others" },
-];
-
-const irregularCallType = [
-  { value: "successful", label: "Successful" },
-  { value: "callback", label: "Callback" },
-  { value: "no answer", label: "No answer" },
-  { value: "switched off/ out of reach", label: "Switched Off/ Out of Reach" },
-  { value: "busy tone", label: "Busy Tone" },
-  { value: "invalid number", label: "Invalid number" },
-];
-
-const callTypeStatusMap = {
-  "cross-sell call": crossSellCall,
-  "feedback call": feedbackCall,
-  "induction call": feedbackCall,
-  "assessment call": feedbackCall,
-  "welcome call": feedbackCall,
-  "courtesy call": feedbackCall,
-  "upgrade call": feedbackCall,
-  "payment call": paymentCall,
-  "renewal call": renewalCall,
-  "anniversary calls": feedbackCall,
-  "inbound calls": inboundCall,
-  "irregular member": irregularCallType,
-  "birthday call": irregularCallType,
-};
-
-const showInvoiceForCallTypes = [
-  "feedback call",
-  "upgrade call",
-  "payment call",
-  "renewal call",
-];
+import { useDispatch, useSelector } from "react-redux";
+import { fetchOptionList } from "../Redux/Reducers/optionListSlice";
 
 const validationSchema = Yup.object().shape({
   calledBy: Yup.string().required("Call by is required"),
   callType: Yup.string().required("Call Type is required"),
   callStatus: Yup.string().required("Lead Status is required"),
-  serviceCard: Yup.string().when("callType", {
-    is: (val) =>
-      ["feedback call", "upgrade call", "payment call", "renewal call"].includes(val),
-    then: () => Yup.string().required("Service Card is required"),
-    otherwise: () => Yup.string().notRequired(),
-  }),
+  // serviceCard: Yup.string().when("callType", {
+  //   is: (val) =>
+  //     [
+  //       "feedback call",
+  //       "upgrade call",
+  //       "payment call",
+  //       "renewal call",
+  //     ].includes(val),
+  //   then: () => Yup.string().required("Service Card is required"),
+  //   otherwise: () => Yup.string().notRequired(),
+  // }),
   discussion: Yup.string().required("Discussion is required"),
 });
 
@@ -149,15 +42,27 @@ const MemberCallLogs = () => {
   const [filterStatus, setFilterStatus] = useState("");
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
-  const [filteredLeadStatusOptions, setFilteredLeadStatusOptions] = useState(
-    []
-  );
+  const [filteredCallStatus, setFilteredCallStatus] = useState([]);
+
+  // Redux state
+  const dispatch = useDispatch();
+  const { lists, loading } = useSelector((state) => state.optionList);
+
+  // Fetch option lists
+  useEffect(() => {
+    dispatch(fetchOptionList("MEMBER_CALL_TYPE"));
+    dispatch(fetchOptionList("MEMBER_CALL_STATUS"));
+  }, [dispatch]);
+
+  // Extract Redux lists
+  const callTypeOption = lists["MEMBER_CALL_TYPE"] || [];
+  const callStatusOption = lists["MEMBER_CALL_STATUS"] || [];
 
   const formik = useFormik({
     initialValues: {
-      callType: null,
-      callStatus: null,
-      serviceCard:'',
+      callType: "",
+      callStatus: "",
+      // serviceCard: "",
       calledBy: "Nitin",
       discussion: "",
     },
@@ -174,10 +79,6 @@ const MemberCallLogs = () => {
       formik.resetForm();
     },
   });
-
-  const shouldShowInvoice = showInvoiceForCallTypes.includes(
-    formik.values.callType
-  );
 
   const filteredLogs = callLogs.filter((log) => {
     const matchesStatus =
@@ -198,12 +99,29 @@ const MemberCallLogs = () => {
     return matchesStatus && matchesStart && matchesEnd;
   });
 
-  useEffect(() => {
-    const selectedCallType = formik.values.callType;
-    const statusOptions = callTypeStatusMap[selectedCallType] || [];
-    setFilteredLeadStatusOptions(statusOptions);
-    formik.setFieldValue("callStatus", "");
-  }, [formik.values.callType]);
+  // Watch callType changes to dynamically filter callStatus options
+   useEffect(() => {
+    if (!formik.values.callType) {
+      // If no call type is selected, do not show any call status options  
+      setFilteredCallStatus([]);
+      formik.setFieldValue("callStatus", "");
+      return;
+    }
+
+    if (formik.values.callType === "Cross-sell Call") {
+      // If selected call type is "Cross-sell Call", show all status options  
+      setFilteredCallStatus(callStatusOption);
+    } else {
+      // If selected call type is NOT "Cross-sell Call", hide only the two specific options  
+      setFilteredCallStatus(
+        callStatusOption.filter(
+          (status) =>
+            status.name !== "Cross-sales trial scheduled" &&
+            status.name !== "Cross-sales trial follow-up"
+        )
+      );
+    }
+  }, [formik.values.callType, callStatusOption]);
 
   return (
     <div className="page--content">
@@ -247,19 +165,17 @@ const MemberCallLogs = () => {
                   Call Type
                   <span className="text-red-500">*</span>
                 </label>
+
                 <Select
                   name="callType"
-                  options={callTypeOption}
-                  value={
-                    callTypeOption.find(
-                      (option) => option.value === formik.values.callType
-                    ) || null
-                  }
+                  value={callTypeOption.find(
+                    (opt) => opt.value === formik.values.callType
+                  )}
                   onChange={(option) =>
                     formik.setFieldValue("callType", option.value)
                   }
+                  options={callTypeOption}
                   styles={customStyles}
-                  placeholder="Call Type"
                 />
 
                 {formik.errors?.callType && formik.touched?.callType && (
@@ -269,7 +185,7 @@ const MemberCallLogs = () => {
                 )}
               </div>
 
-              {shouldShowInvoice && (
+              {/* {shouldShowInvoice && (
                 <div>
                   <label className="mb-2 block">
                     Invoices<span className="text-red-500">*</span>
@@ -297,34 +213,32 @@ const MemberCallLogs = () => {
                       </div>
                     )}
                 </div>
-              )}
+              )} */}
 
               <div>
                 <label className="mb-2 block">
-                  Call Status<span className="text-red-500">*</span>
+                  Call Status <span className="text-red-500">*</span>
                 </label>
-
                 <Select
                   name="callStatus"
-                  options={filteredLeadStatusOptions}
-                  value={
-                    filteredLeadStatusOptions.find(
-                      (option) => option.value === formik.values.callStatus
-                    ) || null
-                  }
-                  onChange={(option) =>
-                    formik.setFieldValue("callStatus", option.value)
-                  }
-                  styles={customStyles}
-                  placeholder="Call Status"
-                />
-
-                {formik.errors?.callStatus &&
-                  formik.touched?.callStatus && (
-                    <div className="text-red-500 text-sm">
-                      {formik.errors?.callStatus}
-                    </div>
+                  value={filteredCallStatus.find(
+                    (opt) => opt.name === formik.values.callStatus
                   )}
+                  onChange={(option) =>
+                    formik.setFieldValue("callStatus", option.name)
+                  }
+                  options={filteredCallStatus.map((opt) => ({
+                    label: opt.name,
+                    value: opt.name,
+                    name: opt.name,
+                  }))}
+                  styles={customStyles}
+                />
+                {formik.errors?.callStatus && formik.touched?.callStatus && (
+                  <div className="text-red-500 text-sm">
+                    {formik.errors?.callStatus}
+                  </div>
+                )}
               </div>
             </div>
 
@@ -420,12 +334,12 @@ const MemberCallLogs = () => {
                   </span>{" "}
                   {log.callStatus}
                 </p>
-                <p className="border p-2 rounded">
+                {/* <p className="border p-2 rounded">
                   <span className="text-sm font-semibold flex flex-col">
                     Service:
                   </span>{" "}
                   {log.serviceCard ? log.serviceCard : "N/A"}
-                </p>
+                </p> */}
               </div>
               <div className="bg-gray-50 p-3 rounded">
                 <h3 className="text-sm font-semibold">Remarks:</h3>

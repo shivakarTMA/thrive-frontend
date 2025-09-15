@@ -26,7 +26,7 @@ import { useNavigate } from "react-router-dom";
 import { RiCalendarScheduleLine, RiResetLeftFill } from "react-icons/ri";
 import { TbArrowsExchange } from "react-icons/tb";
 import Tooltip from "../components/common/Tooltip";
-import CreateMemberForm from "./CreateMemberForm";
+import ConvertMemberForm from "./ConvertMemberForm";
 import CreateInvoice from "./CreateInvoice";
 import SendPaymentLink from "./SendPaymentLink";
 import { toast } from "react-toastify";
@@ -858,7 +858,7 @@ const AllLeads = () => {
       )}
 
       {memberModal && (
-        <CreateMemberForm
+        <ConvertMemberForm
           selectedLeadMember={selectedLeadMember}
           setMemberModal={setMemberModal}
           setSelectedLead={setSelectedLead}
