@@ -27,7 +27,7 @@ const validationSchema = Yup.object({
           .test("is-valid-phone", "Invalid phone number", function (value) {
             return isValidPhoneNumber(value || "");
           }),
-  email: Yup.string().email("Invalid email").required("Email is required"),
+  // email: Yup.string().email("Invalid email").required("Email is required"),
   relationship: Yup.object().required("Relationship is required"),
 });
 
@@ -52,7 +52,7 @@ const Relations = () => {
       name: "",
       phone: "",
       email: "",
-      relationship: relationshipOptions[1],
+      relationship: "",
     },
     validationSchema,
     onSubmit: (values, { resetForm }) => {
@@ -163,7 +163,7 @@ const Relations = () => {
                 </div>
 
                 <div>
-                  <label className="mb-2 block">Email<span className="text-red-500">*</span></label>
+                  <label className="mb-2 block">Email</label>
                   <div className="relative">
                     <span className="absolute top-[50%] translate-y-[-50%] left-[15px]">
                       <FaEnvelope />

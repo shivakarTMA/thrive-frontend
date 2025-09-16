@@ -25,7 +25,7 @@ const Appointments = () => {
       duration: "60 mins",
       assignedStaff: "Trainer Gaurav",
       bookingChannel: "App",
-      status: "Completed",
+      status: "Attempted",
       bookedBy: "Alice",
       remarks: "Great session",
     },
@@ -70,7 +70,7 @@ const Appointments = () => {
       duration: "60 mins",
       assignedStaff: "Trainer Arjun",
       bookingChannel: "App",
-      status: "Completed",
+      status: "Attempted",
       bookedBy: "David",
       remarks: "Interested in full pack",
     },
@@ -85,7 +85,7 @@ const Appointments = () => {
       duration: "90 mins",
       assignedStaff: "Event Host Meera",
       bookingChannel: "CRM",
-      status: "Scheduled",
+      status: "Cancelled",
       bookedBy: "Staff Rita",
       remarks: "",
     },
@@ -176,13 +176,12 @@ const Appointments = () => {
               <th className="border px-3 py-2">Appointment ID</th>
               <th className="border px-3 py-2">Date</th>
               <th className="border px-3 py-2">Appointment Type</th>
-              <th className="border px-3 py-2">Service Name</th>
+              <th className="border px-3 py-2">Session Name</th>
               <th className="border px-3 py-2">Start Time</th>
               <th className="border px-3 py-2">Duration</th>
               <th className="border px-3 py-2">Assigned Staff</th>
               <th className="border px-3 py-2">Source</th>
               <th className="border px-3 py-2">Status</th>
-              <th className="border px-3 py-2">Notes</th>
             </tr>
           </thead>
           <tbody>
@@ -198,7 +197,6 @@ const Appointments = () => {
                   <td className="border px-3 py-2">{appt.assignedStaff}</td>
                   <td className="border px-3 py-2">{appt.bookingChannel}</td>
                   <td className="border px-3 py-2">{appt.status}</td>
-                  <td className="border px-3 py-2">{appt.remarks || "-"}</td>
                 </tr>
               ))
             ) : (

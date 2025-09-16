@@ -5,6 +5,7 @@ import Select from "react-select";
 import { customStyles } from "../../Helper/helper";
 import { useParams } from "react-router-dom";
 import { workoutPlansList } from "../../DummyData/DummyData";
+import { toast } from "react-toastify";
 
 const workoutTagOptions = [
   { value: "warmup", label: "Warm-up" },
@@ -17,7 +18,7 @@ const workoutTypeOptions = [
   { value: "single", label: "Workout (One Day)" },
 ];
 
-const CreateWorkoutPlan = () => {
+const CreateWorkoutPlan = ({ handleCancelWorkout }) => {
   const { id } = useParams();
   const workoutPlan = workoutPlansList.find((item) => item.id === parseInt(id));
 
@@ -77,29 +78,37 @@ const CreateWorkoutPlan = () => {
 
   const handleExerciseAdd = (exercise) => {
     setData((prev) => {
-      const updatedDays = [...prev.days];
-      const targetDay = updatedDays[activeDayIndex];
-      targetDay.exercises.push({
-        ...exercise,
-        isSelected: false,
-        setExercise: "",
-        groupType: null,
-        groupId: null,
-        workoutTag: "",
-        image:
-          "https://media.theeverygirl.com/wp-content/uploads/2020/07/little-things-you-can-do-for-a-better-workout-the-everygirl-1.jpg",
-        notes: "",
-        sets: [
-          {
-            weight: "",
-            reps: "",
-            distance: "",
-            duration: "",
-            rest: "",
-            notes: "",
-          },
-        ],
+      const updatedDays = prev.days.map((day, index) => {
+        if (index !== activeDayIndex) return day;
+        return {
+          ...day,
+          exercises: [
+            ...day.exercises,
+            {
+              ...exercise,
+              isSelected: false,
+              setExercise: "",
+              groupType: null,
+              groupId: null,
+              workoutTag: "",
+              image:
+                "https://media.theeverygirl.com/wp-content/uploads/2020/07/little-things-you-can-do-for-a-better-workout-the-everygirl-1.jpg",
+              notes: "",
+              sets: [
+                {
+                  weight: "",
+                  reps: "",
+                  distance: "",
+                  duration: "",
+                  rest: "",
+                  notes: "",
+                },
+              ],
+            },
+          ],
+        };
       });
+
       return { ...prev, days: updatedDays };
     });
   };
@@ -132,9 +141,18 @@ const CreateWorkoutPlan = () => {
 
   const toggleExerciseSelect = (exIdx) => {
     setData((prev) => {
-      const updatedDays = [...prev.days];
-      updatedDays[activeDayIndex].exercises[exIdx].isSelected =
-        !updatedDays[activeDayIndex].exercises[exIdx].isSelected;
+      const updatedDays = prev.days.map((day, index) => {
+        if (index !== activeDayIndex) return day;
+
+        const updatedExercises = day.exercises.map((exercise, i) =>
+          i === exIdx
+            ? { ...exercise, isSelected: !exercise.isSelected }
+            : exercise
+        );
+
+        return { ...day, exercises: updatedExercises };
+      });
+
       return { ...prev, days: updatedDays };
     });
   };
@@ -200,10 +218,21 @@ const CreateWorkoutPlan = () => {
 
   const handleAddRestTime = (dayIdx) => {
     setData((prev) => {
-      const updatedDays = [...prev.days];
-      updatedDays[dayIdx].exercises.push({
-        type: "rest",
-        duration: 60,
+      const updatedDays = prev.days.map((day, index) => {
+        if (index !== dayIdx) return day;
+        return {
+          ...day,
+          exercises: [
+            ...day.exercises,
+            {
+              id: `rest-${Date.now()}`,
+              type: "rest",
+              duration: 60,
+              isSelected: false,
+              sets: [{ rest: "" }],
+            },
+          ],
+        };
       });
       return { ...prev, days: updatedDays };
     });
@@ -227,7 +256,9 @@ const CreateWorkoutPlan = () => {
       ...data,
       createdAt: new Date().toISOString(),
     };
-    console.log("Submitting workout plan:", workoutPayload);
+    // console.log("Submitting workout plan:", workoutPayload);
+    toast.success("Submitting workout plan:", workoutPayload)
+    handleCancelWorkout();
   };
 
   const handleFormSubmit = (e) => {
@@ -297,11 +328,13 @@ const CreateWorkoutPlan = () => {
     <div key={exIdx} className="mb-2 border p-2 px-4 rounded bg-white">
       <div className="flex justify-between mb-3">
         <div className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            checked={exercise.isSelected || false}
-            onChange={() => toggleExerciseSelect(exIdx)}
-          />
+          {!isGrouped && (
+            <input
+              type="checkbox"
+              checked={exercise.isSelected || false}
+              onChange={() => toggleExerciseSelect(exIdx)}
+            />
+          )}
           <h3 className="font-medium mb-1">{exercise.name}</h3>
         </div>
         <div className="flex gap-2">
@@ -480,15 +513,17 @@ const CreateWorkoutPlan = () => {
     </div>
   );
 
-  const renderRestBlock = (restBlock) => (
+  const renderRestBlock = (restBlock, isGrouped = false) => (
     <div key={restBlock.id} className="mb-2 border p-3 rounded bg-yellow-50">
       <div className="flex justify-between items-center mb-2">
         <div className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            checked={restBlock.isSelected || false}
-            onChange={() => toggleExerciseSelect(restBlock.index)}
-          />
+          {!isGrouped && (
+            <input
+              type="checkbox"
+              checked={restBlock.isSelected || false}
+              onChange={() => toggleExerciseSelect(restBlock.index)}
+            />
+          )}
           <h3 className="text-sm font-semibold text-gray-700">Rest Time</h3>
         </div>
         <button
@@ -588,13 +623,22 @@ const CreateWorkoutPlan = () => {
             />
           </div>
 
-          <button
-            type="button"
-            onClick={handleNextClick}
-            className="bg-black text-white px-4 py-2 rounded"
-          >
-            Configure Workout
-          </button>
+          <div className="flex gap-1">
+            <button
+              type="button"
+              onClick={handleNextClick}
+              className="px-4 py-2 bg-black text-white rounded flex items-center gap-2 border border-black"
+            >
+              Configure Workout
+            </button>
+            <button
+              type="button"
+              onClick={handleCancelWorkout}
+              className="px-4 py-2 bg-white text-black rounded flex items-center gap-2 border border-black"
+            >
+              Cancel
+            </button>
+          </div>
         </form>
       )}
       {step === 2 && (

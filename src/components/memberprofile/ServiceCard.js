@@ -5,6 +5,7 @@ import { FaCirclePlus } from "react-icons/fa6";
 import DummyProfile from "../../assets/images/dummy-profile.png";
 import { customStyles } from "../../Helper/helper";
 import Select from "react-select";
+import CreateInvoice from "../../Pages/CreateInvoice";
 
 const statusOptions = [
   { value: "active", label: "Active" },
@@ -69,6 +70,7 @@ const ServiceCard = () => {
 
   // State to store selected status option, default is "active"
   const [selectedStatus, setSelectedStatus] = useState(statusOptions[0]);
+  const [invoiceModal, setInvoiceModal] = useState(false);
 
   // Filter purchased services based on selected status
   const filteredServices = purchasedServices.filter(
@@ -76,6 +78,7 @@ const ServiceCard = () => {
   );
 
   return (
+    <>
     <div className="bg-white p-4 rounded-[10px] w-full box--shadow">
       {/* Header */}
       <div className="mb-4">
@@ -140,7 +143,7 @@ const ServiceCard = () => {
                 <p className="text-sm text-gray-500">Plan started on</p>
               </div>
               <div className="flex space-x-2">
-                <button className="px-4 py-2 bg-black text-white rounded flex items-center gap-2 border border-black text-sm">
+                <button className="px-4 py-2 bg-black text-white rounded flex items-center gap-2 border border-black text-sm" onClick={() => setInvoiceModal(true)}>
                   UPGRADE PLAN
                 </button>
                 <button className="px-4 py-2 bg-white text-black rounded flex items-center gap-2 border border-black text-sm">
@@ -239,7 +242,7 @@ const ServiceCard = () => {
                     {service.status === "active" ? (
                       <>
                         {/* Show these buttons only if service is active */}
-                        <button className="px-4 py-2 bg-black text-white rounded flex items-center gap-2 border border-black text-sm">
+                        <button className="px-4 py-2 bg-black text-white rounded flex items-center gap-2 border border-black text-sm" onClick={() => setInvoiceModal(true)}>
                           UPGRADE
                         </button>
                         <button className="px-4 py-2 bg-white text-black rounded flex items-center gap-2 border border-black text-sm">
@@ -249,7 +252,7 @@ const ServiceCard = () => {
                     ) : (
                       <>
                         {/* Show renew button if service is inactive */}
-                        <button className="px-4 py-2 bg-black text-white rounded flex items-center gap-2 border border-black text-sm">
+                        <button className="px-4 py-2 bg-black text-white rounded flex items-center gap-2 border border-black text-sm" onClick={() => setInvoiceModal(true)}>
                           RENEW
                         </button>
                       </>
@@ -307,6 +310,8 @@ const ServiceCard = () => {
         </div>
       </div>
     </div>
+    {invoiceModal && <CreateInvoice setInvoiceModal={setInvoiceModal} />}
+    </>
   );
 };
 

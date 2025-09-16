@@ -13,6 +13,7 @@ import KYCSubmission from "../components/memberprofile/KYCSubmission";
 import { apiAxios } from "../config/config";
 import { toast } from "react-toastify";
 import HealthProfile from "../components/memberprofile/HealthProfile";
+import { FiPlus } from "react-icons/fi";
 
 const MemberProfile = () => {
   const { id } = useParams();
@@ -55,8 +56,11 @@ const MemberProfile = () => {
       <div className=" flex items-end justify-between gap-2 mb-0">
         <div className="title--breadcrumbs">
           <p className="text-sm">{`Home > Members > ${member?.full_name} Profile`}</p>
-          <h1 className="text-3xl font-semibold">{member?.full_name} Profile</h1>
+          <h1 className="text-3xl font-semibold">
+            {member?.full_name} Profile
+          </h1>
         </div>
+
       </div>
       <div className="flexs">
         {/* Sidebar */}
@@ -69,11 +73,7 @@ const MemberProfile = () => {
                   <div
                     onClick={() => setActiveTab(item)}
                     className={`w-fit min-w-[fit-content] cursor-pointer
-                      ${
-                        activeTab === item
-                          ? "btn--tab"
-                          : ""
-                      }`}
+                      ${activeTab === item ? "btn--tab" : ""}`}
                   >
                     <div className="px-4 py-3 z-[1] relative text-[14px]">
                       {item}

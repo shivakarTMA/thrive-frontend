@@ -419,3 +419,7 @@ input:-webkit-autofill:active {
     width: 100%;
     text-align: center;
 }
+
+.react-datepicker-popper {
+    z-index: 99 !important;
+}
