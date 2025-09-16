@@ -555,7 +555,7 @@ const ProfileDetails = () => {
           </div>
           {/* Save Button */}
           <div className="flex justify-end mt-5">
-            <button className="bg--color custom--btn">SAVE CHANGES</button>
+            <button className="px-4 py-2 bg-black text-white rounded flex items-center gap-2">SAVE CHANGES</button>
           </div>
         </div>
       </div>

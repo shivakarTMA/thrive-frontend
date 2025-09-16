@@ -7,9 +7,22 @@ import Tooltip from "../common/Tooltip";
 import { LiaEdit } from "react-icons/lia";
 import { FaCircle } from "react-icons/fa6";
 import CreatePackage from "./CreatePackage";
-import { apiAxios } from "../../config/config";
+import { apiAxios, authAxios } from "../../config/config";
 import { IoIosSearch } from "react-icons/io";
 import Pagination from "../common/Pagination";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchOptionList } from "../../Redux/Reducers/optionListSlice";
+
+
+const validationSchema = Yup.object({
+  studio_id: Yup.string().required("Studio is required"),
+  service_id: Yup.string().required("Service is required"),
+  staff_id: Yup.string().required("Staff is required"),
+  name: Yup.string().required("Name is required"),
+  package_type: Yup.string().required("Package type is required"),
+  booking_type: Yup.string().required("Booking type is required"),
+  status: Yup.string().required("Status is required"),
+});
 
 const PackagesList = () => {
   const [showModal, setShowModal] = useState(false);
@@ -17,7 +30,9 @@ const PackagesList = () => {
   const [editingOption, setEditingOption] = useState(null);
   const leadBoxRef = useRef(null);
   const [service, setService] = useState([]);
+  const [studio, setStudio] = useState([]);
   const [packageCategory, setPackageCategory] = useState([]);
+  const [staffList, setStaffList] = useState([]);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [page, setPage] = useState(1);
@@ -25,13 +40,51 @@ const PackagesList = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
 
+    // Redux state
+  const dispatch = useDispatch();
+  const { lists, loading } = useSelector((state) => state.optionList);
+
+  // Fetch option lists
+  useEffect(() => {
+    dispatch(fetchOptionList("SESSION_LEVEL"));
+  }, [dispatch]);
+
+  // Extract Redux lists
+  const sessionLevel = lists["SESSION_LEVEL"] || [];
+
+  const fetchStaff = async (search = "") => {
+    try {
+      const res = await apiAxios().get("/staff/list", {
+        params: search ? { search } : {},
+      });
+      let data = res.data?.data || res.data || [];
+      const activeService = data.filter((item) => item.status === "ACTIVE");
+      setStaffList(activeService);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to fetch club");
+    }
+  };
+  const fetchClub = async (search = "") => {
+    try {
+      const res = await apiAxios().get("/studio/list", {
+        params: search ? { search } : {},
+      });
+      let data = res.data?.data || res.data || [];
+      const activeService = data.filter((item) => item.status === "ACTIVE");
+      setStudio(activeService);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to fetch club");
+    }
+  };
   const fetchService = async (search = "") => {
     try {
       const res = await apiAxios().get("/service/list", {
         params: search ? { search } : {},
       });
       let data = res.data?.data || res.data || [];
-      const activeService = data.filter(item => item.status === "ACTIVE");
+      const activeService = data.filter((item) => item.status === "ACTIVE");
       setService(activeService);
     } catch (err) {
       console.error(err);
@@ -44,16 +97,14 @@ const PackagesList = () => {
         params: search ? { search } : {},
       });
       let data = res.data?.data || res.data || [];
-       // filter only ACTIVE categories
-      const activeCategories = data.filter(item => item.status === "ACTIVE");
+      // filter only ACTIVE categories
+      const activeCategories = data.filter((item) => item.status === "ACTIVE");
       setPackageCategory(activeCategories);
     } catch (err) {
       console.error(err);
       toast.error("Failed to fetch package category");
     }
   };
-
-  console.log(packageCategory,'packageCategory')
 
   const fetchPackagesList = async (search = searchTerm, currentPage = page) => {
     try {
@@ -81,17 +132,31 @@ const PackagesList = () => {
   useEffect(() => {
     fetchPackagesList();
     fetchService();
+    fetchClub();
+    fetchStaff();
     fetchPackageCategory();
   }, []);
 
-  const serviceOptions = service?.map(item => ({
-    label: item.name,
-    value: item.id
-  })) || [];
-  const packageCategoryOptions = packageCategory?.map(item => ({
-    label: item.title,
-    value: item.id
-  })) || [];
+  const staffListOptions =
+    staffList?.map((item) => ({
+      label: item.name,
+      value: item.id,
+    })) || [];
+  const studioOptions =
+    studio?.map((item) => ({
+      label: item.name,
+      value: item.id,
+    })) || [];
+  const serviceOptions =
+    service?.map((item) => ({
+      label: item.name,
+      value: item.id,
+    })) || [];
+  const packageCategoryOptions =
+    packageCategory?.map((item) => ({
+      label: item.title,
+      value: item.id,
+    })) || [];
 
   const handleOverlayClick = (e) => {
     if (leadBoxRef.current && !leadBoxRef.current.contains(e.target)) {
@@ -99,68 +164,63 @@ const PackagesList = () => {
     }
   };
 
-  const formik = useFormik({
-    initialValues: {
-      studio_id:"",
-      service_id:"",
-      name: "",
-      caption: "",
-      description: "",
-      image: "",
-      package_type: "",
-      session_level: "",
-      no_of_sessions: "",
-      session_duration: "",
-      session_validity: "",
-      start_date: "",
-      start_time: "",
-      end_date: "",
+  const initialValues = {
+      studio_id: "", // done
+      service_id: "", // done
+      staff_id: "", // done
+      package_category_id: "", // done
+      name: "", // done
+      caption: "", // done
+      description: "", // done
+      image: "", // done
+      package_type: "", // done
+      session_level: "", // done
+      no_of_sessions: "", // done
+      session_duration: "", // done
+      session_validity: "", // done
+      start_date: "", // done
+      start_time: "", // done
+      end_time: "", // done
       max_capacity: "",
       waitlist_capacity: "",
-      tags: "",
-      amount: "",
-      discount: "",
-      gst: "",
-      position: null,
-      status: "ACTIVE",
-      package_category_id:"",
-      trainer_id: "",
-      booking_type: "",
-      club_id:"",
-    },
-    validationSchema: Yup.object({
-      name: Yup.string().required("Title is required"),
-      image: Yup.string().required("Screen image is required"),
-      service_id: Yup.string().required("Service is required"),
-      package_category_id: Yup.string().required("Package Category is required"),
-      position: Yup.number().required("Position is required"),
-      status: Yup.string().required("Status is required"),
-    }),
+      tags: "", // done
+      amount: "", // done
+      discount: "", // done
+      gst: "", // done
+      position: "", // done
+      trainer_id: "", // done
+      booking_type: "", // done
+      status: "ACTIVE", // done
+    }
+
+  const formik = useFormik({
+    initialValues,
+    validationSchema,
     onSubmit: async (values, { resetForm }) => {
       try {
-        const formData = new FormData();
-        formData.append("title", values.title);
-        formData.append("position", values.position);
-        formData.append("status", values.status);
+          const formData = new FormData();
+          Object.keys(values).forEach((key) => {
+
+            // ✅ Skip image key if it is just a string (URL from DB)
+            if (key === "image" && typeof values.image === "string") return;
+
+            formData.append(key, values[key]);
+          });
 
         // if file exists, append it (instead of just file name)
-        if (values.icon instanceof File) {
+        if (values.image instanceof File) {
           formData.append("file", values.image);
         }
 
         if (editingOption && editingOption.id) {
           // Update
-          await apiAxios().put(
-            `/package/${editingOption.id}`,
-            formData,
-            {
-              headers: { "Content-Type": "multipart/form-data" },
-            }
-          );
+          await authAxios().put(`/package/${editingOption.id}`, formData, {
+            headers: { "Content-Type": "multipart/form-data" },
+          });
           toast.success("Updated Successfully");
         } else {
           // Create
-          await apiAxios().post("/package/create", formData, {
+          await authAxios().post("/package/create", formData, {
             headers: { "Content-Type": "multipart/form-data" },
           });
           toast.success("Created Successfully");
@@ -312,6 +372,9 @@ const PackagesList = () => {
           handleOverlayClick={handleOverlayClick}
           leadBoxRef={leadBoxRef}
           serviceOptions={serviceOptions}
+          studioOptions={studioOptions}
+          staffListOptions={staffListOptions}
+          sessionLevel={sessionLevel}
           packageCategoryOptions={packageCategoryOptions}
         />
       )}
