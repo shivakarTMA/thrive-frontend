@@ -3,8 +3,8 @@ import Tooltip from "../common/Tooltip";
 import { LiaEdit } from "react-icons/lia";
 import { IoCloseCircleOutline } from "react-icons/io5";
 import { AiOutlineDelete } from "react-icons/ai";
-import CreateWorkoutPlan from "../WorkoutPlan/CreateWorkoutplan";
 import { FiPlus } from "react-icons/fi";
+import WorkoutPlan from "./WorkoutPlan";
 
 const AssignedWorkout = [
   {
@@ -21,19 +21,27 @@ const AssignedWorkout = [
 const WorkoutApp = () => {
   // 🔹 Local state to manage workouts dynamically (for delete/cancel)
   const [workouts, setWorkouts] = useState(AssignedWorkout);
+  const [editingId, setEditingId] = useState(null);
   const [workoutTable, setWorkoutTable] = useState(true);
-  const [addWorkout, setAddWorkout] = useState(false);
+  const [workoutModal, setWorkoutModal] = useState(false);
 
   // 🔹 Handle view/edit button click
+  const handleAddWorkout = () => {
+    setWorkoutModal(true);
+    setWorkoutTable(false);
+  };
+  // 🔹 Handle view/edit button click
   const handleViewEdit = (id) => {
-    setAddWorkout(true);
+    setEditingId(id);
+    setWorkoutModal(true);
     setWorkoutTable(false);
   };
 
   // 🔹 Handle Cancel add workout
-  const handleCancelWorkout = (id) => {
-    setAddWorkout(false);
+  const handleCancelWorkout = () => {
+    setWorkoutModal(false);
     setWorkoutTable(true);
+    setEditingId(null)
   };
 
   // 🔹 Handle cancel button click
@@ -58,7 +66,7 @@ const WorkoutApp = () => {
         <div className="flex justify-end items-end gap-2 mb-3 w-full">
           <button
             type="button"
-            onClick={handleViewEdit}
+            onClick={handleAddWorkout}
             className="px-4 py-2 bg-black text-white rounded flex items-center gap-2"
           >
             <FiPlus /> Add Workout
@@ -83,37 +91,30 @@ const WorkoutApp = () => {
             </thead>
             <tbody>
               {workouts.length > 0 ? (
-                workouts.map((appt) => (
-                  <tr key={appt.id} className="hover:bg-gray-50">
-                    <td className="border px-3 py-2">{appt.id}</td>
-                    <td className="border px-3 py-2">{appt.workoutName}</td>
-                    <td className="border px-3 py-2">{appt.noOfDays}</td>
-                    <td className="border px-3 py-2">{appt.startDate}</td>
-                    <td className="border px-3 py-2">{appt.endDate}</td>
-                    <td className="border px-3 py-2">{appt.followUpDate}</td>
-                    <td className="border px-3 py-2">{appt.status}</td>
+                workouts.map((workout) => (
+                  <tr key={workout.id} className="hover:bg-gray-50">
+                    <td className="border px-3 py-2">{workout.id}</td>
+                    <td className="border px-3 py-2">{workout.workoutName}</td>
+                    <td className="border px-3 py-2">{workout.noOfDays}</td>
+                    <td className="border px-3 py-2">{workout.startDate}</td>
+                    <td className="border px-3 py-2">{workout.endDate}</td>
+                    <td className="border px-3 py-2">{workout.followUpDate}</td>
+                    <td className="border px-3 py-2">{workout.status}</td>
                     <td className="border px-3 py-2">
                       <div className="flex gap-0">
-                        <Tooltip
-                          id={`tooltip-edit-${appt.id}`}
-                          content="View/Edit"
-                          place="top"
-                        >
-                          <div
-                            onClick={() => handleViewEdit(appt.id)}
-                            className="p-1 cursor-pointer"
-                          >
+                         <Tooltip id={`tooltip-edit-${workout.id}`} content="View/Edit" place="top">
+                          <div onClick={() => handleViewEdit(workout.id)} className="p-1 cursor-pointer">
                             <LiaEdit className="text-[25px] text-black" />
                           </div>
                         </Tooltip>
 
                         <Tooltip
-                          id={`tooltip-edit-${appt.id}`}
+                          id={`tooltip-edit-${workout.id}`}
                           content="Cancel"
                           place="top"
                         >
                           <div
-                            onClick={() => handleCancel(appt.id)}
+                            onClick={() => handleCancel(workout.id)}
                             className="p-1 cursor-pointer"
                           >
                             <IoCloseCircleOutline className="text-[25px] text-black" />
@@ -121,12 +122,12 @@ const WorkoutApp = () => {
                         </Tooltip>
 
                         <Tooltip
-                          id={`tooltip-edit-${appt.id}`}
+                          id={`tooltip-edit-${workout.id}`}
                           content="Delete"
                           place="top"
                         >
                           <div
-                            onClick={() => handleDelete(appt.id)}
+                            onClick={() => handleDelete(workout.id)}
                             className="p-1 cursor-pointer"
                           >
                             <AiOutlineDelete className="text-[25px] text-black" />
@@ -148,8 +149,8 @@ const WorkoutApp = () => {
         </div>
       )}
 
-      {addWorkout && (
-        <CreateWorkoutPlan handleCancelWorkout={handleCancelWorkout} />
+      {workoutModal && (
+        <WorkoutPlan handleCancelWorkout={handleCancelWorkout} editingId={editingId} />
       )}
     </div>
   );

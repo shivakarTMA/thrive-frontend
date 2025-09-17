@@ -30,6 +30,487 @@ export const workoutPlansList = [
   },
 ];
 
+export const workoutTemplateWithExercises  = {
+  id: 1,
+  name: "Leg Day + Cardio Mix",
+  type: "multiple",
+  numDays: 3,
+  days: [
+    {
+      name: "Day 1",
+      isRestDay: false,
+      exercises: [
+        {
+          id: "rest-1001",
+          type: "rest",
+          duration: 60,
+          isSelected: false,
+          sets: [{ rest: "90" }],
+          groupType: "giant",
+          groupId: "group-101",
+        },
+        {
+          id: 1,
+          name: "Barbell Squat",
+          resps: true,
+          duration: false,
+          distance: false,
+          weight: true,
+          category: "legs",
+          isSelected: false,
+          setExercise: "86",
+          groupType: null,
+          groupId: null,
+          workoutTag: "workout",
+          image:
+            "https://media.theeverygirl.com/wp-content/uploads/2020/07/little-things-you-can-do-for-a-better-workout-the-everygirl-1.jpg",
+          notes: "Focus on full depth squats.",
+          sets: [
+            {
+              weight: "60",
+              reps: "12",
+              distance: "",
+              duration: "",
+              rest: "90",
+              notes: "",
+            },
+            {
+              weight: "65",
+              reps: "10",
+              distance: "",
+              duration: "",
+              rest: "120",
+              notes: "",
+            },
+          ],
+        },
+        {
+          id: 2,
+          name: "Leg Press",
+          resps: true,
+          duration: false,
+          distance: false,
+          weight: true,
+          category: "legs",
+          isSelected: false,
+          setExercise: "53",
+          groupType: null,
+          groupId: null,
+          workoutTag: "workout",
+          image:
+            "https://media.theeverygirl.com/wp-content/uploads/2020/07/little-things-you-can-do-for-a-better-workout-the-everygirl-1.jpg",
+          notes: "Keep feet shoulder-width apart.",
+          sets: [
+            {
+              weight: "180",
+              reps: "15",
+              distance: "",
+              duration: "",
+              rest: "60",
+              notes: "",
+            },
+          ],
+        },
+        {
+          id: 3,
+          name: "Treadmill Run",
+          resps: false,
+          duration: true,
+          distance: true,
+          weight: false,
+          category: "cardio",
+          isSelected: false,
+          setExercise: "37",
+          groupType: null,
+          groupId: null,
+          workoutTag: "workout",
+          image:
+            "https://media.theeverygirl.com/wp-content/uploads/2020/07/little-things-you-can-do-for-a-better-workout-the-everygirl-1.jpg",
+          notes: "Maintain steady pace.",
+          sets: [
+            {
+              weight: "",
+              reps: "",
+              distance: "3",
+              duration: "20",
+              rest: "2",
+              notes: "",
+            },
+          ],
+        },
+        {
+          id: 4,
+          name: "Rowing Machine",
+          resps: false,
+          duration: true,
+          distance: true,
+          weight: true,
+          category: "cardio",
+          isSelected: false,
+          setExercise: "24",
+          groupType: "giant",
+          groupId: "group-101",
+          workoutTag: "workout",
+          image:
+            "https://media.theeverygirl.com/wp-content/uploads/2020/07/little-things-you-can-do-for-a-better-workout-the-everygirl-1.jpg",
+          notes: "Focus on form, drive with legs.",
+          sets: [
+            {
+              weight: "20",
+              reps: "",
+              distance: "500",
+              duration: "3",
+              rest: "45",
+              notes: "",
+            },
+          ],
+        },
+        {
+          id: "rest-1002",
+          type: "rest",
+          duration: 60,
+          isSelected: false,
+          sets: [{ rest: "60" }],
+        },
+      ],
+    },
+    {
+      name: "Day 2",
+      isRestDay: false,
+      exercises: [
+        {
+          id: 5,
+          name: "Deadlift",
+          resps: true,
+          duration: false,
+          distance: false,
+          weight: true,
+          category: "back",
+          isSelected: false,
+          setExercise: "45",
+          groupType: null,
+          groupId: null,
+          workoutTag: "workout",
+          image:
+            "https://media.theeverygirl.com/wp-content/uploads/2020/07/little-things-you-can-do-for-a-better-workout-the-everygirl-1.jpg",
+          notes: "Keep back straight, engage core.",
+          sets: [
+            {
+              weight: "100",
+              reps: "8",
+              distance: "",
+              duration: "",
+              rest: "120",
+              notes: "",
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: "Day 3",
+      isRestDay: true,
+      exercises: [],
+    },
+  ],
+};
+
+export const workoutTemplatePushDay = {
+  id: 2,
+  name: "Push Day Strength",
+  type: "multiple",
+  numDays: 2,
+  days: [
+    {
+      name: "Day 1",
+      isRestDay: false,
+      exercises: [
+        {
+          id: 1,
+          name: "Barbell Bench Press",
+          resps: true,
+          duration: false,
+          distance: false,
+          weight: true,
+          category: "chest",
+          isSelected: false,
+          setExercise: "45",
+          groupType: null,
+          groupId: null,
+          workoutTag: "workout",
+          image:
+            "https://barbend.com/wp-content/uploads/2023/05/shutterstock_123456789.jpg",
+          notes: "Focus on controlled reps, full ROM.",
+          sets: [
+            { weight: "70", reps: "12", rest: "90", notes: "" },
+            { weight: "75", reps: "10", rest: "120", notes: "" },
+            { weight: "80", reps: "8", rest: "150", notes: "" }
+          ]
+        },
+        {
+          id: 2,
+          name: "Overhead Shoulder Press",
+          resps: true,
+          duration: false,
+          distance: false,
+          weight: true,
+          category: "shoulders",
+          isSelected: false,
+          setExercise: "46",
+          groupType: null,
+          groupId: null,
+          workoutTag: "workout",
+          image:
+            "https://barbend.com/wp-content/uploads/2020/10/Overhead-Press.jpg",
+          notes: "Keep core tight, avoid arching back.",
+          sets: [
+            { weight: "40", reps: "12", rest: "90", notes: "" },
+            { weight: "45", reps: "10", rest: "120", notes: "" }
+          ]
+        },
+        {
+          id: 3,
+          name: "Tricep Dips",
+          resps: true,
+          duration: false,
+          distance: false,
+          weight: false,
+          category: "triceps",
+          isSelected: false,
+          setExercise: "47",
+          groupType: null,
+          groupId: null,
+          workoutTag: "workout",
+          image:
+            "https://barbend.com/wp-content/uploads/2021/09/Dips.jpg",
+          notes: "Keep elbows close to body.",
+          sets: [
+            { reps: "12", rest: "60", notes: "" },
+            { reps: "10", rest: "60", notes: "" }
+          ]
+        }
+      ]
+    },
+    {
+      name: "Day 2",
+      isRestDay: true,
+      exercises: []
+    }
+  ]
+};
+
+export const workoutTemplateHIIT = {
+  id: 3,
+  name: "Full Body HIIT",
+  type: "single",
+  numDays: 1,
+  days: [
+    {
+      name: "Day 1",
+      isRestDay: false,
+      exercises: [
+        {
+          id: 1,
+          name: "Burpees",
+          resps: true,
+          duration: false,
+          distance: false,
+          weight: false,
+          category: "fullbody",
+          isSelected: false,
+          setExercise: "50",
+          groupType: null,
+          groupId: null,
+          workoutTag: "hiit",
+          image:
+            "https://barbend.com/wp-content/uploads/2020/04/Burpee.jpg",
+          notes: "Explosive movement, maintain pace.",
+          sets: [
+            { reps: "12", rest: "30", notes: "" },
+            { reps: "10", rest: "30", notes: "" }
+          ]
+        },
+        {
+          id: 2,
+          name: "Mountain Climbers",
+          resps: false,
+          duration: true,
+          distance: false,
+          weight: false,
+          category: "core",
+          isSelected: false,
+          setExercise: "51",
+          groupType: null,
+          groupId: null,
+          workoutTag: "hiit",
+          image:
+            "https://barbend.com/wp-content/uploads/2020/03/Mountain-Climbers.jpg",
+          notes: "Drive knees fast, keep hips low.",
+          sets: [
+            { duration: "30", rest: "20", notes: "" },
+            { duration: "30", rest: "20", notes: "" }
+          ]
+        },
+        {
+          id: 3,
+          name: "Jump Squats",
+          resps: true,
+          duration: false,
+          distance: false,
+          weight: false,
+          category: "legs",
+          isSelected: false,
+          setExercise: "52",
+          groupType: null,
+          groupId: null,
+          workoutTag: "hiit",
+          image:
+            "https://barbend.com/wp-content/uploads/2020/07/Jump-Squat.jpg",
+          notes: "Land softly to protect knees.",
+          sets: [
+            { reps: "15", rest: "40", notes: "" },
+            { reps: "12", rest: "40", notes: "" }
+          ]
+        },
+        {
+          id: 4,
+          name: "Plank Hold",
+          resps: false,
+          duration: true,
+          distance: false,
+          weight: false,
+          category: "core",
+          isSelected: false,
+          setExercise: "53",
+          groupType: null,
+          groupId: null,
+          workoutTag: "hiit",
+          image:
+            "https://barbend.com/wp-content/uploads/2020/01/Plank.jpg",
+          notes: "Keep spine neutral, squeeze glutes.",
+          sets: [
+            { duration: "45", rest: "30", notes: "" }
+          ]
+        }
+      ]
+    }
+  ]
+};
+
+
+export const TrainingList = [
+  {
+    id: 1, // Unique workout identifier
+    name: "Push Day Strength",
+  type: "multiple",
+  numDays: 2,
+  days: [
+    {
+      name: "Day 1",
+      isRestDay: false,
+      exercises: [
+        {
+          id: 1,
+          name: "Barbell Bench Press",
+          resps: true,
+          duration: false,
+          distance: false,
+          weight: true,
+          category: "chest",
+          isSelected: false,
+          setExercise: "45",
+          groupType: null,
+          groupId: null,
+          workoutTag: "workout",
+          image:
+            "https://barbend.com/wp-content/uploads/2023/05/shutterstock_123456789.jpg",
+          notes: "Focus on controlled reps, full ROM.",
+          sets: [
+            { weight: "70", reps: "12", rest: "90", notes: "" },
+            { weight: "75", reps: "10", rest: "120", notes: "" },
+            { weight: "80", reps: "8", rest: "150", notes: "" }
+          ]
+        },
+        {
+          id: 2,
+          name: "Overhead Shoulder Press",
+          resps: true,
+          duration: false,
+          distance: false,
+          weight: true,
+          category: "shoulders",
+          isSelected: false,
+          setExercise: "46",
+          groupType: null,
+          groupId: null,
+          workoutTag: "workout",
+          image:
+            "https://barbend.com/wp-content/uploads/2020/10/Overhead-Press.jpg",
+          notes: "Keep core tight, avoid arching back.",
+          sets: [
+            { weight: "40", reps: "12", rest: "90", notes: "" },
+            { weight: "45", reps: "10", rest: "120", notes: "" }
+          ]
+        },
+        {
+          id: 3,
+          name: "Tricep Dips",
+          resps: true,
+          duration: false,
+          distance: false,
+          weight: false,
+          category: "triceps",
+          isSelected: false,
+          setExercise: "47",
+          groupType: null,
+          groupId: null,
+          workoutTag: "workout",
+          image:
+            "https://barbend.com/wp-content/uploads/2021/09/Dips.jpg",
+          notes: "Keep elbows close to body.",
+          sets: [
+            { reps: "12", rest: "60", notes: "" },
+            { reps: "10", rest: "60", notes: "" }
+          ]
+        }
+      ]
+    },
+    {
+      name: "Day 2",
+      isRestDay: true,
+      exercises: []
+    }
+  ]
+  },
+  {
+    id: 2,
+    workoutName: "Treadmill",
+    startDate: "2025-09-03T18:30:00.000Z",
+    noOfDays: 3,
+    followUpDate: "2025-09-06T18:30:00.000Z",
+    description: "Cardio training plan for endurance.",
+    workoutType: "multiple",
+    days: [
+      { name: "Day 1", exercises: [], isRestDay: false },
+      { name: "Day 2", exercises: [], isRestDay: false },
+      { name: "Day 3", exercises: [], isRestDay: true },
+    ],
+  },
+  {
+    id: 3,
+    workoutName: "Yoga Stretch",
+    startDate: "2025-09-05T18:30:00.000Z",
+    noOfDays: 2,
+    followUpDate: "2025-09-07T18:30:00.000Z",
+    description: "Flexibility routine with yoga postures.",
+    workoutType: "multiple",
+    days: [
+      { name: "Day 1", exercises: [], isRestDay: false },
+      { name: "Day 2", exercises: [], isRestDay: false },
+    ],
+  },
+];
+
 export const memberMockData = [
   {
     id: 1,

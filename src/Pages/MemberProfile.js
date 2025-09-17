@@ -25,6 +25,7 @@ const MemberProfile = () => {
     "Service Card",
     "Order History",
     "Payment History",
+    "Call Logs",
     "Appointments",
     "Referrals",
     "Attendance",
@@ -60,7 +61,6 @@ const MemberProfile = () => {
             {member?.full_name} Profile
           </h1>
         </div>
-
       </div>
       <div className="flexs">
         {/* Sidebar */}
@@ -69,26 +69,36 @@ const MemberProfile = () => {
           <div className="mt-6 flex flex-wrap items-center overflow-auto">
             <div className="mt-0 flex items-center border-b border-b-[#D4D4D4]">
               {tabs.map((item, index) => (
-                <React.Fragment key={item}>
-                  <div
-                    onClick={() => setActiveTab(item)}
-                    className={`w-fit min-w-[fit-content] cursor-pointer
-                      ${activeTab === item ? "btn--tab" : ""}`}
-                  >
-                    <div className="px-4 py-3 z-[1] relative text-[14px]">
-                      {item}
-                    </div>
-                  </div>
+                // <React.Fragment key={item}>
+                //   <div
+                //     onClick={() => setActiveTab(item)}
+                //     className={`w-fit min-w-[fit-content] cursor-pointer
+                //       ${activeTab === item ? "btn--tab" : ""}`}
+                //   >
+                //     <div className="px-4 py-3 z-[1] relative text-[14px]">
+                //       {item}
+                //     </div>
+                //   </div>
 
-                  {item === "Payment History" && (
-                    <Link
-                      to={`/member-follow-up/${member.id}`}
-                      className="w-fit min-w-[fit-content] text-[15px] px-3 py-1.5 rounded hover:text-primarycolor transition"
-                    >
-                      Call Logs
-                    </Link>
-                  )}
-                </React.Fragment>
+                //   {item === "Payment History" && (
+                //     <Link
+                //       to={`/member-follow-up/${member.id}`}
+                //       className="w-fit min-w-[fit-content] text-[15px] px-3 py-1.5 rounded hover:text-primarycolor transition"
+                //     >
+                //       Call Logs
+                //     </Link>
+                //   )}
+                // </React.Fragment>
+                <div
+                  key={item}
+                  onClick={() => setActiveTab(item)}
+                  className={`w-fit min-w-[fit-content] cursor-pointer
+                      ${activeTab === item ? "btn--tab" : ""}`}
+                >
+                  <div className="px-4 py-3 z-[1] relative text-[14px]">
+                    {item}
+                  </div>
+                </div>
               ))}
             </div>
           </div>
