@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { FiPlus } from "react-icons/fi";
 import AllExerciseList from "./AllExerciseList";
 import Select from "react-select";
 import { customStyles } from "../../Helper/helper";
@@ -158,11 +157,8 @@ const CreateWorkoutPlan = ({ handleCancelWorkout }) => {
   };
 
   const handleGroupSelected = (type) => {
-    setData((prev) => {
-      const updatedDays = [...prev.days];
-      const selectedExercises = updatedDays[activeDayIndex].exercises.filter(
-        (ex) => ex.isSelected
-      );
+    setData((previousState) => {
+      const updatedDays = [...previousState.days];
       const groupId = `group-${Date.now()}`;
       updatedDays[activeDayIndex].exercises = updatedDays[
         activeDayIndex
@@ -171,19 +167,19 @@ const CreateWorkoutPlan = ({ handleCancelWorkout }) => {
           ? { ...ex, groupType: type, groupId, isSelected: false }
           : ex
       );
-      return { ...prev, days: updatedDays };
+      return { ...previousState, days: updatedDays };
     });
   };
 
   const handleUngroup = (groupId) => {
-    setData((prev) => {
-      const updatedDays = [...prev.days];
+    setData((previousState) => {
+      const updatedDays = [...previousState.days];
       updatedDays[activeDayIndex].exercises = updatedDays[
         activeDayIndex
       ].exercises.map((ex) =>
         ex.groupId === groupId ? { ...ex, groupId: null, groupType: null } : ex
       );
-      return { ...prev, days: updatedDays };
+      return { ...previousState, days: updatedDays };
     });
   };
 
@@ -202,6 +198,7 @@ const CreateWorkoutPlan = ({ handleCancelWorkout }) => {
   const handleCopyDay = (dayIdx) => {
     const dayToCopy = data.days[dayIdx];
     setCopiedDay(JSON.parse(JSON.stringify(dayToCopy)));
+    toast.success("Copy Successfully");
   };
 
   const handlePasteDay = (dayIdx) => {
@@ -214,12 +211,13 @@ const CreateWorkoutPlan = ({ handleCancelWorkout }) => {
       };
       return { ...prev, days: updatedDays };
     });
+    toast.success("Paste Successfully");
   };
 
-  const handleAddRestTime = (dayIdx) => {
-    setData((prev) => {
-      const updatedDays = prev.days.map((day, index) => {
-        if (index !== dayIdx) return day;
+  const handleAddRestTime = (dayIndex) => {
+    setData((previousState) => {
+      const updatedDays = previousState.days.map((day, index) => {
+        if (index !== dayIndex) return day;
         return {
           ...day,
           exercises: [
@@ -234,7 +232,7 @@ const CreateWorkoutPlan = ({ handleCancelWorkout }) => {
           ],
         };
       });
-      return { ...prev, days: updatedDays };
+      return { ...previousState, days: updatedDays };
     });
   };
 
@@ -257,7 +255,7 @@ const CreateWorkoutPlan = ({ handleCancelWorkout }) => {
       createdAt: new Date().toISOString(),
     };
     // console.log("Submitting workout plan:", workoutPayload);
-    toast.success("Submitting workout plan:", workoutPayload)
+    toast.success("Submitting workout plan:", workoutPayload);
     handleCancelWorkout();
   };
 
@@ -315,11 +313,11 @@ const CreateWorkoutPlan = ({ handleCancelWorkout }) => {
         </button>
       </div>
 
-      {groupExercises.map((item, exIdx) => {
+      {groupExercises.map((item, exerciseIndex) => {
         if (item.type === "rest") {
-          return renderRestBlock({ ...item, index: exIdx }, true);
+          return renderRestBlock({ ...item, index: exerciseIndex }, true);
         }
-        return renderExercise(item, exIdx, true);
+        return renderExercise(item, exerciseIndex, true);
       })}
     </div>
   );
@@ -514,7 +512,7 @@ const CreateWorkoutPlan = ({ handleCancelWorkout }) => {
   );
 
   const renderRestBlock = (restBlock, isGrouped = false) => (
-    <div key={restBlock.id} className="mb-2 border p-3 rounded bg-yellow-50">
+    <div key={restBlock.index} className="mb-2 border p-3 rounded bg-yellow-50">
       <div className="flex justify-between items-center mb-2">
         <div className="flex items-center gap-2">
           {!isGrouped && (
@@ -550,8 +548,6 @@ const CreateWorkoutPlan = ({ handleCancelWorkout }) => {
       />
     </div>
   );
-
-  console.log(data, "data");
 
   return (
     <div className="p-6">
@@ -712,7 +708,7 @@ const CreateWorkoutPlan = ({ handleCancelWorkout }) => {
                     </button>
                   </div>
 
-                  {!data.days[activeDayIndex].isRestDay && (
+                  {!data.days[activeDayIndex]?.isRestDay && (
                     <div className="flex items-center gap-1">
                       <button
                         type="button"
@@ -735,7 +731,7 @@ const CreateWorkoutPlan = ({ handleCancelWorkout }) => {
                   const currentDay = data.days[activeDayIndex];
 
                   // 🛑 If the day is marked as a rest day, just show a message and "Remove" button
-                  if (currentDay.isRestDay) {
+                  if (currentDay?.isRestDay) {
                     return (
                       <div className="p-4 border rounded bg-yellow-50 text-center">
                         <p className="text-gray-700 font-semibold mb-2">
@@ -758,22 +754,24 @@ const CreateWorkoutPlan = ({ handleCancelWorkout }) => {
                   const ungrouped = [];
                   const restBlocks = [];
 
-                  currentDay.exercises.forEach((ex, idx) => {
-                    const item = { ...ex, index: idx };
-
-                    if (ex.groupId) {
-                      if (!grouped[ex.groupId]) {
-                        grouped[ex.groupId] = { type: ex.groupType, items: [] };
+                  currentDay?.exercises.forEach((exercise, index) => {
+                    const item = { ...exercise, index };
+                    if (exercise.groupId) {
+                      if (!grouped[exercise.groupId]) {
+                        grouped[exercise.groupId] = {
+                          type: exercise.groupType,
+                          items: [],
+                        };
                       }
-                      grouped[ex.groupId].items.push(item);
-                    } else if (ex.type === "rest") {
+                      grouped[exercise.groupId].items.push(item);
+                    } else if (exercise.type === "rest") {
                       restBlocks.push(item);
                     } else {
                       ungrouped.push(item);
                     }
                   });
 
-                  const isDayEmpty = currentDay.exercises.length === 0;
+                  const isDayEmpty = currentDay?.exercises.length === 0;
 
                   return (
                     <>
@@ -791,18 +789,16 @@ const CreateWorkoutPlan = ({ handleCancelWorkout }) => {
                         </div>
                       )}
 
-                      {/* Grouped sets */}
-                      {Object.entries(grouped).map(([gid, { type, items }]) =>
-                        renderGroupedExercises(gid, type, items)
+                      {Object.entries(grouped).map(
+                        ([groupId, { type, items }]) =>
+                          renderGroupedExercises(groupId, type, items)
                       )}
 
-                      {/* Ungrouped exercises */}
-                      {ungrouped.map((ex) => renderExercise(ex, ex.index))}
-
-                      {/* Rest blocks */}
-                      {restBlocks.map((rest) =>
-                        renderRestBlock(rest, rest.index)
+                      {ungrouped.map((exercise) =>
+                        renderExercise(exercise, exercise.index)
                       )}
+
+                      {restBlocks.map((rest) => renderRestBlock(rest))}
                     </>
                   );
                 })()}
