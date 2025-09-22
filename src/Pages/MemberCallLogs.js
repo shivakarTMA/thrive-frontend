@@ -77,15 +77,13 @@ const validationSchema = Yup.object().shape({
 });
 
 const MemberCallLogs = () => {
-  const { id } = useParams();
-  const location = useLocation();
-  const queryParams = new URLSearchParams(location.search);
-  const action = queryParams.get("action");
+  // const { id } = useParams();
+  // const location = useLocation();
+  // const queryParams = new URLSearchParams(location.search);
+  // const action = queryParams.get("action");
 
-  const dataSource = action === "add-follow-up" ? assignedLeadsData : mockData;
-  const leadDetails = dataSource.find((m) => m.id === parseInt(id));
+  // const dataSource = action === "add-follow-up" ? assignedLeadsData : mockData;
 
-  const [callLogs, setCallLogs] = useState([]);
   const [filterStatus, setFilterStatus] = useState("");
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
@@ -144,13 +142,12 @@ const MemberCallLogs = () => {
     },
     validationSchema,
     onSubmit: (values, { resetForm }) => {
-      const newEntry = {
-        ...values,
-        createdAt: new Date(),
-        updatedBy: "Rajat Sharma",
-        leadSource: "Passing By",
-      };
-      setCallLogs((prevLogs) => [newEntry, ...prevLogs]);
+      // const newEntry = {
+      //   ...values,
+      //   createdAt: new Date(),
+      //   updatedBy: "Rajat Sharma",
+      //   leadSource: "Passing By",
+      // };
       resetForm({
         values: {
           calledBy: "Nitin",
@@ -167,9 +164,9 @@ const MemberCallLogs = () => {
 
   const filteredData = callDataList.filter((item) => {
     const matchesType =
-      !filterStatus || filterStatus.value === "" // All selected
+      !filterStatus || filterStatus?.value === ""
         ? true
-        : item.callType === filterStatus.value;
+        : item.callType === filterStatus?.value;
 
     const createdDate = new Date(item.createdOn);
     const matchesStartDate = startDate ? createdDate >= startDate : true;
@@ -181,14 +178,14 @@ const MemberCallLogs = () => {
   useEffect(() => {
     let filtered = [];
 
-    if (!formik.values.callType) {
+    if (!formik.values?.callType) {
       // No call type selected → show nothing
       filtered = [];
       formik.setFieldValue("callStatus", "");
-    } else if (formik.values.callType === "Cross-sell Call") {
+    } else if (formik.values?.callType === "Cross-sell Call") {
       // ✅ Show ALL statuses including cross-sell-specific ones
       filtered = callStatusOption;
-    } else if (formik.values.callType === "Welcome Call") {
+    } else if (formik.values?.callType === "Welcome Call") {
       // ✅ Hide Not Interested + Future Prospect
       filtered = callStatusOption.filter(
         (status) =>
@@ -209,19 +206,19 @@ const MemberCallLogs = () => {
     setFilteredCallStatus(filtered);
 
     // ✅ Reset callStatus if current value no longer valid
-    if (!filtered.some((opt) => opt.name === formik.values.callStatus)) {
+    if (!filtered.some((opt) => opt.name === formik.values?.callStatus)) {
       formik.setFieldValue("callStatus", "");
     }
-  }, [formik.values.callType, callStatusOption]);
+  }, [formik.values?.callType, callStatusOption]);
 
   // Show schedule fields only if both callType and callStatus match
   const showScheduleFields =
-    formik.values.callType === "Cross-sell Call" &&
-    formik.values.callStatus === "Cross-sales trial follow-up";
+    formik.values?.callType === "Cross-sell Call" &&
+    formik.values?.callStatus === "Cross-sales trial follow-up";
 
   const showNotInterestedField =
-    formik.values.callType === "Cross-sell Call" &&
-    formik.values.callStatus === "Not Interested";
+    formik.values?.callType === "Cross-sell Call" &&
+    formik.values?.callStatus === "Not Interested";
 
   return (
     <div className="">
@@ -261,7 +258,7 @@ const MemberCallLogs = () => {
                   <Select
                     name="callType"
                     value={callTypeOption.find(
-                      (opt) => opt.value === formik.values.callType
+                      (opt) => opt.value === formik.values?.callType
                     )}
                     onChange={(option) =>
                       formik.setFieldValue("callType", option.value)
@@ -270,9 +267,9 @@ const MemberCallLogs = () => {
                     styles={customStyles}
                     isDisabled={isDisabled}
                   />
-                  {formik.errors.callType && formik.touched.callType && (
+                  {formik.errors?.callType && formik.touched?.callType && (
                     <div className="text-red-500 text-sm">
-                      {formik.errors.callType}
+                      {formik.errors?.callType}
                     </div>
                   )}
                 </div>
@@ -285,7 +282,7 @@ const MemberCallLogs = () => {
                   <Select
                     name="callStatus"
                     value={filteredCallStatus.find(
-                      (opt) => opt.name === formik.values.callStatus
+                      (opt) => opt.name === formik.values?.callStatus
                     )}
                     onChange={(option) =>
                       formik.setFieldValue("callStatus", option.name)
@@ -298,9 +295,9 @@ const MemberCallLogs = () => {
                     styles={customStyles}
                     isDisabled={isDisabled}
                   />
-                  {formik.errors.callStatus && formik.touched.callStatus && (
+                  {formik.errors?.callStatus && formik.touched?.callStatus && (
                     <div className="text-red-500 text-sm">
-                      {formik.errors.callStatus}
+                      {formik.errors?.callStatus}
                     </div>
                   )}
                 </div>
@@ -314,7 +311,7 @@ const MemberCallLogs = () => {
                     <Select
                       name="notInterested"
                       value={notInterestedOption.find(
-                        (opt) => opt.name === formik.values.notInterested
+                        (opt) => opt.name === formik.values?.notInterested
                       )}
                       onChange={(option) =>
                         formik.setFieldValue("notInterested", option.name)
@@ -327,10 +324,10 @@ const MemberCallLogs = () => {
                       styles={customStyles}
                       isDisabled={isDisabled}
                     />
-                    {formik.errors.notInterested &&
-                      formik.touched.notInterested && (
+                    {formik.errors?.notInterested &&
+                      formik.touched?.notInterested && (
                         <div className="text-red-500 text-sm">
-                          {formik.errors.notInterested}
+                          {formik.errors?.notInterested}
                         </div>
                       )}
                   </div>
@@ -347,7 +344,7 @@ const MemberCallLogs = () => {
                         <LuCalendar />
                       </span>
                       <DatePicker
-                        selected={formik.values.schdule_date}
+                        selected={formik.values?.schdule_date}
                         onChange={(date) =>
                           formik.setFieldValue("schdule_date", date)
                         }
@@ -356,10 +353,10 @@ const MemberCallLogs = () => {
                         disabled={isDisabled ? true : false}
                       />
                     </div>
-                    {formik.errors.schdule_date &&
-                      formik.touched.schdule_date && (
+                    {formik.errors?.schdule_date &&
+                      formik.touched?.schdule_date && (
                         <div className="text-red-500 text-sm">
-                          {formik.errors.schdule_date}
+                          {formik.errors?.schdule_date}
                         </div>
                       )}
                   </div>
@@ -376,7 +373,7 @@ const MemberCallLogs = () => {
                         <FiClock />
                       </span>
                       <DatePicker
-                        selected={formik.values.schdule_time}
+                        selected={formik.values?.schdule_time}
                         onChange={(time) =>
                           formik.setFieldValue("schdule_time", time)
                         }
@@ -390,10 +387,10 @@ const MemberCallLogs = () => {
                         disabled={isDisabled ? true : false}
                       />
                     </div>
-                    {formik.errors.schdule_time &&
-                      formik.touched.schdule_time && (
+                    {formik.errors?.schdule_time &&
+                      formik.touched?.schdule_time && (
                         <div className="text-red-500 text-sm">
-                          {formik.errors.schdule_time}
+                          {formik.errors?.schdule_time}
                         </div>
                       )}
                   </div>
@@ -409,7 +406,7 @@ const MemberCallLogs = () => {
                     name="calledBy"
                     value={
                       staffListOptions.find(
-                        (opt) => opt.value === formik.values.calledBy
+                        (opt) => opt.value === formik.values?.calledBy
                       ) || null
                     }
                     options={staffListOptions}
@@ -420,9 +417,9 @@ const MemberCallLogs = () => {
                     styles={customStyles}
                     isDisabled={isDisabled}
                   />
-                  {formik.errors.calledBy && formik.touched.calledBy && (
+                  {formik.errors?.calledBy && formik.touched?.calledBy && (
                     <div className="text-red-500 text-sm">
-                      {formik.errors.calledBy}
+                      {formik.errors?.calledBy}
                     </div>
                   )}
                 </div>
@@ -437,15 +434,15 @@ const MemberCallLogs = () => {
                   name="discussion"
                   placeholder="Discussion (max 1800 characters)"
                   maxLength={1800}
-                  value={formik.values.discussion}
+                  value={formik.values?.discussion}
                   onChange={formik.handleChange}
                   className="custom--input w-full"
                   rows={4}
                   disabled={isDisabled ? true : false}
                 />
-                {formik.errors.discussion && formik.touched.discussion && (
+                {formik.errors?.discussion && formik.touched?.discussion && (
                   <div className="text-red-500 text-sm">
-                    {formik.errors.discussion}
+                    {formik.errors?.discussion}
                   </div>
                 )}
               </div>
