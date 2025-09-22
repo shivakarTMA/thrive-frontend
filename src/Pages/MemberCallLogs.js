@@ -96,8 +96,8 @@ const MemberCallLogs = () => {
       const res = await apiAxios().get("/staff/list", {
         params: search ? { search } : {},
       });
-      let data = res.data?.data || res.data || [];
-      const activeService = data.filter((item) => item.status === "ACTIVE");
+      let data = res.data?.data || res?.data || [];
+      const activeService = data?.filter((item) => item?.status === "ACTIVE");
       setStaffList(activeService);
     } catch (err) {
       console.error(err);
@@ -122,7 +122,7 @@ const MemberCallLogs = () => {
     dispatch(fetchOptionList("MEMBER_CALL_TYPE"));
     dispatch(fetchOptionList("MEMBER_CALL_STATUS"));
     dispatch(fetchOptionList("NOT_INTERESTED_REASON"));
-  }, [dispatch]);
+  }, []);
 
   const callTypeOption = lists["MEMBER_CALL_TYPE"] || [];
   const callStatusOption = lists["MEMBER_CALL_STATUS"] || [];
