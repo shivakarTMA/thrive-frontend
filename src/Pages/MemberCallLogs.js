@@ -209,7 +209,7 @@ const MemberCallLogs = () => {
     if (!filtered.some((opt) => opt.name === formik.values?.callStatus)) {
       formik.setFieldValue("callStatus", "");
     }
-  }, [formik.values?.callType, callStatusOption]);
+  }, [formik.values?.callType]);
 
   // Show schedule fields only if both callType and callStatus match
   const showScheduleFields =
@@ -260,9 +260,10 @@ const MemberCallLogs = () => {
                     value={callTypeOption.find(
                       (opt) => opt.value === formik.values?.callType
                     )}
-                    onChange={(option) =>
-                      formik.setFieldValue("callType", option.value)
-                    }
+                    onChange={(option) => {
+                      formik.setFieldValue("callType", option.value);
+                      formik.setFieldValue("callStatus", ""); // Reset callStatus when callType changes
+                    }}
                     options={callTypeOption}
                     styles={customStyles}
                     isDisabled={isDisabled}
@@ -281,9 +282,13 @@ const MemberCallLogs = () => {
                   </label>
                   <Select
                     name="callStatus"
-                    value={filteredCallStatus.find(
-                      (opt) => opt.name === formik.values?.callStatus
-                    )}
+                    value={
+                      formik.values?.callStatus
+                        ? filteredCallStatus.find(
+                            (opt) => opt.name === formik.values?.callStatus
+                          )
+                        : null
+                    } // Only show a value if callStatus is not empty
                     onChange={(option) =>
                       formik.setFieldValue("callStatus", option.name)
                     }
