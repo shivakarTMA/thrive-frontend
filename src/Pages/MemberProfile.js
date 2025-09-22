@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { mockData } from "../DummyData/DummyData";
 import ProfileDetails from "../components/memberprofile/ProfileDetails";
 import ServiceCard from "../components/memberprofile/ServiceCard";
@@ -14,12 +14,15 @@ import { apiAxios } from "../config/config";
 import { toast } from "react-toastify";
 import HealthProfile from "../components/memberprofile/HealthProfile";
 import { FiPlus } from "react-icons/fi";
+import MemberCallLogs from "./MemberCallLogs";
 
 const MemberProfile = () => {
   const { id } = useParams();
   const [activeTab, setActiveTab] = useState("Profile Details");
   const [memberDetails, setMemberDetails] = useState([]);
   const member = memberDetails.find((m) => m.id === parseInt(id));
+  const location = useLocation();
+  const navigate = useNavigate(); 
   const tabs = [
     "Profile Details",
     "Service Card",
@@ -49,6 +52,20 @@ const MemberProfile = () => {
   useEffect(() => {
     fetchMemberList();
   }, []);
+
+  useEffect(() => {
+    const queryParams = new URLSearchParams(location.search);
+    const view = queryParams.get("view");
+    if (view === "call-logs") {
+      setActiveTab("Call Logs");
+    }
+  }, [location.search]);
+
+    const handleTabClick = (tab) => {
+    // Remove the `view` query parameter when switching tabs
+    navigate(`/member/${id}`, { replace: true });
+    setActiveTab(tab);
+  };
 
   if (!member) return <p>Member not found</p>;
 
@@ -91,7 +108,7 @@ const MemberProfile = () => {
                 // </React.Fragment>
                 <div
                   key={item}
-                  onClick={() => setActiveTab(item)}
+                  onClick={() => handleTabClick(item)}
                   className={`w-fit min-w-[fit-content] cursor-pointer
                       ${activeTab === item ? "btn--tab" : ""}`}
                 >
@@ -116,6 +133,7 @@ const MemberProfile = () => {
           {activeTab === "Payment History" && (
             <PaymentHistory member={member} />
           )}
+          {activeTab === "Call Logs" && <MemberCallLogs details={member} />}
           {activeTab === "Appointments" && <Appointments details={member} />}
           {activeTab === "Referrals" && <Relations details={member} />}
           {activeTab === "Attendance" && <AttendanceData details={member} />}

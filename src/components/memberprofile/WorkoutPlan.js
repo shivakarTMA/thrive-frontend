@@ -14,6 +14,7 @@ import { toast } from "react-toastify";
 import DatePicker from "react-datepicker";
 import { FiPlus } from "react-icons/fi";
 import AssignTemplateModal from "./AssignTemplateModal";
+import SaveWorkoutTemplate from "./SaveWorkoutTemplate";
 
 const workoutTagOptions = [
   { value: "warmup", label: "Warm-up" },
@@ -35,7 +36,6 @@ const WorkoutPlan = ({ handleCancelWorkout, editingId }) => {
   const [data, setData] = useState({
     startDate: "",
     numDays: null,
-    followupDate: "",
     workoutName: workoutPlan?.workoutName || "",
     description: "",
     workoutType: "multiple",
@@ -50,17 +50,18 @@ const WorkoutPlan = ({ handleCancelWorkout, editingId }) => {
   const [workoutForm, setWorkoutForm] = useState(true);
 
   const [showModal, setShowModal] = useState(false);
+  const [saveTemplate, setSaveTemplate] = useState(false);
   const [selectedWorkoutType, setSelectedWorkoutType] = useState(null);
   const [selectedTemplate, setSelectedTemplate] = useState(null);
 
-  useEffect(() => {
-    if (data.startDate && data.numDays > 0) {
-      const calculatedDate = new Date(data.startDate);
-      calculatedDate.setDate(calculatedDate.getDate() + data.numDays);
-      setData((prev) => ({ ...prev, followupDate: calculatedDate }));
-    }
-    if (editingId) setShowConfiguration(true);
-  }, [data.startDate, data.numDays]);
+  // useEffect(() => {
+  //   if (data.startDate && data.numDays > 0) {
+  //     const calculatedDate = new Date(data.startDate);
+  //     calculatedDate.setDate(calculatedDate.getDate() + data.numDays);
+  //     setData((prev) => ({ ...prev, followupDate: calculatedDate }));
+  //   }
+  //   if (editingId) setShowConfiguration(true);
+  // }, [data.startDate, data.numDays]);
 
   const handleExtendDays = () => {
     setWorkoutForm(true);
@@ -140,9 +141,6 @@ const WorkoutPlan = ({ handleCancelWorkout, editingId }) => {
               setExercise: "",
               groupType: null,
               groupId: null,
-              workoutTag: "",
-              image:
-                "https://media.theeverygirl.com/wp-content/uploads/2020/07/little-things-you-can-do-for-a-better-workout-the-everygirl-1.jpg",
               notes: "",
               sets: [
                 {
@@ -433,17 +431,10 @@ const WorkoutPlan = ({ handleCancelWorkout, editingId }) => {
         </div>
       </div>
       <div className="flex items-centerd gap-3">
-        <div className="max-w-[100px] w-full">
-          <img
-            src={exercise.image}
-            alt="exercise"
-            className="w-[100px] h-[100px] object-cover rounded"
-          />
-        </div>
         <div className="flex-1">
-          <div className="grid grid-cols-2 gap-3 items-baseline">
-            <div className="flex flex-col gap-3 mb-3">
-              <div className="flex gap-3">
+          <div className="grid grid-cols-1 gap-3 items-baseline">
+            {exercise.sets.map((set, setIdx) => (
+              <div key={setIdx} className="grid grid-cols-4 gap-3">
                 {!isGrouped && (
                   <div className="w-full">
                     <input
@@ -462,50 +453,6 @@ const WorkoutPlan = ({ handleCancelWorkout, editingId }) => {
                     />
                   </div>
                 )}
-
-                <div className="w-full">
-                  <Select
-                    className="react-select-container"
-                    classNamePrefix="react-select"
-                    placeholder="Workout Tag"
-                    value={
-                      workoutTagOptions.find(
-                        (option) => option.value === exercise.workoutTag
-                      ) || null
-                    }
-                    onChange={(selectedOption) =>
-                      handleExerciseFieldChange(
-                        activeDayIndex,
-                        exIdx,
-                        "workoutTag",
-                        selectedOption?.value || ""
-                      )
-                    }
-                    options={workoutTagOptions}
-                    styles={customStyles}
-                    isClearable
-                  />
-                </div>
-              </div>
-              <div className="w-full">
-                <input
-                  placeholder="Notes"
-                  value={exercise.notes}
-                  onChange={(e) =>
-                    handleExerciseFieldChange(
-                      activeDayIndex,
-                      exIdx,
-                      "notes",
-                      e.target.value
-                    )
-                  }
-                  className="custom--input w-full"
-                />
-              </div>
-            </div>
-
-            {exercise.sets.map((set, setIdx) => (
-              <div key={setIdx} className="grid grid-cols-2 gap-3 mb-3">
                 {exercise.resps && (
                   <input
                     type="number"
@@ -593,6 +540,23 @@ const WorkoutPlan = ({ handleCancelWorkout, editingId }) => {
                 )}
               </div>
             ))}
+            <div className="block">
+              <div className="w-full">
+                <input
+                  placeholder="Notes"
+                  value={exercise.notes}
+                  onChange={(e) =>
+                    handleExerciseFieldChange(
+                      activeDayIndex,
+                      exIdx,
+                      "notes",
+                      e.target.value
+                    )
+                  }
+                  className="custom--input w-full"
+                />
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -640,16 +604,17 @@ const WorkoutPlan = ({ handleCancelWorkout, editingId }) => {
   useEffect(() => {
     if (editingId) {
       setWorkoutForm(false);
+      setShowConfiguration(true);
       // Find the workout being edited from dummy data
       const selectedWorkout = TrainingList.find(
         (item) => item.id === editingId
       );
+      console.log(selectedWorkout, "selectedWorkout");
       if (selectedWorkout) {
         // Set data with prefilled values
         setData({
           startDate: selectedWorkout.startDate || "",
           numDays: selectedWorkout.noOfDays || null,
-          followupDate: selectedWorkout.followUpDate || "",
           workoutName: selectedWorkout.workoutName || "",
           description: selectedWorkout.description || "",
           workoutType: selectedWorkout.workoutType || "multiple",
@@ -661,6 +626,9 @@ const WorkoutPlan = ({ handleCancelWorkout, editingId }) => {
 
   const handleAssignTemplate = () => {
     setShowModal(true);
+  };
+  const handleSaveTemplate = () => {
+    setSaveTemplate(true);
   };
 
   const handleAssignFromModal = () => {
@@ -690,11 +658,15 @@ const WorkoutPlan = ({ handleCancelWorkout, editingId }) => {
     setShowModal(false);
     toast.success("Template Assigned Successfully!");
   };
+  const handleSaveTemplateModal = () => {
+    handleCancelWorkout();
+    toast.success("Template Saved Successfully!");
+  };
 
   return (
     <div className="p-6">
-      {!workoutForm ? (
-        <div className="flex justify-end items-end gap-2 mb-3 w-full">
+      <div className="flex justify-end items-end gap-2 mb-3 w-full">
+        {!workoutForm ? (
           <button
             type="button"
             onClick={handleExtendDays}
@@ -702,15 +674,7 @@ const WorkoutPlan = ({ handleCancelWorkout, editingId }) => {
           >
             <FiPlus /> Extend Days
           </button>
-          <button
-            type="button"
-            className="bg-white text-black px-4 py-2 rounded text-sm flex gap-1 items-center border border-black"
-          >
-            <FiPlus /> Save as Template
-          </button>
-        </div>
-      ) : (
-        <div className="flex justify-end items-end gap-2 mb-3 w-full">
+        ) : (
           <button
             type="button"
             onClick={handleAssignTemplate}
@@ -718,13 +682,61 @@ const WorkoutPlan = ({ handleCancelWorkout, editingId }) => {
           >
             <FiPlus /> Assign Template
           </button>
-        </div>
-      )}
+        )}
+
+        {showConfiguration && data.days.length > 0 && (
+          <button
+            type="button"
+            onClick={handleSaveTemplate}
+            className="bg-white text-black px-4 py-2 rounded text-sm flex gap-1 items-center border border-black"
+          >
+            <FiPlus /> Save as Template
+          </button>
+        )}
+      </div>
 
       {workoutForm && (
         <form onSubmit={handleFormSubmit} className="space-y-4 mb-6">
           <div className="flex gap-3">
             <div className="w-full grid grid-cols-2 gap-3">
+              <div>
+                <label className="block mb-2">
+                  Workout/Program Name<span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={data?.workoutName}
+                  onChange={(e) =>
+                    setData((prev) => ({
+                      ...prev,
+                      workoutName: e.target.value,
+                    }))
+                  }
+                  className="custom--input w-full"
+                />
+                {errors.workoutName && (
+                  <p className="text-red-500 text-sm">{errors.workoutName}</p>
+                )}
+              </div>
+              <div>
+                <label className="block mb-2">Workout Type</label>
+                <Select
+                  options={workoutTypeOptions}
+                  value={workoutTypeOptions.find(
+                    (opt) => opt.value === data.workoutType
+                  )}
+                  onChange={(selectedOption) => {
+                    setData((prev) => ({
+                      ...prev,
+                      workoutType: selectedOption.value,
+                      numDays:
+                        selectedOption.value === "single" ? 1 : prev.numDays,
+                    }));
+                  }}
+                  isDisabled={editingId ? true : false}
+                  styles={customStyles}
+                />
+              </div>
               <div>
                 <label className="block mb-2">
                   Start Date<span className="text-red-500">*</span>
@@ -738,14 +750,6 @@ const WorkoutPlan = ({ handleCancelWorkout, editingId }) => {
                         setData((prev) => ({ ...prev, followupDate: "" }));
                         return;
                       }
-                      const calculatedDate = new Date(date);
-                      calculatedDate.setDate(
-                        calculatedDate.getDate() + data.numDays
-                      );
-                      setData((prev) => ({
-                        ...prev,
-                        followupDate: calculatedDate,
-                      }));
                     }}
                     dateFormat="dd MMM yyyy"
                     placeholderText="Start date"
@@ -801,63 +805,6 @@ const WorkoutPlan = ({ handleCancelWorkout, editingId }) => {
 
                 {errors.numDays && (
                   <p className="text-red-500 text-sm">{errors.numDays}</p>
-                )}
-              </div>
-              <div>
-                <label className="block mb-2">
-                  Workout/Program Name<span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={data?.workoutName}
-                  onChange={(e) =>
-                    setData((prev) => ({
-                      ...prev,
-                      workoutName: e.target.value,
-                    }))
-                  }
-                  className="custom--input w-full"
-                />
-                {errors.workoutName && (
-                  <p className="text-red-500 text-sm">{errors.workoutName}</p>
-                )}
-              </div>
-              <div>
-                <label className="block mb-2">Workout Type</label>
-                <Select
-                  options={workoutTypeOptions}
-                  value={workoutTypeOptions.find(
-                    (opt) => opt.value === data.workoutType
-                  )}
-                  onChange={(selectedOption) => {
-                    setData((prev) => ({
-                      ...prev,
-                      workoutType: selectedOption.value,
-                      numDays:
-                        selectedOption.value === "single" ? 1 : prev.numDays,
-                    }));
-                  }}
-                  styles={customStyles}
-                />
-              </div>
-
-              <div>
-                <label className="block mb-2">
-                  Follow-up Date<span className="text-red-500">*</span>
-                </label>
-                <div className="custom--date relative">
-                  <DatePicker
-                    selected={data.followupDate}
-                    onChange={() => {}}
-                    dateFormat="dd MMM yyyy"
-                    placeholderText="Follow-up date"
-                    className="custom--input w-full"
-                    readOnly
-                    disabled
-                  />
-                </div>
-                {errors.followupDate && (
-                  <p className="text-red-500 text-sm">{errors.followupDate}</p>
                 )}
               </div>
             </div>
@@ -1092,6 +1039,12 @@ const WorkoutPlan = ({ handleCancelWorkout, editingId }) => {
         setSelectedWorkoutType={setSelectedWorkoutType}
         selectedTemplate={selectedTemplate}
         setSelectedTemplate={setSelectedTemplate}
+      />
+
+      <SaveWorkoutTemplate
+        onAssign={handleSaveTemplateModal}
+        open={saveTemplate}
+        onClose={() => setSaveTemplate(false)}
       />
     </div>
   );

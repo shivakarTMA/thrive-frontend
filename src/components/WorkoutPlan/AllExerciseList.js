@@ -274,7 +274,7 @@ const AllExerciseList = ({ isOpen, onClose, onSelectExercise }) => {
                 </div>
                 <button
                   onClick={() => onSelectExercise(exercise)}
-                  className="bg-blue-500 text-white px-3 py-1 rounded text-sm"
+                  className="bg-black text-white px-3 py-1 rounded text-sm"
                 >
                   Add
                 </button>

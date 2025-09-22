@@ -436,7 +436,7 @@ const MemberList = () => {
                     >
                       <div className="p-1 cursor-pointer">
                         <Link
-                          to={`/member-follow-up/${member?.id}`}
+                          to={`/member/${member?.id}?view=call-logs`}
                           className="p-0"
                         >
                           <MdCall className="text-[25px] text-black" />

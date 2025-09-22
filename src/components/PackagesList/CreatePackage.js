@@ -1,99 +1,354 @@
 import React, { useEffect, useState } from "react";
+import { useFormik } from "formik";
+import * as Yup from "yup";
+import { CKEditor } from "@ckeditor/ckeditor5-react";
+import ClassicEditor from "@ckeditor/ckeditor5-build-classic";
+import { FiClock, FiPlus, FiTrash2 } from "react-icons/fi";
 import { IoCloseCircle } from "react-icons/io5";
-import { FaCalendarDays, FaListUl } from "react-icons/fa6";
-import { LuPlug } from "react-icons/lu";
 import Select from "react-select";
-import { selectIcon } from "../../Helper/helper";
-import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
-import { FiClock } from "react-icons/fi";
+import { customStyles } from "../../Helper/helper";
+import DatePicker from "react-datepicker"; // Date picker component
+import "react-datepicker/dist/react-datepicker.css"; // Date picker styles
+import { FaCalendarDays } from "react-icons/fa6";
+import CreatableSelect from "react-select/creatable";
 
-const packageType = [
-  { label: "Class", value: "CLASS" },
-  { label: "Session", value: "SESSION" },
-];
-
+// Booking type options for dropdown
 const bookingType = [
-  { label: "Free", value: "FREE" },
-  { label: "Paid", value: "PAID" },
+  { label: "Yes", value: "Yes" },
+  { label: "No", value: "No" },
 ];
 
 const CreatePackage = ({
   setShowModal,
   editingOption,
-  formik,
   handleOverlayClick,
   leadBoxRef,
   serviceOptions,
-  studioOptions,
-  staffListOptions,
-  sessionLevel,
   packageCategoryOptions,
+  staffListOptions,
+  studioOptions,
+  sessionLevel,
 }) => {
-  const [preview, setPreview] = useState(null);
+  const [sessionRows, setSessionRows] = useState([{ id: 1 }]);
+  const [selectedOptions, setSelectedOptions] = useState([]);
 
+  // 🔍 Helper function to get service_type
+  const getServiceType = (service_id, serviceOptions) => {
+    const found = serviceOptions.find((s) => s.value === service_id);
+    return found?.service_type || null;
+  };
+
+  // ✅ Dynamic Yup validation schema
+  const getValidationSchema = (serviceOptions) =>
+    Yup.lazy((values) => {
+      const service_type = getServiceType(values.service_id, serviceOptions);
+
+      let schema = {
+        image: Yup.mixed()
+          .required("Image is required")
+          .test(
+            "fileType",
+            "Only JPG, PNG or WEBP files are allowed",
+            (value) => {
+              if (!value) return false;
+              return ["image/jpeg", "image/png", "image/webp"].includes(
+                value.type
+              );
+            }
+          )
+          .test("fileSize", "File size must be less than 2 MB", (value) => {
+            if (!value) return false;
+            return value.size <= 2 * 1024 * 1024;
+          }),
+
+        service_id: Yup.number().required("Service is required"),
+        package_name: Yup.string().required("Name is required"),
+        description: Yup.string().required("Description is required"),
+      };
+
+      if (service_type === "CLASS") {
+        schema = {
+          ...schema,
+          package_category_id: Yup.number().required("Category is required"),
+          staff_id: Yup.number().required("Staff is required"),
+          start_date: Yup.string().required("Start Date is required"),
+          start_time: Yup.string().required("Start Time is required"),
+          duration: Yup.number()
+            .required("Duration is required")
+            .min(1, "Must be at least 1"),
+          studio_id: Yup.number().required("Studio is required"),
+          max_capacity: Yup.number()
+            .required("Capacity is required")
+            .min(1, "Must be at least 1"),
+          waitlist_capacity: Yup.number()
+            .required("Waitlist is required")
+            .min(1, "Must be at least 1"),
+          tags: Yup.array()
+            .of(
+              Yup.object().shape({
+                label: Yup.string().required(),
+                value: Yup.string().required(),
+              })
+            )
+            .min(1, "Please add at least one tag"),
+          booking_type: Yup.string().required("Booking type is required"),
+        };
+
+        if (values.booking_type === "Yes") {
+          schema.amount = Yup.number().required("Amount is required");
+          schema.gst = Yup.number().required("GST is required");
+          schema.thrive_coins = Yup.number().required("Thrive coins required");
+        }
+      }
+
+      if (service_type === "PRODUCT") {
+        schema = {
+          ...schema,
+          package_category_id: Yup.number().required("Category is required"),
+          food_type: Yup.string().required("Food type is required"),
+          tags: Yup.array()
+            .of(
+              Yup.object().shape({
+                label: Yup.string().required(),
+                value: Yup.string().required(),
+              })
+            )
+            .min(1, "Please add at least one tag"),
+          amount: Yup.number().required("Amount is required"),
+          gst: Yup.number().required("GST is required"),
+          thrive_coins: Yup.number().required("Thrive coins required"),
+        };
+      }
+
+      if (service_type === "SESSION") {
+        schema = {
+          ...schema,
+          session_duration: Yup.number().required(
+            "Session duration is required"
+          ),
+          session_level: Yup.number().required("Session level is required"),
+          session_validity: Yup.number().required("Validity is required"),
+          session_list: Yup.object().shape({
+            no_of_sessions: Yup.number()
+              .required("No of sessions is required")
+              .min(1, "Must be at least 1"),
+            session_duration: Yup.number()
+              .required("Amount is required")
+              .min(1, "Must be at least 1"),
+            thrive_coins: Yup.number()
+              .required("Thrive coins are required")
+              .min(0, "Must be 0 or more"),
+            session_gst: Yup.number()
+              .required("GST is required")
+              .min(0, "Must be 0 or more"),
+          }),
+        };
+      }
+
+      return Yup.object(schema);
+    });
+
+  // ✅ Formik Setup
+  const formik = useFormik({
+    initialValues: {
+      image: null,
+      package_name: "",
+      service_id: 1,
+      package_category_id: null,
+      food_type: "",
+      staff_id: null,
+      start_date: "",
+      start_time: "",
+      duration: "",
+      studio_id: null,
+      max_capacity: "",
+      waitlist_capacity: "",
+      tags: [],
+      booking_type: "",
+      session_duration: "",
+      session_level: null,
+      amount: "",
+      session_validity: "",
+      gst: "",
+      thrive_coins: "",
+      session_list: {
+        no_of_sessions: "",
+        session_duration: "",
+        thrive_coins: "",
+        session_gst: "",
+      },
+      description: "",
+    },
+    validationSchema: getValidationSchema(serviceOptions),
+    // validationSchema: Yup.lazy((values) => {
+    //   let schema = {
+    //     image: Yup.mixed()
+    //       .required("Image is required")
+    //       .test(
+    //         "fileType",
+    //         "Only JPG, PNG or WEBP files are allowed",
+    //         (value) => {
+    //           if (!value) return false; // required
+    //           return ["image/jpeg", "image/png", "image/webp"].includes(
+    //             value.type
+    //           );
+    //         }
+    //       )
+    //       .test("fileSize", "File size must be less than 2 MB", (value) => {
+    //         if (!value) return false;
+    //         return value.size <= 2 * 1024 * 1024; // 2MB limit
+    //       }),
+
+    //     service_id: Yup.number().required("Service is required"),
+    //     package_name: Yup.string().required("Name is required"),
+    //     description: Yup.string().required("Description is required"),
+    //   };
+
+    //   if (values.service_id === 1) {
+    //     schema = {
+    //       ...schema,
+    //       package_category_id: Yup.number().required("Category is required"),
+    //       staff_id: Yup.number().required("Staff is required"),
+    //       start_date: Yup.string().required("Start Date is required"),
+    //       start_time: Yup.string().required("Start Time is required"),
+    //       duration: Yup.number()
+    //         .required("Duration is required")
+    //         .min(1, "Must be at least 1"),
+    //       studio_id: Yup.number().required("Studio is required"),
+    //       max_capacity: Yup.number()
+    //         .required("Capacity is required")
+    //         .min(1, "Must be at least 1"),
+    //       waitlist_capacity: Yup.number()
+    //         .required("Waitlist is required")
+    //         .min(1, "Must be at least 1"),
+    //       tags: Yup.array()
+    //         .of(
+    //           Yup.object().shape({
+    //             label: Yup.string().required(),
+    //             value: Yup.string().required(),
+    //           })
+    //         )
+    //         .min(1, "Please add at least one tag"),
+    //       booking_type: Yup.string().required("Booking type is required"),
+    //     };
+
+    //     if (values.booking_type === "Yes") {
+    //       schema.amount = Yup.number().required("Amount is required");
+    //       schema.gst = Yup.number().required("GST is required");
+    //       schema.thrive_coins = Yup.number().required("Thrive coins required");
+    //     }
+    //   }
+
+    //   if (values.service_id === 10) {
+    //     schema = {
+    //       ...schema,
+    //       package_category_id: Yup.number().required("Category is required"),
+    //       food_type: Yup.string().required("Food type is required"),
+    //       tags: Yup.array()
+    //         .of(
+    //           Yup.object().shape({
+    //             label: Yup.string().required(),
+    //             value: Yup.string().required(),
+    //           })
+    //         )
+    //         .min(1, "Please add at least one tag"),
+    //       amount: Yup.number().required("Amount is required"),
+    //       gst: Yup.number().required("GST is required"),
+    //       thrive_coins: Yup.number().required("Thrive coins required"),
+    //     };
+    //   }
+
+    //   if (values.service_id !== 1 && values.service_id !== 10) {
+    //     schema = {
+    //       ...schema,
+    //       session_duration: Yup.number().required(
+    //         "Session duration is required"
+    //       ),
+    //       session_level: Yup.number().required("Session level is required"),
+    //       session_validity: Yup.number().required("Validity is required"),
+    //       session_list: Yup.object().shape({
+    //         no_of_sessions: Yup.number()
+    //           .required("No of sessions is required")
+    //           .min(1, "Must be at least 1"),
+    //         session_duration: Yup.number()
+    //           .required("Amount is required")
+    //           .min(1, "Must be at least 1"),
+    //         thrive_coins: Yup.number()
+    //           .required("Thrive coins are required")
+    //           .min(0, "Must be 0 or more"),
+    //         session_gst: Yup.number()
+    //           .required("GST is required")
+    //           .min(0, "Must be 0 or more"),
+    //       }),
+    //     };
+    //   }
+
+    //   return Yup.object(schema);
+    // }),
+
+    onSubmit: (values) => {
+      console.log("✅ Form Submitted:", values);
+    },
+  });
+
+  // ✅ Reset fields except image when service_id changes
+  useEffect(() => {
+
+    if (formik.values.service_id) {
+      formik.setValues((prev) => ({
+        ...prev,
+        package_name: "",
+        package_category_id: null,
+        food_type: "",
+        staff_id: null,
+        start_date: "",
+        start_time: "",
+        duration: "",
+        studio_id: null,
+        max_capacity: "",
+        waitlist_capacity: "",
+        tags: [],
+        booking_type: "",
+        session_duration: "",
+        session_level: null,
+        amount: "",
+        session_validity: "",
+        gst: "",
+        thrive_coins: "",
+        session_list: {
+          no_of_sessions: "",
+          session_duration: "",
+          thrive_coins: "",
+          session_gst: "",
+        },
+        description: "",
+      }));
+    }
+  }, [formik.values.service_id]);
+
+  const service_type_check = getServiceType(formik.values?.service_id, serviceOptions)
+
+  // ✅ Session row handlers
+  const handleAddSessionRow = () => {
+    setSessionRows([...sessionRows, { id: Date.now() }]);
+  };
+
+  const handleDeleteSessionRow = (index) => {
+    setSessionRows((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleTagsChange = (selected) => {
+    setSelectedOptions(selected);
+    formik.setFieldValue("tags", [selected]);
+  };
+
+  // Handle image file change and set preview
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      formik.setFieldValue("image", file);
-      setPreview(URL.createObjectURL(file));
+      formik.setFieldValue("image", file); // ✅ store file in Formik state
     }
   };
-
-  const removeImage = () => {
-    formik.setFieldValue("image", null);
-    setPreview(null);
-  };
-  useEffect(() => {
-    if (formik.values.package_type !== "SESSION") {
-      formik.setFieldValue("session_level", "");
-      formik.setFieldValue("no_of_sessions", "");
-      formik.setFieldValue("session_duration", "");
-      formik.setFieldValue("session_validity", "");
-    }
-  }, [formik.values.package_type]);
-
-
-    useEffect(() => {
-      if (editingOption) {
-        formik.setValues({
-          id: editingOption.id || "",
-          studio_id: editingOption.studio_id || "",
-          service_id: editingOption.service_id || "",
-          staff_id: editingOption.staff_id || "",
-          package_category_id: editingOption.package_category_id || "",
-          name: editingOption.name || "",
-          caption: editingOption.caption || "",
-          description: editingOption.description || "",
-          image: editingOption.image || "",
-          package_type: editingOption.package_type || "",
-          session_level: editingOption.session_level || "",
-          no_of_sessions: editingOption.no_of_sessions || "",
-          session_duration: editingOption.session_duration || "",
-          session_validity: editingOption.session_validity || "",
-          start_date: editingOption.start_date || "",
-          start_time: editingOption.start_time || "",
-          end_time: editingOption.end_time || "",
-          max_capacity: editingOption.max_capacity || "",
-          waitlist_capacity: editingOption.waitlist_capacity || "",
-          tags: editingOption.tags || "",
-          amount: editingOption.amount || "",
-          discount: editingOption.discount || "",
-          gst: editingOption.gst || "",
-          position: editingOption.position || "",
-          trainer_id: editingOption.trainer_id || "",
-          booking_type: editingOption.booking_type || "",
-          status: editingOption.status || "ACTIVE",
-        });
-        if (editingOption.image) {
-          // If image is a URL string
-          setPreview(editingOption.image);
-        } else {
-          setPreview(null);
-        }
-      }
-    }, [editingOption]);
-
 
   return (
     <div
@@ -105,6 +360,7 @@ const CreatePackage = ({
         ref={leadBoxRef}
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Header */}
         <div className="bg-white rounded-t-[10px] flex gap-3 items-center justify-between py-4 px-4 border-b">
           <h2 className="text-xl font-semibold">
             {editingOption ? "Edit Package" : "Create Package"}
@@ -120,161 +376,59 @@ const CreatePackage = ({
           </div>
         </div>
 
+        {/* Form */}
         <div className="flex-1">
-          <form onSubmit={formik.handleSubmit} className="p-0 space-y-0">
+          <form onSubmit={formik.handleSubmit} className="space-y-6">
             <div className="flex bg-white rounded-b-[10px]">
               <div className="p-6 flex-1">
                 <div className="grid grid-cols-4 gap-4">
-                  {/* Image */}
-                  <div className="row-span-3">
-                    <div
-                      className={`${
-                        preview ? "" : "border-2 border-dashed border-gray-300"
-                      } bg-gray-100 rounded-lg ${
-                        preview ? "p-0" : "p-6"
-                      }text-center relative group hover:border-blue-400 transition-all overflow-hidden h-[260px]`}
-                    >
-                      {preview ? (
-                        <div className="relative h-full">
-                          <img
-                            src={preview}
-                            alt="Preview"
-                            className="w-full h-full object-cover object-center"
-                          />
-                          <button
-                            onClick={removeImage}
-                            type="button"
-                            className="absolute top-2 right-2 bg-red-500 text-white text-sm px-2 py-1 rounded hover:bg-red-600"
-                          >
-                            Remove
-                          </button>
-                        </div>
-                      ) : (
-                        <div className="flex items-center text-center justify-center p-6 h-full">
-                          <p className="text-gray-500">
-                            Drag & drop or click to upload an image
-                          </p>
-                          <input
-                            type="file"
-                            accept="image/*"
-                            onChange={handleFileChange}
-                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                          />
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  {/* Name */}
+                  {/* Image Upload */}
                   <div>
                     <label className="mb-2 block">
-                      Name<span className="text-red-500">*</span>
+                      Image<span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
-                      <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[10]">
-                        <FaListUl />
-                      </span>
                       <input
-                        type="text"
-                        name="name"
-                        value={formik.values.name}
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
-                        className="custom--input w-full input--icon"
+                        type="file"
+                        name="image"
+                        onChange={handleFileChange} // ✅ no value prop here
+                        onBlur={() => formik.setFieldTouched("image", true)}
+                        className="custom--input w-full"
                       />
                     </div>
-                     {formik.errors?.name &&
-                        formik.touched?.name && (
-                          <div className="text-red-500 text-sm">
-                            {formik.errors.name}
-                          </div>
-                        )}
+                    {formik.errors.image && (
+                      <p className="text-red-500 text-sm">
+                        {formik.errors.image}
+                      </p>
+                    )}
                   </div>
-                  {/* Studio */}
+                  {/* Service ID */}
                   <div>
-                    <label className="mb-2 block">
-                      Studio<span className="text-red-500">*</span>
-                    </label>
-                    <div className="relative">
-                      <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[10]">
-                        <FaListUl />
-                      </span>
-                      <Select
-                        name="studio_id"
-                        value={
-                          studioOptions.find(
-                            (opt) => opt.value === formik.values.studio_id
-                          ) || null
-                        }
-                        options={studioOptions}
-                        onChange={(option) =>
-                          formik.setFieldValue("studio_id", option.value)
-                        }
-                        onBlur={() => formik.setFieldTouched("studio_id", true)}
-                        styles={selectIcon}
-                      />
-                    </div>
+                    <label className="mb-2 block">Service</label>
+                    <Select
+                      name="service_id"
+                      value={
+                        serviceOptions.find(
+                          (opt) => opt.value === formik.values.service_id
+                        ) || null
+                      }
+                      options={serviceOptions}
+                      onChange={(option) => {
+                        formik.setFieldValue("service_id", option.value);
+                      }}
+                      onBlur={() => formik.setFieldTouched("service_id", true)}
+                      styles={customStyles}
+                    />
+                    {formik.touched.service_id && formik.errors.service_id && (
+                      <p className="text-red-500 text-sm">
+                        {formik.errors.service_id}
+                      </p>
+                    )}
                   </div>
 
-                  {/* Service */}
-                  <div>
-                    <label className="mb-2 block">
-                      Service<span className="text-red-500">*</span>
-                    </label>
-                    <div className="relative">
-                      <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[10]">
-                        <FaListUl />
-                      </span>
-                      <Select
-                        name="service_id"
-                        value={
-                          serviceOptions.find(
-                            (opt) => opt.value === formik.values.service_id
-                          ) || null
-                        }
-                        options={serviceOptions}
-                        onChange={(option) =>
-                          formik.setFieldValue("service_id", option.value)
-                        }
-                        onBlur={() =>
-                          formik.setFieldTouched("service_id", true)
-                        }
-                        styles={selectIcon}
-                      />
-                    </div>
-                  </div>
-                  {/* Staff */}
-                  <div>
-                    <label className="mb-2 block">
-                      Staff<span className="text-red-500">*</span>
-                    </label>
-                    <div className="relative">
-                      <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[10]">
-                        <FaListUl />
-                      </span>
-                      <Select
-                        name="staff_id"
-                        value={
-                          staffListOptions.find(
-                            (opt) => opt.value === formik.values.staff_id
-                          ) || null
-                        }
-                        options={staffListOptions}
-                        onChange={(option) =>
-                          formik.setFieldValue("staff_id", option.value)
-                        }
-                        onBlur={() => formik.setFieldTouched("staff_id", true)}
-                        styles={selectIcon}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Package Category */}
-                  <div>
-                    <label className="mb-2 block">Package Category</label>
-                    <div className="relative">
-                      <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[10]">
-                        <FaListUl />
-                      </span>
+                  {service_type_check !== "CLASS" && service_type_check !== "PRODUCT" ? null : (
+                    <div>
+                      <label className="mb-2 block">Category</label>
                       <Select
                         name="package_category_id"
                         value={
@@ -293,497 +447,731 @@ const CreatePackage = ({
                         onBlur={() =>
                           formik.setFieldTouched("package_category_id", true)
                         }
-                        styles={selectIcon}
+                        styles={customStyles}
+                      />
+                      {formik.errors.package_category_id && (
+                        <p className="text-red-500 text-sm">
+                          {formik.errors.package_category_id}
+                        </p>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Name */}
+                  <div>
+                    <label className="mb-2 block">
+                      Name<span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        name="package_name"
+                        value={formik.values.package_name}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        className="custom--input w-full"
                       />
                     </div>
+                    {formik.errors.package_name && (
+                      <p className="text-red-500 text-sm">
+                        {formik.errors.package_name}
+                      </p>
+                    )}
                   </div>
 
-                  {/* Package Type */}
-                  <div>
-                    <label className="mb-2 block">Package Type</label>
-                    <div className="relative">
-                      <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[10]">
-                        <FaListUl />
-                      </span>
+                  {/* Food Type */}
+                  {service_type_check !== "PRODUCT" ? null : (
+                    <div className="food-type-selector">
+                      <label className="block mb-2">Select Food Type</label>
+
+                      <div className="flex items-center gap-4">
+                        <label className="flex items-center gap-2">
+                          <input
+                            type="radio"
+                            name="food_type"
+                            value="veg"
+                            checked={formik.values.food_type === "veg"}
+                            onChange={() =>
+                              formik.setFieldValue("food_type", "veg")
+                            }
+                          />
+                          Veg
+                        </label>
+
+                        <label className="flex items-center gap-2">
+                          <input
+                            type="radio"
+                            name="food_type"
+                            value="non_veg"
+                            checked={formik.values.food_type === "non_veg"}
+                            onChange={() =>
+                              formik.setFieldValue("food_type", "non_veg")
+                            }
+                          />
+                          Non-Veg
+                        </label>
+                      </div>
+                      {formik.errors.food_type && (
+                        <p className="text-red-500 text-sm">
+                          {formik.errors.food_type}
+                        </p>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Staff Dropdown */}
+                  {service_type_check !== "CLASS" ? null : (
+                    <div>
+                      <label className="mb-2 block">
+                        Staff<span className="text-red-500">*</span>
+                      </label>
                       <Select
-                        name="package_type"
+                        name="staff_id"
                         value={
-                          packageType.find(
-                            (opt) => opt.value === formik.values.package_type
+                          staffListOptions.find(
+                            (opt) => opt.value === formik.values.staff_id
                           ) || null
                         }
-                        options={packageType}
+                        options={staffListOptions}
                         onChange={(option) =>
-                          formik.setFieldValue("package_type", option.value)
+                          formik.setFieldValue("staff_id", option.value)
                         }
-                        onBlur={() =>
-                          formik.setFieldTouched("package_type", true)
-                        }
-                        styles={selectIcon}
+                        onBlur={() => formik.setFieldTouched("staff_id", true)}
+                        styles={customStyles}
                       />
+                      {formik.errors.staff_id && (
+                        <p className="text-red-500 text-sm">
+                          {formik.errors.staff_id}
+                        </p>
+                      )}
                     </div>
-                  </div>
-
-                  {formik.values?.package_type === "SESSION" && (
-                    <>
-                      {/* Session Level */}
-                      <div>
-                        <label className="mb-2 block">Session Level</label>
-                        <div className="relative">
-                          <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[10]">
-                            <FaListUl />
-                          </span>
-                          <Select
-                            name="session_level"
-                            value={
-                              sessionLevel.find(
-                                (opt) =>
-                                  opt.value === formik.values.session_level
-                              ) || null
-                            }
-                            options={sessionLevel}
-                            onChange={(option) =>
-                              formik.setFieldValue(
-                                "session_level",
-                                option.value
-                              )
-                            }
-                            onBlur={() =>
-                              formik.setFieldTouched("session_level", true)
-                            }
-                            styles={selectIcon}
-                          />
-                        </div>
-                      </div>
-
-                      {/* No of Sessions */}
-                      <div>
-                        <label className="mb-2 block">No of Sessions</label>
-                        <div className="relative">
-                          <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[10]">
-                            <FaListUl />
-                          </span>
-                          <input
-                            type="number"
-                            name="no_of_sessions"
-                            value={formik.values.no_of_sessions}
-                            onChange={formik.handleChange}
-                            onBlur={formik.handleBlur}
-                            className="custom--input w-full input--icon"
-                          />
-                        </div>
-                      </div>
-
-                      {/* Session Duration */}
-                      <div>
-                        <label className="mb-2 block">Session Duration</label>
-                        <div className="relative">
-                          <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[10]">
-                            <FaListUl />
-                          </span>
-                          <input
-                            type="number"
-                            name="session_duration"
-                            value={formik.values.session_duration}
-                            onChange={formik.handleChange}
-                            onBlur={formik.handleBlur}
-                            className="custom--input w-full input--icon"
-                          />
-                        </div>
-                      </div>
-
-                      {/* Session Validity */}
-                      <div>
-                        <label className="mb-2 block">
-                          Session Validity <span className="">Days</span>
-                        </label>
-                        <div className="relative">
-                          <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[10]">
-                            <FaListUl />
-                          </span>
-                          <input
-                            type="number"
-                            name="session_validity"
-                            value={formik.values.session_validity}
-                            onChange={formik.handleChange}
-                            onBlur={formik.handleBlur}
-                            className="custom--input w-full input--icon"
-                          />
-                        </div>
-                      </div>
-                    </>
                   )}
 
                   {/* Start Date Field */}
-                  <div>
-                    <label className="mb-2 block">Start Date</label>
-                    <div className="custom--date relative">
-                      {/* Calendar Icon */}
-                      <span className="absolute z-[1] mt-[15px] ml-[15px]">
-                        <FaCalendarDays />
-                      </span>
-                      <DatePicker
-                        selected={
-                          formik.values.start_date
-                            ? new Date(formik.values.start_date) // ✅ Ensure valid Date object
-                            : null
-                        }
-                        onChange={
-                          (date) =>
-                            formik.setFieldValue(
-                              "start_date",
-                              date.toISOString().split("T")[0]
-                            ) // ✅ Save as YYYY-MM-DD
-                        }
-                        onBlur={() =>
-                          formik.setFieldTouched("start_date", true)
-                        }
-                        dateFormat="yyyy-MM-dd"
-                        minDate={new Date()} // ✅ Prevent selecting past dates
-                        className="custom--input w-full input--icon"
-                      />
+                  {service_type_check !== "CLASS" ? null : (
+                    <div>
+                      <label className="mb-2 block">Start Date</label>
+                      <div className="custom--date relative">
+                        {/* Calendar Icon */}
+                        <span className="absolute z-[1] mt-[15px] ml-[15px]">
+                          <FaCalendarDays />
+                        </span>
+                        <DatePicker
+                          selected={
+                            formik.values.start_date
+                              ? new Date(formik.values.start_date) // ✅ Ensure valid Date object
+                              : null
+                          }
+                          onChange={
+                            (date) =>
+                              formik.setFieldValue(
+                                "start_date",
+                                date.toISOString().split("T")[0]
+                              ) // ✅ Save as YYYY-MM-DD
+                          }
+                          onBlur={() =>
+                            formik.setFieldTouched("start_date", true)
+                          }
+                          dateFormat="yyyy-MM-dd"
+                          minDate={new Date()} // ✅ Prevent selecting past dates
+                          className="custom--input w-full input--icon"
+                        />
+                      </div>
+                      {/* Display validation error if any */}
+                      {formik.touched.start_date &&
+                        formik.errors.start_date && (
+                          <p className="text-red-500 text-sm mt-1">
+                            {formik.errors.start_date}
+                          </p>
+                        )}
                     </div>
-                    {/* Display validation error if any */}
-                    {formik.touched.start_date && formik.errors.start_date && (
-                      <p className="text-red-500 text-sm mt-1">
-                        {formik.errors.start_date}
-                      </p>
-                    )}
-                  </div>
+                  )}
 
                   {/* Start Time Field */}
-                  <div>
-                    <label className="mb-2 block">Start Time</label>
-                    <div className="custom--date relative">
-                      {/* Clock Icon */}
-                      <span className="absolute z-[1] mt-[15px] ml-[15px]">
-                        <FiClock />
-                      </span>
-                      <DatePicker
-                        selected={
-                          formik.values.start_time
-                            ? new Date(`1970-01-01T${formik.values.start_time}`) // ✅ Convert string to Date
-                            : null
-                        }
-                        onChange={(date) =>
-                          formik.setFieldValue(
-                            "start_time",
-                            date.toLocaleTimeString([], {
-                              hour12: false, // ✅ Ensure 24-hour format
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })
-                          )
-                        }
-                        onBlur={() =>
-                          formik.setFieldTouched("start_time", true)
-                        }
-                        showTimeSelect
-                        showTimeSelectOnly
-                        timeIntervals={15}
-                        timeCaption="Time"
-                        dateFormat="HH:mm"
-                        className="custom--input w-full input--icon"
-                        minTime={
-                          formik.values.start_date &&
-                          new Date(formik.values.start_date).toDateString() ===
-                            new Date().toDateString()
-                            ? new Date() // ✅ Block past times if selected date is today
-                            : new Date(0, 0, 0, 0, 0)
-                        }
-                        maxTime={new Date(0, 0, 0, 23, 59)}
-                      />
+                  {service_type_check !== "CLASS" ? null : (
+                    <div>
+                      <label className="mb-2 block">Start Time</label>
+                      <div className="custom--date relative">
+                        {/* Clock Icon */}
+                        <span className="absolute z-[1] mt-[15px] ml-[15px]">
+                          <FiClock />
+                        </span>
+                        <DatePicker
+                          selected={
+                            formik.values.start_time
+                              ? new Date(
+                                  `1970-01-01T${formik.values.start_time}`
+                                ) // ✅ Convert string to Date
+                              : null
+                          }
+                          onChange={(date) =>
+                            formik.setFieldValue(
+                              "start_time",
+                              date.toLocaleTimeString([], {
+                                hour12: false, // ✅ Ensure 24-hour format
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })
+                            )
+                          }
+                          onBlur={() =>
+                            formik.setFieldTouched("start_time", true)
+                          }
+                          showTimeSelect
+                          showTimeSelectOnly
+                          timeIntervals={15}
+                          timeCaption="Time"
+                          dateFormat="HH:mm"
+                          className="custom--input w-full input--icon"
+                          minTime={
+                            formik.values.start_date &&
+                            new Date(
+                              formik.values.start_date
+                            ).toDateString() === new Date().toDateString()
+                              ? new Date() // ✅ Block past times if selected date is today
+                              : new Date(0, 0, 0, 0, 0)
+                          }
+                          maxTime={new Date(0, 0, 0, 23, 59)}
+                        />
+                      </div>
+                      {/* Display validation error if any */}
+                      {formik.touched.start_time &&
+                        formik.errors.start_time && (
+                          <p className="text-red-500 text-sm mt-1">
+                            {formik.errors.start_time}
+                          </p>
+                        )}
                     </div>
-                    {/* Display validation error if any */}
-                    {formik.touched.start_time && formik.errors.start_time && (
-                      <p className="text-red-500 text-sm mt-1">
-                        {formik.errors.start_time}
-                      </p>
-                    )}
-                  </div>
+                  )}
 
-                  {/* End Time Field */}
-                  <div>
-                    <label className="mb-2 block">End Time</label>
-                    <div className="custom--date relative">
-                      {/* Clock Icon */}
-                      <span className="absolute z-[1] mt-[15px] ml-[15px]">
-                        <FiClock />
-                      </span>
-                      <DatePicker
-                        selected={
-                          formik.values.end_time
-                            ? new Date(`1970-01-01T${formik.values.end_time}`) // ✅ Convert string to Date
-                            : null
-                        }
-                        onChange={(date) =>
-                          formik.setFieldValue(
-                            "end_time",
-                            date.toLocaleTimeString([], {
-                              hour12: false, // ✅ Ensure 24-hour format
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })
-                          )
-                        }
-                        onBlur={() => formik.setFieldTouched("end_time", true)}
-                        showTimeSelect
-                        showTimeSelectOnly
-                        timeIntervals={15}
-                        timeCaption="Time"
-                        dateFormat="HH:mm"
-                        className="custom--input w-full input--icon"
-                        minTime={
-                          formik.values.start_date &&
-                          new Date(formik.values.start_date).toDateString() ===
-                            new Date().toDateString()
-                            ? new Date() // ✅ Block past times if selected date is today
-                            : new Date(0, 0, 0, 0, 0)
-                        }
-                        maxTime={new Date(0, 0, 0, 23, 59)}
-                      />
+                  {/* Duration */}
+                  {service_type_check !== "CLASS" ? null : (
+                    <div>
+                      <label className="mb-2 block">Duration</label>
+                      <div className="relative">
+                        <input
+                          type="number"
+                          name="duration"
+                          value={formik.values.duration}
+                          onChange={formik.handleChange}
+                          onBlur={formik.handleBlur}
+                          className="custom--input w-full"
+                        />
+                      </div>
+                      {formik.errors.duration && (
+                        <p className="text-red-500 text-sm">
+                          {formik.errors.duration}
+                        </p>
+                      )}
                     </div>
-                    {/* Display validation error if any */}
-                    {formik.touched.end_time && formik.errors.end_time && (
-                      <p className="text-red-500 text-sm mt-1">
-                        {formik.errors.end_time}
-                      </p>
-                    )}
-                  </div>
+                  )}
+
+                  {/* Studio Dropdown */}
+                  {service_type_check !== "CLASS" ? null : (
+                    <div>
+                      <label className="mb-2 block">
+                        Studio<span className="text-red-500">*</span>
+                      </label>
+                      <Select
+                        name="studio_id"
+                        value={
+                          studioOptions.find(
+                            (opt) => opt.value === formik.values.studio_id
+                          ) || null
+                        }
+                        options={studioOptions}
+                        onChange={(option) =>
+                          formik.setFieldValue("studio_id", option.value)
+                        }
+                        onBlur={() => formik.setFieldTouched("studio_id", true)}
+                        styles={customStyles}
+                      />
+                      {formik.errors.studio_id && (
+                        <p className="text-red-500 text-sm">
+                          {formik.errors.studio_id}
+                        </p>
+                      )}
+                    </div>
+                  )}
 
                   {/* Max Capacity */}
-                  <div>
-                    <label className="mb-2 block">Max Capacity</label>
-                    <div className="relative">
-                      <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[10]">
-                        <FaListUl />
-                      </span>
-                      <input
-                        type="number"
-                        name="max_capacity"
-                        value={formik.values.max_capacity}
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
-                        className="custom--input w-full input--icon"
-                      />
+                  {service_type_check !== "CLASS" ? null : (
+                    <div>
+                      <label className="mb-2 block">Capacity</label>
+                      <div className="relative">
+                        <input
+                          type="number"
+                          name="max_capacity"
+                          value={formik.values.max_capacity}
+                          onChange={formik.handleChange}
+                          onBlur={formik.handleBlur}
+                          className="custom--input w-full"
+                        />
+                      </div>
+                      {formik.errors.max_capacity && (
+                        <p className="text-red-500 text-sm">
+                          {formik.errors.max_capacity}
+                        </p>
+                      )}
                     </div>
-                  </div>
+                  )}
 
                   {/* Waitlist Capacity */}
-                  <div>
-                    <label className="mb-2 block">Waitlist Capacity</label>
-                    <div className="relative">
-                      <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[10]">
-                        <FaListUl />
-                      </span>
-                      <input
-                        type="number"
-                        name="waitlist_capacity"
-                        value={formik.values.waitlist_capacity}
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
-                        className="custom--input w-full input--icon"
-                      />
+                  {service_type_check !== "CLASS" ? null : (
+                    <div>
+                      <label className="mb-2 block">Waitlist</label>
+                      <div className="relative">
+                        <input
+                          type="number"
+                          name="waitlist_capacity"
+                          value={formik.values.waitlist_capacity}
+                          onChange={formik.handleChange}
+                          onBlur={formik.handleBlur}
+                          className="custom--input w-full"
+                        />
+                      </div>
+                      {formik.errors.waitlist_capacity && (
+                        <p className="text-red-500 text-sm">
+                          {formik.errors.waitlist_capacity}
+                        </p>
+                      )}
                     </div>
-                  </div>
+                  )}
 
                   {/* Tags */}
-                  <div>
-                    <label className="mb-2 block">Tags</label>
-                    <div className="relative">
-                      <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[10]">
-                        <FaListUl />
-                      </span>
-                      <input
-                        type="text"
-                        name="tags"
-                        value={formik.values.tags}
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
-                        className="custom--input w-full input--icon"
-                      />
-                    </div>
-                  </div>
+                  {service_type_check !== "CLASS" &&
+                  service_type_check !== "PRODUCT" ? null : (
+                    <div>
+                      <label className="mb-2 block">Tags</label>
+                      <div className="relative">
+                        <CreatableSelect
+                          isMulti
+                          value={formik.values.tags}
+                          onChange={(newValue) => {
+                            // ✅ Remove extra quotes from value and label
+                            const cleaned = newValue.map((tag) => ({
+                              label: tag.label.replace(/"/g, ""),
+                              value: tag.value.replace(/"/g, ""),
+                            }));
+                            formik.setFieldValue("tags", cleaned);
+                          }}
+                          placeholder="Add Tags"
+                          getOptionLabel={(e) => e.label}
+                          getOptionValue={(e) => e.value}
+                          styles={customStyles}
+                          className="multi--select"
+                        />
 
-                  {/* Amount */}
-                  <div>
-                    <label className="mb-2 block">Amount (₹)</label>
-                    <div className="relative">
-                      <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[10]">
-                        <FaListUl />
-                      </span>
+                        {formik.touched.tags && formik.errors.tags && (
+                          <p className="text-red-500 text-sm">
+                            {formik.errors.tags}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Booking Type */}
+                  {service_type_check !== "CLASS" ? null : (
+                    <div>
+                      <label className="mb-2 block">Paid</label>
+                      <div className="relative">
+                        <Select
+                          name="booking_type"
+                          value={
+                            bookingType.find(
+                              (opt) => opt.value === formik.values?.booking_type
+                            ) || null
+                          }
+                          options={bookingType}
+                          onChange={(option) =>
+                            formik.setFieldValue("booking_type", option.value)
+                          }
+                          onBlur={() =>
+                            formik.setFieldTouched("booking_type", true)
+                          }
+                          styles={customStyles}
+                        />
+                      </div>
+                      {formik.touched.booking_type &&
+                        formik.errors.booking_type && (
+                          <p className="text-red-500 text-sm">
+                            {formik.errors.booking_type}
+                          </p>
+                        )}
+                    </div>
+                  )}
+
+                  {/* Session Duration */}
+                  {service_type_check !== "CLASS" &&
+                  service_type_check !== "PRODUCT" ? (
+                    <div>
+                      <label className="mb-2 block">
+                        Session Duration{" "}
+                        <span className="text-sm">(In Mins)</span>
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="number"
+                          name="session_duration"
+                          value={formik.values.session_duration}
+                          onChange={formik.handleChange}
+                          onBlur={formik.handleBlur}
+                          className="custom--input w-full"
+                        />
+                      </div>
+                      {formik.touched.session_duration &&
+                        formik.errors.session_duration && (
+                          <p className="text-red-500 text-sm">
+                            {formik.errors.session_duration}
+                          </p>
+                        )}
+                    </div>
+                  ) : null}
+
+                  {/* Level */}
+                  {service_type_check !== "CLASS" &&
+                  service_type_check !== "PRODUCT" ? (
+                    <div>
+                      <label className="mb-2 block">Level</label>
+                      <div className="relative">
+                        <Select
+                          name="session_level"
+                          value={
+                            sessionLevel.find(
+                              (opt) => opt.value === formik.values.session_level
+                            ) || null
+                          }
+                          options={sessionLevel}
+                          onChange={(option) =>
+                            formik.setFieldValue("session_level", option.value)
+                          }
+                          onBlur={() =>
+                            formik.setFieldTouched("session_level", true)
+                          }
+                          styles={customStyles}
+                        />
+                      </div>
+                      {formik.touched.session_level &&
+                        formik.errors.session_level && (
+                          <p className="text-red-500 text-sm">
+                            {formik.errors.session_level}
+                          </p>
+                        )}
+                    </div>
+                  ) : null}
+
+                  {service_type_check === "PRODUCT" && (
+                    <div>
+                      <label className="mb-2 block">Amount (₹)</label>
+                      <div className="relative">
+                        <input
+                          type="number"
+                          name="amount"
+                          value={formik.values.amount}
+                          onChange={formik.handleChange}
+                          onBlur={formik.handleBlur}
+                          className="custom--input w-full"
+                        />
+                      </div>
+                      {formik.touched.amount && formik.errors.amount && (
+                        <p className="text-red-500 text-sm">
+                          {formik.errors.amount}
+                        </p>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Validity */}
+                  {service_type_check !== "CLASS" &&
+                  service_type_check !== "PRODUCT" ? (
+                    <div>
+                      <label className="mb-2 block">
+                        Validity <span className="text-sm">(In Days)</span>
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="number"
+                          name="session_validity"
+                          value={formik.values.session_validity}
+                          onChange={formik.handleChange}
+                          onBlur={formik.handleBlur}
+                          className="custom--input w-full"
+                        />
+                      </div>
+                      {formik.touched.session_validity &&
+                        formik.errors.session_validity && (
+                          <p className="text-red-500 text-sm">
+                            {formik.errors.session_validity}
+                          </p>
+                        )}
+                    </div>
+                  ) : null}
+
+                  {formik.values?.booking_type === "Yes" && (
+                    <div>
+                      <label className="mb-2 block">Amount (₹)</label>
+                      <div className="relative">
+                        <input
+                          type="number"
+                          name="amount"
+                          value={formik.values.amount}
+                          onChange={formik.handleChange}
+                          onBlur={formik.handleBlur}
+                          className="custom--input w-full"
+                        />
+                      </div>
+                      {formik.touched.amount && formik.errors.amount && (
+                        <p className="text-red-500 text-sm">
+                          {formik.errors.amount}
+                        </p>
+                      )}
+                    </div>
+                  )}
+
+                  {formik.values?.booking_type === "Yes" && (
+                    <div>
+                      <label className="mb-2 block">
+                        GST <span>(%)</span>
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="number"
+                          name="gst"
+                          value={formik.values.gst}
+                          onChange={formik.handleChange}
+                          onBlur={formik.handleBlur}
+                          className="custom--input w-full"
+                        />
+                      </div>
+                      {formik.touched.gst && formik.errors.gst && (
+                        <p className="text-red-500 text-sm">
+                          {formik.errors.gst}
+                        </p>
+                      )}
+                    </div>
+                  )}
+
+                  {formik.values?.booking_type === "Yes" && (
+                    <div>
+                      <label className="mb-2 block">Thrive Coins</label>
                       <input
                         type="number"
-                        name="amount"
-                        value={formik.values.amount}
+                        name="thrive_coins"
+                        value={formik.values.thrive_coins}
                         onChange={formik.handleChange}
                         onBlur={formik.handleBlur}
-                        className="custom--input w-full input--icon"
+                        className="custom--input w-full"
                       />
+                      {formik.touched.thrive_coins &&
+                        formik.errors.thrive_coins && (
+                          <p className="text-red-500 text-sm">
+                            {formik.errors.thrive_coins}
+                          </p>
+                        )}
                     </div>
-                  </div>
+                  )}
 
-                  {/* Discount */}
-                  <div>
-                    <label className="mb-2 block">Discount (₹)</label>
-                    <div className="relative">
-                      <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[10]">
-                        <FaListUl />
-                      </span>
-                      <input
-                        type="number"
-                        name="discount"
-                        value={formik.values.discount}
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
-                        className="custom--input w-full input--icon"
-                      />
-                    </div>
-                  </div>
-
-                  {/* GST */}
-                  <div>
-                    <label className="mb-2 block">GST (%)</label>
-                    <div className="relative">
-                      <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[10]">
-                        <FaListUl />
-                      </span>
+                  {service_type_check === "PRODUCT" && (
+                    <div>
+                      <label className="mb-2 block">
+                        GST <span>(%)</span>
+                      </label>
                       <input
                         type="number"
                         name="gst"
                         value={formik.values.gst}
                         onChange={formik.handleChange}
                         onBlur={formik.handleBlur}
-                        className="custom--input w-full input--icon"
+                        className="custom--input w-full"
                       />
+                      {formik.touched.gst && formik.errors.gst && (
+                        <p className="text-red-500 text-sm">
+                          {formik.errors.gst}
+                        </p>
+                      )}
                     </div>
-                  </div>
+                  )}
 
-                  {/* Position */}
-                  <div>
-                    <label className="mb-2 block">Position</label>
-                    <div className="relative">
-                      <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[10]">
-                        <FaListUl />
-                      </span>
+                  {service_type_check === "PRODUCT" && (
+                    <div>
+                      <label className="mb-2 block">Thrive Coins</label>
                       <input
                         type="number"
-                        name="position"
-                        value={formik.values.position}
+                        name="thrive_coins"
+                        value={formik.values.thrive_coins}
                         onChange={formik.handleChange}
                         onBlur={formik.handleBlur}
-                        className="custom--input w-full input--icon"
+                        className="custom--input w-full"
                       />
+                      {formik.touched.thrive_coins &&
+                        formik.errors.thrive_coins && (
+                          <p className="text-red-500 text-sm">
+                            {formik.errors.thrive_coins}
+                          </p>
+                        )}
                     </div>
-                  </div>
+                  )}
+                </div>
 
-                  {/* Trainer */}
-                  <div>
-                    <label className="mb-2 block">Trainer ID</label>
-                    <div className="relative">
-                      <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[10]">
-                        <FaListUl />
-                      </span>
-                      <Select
-                        name="trainer_id"
-                        value={
-                          staffListOptions.find(
-                            (opt) => opt.value === formik.values.trainer_id
-                          ) || null
-                        }
-                        options={staffListOptions}
-                        onChange={(option) =>
-                          formik.setFieldValue("trainer_id", option.value)
-                        }
-                        onBlur={() =>
-                          formik.setFieldTouched("trainer_id", true)
-                        }
-                        styles={selectIcon}
-                      />
-                    </div>
-                  </div>
+                {service_type_check !== "CLASS" &&
+                  service_type_check !== "PRODUCT" && (
+                    <div className="col-span-4 space-y-3">
+                      {sessionRows.map((row, index) => (
+                        <React.Fragment key={index}>
+                          <div className="flex items-end gap-4 border-2 border-dashed border-gray-300 bg-gray-100 rounded-lg p-6 mt-5">
+                            <div className="grid grid-cols-4 gap-5">
+                              {/* No of Sessions */}
+                              <div>
+                                <label className="mb-2 block">
+                                  No of Sessions
+                                </label>
+                                <input
+                                  type="number"
+                                  name="session_list.no_of_sessions"
+                                  value={
+                                    formik.values.session_list?.no_of_sessions
+                                  }
+                                  onChange={formik.handleChange}
+                                  onBlur={formik.handleBlur}
+                                  className="custom--input w-full"
+                                />
+                                {formik.touched.session_list?.no_of_sessions &&
+                                  formik.errors.session_list
+                                    ?.no_of_sessions && (
+                                    <p className="text-red-500 text-sm">
+                                      {
+                                        formik.errors.session_list
+                                          .no_of_sessions
+                                      }
+                                    </p>
+                                  )}
+                              </div>
 
-                  {/* Booking Type */}
-                  <div>
-                    <label className="mb-2 block">Booking Type</label>
-                    <div className="relative">
-                      <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[10]">
-                        <FaListUl />
-                      </span>
-                      <Select
-                        name="booking_type"
-                        value={
-                          bookingType.find(
-                            (opt) => opt.value === formik.values.booking_type
-                          ) || null
-                        }
-                        options={bookingType}
-                        onChange={(option) =>
-                          formik.setFieldValue("booking_type", option.value)
-                        }
-                        onBlur={() =>
-                          formik.setFieldTouched("booking_type", true)
-                        }
-                        styles={selectIcon}
-                      />
-                    </div>
-                  </div>
+                              {/* Session Duration */}
+                              <div>
+                                <label className="mb-2 block">Amount</label>
+                                <input
+                                  type="number"
+                                  name="session_list.session_duration"
+                                  value={
+                                    formik.values.session_list?.session_duration
+                                  }
+                                  onChange={formik.handleChange}
+                                  onBlur={formik.handleBlur}
+                                  className="custom--input w-full"
+                                />
+                                {formik.touched.session_list
+                                  ?.session_duration &&
+                                  formik.errors.session_list
+                                    ?.session_duration && (
+                                    <p className="text-red-500 text-sm">
+                                      {
+                                        formik.errors.session_list
+                                          .session_duration
+                                      }
+                                    </p>
+                                  )}
+                              </div>
 
-                  {/* Status */}
-                  <div>
-                    <label className="mb-2 block">Status</label>
-                    <div className="relative">
-                      <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[10]">
-                        <LuPlug />
-                      </span>
-                      <Select
-                        name="status"
-                        value={{
-                          label: formik.values.status,
-                          value: formik.values.status,
-                        }}
-                        options={[
-                          { label: "Active", value: "ACTIVE" },
-                          { label: "Inactive", value: "INACTIVE" },
-                        ]}
-                        onChange={(option) =>
-                          formik.setFieldValue("status", option.value)
-                        }
-                        onBlur={() => formik.setFieldTouched("status", true)}
-                        styles={selectIcon}
-                      />
+                              {/* Thrive Coins */}
+                              <div>
+                                <label className="mb-2 block">
+                                  Thrive Coins
+                                </label>
+                                <input
+                                  type="number"
+                                  name="session_list.thrive_coins"
+                                  value={
+                                    formik.values.session_list?.thrive_coins
+                                  }
+                                  onChange={formik.handleChange}
+                                  onBlur={formik.handleBlur}
+                                  className="custom--input w-full"
+                                />
+                                {formik.touched.session_list?.thrive_coins &&
+                                  formik.errors.session_list?.thrive_coins && (
+                                    <p className="text-red-500 text-sm">
+                                      {formik.errors.session_list.thrive_coins}
+                                    </p>
+                                  )}
+                              </div>
+
+                              {/* GST */}
+                              <div>
+                                <label className="mb-2 block">
+                                  GST <span>(%)</span>
+                                </label>
+                                <div className="relative">
+                                  <input
+                                    type="number"
+                                    name="session_list.session_gst"
+                                    value={
+                                      formik.values.session_list?.session_gst
+                                    }
+                                    onChange={formik.handleChange}
+                                    onBlur={formik.handleBlur}
+                                    className="custom--input w-full"
+                                  />
+                                </div>
+                                {formik.touched.session_list?.session_gst &&
+                                  formik.errors.session_list?.session_gst && (
+                                    <p className="text-red-500 text-sm">
+                                      {formik.errors.session_list.session_gst}
+                                    </p>
+                                  )}
+                              </div>
+                            </div>
+
+                            <div>
+                              {/* Add Row Button */}
+                              <button
+                                type="button"
+                                onClick={handleAddSessionRow}
+                                className="flex items-center justify-center px-1 py-1 bg-black text-white rounded gap-2 mb-1 w-10 h-10"
+                              >
+                                <FiPlus />
+                              </button>
+                              {/* Delete Row Button */}
+                              {index !== 0 && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleDeleteSessionRow(index)}
+                                  className="flex items-center justify-center px-1 py-1 bg-red-600 text-white rounded gap-2 mb-1 w-10 h-10"
+                                >
+                                  <FiTrash2 />
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        </React.Fragment>
+                      ))}
                     </div>
-                  </div>
-                  {/* Caption */}
-                  <div className="col-span-2">
-                    <label className="mb-2 block">Caption</label>
-                    <textarea
-                      name="caption"
-                      value={formik.values.caption}
-                      onChange={formik.handleChange}
-                      onBlur={formik.handleBlur}
-                      className="custom--input w-full"
-                      rows={1}
-                    />
-                  </div>
-                  {/* Description */}
-                  <div className="col-span-4">
-                    <label className="mb-2 block">Description</label>
-                    <textarea
-                      name="description"
-                      value={formik.values.description}
-                      onChange={formik.handleChange}
-                      onBlur={formik.handleBlur}
-                      className="custom--input w-full"
-                      rows={3}
-                    />
-                  </div>
+                  )}
+
+                {/* CKEditor for Description */}
+                <div className="mt-5">
+                  <label className="mb-2 block">Description</label>
+                  <CKEditor
+                    editor={ClassicEditor}
+                    data={formik.values.description || ""}
+                    onChange={(event, editor) => {
+                      const data = editor.getData(); // ✅ Get HTML string from editor
+                      formik.setFieldValue("description", data);
+                    }}
+                    onBlur={() => formik.setFieldTouched("description", true)}
+                  />
+                  {formik.errors.description && (
+                    <p className="text-red-500 text-sm">
+                      {formik.errors.description}
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
 
-            {/* Buttons */}
-            <div className="flex gap-4 py-5 justify-end">
+            {/* Submit Button */}
+            <div className="flex gap-4 justify-end">
               <button
                 type="button"
                 onClick={() => {
@@ -798,7 +1186,7 @@ const CreatePackage = ({
                 type="submit"
                 className="px-4 py-2 bg-white text-black font-semibold rounded max-w-[150px] w-full"
               >
-                {editingOption ? "Update" : "Submit"}
+                Submit
               </button>
             </div>
           </form>

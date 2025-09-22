@@ -162,7 +162,7 @@ const HealthProfile = () => {
           </button>
         </div>
         <div>
-          <p>Last Updated : 10/4/25</p>
+          <p>Last Updated : October 4, 2025, 4:30 PM</p>
         </div>
       </div>
 

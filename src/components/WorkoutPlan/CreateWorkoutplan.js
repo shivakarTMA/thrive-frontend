@@ -89,9 +89,6 @@ const CreateWorkoutPlan = ({ handleCancelWorkout }) => {
               setExercise: "",
               groupType: null,
               groupId: null,
-              workoutTag: "",
-              image:
-                "https://media.theeverygirl.com/wp-content/uploads/2020/07/little-things-you-can-do-for-a-better-workout-the-everygirl-1.jpg",
               notes: "",
               sets: [
                 {
@@ -383,17 +380,10 @@ const CreateWorkoutPlan = ({ handleCancelWorkout }) => {
         </div>
       </div>
       <div className="flex items-centerd gap-3">
-        <div className="max-w-[100px] w-full">
-          <img
-            src={exercise.image}
-            alt="exercise"
-            className="w-[100px] h-[100px] object-cover rounded"
-          />
-        </div>
         <div className="flex-1">
-          <div className="grid grid-cols-2 gap-3 items-baseline">
-            <div className="flex flex-col gap-3 mb-3">
-              <div className="flex gap-3">
+          <div className="grid grid-cols-1 gap-3 items-baseline">
+            {exercise.sets.map((set, setIdx) => (
+              <div key={setIdx} className="grid grid-cols-4 gap-3 mb-0">
                 {!isGrouped && (
                   <div className="w-full">
                     <input
@@ -412,50 +402,6 @@ const CreateWorkoutPlan = ({ handleCancelWorkout }) => {
                     />
                   </div>
                 )}
-
-                <div className="w-full">
-                  <Select
-                    className="react-select-container"
-                    classNamePrefix="react-select"
-                    placeholder="Workout Tag"
-                    value={
-                      workoutTagOptions.find(
-                        (option) => option.value === exercise.workoutTag
-                      ) || null
-                    }
-                    onChange={(selectedOption) =>
-                      handleExerciseFieldChange(
-                        activeDayIndex,
-                        exIdx,
-                        "workoutTag",
-                        selectedOption?.value || ""
-                      )
-                    }
-                    options={workoutTagOptions}
-                    styles={customStyles}
-                    isClearable
-                  />
-                </div>
-              </div>
-              <div className="w-full">
-                <input
-                  placeholder="Notes"
-                  value={exercise.notes}
-                  onChange={(e) =>
-                    handleExerciseFieldChange(
-                      activeDayIndex,
-                      exIdx,
-                      "notes",
-                      e.target.value
-                    )
-                  }
-                  className="custom--input w-full"
-                />
-              </div>
-            </div>
-
-            {exercise.sets.map((set, setIdx) => (
-              <div key={setIdx} className="grid grid-cols-2 gap-3 mb-3">
                 {exercise.resps && (
                   <input
                     type="number"
@@ -543,6 +489,25 @@ const CreateWorkoutPlan = ({ handleCancelWorkout }) => {
                 )}
               </div>
             ))}
+            <div className="flex flex-col gap-3 mb-0">
+              <div className="w-full">
+                <input
+                  placeholder="Notes"
+                  value={exercise.notes}
+                  onChange={(e) =>
+                    handleExerciseFieldChange(
+                      activeDayIndex,
+                      exIdx,
+                      "notes",
+                      e.target.value
+                    )
+                  }
+                  className="custom--input w-full"
+                />
+              </div>
+            </div>
+
+            
           </div>
         </div>
       </div>
@@ -854,7 +819,7 @@ const CreateWorkoutPlan = ({ handleCancelWorkout }) => {
             <button
               type="button"
               onClick={handleSaveWorkoutPlan}
-              className="bg-green-600 text-white px-4 py-2 rounded"
+              className="bg-black text-white px-4 py-2 rounded"
             >
               Submit
             </button>

@@ -1,313 +1,251 @@
-import React, { useState } from "react";
-import { AiOutlineExclamationCircle } from "react-icons/ai";
-import { IoCameraOutline, IoClose } from "react-icons/io5";
-import { LuUpload } from "react-icons/lu";
-import { FaCircleCheck, FaRegBuilding } from "react-icons/fa6";
+// Importing React and required hooks from React
+import React, { useState, useRef } from "react";
 
 const KYCSubmission = () => {
-  const [aadharFront, setAadharFront] = useState(null);
-  const [aadharBack, setAadharBack] = useState(null);
-  const [corporateId, setCorporateId] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  // State to store uploaded document details
+  const [documents, setDocuments] = useState({
+    aadharFront: null, // Stores Aadhar Front details
+    aadharBack: null, // Stores Aadhar Back details
+    corporateId: null, // Stores Corporate ID details
+  });
 
-  const [submitStatus, setSubmitStatus] = useState(null);
+  // State to handle document preview modal
+  const [previewing, setPreviewing] = useState(null);
 
-  const [activeStep, setActiveStep] = useState(1);
+  // State to handle drag-over effect for drop area
+  const [dragOver, setDragOver] = useState("");
 
-  const handleFileUpload = (file, type) => {
+  // Refs for each file input field
+  const fileInputRefs = {
+    aadharFront: useRef(null),
+    aadharBack: useRef(null),
+    corporateId: useRef(null),
+  };
+
+  // Document type configuration with labels and accepted file types
+  const documentTypes = {
+    aadharFront: { label: "Aadhar Card (Front)", accept: "image/*" },
+    aadharBack: { label: "Aadhar Card (Back)", accept: "image/*" },
+    corporateId: { label: "Corporate ID", accept: "image/*" },
+  };
+
+  // Function to handle file selection and preview generation
+  const handleFileSelect = (documentType, file) => {
     if (file && file.type.startsWith("image/")) {
       const reader = new FileReader();
       reader.onload = (e) => {
-        if (type === "front") {
-          setAadharFront({ file, preview: e.target.result });
-        } else {
-          setAadharBack({ file, preview: e.target.result });
-        }
+        setDocuments((previous) => ({
+          ...previous,
+          [documentType]: {
+            file: file,
+            preview: e.target.result, // Base64 preview
+            name: file.name,
+            size: file.size,
+          },
+        }));
       };
       reader.readAsDataURL(file);
     }
   };
 
-  const removeFile = (type) => {
-    if (type === "front") {
-      setAadharFront(null);
-    } else {
-      setAadharBack(null);
-    }
+  // Function to handle file drop event
+  const handleDrop = (event, documentType) => {
+    event.preventDefault();
+    setDragOver("");
+    const file = event.dataTransfer.files[0];
+    handleFileSelect(documentType, file);
   };
 
-  const handleAadharSubmit = async () => {
-    if (!aadharFront || !aadharBack) {
-      alert("Please upload both front and back of Aadhar card");
-      return;
-    }
-
-    setIsSubmitting(true);
-
-    setTimeout(() => {
-      setIsSubmitting(false);
-      setSubmitStatus("aadhar_success");
-      setActiveStep(2);
-    }, 2000);
+  // Function to handle drag-over effect
+  const handleDragOver = (event, documentType) => {
+    event.preventDefault();
+    setDragOver(documentType);
   };
 
-  const handleCorporateSubmit = async () => {
-    if (!corporateId.trim()) {
-      alert("Please enter Corporate ID");
-      return;
+  // Function to reset drag-over effect
+  const handleDragLeave = () => {
+    setDragOver("");
+  };
+
+  // Function to remove a selected document
+  const removeDocument = (documentType) => {
+    setDocuments((previous) => ({
+      ...previous,
+      [documentType]: null,
+    }));
+  };
+
+  // Function to format file size into readable format
+  const formatFileSize = (bytes) => {
+    if (bytes === 0) return "0 Bytes";
+    const k = 1024;
+    const sizes = ["Bytes", "KB", "MB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+  };
+
+  // Function to handle document submission
+  const handleSubmit = () => {
+    console.log("Documents to upload:", documents);
+    alert("Documents uploaded successfully! (Check console for details)");
+  };
+
+  // Check if all required documents are uploaded before enabling submit button
+  const isFormValid =
+    documents.aadharFront || documents.aadharBack || documents.corporateId;
+
+  // Function to open file dialog programmatically
+  const openFileDialog = (ref) => {
+    if (ref.current) {
+      ref.current.click();
     }
-
-    setIsSubmitting(true);
-
-    setTimeout(() => {
-      setIsSubmitting(false);
-      setSubmitStatus("corporate_success");
-      setActiveStep(3);
-    }, 1500);
   };
 
   return (
-    <div className="w-full">
-      <div className="mx-auto w-full">
-        <div className="flex w-full gap-5 justify-between items-center">
-          {/* Main Content */}
-          <div className="w-full bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
-            {/* Step 1: Aadhar Card Upload */}
-            {activeStep === 1 && (
-              <div className="p-8">
-                <div className="text-center mb-8">
-                  <div className="inline-flex items-center justify-center w-12 h-12 bg-blue-100 rounded-full mb-4">
-                    <IoCameraOutline className="w-6 h-6 text-blue-600" />
-                  </div>
-                  <h2 className="text-2xl font-semibold text-gray-800 mb-2">
-                    Upload Aadhar Card
-                  </h2>
-                  <p className="text-gray-600">
-                    Please upload clear images of both sides of your Aadhar card
-                  </p>
-                </div>
+    <div className="bg-white p-4 rounded-[10px] w-full box--shadow">
+      {/* Document Upload Section */}
+      <div className="space-y-6">
+        <div className="flex gap-3">
+          {Object.entries(documentTypes).map(([type, config]) => {
+            const document = documents[type];
+            const isDragOver = dragOver === type;
 
-                <div className="grid md:grid-cols-2 gap-6 mb-8">
-                  {/* Front Side */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-3">
-                      Aadhar Card - Front Side
-                    </label>
-                    <div className="relative">
-                      {aadharFront ? (
-                        <div className="relative group">
-                          <img
-                            src={aadharFront.preview}
-                            alt="Aadhar Front"
-                            className="w-full h-48 object-cover rounded-lg border-2 border-green-200"
-                          />
-                          <button
-                            onClick={() => removeFile("front")}
-                            className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer z-[999]"
-                          >
-                            <IoClose className="w-4 h-4" />
-                          </button>
-                          <div className="absolute inset-0 bg-green-500 bg-opacity-10 rounded-lg flex items-center justify-center">
-                            <FaCircleCheck className="w-8 h-8 text-green-600" />
-                          </div>
-                        </div>
-                      ) : (
-                        <label className="flex flex-col items-center justify-center w-full h-48 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
-                          <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                            <LuUpload className="w-8 h-8 mb-4 text-gray-400" />
-                            <p className="mb-2 text-sm text-gray-500">
-                              <span className="font-semibold">
-                                Click to upload
-                              </span>
-                            </p>
-                            <p className="text-xs text-gray-500">
-                              PNG, JPG up to 10MB
-                            </p>
-                          </div>
-                          <input
-                            type="file"
-                            className="hidden"
-                            accept="image/*"
-                            onChange={(e) =>
-                              handleFileUpload(e.target.files[0], "front")
-                            }
-                          />
-                        </label>
-                      )}
-                    </div>
-                  </div>
+            return (
+              <div key={type} className="bg-gray-50 rounded-lg p-6">
+                {/* Label */}
+                <label className="block text-lg font-semibold text-gray-700 mb-4">
+                  {config.label} *
+                </label>
 
-                  {/* Back Side */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-3">
-                      Aadhar Card - Back Side
-                    </label>
-                    <div className="relative">
-                      {aadharBack ? (
-                        <div className="relative group">
-                          <img
-                            src={aadharBack.preview}
-                            alt="Aadhar Back"
-                            className="w-full h-48 object-cover rounded-lg border-2 border-green-200"
-                          />
-                          <button
-                            onClick={() => removeFile("back")}
-                            className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity z-[999]"
-                          >
-                            <IoClose className="w-4 h-4" />
-                          </button>
-                          <div className="absolute inset-0 bg-green-500 bg-opacity-10 rounded-lg flex items-center justify-center">
-                            <FaCircleCheck className="w-8 h-8 text-green-600" />
-                          </div>
-                        </div>
-                      ) : (
-                        <label className="flex flex-col items-center justify-center w-full h-48 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
-                          <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                            <LuUpload className="w-8 h-8 mb-4 text-gray-400" />
-                            <p className="mb-2 text-sm text-gray-500">
-                              <span className="font-semibold">
-                                Click to upload
-                              </span>
-                            </p>
-                            <p className="text-xs text-gray-500">
-                              PNG, JPG up to 10MB
-                            </p>
-                          </div>
-                          <input
-                            type="file"
-                            className="hidden"
-                            accept="image/*"
-                            onChange={(e) =>
-                              handleFileUpload(e.target.files[0], "back")
-                            }
-                          />
-                        </label>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Conditional message after file upload */}
-                {(aadharFront || aadharBack) && (
-                  <p className="text-green-600 text-center mb-4 font-medium">
-                    ✅ You have successfully uploaded your document(s).
-                  </p>
-                )}
-
-                <button
-                  onClick={handleAadharSubmit}
-                  disabled={!aadharFront || !aadharBack || isSubmitting}
-                  className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-4 px-6 rounded-lg font-semibold text-lg hover:from-blue-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all transform "
-                >
-                  {isSubmitting ? (
-                    <div className="flex items-center justify-center">
-                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white mr-3"></div>
-                      Uploading Aadhar...
-                    </div>
-                  ) : (
-                    "Submit Aadhar Card"
-                  )}
-                </button>
-              </div>
-            )}
-
-            {/* Step 2: Corporate ID */}
-            {activeStep === 2 && (
-              <div className="p-8">
-                <div className="text-center mb-8">
-                  <div className="inline-flex items-center justify-center w-12 h-12 bg-purple-100 rounded-full mb-4">
-                    <FaRegBuilding className="w-6 h-6 text-purple-600" />
-                  </div>
-                  <h2 className="text-2xl font-semibold text-gray-800 mb-2">
-                    Corporate ID Verification
-                  </h2>
-                  <p className="text-gray-600">
-                    Enter your corporate identification number
-                  </p>
-                </div>
-
-                <div className="max-w-md mx-auto">
-                  <label className="block text-sm font-medium text-gray-700 mb-3">
-                    Corporate ID Number
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      value={corporateId}
-                      onChange={(e) => setCorporateId(e.target.value)}
-                      placeholder="Enter your Corporate ID"
-                      className="w-full px-4 py-4 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-lg"
-                    />
-                    <FaRegBuilding className="absolute right-3 top-4 w-6 h-6 text-gray-400" />
-                  </div>
-                  <p className="text-sm text-gray-500 mt-2">
-                    This should be your official corporate identification number
-                  </p>
-
-                  <button
-                    onClick={handleCorporateSubmit}
-                    disabled={!corporateId.trim() || isSubmitting}
-                    className="w-full mt-6 bg-gradient-to-r from-purple-600 to-pink-600 text-white py-4 px-6 rounded-lg font-semibold text-lg hover:from-purple-700 hover:to-pink-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all transform "
+                {/* Drop Zone or Preview */}
+                {!document ? (
+                  <div
+                    className={`border-2 border-dashed rounded-lg p-2 text-center transition-colors ${
+                      isDragOver
+                        ? "border-blue-500 bg-blue-50"
+                        : "border-gray-300 hover:border-gray-400"
+                    }`}
+                    onDrop={(e) => handleDrop(e, type)}
+                    onDragOver={(e) => handleDragOver(e, type)}
+                    onDragLeave={handleDragLeave}
                   >
-                    {isSubmitting ? (
-                      <div className="flex items-center justify-center">
-                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white mr-3"></div>
-                        Verifying ID...
-                      </div>
-                    ) : (
-                      "Submit Corporate ID"
-                    )}
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* Step 3: Success */}
-            {activeStep === 3 && (
-              <div className="p-8 text-center">
-                <div className="mb-8">
-                  <div className="inline-flex items-center justify-center w-20 h-20 bg-green-100 rounded-full mb-6">
-                    <FaCircleCheck className="w-12 h-12 text-green-600" />
+                    <p className="text-gray-600 mb-2 text-sm">
+                      Drag and drop your {config.label.toLowerCase()} here, or{" "}
+                      <button
+                        type="button"
+                        className="text-blue-600 hover:text-blue-700 font-medium"
+                        onClick={() => openFileDialog(fileInputRefs[type])}
+                      >
+                        browse files
+                      </button>
+                    </p>
+                    <p className="text-sm text-gray-400">
+                      Supports: JPG, PNG, JPEG
+                    </p>
+                    <input
+                      ref={fileInputRefs[type]}
+                      type="file"
+                      accept={config.accept}
+                      className="hidden"
+                      onChange={(e) =>
+                        handleFileSelect(type, e.target.files[0])
+                      }
+                    />
                   </div>
-                  <h2 className="text-3xl font-bold text-gray-800 mb-4">
-                    Verification Complete!
-                  </h2>
-                  <p className="text-gray-600 text-lg mb-8">
-                    Your KYC documents have been successfully submitted and are
-                    under review.
-                  </p>
-
-                  <div className="bg-green-50 border border-green-200 rounded-lg p-6 mb-8">
-                    <div className="flex items-start space-x-4">
-                      <AiOutlineExclamationCircle className="w-6 h-6 text-green-600 mt-0.5" />
-                      <div className="text-left">
-                        <h3 className="font-semibold text-green-800 mb-2">
-                          What's Next?
-                        </h3>
-                        <ul className="text-green-700 space-y-1 text-sm">
-                          <li>
-                            • Your documents are being reviewed by our team
-                          </li>
-                          <li>
-                            • You'll receive an email confirmation within 24
-                            hours
-                          </li>
-                          <li>
-                            • Verification typically completes within 2-3
-                            business days
-                          </li>
-                        </ul>
+                ) : (
+                  <div className="border rounded-lg p-4 bg-white">
+                    {/* Document Preview */}
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-start space-x-4">
+                        <div className="relative">
+                          <img
+                            src={document.preview}
+                            alt={config.label}
+                            className="w-20 h-20 object-cover rounded border"
+                          />
+                          <div className="absolute -top-1 -right-1 bg-green-500 rounded-full w-6 h-6 flex items-center justify-center">
+                            <span className="text-white text-xs">✓</span>
+                          </div>
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="font-medium text-gray-900">
+                            {document.name}
+                          </h4>
+                          <p className="text-sm text-gray-500">
+                            {formatFileSize(document.size)}
+                          </p>
+                          <div className="flex space-x-2 mt-2">
+                            <button
+                              type="button"
+                              onClick={() => setPreviewing(document)}
+                              className="inline-flex items-center px-3 py-1 text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors"
+                            >
+                              <span className="mr-1">👁️</span>
+                              View
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => removeDocument(type)}
+                              className="inline-flex items-center px-3 py-1 text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-md transition-colors"
+                            >
+                              <span className="mr-1">✕</span>
+                              Remove
+                            </button>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
+                )}
               </div>
-            )}
-          </div>
+            );
+          })}
+        </div>
+
+        {/* Submit Button */}
+        <div className="flex justify-start pt-0">
+          <button
+            onClick={handleSubmit}
+            disabled={!isFormValid}
+            className={`px-4 py-2 text-white rounded flex items-center gap-2 ${
+              isFormValid
+                ? "bg-black"
+                : "bg-gray-300 cursor-not-allowed"
+            }`}
+          >
+            Upload Documents
+          </button>
         </div>
       </div>
+
+      {/* Document Preview Modal */}
+      {previewing && (
+        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-4xl max-h-[90vh] overflow-hidden">
+            <div className="flex items-center justify-between p-4 border-b">
+              <h3 className="text-lg font-semibold text-gray-900">
+                Document Preview
+              </h3>
+              <button
+                onClick={() => setPreviewing(null)}
+                className="text-gray-400 hover:text-gray-600 transition-colors text-xl"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="p-4">
+              <img
+                src={previewing.preview}
+                alt="Document preview"
+                className="max-w-full max-h-[70vh] object-contain mx-auto"
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };
 
-export default KYCSubmission; // Export component
+export default KYCSubmission;

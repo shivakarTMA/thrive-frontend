@@ -5,6 +5,7 @@ import { IoCloseCircleOutline } from "react-icons/io5";
 import { AiOutlineDelete } from "react-icons/ai";
 import { FiPlus } from "react-icons/fi";
 import WorkoutPlan from "./WorkoutPlan";
+import { toast } from "react-toastify";
 
 const AssignedWorkout = [
   {
@@ -27,8 +28,17 @@ const WorkoutApp = () => {
 
   // 🔹 Handle view/edit button click
   const handleAddWorkout = () => {
-    setWorkoutModal(true);
-    setWorkoutTable(false);
+    const lastWorkoutStatus =
+      AssignedWorkout[AssignedWorkout.length - 1]?.status;
+
+    if (lastWorkoutStatus !== "Cancelled" && lastWorkoutStatus !== "Expired") {
+       toast.error(
+        "Cannot add workout: Last workout is either Cancelled or Expired"
+      );
+    } else {
+      setWorkoutModal(true);
+      setWorkoutTable(false);
+    }
   };
   // 🔹 Handle view/edit button click
   const handleViewEdit = (id) => {
@@ -41,7 +51,7 @@ const WorkoutApp = () => {
   const handleCancelWorkout = () => {
     setWorkoutModal(false);
     setWorkoutTable(true);
-    setEditingId(null)
+    setEditingId(null);
   };
 
   // 🔹 Handle cancel button click
@@ -102,8 +112,15 @@ const WorkoutApp = () => {
                     <td className="border px-3 py-2">{workout.status}</td>
                     <td className="border px-3 py-2">
                       <div className="flex gap-0">
-                         <Tooltip id={`tooltip-edit-${workout.id}`} content="View/Edit" place="top">
-                          <div onClick={() => handleViewEdit(workout.id)} className="p-1 cursor-pointer">
+                        <Tooltip
+                          id={`tooltip-edit-${workout.id}`}
+                          content="View/Edit"
+                          place="top"
+                        >
+                          <div
+                            onClick={() => handleViewEdit(workout.id)}
+                            className="p-1 cursor-pointer"
+                          >
                             <LiaEdit className="text-[25px] text-black" />
                           </div>
                         </Tooltip>
@@ -150,7 +167,10 @@ const WorkoutApp = () => {
       )}
 
       {workoutModal && (
-        <WorkoutPlan handleCancelWorkout={handleCancelWorkout} editingId={editingId} />
+        <WorkoutPlan
+          handleCancelWorkout={handleCancelWorkout}
+          editingId={editingId}
+        />
       )}
     </div>
   );

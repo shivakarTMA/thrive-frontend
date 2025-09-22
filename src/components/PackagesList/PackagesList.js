@@ -44,6 +44,8 @@ const PackagesList = () => {
   const dispatch = useDispatch();
   const { lists, loading } = useSelector((state) => state.optionList);
 
+  console.log(service,'shivakar')
+
   // Fetch option lists
   useEffect(() => {
     dispatch(fetchOptionList("SESSION_LEVEL"));
@@ -151,6 +153,7 @@ const PackagesList = () => {
     service?.map((item) => ({
       label: item.name,
       value: item.id,
+      service_type: item.service_type
     })) || [];
   const packageCategoryOptions =
     packageCategory?.map((item) => ({
@@ -166,7 +169,7 @@ const PackagesList = () => {
 
   const initialValues = {
       studio_id: "", // done
-      service_id: "", // done
+      service_id: 1, // done
       staff_id: "", // done
       package_category_id: "", // done
       name: "", // done
@@ -195,7 +198,7 @@ const PackagesList = () => {
 
   const formik = useFormik({
     initialValues,
-    validationSchema,
+    // validationSchema,
     onSubmit: async (values, { resetForm }) => {
       try {
           const formData = new FormData();
@@ -363,7 +366,6 @@ const PackagesList = () => {
           fetchPackagesList(searchTerm, newPage);
         }}
       />
-
       {showModal && (
         <CreatePackage
           setShowModal={setShowModal}

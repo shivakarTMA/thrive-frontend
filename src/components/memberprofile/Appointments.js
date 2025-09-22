@@ -4,6 +4,7 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { customStyles } from "../../Helper/helper";
 import { FiPlus } from "react-icons/fi";
+import CreateAppointment from "../Appointment/CreateAppointment";
 
 const Appointments = () => {
   const [appointmentTypeFilter, setAppointmentTypeFilter] = useState({
@@ -12,6 +13,7 @@ const Appointments = () => {
   });
   const [dateFrom, setDateFrom] = useState(null);
   const [dateTo, setDateTo] = useState(null);
+  const [appointmentModal, setAppointmentModal] = useState(false);
 
   const dummyAppointments = [
     {
@@ -163,6 +165,7 @@ const Appointments = () => {
         <div>
           <div
               className="px-4 py-2 bg-white text-black flex items-center gap-2 cursor-pointer"
+              onClick={() => setAppointmentModal(true)}
             >
               <FiPlus /> Add Appointment
             </div>
@@ -209,6 +212,9 @@ const Appointments = () => {
           </tbody>
         </table>
       </div>
+
+{appointmentModal && <CreateAppointment setAppointmentModal={setAppointmentModal} />}
+
     </div>
   );
 };
