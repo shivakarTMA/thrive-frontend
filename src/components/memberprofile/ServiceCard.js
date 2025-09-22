@@ -6,6 +6,7 @@ import DummyProfile from "../../assets/images/dummy-profile.png";
 import { customStyles } from "../../Helper/helper";
 import Select from "react-select";
 import CreateInvoice from "../../Pages/CreateInvoice";
+import AddCoins from "../CoinsList/AddCoins";
 
 const statusOptions = [
   { value: "active", label: "Active" },
@@ -71,6 +72,7 @@ const ServiceCard = () => {
   // State to store selected status option, default is "active"
   const [selectedStatus, setSelectedStatus] = useState(statusOptions[0]);
   const [invoiceModal, setInvoiceModal] = useState(false);
+  const [coinsModal, setCoinsModal] = useState(false);
 
   // Filter purchased services based on selected status
   const filteredServices = purchasedServices.filter(
@@ -91,7 +93,8 @@ const ServiceCard = () => {
               Relationship since: {membershipData.relationshipSince}
             </p>
           </div>
-          <div className="flex items-center bg-white rounded-full px-2 py-1 border border-[#D4D4D4] border-[2px]">
+          <div className="flex items-center bg-white rounded-full px-2 py-1 border border-[#D4D4D4] border-[2px]"
+          onClick={() => setCoinsModal(true)}>
             <img src={Coins} className="mr-1" />
             <span className="text-xl font-medium text-black mr-3">250</span>
             <FaCirclePlus className="text-black text-2xl cursor-pointer" />
@@ -311,6 +314,7 @@ const ServiceCard = () => {
       </div>
     </div>
     {invoiceModal && <CreateInvoice setInvoiceModal={setInvoiceModal} />}
+    {coinsModal && <AddCoins setCoinsModal={setCoinsModal} />}
     </>
   );
 };

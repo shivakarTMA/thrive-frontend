@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { mockData } from "../DummyData/DummyData";
 import ProfileDetails from "../components/memberprofile/ProfileDetails";
@@ -15,6 +15,7 @@ import { toast } from "react-toastify";
 import HealthProfile from "../components/memberprofile/HealthProfile";
 import { FiPlus } from "react-icons/fi";
 import MemberCallLogs from "./MemberCallLogs";
+import CoinsList from "../components/CoinsList/CoinsList";
 
 const MemberProfile = () => {
   const { id } = useParams();
@@ -22,7 +23,9 @@ const MemberProfile = () => {
   const [memberDetails, setMemberDetails] = useState([]);
   const member = memberDetails.find((m) => m.id === parseInt(id));
   const location = useLocation();
-  const navigate = useNavigate(); 
+  const tabRefs = useRef({});
+
+  const navigate = useNavigate();
   const tabs = [
     "Profile Details",
     "Service Card",
@@ -35,6 +38,7 @@ const MemberProfile = () => {
     "Training",
     "Kyc Submission",
     "Health Profile",
+    "Coins",
   ];
   const fetchMemberList = async (search = "") => {
     try {
@@ -61,7 +65,9 @@ const MemberProfile = () => {
     }
   }, [location.search]);
 
-    const handleTabClick = (tab) => {
+  const handleTabClick = (tab) => {
+    setActiveTab(tab);
+    tabRefs.current[tab]?.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
     // Remove the `view` query parameter when switching tabs
     navigate(`/member/${id}`, { replace: true });
     setActiveTab(tab);
@@ -83,31 +89,12 @@ const MemberProfile = () => {
         {/* Sidebar */}
         <aside className="w-full">
           {/* <h1 className="text-3xl font-semibold">Member Profile</h1> */}
-          <div className="mt-6 flex flex-wrap items-center overflow-auto">
-            <div className="mt-0 flex items-center border-b border-b-[#D4D4D4]">
+          <div className="mt-6 flex flex-wrap items-center ">
+            <div className="mt-0 flex items-center border-b border-b-[#D4D4D4] overflow-auto buttons--overflow pr-6">
               {tabs.map((item, index) => (
-                // <React.Fragment key={item}>
-                //   <div
-                //     onClick={() => setActiveTab(item)}
-                //     className={`w-fit min-w-[fit-content] cursor-pointer
-                //       ${activeTab === item ? "btn--tab" : ""}`}
-                //   >
-                //     <div className="px-4 py-3 z-[1] relative text-[14px]">
-                //       {item}
-                //     </div>
-                //   </div>
-
-                //   {item === "Payment History" && (
-                //     <Link
-                //       to={`/member-follow-up/${member.id}`}
-                //       className="w-fit min-w-[fit-content] text-[15px] px-3 py-1.5 rounded hover:text-primarycolor transition"
-                //     >
-                //       Call Logs
-                //     </Link>
-                //   )}
-                // </React.Fragment>
                 <div
                   key={item}
+                  ref={(el) => (tabRefs.current[item] = el)}
                   onClick={() => handleTabClick(item)}
                   className={`w-fit min-w-[fit-content] cursor-pointer
                       ${activeTab === item ? "btn--tab" : ""}`}
@@ -139,6 +126,7 @@ const MemberProfile = () => {
           {activeTab === "Attendance" && <AttendanceData details={member} />}
           {activeTab === "Training" && <WorkoutApp details={member} />}
           {activeTab === "Health Profile" && <HealthProfile details={member} />}
+          {activeTab === "Coins" && <CoinsList details={member} />}
         </div>
       </div>
     </div>
