@@ -28,9 +28,9 @@ const CreatePackage = ({
   staffListOptions,
   studioOptions,
   sessionLevel,
+  foodTypes,
 }) => {
   const [sessionRows, setSessionRows] = useState([{ id: 1 }]);
-  const [selectedOptions, setSelectedOptions] = useState([]);
 
   // 🔍 Helper function to get service_type
   const getServiceType = (service_id, serviceOptions) => {
@@ -104,7 +104,7 @@ const CreatePackage = ({
       if (service_type === "PRODUCT") {
         schema = {
           ...schema,
-          package_category_id: Yup.number().required("Category is required"),
+          package_category_id: Yup.string().required("Category is required"),
           food_type: Yup.string().required("Food type is required"),
           tags: Yup.array()
             .of(
@@ -126,22 +126,24 @@ const CreatePackage = ({
           session_duration: Yup.number().required(
             "Session duration is required"
           ),
-          session_level: Yup.number().required("Session level is required"),
+          session_level: Yup.string().required("Session level is required"),
           session_validity: Yup.number().required("Validity is required"),
-          session_list: Yup.object().shape({
-            no_of_sessions: Yup.number()
-              .required("No of sessions is required")
-              .min(1, "Must be at least 1"),
-            session_duration: Yup.number()
-              .required("Amount is required")
-              .min(1, "Must be at least 1"),
-            thrive_coins: Yup.number()
-              .required("Thrive coins are required")
-              .min(0, "Must be 0 or more"),
-            session_gst: Yup.number()
-              .required("GST is required")
-              .min(0, "Must be 0 or more"),
-          }),
+          session_list: Yup.array().of(
+            Yup.object().shape({
+              no_of_sessions: Yup.number()
+                .required("No of sessions is required")
+                .min(1, "Must be at least 1"),
+              session_duration: Yup.number()
+                .required("Amount is required")
+                .min(1, "Must be at least 1"),
+              thrive_coins: Yup.number()
+                .required("Thrive coins are required")
+                .min(0, "Must be 0 or more"),
+              session_gst: Yup.number()
+                .required("GST is required")
+                .min(0, "Must be 0 or more"),
+            })
+          ),
         };
       }
 
@@ -171,15 +173,19 @@ const CreatePackage = ({
       session_validity: "",
       gst: "",
       thrive_coins: "",
-      session_list: {
-        no_of_sessions: "",
-        session_duration: "",
-        thrive_coins: "",
-        session_gst: "",
-      },
+      session_list: [
+        {
+          no_of_sessions: "",
+          session_duration: "",
+          thrive_coins: "",
+          session_gst: "",
+        },
+      ],
       description: "",
     },
     validationSchema: getValidationSchema(serviceOptions),
+    validateOnChange: false,
+    validateOnBlur: false,
     // validationSchema: Yup.lazy((values) => {
     //   let schema = {
     //     image: Yup.mixed()
@@ -293,7 +299,6 @@ const CreatePackage = ({
 
   // ✅ Reset fields except image when service_id changes
   useEffect(() => {
-
     if (formik.values.service_id) {
       formik.setValues((prev) => ({
         ...prev,
@@ -315,18 +320,23 @@ const CreatePackage = ({
         session_validity: "",
         gst: "",
         thrive_coins: "",
-        session_list: {
-          no_of_sessions: "",
-          session_duration: "",
-          thrive_coins: "",
-          session_gst: "",
-        },
+        session_list: [
+          {
+            no_of_sessions: "",
+            session_duration: "",
+            thrive_coins: "",
+            session_gst: "",
+          },
+        ],
         description: "",
       }));
     }
   }, [formik.values.service_id]);
 
-  const service_type_check = getServiceType(formik.values?.service_id, serviceOptions)
+  const service_type_check = getServiceType(
+    formik.values?.service_id,
+    serviceOptions
+  );
 
   // ✅ Session row handlers
   const handleAddSessionRow = () => {
@@ -335,11 +345,6 @@ const CreatePackage = ({
 
   const handleDeleteSessionRow = (index) => {
     setSessionRows((prev) => prev.filter((_, i) => i !== index));
-  };
-
-  const handleTagsChange = (selected) => {
-    setSelectedOptions(selected);
-    formik.setFieldValue("tags", [selected]);
   };
 
   // Handle image file change and set preview
@@ -396,11 +401,12 @@ const CreatePackage = ({
                         className="custom--input w-full"
                       />
                     </div>
-                    {formik.errors.image && (
-                      <p className="text-red-500 text-sm">
-                        {formik.errors.image}
-                      </p>
-                    )}
+                    {(formik.submitCount > 0 || formik.touched.image) &&
+                      formik.errors.image && (
+                        <p className="text-red-500 text-sm">
+                          {formik.errors.image}
+                        </p>
+                      )}
                   </div>
                   {/* Service ID */}
                   <div>
@@ -419,41 +425,69 @@ const CreatePackage = ({
                       onBlur={() => formik.setFieldTouched("service_id", true)}
                       styles={customStyles}
                     />
-                    {formik.touched.service_id && formik.errors.service_id && (
-                      <p className="text-red-500 text-sm">
-                        {formik.errors.service_id}
-                      </p>
-                    )}
-                  </div>
-
-                  {service_type_check !== "CLASS" && service_type_check !== "PRODUCT" ? null : (
-                    <div>
-                      <label className="mb-2 block">Category</label>
-                      <Select
-                        name="package_category_id"
-                        value={
-                          packageCategoryOptions.find(
-                            (opt) =>
-                              opt.value === formik.values.package_category_id
-                          ) || null
-                        }
-                        options={packageCategoryOptions}
-                        onChange={(option) =>
-                          formik.setFieldValue(
-                            "package_category_id",
-                            option.value
-                          )
-                        }
-                        onBlur={() =>
-                          formik.setFieldTouched("package_category_id", true)
-                        }
-                        styles={customStyles}
-                      />
-                      {formik.errors.package_category_id && (
+                    {(formik.submitCount > 0 || formik.touched.service_id) &&
+                      formik.errors.service_id && (
                         <p className="text-red-500 text-sm">
-                          {formik.errors.package_category_id}
+                          {formik.errors.service_id}
                         </p>
                       )}
+                  </div>
+
+                  {service_type_check !== "CLASS" &&
+                  service_type_check !== "PRODUCT" ? null : (
+                    <div>
+                      <label className="mb-2 block">Category</label>
+
+                      {service_type_check === "PRODUCT" ? (
+                        <Select
+                          name="package_category_id"
+                          value={
+                            foodTypes.find(
+                              (opt) =>
+                                opt.value === formik.values.package_category_id
+                            ) || null
+                          }
+                          options={foodTypes}
+                          onChange={(option) =>
+                            formik.setFieldValue(
+                              "package_category_id",
+                              option.value
+                            )
+                          }
+                          onBlur={() =>
+                            formik.setFieldTouched("package_category_id", true)
+                          }
+                          styles={customStyles}
+                        />
+                      ) : (
+                        <Select
+                          name="package_category_id"
+                          value={
+                            packageCategoryOptions.find(
+                              (opt) =>
+                                opt.value === formik.values.package_category_id
+                            ) || null
+                          }
+                          options={packageCategoryOptions}
+                          onChange={(option) =>
+                            formik.setFieldValue(
+                              "package_category_id",
+                              option.value
+                            )
+                          }
+                          onBlur={() =>
+                            formik.setFieldTouched("package_category_id", true)
+                          }
+                          styles={customStyles}
+                        />
+                      )}
+                      {(formik.submitCount > 0 ||
+                        formik.touched.package_category_id) &&
+                        formik.errors.package_category_id && (
+                          <p className="text-red-500 text-sm">
+                            {formik.errors.package_category_id}
+                          </p>
+                        )}
                     </div>
                   )}
 
@@ -472,11 +506,12 @@ const CreatePackage = ({
                         className="custom--input w-full"
                       />
                     </div>
-                    {formik.errors.package_name && (
-                      <p className="text-red-500 text-sm">
-                        {formik.errors.package_name}
-                      </p>
-                    )}
+                    {(formik.submitCount > 0 || formik.touched.package_name) &&
+                      formik.errors.package_name && (
+                        <p className="text-red-500 text-sm">
+                          {formik.errors.package_name}
+                        </p>
+                      )}
                   </div>
 
                   {/* Food Type */}
@@ -511,11 +546,12 @@ const CreatePackage = ({
                           Non-Veg
                         </label>
                       </div>
-                      {formik.errors.food_type && (
-                        <p className="text-red-500 text-sm">
-                          {formik.errors.food_type}
-                        </p>
-                      )}
+                      {(formik.submitCount > 0 || formik.touched.food_type) &&
+                        formik.errors.food_type && (
+                          <p className="text-red-500 text-sm">
+                            {formik.errors.food_type}
+                          </p>
+                        )}
                     </div>
                   )}
 
@@ -539,11 +575,12 @@ const CreatePackage = ({
                         onBlur={() => formik.setFieldTouched("staff_id", true)}
                         styles={customStyles}
                       />
-                      {formik.errors.staff_id && (
-                        <p className="text-red-500 text-sm">
-                          {formik.errors.staff_id}
-                        </p>
-                      )}
+                      {(formik.submitCount > 0 || formik.touched.staff_id) &&
+                        formik.errors.staff_id && (
+                          <p className="text-red-500 text-sm">
+                            {formik.errors.staff_id}
+                          </p>
+                        )}
                     </div>
                   )}
 
@@ -578,9 +615,9 @@ const CreatePackage = ({
                         />
                       </div>
                       {/* Display validation error if any */}
-                      {formik.touched.start_date &&
+                      {(formik.submitCount > 0 || formik.touched.start_date) &&
                         formik.errors.start_date && (
-                          <p className="text-red-500 text-sm mt-1">
+                          <p className="text-red-500 text-sm">
                             {formik.errors.start_date}
                           </p>
                         )}
@@ -635,9 +672,9 @@ const CreatePackage = ({
                         />
                       </div>
                       {/* Display validation error if any */}
-                      {formik.touched.start_time &&
+                      {(formik.submitCount > 0 || formik.touched.start_time) &&
                         formik.errors.start_time && (
-                          <p className="text-red-500 text-sm mt-1">
+                          <p className="text-red-500 text-sm">
                             {formik.errors.start_time}
                           </p>
                         )}
@@ -658,11 +695,12 @@ const CreatePackage = ({
                           className="custom--input w-full"
                         />
                       </div>
-                      {formik.errors.duration && (
-                        <p className="text-red-500 text-sm">
-                          {formik.errors.duration}
-                        </p>
-                      )}
+                      {(formik.submitCount > 0 || formik.touched.duration) &&
+                        formik.errors.duration && (
+                          <p className="text-red-500 text-sm">
+                            {formik.errors.duration}
+                          </p>
+                        )}
                     </div>
                   )}
 
@@ -686,11 +724,12 @@ const CreatePackage = ({
                         onBlur={() => formik.setFieldTouched("studio_id", true)}
                         styles={customStyles}
                       />
-                      {formik.errors.studio_id && (
-                        <p className="text-red-500 text-sm">
-                          {formik.errors.studio_id}
-                        </p>
-                      )}
+                      {(formik.submitCount > 0 || formik.touched.studio_id) &&
+                        formik.errors.studio_id && (
+                          <p className="text-red-500 text-sm">
+                            {formik.errors.studio_id}
+                          </p>
+                        )}
                     </div>
                   )}
 
@@ -708,11 +747,13 @@ const CreatePackage = ({
                           className="custom--input w-full"
                         />
                       </div>
-                      {formik.errors.max_capacity && (
-                        <p className="text-red-500 text-sm">
-                          {formik.errors.max_capacity}
-                        </p>
-                      )}
+                      {(formik.submitCount > 0 ||
+                        formik.touched.max_capacity) &&
+                        formik.errors.max_capacity && (
+                          <p className="text-red-500 text-sm">
+                            {formik.errors.max_capacity}
+                          </p>
+                        )}
                     </div>
                   )}
 
@@ -730,11 +771,13 @@ const CreatePackage = ({
                           className="custom--input w-full"
                         />
                       </div>
-                      {formik.errors.waitlist_capacity && (
-                        <p className="text-red-500 text-sm">
-                          {formik.errors.waitlist_capacity}
-                        </p>
-                      )}
+                      {(formik.submitCount > 0 ||
+                        formik.touched.waitlist_capacity) &&
+                        formik.errors.waitlist_capacity && (
+                          <p className="text-red-500 text-sm">
+                            {formik.errors.waitlist_capacity}
+                          </p>
+                        )}
                     </div>
                   )}
 
@@ -762,11 +805,12 @@ const CreatePackage = ({
                           className="multi--select"
                         />
 
-                        {formik.touched.tags && formik.errors.tags && (
-                          <p className="text-red-500 text-sm">
-                            {formik.errors.tags}
-                          </p>
-                        )}
+                        {(formik.submitCount > 0 || formik.touched.tags) &&
+                          formik.errors.tags && (
+                            <p className="text-red-500 text-sm">
+                              {formik.errors.tags}
+                            </p>
+                          )}
                       </div>
                     </div>
                   )}
@@ -793,7 +837,8 @@ const CreatePackage = ({
                           styles={customStyles}
                         />
                       </div>
-                      {formik.touched.booking_type &&
+                      {(formik.submitCount > 0 ||
+                        formik.touched.booking_type) &&
                         formik.errors.booking_type && (
                           <p className="text-red-500 text-sm">
                             {formik.errors.booking_type}
@@ -820,7 +865,8 @@ const CreatePackage = ({
                           className="custom--input w-full"
                         />
                       </div>
-                      {formik.touched.session_duration &&
+                      {(formik.submitCount > 0 ||
+                        formik.touched.session_duration) &&
                         formik.errors.session_duration && (
                           <p className="text-red-500 text-sm">
                             {formik.errors.session_duration}
@@ -852,7 +898,8 @@ const CreatePackage = ({
                           styles={customStyles}
                         />
                       </div>
-                      {formik.touched.session_level &&
+                      {(formik.submitCount > 0 ||
+                        formik.touched.session_level) &&
                         formik.errors.session_level && (
                           <p className="text-red-500 text-sm">
                             {formik.errors.session_level}
@@ -874,11 +921,12 @@ const CreatePackage = ({
                           className="custom--input w-full"
                         />
                       </div>
-                      {formik.touched.amount && formik.errors.amount && (
-                        <p className="text-red-500 text-sm">
-                          {formik.errors.amount}
-                        </p>
-                      )}
+                      {(formik.submitCount > 0 || formik.touched.amount) &&
+                        formik.errors.amount && (
+                          <p className="text-red-500 text-sm">
+                            {formik.errors.amount}
+                          </p>
+                        )}
                     </div>
                   )}
 
@@ -899,7 +947,8 @@ const CreatePackage = ({
                           className="custom--input w-full"
                         />
                       </div>
-                      {formik.touched.session_validity &&
+                      {(formik.submitCount > 0 ||
+                        formik.touched.session_validity) &&
                         formik.errors.session_validity && (
                           <p className="text-red-500 text-sm">
                             {formik.errors.session_validity}
@@ -921,11 +970,12 @@ const CreatePackage = ({
                           className="custom--input w-full"
                         />
                       </div>
-                      {formik.touched.amount && formik.errors.amount && (
-                        <p className="text-red-500 text-sm">
-                          {formik.errors.amount}
-                        </p>
-                      )}
+                      {(formik.submitCount > 0 || formik.touched.amount) &&
+                        formik.errors.amount && (
+                          <p className="text-red-500 text-sm">
+                            {formik.errors.amount}
+                          </p>
+                        )}
                     </div>
                   )}
 
@@ -944,11 +994,12 @@ const CreatePackage = ({
                           className="custom--input w-full"
                         />
                       </div>
-                      {formik.touched.gst && formik.errors.gst && (
-                        <p className="text-red-500 text-sm">
-                          {formik.errors.gst}
-                        </p>
-                      )}
+                      {(formik.submitCount > 0 || formik.touched.gst) &&
+                        formik.errors.gst && (
+                          <p className="text-red-500 text-sm">
+                            {formik.errors.gst}
+                          </p>
+                        )}
                     </div>
                   )}
 
@@ -963,7 +1014,9 @@ const CreatePackage = ({
                         onBlur={formik.handleBlur}
                         className="custom--input w-full"
                       />
-                      {formik.touched.thrive_coins &&
+
+                      {(formik.submitCount > 0 ||
+                        formik.touched.thrive_coins) &&
                         formik.errors.thrive_coins && (
                           <p className="text-red-500 text-sm">
                             {formik.errors.thrive_coins}
@@ -985,11 +1038,12 @@ const CreatePackage = ({
                         onBlur={formik.handleBlur}
                         className="custom--input w-full"
                       />
-                      {formik.touched.gst && formik.errors.gst && (
-                        <p className="text-red-500 text-sm">
-                          {formik.errors.gst}
-                        </p>
-                      )}
+                      {(formik.submitCount > 0 || formik.touched.gst) &&
+                        formik.errors.gst && (
+                          <p className="text-red-500 text-sm">
+                            {formik.errors.gst}
+                          </p>
+                        )}
                     </div>
                   )}
 
@@ -1004,7 +1058,8 @@ const CreatePackage = ({
                         onBlur={formik.handleBlur}
                         className="custom--input w-full"
                       />
-                      {formik.touched.thrive_coins &&
+                      {(formik.submitCount > 0 ||
+                        formik.touched.thrive_coins) &&
                         formik.errors.thrive_coins && (
                           <p className="text-red-500 text-sm">
                             {formik.errors.thrive_coins}
@@ -1028,20 +1083,22 @@ const CreatePackage = ({
                                 </label>
                                 <input
                                   type="number"
-                                  name="session_list.no_of_sessions"
+                                  name={`session_list[${index}].no_of_sessions`}
                                   value={
-                                    formik.values.session_list?.no_of_sessions
+                                    formik.values.session_list[index]
+                                      ?.no_of_sessions || ""
                                   }
                                   onChange={formik.handleChange}
                                   onBlur={formik.handleBlur}
                                   className="custom--input w-full"
                                 />
-                                {formik.touched.session_list?.no_of_sessions &&
-                                  formik.errors.session_list
+                                {formik.touched.session_list?.[index]
+                                  ?.no_of_sessions &&
+                                  formik.errors.session_list?.[index]
                                     ?.no_of_sessions && (
                                     <p className="text-red-500 text-sm">
                                       {
-                                        formik.errors.session_list
+                                        formik.errors.session_list[index]
                                           .no_of_sessions
                                       }
                                     </p>
@@ -1053,21 +1110,22 @@ const CreatePackage = ({
                                 <label className="mb-2 block">Amount</label>
                                 <input
                                   type="number"
-                                  name="session_list.session_duration"
+                                  name={`session_list[${index}].session_duration`}
                                   value={
-                                    formik.values.session_list?.session_duration
+                                    formik.values.session_list[index]
+                                      ?.session_duration || ""
                                   }
                                   onChange={formik.handleChange}
                                   onBlur={formik.handleBlur}
                                   className="custom--input w-full"
                                 />
-                                {formik.touched.session_list
+                                {formik.touched.session_list?.[index]
                                   ?.session_duration &&
-                                  formik.errors.session_list
+                                  formik.errors.session_list?.[index]
                                     ?.session_duration && (
                                     <p className="text-red-500 text-sm">
                                       {
-                                        formik.errors.session_list
+                                        formik.errors.session_list[index]
                                           .session_duration
                                       }
                                     </p>
@@ -1081,18 +1139,24 @@ const CreatePackage = ({
                                 </label>
                                 <input
                                   type="number"
-                                  name="session_list.thrive_coins"
+                                  name={`session_list[${index}].thrive_coins`}
                                   value={
-                                    formik.values.session_list?.thrive_coins
+                                    formik.values.session_list[index]
+                                      ?.thrive_coins || ""
                                   }
                                   onChange={formik.handleChange}
                                   onBlur={formik.handleBlur}
                                   className="custom--input w-full"
                                 />
-                                {formik.touched.session_list?.thrive_coins &&
-                                  formik.errors.session_list?.thrive_coins && (
+                                {formik.touched.session_list?.[index]
+                                  ?.thrive_coins &&
+                                  formik.errors.session_list?.[index]
+                                    ?.thrive_coins && (
                                     <p className="text-red-500 text-sm">
-                                      {formik.errors.session_list.thrive_coins}
+                                      {
+                                        formik.errors.session_list[index]
+                                          .thrive_coins
+                                      }
                                     </p>
                                   )}
                               </div>
@@ -1105,19 +1169,25 @@ const CreatePackage = ({
                                 <div className="relative">
                                   <input
                                     type="number"
-                                    name="session_list.session_gst"
+                                    name={`session_list[${index}].session_gst`}
                                     value={
-                                      formik.values.session_list?.session_gst
+                                      formik.values.session_list[index]
+                                        ?.session_gst || ""
                                     }
                                     onChange={formik.handleChange}
                                     onBlur={formik.handleBlur}
                                     className="custom--input w-full"
                                   />
                                 </div>
-                                {formik.touched.session_list?.session_gst &&
-                                  formik.errors.session_list?.session_gst && (
+                                {formik.touched.session_list?.[index]
+                                  ?.session_gst &&
+                                  formik.errors.session_list?.[index]
+                                    ?.session_gst && (
                                     <p className="text-red-500 text-sm">
-                                      {formik.errors.session_list.session_gst}
+                                      {
+                                        formik.errors.session_list[index]
+                                          .session_gst
+                                      }
                                     </p>
                                   )}
                               </div>
@@ -1161,11 +1231,12 @@ const CreatePackage = ({
                     }}
                     onBlur={() => formik.setFieldTouched("description", true)}
                   />
-                  {formik.errors.description && (
-                    <p className="text-red-500 text-sm">
-                      {formik.errors.description}
-                    </p>
-                  )}
+                  {(formik.submitCount > 0 || formik.touched.description) &&
+                    formik.errors.description && (
+                      <p className="text-red-500 text-sm">
+                        {formik.errors.description}
+                      </p>
+                    )}
                 </div>
               </div>
             </div>

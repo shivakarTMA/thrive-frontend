@@ -49,10 +49,12 @@ const PackagesList = () => {
   // Fetch option lists
   useEffect(() => {
     dispatch(fetchOptionList("SESSION_LEVEL"));
+    dispatch(fetchOptionList("FOOD_CATEGORY"));
   }, [dispatch]);
 
   // Extract Redux lists
   const sessionLevel = lists["SESSION_LEVEL"] || [];
+  const foodTypes = lists["FOOD_CATEGORY"] || [];
 
   const fetchStaff = async (search = "") => {
     try {
@@ -377,6 +379,7 @@ const PackagesList = () => {
           studioOptions={studioOptions}
           staffListOptions={staffListOptions}
           sessionLevel={sessionLevel}
+          foodTypes={foodTypes}
           packageCategoryOptions={packageCategoryOptions}
         />
       )}
