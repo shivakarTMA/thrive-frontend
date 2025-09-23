@@ -28,7 +28,6 @@ const CreatePackage = ({
   staffListOptions,
   studioOptions,
   sessionLevel,
-  foodTypes,
 }) => {
   const [sessionRows, setSessionRows] = useState([{ id: 1 }]);
 
@@ -101,25 +100,6 @@ const CreatePackage = ({
         }
       }
 
-      if (service_type === "PRODUCT") {
-        schema = {
-          ...schema,
-          package_category_id: Yup.string().required("Category is required"),
-          food_type: Yup.string().required("Food type is required"),
-          tags: Yup.array()
-            .of(
-              Yup.object().shape({
-                label: Yup.string().required(),
-                value: Yup.string().required(),
-              })
-            )
-            .min(1, "Please add at least one tag"),
-          amount: Yup.number().required("Amount is required"),
-          gst: Yup.number().required("GST is required"),
-          thrive_coins: Yup.number().required("Thrive coins required"),
-        };
-      }
-
       if (service_type === "SESSION") {
         schema = {
           ...schema,
@@ -136,10 +116,13 @@ const CreatePackage = ({
               session_duration: Yup.number()
                 .required("Amount is required")
                 .min(1, "Must be at least 1"),
+              amount: Yup.number()
+                .required("Amount is required")
+                .min(0, "Must be 0 or more"),
               thrive_coins: Yup.number()
                 .required("Thrive coins are required")
                 .min(0, "Must be 0 or more"),
-              session_gst: Yup.number()
+              gst: Yup.number()
                 .required("GST is required")
                 .min(0, "Must be 0 or more"),
             })
@@ -157,7 +140,6 @@ const CreatePackage = ({
       package_name: "",
       service_id: 1,
       package_category_id: null,
-      food_type: "",
       staff_id: null,
       start_date: "",
       start_time: "",
@@ -177,8 +159,9 @@ const CreatePackage = ({
         {
           no_of_sessions: "",
           session_duration: "",
+          amount: "",
           thrive_coins: "",
-          session_gst: "",
+          gst: "",
         },
       ],
       description: "",
@@ -186,112 +169,6 @@ const CreatePackage = ({
     validationSchema: getValidationSchema(serviceOptions),
     validateOnChange: false,
     validateOnBlur: false,
-    // validationSchema: Yup.lazy((values) => {
-    //   let schema = {
-    //     image: Yup.mixed()
-    //       .required("Image is required")
-    //       .test(
-    //         "fileType",
-    //         "Only JPG, PNG or WEBP files are allowed",
-    //         (value) => {
-    //           if (!value) return false; // required
-    //           return ["image/jpeg", "image/png", "image/webp"].includes(
-    //             value.type
-    //           );
-    //         }
-    //       )
-    //       .test("fileSize", "File size must be less than 2 MB", (value) => {
-    //         if (!value) return false;
-    //         return value.size <= 2 * 1024 * 1024; // 2MB limit
-    //       }),
-
-    //     service_id: Yup.number().required("Service is required"),
-    //     package_name: Yup.string().required("Name is required"),
-    //     description: Yup.string().required("Description is required"),
-    //   };
-
-    //   if (values.service_id === 1) {
-    //     schema = {
-    //       ...schema,
-    //       package_category_id: Yup.number().required("Category is required"),
-    //       staff_id: Yup.number().required("Staff is required"),
-    //       start_date: Yup.string().required("Start Date is required"),
-    //       start_time: Yup.string().required("Start Time is required"),
-    //       duration: Yup.number()
-    //         .required("Duration is required")
-    //         .min(1, "Must be at least 1"),
-    //       studio_id: Yup.number().required("Studio is required"),
-    //       max_capacity: Yup.number()
-    //         .required("Capacity is required")
-    //         .min(1, "Must be at least 1"),
-    //       waitlist_capacity: Yup.number()
-    //         .required("Waitlist is required")
-    //         .min(1, "Must be at least 1"),
-    //       tags: Yup.array()
-    //         .of(
-    //           Yup.object().shape({
-    //             label: Yup.string().required(),
-    //             value: Yup.string().required(),
-    //           })
-    //         )
-    //         .min(1, "Please add at least one tag"),
-    //       booking_type: Yup.string().required("Booking type is required"),
-    //     };
-
-    //     if (values.booking_type === "Yes") {
-    //       schema.amount = Yup.number().required("Amount is required");
-    //       schema.gst = Yup.number().required("GST is required");
-    //       schema.thrive_coins = Yup.number().required("Thrive coins required");
-    //     }
-    //   }
-
-    //   if (values.service_id === 10) {
-    //     schema = {
-    //       ...schema,
-    //       package_category_id: Yup.number().required("Category is required"),
-    //       food_type: Yup.string().required("Food type is required"),
-    //       tags: Yup.array()
-    //         .of(
-    //           Yup.object().shape({
-    //             label: Yup.string().required(),
-    //             value: Yup.string().required(),
-    //           })
-    //         )
-    //         .min(1, "Please add at least one tag"),
-    //       amount: Yup.number().required("Amount is required"),
-    //       gst: Yup.number().required("GST is required"),
-    //       thrive_coins: Yup.number().required("Thrive coins required"),
-    //     };
-    //   }
-
-    //   if (values.service_id !== 1 && values.service_id !== 10) {
-    //     schema = {
-    //       ...schema,
-    //       session_duration: Yup.number().required(
-    //         "Session duration is required"
-    //       ),
-    //       session_level: Yup.number().required("Session level is required"),
-    //       session_validity: Yup.number().required("Validity is required"),
-    //       session_list: Yup.object().shape({
-    //         no_of_sessions: Yup.number()
-    //           .required("No of sessions is required")
-    //           .min(1, "Must be at least 1"),
-    //         session_duration: Yup.number()
-    //           .required("Amount is required")
-    //           .min(1, "Must be at least 1"),
-    //         thrive_coins: Yup.number()
-    //           .required("Thrive coins are required")
-    //           .min(0, "Must be 0 or more"),
-    //         session_gst: Yup.number()
-    //           .required("GST is required")
-    //           .min(0, "Must be 0 or more"),
-    //       }),
-    //     };
-    //   }
-
-    //   return Yup.object(schema);
-    // }),
-
     onSubmit: (values) => {
       console.log("✅ Form Submitted:", values);
     },
@@ -304,7 +181,6 @@ const CreatePackage = ({
         ...prev,
         package_name: "",
         package_category_id: null,
-        food_type: "",
         staff_id: null,
         start_date: "",
         start_time: "",
@@ -325,7 +201,8 @@ const CreatePackage = ({
             no_of_sessions: "",
             session_duration: "",
             thrive_coins: "",
-            session_gst: "",
+            amount: "",
+            gst: "",
           },
         ],
         description: "",
@@ -433,34 +310,11 @@ const CreatePackage = ({
                       )}
                   </div>
 
-                  {service_type_check !== "CLASS" &&
-                  service_type_check !== "PRODUCT" ? null : (
+                  {service_type_check !== "CLASS" ? null : (
                     <div>
                       <label className="mb-2 block">Category</label>
 
-                      {service_type_check === "PRODUCT" ? (
-                        <Select
-                          name="package_category_id"
-                          value={
-                            foodTypes.find(
-                              (opt) =>
-                                opt.value === formik.values.package_category_id
-                            ) || null
-                          }
-                          options={foodTypes}
-                          onChange={(option) =>
-                            formik.setFieldValue(
-                              "package_category_id",
-                              option.value
-                            )
-                          }
-                          onBlur={() =>
-                            formik.setFieldTouched("package_category_id", true)
-                          }
-                          styles={customStyles}
-                        />
-                      ) : (
-                        <Select
+                      <Select
                           name="package_category_id"
                           value={
                             packageCategoryOptions.find(
@@ -480,7 +334,6 @@ const CreatePackage = ({
                           }
                           styles={customStyles}
                         />
-                      )}
                       {(formik.submitCount > 0 ||
                         formik.touched.package_category_id) &&
                         formik.errors.package_category_id && (
@@ -514,46 +367,6 @@ const CreatePackage = ({
                       )}
                   </div>
 
-                  {/* Food Type */}
-                  {service_type_check !== "PRODUCT" ? null : (
-                    <div className="food-type-selector">
-                      <label className="block mb-2">Select Food Type</label>
-
-                      <div className="flex items-center gap-4">
-                        <label className="flex items-center gap-2">
-                          <input
-                            type="radio"
-                            name="food_type"
-                            value="veg"
-                            checked={formik.values.food_type === "veg"}
-                            onChange={() =>
-                              formik.setFieldValue("food_type", "veg")
-                            }
-                          />
-                          Veg
-                        </label>
-
-                        <label className="flex items-center gap-2">
-                          <input
-                            type="radio"
-                            name="food_type"
-                            value="non_veg"
-                            checked={formik.values.food_type === "non_veg"}
-                            onChange={() =>
-                              formik.setFieldValue("food_type", "non_veg")
-                            }
-                          />
-                          Non-Veg
-                        </label>
-                      </div>
-                      {(formik.submitCount > 0 || formik.touched.food_type) &&
-                        formik.errors.food_type && (
-                          <p className="text-red-500 text-sm">
-                            {formik.errors.food_type}
-                          </p>
-                        )}
-                    </div>
-                  )}
 
                   {/* Staff Dropdown */}
                   {service_type_check !== "CLASS" ? null : (
@@ -782,8 +595,7 @@ const CreatePackage = ({
                   )}
 
                   {/* Tags */}
-                  {service_type_check !== "CLASS" &&
-                  service_type_check !== "PRODUCT" ? null : (
+                  {service_type_check !== "CLASS" ? null : (
                     <div>
                       <label className="mb-2 block">Tags</label>
                       <div className="relative">
@@ -848,8 +660,7 @@ const CreatePackage = ({
                   )}
 
                   {/* Session Duration */}
-                  {service_type_check !== "CLASS" &&
-                  service_type_check !== "PRODUCT" ? (
+                  {service_type_check !== "CLASS" ? (
                     <div>
                       <label className="mb-2 block">
                         Session Duration{" "}
@@ -876,8 +687,7 @@ const CreatePackage = ({
                   ) : null}
 
                   {/* Level */}
-                  {service_type_check !== "CLASS" &&
-                  service_type_check !== "PRODUCT" ? (
+                  {service_type_check !== "CLASS" ? (
                     <div>
                       <label className="mb-2 block">Level</label>
                       <div className="relative">
@@ -908,31 +718,8 @@ const CreatePackage = ({
                     </div>
                   ) : null}
 
-                  {service_type_check === "PRODUCT" && (
-                    <div>
-                      <label className="mb-2 block">Amount (₹)</label>
-                      <div className="relative">
-                        <input
-                          type="number"
-                          name="amount"
-                          value={formik.values.amount}
-                          onChange={formik.handleChange}
-                          onBlur={formik.handleBlur}
-                          className="custom--input w-full"
-                        />
-                      </div>
-                      {(formik.submitCount > 0 || formik.touched.amount) &&
-                        formik.errors.amount && (
-                          <p className="text-red-500 text-sm">
-                            {formik.errors.amount}
-                          </p>
-                        )}
-                    </div>
-                  )}
-
                   {/* Validity */}
-                  {service_type_check !== "CLASS" &&
-                  service_type_check !== "PRODUCT" ? (
+                  {service_type_check !== "CLASS" ? (
                     <div>
                       <label className="mb-2 block">
                         Validity <span className="text-sm">(In Days)</span>
@@ -1024,62 +811,18 @@ const CreatePackage = ({
                         )}
                     </div>
                   )}
-
-                  {service_type_check === "PRODUCT" && (
-                    <div>
-                      <label className="mb-2 block">
-                        GST <span>(%)</span>
-                      </label>
-                      <input
-                        type="number"
-                        name="gst"
-                        value={formik.values.gst}
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
-                        className="custom--input w-full"
-                      />
-                      {(formik.submitCount > 0 || formik.touched.gst) &&
-                        formik.errors.gst && (
-                          <p className="text-red-500 text-sm">
-                            {formik.errors.gst}
-                          </p>
-                        )}
-                    </div>
-                  )}
-
-                  {service_type_check === "PRODUCT" && (
-                    <div>
-                      <label className="mb-2 block">Thrive Coins</label>
-                      <input
-                        type="number"
-                        name="thrive_coins"
-                        value={formik.values.thrive_coins}
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
-                        className="custom--input w-full"
-                      />
-                      {(formik.submitCount > 0 ||
-                        formik.touched.thrive_coins) &&
-                        formik.errors.thrive_coins && (
-                          <p className="text-red-500 text-sm">
-                            {formik.errors.thrive_coins}
-                          </p>
-                        )}
-                    </div>
-                  )}
                 </div>
 
-                {service_type_check !== "CLASS" &&
-                  service_type_check !== "PRODUCT" && (
+                {service_type_check !== "CLASS" && (
                     <div className="col-span-4 space-y-3">
                       {sessionRows.map((row, index) => (
                         <React.Fragment key={index}>
                           <div className="flex items-end gap-4 border-2 border-dashed border-gray-300 bg-gray-100 rounded-lg p-6 mt-5">
-                            <div className="grid grid-cols-4 gap-5">
+                            <div className="grid grid-cols-5 gap-5">
                               {/* No of Sessions */}
                               <div>
                                 <label className="mb-2 block">
-                                  No of Sessions
+                                  No. of Sessions
                                 </label>
                                 <input
                                   type="number"
@@ -1107,7 +850,7 @@ const CreatePackage = ({
 
                               {/* Session Duration */}
                               <div>
-                                <label className="mb-2 block">Amount</label>
+                                <label className="mb-2 block">Session Duration</label>
                                 <input
                                   type="number"
                                   name={`session_list[${index}].session_duration`}
@@ -1128,6 +871,33 @@ const CreatePackage = ({
                                         formik.errors.session_list[index]
                                           .session_duration
                                       }
+                                    </p>
+                                  )}
+                              </div>
+
+                              {/* GST */}
+                              <div>
+                                <label className="mb-2 block">
+                                  Amount <span>(₹)</span>
+                                </label>
+                                <div className="relative">
+                                  <input
+                                    type="number"
+                                    name={`session_list[${index}].amount`}
+                                    value={
+                                      formik.values.session_list[index]
+                                        ?.amount || ""
+                                    }
+                                    onChange={formik.handleChange}
+                                    onBlur={formik.handleBlur}
+                                    className="custom--input w-full"
+                                  />
+                                </div>
+                                {formik.touched.session_list?.[index]?.amount &&
+                                  formik.errors.session_list?.[index]
+                                    ?.amount && (
+                                    <p className="text-red-500 text-sm">
+                                      {formik.errors.session_list[index].amount}
                                     </p>
                                   )}
                               </div>
@@ -1169,25 +939,20 @@ const CreatePackage = ({
                                 <div className="relative">
                                   <input
                                     type="number"
-                                    name={`session_list[${index}].session_gst`}
+                                    name={`session_list[${index}].gst`}
                                     value={
-                                      formik.values.session_list[index]
-                                        ?.session_gst || ""
+                                      formik.values.session_list[index]?.gst ||
+                                      ""
                                     }
                                     onChange={formik.handleChange}
                                     onBlur={formik.handleBlur}
                                     className="custom--input w-full"
                                   />
                                 </div>
-                                {formik.touched.session_list?.[index]
-                                  ?.session_gst &&
-                                  formik.errors.session_list?.[index]
-                                    ?.session_gst && (
+                                {formik.touched.session_list?.[index]?.gst &&
+                                  formik.errors.session_list?.[index]?.gst && (
                                     <p className="text-red-500 text-sm">
-                                      {
-                                        formik.errors.session_list[index]
-                                          .session_gst
-                                      }
+                                      {formik.errors.session_list[index].gst}
                                     </p>
                                   )}
                               </div>

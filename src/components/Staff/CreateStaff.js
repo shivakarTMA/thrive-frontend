@@ -14,6 +14,9 @@ import {
   FaUser,
 } from "react-icons/fa6";
 import { MdInsertPhoto } from "react-icons/md";
+import { CKEditor } from "@ckeditor/ckeditor5-react";
+import ClassicEditor from "@ckeditor/ckeditor5-build-classic";
+import { LuPlug } from "react-icons/lu";
 
 const roleOptions = [
   { value: "admin", label: "Admin" },
@@ -34,13 +37,6 @@ const centerOptions = [
   { value: "center3", label: "Center 3" },
 ];
 
-const serviceOptions = [
-  { value: "pt", label: "Personal Training" },
-  { value: "bca", label: "BCA" },
-  { value: "nutrition", label: "Nutrition" },
-  { value: "massage", label: "Massage" },
-  { value: "haircut", label: "Haircut" },
-];
 
 const tagOptions = [
   { value: "weight Loss", label: "Weight Loss" },
@@ -76,23 +72,13 @@ const validationSchema = Yup.object({
         }),
     otherwise: () => Yup.mixed().notRequired(),
   }),
-  shortDescription: Yup.string().when("showOnApp", {
-    is: "active",
-    then: () => Yup.string().required("Short Description is required"),
-  }),
-  longDescription: Yup.string().when("showOnApp", {
+  description: Yup.string().when("showOnApp", {
     is: "active",
     then: () => Yup.string().required("Long Description is required"),
   }),
   tags: Yup.array().when("showOnApp", {
     is: "active",
     then: () => Yup.array().of(Yup.string()).min(1, "Tags are required"),
-  }),
-  serviceMapping: Yup.array().when("showOnApp", {
-    is: "active",
-    then: () =>
-      Yup.array().of(Yup.string()).min(1, "Select at least one service"),
-    otherwise: () => Yup.array().notRequired(),
   }),
 });
 
@@ -106,13 +92,12 @@ const CreateStaff = ({ setShowModal, onExerciseCreated, initialData }) => {
     phoneNumber: initialData?.phoneNumber || "",
     role: initialData?.role || "",
     assignedCenters: initialData?.assignedCenters || [],
-    staffStatus: initialData?.staffStatus || "active",
+    status: initialData?.status || "ACTIVE",
     showOnApp: initialData?.showOnApp || "inactive",
     profilePicture: initialData?.serviceImage || "",
-    shortDescription: initialData?.shortDescription || "",
-    longDescription: initialData?.longDescription || "",
+    description: initialData?.description || "",
+    status: initialData?.status || "",
     tags: initialData?.tags || [],
-    serviceMapping: initialData?.serviceMapping || [],
   };
 
   const formik = useFormik({
@@ -393,81 +378,60 @@ const CreateStaff = ({ setShowModal, onExerciseCreated, initialData }) => {
                         )}
                       </div>
 
-                      {/* Service Mapping */}
+                      {/* Status */}
                       <div>
                         <label className="mb-2 block">
-                          Service Mapping<span className="text-red-500">*</span>
+                          Staff Status<span className="text-red-500">*</span>
                         </label>
                         <div className="relative">
-                          <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
-                            <FaListCheck />
+                          <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[10]">
+                            <LuPlug />
                           </span>
                           <Select
-                            options={serviceOptions}
-                            isMulti
-                            value={serviceOptions.filter((option) =>
-                              formik.values.serviceMapping.includes(
-                                option.value
-                              )
-                            )}
-                            onChange={(selected) =>
-                              formik.setFieldValue(
-                                "serviceMapping",
-                                selected.map((s) => s.value)
-                              )
+                            name="status"
+                            value={{
+                              label: formik.values.status,
+                              value: formik.values.status,
+                            }}
+                            options={[
+                              { label: "Active", value: "ACTIVE" },
+                              { label: "Inactive", value: "INACTIVE" },
+                            ]}
+                            onChange={(option) =>
+                              formik.setFieldValue("status", option.value)
                             }
-                            onBlur={() =>
-                              formik.setFieldTouched("serviceMapping", true)
-                            }
+                            onBlur={() => formik.setFieldTouched("status", true)}
                             styles={selectIcon}
+                            className="!capitalize"
                           />
                         </div>
-                        {formik.touched.serviceMapping &&
-                          formik.errors.serviceMapping && (
-                            <p className="text-red-500 text-sm">
-                              {formik.errors.serviceMapping}
-                            </p>
-                          )}
+                        {formik.touched.status && formik.errors.status && (
+                          <p className="text-red-500 text-sm mt-1">
+                            {formik.errors.status}
+                          </p>
+                        )}
                       </div>
 
-                      {/* Short Description */}
-                      <div>
+                      {/* Description */}
+                      <div className="col-span-3">
                         <label className="mb-2 block">
-                          Short Description
+                          Description
                           <span className="text-red-500">*</span>
                         </label>
-                        <textarea
-                          name="shortDescription"
-                          className="custom--input w-full"
-                          value={formik.values.shortDescription}
-                          onChange={formik.handleChange}
-                          onBlur={formik.handleBlur}
-                        />
-                        {formik.touched.shortDescription &&
-                          formik.errors.shortDescription && (
-                            <p className="text-red-500 text-sm">
-                              {formik.errors.shortDescription}
-                            </p>
-                          )}
-                      </div>
 
-                      {/* Long Description */}
-                      <div>
-                        <label className="mb-2 block">
-                          Long Description
-                          <span className="text-red-500">*</span>
-                        </label>
-                        <textarea
-                          name="longDescription"
-                          className="custom--input w-full"
-                          value={formik.values.longDescription}
-                          onChange={formik.handleChange}
-                          onBlur={formik.handleBlur}
+                        <CKEditor
+                          editor={ClassicEditor}
+                          data={formik.values.description || ""}
+                          onChange={(event, editor) => {
+                            const data = editor.getData(); // ✅ Get HTML string from editor
+                            formik.setFieldValue("description", data);
+                          }}
+                          onBlur={() => formik.setFieldTouched("description", true)}
                         />
-                        {formik.touched.longDescription &&
-                          formik.errors.longDescription && (
+                        {formik.touched.description &&
+                          formik.errors.description && (
                             <p className="text-red-500 text-sm">
-                              {formik.errors.longDescription}
+                              {formik.errors.description}
                             </p>
                           )}
                       </div>

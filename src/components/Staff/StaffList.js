@@ -65,7 +65,7 @@ const StaffList = () => {
             email: staff.email,
             role: staff.designation || "N/A",
             assignedCenters: ["Center 1"], // dummy data until API provides
-            staffStatus: "active", // default until API provides
+            status: "active", // default until API provides
             showOnApp: "inactive", // default until API provides
           }));
           setSubmittedServices(staffList);
@@ -100,7 +100,7 @@ const StaffList = () => {
       : true;
 
     const matchesStatus = selectedStaffStatus
-      ? staff.staffStatus === selectedStaffStatus.value
+      ? staff.status === selectedStaffStatus.value
       : true;
 
     const matchesShowOnApp = selectedAppStatus
@@ -123,16 +123,16 @@ const StaffList = () => {
   );
 
   // Add / Update staff locally (replace with POST/PUT API when available)
-  const handleProductCreated = (productData) => {
+  const handleStaffCreated = (item) => {
     if (editingService) {
       setSubmittedServices((prev) =>
         prev.map((p) =>
-          p.id === productData.id ? { ...p, ...productData } : p
+          p.id === item.id ? { ...p, ...item } : p
         )
       );
       toast.success("Staff updated successfully!");
     } else {
-      const newProduct = { id: Date.now(), ...productData };
+      const newProduct = { id: Date.now(), ...item };
       setSubmittedServices((prev) => [...prev, newProduct]);
       toast.success("Staff added successfully!");
     }
@@ -157,7 +157,7 @@ const StaffList = () => {
 
     toast.success(
       `${
-        key === "staffStatus" ? "Staff status" : "Show on App"
+        key === "status" ? "Staff status" : "Show on App"
       } marked as ${newStatus}`
     );
   };
@@ -262,8 +262,8 @@ const StaffList = () => {
                 </td>
                 <td className="px-2 py-4">
                   <Switch
-                    onChange={() => handleStatusToggle(row.id, "staffStatus")}
-                    checked={row.staffStatus === "active"}
+                    onChange={() => handleStatusToggle(row.id, "status")}
+                    checked={row.status === "active"}
                     uncheckedIcon={false}
                     checkedIcon={false}
                     onColor="#000"
@@ -351,7 +351,7 @@ const StaffList = () => {
       {showModal && (
         <CreateStaff
           setShowModal={setShowModal}
-          onExerciseCreated={handleProductCreated}
+          onExerciseCreated={handleStaffCreated}
           initialData={editingService}
         />
       )}
