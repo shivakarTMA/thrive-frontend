@@ -20,8 +20,8 @@ import CoinsList from "../components/CoinsList/CoinsList";
 const MemberProfile = () => {
   const { id } = useParams();
   const [activeTab, setActiveTab] = useState("Profile Details");
-  const [memberDetails, setMemberDetails] = useState([]);
-  const member = memberDetails.find((m) => m.id === parseInt(id));
+  const [member, setMember] = useState(null);
+
   const location = useLocation();
   const tabRefs = useRef({});
 
@@ -40,22 +40,23 @@ const MemberProfile = () => {
     "Health Profile",
     "Coins",
   ];
-  const fetchMemberList = async (search = "") => {
+
+  const fetchMemberById = async (memberId) => {
     try {
-      const res = await apiAxios().get("/member/list", {
-        params: search ? { search } : {},
-      });
-      let data = res.data?.data || res.data || [];
-      setMemberDetails(data);
+      const res = await apiAxios().get(`/member/${memberId}`);
+      const data = res.data?.data || res.data || null;
+      setMember(data);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch member");
+      toast.error("Failed to fetch member details");
     }
   };
 
   useEffect(() => {
-    fetchMemberList();
-  }, []);
+    if (id) {
+      fetchMemberById(id);
+    }
+  }, [id]);
 
   useEffect(() => {
     const queryParams = new URLSearchParams(location.search);

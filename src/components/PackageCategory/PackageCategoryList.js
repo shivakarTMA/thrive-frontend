@@ -61,10 +61,10 @@ const PackageCategoryList = () => {
           formData.append("file", values.icon);
         }
 
-        if (editingOption && editingOption.id) {
+        if (editingOption && editingOption) {
           // Update
           await apiAxios().put(
-            `/package-category/${editingOption.id}`,
+            `/package-category/${editingOption}`,
             formData,
             {
               headers: { "Content-Type": "multipart/form-data" },
@@ -171,8 +171,7 @@ const PackageCategoryList = () => {
                         <div
                           className="p-1 cursor-pointer"
                           onClick={() => {
-                            setEditingOption(item);
-                            formik.setValues(item);
+                            setEditingOption(item?.id);
                             setShowModal(true);
                           }}
                         >

@@ -10,27 +10,29 @@ import { CiCamera } from "react-icons/ci";
 import Webcam from "react-webcam";
 import { IoCheckmark, IoClose } from "react-icons/io5";
 import { FaRegImage } from "react-icons/fa";
+import { apiAxios } from "../../config/config";
 
-const ProfileDetails = () => {
+const ProfileDetails = ({ member }) => {
+  console.log(member, "membershivakar");
   const [showModal, setShowModal] = useState(false);
   const webcamRef = useRef(null);
   const [formData, setFormData] = useState({
-    profileImage: DummyProfile,
-    contactNumber: "+919875646241",
-    fullName: "Rohan Agarwal",
-    dob: "01 Jan 2000",
-    gender: "MALE",
-    email: "rohan.agarwal@gmail.com",
-    location: "Gurugram, Haryana",
-    address: "Plot 2, Landmark Tower, South City 1, Block 6, Sector 41",
-    leadOwner: "rohan.agarwal@gmail.com",
-    leadType: "Select",
-    leadSource: "Select",
-    company: "Google India",
-    designation: "UI/UX Designer",
+    profileImage: "",
+    contactNumber: "",
+    fullName: "",
+    dob: "",
+    gender: null,
+    email: "",
+    location: "",
+    address: "",
+    leadOwner: "",
+    leadType: "",
+    leadSource: null,
+    company: "",
+    designation: "",
     officialEmail: "",
-    emergencyName: "Aarav Agarwal",
-    emergencyContact: "+919875646000",
+    emergencyName: "",
+    emergencyContact: "",
     emergencyEmail: "",
   });
 
@@ -81,6 +83,55 @@ const ProfileDetails = () => {
     }
   };
 
+  const fetchCompanyDetails = async (companyId) => {
+    try {
+      const res = await apiAxios().get(`/company/${companyId}`);
+      return res.data?.data || res.data || null;
+    } catch (error) {
+      console.error("Failed to fetch company details:", error);
+      return null;
+    }
+  };
+
+  useEffect(() => {
+    const populateFormData = async () => {
+      // Fetch company details if company_name is actually an ID
+      let companyName = "";
+      if (member.company_name) {
+        const companyDetails = await fetchCompanyDetails(member.company_name);
+        companyName = companyDetails?.name || ""; // fallback to empty if not found
+      }
+    
+
+    setFormData({
+      profileImage: member.profile_pic || DummyProfile,
+      contactNumber:
+        member.country_code && member.mobile
+          ? `+${member.country_code}${member.mobile}`
+          : "",
+      fullName: member.full_name || "",
+      dob: member.date_of_birth || "",
+      gender: genderOptions.find((g) => g.value === member.gender) || null,
+      email: member.email || "",
+      location: member.location || "",
+      address: member.address || "",
+      leadOwner: member.created_by || "",
+      leadType:
+        leadTypes.find((g) => g.value === member.lead_type) || null || "",
+      leadSource: member.lead_source || "",
+      company: companyName || "",
+      designation: member.designation || "",
+      officialEmail: member.official_email || "",
+      emergencyName: member.emergency_name || "",
+      emergencyContact: member.emergency_contact || "",
+      emergencyEmail: member.emergency_email || "",
+    });
+
+  };
+
+    populateFormData();
+  }, [member]);
+
   return (
     <div className="min-h-screen">
       <div className="flex gap-5">
@@ -91,12 +142,13 @@ const ProfileDetails = () => {
             <div className="text-center mb-6">
               <div className="w-full bg-gray-100 rounded-lg mx-auto mb-4 overflow-hidden relative group">
                 <img
-                  src={formData.profileImage}
+                  // src={formData.profileImage}
+                  src={member?.profile_pic || formData.profileImage}
                   alt="Profile"
                   className="w-full h-[300px] object-cover"
                 />
                 <div
-                  className="opacity-0 bg-black bg-opacity-25 flex items-center justify-center absolute w-full h-full top-0 left-0 opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity duration-300"
+                  className="bg-black bg-opacity-25 flex items-center justify-center absolute w-full h-full top-0 left-0 opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity duration-300"
                   onClick={() => setShowModal(true)}
                 >
                   <div className="bg-white bg-opacity-25 w-[60px] h-[60px] flex items-center justify-center rounded-full">
@@ -177,7 +229,7 @@ const ProfileDetails = () => {
                     Membership ID:
                   </span>
                   <span className="text-[#6F6F6F] font-[500] text-[15px]">
-                    TL317432
+                    {member?.membership_number || "N/A"}
                   </span>
                 </div>
                 <div className="flex justify-between">
@@ -185,7 +237,7 @@ const ProfileDetails = () => {
                     Centre ID:
                   </span>
                   <span className="text-[#6F6F6F] font-[500] text-[15px]">
-                    032661
+                    {member?.club_id || "N/A"}
                   </span>
                 </div>
                 <div className="flex justify-between">
@@ -193,7 +245,7 @@ const ProfileDetails = () => {
                     Centre Name:
                   </span>
                   <span className="text-[#6F6F6F] font-[500] text-[15px]">
-                    Club 5, Gurugram
+                    {member?.location || "N/A"}
                   </span>
                 </div>
               </div>
@@ -210,7 +262,7 @@ const ProfileDetails = () => {
                     Name:
                   </span>
                   <span className="text-[#6F6F6F] font-[500] text-[15px]">
-                    Mohit Kumar
+                    {member?.referred_by_name || "N/A"}
                   </span>
                 </div>
                 <div className="flex justify-between">
@@ -218,7 +270,7 @@ const ProfileDetails = () => {
                     Referrer ID:
                   </span>
                   <span className="text-[#6F6F6F] font-[500] text-[15px]">
-                    TL317362
+                    {member?.referred_by_id || "N/A"}
                   </span>
                 </div>
               </div>
@@ -394,7 +446,8 @@ const ProfileDetails = () => {
                   </label>
                   <Select
                     name="leadSource"
-                    value={leadsSources}
+                    value={formData.leadSource}
+                    options={leadsSources}
                     onChange={(value) => handleInputChange("leadSource", value)}
                     styles={customStyles}
                     className="!capitalize"
@@ -555,7 +608,9 @@ const ProfileDetails = () => {
           </div>
           {/* Save Button */}
           <div className="flex justify-end mt-5">
-            <button className="px-4 py-2 bg-black text-white rounded flex items-center gap-2">SAVE CHANGES</button>
+            <button className="px-4 py-2 bg-black text-white rounded flex items-center gap-2">
+              SAVE CHANGES
+            </button>
           </div>
         </div>
       </div>

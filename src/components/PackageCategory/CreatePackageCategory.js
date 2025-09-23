@@ -1,9 +1,11 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { IoCloseCircle } from "react-icons/io5";
 import { FaListUl } from "react-icons/fa6";
 import { LuPlug } from "react-icons/lu";
 import Select from "react-select";
 import { selectIcon } from "../../Helper/helper";
+import { toast } from "react-toastify";
+import { apiAxios } from "../../config/config";
 
 const CreatePackageCategory = ({
   setShowModal,
@@ -12,6 +14,37 @@ const CreatePackageCategory = ({
   handleOverlayClick,
   leadBoxRef,
 }) => {
+
+    // ✅ Fetch role details when selectedId changes
+  useEffect(() => {
+    if (!editingOption) return;
+
+    const fetchPackageById = async (id) => {
+      try {
+        const res = await apiAxios().get(`/package-category/${id}`);
+        const data = res.data?.data || res.data || null;
+
+        console.log(data,'SHIVAKAR')
+
+        if (data) {
+          // ✅ Prefill formik fields with fetched data
+          formik.setValues({
+            title: data.title || "",
+            icon: data.icon || "",
+            position: data.position || "",
+            status: data.status || "",
+          });
+        }
+      } catch (err) {
+        console.error(err);
+        toast.error("Failed to fetch module details");
+      }
+    };
+
+    fetchPackageById(editingOption);
+  }, [editingOption]);
+ 
+
   return (
     <div
       className="bg--blur create--lead--container overflow-auto hide--overflow fixed top-0 left-0 z-[999] w-full bg-black bg-opacity-60 h-full"

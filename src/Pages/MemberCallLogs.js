@@ -184,22 +184,22 @@ const MemberCallLogs = () => {
       formik.setFieldValue("callStatus", "");
     } else if (formik.values?.callType === "Cross-sell Call") {
       // ✅ Show ALL statuses including cross-sell-specific ones
-      filtered = callStatusOption;
-    } else if (formik.values?.callType === "Welcome Call") {
+      filtered = callStatusOption.filter(
+        (status) => status.name !== "Successful"
+      );
+    } else if (formik.values?.callType === "Welcome Call" || formik.values?.callType === "Induction Call" || formik.values?.callType === "Upgrade Call" || formik.values?.callType === "Courtesy Call" || formik.values?.callType === "Birthday Call" || formik.values?.callType === "Payment Call" || formik.values?.callType === "Feedback call" || formik.values?.callType === "Assessment Call" || formik.values?.callType === "Anniversary Call" || formik.values?.callType === "Irregular Member") {
       // ✅ Hide Not Interested + Future Prospect
       filtered = callStatusOption.filter(
         (status) =>
           status.name !== "Not Interested" &&
           status.name !== "Future Prospect" &&
-          status.name !== "Cross-sales trial scheduled" &&
-          status.name !== "Cross-sales trial follow-up"
+          status.name !== "Cross-sales trial scheduled"
       );
     } else {
       // ✅ For all other call types → hide cross-sell-specific statuses
       filtered = callStatusOption.filter(
         (status) =>
-          status.name !== "Cross-sales trial scheduled" &&
-          status.name !== "Cross-sales trial follow-up"
+          status.name !== "Cross-sales trial scheduled"
       );
     }
 
@@ -211,14 +211,30 @@ const MemberCallLogs = () => {
     }
   }, [formik.values?.callType]);
 
-  // Show schedule fields only if both callType and callStatus match
-  const showScheduleFields =
-    formik.values?.callType === "Cross-sell Call" &&
-    formik.values?.callStatus === "Cross-sales trial follow-up";
+const statusesNeedingSchedule = [
+  "Callback",
+  "No Answer",
+  "Switched-off/Out of Reach",
+  "Busy Tone",
+  "Future Prospect"
+];
 
-  const showNotInterestedField =
-    formik.values?.callType === "Cross-sell Call" &&
-    formik.values?.callStatus === "Not Interested";
+// Show schedule fields only if both callType and callStatus match
+const scheduleCallTypes = ["Welcome Call", "Induction Call", "Upgrade Call", "Courtesy Call", "Renewal Call", "Birthday Call", "Payment Call", "Cross-sell Call", "Feedback call", "Assessment Call", "Anniversary Call", "Irregular Member"];
+
+const showScheduleFields =
+  (formik.values?.callType === "Cross-sell Call" &&
+    formik.values?.callStatus === "Cross-sales trial scheduled") ||
+  (
+    scheduleCallTypes.includes(formik.values?.callType) &&
+    statusesNeedingSchedule.includes(formik.values?.callStatus)
+  );
+
+const showNotInterestedTypes = ["Cross-sell Call", "Renewal Call"]; 
+const showNotInterestedField =
+  showNotInterestedTypes.includes(formik.values?.callType) &&
+  formik.values?.callStatus === "Not Interested";
+
 
   return (
     <div className="">
@@ -342,7 +358,7 @@ const MemberCallLogs = () => {
                 {showScheduleFields && (
                   <div>
                     <label className="mb-2 block">
-                      Schedule Date<span className="text-red-500">*</span>
+                      Date<span className="text-red-500">*</span>
                     </label>
                     <div className="custom--date relative">
                       <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
@@ -371,7 +387,7 @@ const MemberCallLogs = () => {
                 {showScheduleFields && (
                   <div>
                     <label className="mb-2 block">
-                      Schedule Time<span className="text-red-500">*</span>
+                      Time<span className="text-red-500">*</span>
                     </label>
                     <div className="custom--date relative">
                       <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
