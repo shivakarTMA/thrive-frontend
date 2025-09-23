@@ -20,8 +20,6 @@ const RoleList = () => {
   const leadBoxRef = useRef(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState(null);
-  const [selectedType, setSelectedType] = useState(null);
-  const [optionTypes, setOptionTypes] = useState([]);
 
   const [page, setPage] = useState(1);
   const [rowsPerPage] = useState(10);
@@ -53,38 +51,6 @@ const RoleList = () => {
     }
   };
 
-  // const fetchRole = async (search = "") => {
-  //   try {
-  //     const res = await apiAxios().get("/role/list", {
-  //       params: search ? { search } : {},
-  //     });
-  //     let data = res.data?.data || res.data || [];
-  //     // ✅ Filter by selected type
-  //     if (selectedType?.value) {
-  //       data = data.filter(
-  //         (item) => item.name === selectedType.value
-  //       );
-  //     }
-
-  //     if (statusFilter?.value) {
-  //       data = data.filter((item) => item.status === statusFilter.value);
-  //     }
-  //     setRole(data);
-
-  //     const types = [
-  //       ...new Set(
-  //         (res.data?.data || [])
-  //           .map((item) => item.name)
-  //           .filter(Boolean)
-  //       ),
-  //     ];
-  //     setOptionTypes(types.map((type) => ({ label: type, value: type })));
-  //   } catch (err) {
-  //     console.error(err);
-  //     toast.error("Failed to fetch companies");
-  //   }
-  // };
-
   useEffect(() => {
     fetchRole();
   }, []);
@@ -96,7 +62,7 @@ const RoleList = () => {
     }, 300);
 
     return () => clearTimeout(delayDebounce);
-  }, [searchTerm,selectedType, statusFilter]);
+  }, [searchTerm, statusFilter]);
 
   const handleOverlayClick = (e) => {
     if (leadBoxRef.current && !leadBoxRef.current.contains(e.target)) {
@@ -120,9 +86,9 @@ const RoleList = () => {
       try {
         const payload = { ...values};
 
-        if (editingOption && editingOption.id) {
+        if (editingOption && editingOption) {
           // Update
-          await apiAxios().put(`/role/${editingOption.id}`, payload);
+          await apiAxios().put(`/role/${editingOption}`, payload);
           toast.success("Updated Successfully");
         } else {
           // Create
@@ -179,16 +145,6 @@ const RoleList = () => {
               className="custom--input w-full input--icon"
             />
           </div>
-        </div>
-        <div className="w-full max-w-[200px]">
-          <Select
-            placeholder="Filter by Type"
-            options={optionTypes}
-            value={selectedType}
-            onChange={(option) => setSelectedType(option)}
-            isClearable
-            styles={customStyles}
-          />
         </div>
         {/* Status filter */}
         <div className="w-full max-w-[200px]">
@@ -258,8 +214,7 @@ const RoleList = () => {
                         <div
                           className="p-1 cursor-pointer"
                           onClick={() => {
-                            setEditingOption(company);
-                            formik.setValues(company);
+                            setEditingOption(company?.id);
                             setShowModal(true);
                           }}
                         >
@@ -294,7 +249,6 @@ const RoleList = () => {
           formik={formik}
           handleOverlayClick={handleOverlayClick}
           leadBoxRef={leadBoxRef}
-          optionTypes={optionTypes}
         />
       )}
     </div>

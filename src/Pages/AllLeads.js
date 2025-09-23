@@ -532,7 +532,7 @@ const AllLeads = () => {
                         >
                           <div
                             onClick={() => {
-                              setSelectedLead(row);
+                              setSelectedLead(row?.id);
                               setLeadModal(true);
                             }}
                             className="p-1 cursor-pointer"
@@ -671,7 +671,7 @@ const AllLeads = () => {
                       >
                         <div
                           onClick={() => {
-                            setSelectedLead(row);
+                            setSelectedLead(row?.id);
                             setLeadModal(true);
                           }}
                           className="p-1 cursor-pointer"

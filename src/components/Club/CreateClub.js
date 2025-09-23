@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { IoCloseCircle, IoLocationOutline } from "react-icons/io5";
 import { FaEnvelope, FaRegBuilding } from "react-icons/fa6";
 import { GrDocument } from "react-icons/gr";
@@ -6,6 +6,8 @@ import { LuPlug } from "react-icons/lu";
 import Select from "react-select";
 import { selectIcon } from "../../Helper/helper";
 import PhoneInput from "react-phone-number-input";
+import { apiAxios } from "../../config/config";
+import { toast } from "react-toastify";
 
 const CreateClub = ({
   setShowModal,
@@ -16,7 +18,45 @@ const CreateClub = ({
   handlePhoneChange,
   indianStates,
 }) => {
-  console.log(formik,'formik')
+  console.log(editingClub,'editingClub')
+
+  // ✅ Fetch club details when selectedId changes
+  useEffect(() => {
+    if (!editingClub) return;
+
+    const fetchCompanyById = async (id) => {
+      try {
+        const res = await apiAxios().get(`/club/${id}`);
+        const data = res.data?.data || res.data || null;
+
+        console.log(data,'SHIVAKAR')
+
+        if (data) {
+          // ✅ Prefill formik fields with fetched data
+          formik.setValues({
+            logo: data.name || "",
+            name: data.name || "",
+            email: data.email || "",
+            phone: "+" + data.phone || "",
+            address: data.address || "",
+            city: data.city || "",
+            state: typeof data.state === "string" 
+           ? { label: data.state, value: data.state } 
+           : data.state || "",
+            country: data.country || "",
+            zipcode: data.zipcode || "",
+            status: data.status || "",
+          });
+        }
+      } catch (err) {
+        console.error(err);
+        toast.error("Failed to fetch module details");
+      }
+    };
+
+    fetchCompanyById(editingClub);
+  }, [editingClub]);
+
   return (
     <div
       className="bg--blur create--lead--container overflow-auto hide--overflow fixed top-0 left-0 z-[999] w-full bg-black bg-opacity-60 h-full"

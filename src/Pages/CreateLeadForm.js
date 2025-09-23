@@ -243,7 +243,7 @@ const CreateLeadForm = ({ setLeadModal, selectedLead, onLeadUpdate }) => {
           ]);
         }
         setLeadModal(false);
-        // ✅ Trigger parent refresh  
+        // ✅ Trigger parent refresh
         onLeadUpdate();
       } catch (err) {
         console.error("❌ API Error:", err.response?.data || err.message);
@@ -252,6 +252,71 @@ const CreateLeadForm = ({ setLeadModal, selectedLead, onLeadUpdate }) => {
     },
   });
 
+  // ✅ Fetch lead details when selectedId changes
+  useEffect(() => {
+    console.log(selectedLead,'SHIVAKAR')
+    if (!selectedLead) return;
+
+    const fetchRoleById = async (id) => {
+      try {
+        const res = await apiAxios().get(`/lead/${id}`);
+        const data = res.data?.data || res.data || null;
+
+        console.log(data, "SHIVAKAR");
+
+        if (data) {
+          // ✅ Prefill formik fields with fetched data
+          formik.setValues({
+            // id: data.id || "",
+            full_name: data.full_name || "",
+            mobile: data.mobile || "",
+            country_code: data.country_code || "",
+            phoneFull: data.country_code
+              ? `+${data.country_code}${data.mobile}` // add the "+"
+              : "",
+            email: data.email || "",
+            gender: data.gender || "NOTDISCLOSE",
+            date_of_birth: data.date_of_birth
+              ? new Date(data.date_of_birth).toISOString()
+              : null,
+            address: data.address || "",
+            location: data.location || "",
+            company_name: data.company_name || "",
+            interested_in: data.interested_in || "",
+            lead_source: data.lead_source || "",
+            lead_type: data.lead_type || "",
+            platform: data.platform || "",
+            schedule: data.schedule || "",
+            schedule_date_time: data.schedule_date_time
+              ? new Date(data.schedule_date_time).toISOString()
+              : "",
+            staff_name: data.staff_name || "",
+          });
+        }
+      } catch (err) {
+        console.error(err);
+        toast.error("Failed to fetch module details");
+      }
+    };
+
+    fetchRoleById(selectedLead);
+  }, [selectedLead]);
+
+  const calculateAge = (dob) => {
+    const today = new Date();
+    const birthDate = new Date(dob);
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    return age;
+  };
+
+  const fifteenYearsAgo = new Date();
+  fifteenYearsAgo.setFullYear(fifteenYearsAgo.getFullYear() - 15);
+
+  // useEffect for selectedLead
   useEffect(() => {
     if (selectedLead) {
       formik.setValues({
@@ -260,13 +325,13 @@ const CreateLeadForm = ({ setLeadModal, selectedLead, onLeadUpdate }) => {
         mobile: selectedLead.mobile || "",
         country_code: selectedLead.country_code || "",
         phoneFull: selectedLead.country_code
-          ? `+${selectedLead.country_code}${selectedLead.mobile}` // add the "+"
+          ? `+${selectedLead.country_code}${selectedLead.mobile}`
           : "",
         email: selectedLead.email || "",
         gender: selectedLead.gender || "NOTDISCLOSE",
         date_of_birth: selectedLead.date_of_birth
-        ? new Date(selectedLead.date_of_birth).toISOString()
-        : null,
+          ? new Date(selectedLead.date_of_birth).toISOString()
+          : null,
         address: selectedLead.address || "",
         location: selectedLead.location || "",
         company_name: selectedLead.company_name || "",
@@ -283,55 +348,8 @@ const CreateLeadForm = ({ setLeadModal, selectedLead, onLeadUpdate }) => {
     }
   }, [selectedLead]);
 
-  
-
-
-const calculateAge = (dob) => {
-  const today = new Date();
-  const birthDate = new Date(dob);
-  let age = today.getFullYear() - birthDate.getFullYear();
-  const m = today.getMonth() - birthDate.getMonth();
-  if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-    age--;
-  }
-  return age;
-};
-
-const fifteenYearsAgo = new Date();
-fifteenYearsAgo.setFullYear(fifteenYearsAgo.getFullYear() - 15);
-
-// useEffect for selectedLead
-useEffect(() => {
-  if (selectedLead) {
-    formik.setValues({
-      id: selectedLead.id || "",
-      full_name: selectedLead.full_name || "",
-      mobile: selectedLead.mobile || "",
-      country_code: selectedLead.country_code || "",
-      phoneFull: selectedLead.country_code
-        ? `+${selectedLead.country_code}${selectedLead.mobile}`
-        : "",
-      email: selectedLead.email || "",
-      gender: selectedLead.gender || "NOTDISCLOSE",
-      date_of_birth: selectedLead.date_of_birth ? new Date(selectedLead.date_of_birth).toISOString() : null,
-      address: selectedLead.address || "",
-      location: selectedLead.location || "",
-      company_name: selectedLead.company_name || "",
-      interested_in: selectedLead.interested_in || "",
-      lead_source: selectedLead.lead_source || "",
-      lead_type: selectedLead.lead_type || "",
-      platform: selectedLead.platform || "",
-      schedule: selectedLead.schedule || "",
-      schedule_date_time: selectedLead.schedule_date_time
-        ? new Date(selectedLead.schedule_date_time).toISOString()
-        : "",
-      staff_name: selectedLead.staff_name || "",
-    });
-  }
-}, [selectedLead]);
-
-// Handle manual date selection
-const handleDobChange = (date) => {
+  // Handle manual date selection
+  const handleDobChange = (date) => {
     if (!date) return;
     const today = new Date();
     const age =
@@ -351,17 +369,17 @@ const handleDobChange = (date) => {
     }
   };
 
-const confirmDob = () => {
-  formik.setFieldValue("date_of_birth", pendingDob);
-  setShowUnderageModal(false);
-  setPendingDob(null);
-};
+  const confirmDob = () => {
+    formik.setFieldValue("date_of_birth", pendingDob);
+    setShowUnderageModal(false);
+    setPendingDob(null);
+  };
 
-const cancelDob = () => {
-  formik.setFieldValue("date_of_birth", "");
-  setShowUnderageModal(false);
-  setPendingDob(null);
-};
+  const cancelDob = () => {
+    formik.setFieldValue("date_of_birth", "");
+    setShowUnderageModal(false);
+    setPendingDob(null);
+  };
 
   const handleInput = (e) => {
     const { name, value } = e.target;
@@ -457,30 +475,75 @@ const cancelDob = () => {
     }
   };
 
+  // const handleEmailBlur = () => {
+  //   const inputValue = formik.values.email?.trim().toLowerCase();
+  //   const { id } = formik.values;
+
+  //   // 👇 Clear error if field is empty
+  //   if (!inputValue) {
+  //     setDuplicateEmailError("");
+  //     setShowDuplicateEmailModal(false);
+  //     return;
+  //   }
+
+  //   const matches = allLeads.filter(
+  //     (user) =>
+  //       user.email?.trim().toLowerCase() === inputValue && user.id !== id,
+  //   );
+
+  //   if (matches.length > 0) {
+  //     setDuplicateEmailError("This email already exists");
+  //     setShowDuplicateEmailModal(true);
+  //   } else {
+  //     setDuplicateEmailError("");
+  //     setShowDuplicateEmailModal(false);
+  //   }
+  // };
+
+
   const handleEmailBlur = () => {
-    const inputValue = formik.values.email?.trim().toLowerCase();
-    const { id } = formik.values;
+  const inputValue = formik.values.email?.trim().toLowerCase();
+  const { id } = formik.values;
 
-    // 👇 Clear error if field is empty
-    if (!inputValue) {
-      setDuplicateEmailError("");
-      setShowDuplicateEmailModal(false);
-      return;
-    }
+  // Debug logs
+  console.log("Input Value:", inputValue);
+  console.log("Formik ID:", id);
+  console.log("Selected Lead ID:", selectedLead);
 
-    const matches = allLeads.filter(
-      (user) =>
-        user.email?.trim().toLowerCase() === inputValue && user.id !== id
-    );
+  // Clear error if field is empty
+  if (!inputValue) {
+    setDuplicateEmailError("");
+    setShowDuplicateEmailModal(false);
+    return;
+  }
 
-    if (matches.length > 0) {
-      setDuplicateEmailError("This email already exists");
-      setShowDuplicateEmailModal(true);
-    } else {
-      setDuplicateEmailError("");
-      setShowDuplicateEmailModal(false);
-    }
-  };
+  // Get the currently selected lead object using the ID
+  const currentLead = allLeads.find((user) => user.id === selectedLead);
+
+  // Skip duplicate check if the email hasn't changed
+  if (currentLead && inputValue === currentLead.email?.trim().toLowerCase()) {
+    setDuplicateEmailError("");
+    setShowDuplicateEmailModal(false);
+    return;
+  }
+
+  // Check for duplicates excluding the current lead ID
+  const matches = allLeads.filter(
+    (user) =>
+      user.email?.trim().toLowerCase() === inputValue && user.id !== selectedLead
+  );
+
+  if (matches.length > 0) {
+    setDuplicateEmailError("This email already exists");
+    setShowDuplicateEmailModal(true);
+  } else {
+    setDuplicateEmailError("");
+    setShowDuplicateEmailModal(false);
+  }
+};
+
+
+  console.log(allLeads,'alllead data')
 
   const getAvailableTrainers = () => {
     const dt = formik.values.schedule_date_time;

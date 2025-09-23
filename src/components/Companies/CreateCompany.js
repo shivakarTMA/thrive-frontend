@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { IoCloseCircle, IoLocationOutline } from "react-icons/io5";
 import { FaEnvelope, FaRegBuilding } from "react-icons/fa6";
 import { GrDocument } from "react-icons/gr";
@@ -6,6 +6,8 @@ import { LuPlug } from "react-icons/lu";
 import Select from "react-select";
 import { selectIcon } from "../../Helper/helper";
 import PhoneInput from "react-phone-number-input";
+import { toast } from "react-toastify";
+import { apiAxios } from "../../config/config";
 
 const CreateCompany = ({
   setShowModal,
@@ -16,7 +18,6 @@ const CreateCompany = ({
   handlePhoneChange,
   indianStates,
 }) => {
-  console.log(formik.values, "value data");
 
   const handleLogoChange = (event) => {
     const file = event.currentTarget.files[0];
@@ -28,6 +29,42 @@ const CreateCompany = ({
       reader.readAsDataURL(file);
     }
   };
+
+  // ✅ Fetch company details when selectedId changes
+  useEffect(() => {
+    if (!editingCompany) return;
+
+    const fetchCompanyById = async (id) => {
+      try {
+        const res = await apiAxios().get(`/company/${id}`);
+        const data = res.data?.data || res.data || null;
+
+        if (data) {
+          // ✅ Prefill formik fields with fetched data
+          formik.setValues({
+            logo: data.name || "",
+            name: data.name || "",
+            email: data.email || "",
+            phone: data.phone || "",
+            address: data.address || "",
+            city: data.city || "",
+            state: typeof data.state === "string" 
+           ? { label: data.state, value: data.state } 
+           : data.state || "",
+            country: data.country || "",
+            zipcode: data.zipcode || "",
+            gstno: data.gstno || "",
+            status: data.status || "ACTIVE",
+          });
+        }
+      } catch (err) {
+        console.error(err);
+        toast.error("Failed to fetch module details");
+      }
+    };
+
+    fetchCompanyById(editingCompany);
+  }, [editingCompany]);
 
   return (
     <div
@@ -61,17 +98,17 @@ const CreateCompany = ({
                 <div className="grid grid-cols-3 gap-4">
                   <div>
                     <label className="mb-2 block">Company Logo</label>
-                     <input
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) => {
-                          const file = e.target.files[0];
-                          if (file) {
-                            formik.setFieldValue("logo", file);
-                          }
-                        }}
-                        className="custom--input w-full"
-                      />
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files[0];
+                        if (file) {
+                          formik.setFieldValue("logo", file);
+                        }
+                      }}
+                      className="custom--input w-full"
+                    />
                     {/* {formik.values.logo && (
                       <div className="mt-2">
                         <img
@@ -109,9 +146,7 @@ const CreateCompany = ({
 
                   {/* Email */}
                   <div>
-                    <label className="mb-2 block">
-                      Company Email
-                    </label>
+                    <label className="mb-2 block">Company Email</label>
                     <div className="relative">
                       <span className="absolute top-[50%] translate-y-[-50%] left-[15px]">
                         <FaEnvelope />
@@ -134,9 +169,7 @@ const CreateCompany = ({
 
                   {/* Phone */}
                   <div>
-                    <label className="mb-2 block">
-                      Contact Number
-                    </label>
+                    <label className="mb-2 block">Contact Number</label>
                     <PhoneInput
                       name="phone"
                       value={formik.values.phone}
@@ -156,9 +189,7 @@ const CreateCompany = ({
 
                   {/* City */}
                   <div>
-                    <label className="mb-2 block">
-                      City
-                    </label>
+                    <label className="mb-2 block">City</label>
                     <div className="relative">
                       <span className="absolute top-[50%] translate-y-[-50%] left-[15px]">
                         <IoLocationOutline />
@@ -181,9 +212,7 @@ const CreateCompany = ({
 
                   {/* State */}
                   <div>
-                    <label className="mb-2 block">
-                      State/Province
-                    </label>
+                    <label className="mb-2 block">State/Province</label>
                     <div className="relative">
                       <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[10]">
                         <IoLocationOutline />
@@ -208,9 +237,7 @@ const CreateCompany = ({
 
                   {/* Country */}
                   <div>
-                    <label className="mb-2 block">
-                      Country
-                    </label>
+                    <label className="mb-2 block">Country</label>
                     <div className="relative">
                       <span className="absolute top-[50%] translate-y-[-50%] left-[15px]">
                         <IoLocationOutline />
@@ -233,9 +260,7 @@ const CreateCompany = ({
 
                   {/* Zip */}
                   <div>
-                    <label className="mb-2 block">
-                      Zip or Postal Code
-                    </label>
+                    <label className="mb-2 block">Zip or Postal Code</label>
                     <div className="relative">
                       <span className="absolute top-[50%] translate-y-[-50%] left-[15px]">
                         <IoLocationOutline />
@@ -258,9 +283,7 @@ const CreateCompany = ({
 
                   {/* GST */}
                   <div>
-                    <label className="mb-2 block">
-                      Company GST No.
-                    </label>
+                    <label className="mb-2 block">Company GST No.</label>
                     <div className="relative">
                       <span className="absolute top-[50%] translate-y-[-50%] left-[15px]">
                         <GrDocument />
@@ -283,9 +306,7 @@ const CreateCompany = ({
 
                   {/* Status */}
                   <div>
-                    <label className="mb-2 block">
-                      Company Status
-                    </label>
+                    <label className="mb-2 block">Company Status</label>
                     <div className="relative">
                       <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[10]">
                         <LuPlug />

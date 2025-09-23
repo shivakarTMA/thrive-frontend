@@ -1,9 +1,11 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { IoCloseCircle } from "react-icons/io5";
 import { FaListUl } from "react-icons/fa6";
 import { LuPlug } from "react-icons/lu";
 import Select from "react-select";
 import { selectIcon } from "../../Helper/helper";
+import { apiAxios } from "../../config/config";
+import { toast } from "react-toastify";
 
 const CreateModule = ({
   setShowModal,
@@ -12,6 +14,32 @@ const CreateModule = ({
   handleOverlayClick,
   leadBoxRef,
 }) => {
+
+  // ✅ Fetch module details when selectedId changes
+  useEffect(() => {
+    if (!editingOption) return;
+
+    const fetchModuleById = async (id) => {
+      try {
+        const res = await apiAxios().get(`/module/${id}`);
+        const data = res.data?.data || res.data || null;
+
+        if (data) {
+          // ✅ Prefill formik fields with fetched data
+          formik.setValues({
+            name: data.name || "",
+            description: data.description || "",
+            status: data.status || "",
+          });
+        }
+      } catch (err) {
+        console.error(err);
+        toast.error("Failed to fetch module details");
+      }
+    };
+
+    fetchModuleById(editingOption);
+  }, [editingOption]);
 
   return (
     <div

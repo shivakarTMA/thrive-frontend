@@ -172,9 +172,9 @@ const ClubList = () => {
         formData.append("logo", values.logo);
       }
 
-      if (editingClub && editingClub.id) {
+      if (editingClub && editingClub) {
         // Update
-        await apiAxios().put(`/club/${editingClub.id}`, formData, {
+        await apiAxios().put(`/club/${editingClub}`, formData, {
           headers: { "Content-Type": "multipart/form-data" },
         });
         toast.success("Updated Successfully");
@@ -322,14 +322,14 @@ const ClubList = () => {
                       <div
                         className="p-1 cursor-pointer"
                         onClick={() => {
-                          setEditingClub(club);
-                          formik.setValues({
-                            ...club,
-                            state:
-                              typeof club.state === "string"
-                                ? { label: club.state, value: club.state }
-                                : club.state,
-                          });
+                          setEditingClub(club?.id);
+                          // formik.setValues({
+                          //   ...club,
+                          //   state:
+                          //     typeof club.state === "string"
+                          //       ? { label: club.state, value: club.state }
+                          //       : club.state,
+                          // });
                           setShowModal(true);
                         }}
                       >

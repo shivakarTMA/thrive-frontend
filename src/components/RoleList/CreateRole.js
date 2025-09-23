@@ -5,6 +5,8 @@ import { LuPlug } from "react-icons/lu";
 import Select from "react-select";
 import { selectIcon } from "../../Helper/helper";
 import CreatableSelect from "react-select/creatable";
+import { toast } from "react-toastify";
+import { apiAxios } from "../../config/config";
 
 const tagOptions = [
   { value: "admin", label: "Admin" },
@@ -19,43 +21,38 @@ const CreateRole = ({
   formik,
   handleOverlayClick,
   leadBoxRef,
-  optionTypes = [],
 }) => {
-  const [availableTags, setAvailableTags] = useState(optionTypes);
 
-  // useEffect(() => {
-  //   if (
-  //     formik.values.name &&
-  //     !availableTags.some((opt) => opt.value === formik.values.name)
-  //   ) {
-  //     setAvailableTags((prev) => [
-  //       ...prev,
-  //       {
-  //         value: formik.values.name,
-  //         label: formik.values.name,
-  //       },
-  //     ]);
-  //   }
-  // }, [formik.values.name, availableTags]);
-
+  // ✅ Fetch role details when selectedId changes
   useEffect(() => {
-    setAvailableTags(optionTypes); // update when parent prop changes
-  }, [optionTypes]);
+    if (!editingOption) return;
 
-  const handleTagChange = (newValue, actionMeta) => {
-    if (actionMeta.action === "create-option") {
-      const newTag = {
-        label: newValue.label,
-        value: newValue.label,
-      };
-      setAvailableTags((prev) => [...prev, newTag]);
-      formik.setFieldValue("name", newTag.value);
-    } else {
-      formik.setFieldValue("name", newValue ? newValue.value : "");
-    }
-  };
+    const fetchRoleById = async (id) => {
+      try {
+        const res = await apiAxios().get(`/role/${id}`);
+        const data = res.data?.data || res.data || null;
 
-  console.log(formik.values, "formik");
+        console.log(data,'SHIVAKAR')
+
+        if (data) {
+          // ✅ Prefill formik fields with fetched data
+          formik.setValues({
+            name: data.name || "",
+            description: data.description || "",
+            status: data.status || "",
+          });
+        }
+      } catch (err) {
+        console.error(err);
+        toast.error("Failed to fetch module details");
+      }
+    };
+
+    fetchRoleById(editingOption);
+  }, [editingOption]);
+ 
+
+
 
   return (
     <div
@@ -96,18 +93,13 @@ const CreateRole = ({
                       <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[10]">
                         <FaListUl />
                       </span>
-                      <CreatableSelect
-                        options={availableTags}
-                        value={
-                          formik.values.name
-                            ? availableTags.find(
-                                (opt) => opt.value === formik.values.name
-                              )
-                            : null
-                        }
-                        onChange={handleTagChange}
-                        styles={selectIcon}
-                        isClearable
+                      <input
+                        type="text"
+                        name="name"
+                        value={formik.values.name}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        className="custom--input w-full input--icon"
                       />
                     </div>
                     {formik.touched.name && formik.errors.name && (

@@ -80,31 +80,6 @@ const ModuleList = () => {
       name: Yup.string().required("Module name is required"),
       status: Yup.string().required("Status is required"),
     }),
-    // onSubmit: (values, { resetForm }) => {
-    //   const now = new Date().toISOString(); // ISO format, easy to format later
-
-    //   if (editingOption) {
-    //     setModule((prev) =>
-    //       prev.map((c) =>
-    //         c.id === editingOption.id ? { ...c, ...values, updated_at: now } : c
-    //       )
-    //     );
-    //     toast.success("Updated Successfully");
-    //   } else {
-    //     const newCompany = {
-    //       id: Date.now(),
-    //       ...values,
-    //       created_at: now,
-    //       updated_at: now,
-    //     };
-    //     setModule((prev) => [...prev, newCompany]);
-    //     toast.success("Created Successfully");
-    //   }
-
-    //   resetForm();
-    //   setEditingOption(null);
-    //   setShowModal(false);
-    // },
      onSubmit: async (values, { resetForm }) => {
       try {
         const payload = {
@@ -112,9 +87,9 @@ const ModuleList = () => {
           state: values.state?.value || values.state,
         };
 
-        if (editingOption && editingOption.id) {
+        if (editingOption && editingOption) {
           // Update
-          await apiAxios().put(`/module/${editingOption.id}`, payload);
+          await apiAxios().put(`/module/${editingOption}`, payload);
           toast.success("Updated Successfully");
         } else {
           // Create
@@ -245,8 +220,7 @@ const ModuleList = () => {
                         <div
                           className="p-1 cursor-pointer"
                           onClick={() => {
-                            setEditingOption(company);
-                            formik.setValues(company);
+                            setEditingOption(company?.id);
                             setShowModal(true);
                           }}
                         >
