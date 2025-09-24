@@ -3,10 +3,12 @@ import Select from "react-select";
 import { FaFilter } from "react-icons/fa";
 import { RiResetLeftFill } from "react-icons/ri";
 import { IoTriangle } from "react-icons/io5";
-import { customStyles } from "../Helper/helper";
-import { leadsSources } from "../DummyData/DummyData";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchOptionList } from "../../Redux/Reducers/optionListSlice";
+import { customStyles } from "../../Helper/helper";
+import { HiOutlineAdjustmentsHorizontal } from "react-icons/hi2";
 
-export default function FiltersPanel({
+export default function LeadFilterPanel({
   selectedLeadSource,
   setSelectedLeadSource,
   selectedLastCallType,
@@ -18,6 +20,19 @@ export default function FiltersPanel({
 }) {
   const [showFilters, setShowFilters] = useState(false);
   const panelRef = useRef(null);
+
+  
+  // Redux state
+  const dispatch = useDispatch();
+  const { lists, loading } = useSelector((state) => state.optionList);
+
+  // Fetch option lists
+  useEffect(() => {
+    dispatch(fetchOptionList("LEAD_SOURCE"));
+  }, [dispatch]);
+
+  // Extract Redux lists
+  const leadsSources = lists["LEAD_SOURCE"] || [];
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -81,9 +96,9 @@ export default function FiltersPanel({
     <div className="relative max-w-fit w-full" ref={panelRef}>
       <button
         onClick={() => setShowFilters(!showFilters)}
-        className="px-4 py-2 bg-black text-white rounded-lg flex items-center gap-2 min-h-[44px]"
+        className="w-12 h-10 bg-black text-white rounded-lg flex items-center justify-center gap-2 min-h-[44px]"
       >
-        <FaFilter />
+        <HiOutlineAdjustmentsHorizontal className="text-2xl" />
         {/* {showFilters ? "Hide Filters" : "Show Filters"} */}
       </button>
 

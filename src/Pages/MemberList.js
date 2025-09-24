@@ -25,6 +25,7 @@ import { toast } from "react-toastify";
 import Pagination from "../components/common/Pagination";
 import { FiPlus } from "react-icons/fi";
 import CreateMemberForm from "./CreateMemberForm";
+import MemberFilterPanel from "../components/common/MemberFilterPanel";
 
 export const memberFilters = {
   membershipType: ["Gold", "Silver", "Platinum"],
@@ -46,6 +47,11 @@ const dateFilterOptions = [
   { value: "custom", label: "Custom Date" },
 ];
 
+const communicateOptions = [
+  { value: "sms", label: "Send SMS" },
+  { value: "email", label: "Send Email" },
+];
+
 const MemberList = () => {
   const [search, setSearch] = useState("");
   const [memberList, setMemberList] = useState([]);
@@ -56,6 +62,15 @@ const MemberList = () => {
   const [customFrom, setCustomFrom] = useState(null);
   const [customTo, setCustomTo] = useState(null);
   const [memberModal, setMemberModal] = useState(false);
+  const [sendCommunicate, setSendCommunicate] = useState(null);
+  const [filterService, setFilterService] = useState(null);
+  const [filterServiceVariation, setFilterServiceVariation] = useState(null);
+  const [filterAgeGroup, setFilterAgeGroup] = useState(null);
+  const [filterLeadSource, setFilterLeadSource] = useState(null);
+  const [filterLeadOwner, setFilterLeadOwner] = useState(null);
+  const [filterTrainer, setFilterTrainer] = useState(null);
+  const [filterFitness, setFilterFitness] = useState(null);
+  const [filterGender, setFilterGender] = useState(null);
 
   const [page, setPage] = useState(1);
   const [rowsPerPage] = useState(10);
@@ -98,8 +113,8 @@ const MemberList = () => {
     fetchMemberList();
   }, []);
 
-  const handleMemberUpdate = () => {  
-    fetchMemberList();  
+  const handleMemberUpdate = () => {
+    fetchMemberList();
   };
 
   console.log(memberList, "memberList");
@@ -120,18 +135,11 @@ const MemberList = () => {
 
   const ownerOptions = [
     {
-      label: "FOH", // Group label
+      label: "GT", // Group label
       options: [
         { value: "shivakar", label: "Shivakar" },
         { value: "divakar", label: "Divakar" },
         { value: "parbhakar", label: "Parbhakar" },
-      ],
-    },
-    {
-      label: "PT", // Group label
-      options: [
-        { value: "nitin", label: "Nitin" },
-        { value: "esha", label: "Esha" },
       ],
     },
   ];
@@ -214,13 +222,35 @@ const MemberList = () => {
 
   return (
     <>
-    <div className="page--content">
-      <div className="flex items-end justify-between gap-2 mb-5">
-        <div className="title--breadcrumbs">
-          <p className="text-sm">Home &gt; Members &gt; All Members</p>
-          <h1 className="text-3xl font-semibold">All Members</h1>
+      <div className="page--content">
+        <div className="w-full mb-5">
+          <div className="grid grid-cols-3 gap-3">
+            <div className="flex flex-col border rounded p-3 w-full">
+              <div className="text-sm font-medium text-gray-600">Total Members</div>
+              <div className="flex flex-wrap items-center justify-between mt-2">
+                <span className="text-lg font-semibold">10</span>
+              </div>
+            </div>
+            <div className="flex flex-col border rounded p-3 w-full">
+              <div className="text-sm font-medium text-gray-600">Active Members</div>
+              <div className="flex flex-wrap items-center justify-between mt-2">
+                <span className="text-lg font-semibold">5</span>
+              </div>
+            </div>
+            <div className="flex flex-col border rounded p-3 w-full">
+              <div className="text-sm font-medium text-gray-600">Inactive Members</div>
+              <div className="flex flex-wrap items-center justify-between mt-2">
+                <span className="text-lg font-semibold">0</span>
+              </div>
+            </div>
+          </div>
         </div>
-        <div className="flex items-end gap-2">
+        <div className="flex items-end justify-between gap-2 mb-5">
+          <div className="title--breadcrumbs">
+            <p className="text-sm">Home &gt; Members &gt; All Members</p>
+            <h1 className="text-3xl font-semibold">All Members</h1>
+          </div>
+          <div className="flex items-end gap-2">
             <button
               onClick={() => {
                 setMemberModal(true);
@@ -231,256 +261,207 @@ const MemberList = () => {
               <FiPlus /> Add New Member
             </button>
           </div>
-      </div>
-
-      <div className="flex w-full gap-2 justify-between items-center mb-4">
-        {/* <div className="flex flex-1 gap-2 items-center flex-wrap">
-          <Select
-            placeholder="Membership Type"
-            options={getUniqueOptions(memberMockData, "membershipType")}
-            value={membershipFilter}
-            onChange={setMembershipFilter}
-            isClearable
-            styles={customStyles}
-          />
-          <Select
-            placeholder="Trainer Type"
-            options={getUniqueOptions(memberMockData, "trainerType")}
-            value={trainerTypeFilter}
-            onChange={setTrainerTypeFilter}
-            isClearable
-            styles={customStyles}
-          />
-          <Select
-            placeholder="FOH"
-            options={getUniqueOptions(memberMockData, "fohAssigned")}
-            value={fohFilter}
-            onChange={setFohFilter}
-            isClearable
-            styles={customStyles}
-            className="w-40"
-          />
-          <Select
-            placeholder="Date Filter"
-            options={dateFilterOptions}
-            value={dateFilter}
-            onChange={(selected) => {
-              setDateFilter(selected);
-              if (selected?.value !== "custom") {
-                setCustomFrom(null);
-                setCustomTo(null);
-              }
-            }}
-            isClearable
-            styles={customStyles}
-          />
-          {dateFilter?.value === "custom" && (
-            <>
-              <div className="custom--date dob-format">
-                <DatePicker
-                  selected={customFrom}
-                  onChange={(date) => setCustomFrom(date)}
-                  placeholderText="From Date"
-                  className="custom--input w-full max-w-[170px]"
-                  minDate={subYears(new Date(), 20)}
-                  maxDate={addYears(new Date(), 0)}
-                  dateFormat="dd-MM-yyyy"
-                  showMonthDropdown
-                  showYearDropdown
-                  dropdownMode="select"
-                />
-              </div>
-              <div className="custom--date dob-format">
-                <DatePicker
-                  selected={customTo}
-                  onChange={(date) => setCustomTo(date)}
-                  placeholderText="To Date"
-                  className="custom--input w-full max-w-[170px]"
-                  minDate={subYears(new Date(), 20)}
-                  maxDate={addYears(new Date(), 0)}
-                  showMonthDropdown
-                  showYearDropdown
-                  dropdownMode="select"
-                  dateFormat="dd-MM-yyyy"
-                />
-              </div>
-            </>
-          )}
-        </div> */}
-        {/* <div className="flex items-center gap-2 border rounded-[50px] px-2 bg-white">
-          <IoIosSearch className="text-xl" />
-          <input
-            type="text"
-            placeholder="Search"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full max-w-xs px-3 py-2 border-none rounded-[50px] focus:outline-none"
-          />
-        </div> */}
-      </div>
-      {selectedIds.length > 0 && (
-        <div className="flex items-center gap-3 mb-3">
-          <span className="font-medium text-gray-700">
-            Assign {selectedIds.length} selected member(s) to:
-          </span>
-          <Select
-            options={ownerOptions}
-            value={bulkOwner}
-            onChange={handleBulkAssign}
-            placeholder="Assign Owner"
-            styles={customStyles}
-          />
-          <button
-            onClick={handleSubmitAssign}
-            className="px-4 py-2 bg-black text-white rounded flex items-center gap-2"
-          >
-            Submit
-          </button>
         </div>
-      )}
 
-      {showConfirm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-xl shadow-lg w-96 text-center">
-            <h2 className="text-lg font-semibold mb-4">Confirm Assignment</h2>
-            <p className="mb-4">
-              Are you sure you want to assign{" "}
-              <strong>{selectedIds.length}</strong> lead(s) to{" "}
-              <strong>{bulkOwner?.label}</strong>?
-            </p>
-            <div className="flex justify-center gap-4">
+        <div className="flex w-full gap-2 justify-between items-center mb-4">
+          <div className="flex items-center gap-3 mb-3">
+            <MemberFilterPanel
+              filterService={filterService}
+              setFilterService={setFilterService}
+              filterServiceVariation={filterServiceVariation}
+              setFilterServiceVariation={setFilterServiceVariation}
+              filterAgeGroup={filterAgeGroup}
+              setFilterAgeGroup={setFilterAgeGroup}
+              filterLeadSource={filterLeadSource}
+              setFilterLeadSource={setFilterLeadSource}
+              filterLeadOwner={filterLeadOwner}
+              setFilterLeadOwner={setFilterLeadOwner}
+              filterTrainer={filterTrainer}
+              setFilterTrainer={setFilterTrainer}
+              filterFitness={filterFitness}
+              setFilterFitness={setFilterFitness}
+              filterGender={filterGender}
+              setFilterGender={setFilterGender}
+            />
+            <div className="flex items-center justify-start gap-3">
+              <Select
+                options={ownerOptions}
+                value={bulkOwner}
+                onChange={handleBulkAssign}
+                placeholder="Assign General Trainer"
+                styles={customStyles}
+              />
               <button
-                onClick={() => setShowConfirm(false)}
-                className="px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-100"
+                onClick={handleSubmitAssign}
+                className="px-4 py-2 bg-black text-white rounded-lg flex items-center gap-2 min-h-[44px]"
               >
-                Cancel
-              </button>
-              <button
-                onClick={confirmAssign}
-                className="px-4 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700"
-              >
-                Confirm
+                Submit
               </button>
             </div>
           </div>
+          <div className="flex gap-1 items-center max-w-[180px] w-full">
+            <Select
+              placeholder="Communicate"
+              options={communicateOptions}
+              value={sendCommunicate}
+              onChange={(selected) => {
+                setSendCommunicate(selected);
+              }}
+              isClearable
+              styles={customStyles}
+              className="w-full"
+            />
+          </div>
         </div>
-      )}
+        {/* {selectedIds.length > 0 && ( */}
 
-      <div className="relative overflow-x-auto">
-        <table className="w-full text-sm text-left text-gray-500">
-          <thead className="text-xs text-gray-700 uppercase bg-gray-50">
-            <tr>
-              <th className="px-2 py-4">#</th>
-              <th className="px-2 py-4">Member Name</th>
-              <th className="px-2 py-4">Membership Duration</th>
-              <th className="px-2 py-4">Membership Status</th>
-              <th className="px-2 py-4">Expiry Date</th>
-              <th className="px-2 py-4">Trainer Name</th>
-            </tr>
-          </thead>
-          <tbody>
-            {memberList.map((member, index) => (
-              <tr
-                key={member.id}
-                className="group bg-white border-b relative hover:bg-gray-50"
-              >
-                {/* <td className="px-2 py-4">
+        {/* )} */}
+
+        {showConfirm && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white p-6 rounded-xl shadow-lg w-96 text-center">
+              <h2 className="text-lg font-semibold mb-4">Confirm Assignment</h2>
+              <p className="mb-4">
+                Are you sure you want to assign{" "}
+                <strong>{selectedIds.length}</strong> lead(s) to{" "}
+                <strong>{bulkOwner?.label}</strong>?
+              </p>
+              <div className="flex justify-center gap-4">
+                <button
+                  onClick={() => setShowConfirm(false)}
+                  className="px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-100"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmAssign}
+                  className="px-4 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700"
+                >
+                  Confirm
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div className="relative overflow-x-auto">
+          <table className="w-full text-sm text-left text-gray-500">
+            <thead className="text-xs text-gray-700 uppercase bg-gray-50">
+              <tr>
+                <th className="px-2 py-4">#</th>
+                <th className="px-2 py-4">Name</th>
+                <th className="px-2 py-4">MemeberShip Duration</th>
+                <th className="px-2 py-4">Status</th>
+                <th className="px-2 py-4">Expired On</th>
+                <th className="px-2 py-4">Trainer Name</th>
+                <th className="px-2 py-4">Profile Completion</th>
+              </tr>
+            </thead>
+            <tbody>
+              {memberList.map((member, index) => (
+                <tr
+                  key={member.id}
+                  className="group bg-white border-b relative hover:bg-gray-50"
+                >
+                  {/* <td className="px-2 py-4">
                   {index + 1 + (page - 1) * rowsPerPage}
                 </td> */}
-                <td className="px-2 py-4">
-                  <div className="flex items-center custom--checkbox--2">
-                    <input
-                      type="checkbox"
-                      className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
-                      checked={selectedIds.includes(member.id)}
-                      onChange={() => handleCheckboxChange(member.id)}
-                    />
-                    <span className="checkmark--custom"></span>
-                  </div>
-                </td>
-                <td className="px-2 py-4">{member?.full_name}</td>
-                <td className="px-2 py-4">
-                  {/* {formatAutoDate(member?.createdAt)} */}
-                  6 Months
-                </td>
-                <td className="px-2 py-4">
-                  <div className="flex gap-1 items-center text-green-500">
-                  <FaCircle /> Active
-                  </div>
+                  <td className="px-2 py-4">
+                    <div className="flex items-center custom--checkbox--2">
+                      <input
+                        type="checkbox"
+                        className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                        checked={selectedIds.includes(member.id)}
+                        onChange={() => handleCheckboxChange(member.id)}
+                      />
+                      <span className="checkmark--custom"></span>
+                    </div>
                   </td>
-                <td className="px-2 py-4">
-                  {formatAutoDate(member?.updatedAt)}
-                </td>
-                <td className="px-2 py-4">{member?.trainer ? member?.trainer : '--'}</td>
-                {/* <td className="px-2 py-4">{member?.memberFrom}</td>
+                  <td className="px-2 py-4">{member?.full_name}</td>
+                  <td className="px-2 py-4">
+                    {/* {formatAutoDate(member?.createdAt)} */}6 Months
+                  </td>
+                  <td className="px-2 py-4">
+                    <div className="flex gap-1 items-center text-green-500">
+                      <FaCircle /> Active
+                    </div>
+                  </td>
+                  <td className="px-2 py-4">
+                    {formatAutoDate(member?.updatedAt)}
+                  </td>
+                  <td className="px-2 py-4">
+                    {member?.trainer ? member?.trainer : "--"}
+                  </td>
+                  <td className="px-2 py-4">50%</td>
+                  {/* <td className="px-2 py-4">{member?.memberFrom}</td>
                 <td className="px-2 py-4">{member?.memberTill}</td>
                 <td className="px-2 py-4">{member?.fohAssigned}</td> */}
-                <div className="absolute hidden group-hover:flex gap-2 items-center right-0 h-full top-0 w-[50%] flex items-center justify-end bg-[linear-gradient(269deg,_#ffffff_30%,_transparent)] pr-5 transition duration-700">
-                  <div className="flex gap-1">
-                    <Tooltip
-                      id={`edit-member-${member?.id}`}
-                      content="Edit Member"
-                      place="top"
-                    >
-                      <div className="p-1 cursor-pointer">
-                        <Link to={`/member/${member?.id}`} className="p-0">
-                          <LiaEdit className="text-[25px] text-black" />
-                        </Link>
-                      </div>
-                    </Tooltip>
+                  <div className="absolute hidden group-hover:flex gap-2 items-center right-0 h-full top-0 w-[50%] flex items-center justify-end bg-[linear-gradient(269deg,_#ffffff_30%,_transparent)] pr-5 transition duration-700">
+                    <div className="flex gap-1">
+                      <Tooltip
+                        id={`edit-member-${member?.id}`}
+                        content="Edit Member"
+                        place="top"
+                      >
+                        <div className="p-1 cursor-pointer">
+                          <Link to={`/member/${member?.id}`} className="p-0">
+                            <LiaEdit className="text-[25px] text-black" />
+                          </Link>
+                        </div>
+                      </Tooltip>
 
-                    <Tooltip
-                      id={`member-call-${member?.id}`}
-                      content="Call Logs"
-                      place="top"
-                    >
-                      <div className="p-1 cursor-pointer">
-                        <Link
-                          to={`/member/${member?.id}?view=call-logs`}
-                          className="p-0"
-                        >
-                          <MdCall className="text-[25px] text-black" />
-                        </Link>
-                      </div>
-                    </Tooltip>
+                      <Tooltip
+                        id={`member-call-${member?.id}`}
+                        content="Call Logs"
+                        place="top"
+                      >
+                        <div className="p-1 cursor-pointer">
+                          <Link
+                            to={`/member/${member?.id}?view=call-logs`}
+                            className="p-0"
+                          >
+                            <MdCall className="text-[25px] text-black" />
+                          </Link>
+                        </div>
+                      </Tooltip>
 
-                    <Tooltip
-                      id={`send-payment-${member?.id}`}
-                      content="Send Payment Link"
-                      place="top"
-                    >
-                      <div className="p-1 cursor-pointer">
-                        <Link to="#" className="p-0">
-                          <IoIosAddCircleOutline className="text-[25px] text-black" />
-                        </Link>
-                      </div>
-                    </Tooltip>
+                      <Tooltip
+                        id={`send-payment-${member?.id}`}
+                        content="Send Payment Link"
+                        place="top"
+                      >
+                        <div className="p-1 cursor-pointer">
+                          <Link to="#" className="p-0">
+                            <IoIosAddCircleOutline className="text-[25px] text-black" />
+                          </Link>
+                        </div>
+                      </Tooltip>
+                    </div>
                   </div>
-                </div>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        {memberList.length === 0 && (
-          <p className="text-center p-4">No matching members found.</p>
-        )}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {memberList.length === 0 && (
+            <p className="text-center p-4">No matching members found.</p>
+          )}
+        </div>
+
+        {/* Pagination */}
+        <Pagination
+          page={page}
+          totalPages={totalPages}
+          rowsPerPage={rowsPerPage}
+          totalCount={totalCount}
+          currentDataLength={memberList.length}
+          onPageChange={(newPage) => {
+            setPage(newPage);
+            fetchMemberList(searchTerm, newPage);
+          }}
+        />
       </div>
 
-      {/* Pagination */}
-      <Pagination
-        page={page}
-        totalPages={totalPages}
-        rowsPerPage={rowsPerPage}
-        totalCount={totalCount}
-        currentDataLength={memberList.length}
-        onPageChange={(newPage) => {
-          setPage(newPage);
-          fetchMemberList(searchTerm, newPage);
-        }}
-      />
-    </div>
-
-    {memberModal && (
+      {memberModal && (
         <CreateMemberForm
           setMemberModal={setMemberModal}
           onMemberUpdate={handleMemberUpdate}

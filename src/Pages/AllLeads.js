@@ -20,7 +20,6 @@ import {
   subDays,
   startOfMonth,
 } from "date-fns";
-import FiltersPanel from "./MultiSelectFilter";
 import { useLocation } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import { RiCalendarScheduleLine, RiResetLeftFill } from "react-icons/ri";
@@ -34,14 +33,15 @@ import { apiAxios } from "../config/config";
 import Pagination from "../components/common/Pagination";
 import { LuCalendarPlus } from "react-icons/lu";
 import CreateAppointment from "../components/Appointment/CreateAppointment";
+import LeadFilterPanel from "../components/common/LeadFilterPanel";
 const useQuery = () => {
   return new URLSearchParams(useLocation().search);
 };
 
 const dateFilterOptions = [
   { value: "today", label: "Today" },
-  { value: "last7", label: "Last 7 Days" },
-  { value: "monthTillDate", label: "Month Till Date" },
+  { value: "last_7_days", label: "Last 7 Days" },
+  { value: "last_30_days", label: "Month Till Date" },
   { value: "custom", label: "Custom Date" },
 ];
 const communicateOptions = [
@@ -315,7 +315,7 @@ const AllLeads = () => {
         {/* Filters */}
         <div className="flex gap-3 mb-4 items-center justify-between">
           <div className="flex gap-2 w-full">
-            <FiltersPanel
+            <LeadFilterPanel
               selectedLeadSource={selectedLeadSource}
               setSelectedLeadSource={setSelectedLeadSource}
               selectedLastCallType={selectedLastCallType}
