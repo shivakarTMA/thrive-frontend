@@ -2,6 +2,7 @@ import React, { useState } from "react"; // Import React and useState hook
 
 // Component to render individual call card details
 export default function ContactHistory({ filteredLogs }) {
+  console.log(filteredLogs,'filteredLogs')
   const [isExpanded, setIsExpanded] = useState(false); // State to manage remarks expand/collapse
 
   // Function to toggle remarks between view more and view less
@@ -14,7 +15,7 @@ export default function ContactHistory({ filteredLogs }) {
       {/* Header with call type and created date */}
       <div className="flex justify-between items-center border-b pb-2 mb-3 p-4 bg-[#F1F1F1]">
         <h2 className="text-lg font-semibold">
-          Call Type: {filteredLogs?.callType}
+          Call Type: {filteredLogs?.callStatus}
         </h2>
         <span className="text-gray-500 text-sm">
           Created on: {filteredLogs?.createdOn}

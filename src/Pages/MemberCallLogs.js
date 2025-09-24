@@ -384,7 +384,7 @@ const MemberCallLogs = () => {
                         onChange={handleDateChange}
                         showTimeSelect
                         timeFormat="hh:mm aa"
-                        dateFormat="MM/dd/yyyy"
+                        dateFormat="MM/dd/yyyy hh:mm aa"
                         placeholderText="Select date & time"
                         className="border px-3 py-2 w-full input--icon"
                         minDate={now}

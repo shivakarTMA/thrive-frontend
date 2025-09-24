@@ -9,66 +9,29 @@ import {
   trainerAvailability,
 } from "../DummyData/DummyData";
 
-import { customStyles } from "../Helper/helper";
+import { customStyles, selectIcon } from "../Helper/helper";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { apiAxios } from "../config/config";
 import { toast } from "react-toastify";
 import PhoneInput from "react-phone-number-input";
 import ContactHistory from "./ContactHistory";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchOptionList } from "../Redux/Reducers/optionListSlice";
+import { FaCalendarDays } from "react-icons/fa6";
+import { LuIndianRupee } from "react-icons/lu";
 
-const noReasons = [
-  { value: "expensive", label: "Expensive" },
-  { value: "competition", label: "Competition" },
-  { value: "not-responsive", label: "Not-responsive" },
-  { value: "relocation", label: "Relocation" },
-  { value: "parking/transport", label: "Parking/Transport" },
-  { value: "distance", label: "Distance" },
-  { value: "time constraints", label: "Time Constraints" },
-  { value: "lack of motivation", label: "Lack of motivation" },
-];
-
-const callStatusOption = [
-  { value: "trial scheduled", label: "Trial Scheduled" },
-  { value: "tour scheduled", label: "Tour Scheduled" },
-  { value: "no answer", label: "No Answer" },
-  { value: "call again", label: "Call Again" },
-  { value: "not interested", label: "Not Interested" },
-  { value: "future prospect", label: "Future Prospect" },
-  { value: "wrong number", label: "Wrong Number" },
-];
-
-const allLeadStatuses = [
-  { value: "closed", label: "Closed" },
-  { value: "lost", label: "Lost" },
-];
-
-const leadStatusOptionsMap = [
-  { value: "new", label: "New" },
-  { value: "lead", label: "Lead" },
-  { value: "opportunity", label: "Opportunity" },
-  { value: "won", label: "Won" },
-  { value: "closed", label: "Closed" },
-  { value: "lost", label: "Lost" },
-  { value: "future prospect", label: "Future Prospect" },
-];
-
-const irregularCallType = [
-  { value: "Busy", label: "Busy" },
-  { value: "Traveling", label: "Traveling" },
-  { value: "Service issue", label: "Service issue" },
-  { value: "Hybrid", label: "Hybrid" },
-  { value: "No Answer", label: "No Answer" },
+// Trainer assignment options
+const assignTrainers = [
+  { value: "shivakar", label: "Shivakar" },
+  { value: "nitin", label: "Nitin" },
+  { value: "esha", label: "Esha" },
+  { value: "apporva", label: "Apporva" },
 ];
 
 const validationSchema = Yup.object().shape({
-  calledBy: Yup.string().required("Call by is required"),
+  // calledBy: Yup.string().required("Call by is required"),
   callStatus: Yup.string().required("Call status is required"),
-  irregularCallType: Yup.string().when("callStatus", {
-    is: "irregular call",
-    then: () => Yup.string().required("Irregular Call is required"),
-  }),
-  leadStatus: Yup.string().required("Lead Status is required"),
   notInterestedReason: Yup.string().when("callStatus", {
     is: "not interested",
     then: () => Yup.string().required("Required"),
@@ -82,11 +45,11 @@ const validationSchema = Yup.object().shape({
     is: (val) => val === "trial scheduled" || val === "tour scheduled",
     then: () => Yup.string().required("Trainer Date & Time is required"),
   }),
-  assginStaff: Yup.string().when("callStatus", {
+  staff_name: Yup.string().when("callStatus", {
     is: (val) => val === "trial scheduled" || val === "tour scheduled",
     then: () => Yup.string().required("Staff Name is required"),
   }),
-  discussion: Yup.string().required("Discussion is required"),
+  remarks: Yup.string().required("Discussion is required"),
 });
 
 const LeadCallLogs = () => {
@@ -95,16 +58,52 @@ const LeadCallLogs = () => {
   const queryParams = new URLSearchParams(location.search);
   const action = queryParams.get("action");
   const [leadDetails, setLeadDetails] = useState(null);
+  const [staffList, setStaffList] = useState([]);
 
   const dataSource = action === "add-follow-up" ? assignedLeadsData : mockData;
 
+  const fetchStaff = async (search = "") => {
+    try {
+      const res = await apiAxios().get("/staff/list", {
+        params: search ? { search } : {},
+      });
+      let data = res.data?.data || res?.data || [];
+      const activeService = data?.filter((item) => item?.status === "ACTIVE");
+      setStaffList(activeService);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to fetch club");
+    }
+  };
+
+  useEffect(() => {
+    fetchStaff();
+  }, []);
+
+  const staffListOptions =
+    staffList?.map((item) => ({
+      label: item.name,
+      value: item.id,
+    })) || [];
+
+  // Redux state
+  const dispatch = useDispatch();
+  const { lists, loading } = useSelector((state) => state.optionList);
+
+  // Fetch option lists
+  useEffect(() => {
+    dispatch(fetchOptionList("LEAD_CALL_STATUS"));
+    dispatch(fetchOptionList("NOT_INTERESTED_REASON"));
+  }, [dispatch]);
+
+  // Extract Redux lists
+  const callStatusOption = lists["LEAD_CALL_STATUS"] || [];
+  const notInterestedOption = lists["NOT_INTERESTED_REASON"] || [];
 
   const [callLogs, setCallLogs] = useState([]);
   const [filterStatus, setFilterStatus] = useState("");
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
-  const [trainerDateTime, setTrainerDateTime] = useState(null);
-  const [filteredStaffOptions, setFilteredStaffOptions] = useState([]);
 
   const fetchLeadById = async (leadId) => {
     try {
@@ -124,24 +123,18 @@ const LeadCallLogs = () => {
   }, [id]);
 
   const initialValues = {
-    callStatus: null,
-    leadStatus: null,
-    serviceType: null,
-    notInterestedReason: "",
-    trialType: "",
-    scheduleFollowUp: null,
-    irregularCallType: "",
-    trainerAvailability: "",
-    assginStaff: "",
-    trialDateTime: "",
-    TrialTourStaff: "",
-    discussion: "",
     scheduleFor: "",
-    followUpDate: null,
-    temperature: "",
-    closureDate: null,
+    callStatus: "",
+    date_time: "",
+    schedule_date_time: "",
+    staff_name: "",
+    followup_date_time: "",
+    followup_staff_name: "",
+    notInterestedReason: "",
+
+    closureDate: "",
     amount: "",
-    calledBy: "Nitin",
+    remarks: "",
   };
 
   const formik = useFormik({
@@ -156,13 +149,16 @@ const LeadCallLogs = () => {
       };
 
       setCallLogs((prevLogs) => [newEntry, ...prevLogs]);
+      console.log(values,'values shivakar')
 
       // Reset form and external states
       resetForm({ values: initialValues });
-      setTrainerDateTime(null);
-      setFilteredStaffOptions([]);
     },
   });
+
+  const handleDateChange = (date) => {
+    formik.setFieldValue("followup_date_time", date);
+  };
 
   const filteredData = callLogs.filter((log) => {
     const matchesStatus =
@@ -182,63 +178,53 @@ const LeadCallLogs = () => {
     return matchesStatus && matchesStart && matchesEnd;
   });
 
-  const handleDateTrainerChange = (date) => {
-    setTrainerDateTime(date);
-    formik.setFieldValue("trainerAvailability", date);
+   const handleCallStatusChange = (option) => {
+    formik.resetForm({ values: { ...initialValues, callStatus: option.value } }); // Reset all fields except callStatus
   };
 
-  console.log(leadDetails,'leadDetails')
+  const handleDateTime = (date) => {
+    formik.setFieldValue("date_time", date); // Store Date object in Formik
+  };
 
-  useEffect(() => {
-    if (!trainerDateTime) return;
+  const handleDateTrainerChange = (val) => {
+    if (!val) return;
+    formik.setFieldValue("schedule_date_time", val.toISOString());
+  };
 
-    const selectedDate = trainerDateTime.toISOString().split("T")[0];
-    const selectedTime = trainerDateTime.toTimeString().split(" ")[0];
-
-    const availableStaff = Object.entries(trainerAvailability)
-      .filter(([staff, slots]) =>
-        slots.some(
-          (slot) => slot.date === selectedDate && slot.time === selectedTime
-        )
-      )
-      .map(([staff]) => ({
-        value: staff.toLowerCase(),
-        label: staff.charAt(0).toUpperCase() + staff.slice(1),
-      }));
-
-    setFilteredStaffOptions(availableStaff);
-  }, [trainerDateTime]);
-
-  const selectedCallStatus = formik.values.callStatus;
-
-  const filteredLeadStatusOptions =
-    filteredData.length > 0
-      ? leadStatusOptionsMap.filter((option) => option.value !== "new")
-      : leadStatusOptionsMap;
+  // Staff select -> just the value/id
+  const handleSelectSchedule = (_, selectedOption) => {
+    formik.setFieldValue("staff_name", selectedOption?.value ?? "");
+  };
 
   const now = new Date();
-  const selectedDateTime = formik.values.trialDateTime
-    ? new Date(formik.values.trialDateTime)
-    : now;
+  const minTime = new Date();
+  minTime.setHours(6, 0, 0, 0);
 
-  const isTodaySelected =
-    selectedDateTime.toDateString() === now.toDateString();
-
-  const minTime = new Date(selectedDateTime);
-  if (isTodaySelected) {
-    minTime.setHours(now.getHours(), now.getMinutes(), 0, 0);
-  } else {
-    minTime.setHours(0, 0, 0, 0);
-  }
-
-  const maxTime = new Date(selectedDateTime);
-  maxTime.setHours(23, 59, 59, 999);
+  const maxTime = new Date();
+  maxTime.setHours(22, 0, 0, 0);
 
   useEffect(() => {
     if (action === "schedule-tour-trial") {
       formik.setFieldValue("callStatus", "trial scheduled");
     }
   }, [action]);
+
+  const getAvailableTrainers = () => {
+    const dt = formik.values.schedule_date_time;
+    if (!dt) return [];
+
+    const selected = new Date(dt);
+    if (isNaN(selected)) return [];
+
+    return assignTrainers.filter((trainer) =>
+      trainerAvailability[trainer.value]?.some((slot) => {
+        const slotDt = new Date(slot.date_time);
+        return slotDt.getTime() === selected.getTime();
+      })
+    );
+  };
+
+  console.log(leadDetails, "SHIVAKAR");
 
   return (
     <div className="page--content">
@@ -257,22 +243,29 @@ const LeadCallLogs = () => {
             </h2>
 
             <div className="grid grid-cols-2 gap-4">
+              {/* Schedule For only admin */}
               <div>
                 <label className="mb-2 block">
-                  Staff Name<span className="text-red-500">*</span>
+                  Schedule For<span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="text"
-                  name="calledBy"
-                  value={formik.values.calledBy}
-                  onChange={formik.handleChange}
-                  placeholder="Called By"
-                  className="custom--input w-full bg-gray-100"
-                  readOnly={true}
+
+                <Select
+                  name="scheduleFor"
+                  value={
+                    staffListOptions.find(
+                      (opt) => opt.value === formik.values?.scheduleFor
+                    ) || null
+                  }
+                  options={staffListOptions}
+                  onChange={(option) =>
+                    formik.setFieldValue("scheduleFor", option.value)
+                  }
+                  onBlur={() => formik.setFieldTouched("scheduleFor", true)}
+                  styles={customStyles}
                 />
-                {formik.errors.calledBy && formik.touched.calledBy && (
+                {formik.errors?.scheduleFor && formik.touched?.scheduleFor && (
                   <div className="text-red-500 text-sm">
-                    {formik.errors.calledBy}
+                    {formik.errors?.scheduleFor}
                   </div>
                 )}
               </div>
@@ -290,9 +283,7 @@ const LeadCallLogs = () => {
                       (option) => option.value === formik.values.callStatus
                     ) || null
                   }
-                  onChange={(option) =>
-                    formik.setFieldValue("callStatus", option.value)
-                  }
+                  onChange={handleCallStatusChange}
                   styles={customStyles}
                   placeholder="Call Status"
                 />
@@ -304,148 +295,30 @@ const LeadCallLogs = () => {
                 )}
               </div>
 
-              {formik.values.callStatus === "irregular call" && (
+              {formik.values.callStatus !== "Trial/Tour Scheduled" &&
+              formik.values.callStatus !== "Not Interested" &&
+              formik.values.callStatus !== "Not Relevant" &&
+              formik.values.callStatus !== "Invalid number" && (
                 <div>
                   <label className="mb-2 block">
-                    Irregular call types
-                    <span className="text-red-500">*</span>
+                    Date & Time <span className="text-red-500">*</span>
                   </label>
-                  <Select
-                    name="irregularCallType"
-                    options={irregularCallType}
-                    value={
-                      irregularCallType.find(
-                        (option) =>
-                          option.value === formik.values.irregularCallType
-                      ) || null
-                    }
-                    onChange={(option) =>
-                      formik.setFieldValue("irregularCallType", option.value)
-                    }
-                    styles={customStyles}
-                    placeholder="Irregular Call Type"
-                  />
-
-                  {formik.errors?.irregularCallType &&
-                    formik.touched?.irregularCallType && (
-                      <div className="text-red-500 text-sm">
-                        {formik.errors?.irregularCallType}
-                      </div>
-                    )}
-                </div>
-              )}
-
-              <div>
-                <label className="mb-2 block">
-                  Lead Status<span className="text-red-500">*</span>
-                </label>
-
-                <Select
-                  name="leadStatus"
-                  options={filteredLeadStatusOptions}
-                  value={
-                    filteredLeadStatusOptions.find(
-                      (option) => option.value === formik.values.leadStatus
-                    ) || null
-                  }
-                  onChange={(option) =>
-                    formik.setFieldValue("leadStatus", option.value)
-                  }
-                  styles={customStyles}
-                  placeholder="Lead Status"
-                />
-
-                {formik.errors?.leadStatus && formik.touched?.leadStatus && (
-                  <div className="text-red-500 text-sm">
-                    {formik.errors?.leadStatus}
-                  </div>
-                )}
-              </div>
-              {(formik.values?.callStatus === "trial scheduled" ||
-                formik.values?.callStatus === "tour scheduled") && (
-                <>
-                  <div>
-                    <label className="mb-2 block">
-                      Date & Time <span className="text-red-500">*</span>
-                    </label>
-                    <div className="custom--date flex-1">
-                      <DatePicker
-                        selected={trainerDateTime}
-                        onChange={handleDateTrainerChange}
-                        showTimeSelect
-                        timeFormat="hh:mm aa"
-                        dateFormat="MMMM d, yyyy hh:mm aa"
-                        placeholderText="Select date & time"
-                        className="border px-3 py-2 w-full"
-                        minDate={now}
-                      />
-                      {formik.errors?.trainerAvailability &&
-                        formik.touched?.trainerAvailability && (
-                          <div className="text-red-500 text-sm">
-                            Staff Availability
-                          </div>
-                        )}
-                    </div>
-                  </div>
-                  <div>
-                    <label className="mb-2 block">
-                      Assigned to<span className="text-red-500">*</span>
-                    </label>
-                    <Select
-                      name="assginStaff"
-                      options={filteredStaffOptions}
-                      onChange={(option) => {
-                        formik.setFieldValue("assginStaff", option?.value);
-                      }}
-                      placeholder="Assign Staff"
-                      styles={customStyles}
-                    />
-                    {formik.errors.assginStaff &&
-                      formik.touched.assginStaff && (
-                        <div className="text-red-500 text-sm">
-                          Staff Name is required
-                        </div>
-                      )}
-                  </div>
-                  <div>
-                    <label className="mb-2 block">
-                      Schedule a Follow Up
-                      {/* <span className="text-red-500">*</span> */}
-                    </label>
-                    <div className="custom--date">
-                      <DatePicker
-                        selected={formik.values.trialDateTime}
-                        onChange={(val) =>
-                          formik.setFieldValue("trialDateTime", val)
-                        }
-                        showTimeSelect
-                        timeFormat="hh:mm aa"
-                        dateFormat="MMMM d, yyyy hh:mm aa"
-                        placeholderText="Select follow-up date & time"
-                        className="border px-3 py-2 w-full"
-                        minDate={now} // disables all past days
-                        minTime={minTime} // disables past times today
-                        maxTime={maxTime}
-                      />
-                    </div>
-                  </div>
-                </>
-              )}
-
-              {formik.values?.callStatus === "no answer" && (
-                <div>
-                  <label className="mb-2 block">Schedule a Follow Up</label>
-                  <div className="custom--date">
+                  <div className="custom--date flex-1">
+                    <span className="absolute z-[1] mt-[15px] ml-[15px]">
+                      <FaCalendarDays />
+                    </span>
                     <DatePicker
-                      selected={formik.values.scheduleFollowUp}
-                      onChange={(val) =>
-                        formik.setFieldValue("scheduleFollowUp", val)
+                      selected={
+                        formik.values.date_time
+                          ? new Date(formik.values.date_time)
+                          : null
                       }
+                      onChange={handleDateTime}
                       showTimeSelect
                       timeFormat="hh:mm aa"
-                      dateFormat="MMMM d, yyyy hh:mm aa"
-                      placeholderText="Select follow-up date & time"
-                      className="border px-3 py-2 w-full"
+                      dateFormat="MM/dd/yyyy hh:mm aa"
+                      placeholderText="Select date & time"
+                      className="border px-3 py-2 w-full input--icon"
                       minDate={now}
                       minTime={minTime}
                       maxTime={maxTime}
@@ -454,7 +327,150 @@ const LeadCallLogs = () => {
                 </div>
               )}
 
-              {formik.values?.callStatus === "not interested" && (
+              {formik?.values?.callStatus === "Trial/Tour Scheduled" && (
+                <>
+                  <div>
+                    <label className="mb-2 block">
+                      Date & Time <span className="text-red-500">*</span>
+                    </label>
+                    <div className="custom--date flex-1">
+                      <span className="absolute z-[1] mt-[15px] ml-[15px]">
+                        <FaCalendarDays />
+                      </span>
+                      <DatePicker
+                        selected={
+                          formik.values.schedule_date_time
+                            ? new Date(formik.values.schedule_date_time)
+                            : null
+                        }
+                        onChange={handleDateTrainerChange}
+                        showTimeSelect
+                        timeFormat="hh:mm aa"
+                        dateFormat="MM/dd/yyyy hh:mm aa"
+                        placeholderText="Select date & time"
+                        className="border px-3 py-2 w-full input--icon"
+                        minDate={now}
+                        minTime={minTime}
+                        maxTime={maxTime}
+                      />
+                      {formik.touched.schedule_date_time &&
+                        formik.errors.schedule_date_time && (
+                          <p className="text-sm text-red-500 mt-1">
+                            {formik.errors.schedule_date_time}
+                          </p>
+                        )}
+                    </div>
+                  </div>
+
+                  {/* Staff Name */}
+                  <div>
+                    <label className="mb-2 block">
+                      Staff Name <span className="text-red-500">*</span>
+                    </label>
+                    <Select
+                      name="staff_name"
+                      value={
+                        assignTrainers.find(
+                          (opt) => opt.value === formik.values.staff_name
+                        ) || null
+                      }
+                      onChange={(option) =>
+                        handleSelectSchedule("staff_name", option)
+                      }
+                      options={getAvailableTrainers()}
+                      placeholder="Select Staff"
+                      styles={customStyles}
+                    />
+                    {formik.values.schedule &&
+                      formik.values.schedule_date_time &&
+                      !getAvailableTrainers().length && (
+                        <p className="text-sm text-red-500 mt-1">
+                          No trainers available at this date and time.
+                        </p>
+                      )}
+
+                    {formik.touched.staff_name && formik.errors.staff_name && (
+                      <p className="text-sm text-red-500 mt-1">
+                        {formik.errors.staff_name}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="my-3 col-span-2 border border-gray-500 rounded-lg p-3 pt-0">
+                    <h3 className="w-fit font-semibold text-black mb-1 px-2 bg-white mt-[-10px]">
+                      Schedule Follow UP
+                    </h3>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="mb-2 block">
+                          Date & Time<span className="text-red-500">*</span>
+                        </label>
+                        <div className="custom--date flex-1">
+                          <span className="absolute z-[1] mt-[15px] ml-[15px]">
+                            <FaCalendarDays />
+                          </span>
+                          <DatePicker
+                            selected={formik.values.followup_date_time}
+                            onChange={handleDateChange}
+                            showTimeSelect
+                            timeFormat="hh:mm aa"
+                            dateFormat="MM/dd/yyyy hh:mm aa"
+                            placeholderText="Select date & time"
+                            className="border px-3 py-2 w-full input--icon"
+                            minDate={now}
+                            minTime={minTime}
+                            maxTime={maxTime}
+                          />
+                        </div>
+
+                        {formik.errors?.followup_date_time &&
+                          formik.touched?.followup_date_time && (
+                            <div className="text-red-500 text-sm">
+                              {formik.errors?.followup_date_time}
+                            </div>
+                          )}
+                      </div>
+
+                      {/* Schedule For */}
+                      <div>
+                        <label className="mb-2 block">
+                          Schedule For<span className="text-red-500">*</span>
+                        </label>
+
+                        <Select
+                          name="followup_staff_name"
+                          value={
+                            staffListOptions.find(
+                              (opt) =>
+                                opt.value === formik.values?.followup_staff_name
+                            ) || null
+                          }
+                          options={staffListOptions}
+                          onChange={(option) =>
+                            formik.setFieldValue(
+                              "followup_staff_name",
+                              option.value
+                            )
+                          }
+                          onBlur={() =>
+                            formik.setFieldTouched("followup_staff_name", true)
+                          }
+                          styles={customStyles}
+                        />
+                        {formik.errors?.followup_staff_name &&
+                          formik.touched?.followup_staff_name && (
+                            <div className="text-red-500 text-sm">
+                              {formik.errors?.followup_staff_name}
+                            </div>
+                          )}
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {formik?.values?.callStatus === "Not Interested" && (
                 <div>
                   <div>
                     <label className="mb-2 block">
@@ -463,8 +479,8 @@ const LeadCallLogs = () => {
                     </label>
                     <Select
                       name="notInterestedReason"
-                      options={noReasons}
-                      value={noReasons.find(
+                      options={notInterestedOption}
+                      value={notInterestedOption.find(
                         (option) =>
                           option.value === formik.values.notInterestedReason
                       )}
@@ -487,28 +503,72 @@ const LeadCallLogs = () => {
                   </div>
                 </div>
               )}
-            </div>
 
-            {/* Discussion */}
-            <div className="mb-3 mt-3">
-              <label className="mb-2 block">
-                Discussion Details<span className="text-red-500">*</span>
-              </label>
-              <textarea
-                name="discussion"
-                placeholder="Discussion (max 1800 characters)"
-                maxLength={1800}
-                value={formik.values.discussion}
-                onChange={formik.handleChange}
-                rows={4}
-                className="custom--input w-full"
-              />
-              {formik.errors?.discussion && formik.touched?.discussion && (
-                <div className="text-red-500 text-sm">
-                  {formik.errors?.discussion}
-                </div>
+              {formik?.values?.callStatus === "Won" && (
+                <>
+                  <div>
+                    <label className="mb-2 block">
+                      Expected Date of Closure
+                    </label>
+                    <div className="custom--date flex-1">
+                      <span className="absolute z-[1] mt-[15px] ml-[15px]">
+                        <FaCalendarDays />
+                      </span>
+                      <DatePicker
+                        selected={formik.values.closureDate}
+                        onChange={(val) =>
+                          formik.setFieldValue("closureDate", val)
+                        }
+                        dateFormat="MM/dd/yyyy hh:mm aa"
+                        placeholderText="Select Date"
+                        className="border px-3 py-2 w-full input--icon"
+                        minDate={now}
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="mb-2 block">Amount</label>
+                    <div className="relative">
+                      <span className="absolute top-[50%] translate-y-[-50%] left-[15px]">
+                        <LuIndianRupee />
+                      </span>
+                      <input
+                        type="number"
+                        name="amount"
+                        value={formik.values.amount}
+                        onChange={formik.handleChange}
+                        className="custom--input w-full input--icon"
+                      />
+                    </div>
+                  </div>
+                </>
               )}
             </div>
+
+            {formik?.values?.callStatus === "Not Relevant" ||
+            formik?.values?.callStatus === "Invalid number" ? null : (
+              <>
+                <div className="mb-3 mt-3">
+                  <label className="mb-2 block">
+                    Discussion Details<span className="text-red-500">*</span>
+                  </label>
+                  <textarea
+                    name="remarks"
+                    placeholder="Discussion (max 1800 characters)"
+                    maxLength={1800}
+                    value={formik.values.remarks}
+                    onChange={formik.handleChange}
+                    rows={4}
+                    className="custom--input w-full"
+                  />
+                  {formik.errors?.remarks && formik.touched?.remarks && (
+                    <div className="text-red-500 text-sm">
+                      {formik.errors?.remarks}
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
 
             {/* Buttons */}
             <div className="flex justify-end gap-2 mt-3">
@@ -529,7 +589,7 @@ const LeadCallLogs = () => {
             <div>
               <PhoneInput
                 name="text"
-                value={"+" + leadDetails?.mobile}
+                value={"+" + leadDetails?.country_code + leadDetails?.mobile}
                 international
                 defaultCountry="IN"
                 countryCallingCodeEditable={false}
@@ -655,19 +715,19 @@ const LeadCallLogs = () => {
               
                 {(log.callStatus === "trial scheduled" ||
                   log.callStatus === "tour scheduled") &&
-                  log.assginStaff && (
+                  log.staff_name && (
                     <p className="border p-2 rounded">
                       <span className="text-sm font-semibold flex flex-col">
                         Assigned Staff
                       </span>{" "}
-                      {log.assginStaff}
+                      {log.staff_name}
                     </p>
                   )}
               </div>
 
               <div className="bg-gray-50 p-3 rounded">
                 <h3 className="text-sm font-semibold">Remarks:</h3>
-                <p>{log.discussion}</p>
+                <p>{log.remarks}</p>
               </div>
             </div>
           ))} */}
