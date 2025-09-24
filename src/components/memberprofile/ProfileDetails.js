@@ -65,6 +65,7 @@ const ProfileDetails = ({ member }) => {
   const leadsSources = lists["LEAD_SOURCE"] || [];
   const leadTypes = lists["LEAD_TYPE"] || [];
   const servicesName = lists["INTERESTED_IN"] || [];
+  const genralTrainer = lists["GENRAL_TRAINER"] || [];
 
   // Capture from webcam
   const capturePhoto = () => {
@@ -395,26 +396,40 @@ const ProfileDetails = ({ member }) => {
             {/* Lead Information */}
             <div className="border-b border-b[#D4D4D4] pb-5 pt-5">
               <h2 className="text-xl font-semibold text-gray-900 mb-6">
-                Lead Information
+                Member Information
               </h2>
 
               <div className="grid grid-cols-4 gap-3">
                 <div>
                   <label className="block text-sm font-medium text-black mb-2">
-                    Lead Owner<span className="text-red-500">*</span>
+                    Sales Rep
                   </label>
-                  <input
-                    type="email"
+                  <Select
+                    name="leadOwner"
                     value={formData.leadOwner}
-                    onChange={(e) =>
-                      handleInputChange("leadOwner", e.target.value)
-                    }
-                    disabled={true}
-                    className="custom--input w-full"
+                    options={servicesName}
+                    onChange={(value) => handleInputChange("leadOwner", value)}
+                    styles={customStyles}
+                    isDisabled={true}
+                    className="!capitalize"
+                    placeholder=""
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-black mb-2">
+                    General Trainer
+                  </label>
+                  <Select
+                    name="gt"
+                    value={formData.gt}
+                    options={genralTrainer}
+                    onChange={(value) => handleInputChange("gt", value)}
+                    styles={customStyles}
+                    className="!capitalize"
                   />
                 </div>
 
-                <div>
+                {/* <div>
                   <label className="block text-sm font-medium text-black mb-2">
                     Service Name
                   </label>
@@ -439,7 +454,7 @@ const ProfileDetails = ({ member }) => {
                     styles={customStyles}
                     className="!capitalize"
                   />
-                </div>
+                </div> */}
                 <div>
                   <label className="block text-sm font-medium text-black mb-2">
                     Lead Source<span className="text-red-500">*</span>
@@ -451,6 +466,21 @@ const ProfileDetails = ({ member }) => {
                     onChange={(value) => handleInputChange("leadSource", value)}
                     styles={customStyles}
                     className="!capitalize"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-black mb-2">
+                    Personal Trainer
+                  </label>
+                  <input
+                    type="text"
+                    name="personal_trainer"
+                    value={formData.personal_trainer}
+                    onChange={(e) =>
+                      handleInputChange("personal_trainer", e.target.value)
+                    }
+                    className="custom--input w-full"
+                    disabled={true}
                   />
                 </div>
               </div>
