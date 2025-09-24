@@ -307,7 +307,7 @@ const MemberList = () => {
             </>
           )}
         </div> */}
-        <div className="flex items-center gap-2 border rounded-[50px] px-2 bg-white">
+        {/* <div className="flex items-center gap-2 border rounded-[50px] px-2 bg-white">
           <IoIosSearch className="text-xl" />
           <input
             type="text"
@@ -316,7 +316,7 @@ const MemberList = () => {
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full max-w-xs px-3 py-2 border-none rounded-[50px] focus:outline-none"
           />
-        </div>
+        </div> */}
       </div>
       {selectedIds.length > 0 && (
         <div className="flex items-center gap-3 mb-3">

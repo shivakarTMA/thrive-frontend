@@ -32,6 +32,8 @@ import SendPaymentLink from "./SendPaymentLink";
 import { toast } from "react-toastify";
 import { apiAxios } from "../config/config";
 import Pagination from "../components/common/Pagination";
+import { LuCalendarPlus } from "react-icons/lu";
+import CreateAppointment from "../components/Appointment/CreateAppointment";
 const useQuery = () => {
   return new URLSearchParams(useLocation().search);
 };
@@ -41,6 +43,10 @@ const dateFilterOptions = [
   { value: "last7", label: "Last 7 Days" },
   { value: "monthTillDate", label: "Month Till Date" },
   { value: "custom", label: "Custom Date" },
+];
+const communicateOptions = [
+  { value: "sms", label: "Send SMS" },
+  { value: "email", label: "Send Email" },
 ];
 
 const AllLeads = () => {
@@ -52,6 +58,7 @@ const AllLeads = () => {
   const [invoiceModal, setInvoiceModal] = useState(false);
   const [selectedLeadMember, setSelectedLeadMember] = useState(null);
   const [sendPaymentModal, setSendPaymentModal] = useState(false);
+  const [appointmentModal, setAppointmentModal] = useState(false);
   const [leadPaymentSend, setLeadPaymentSend] = useState(null);
   const [activeTab, setActiveTab] = useState("Allleads");
 
@@ -65,7 +72,8 @@ const AllLeads = () => {
   const [selectedLastCallType, setSelectedLastCallType] = useState(null);
   const [selectedCallTag, setSelectedCallTag] = useState(null);
 
-  const [dateFilter, setDateFilter] = useState(null);
+  const [dateFilter, setDateFilter] = useState(dateFilterOptions[0]);
+  const [sendCommunicate, setSendCommunicate] = useState(null);
   const [customFrom, setCustomFrom] = useState(null);
   const [customTo, setCustomTo] = useState(null);
 
@@ -96,13 +104,6 @@ const AllLeads = () => {
         { value: "shivakar", label: "Shivakar" },
         { value: "divakar", label: "Divakar" },
         { value: "parbhakar", label: "Parbhakar" },
-      ],
-    },
-    {
-      label: "PT", // Group label
-      options: [
-        { value: "nitin", label: "Nitin" },
-        { value: "esha", label: "Esha" },
       ],
     },
   ];
@@ -185,10 +186,9 @@ const AllLeads = () => {
     }
   };
 
-
-  const handleLeadUpdate = () => {  
-    fetchLeadList();  
-  };  
+  const handleLeadUpdate = () => {
+    fetchLeadList();
+  };
 
   useEffect(() => {
     fetchLeadList();
@@ -280,6 +280,8 @@ const AllLeads = () => {
     accept: ".csv",
   });
 
+  console.log(allLeads, "cikid");
+
   return (
     <>
       <div className="page--content">
@@ -311,8 +313,8 @@ const AllLeads = () => {
         </div>
 
         {/* Filters */}
-        <div className="flex flex-wrap gap-3 mb-4 items-center justify-between">
-          <div className="flex items-center gap-2 flex-1">
+        <div className="flex gap-3 mb-4 items-center justify-between">
+          <div className="flex gap-2 w-full">
             <FiltersPanel
               selectedLeadSource={selectedLeadSource}
               setSelectedLeadSource={setSelectedLeadSource}
@@ -324,20 +326,23 @@ const AllLeads = () => {
               setSelectedLastCallType={setSelectedLastCallType}
             />
 
-            <Select
-              placeholder="Date Filter"
-              options={dateFilterOptions}
-              value={dateFilter}
-              onChange={(selected) => {
-                setDateFilter(selected);
-                if (selected?.value !== "custom") {
-                  setCustomFrom(null);
-                  setCustomTo(null);
-                }
-              }}
-              isClearable
-              styles={customStyles}
-            />
+            <div className="max-w-[180px] w-full">
+              <Select
+                placeholder="Date Filter"
+                options={dateFilterOptions}
+                value={dateFilter}
+                onChange={(selected) => {
+                  setDateFilter(selected);
+                  if (selected?.value !== "custom") {
+                    setCustomFrom(null);
+                    setCustomTo(null);
+                  }
+                }}
+                // isClearable
+                styles={customStyles}
+                className="w-full"
+              />
+            </div>
 
             {dateFilter?.value === "custom" && (
               <>
@@ -383,7 +388,7 @@ const AllLeads = () => {
             )}
           </div>
 
-          <div className="flex items-center gap-2 border rounded-[50px] px-2 bg-white">
+          {/* <div className="flex items-center gap-2 border rounded-[50px] px-2 bg-white">
             <IoIosSearch className="text-xl" />
             <input
               type="text"
@@ -392,29 +397,95 @@ const AllLeads = () => {
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full max-w-xs px-3 py-2 border-none rounded-[50px] focus:outline-none"
             />
+          </div> */}
+          <div className="flex gap-1 items-center max-w-[180px] w-full">
+            <Select
+              placeholder="Communicate"
+              options={communicateOptions}
+              value={sendCommunicate}
+              onChange={(selected) => {
+                setSendCommunicate(selected);
+              }}
+              isClearable
+              styles={customStyles}
+              className="w-full"
+            />
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-5 mb-5">
+          <div className="border rounded p-4 w-full">
+            <div className="text-2xl font-bold">Total Enquiries</div>
+            <div className="grid grid-cols-3 gap-3 mt-4">
+              <div className="flex flex-col border rounded p-3 w-full">
+                <div className="text-sm font-medium text-gray-600">Open</div>
+                <div className="flex flex-wrap items-center justify-between mt-2">
+                  <span className="text-lg font-semibold">10</span>
+                </div>
+              </div>
+              <div className="flex flex-col border rounded p-3 w-full">
+                <div className="text-sm font-medium text-gray-600">
+                  Converted
+                </div>
+                <div className="flex flex-wrap items-center justify-between mt-2">
+                  <span className="text-lg font-semibold">5</span>
+                </div>
+              </div>
+              <div className="flex flex-col border rounded p-3 w-full">
+                <div className="text-sm font-medium text-gray-600">Lost</div>
+                <div className="flex flex-wrap items-center justify-between mt-2">
+                  <span className="text-lg font-semibold">0</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="border rounded p-4 w-full">
+            <div className="text-2xl font-bold">Open Enquiries</div>
+            <div className="grid grid-cols-3 gap-3 mt-4">
+              <div className="flex flex-col border rounded p-3 w-full">
+                <div className="text-sm font-medium text-gray-600">Enquiry</div>
+                <div className="flex flex-wrap items-center justify-between mt-2">
+                  <span className="text-lg font-semibold">10</span>
+                </div>
+              </div>
+              <div className="flex flex-col border rounded p-3 w-full">
+                <div className="text-sm font-medium text-gray-600">
+                  Trial Scheduled
+                </div>
+                <div className="flex flex-wrap items-center justify-between mt-2">
+                  <span className="text-lg font-semibold">5</span>
+                </div>
+              </div>
+              <div className="flex flex-col border rounded p-3 w-full">
+                <div className="text-sm font-medium text-gray-600">Won</div>
+                <div className="flex flex-wrap items-center justify-between mt-2">
+                  <span className="text-lg font-semibold">0</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
-        {selectedIds.length > 0 && (
-          <div className="flex items-center gap-3 mb-3">
-            <span className="font-medium text-gray-700">
-              Assign {selectedIds.length} selected lead(s) to:
-            </span>
+        <div className="flex items-center gap-3 mb-3">
+          <span className="font-medium text-gray-700">
+            Assign {selectedIds.length} selected lead(s) to:
+          </span>
+          <div className="max-w-[180px] w-full">
             <Select
               options={ownerOptions}
               value={bulkOwner}
               onChange={handleBulkAssign}
               placeholder="Assign Owner"
               styles={customStyles}
+              className="w-full"
             />
-            <button
-              onClick={handleSubmitAssign}
-              className="px-4 py-2 bg-black text-white rounded flex items-center gap-2"
-            >
-              Submit
-            </button>
           </div>
-        )}
+          <button
+            onClick={handleSubmitAssign}
+            className="px-4 py-2 bg-black text-white rounded flex items-center gap-2"
+          >
+            Submit
+          </button>
+        </div>
 
         {showConfirm && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -474,10 +545,12 @@ const AllLeads = () => {
                 <thead className="text-xs text-gray-700 uppercase bg-gray-50">
                   <tr>
                     <th className="px-2 py-4">#</th>
-                    {/* <th className="px-2 py-4">Lead ID</th> */}
+                    <th className="px-2 py-4">S.No</th>
+                    <th className="px-2 py-4">Enquiry ID</th>
                     <th className="px-2 py-4">Created on</th>
-                    <th className="px-2 py-4">Last Updated</th>
+                    {/* <th className="px-2 py-4">Last Updated</th> */}
                     <th className="px-2 py-4">Name</th>
+                    <th className="px-2 py-4">Service Name</th>
                     <th className="px-2 py-4">Lead Source</th>
                     <th className="px-2 py-4">Lead Status</th>
                     <th className="px-2 py-4">Last Call Status</th>
@@ -496,19 +569,25 @@ const AllLeads = () => {
                           <input
                             type="checkbox"
                             className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
-                             checked={selectedIds.includes(row.id)}
-                              onChange={() => handleCheckboxChange(row.id)}
+                            checked={selectedIds.includes(row.id)}
+                            onChange={() => handleCheckboxChange(row.id)}
                           />
                           <span className="checkmark--custom"></span>
                         </div>
                       </td>
+                      <td className="px-2 py-4">{row?.id}</td>
+                      <td className="px-2 py-4">4339161</td>
+
                       <td className="px-2 py-4">
                         {formatAutoDate(row?.createdAt)}
                       </td>
-                      <td className="px-2 py-4">
+                      {/* <td className="px-2 py-4">
                         {formatAutoDate(row?.updatedAt)}
-                      </td>
+                      </td> */}
                       <td className="px-2 py-4">{row?.full_name}</td>
+                      <td className="px-2 py-4">
+                        {row?.interested_in ? row?.interested_in : "--"}
+                      </td>
                       <td className="px-2 py-4">
                         {row?.lead_source == null ? "--" : row?.lead_source}
                       </td>
@@ -524,7 +603,7 @@ const AllLeads = () => {
                         {row?.created_by == null ? "--" : row?.created_by}
                       </td>
 
-                      <div className="absolute hidden group-hover:flex gap-2 items-center right-0 h-full top-0 w-[50%] flex items-center justify-end bg-[linear-gradient(269deg,_#ffffff_30%,_transparent)] pr-5 transition duration-700">
+                      <div className="absolute hidden group-hover:flex gap-2 right-0 h-full top-0 w-[50%] items-center justify-end bg-[linear-gradient(269deg,_#ffffff_30%,_transparent)] pr-5 transition duration-700">
                         <Tooltip
                           id={`tooltip-edit-${row.id}`}
                           content="Edit Lead"
@@ -581,6 +660,21 @@ const AllLeads = () => {
                             >
                               <RiCalendarScheduleLine className="text-[25px] text-black" />
                             </Link>
+                          </div>
+                        </Tooltip>
+
+                        <Tooltip
+                          id={`tooltip-appointment-${row.id}`}
+                          content="Add Appointment"
+                          place="top"
+                        >
+                          <div
+                            onClick={() => {
+                              setAppointmentModal(true);
+                            }}
+                            className="p-1 cursor-pointer"
+                          >
+                            <LuCalendarPlus className="text-[25px] text-black" />
                           </div>
                         </Tooltip>
 
@@ -875,6 +969,12 @@ const AllLeads = () => {
         <SendPaymentLink
           leadPaymentSend={leadPaymentSend}
           setSendPaymentModal={setSendPaymentModal}
+        />
+      )}
+      {appointmentModal && (
+        <CreateAppointment
+          setAppointmentModal={setAppointmentModal}
+          defaultCategory="complementary"
         />
       )}
     </>

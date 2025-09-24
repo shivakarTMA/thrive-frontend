@@ -91,7 +91,7 @@ const MemberProfile = () => {
         <aside className="w-full">
           {/* <h1 className="text-3xl font-semibold">Member Profile</h1> */}
           <div className="mt-6 flex flex-wrap items-center ">
-            <div className="mt-0 flex items-center border-b border-b-[#D4D4D4] overflow-auto buttons--overflow pr-6">
+            <div className="mt-0 flex items-center border-b border-b-[#D4D4D4] overflow-auto buttons--overflow pr-6 w-full">
               {tabs.map((item, index) => (
                 <div
                   key={item}

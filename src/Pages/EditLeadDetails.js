@@ -19,7 +19,15 @@ import {
   convertToISODate,
   customStyles,
   formatDateTime,
+  selectIcon,
 } from "../Helper/helper";
+import { PiGenderIntersexBold } from "react-icons/pi";
+
+const genderOptions = [
+  { value: "MALE", label: "Male" },
+  { value: "FEMALE", label: "Female" },
+  { value: "NOTDISCLOSE", label: "Not to Disclose" },
+];
 
 const validationSchema = Yup.object({
   personalDetails: Yup.object({
@@ -170,31 +178,22 @@ const EditLeadDetails = () => {
 
               <div>
                 <label className="mb-2 block">Gender</label>
-                <div className="flex gap-2">
-                  <label className="custom--radio">
-                    Male
-                    <input
-                      type="radio"
-                      name="personalDetails.gender"
-                      value="male"
-                      checked={formik.values.personalDetails.gender === "male"}
-                      onChange={formik.handleChange}
-                    />
-                    <span className="radio-checkmark"></span>
-                  </label>
-                  <label className="custom--radio">
-                    Female
-                    <input
-                      type="radio"
-                      name="personalDetails.gender"
-                      value="female"
-                      checked={
-                        formik.values.personalDetails.gender === "female"
-                      }
-                      onChange={formik.handleChange}
-                    />
-                    <span className="radio-checkmark"></span>
-                  </label>
+                <div className="relative">
+                  <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
+                    <PiGenderIntersexBold />
+                  </span>
+                  <Select
+                    name="personalDetails.gender"
+                    value={genderOptions.find(
+                      (opt) => opt.value === formik.values.personalDetails.gender
+                    )}
+                    options={genderOptions}
+                    onChange={(option) =>
+                      formik.setFieldValue("gender", option.value)
+                    }
+                    styles={selectIcon}
+                    className="!capitalize"
+                  />
                 </div>
               </div>
 

@@ -78,13 +78,13 @@ export default function FiltersPanel({
   };
 
   return (
-    <div className="relative max-w-[145px] w-full" ref={panelRef}>
+    <div className="relative max-w-fit w-full" ref={panelRef}>
       <button
         onClick={() => setShowFilters(!showFilters)}
-        className="px-4 py-2 bg-black text-white rounded flex items-center gap-2 w-full"
+        className="px-4 py-2 bg-black text-white rounded-lg flex items-center gap-2 min-h-[44px]"
       >
         <FaFilter />
-        {showFilters ? "Hide Filters" : "Show Filters"}
+        {/* {showFilters ? "Hide Filters" : "Show Filters"} */}
       </button>
 
       {showFilters && (

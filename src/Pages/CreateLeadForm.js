@@ -25,6 +25,7 @@ import { FaCalendarDays, FaListCheck, FaLocationDot } from "react-icons/fa6";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchOptionList } from "../Redux/Reducers/optionListSlice";
 import { apiAxios, authAxios } from "../config/config";
+import { PiGenderIntersexBold } from "react-icons/pi";
 
 // Trainer assignment options
 const assignTrainers = [
@@ -32,6 +33,12 @@ const assignTrainers = [
   { value: "nitin", label: "Nitin" },
   { value: "esha", label: "Esha" },
   { value: "apporva", label: "Apporva" },
+];
+
+const genderOptions = [
+  { value: "MALE", label: "Male" },
+  { value: "FEMALE", label: "Female" },
+  { value: "NOTDISCLOSE", label: "Not to Disclose" },
 ];
 
 // Lead source types
@@ -254,7 +261,7 @@ const CreateLeadForm = ({ setLeadModal, selectedLead, onLeadUpdate }) => {
 
   // ✅ Fetch lead details when selectedId changes
   useEffect(() => {
-    console.log(selectedLead,'SHIVAKAR')
+    console.log(selectedLead, "SHIVAKAR");
     if (!selectedLead) return;
 
     const fetchRoleById = async (id) => {
@@ -500,50 +507,49 @@ const CreateLeadForm = ({ setLeadModal, selectedLead, onLeadUpdate }) => {
   //   }
   // };
 
-
   const handleEmailBlur = () => {
-  const inputValue = formik.values.email?.trim().toLowerCase();
-  const { id } = formik.values;
+    const inputValue = formik.values.email?.trim().toLowerCase();
+    const { id } = formik.values;
 
-  // Debug logs
-  console.log("Input Value:", inputValue);
-  console.log("Formik ID:", id);
-  console.log("Selected Lead ID:", selectedLead);
+    // Debug logs
+    console.log("Input Value:", inputValue);
+    console.log("Formik ID:", id);
+    console.log("Selected Lead ID:", selectedLead);
 
-  // Clear error if field is empty
-  if (!inputValue) {
-    setDuplicateEmailError("");
-    setShowDuplicateEmailModal(false);
-    return;
-  }
+    // Clear error if field is empty
+    if (!inputValue) {
+      setDuplicateEmailError("");
+      setShowDuplicateEmailModal(false);
+      return;
+    }
 
-  // Get the currently selected lead object using the ID
-  const currentLead = allLeads.find((user) => user.id === selectedLead);
+    // Get the currently selected lead object using the ID
+    const currentLead = allLeads.find((user) => user.id === selectedLead);
 
-  // Skip duplicate check if the email hasn't changed
-  if (currentLead && inputValue === currentLead.email?.trim().toLowerCase()) {
-    setDuplicateEmailError("");
-    setShowDuplicateEmailModal(false);
-    return;
-  }
+    // Skip duplicate check if the email hasn't changed
+    if (currentLead && inputValue === currentLead.email?.trim().toLowerCase()) {
+      setDuplicateEmailError("");
+      setShowDuplicateEmailModal(false);
+      return;
+    }
 
-  // Check for duplicates excluding the current lead ID
-  const matches = allLeads.filter(
-    (user) =>
-      user.email?.trim().toLowerCase() === inputValue && user.id !== selectedLead
-  );
+    // Check for duplicates excluding the current lead ID
+    const matches = allLeads.filter(
+      (user) =>
+        user.email?.trim().toLowerCase() === inputValue &&
+        user.id !== selectedLead
+    );
 
-  if (matches.length > 0) {
-    setDuplicateEmailError("This email already exists");
-    setShowDuplicateEmailModal(true);
-  } else {
-    setDuplicateEmailError("");
-    setShowDuplicateEmailModal(false);
-  }
-};
+    if (matches.length > 0) {
+      setDuplicateEmailError("This email already exists");
+      setShowDuplicateEmailModal(true);
+    } else {
+      setDuplicateEmailError("");
+      setShowDuplicateEmailModal(false);
+    }
+  };
 
-
-  console.log(allLeads,'alllead data')
+  console.log(allLeads, "alllead data");
 
   const getAvailableTrainers = () => {
     const dt = formik.values.schedule_date_time;
@@ -698,65 +704,22 @@ const CreateLeadForm = ({ setLeadModal, selectedLead, onLeadUpdate }) => {
                       <label className="mb-2 block font-medium text-gray-700">
                         Gender
                       </label>
-                      <div className="flex gap-2 flex-wrap">
-                        <label
-                          className={`flex items-center gap-2 px-4 py-2 rounded-[10px] border cursor-pointer shadow-sm transition
-                          ${
-                            formik.values.gender === "MALE"
-                              ? "bg-black text-white border-black"
-                              : "bg-white text-gray-700 border-gray-300"
-                          }`}
-                        >
-                          <input
-                            type="radio"
-                            name="gender"
-                            value="MALE"
-                            checked={formik.values.gender === "MALE"}
-                            onChange={formik.handleChange}
-                            className="hidden"
-                          />
-                          <FaMale />
-                          Male
-                        </label>
-
-                        <label
-                          className={`flex items-center gap-2 px-4 py-2 rounded-[10px] border cursor-pointer shadow-sm transition
-                          ${
-                            formik.values.gender === "FEMALE"
-                              ? "bg-black text-white border-black"
-                              : "bg-white text-gray-700 border-gray-300"
-                          }`}
-                        >
-                          <input
-                            type="radio"
-                            name="gender"
-                            value="FEMALE"
-                            checked={formik.values.gender === "FEMALE"}
-                            onChange={formik.handleChange}
-                            className="hidden"
-                          />
-                          <FaFemale />
-                          Female
-                        </label>
-                        <label
-                          className={`flex items-center gap-2 px-4 py-2 rounded-[10px] border cursor-pointer shadow-sm transition
-                          ${
-                            formik.values.gender === "NOTDISCLOSE"
-                              ? "bg-black text-white border-black"
-                              : "bg-white text-gray-700 border-gray-300"
-                          }`}
-                        >
-                          <input
-                            type="radio"
-                            name="gender"
-                            value="NOTDISCLOSE"
-                            checked={formik.values.gender === "NOTDISCLOSE"}
-                            onChange={formik.handleChange}
-                            className="hidden"
-                          />
-                          <IoBan />
-                          Not to Disclose
-                        </label>
+                      <div className="relative">
+                        <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
+                          <PiGenderIntersexBold />
+                        </span>
+                        <Select
+                          name="gender"
+                          value={genderOptions.find(
+                            (opt) => opt.value === formik.values.gender
+                          )}
+                          options={genderOptions}
+                          onChange={(option) =>
+                            formik.setFieldValue("gender", option.value)
+                          }
+                          styles={selectIcon}
+                          className="!capitalize"
+                        />
                       </div>
                     </div>
 
@@ -826,20 +789,6 @@ const CreateLeadForm = ({ setLeadModal, selectedLead, onLeadUpdate }) => {
                       </div>
                     )}
 
-                    <div className="col-span-2">
-                      <label className="mb-2 block">Address</label>
-                      <div className="relative">
-                        <span className="absolute top-[50%] translate-y-[-50%] left-[15px]">
-                          <FaLocationDot />
-                        </span>
-                        <input
-                          name="address"
-                          value={formik.values.address}
-                          onChange={formik.handleChange}
-                          className="custom--input w-full input--icon"
-                        />
-                      </div>
-                    </div>
                     <div>
                       <label className="mb-2 block">Location</label>
                       <div className="relative">
@@ -854,6 +803,20 @@ const CreateLeadForm = ({ setLeadModal, selectedLead, onLeadUpdate }) => {
                         />
                       </div>
                     </div>
+
+                    <div className="col-span-3">
+                      <label className="mb-2 block">Address</label>
+                      <div className="relative">
+                        <textarea
+                          name="address"
+                          value={formik.values.address}
+                          onChange={formik.handleChange}
+                          rows={4}
+                          className="custom--input w-full"
+                        />
+                      </div>
+                    </div>
+                    
                   </div>
 
                   <hr className="my-3 mt-5" />
@@ -863,7 +826,7 @@ const CreateLeadForm = ({ setLeadModal, selectedLead, onLeadUpdate }) => {
                   </h3>
                   <div className="grid grid-cols-3 gap-4">
                     <div>
-                      <label className="mb-2 block">Interested In</label>
+                      <label className="mb-2 block">Service Name</label>
                       <div className="relative">
                         <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
                           <FaListCheck />
@@ -1058,7 +1021,7 @@ const CreateLeadForm = ({ setLeadModal, selectedLead, onLeadUpdate }) => {
                                 onChange={handleDateTrainerChange}
                                 showTimeSelect
                                 timeFormat="hh:mm aa"
-                                dateFormat="MMMM d, yyyy hh:mm aa"
+                                dateFormat="MM/dd/yyyy hh:mm aa"
                                 placeholderText="Select date & time"
                                 className="border px-3 py-2 w-full input--icon"
                                 minDate={now}

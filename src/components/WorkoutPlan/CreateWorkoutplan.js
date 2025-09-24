@@ -506,8 +506,6 @@ const CreateWorkoutPlan = ({ handleCancelWorkout }) => {
                 />
               </div>
             </div>
-
-            
           </div>
         </div>
       </div>
@@ -610,15 +608,25 @@ const CreateWorkoutPlan = ({ handleCancelWorkout }) => {
             <input
               type="number"
               min={1}
-              value={data.numDays}
-              onChange={(e) =>
+              value={data.numDays || ""}
+              onChange={(e) => {
+                const val = e.target.value;
+
+                // If the input is cleared, reset to empty string
+                if (val === "") {
+                  setData((prev) => ({ ...prev, numDays: "" }));
+                  return;
+                }
+
+                // Parse and normalize the number (remove leading 0s)
+                const parsed = parseInt(val, 10);
                 setData((prev) => ({
                   ...prev,
-                  numDays: Number(e.target.value),
-                }))
-              }
+                  numDays: isNaN(parsed) ? "" : parsed,
+                }));
+              }}
               disabled={data.workoutType === "single"}
-              className="border px-3 py-2 w-full rounded number--appearance-none"
+              className="border px-3 py-2 w-full rounded"
             />
           </div>
 
@@ -630,13 +638,13 @@ const CreateWorkoutPlan = ({ handleCancelWorkout }) => {
             >
               Configure Workout
             </button>
-            <button
+            {/* <button
               type="button"
               onClick={handleCancelWorkout}
               className="px-4 py-2 bg-white text-black rounded flex items-center gap-2 border border-black"
             >
               Cancel
-            </button>
+            </button> */}
           </div>
         </form>
       )}

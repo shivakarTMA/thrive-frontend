@@ -1,6 +1,10 @@
 import React, { useState } from "react";
 import { FiPlus } from "react-icons/fi";
 import AddCoins from "./AddCoins";
+import Select from "react-select";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import { customStyles } from "../../Helper/helper";
 
 const coinsList = [
   {
@@ -65,19 +69,88 @@ const coinsList = [
   },
 ];
 
+const coinsTypeOptions = [
+  { value: "All", label: "All" },
+  { value: "Referral", label: "Referral" },
+  { value: "Compensation", label: "Compensation" },
+  { value: "Challenges", label: "Challenges" },
+];
+
 const CoinsList = () => {
+  const [coinsTypeFilter, setCoinsTypeFilter] = useState({
+    value: "All",
+    label: "All",
+  });
+  const [dateFrom, setDateFrom] = useState(null);
+  const [dateTo, setDateTo] = useState(null);
+
   const [coinsModal, setCoinsModal] = useState(false);
-const columns = ["Date", "Coins Added", "Reason", "Remarks"];
+  const columns = ["Date", "Coins Added", "Reason", "Remarks"];
+
+  const filteredCoins = coinsList.filter((appt) => {
+    const apptDate = new Date(appt.date); // ✅ Correct parsing
+
+    return (
+      (coinsTypeFilter.value === "All" ||
+        appt.reason === coinsTypeFilter.value) && // ✅ Check against reason, not appointmentType
+      (!dateFrom || apptDate >= dateFrom) &&
+      (!dateTo || apptDate <= dateTo)
+    );
+  });
 
   return (
     <div className="p-4 bg-white rounded shadow">
-      <div className="flex justify-end mb-3">
-        <button
-          onClick={() => setCoinsModal(true)}
-          className="px-4 py-2 bg-white text-black flex items-center gap-2 cursor-pointer"
-        >
-          <FiPlus /> Add Coins
-        </button>
+      <div className="flex gap-3 justify-between">
+        <div className="flex flex-wrap items-center gap-2 mb-4">
+          <Select
+            options={coinsTypeOptions}
+            value={coinsTypeFilter}
+            onChange={setCoinsTypeFilter}
+            placeholder="Select Appointment Type"
+            styles={customStyles}
+            className="w-40"
+          />
+          <div className="custom--date dob-format">
+            <DatePicker
+              selected={dateFrom}
+              onChange={(date) => {
+                setDateFrom(date);
+                if (!date) setDateTo(null);
+              }}
+              isClearable
+              showMonthDropdown
+              showYearDropdown
+              maxDate={new Date()}
+              dateFormat="dd MMM yyyy"
+              dropdownMode="select"
+              placeholderText="From date"
+              className="custom--input w-full"
+            />
+          </div>
+          <div className="custom--date dob-format">
+            <DatePicker
+              selected={dateTo}
+              onChange={(date) => setDateTo(date)}
+              isClearable
+              minDate={dateFrom || null}
+              maxDate={new Date()}
+              showMonthDropdown
+              showYearDropdown
+              dateFormat="dd MMM yyyy"
+              dropdownMode="select"
+              placeholderText="End date"
+              className="custom--input w-full"
+            />
+          </div>
+        </div>
+        <div>
+          <div
+            className="px-4 py-2 bg-white text-black flex items-center gap-2 cursor-pointer"
+            onClick={() => setCoinsModal(true)}
+          >
+            <FiPlus /> Add Coins
+          </div>
+        </div>
       </div>
 
       <div className="overflow-auto">
@@ -92,8 +165,8 @@ const columns = ["Date", "Coins Added", "Reason", "Remarks"];
             </tr>
           </thead>
           <tbody>
-            {coinsList.length > 0 ? (
-              coinsList.map((item, idx) => (
+            {filteredCoins.length > 0 ? (
+              filteredCoins.map((item, idx) => (
                 <tr key={idx}>
                   <td className="border px-3 py-2">{item?.date}</td>
                   <td className="border px-3 py-2">{item?.coins_added}</td>

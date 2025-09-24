@@ -416,7 +416,7 @@ const ProfileDetails = ({ member }) => {
 
                 <div>
                   <label className="block text-sm font-medium text-black mb-2">
-                    Interested In
+                    Service Name
                   </label>
                   <Select
                     name="leadType"

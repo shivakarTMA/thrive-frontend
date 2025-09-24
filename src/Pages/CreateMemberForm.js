@@ -39,11 +39,17 @@ import { apiAxios } from "../config/config";
 import { fetchOptionList } from "../Redux/Reducers/optionListSlice";
 import Webcam from "react-webcam";
 import { IoCheckmark, IoClose } from "react-icons/io5";
+import { PiGenderIntersexBold } from "react-icons/pi";
 
 const voucherList = [
   { code: "FIT10", discount: 10 },
   { code: "WELCOME20", discount: 20 },
   { code: "SUMMER25", discount: 25 },
+];
+const genderOptions = [
+  { value: "MALE", label: "Male" },
+  { value: "FEMALE", label: "Female" },
+  { value: "NOTDISCLOSE", label: "Not to Disclose" },
 ];
 
 const stepValidationSchemas = [
@@ -54,14 +60,16 @@ const stepValidationSchemas = [
       .email("Invalid email format")
       .required("Email is required"),
     gender: Yup.string().required("Gender is required"),
-   mobile: Yup.string()
-        .required("Contact number is required")
-        .test("is-valid-phone", "Invalid phone number", function (value) {
-          const { country_code } = this.parent;
-          if (!value || !country_code) return false;
-          const phoneNumber = parsePhoneNumberFromString("+" + country_code + value);
-          return phoneNumber?.isValid() || false;
-        }),
+    mobile: Yup.string()
+      .required("Contact number is required")
+      .test("is-valid-phone", "Invalid phone number", function (value) {
+        const { country_code } = this.parent;
+        if (!value || !country_code) return false;
+        const phoneNumber = parsePhoneNumberFromString(
+          "+" + country_code + value
+        );
+        return phoneNumber?.isValid() || false;
+      }),
     date_of_birth: Yup.string()
       .nullable()
       .required("Date of birth is required")
@@ -227,7 +235,6 @@ const CreateMemberForm = ({ setMemberModal, onMemberUpdate }) => {
     },
   });
 
-
   // Fetch companies
   const fetchCompanies = async (search = "") => {
     try {
@@ -285,7 +292,7 @@ const CreateMemberForm = ({ setMemberModal, onMemberUpdate }) => {
     }
   };
 
-const handleNextStep = async () => {
+  const handleNextStep = async () => {
     const errors = await formik.validateForm();
 
     if (Object.keys(errors).length === 0) {
@@ -333,7 +340,6 @@ const handleNextStep = async () => {
       new Date().toISOString().split("T")[0]
     );
   }, []);
-
 
   const handleProductSubmit = (product) => {
     formik.setFieldValue("productDetails.productName", product.productName);
@@ -387,7 +393,7 @@ const handleNextStep = async () => {
     formik.setFieldValue("emergencyContacts", updated);
   };
 
- const handlePhoneChange = (value) => {
+  const handlePhoneChange = (value) => {
     formik.setFieldValue("phoneFull", value);
     if (!value) {
       formik.setFieldValue("mobile", "");
@@ -401,7 +407,6 @@ const handleNextStep = async () => {
     }
     setDuplicateError(false);
   };
-
 
   const handleDobChange = (date) => {
     if (!date) return;
@@ -648,70 +653,23 @@ const handleNextStep = async () => {
                             <label className="mb-2 block font-medium text-gray-700">
                               Gender<span className="text-red-500">*</span>
                             </label>
-                            <div className="flex gap-2 flex-wrap">
-                              <label
-                                className={`flex items-center gap-2 px-4 py-2 rounded-[10px] border cursor-pointer shadow-sm transition
-                                                   ${
-                                                     formik.values.gender ===
-                                                     "MALE"
-                                                       ? "bg-black text-white border-black"
-                                                       : "bg-white text-gray-700 border-gray-300"
-                                                   }`}
-                              >
-                                <input
-                                  type="radio"
-                                  name="gender"
-                                  value="MALE"
-                                  checked={formik.values.gender === "MALE"}
-                                  onChange={formik.handleChange}
-                                  className="hidden"
-                                />
-                                <FaMale />
-                                Male
-                              </label>
 
-                              <label
-                                className={`flex items-center gap-2 px-4 py-2 rounded-[10px] border cursor-pointer shadow-sm transition
-                                                   ${
-                                                     formik.values.gender ===
-                                                     "FEMALE"
-                                                       ? "bg-black text-white border-black"
-                                                       : "bg-white text-gray-700 border-gray-300"
-                                                   }`}
-                              >
-                                <input
-                                  type="radio"
-                                  name="gender"
-                                  value="FEMALE"
-                                  checked={formik.values.gender === "FEMALE"}
-                                  onChange={formik.handleChange}
-                                  className="hidden"
-                                />
-                                <FaFemale />
-                                Female
-                              </label>
-                              <label
-                                className={`flex items-center gap-2 px-4 py-2 rounded-[10px] border cursor-pointer shadow-sm transition
-                                                   ${
-                                                     formik.values.gender ===
-                                                     "NOTDISCLOSE"
-                                                       ? "bg-black text-white border-black"
-                                                       : "bg-white text-gray-700 border-gray-300"
-                                                   }`}
-                              >
-                                <input
-                                  type="radio"
-                                  name="gender"
-                                  value="NOTDISCLOSE"
-                                  checked={
-                                    formik.values.gender === "NOTDISCLOSE"
-                                  }
-                                  onChange={formik.handleChange}
-                                  className="hidden"
-                                />
-                                <IoBan />
-                                Not to Disclose
-                              </label>
+                            <div className="relative">
+                              <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
+                                <PiGenderIntersexBold />
+                              </span>
+                              <Select
+                                name="gender"
+                                value={genderOptions.find(
+                                  (opt) => opt.value === formik.values.gender
+                                )}
+                                options={genderOptions}
+                                onChange={(option) =>
+                                  formik.setFieldValue("gender", option.value)
+                                }
+                                styles={selectIcon}
+                                className="!capitalize"
+                              />
                             </div>
                           </div>
 
@@ -800,7 +758,7 @@ const handleNextStep = async () => {
                       </h3>
                       <div className="grid grid-cols-3 gap-4">
                         <div>
-                          <label className="mb-2 block">Interested In</label>
+                          <label className="mb-2 block">Service Name</label>
                           <div className="relative">
                             <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
                               <FaListCheck />
@@ -1083,118 +1041,115 @@ const handleNextStep = async () => {
                       <h3 className="text-2xl font-semibold mb-2">
                         Emergency Contact
                       </h3>
-                      {formik.values?.emergencyContacts?.map(
-                        (phone, index) => (
-                          <div
-                            key={index}
-                            className="grid grid-cols-3 gap-4 mb-4 border p-4 rounded-lg"
-                          >
-                            {/* Name Field */}
-                            <div>
-                              <label className="mb-2 block">Name<span className="text-red-500">*</span></label>
-                              <div className="custom--date dob-format relative">
-                                <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
-                                  <FaUser />
-                                </span>
-                                <input
-                                  type="text"
-                                  name={`emergencyContacts.${index}.name`}
-                                  value={phone?.name}
-                                  onChange={formik.handleChange}
-                                  className="custom--input w-full input--icon"
-                                />
-                              </div>
-                              {formik.errors?.emergencyContacts?.[index]
-                                ?.name &&
-                                formik.touched?.emergencyContacts?.[index]
-                                  ?.name && (
-                                  <div className="text-red-500 text-sm">
-                                    {
-                                      formik.errors.emergencyContacts[index]
-                                        .name
-                                    }
-                                  </div>
-                                )}
-                            </div>
-
-                            {/* Contact Number Field */}
-                            <div>
-                              <label className="mb-2 block">Number<span className="text-red-500">*</span></label>
-                              <PhoneInput
-                                name={`emergencyContacts.${index}.phone`}
-                                value={phone?.phone}
-                                onChange={(value) =>
-                                  handleEmergancyPhone(value, index)
-                                } // Ensure this function handles formik update
-                                international
-                                defaultCountry="IN"
-                                countryCallingCodeEditable={false}
-                                className="custom--input w-full custom--phone"
+                      {formik.values?.emergencyContacts?.map((phone, index) => (
+                        <div
+                          key={index}
+                          className="grid grid-cols-3 gap-4 mb-4 border p-4 rounded-lg"
+                        >
+                          {/* Name Field */}
+                          <div>
+                            <label className="mb-2 block">
+                              Name<span className="text-red-500">*</span>
+                            </label>
+                            <div className="custom--date dob-format relative">
+                              <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
+                                <FaUser />
+                              </span>
+                              <input
+                                type="text"
+                                name={`emergencyContacts.${index}.name`}
+                                value={phone?.name}
+                                onChange={formik.handleChange}
+                                className="custom--input w-full input--icon"
                               />
-                              {formik.errors?.emergencyContacts?.[index]
-                                ?.phone &&
-                                formik.touched?.emergencyContacts?.[index]
-                                  ?.phone && (
-                                  <div className="text-red-500 text-sm">
-                                    {
-                                      formik.errors.emergencyContacts[index]
-                                        .phone
-                                    }
-                                  </div>
-                                )}
                             </div>
-
-                            {/* Relationship Field */}
-                            <div>
-                              <label className="mb-2 block">Relationship<span className="text-red-500">*</span></label>
-                              <div className="custom--date dob-format relative">
-                                <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
-                                  <FaLink />
-                                </span>
-                                <Select
-                                  name={`emergencyContacts.${index}.relationship`}
-                                  value={relationList.find(
-                                    (opt) =>
-                                      opt.value === formik.values.lead_source
-                                  )}
-                                  onChange={(option) =>
-                                    formik.setFieldValue(
-                                      `emergencyContacts.${index}.relationship`,
-                                      option.value
-                                    )
-                                  }
-                                  options={relationList}
-                                  styles={selectIcon}
-                                />
-                              </div>
-                              {formik.errors?.emergencyContacts?.[index]
-                                ?.relationship &&
-                                formik.touched?.emergencyContacts?.[index]
-                                  ?.relationship && (
-                                  <div className="text-red-500 text-sm">
-                                    {
-                                      formik.errors.emergencyContacts[index]
-                                        .relationship
-                                    }
-                                  </div>
-                                )}
-                            </div>
-
-                            {/* Remove Button */}
-                            <div className="col-span-3 flex justify-end mt-2">
-                              {formik.values?.emergencyContacts?.length > 1 && (
-                                <button
-                                  type="button"
-                                  onClick={() => handleRemoveContact(index)}
-                                  className="text-red-500"
-                                >
-                                  Remove
-                                </button>
+                            {formik.errors?.emergencyContacts?.[index]?.name &&
+                              formik.touched?.emergencyContacts?.[index]
+                                ?.name && (
+                                <div className="text-red-500 text-sm">
+                                  {formik.errors.emergencyContacts[index].name}
+                                </div>
                               )}
-                            </div>
                           </div>
-                        )
-                      )}
+
+                          {/* Contact Number Field */}
+                          <div>
+                            <label className="mb-2 block">
+                              Number<span className="text-red-500">*</span>
+                            </label>
+                            <PhoneInput
+                              name={`emergencyContacts.${index}.phone`}
+                              value={phone?.phone}
+                              onChange={(value) =>
+                                handleEmergancyPhone(value, index)
+                              } // Ensure this function handles formik update
+                              international
+                              defaultCountry="IN"
+                              countryCallingCodeEditable={false}
+                              className="custom--input w-full custom--phone"
+                            />
+                            {formik.errors?.emergencyContacts?.[index]?.phone &&
+                              formik.touched?.emergencyContacts?.[index]
+                                ?.phone && (
+                                <div className="text-red-500 text-sm">
+                                  {formik.errors.emergencyContacts[index].phone}
+                                </div>
+                              )}
+                          </div>
+
+                          {/* Relationship Field */}
+                          <div>
+                            <label className="mb-2 block">
+                              Relationship
+                              <span className="text-red-500">*</span>
+                            </label>
+                            <div className="custom--date dob-format relative">
+                              <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
+                                <FaLink />
+                              </span>
+                              <Select
+                                name={`emergencyContacts.${index}.relationship`}
+                                value={relationList.find(
+                                  (opt) =>
+                                    opt.value === formik.values.lead_source
+                                )}
+                                onChange={(option) =>
+                                  formik.setFieldValue(
+                                    `emergencyContacts.${index}.relationship`,
+                                    option.value
+                                  )
+                                }
+                                options={relationList}
+                                styles={selectIcon}
+                              />
+                            </div>
+                            {formik.errors?.emergencyContacts?.[index]
+                              ?.relationship &&
+                              formik.touched?.emergencyContacts?.[index]
+                                ?.relationship && (
+                                <div className="text-red-500 text-sm">
+                                  {
+                                    formik.errors.emergencyContacts[index]
+                                      .relationship
+                                  }
+                                </div>
+                              )}
+                          </div>
+
+                          {/* Remove Button */}
+                          <div className="col-span-3 flex justify-end mt-2">
+                            {formik.values?.emergencyContacts?.length > 1 && (
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveContact(index)}
+                                className="text-red-500"
+                              >
+                                Remove
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      ))}
 
                       <button
                         type="button"

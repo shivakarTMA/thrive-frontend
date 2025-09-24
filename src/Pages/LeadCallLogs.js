@@ -12,6 +12,10 @@ import {
 import { customStyles } from "../Helper/helper";
 import { useFormik } from "formik";
 import * as Yup from "yup";
+import { apiAxios } from "../config/config";
+import { toast } from "react-toastify";
+import PhoneInput from "react-phone-number-input";
+import ContactHistory from "./ContactHistory";
 
 const noReasons = [
   { value: "expensive", label: "Expensive" },
@@ -90,9 +94,10 @@ const LeadCallLogs = () => {
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
   const action = queryParams.get("action");
+  const [leadDetails, setLeadDetails] = useState(null);
 
   const dataSource = action === "add-follow-up" ? assignedLeadsData : mockData;
-  const leadDetails = dataSource.find((m) => m.id === parseInt(id));
+
 
   const [callLogs, setCallLogs] = useState([]);
   const [filterStatus, setFilterStatus] = useState("");
@@ -100,6 +105,23 @@ const LeadCallLogs = () => {
   const [endDate, setEndDate] = useState(null);
   const [trainerDateTime, setTrainerDateTime] = useState(null);
   const [filteredStaffOptions, setFilteredStaffOptions] = useState([]);
+
+  const fetchLeadById = async (leadId) => {
+    try {
+      const res = await apiAxios().get(`/lead/${leadId}`);
+      const data = res.data?.data || res.data || null;
+      setLeadDetails(data);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to fetch member details");
+    }
+  };
+
+  useEffect(() => {
+    if (id) {
+      fetchLeadById(id);
+    }
+  }, [id]);
 
   const initialValues = {
     callStatus: null,
@@ -142,7 +164,7 @@ const LeadCallLogs = () => {
     },
   });
 
-  const filteredLogs = callLogs.filter((log) => {
+  const filteredData = callLogs.filter((log) => {
     const matchesStatus =
       !filterStatus || filterStatus.value === ""
         ? true
@@ -164,6 +186,8 @@ const LeadCallLogs = () => {
     setTrainerDateTime(date);
     formik.setFieldValue("trainerAvailability", date);
   };
+
+  console.log(leadDetails,'leadDetails')
 
   useEffect(() => {
     if (!trainerDateTime) return;
@@ -188,7 +212,7 @@ const LeadCallLogs = () => {
   const selectedCallStatus = formik.values.callStatus;
 
   const filteredLeadStatusOptions =
-    filteredLogs.length > 0
+    filteredData.length > 0
       ? leadStatusOptionsMap.filter((option) => option.value !== "new")
       : leadStatusOptionsMap;
 
@@ -225,11 +249,11 @@ const LeadCallLogs = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <div className="border bg-white rounded p-4 w-full">
+      <div className="flex gap-5">
+        <div className="z-[222] relative max-w-[500px] bg-white p-4 rounded-[10px] w-full box--shadow">
           <form onSubmit={formik.handleSubmit} className="sticky top-[50px]">
             <h2 className="text-xl font-semibold mb-4">
-              {leadDetails?.name} - {leadDetails?.contact}
+              {leadDetails?.full_name}
             </h2>
 
             <div className="grid grid-cols-2 gap-4">
@@ -476,6 +500,7 @@ const LeadCallLogs = () => {
                 maxLength={1800}
                 value={formik.values.discussion}
                 onChange={formik.handleChange}
+                rows={4}
                 className="custom--input w-full"
               />
               {formik.errors?.discussion && formik.touched?.discussion && (
@@ -498,8 +523,22 @@ const LeadCallLogs = () => {
         </div>
 
         {/* Contact History Placeholder */}
-        <div className="border bg-white rounded p-4 w-full">
-          <h2 className="text-xl font-semibold mb-5">Contact History</h2>
+        <div className="bg-white p-4 rounded-[10px] w-full box--shadow">
+          <div className="flex gap-2 justify-between items-center mb-5">
+            <h2 className="text-xl font-semibold">Contact History</h2>
+            <div>
+              <PhoneInput
+                name="text"
+                value={"+" + leadDetails?.mobile}
+                international
+                defaultCountry="IN"
+                countryCallingCodeEditable={false}
+                readOnly={true}
+                disabled={true}
+                className="disable--phone px-0 text-right font-[500]"
+              />
+            </div>
+          </div>
           <div className="flex gap-2 mb-3">
             <div className="grid grid-cols-3 gap-2">
               <Select
@@ -529,11 +568,11 @@ const LeadCallLogs = () => {
             </div>
           </div>
 
-          {filteredLogs.length === 0 && (
+          {/* {filteredLogs.length === 0 && (
             <p className="text-gray-500">No call logs found.</p>
-          )}
+          )} */}
 
-          {filteredLogs.map((log, index) => (
+          {/* {filteredLogs.map((log, index) => (
             <div
               key={index}
               className="border rounded p-4 w-full mb-3 calllogdetails"
@@ -558,7 +597,7 @@ const LeadCallLogs = () => {
                   {log.leadStatus}
                 </p>
 
-                {/* Show follow-up dates */}
+             
                 {log.scheduleFollowUp && (
                   <p className="border p-2 rounded">
                     <span className="text-sm font-semibold flex flex-col">
@@ -579,7 +618,7 @@ const LeadCallLogs = () => {
                     </p>
                   )}
 
-                {/* Not Interested Reason */}
+             
                 {log.callStatus === "not interested" &&
                   log.notInterestedReason && (
                     <p className="border p-2 rounded">
@@ -590,7 +629,7 @@ const LeadCallLogs = () => {
                     </p>
                   )}
 
-                {/* Irregular Call */}
+               
                 {log.callStatus === "irregular call" &&
                   log.irregularCallType && (
                     <p className="border p-2 rounded">
@@ -601,7 +640,7 @@ const LeadCallLogs = () => {
                     </p>
                   )}
 
-                {/* Trainer Availability */}
+         
                 {(log.callStatus === "trial scheduled" ||
                   log.callStatus === "tour scheduled") &&
                   log.trainerAvailability && (
@@ -613,7 +652,7 @@ const LeadCallLogs = () => {
                     </p>
                   )}
 
-                {/* Assigned Staff */}
+              
                 {(log.callStatus === "trial scheduled" ||
                   log.callStatus === "tour scheduled") &&
                   log.assginStaff && (
@@ -631,7 +670,14 @@ const LeadCallLogs = () => {
                 <p>{log.discussion}</p>
               </div>
             </div>
-          ))}
+          ))} */}
+          {filteredData.length > 0 ? (
+            filteredData.map((filteredLogs, index) => (
+              <ContactHistory key={index} filteredData={filteredLogs} />
+            ))
+          ) : (
+            <p className="text-center text-gray-500">No records found</p>
+          )}
         </div>
       </div>
     </div>

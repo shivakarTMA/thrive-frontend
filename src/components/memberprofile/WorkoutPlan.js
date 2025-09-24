@@ -654,7 +654,7 @@ const WorkoutPlan = ({ handleCancelWorkout, editingId }) => {
 
     setActiveDayIndex(0);
     setShowConfiguration(true);
-    setWorkoutForm(false);
+    setWorkoutForm(true);
     setShowModal(false);
     toast.success("Template Assigned Successfully!");
   };
@@ -773,25 +773,34 @@ const WorkoutPlan = ({ handleCancelWorkout, editingId }) => {
                     type="number"
                     min={0}
                     value={data.numDays ?? ""}
-                    onChange={(e) =>
+                    onChange={(e) => {
+                      const value = e.target.value;
+
+                      // If empty, reset to empty string
+                      if (value === "") {
+                        setData((prev) => ({ ...prev, numDays: "" }));
+                        return;
+                      }
+
+                      // Parse and normalize the number (e.g., '05' → 5)
+                      const parsedValue = parseInt(value, 10); // Always base 10
                       setData((prev) => ({
                         ...prev,
-                        numDays: Number(e.target.value),
-                      }))
-                    }
+                        numDays: isNaN(parsedValue) ? "" : parsedValue,
+                      }));
+                    }}
                     onBlur={() => {
                       if (
                         !data.startDate ||
                         !data.numDays ||
                         data.numDays === 0
                       ) {
-                        // Clear followupDate if no startDate or numDays = 0
                         setData((prev) => ({ ...prev, followupDate: "" }));
                         return;
                       }
                       const calculatedDate = new Date(data.startDate);
                       calculatedDate.setDate(
-                        calculatedDate.getDate() + data.numDays
+                        calculatedDate.getDate() + Number(data.numDays)
                       );
                       setData((prev) => ({
                         ...prev,

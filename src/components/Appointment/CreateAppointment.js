@@ -9,7 +9,7 @@ import { IoCloseCircle } from "react-icons/io5";
 import { toast } from "react-toastify";
 
 // Main component
-const CreateAppointment = ({ setAppointmentModal }) => {
+const CreateAppointment = ({ setAppointmentModal, defaultCategory }) => {
   const leadBoxRef = useRef(null);
   const memberPurchasedServices = [
     {
@@ -166,6 +166,12 @@ const CreateAppointment = ({ setAppointmentModal }) => {
     setAppointmentModal(false);
   };
 
+  useEffect(() => {
+    if (defaultCategory) {
+      formik.setFieldValue("appointmentCategory", defaultCategory);
+    }
+  }, [defaultCategory]);
+
   return (
     <div
       className="bg--blur create--lead--container overflow-auto fixed top-0 left-0 z-[999] w-full bg-black bg-opacity-60 h-full"
@@ -190,22 +196,43 @@ const CreateAppointment = ({ setAppointmentModal }) => {
                 Appointment Category<span className="text-red-500">*</span>
               </label>
               <div className="flex gap-4">
-                {appointmentCategories.map((cat) => (
-                  <label key={cat.value} className="flex items-center gap-2">
-                    <input
-                      type="radio"
-                      name="appointmentCategory"
-                      value={cat.value}
-                      checked={formik.values.appointmentCategory === cat.value}
-                      onChange={() => {
-                        formik.setFieldValue("appointmentCategory", cat.value);
-                        handleReset(cat.value);
-                      }}
-                      className="w-auto custom--input"
-                    />
-                    {cat.label}
-                  </label>
-                ))}
+                {appointmentCategories.map((cat) => {
+                  const isServiceDisabled =
+                    defaultCategory === "complementary" &&
+                    cat.value === "service";
+
+                  return (
+                    <label
+                      key={cat.value}
+                      className={`flex items-center gap-2 ${
+                        isServiceDisabled
+                          ? "cursor-not-allowed text-gray-400"
+                          : ""
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="appointmentCategory"
+                        value={cat.value}
+                        checked={
+                          formik.values.appointmentCategory === cat.value
+                        }
+                        onChange={() => {
+                          if (!isServiceDisabled) {
+                            formik.setFieldValue(
+                              "appointmentCategory",
+                              cat.value
+                            );
+                            handleReset(cat.value);
+                          }
+                        }}
+                        disabled={isServiceDisabled}
+                        className="w-auto custom--input"
+                      />
+                      {cat.label}
+                    </label>
+                  );
+                })}
               </div>
             </div>
 
@@ -324,11 +351,11 @@ const CreateAppointment = ({ setAppointmentModal }) => {
                 placeholder="Select staff..."
               />
               {formik.errors.selectedTrainer &&
-                  formik.touched.selectedTrainer && (
-                    <div className="text-red-500 text-sm">
-                      {formik.errors.selectedTrainer}
-                    </div>
-                  )}
+                formik.touched.selectedTrainer && (
+                  <div className="text-red-500 text-sm">
+                    {formik.errors.selectedTrainer}
+                  </div>
+                )}
             </div>
 
             {/* Remarks */}
@@ -337,7 +364,7 @@ const CreateAppointment = ({ setAppointmentModal }) => {
                 Remarks
               </label>
               <textarea
-              name="remarks"
+                name="remarks"
                 value={formik.values.remarks}
                 onChange={formik.handleChange}
                 className="custom--input w-full"

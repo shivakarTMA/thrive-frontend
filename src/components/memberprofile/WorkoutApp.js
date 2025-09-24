@@ -28,17 +28,19 @@ const WorkoutApp = () => {
 
   // 🔹 Handle view/edit button click
   const handleAddWorkout = () => {
-    const lastWorkoutStatus =
-      AssignedWorkout[AssignedWorkout.length - 1]?.status;
+    // const lastWorkoutStatus =
+    //   AssignedWorkout[AssignedWorkout.length - 1]?.status;
 
-    if (lastWorkoutStatus !== "Cancelled" && lastWorkoutStatus !== "Expired") {
-       toast.error(
-        "Cannot add workout: Last workout is either Cancelled or Expired"
-      );
-    } else {
-      setWorkoutModal(true);
+    // if (lastWorkoutStatus !== "Cancelled" && lastWorkoutStatus !== "Expired") {
+    //    toast.error(
+    //     "Cannot add workout: Last workout is either Cancelled or Expired"
+    //   );
+    // } else {
+    //   setWorkoutModal(true);
+    //   setWorkoutTable(false);
+    // }
+    setWorkoutModal(true);
       setWorkoutTable(false);
-    }
   };
   // 🔹 Handle view/edit button click
   const handleViewEdit = (id) => {

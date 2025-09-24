@@ -8,6 +8,7 @@ import { parsePhoneNumberFromString } from "libphonenumber-js";
 import { companies, centreInfo } from "../DummyData/DummyData";
 import { selectIcon } from "../Helper/helper";
 import { IoBan, IoCloseCircle } from "react-icons/io5";
+import { PiGenderIntersex, PiGenderIntersexBold } from "react-icons/pi";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import {
@@ -44,6 +45,12 @@ const voucherList = [
   { code: "FIT10", discount: 10 },
   { code: "WELCOME20", discount: 20 },
   { code: "SUMMER25", discount: 25 },
+];
+
+const genderOptions = [
+  { value: "MALE", label: "Male" },
+  { value: "FEMALE", label: "Female" },
+  { value: "NOTDISCLOSE", label: "Not to Disclose" },
 ];
 
 const stepValidationSchemas = [
@@ -97,6 +104,10 @@ const stepValidationSchemas = [
       invoiceDate: Yup.string().required("Invoice Date is required"),
       // leadOwner: Yup.string().required("Lead Owner is required"),
       memberName: Yup.string().required("Member Name is required"),
+      productName: Yup.string().required("Product is required"),
+    }),
+    productDetails: Yup.object({
+      productName: Yup.string().required("Product is required"),
     }),
   }),
 ];
@@ -112,7 +123,6 @@ const ConvertMemberForm = ({
   selectedLeadMember,
   onLeadUpdate,
 }) => {
-  console.log(selectedLeadMember, "selectedLeadMember");
   const [allLeads, setAllLeads] = useState([]);
   const [profileImage, setProfileImage] = useState("");
   const [showModal, setShowModal] = useState(false);
@@ -795,70 +805,22 @@ const ConvertMemberForm = ({
                             <label className="mb-2 block font-medium text-gray-700">
                               Gender<span className="text-red-500">*</span>
                             </label>
-                            <div className="flex gap-2 flex-wrap">
-                              <label
-                                className={`flex items-center gap-2 px-4 py-2 rounded-[10px] border cursor-pointer shadow-sm transition
-                                                   ${
-                                                     formik.values.gender ===
-                                                     "MALE"
-                                                       ? "bg-black text-white border-black"
-                                                       : "bg-white text-gray-700 border-gray-300"
-                                                   }`}
-                              >
-                                <input
-                                  type="radio"
-                                  name="gender"
-                                  value="MALE"
-                                  checked={formik.values.gender === "MALE"}
-                                  onChange={formik.handleChange}
-                                  className="hidden"
-                                />
-                                <FaMale />
-                                Male
-                              </label>
-
-                              <label
-                                className={`flex items-center gap-2 px-4 py-2 rounded-[10px] border cursor-pointer shadow-sm transition
-                                                   ${
-                                                     formik.values.gender ===
-                                                     "FEMALE"
-                                                       ? "bg-black text-white border-black"
-                                                       : "bg-white text-gray-700 border-gray-300"
-                                                   }`}
-                              >
-                                <input
-                                  type="radio"
-                                  name="gender"
-                                  value="FEMALE"
-                                  checked={formik.values.gender === "FEMALE"}
-                                  onChange={formik.handleChange}
-                                  className="hidden"
-                                />
-                                <FaFemale />
-                                Female
-                              </label>
-                              <label
-                                className={`flex items-center gap-2 px-4 py-2 rounded-[10px] border cursor-pointer shadow-sm transition
-                                                   ${
-                                                     formik.values.gender ===
-                                                     "NOTDISCLOSE"
-                                                       ? "bg-black text-white border-black"
-                                                       : "bg-white text-gray-700 border-gray-300"
-                                                   }`}
-                              >
-                                <input
-                                  type="radio"
-                                  name="gender"
-                                  value="NOTDISCLOSE"
-                                  checked={
-                                    formik.values.gender === "NOTDISCLOSE"
-                                  }
-                                  onChange={formik.handleChange}
-                                  className="hidden"
-                                />
-                                <IoBan />
-                                Not to Disclose
-                              </label>
+                            <div className="relative">
+                              <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
+                                <PiGenderIntersexBold />
+                              </span>
+                              <Select
+                                name="gender"
+                                value={genderOptions.find(
+                                  (opt) => opt.value === formik.values.gender
+                                )}
+                                options={genderOptions}
+                                onChange={(option) =>
+                                  formik.setFieldValue("gender", option.value)
+                                }
+                                styles={selectIcon}
+                                className="!capitalize"
+                              />
                             </div>
                           </div>
 
@@ -896,26 +858,6 @@ const ConvertMemberForm = ({
                               )}
                           </div>
 
-                          <div className="col-span-2">
-                            <label className="mb-2 block">Address</label>
-                            <div className="relative">
-                              <span className="absolute top-[50%] translate-y-[-50%] left-[15px]">
-                                <FaLocationDot />
-                              </span>
-                              <input
-                                name="address"
-                                value={formik.values.address}
-                                onChange={formik.handleChange}
-                                className="custom--input w-full input--icon"
-                              />
-                            </div>
-                            {formik.errors?.address &&
-                              formik.touched?.address && (
-                                <div className="text-red-500 text-sm">
-                                  {formik.errors.address}
-                                </div>
-                              )}
-                          </div>
                           <div>
                             <label className="mb-2 block">
                               Location<span className="text-red-500">*</span>
@@ -938,6 +880,26 @@ const ConvertMemberForm = ({
                                 </div>
                               )}
                           </div>
+
+                          <div className="col-span-3">
+                            <label className="mb-2 block">Address</label>
+                            <div className="relative">
+                              <textarea
+                                name="address"
+                                value={formik.values.address}
+                                onChange={formik.handleChange}
+                                rows={4}
+                                className="custom--input w-full"
+                              />
+                            </div>
+                            {formik.errors?.address &&
+                              formik.touched?.address && (
+                                <div className="text-red-500 text-sm">
+                                  {formik.errors.address}
+                                </div>
+                              )}
+                          </div>
+                          
                         </div>
                       </div>
 
@@ -947,7 +909,7 @@ const ConvertMemberForm = ({
                       </h3>
                       <div className="grid grid-cols-3 gap-4">
                         <div>
-                          <label className="mb-2 block">Interested In</label>
+                          <label className="mb-2 block">Service Name</label>
                           <div className="relative">
                             <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
                               <FaListCheck />
@@ -1418,7 +1380,7 @@ const ConvertMemberForm = ({
                           </div>
                         </div>
                         <div>
-                          <label className="mb-2 block">Product Name</label>
+                          <label className="mb-2 block">Product Name<span className="text-red-500">*</span></label>
                           <div
                             className="relative"
                             onClick={() => setShowProductModal(true)}
@@ -1434,6 +1396,12 @@ const ConvertMemberForm = ({
                               readOnly={true}
                             />
                           </div>
+                          {formik.errors?.productDetails.productName &&
+                            formik.touched?.productDetails.productName && (
+                              <div className="text-red-500 text-sm">
+                                {formik.errors.productDetails.productName}
+                              </div>
+                            )}
                         </div>
 
                         <div>

@@ -15,6 +15,8 @@ import { FiClock } from "react-icons/fi";
 import { toast } from "react-toastify";
 import { apiAxios } from "../config/config";
 import ContactHistory from "./ContactHistory";
+import { FaCalendarDays } from "react-icons/fa6";
+import { format } from "date-fns";
 
 const callDataList = [
   {
@@ -56,24 +58,7 @@ const validationSchema = Yup.object().shape({
       then: (schema) => schema.required("Not Interested Reason is required"),
       otherwise: (schema) => schema.nullable(),
     }),
-  schdule_date: Yup.date()
-    .nullable()
-    .when(["callType", "callStatus"], {
-      is: (callType, callStatus) =>
-        callType === "Cross-sell Call" &&
-        callStatus === "Cross-sales trial follow-up",
-      then: (schema) => schema.required("Schedule date is required"),
-      otherwise: (schema) => schema.nullable(),
-    }),
-  schdule_time: Yup.date()
-    .nullable()
-    .when(["callType", "callStatus"], {
-      is: (callType, callStatus) =>
-        callType === "Cross-sell Call" &&
-        callStatus === "Cross-sales trial follow-up",
-      then: (schema) => schema.required("Schedule time is required"),
-      otherwise: (schema) => schema.nullable(),
-    }),
+  schedule_date_time: Yup.string().required("Date & Time is required"),
 });
 
 const MemberCallLogs = () => {
@@ -90,6 +75,13 @@ const MemberCallLogs = () => {
   const [filteredCallStatus, setFilteredCallStatus] = useState([]);
   const [activeTab, setActiveTab] = useState("Member Logs");
   const [staffList, setStaffList] = useState([]);
+
+  const now = new Date();
+  const minTime = new Date();
+  minTime.setHours(6, 0, 0, 0); // Earliest selectable time = 6:00 AM
+
+  const maxTime = new Date();
+  maxTime.setHours(22, 0, 0, 0);
 
   const fetchStaff = async (search = "") => {
     try {
@@ -136,8 +128,7 @@ const MemberCallLogs = () => {
       callType: "",
       callStatus: "",
       notInterested: "",
-      schdule_date: null,
-      schdule_time: null,
+      schedule_date_time: null,
       discussion: "",
     },
     validationSchema,
@@ -154,8 +145,7 @@ const MemberCallLogs = () => {
           callType: "",
           callStatus: "",
           notInterested: "",
-          schdule_date: null,
-          schdule_time: null,
+          schedule_date_time: null,
           discussion: "",
         },
       });
@@ -187,7 +177,18 @@ const MemberCallLogs = () => {
       filtered = callStatusOption.filter(
         (status) => status.name !== "Successful"
       );
-    } else if (formik.values?.callType === "Welcome Call" || formik.values?.callType === "Induction Call" || formik.values?.callType === "Upgrade Call" || formik.values?.callType === "Courtesy Call" || formik.values?.callType === "Birthday Call" || formik.values?.callType === "Payment Call" || formik.values?.callType === "Feedback call" || formik.values?.callType === "Assessment Call" || formik.values?.callType === "Anniversary Call" || formik.values?.callType === "Irregular Member") {
+    } else if (
+      formik.values?.callType === "Welcome Call" ||
+      formik.values?.callType === "Induction Call" ||
+      formik.values?.callType === "Upgrade Call" ||
+      formik.values?.callType === "Courtesy Call" ||
+      formik.values?.callType === "Birthday Call" ||
+      formik.values?.callType === "Payment Call" ||
+      formik.values?.callType === "Feedback call" ||
+      formik.values?.callType === "Assessment Call" ||
+      formik.values?.callType === "Anniversary Call" ||
+      formik.values?.callType === "Irregular Member"
+    ) {
       // ✅ Hide Not Interested + Future Prospect
       filtered = callStatusOption.filter(
         (status) =>
@@ -198,8 +199,7 @@ const MemberCallLogs = () => {
     } else {
       // ✅ For all other call types → hide cross-sell-specific statuses
       filtered = callStatusOption.filter(
-        (status) =>
-          status.name !== "Cross-sales trial scheduled"
+        (status) => status.name !== "Cross-sales trial scheduled"
       );
     }
 
@@ -211,30 +211,45 @@ const MemberCallLogs = () => {
     }
   }, [formik.values?.callType]);
 
-const statusesNeedingSchedule = [
-  "Callback",
-  "No Answer",
-  "Switched-off/Out of Reach",
-  "Busy Tone",
-  "Future Prospect"
-];
+  const statusesNeedingSchedule = [
+    "Callback",
+    "No Answer",
+    "Switched-off/Out of Reach",
+    "Busy Tone",
+    "Future Prospect",
+  ];
 
-// Show schedule fields only if both callType and callStatus match
-const scheduleCallTypes = ["Welcome Call", "Induction Call", "Upgrade Call", "Courtesy Call", "Renewal Call", "Birthday Call", "Payment Call", "Cross-sell Call", "Feedback call", "Assessment Call", "Anniversary Call", "Irregular Member"];
+  // Show schedule fields only if both callType and callStatus match
+  const scheduleCallTypes = [
+    "Welcome Call",
+    "Induction Call",
+    "Upgrade Call",
+    "Courtesy Call",
+    "Renewal Call",
+    "Birthday Call",
+    "Payment Call",
+    "Cross-sell Call",
+    "Feedback call",
+    "Assessment Call",
+    "Anniversary Call",
+    "Irregular Member",
+  ];
 
-const showScheduleFields =
-  (formik.values?.callType === "Cross-sell Call" &&
-    formik.values?.callStatus === "Cross-sales trial scheduled") ||
-  (
-    scheduleCallTypes.includes(formik.values?.callType) &&
-    statusesNeedingSchedule.includes(formik.values?.callStatus)
-  );
+  const showScheduleFields =
+    (formik.values?.callType === "Cross-sell Call" &&
+      formik.values?.callStatus === "Cross-sales trial scheduled") ||
+    (scheduleCallTypes.includes(formik.values?.callType) &&
+      statusesNeedingSchedule.includes(formik.values?.callStatus));
 
-const showNotInterestedTypes = ["Cross-sell Call", "Renewal Call"]; 
-const showNotInterestedField =
-  showNotInterestedTypes.includes(formik.values?.callType) &&
-  formik.values?.callStatus === "Not Interested";
+  const showNotInterestedTypes = ["Cross-sell Call", "Renewal Call"];
+  const showNotInterestedField =
+    showNotInterestedTypes.includes(formik.values?.callType) &&
+    formik.values?.callStatus === "Not Interested";
 
+  // Function to handle setting formatted date
+  const handleDateChange = (date) => {
+    formik.setFieldValue("schedule_date_time", date); // Store Date object in Formik
+  };
 
   return (
     <div className="">
@@ -358,60 +373,31 @@ const showNotInterestedField =
                 {showScheduleFields && (
                   <div>
                     <label className="mb-2 block">
-                      Date<span className="text-red-500">*</span>
+                      Date & Time<span className="text-red-500">*</span>
                     </label>
-                    <div className="custom--date relative">
-                      <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
-                        <LuCalendar />
+                    <div className="custom--date flex-1">
+                      <span className="absolute z-[1] mt-[15px] ml-[15px]">
+                        <FaCalendarDays />
                       </span>
                       <DatePicker
-                        selected={formik.values?.schdule_date}
-                        onChange={(date) =>
-                          formik.setFieldValue("schdule_date", date)
-                        }
-                        placeholderText="Schedule Date"
-                        className="input--icon"
-                        disabled={isDisabled ? true : false}
-                      />
-                    </div>
-                    {formik.errors?.schdule_date &&
-                      formik.touched?.schdule_date && (
-                        <div className="text-red-500 text-sm">
-                          {formik.errors?.schdule_date}
-                        </div>
-                      )}
-                  </div>
-                )}
-
-                {/* Conditional Schedule Time */}
-                {showScheduleFields && (
-                  <div>
-                    <label className="mb-2 block">
-                      Time<span className="text-red-500">*</span>
-                    </label>
-                    <div className="custom--date relative">
-                      <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
-                        <FiClock />
-                      </span>
-                      <DatePicker
-                        selected={formik.values?.schdule_time}
-                        onChange={(time) =>
-                          formik.setFieldValue("schdule_time", time)
-                        }
+                        selected={formik.values.schedule_date_time}
+                        onChange={handleDateChange}
                         showTimeSelect
-                        showTimeSelectOnly
-                        timeIntervals={15}
-                        timeCaption="Time"
-                        dateFormat="h:mm aa"
-                        placeholderText="Schedule Time"
-                        className="input--icon"
-                        disabled={isDisabled ? true : false}
+                        timeFormat="hh:mm aa"
+                        dateFormat="MM/dd/yyyy"
+                        placeholderText="Select date & time"
+                        className="border px-3 py-2 w-full input--icon"
+                        minDate={now}
+                        minTime={minTime}
+                        maxTime={maxTime}
+                        disabled={isDisabled}
                       />
                     </div>
-                    {formik.errors?.schdule_time &&
-                      formik.touched?.schdule_time && (
+
+                    {formik.errors?.schedule_date_time &&
+                      formik.touched?.schedule_date_time && (
                         <div className="text-red-500 text-sm">
-                          {formik.errors?.schdule_time}
+                          {formik.errors?.schedule_date_time}
                         </div>
                       )}
                   </div>
@@ -420,7 +406,7 @@ const showNotInterestedField =
                 {/* Staff Name */}
                 <div>
                   <label className="mb-2 block">
-                    Staff Name<span className="text-red-500">*</span>
+                    Assign to<span className="text-red-500">*</span>
                   </label>
 
                   <Select
