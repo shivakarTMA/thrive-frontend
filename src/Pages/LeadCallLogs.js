@@ -30,26 +30,57 @@ const assignTrainers = [
 ];
 
 const validationSchema = Yup.object().shape({
-  // calledBy: Yup.string().required("Call by is required"),
+  scheduleFor: Yup.string()
+    .nullable()
+    .when("callStatus", {
+      is: (val) => val !== "Not Relevant" && val !== "Invalid number",
+      then: (schema) => schema.required("Schedule For is required"),
+      otherwise: (schema) => schema.notRequired(),
+    }),
+
   callStatus: Yup.string().required("Call status is required"),
-  notInterestedReason: Yup.string().when("callStatus", {
-    is: "not interested",
-    then: () => Yup.string().required("Required"),
-  }),
-  scheduleFor: Yup.string().when("callStatus", {
-    is: "enquiry follow-up",
-    then: () => Yup.string().required("Schedule for is required"),
+
+  // Main Date & Time (only when not Trial/Tour/Not Interested/Not Relevant/Invalid number)
+  date_time: Yup.string().when("callStatus", {
+    is: (val) =>
+      val !== "Trial/Tour Scheduled" &&
+      val !== "Not Interested" &&
+      val !== "Not Relevant" &&
+      val !== "Invalid number",
+    then: (schema) => schema.required("Date & Time is required"),
+    otherwise: (schema) => schema.notRequired(),
   }),
 
-  trainerAvailability: Yup.string().when("callStatus", {
-    is: (val) => val === "trial scheduled" || val === "tour scheduled",
-    then: () => Yup.string().required("Trainer Date & Time is required"),
+  // Trial/Tour Scheduled Fields
+  schedule_date_time: Yup.string().when("callStatus", {
+    is: "Trial/Tour Scheduled",
+    then: (schema) => schema.required("Date & Time is required"),
+    otherwise: (schema) => schema.notRequired(),
   }),
+
   staff_name: Yup.string().when("callStatus", {
-    is: (val) => val === "trial scheduled" || val === "tour scheduled",
-    then: () => Yup.string().required("Staff Name is required"),
+    is: "Trial/Tour Scheduled",
+    then: (schema) => schema.required("Staff Name is required"),
+    otherwise: (schema) => schema.notRequired(),
   }),
-  remarks: Yup.string().required("Discussion is required"),
+
+  // Not Interested Reason
+  notInterestedReason: Yup.string().when("callStatus", {
+    is: "Not Interested",
+    then: (schema) => schema.required("Not Interested Reason is required"),
+    otherwise: (schema) => schema.notRequired(),
+  }),
+
+  // Remarks (Discussion) - Hide when Not Relevant or Invalid number
+  remarks: Yup.string().when("callStatus", {
+    is: (val) => val !== "Not Relevant" && val !== "Invalid number",
+    then: (schema) => schema.required("Discussion is required"),
+    otherwise: (schema) => schema.notRequired(),
+  }),
+
+  // Optional fields (won case)
+  closureDate: Yup.date().nullable(),
+  amount: Yup.number().nullable(),
 });
 
 const LeadCallLogs = () => {
@@ -149,7 +180,7 @@ const LeadCallLogs = () => {
       };
 
       setCallLogs((prevLogs) => [newEntry, ...prevLogs]);
-      console.log(values,'values shivakar')
+      console.log(values, "values shivakar");
 
       // Reset form and external states
       resetForm({ values: initialValues });
@@ -178,8 +209,10 @@ const LeadCallLogs = () => {
     return matchesStatus && matchesStart && matchesEnd;
   });
 
-   const handleCallStatusChange = (option) => {
-    formik.resetForm({ values: { ...initialValues, callStatus: option.value } }); // Reset all fields except callStatus
+  const handleCallStatusChange = (option) => {
+    formik.resetForm({
+      values: { ...initialValues, callStatus: option.value },
+    }); // Reset all fields except callStatus
   };
 
   const handleDateTime = (date) => {
@@ -296,36 +329,41 @@ const LeadCallLogs = () => {
               </div>
 
               {formik.values.callStatus !== "Trial/Tour Scheduled" &&
-              formik.values.callStatus !== "Not Interested" &&
-              formik.values.callStatus !== "Not Relevant" &&
-              formik.values.callStatus !== "Invalid number" && (
-                <div>
-                  <label className="mb-2 block">
-                    Date & Time <span className="text-red-500">*</span>
-                  </label>
-                  <div className="custom--date flex-1">
-                    <span className="absolute z-[1] mt-[15px] ml-[15px]">
-                      <FaCalendarDays />
-                    </span>
-                    <DatePicker
-                      selected={
-                        formik.values.date_time
-                          ? new Date(formik.values.date_time)
-                          : null
-                      }
-                      onChange={handleDateTime}
-                      showTimeSelect
-                      timeFormat="hh:mm aa"
-                      dateFormat="MM/dd/yyyy hh:mm aa"
-                      placeholderText="Select date & time"
-                      className="border px-3 py-2 w-full input--icon"
-                      minDate={now}
-                      minTime={minTime}
-                      maxTime={maxTime}
-                    />
+                formik.values.callStatus !== "Not Interested" &&
+                formik.values.callStatus !== "Not Relevant" &&
+                formik.values.callStatus !== "Invalid number" && formik.values.callStatus !== "Won" && (
+                  <div>
+                    <label className="mb-2 block">
+                      Date & Time <span className="text-red-500">*</span>
+                    </label>
+                    <div className="custom--date flex-1">
+                      <span className="absolute z-[1] mt-[15px] ml-[15px]">
+                        <FaCalendarDays />
+                      </span>
+                      <DatePicker
+                        selected={
+                          formik.values.date_time
+                            ? new Date(formik.values.date_time)
+                            : null
+                        }
+                        onChange={handleDateTime}
+                        showTimeSelect
+                        timeFormat="hh:mm aa"
+                        dateFormat="MM/dd/yyyy hh:mm aa"
+                        placeholderText="Select date & time"
+                        className="border px-3 py-2 w-full input--icon"
+                        minDate={now}
+                        minTime={minTime}
+                        maxTime={maxTime}
+                      />
+                    </div>
+                    {formik.touched.date_time && formik.errors.date_time && (
+                      <p className="text-sm text-red-500 mt-1">
+                        {formik.errors.date_time}
+                      </p>
+                    )}
                   </div>
-                </div>
-              )}
+                )}
 
               {formik?.values?.callStatus === "Trial/Tour Scheduled" && (
                 <>
@@ -404,7 +442,7 @@ const LeadCallLogs = () => {
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <label className="mb-2 block">
-                          Date & Time<span className="text-red-500">*</span>
+                          Date & Time
                         </label>
                         <div className="custom--date flex-1">
                           <span className="absolute z-[1] mt-[15px] ml-[15px]">
@@ -435,7 +473,7 @@ const LeadCallLogs = () => {
                       {/* Schedule For */}
                       <div>
                         <label className="mb-2 block">
-                          Schedule For<span className="text-red-500">*</span>
+                          Schedule For
                         </label>
 
                         <Select
