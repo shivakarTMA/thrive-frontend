@@ -55,6 +55,9 @@ import Services from "../components/ServicesNew/Services";
 import PackageCategoryList from "../components/PackageCategory/PackageCategoryList";
 import SubscriptionPlan from "../components/SubscriptionPlan/SubscriptionPlan";
 import PackagesList from "../components/PackagesList/PackagesList";
+import EmailModule from "../components/Marketing/EmailModule";
+import SmsModule from "../components/Marketing/SmsModule";
+import WhatsappModule from "../components/Marketing/WhatsappModule";
 
 
 export default function Routing() {
@@ -575,6 +578,30 @@ export default function Routing() {
               element={
                 <PrivateRoute>
                   <AllGroupClasses />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/memssmail/"
+              element={
+                <PrivateRoute>
+                  <EmailModule />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/memsssms/"
+              element={
+                <PrivateRoute>
+                  <SmsModule />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/memsswhatsapp/"
+              element={
+                <PrivateRoute>
+                  <WhatsappModule />
                 </PrivateRoute>
               }
             />

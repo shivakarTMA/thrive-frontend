@@ -18,6 +18,14 @@ export const apiAxios = () => {
   });
 };
 
+export const phoneAxios = axios.create({
+  baseURL: process.env.REACT_APP_BASEURL,
+  headers: {
+    "x-api-key": process.env.REACT_APP_API_KEY,
+    "Content-Type": "application/json",
+  },
+});
+
 
 export const authAxios = () => {
   const token = store.getState().auth.accessToken; // Get the current access token from Redux

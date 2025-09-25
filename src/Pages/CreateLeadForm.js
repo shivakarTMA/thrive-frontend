@@ -24,7 +24,7 @@ import ConfirmUnderAge from "../components/modal/ConfirmUnderAge";
 import { FaCalendarDays, FaListCheck, FaLocationDot } from "react-icons/fa6";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchOptionList } from "../Redux/Reducers/optionListSlice";
-import { apiAxios, authAxios } from "../config/config";
+import { apiAxios, authAxios, phoneAxios } from "../config/config";
 import { PiGenderIntersexBold } from "react-icons/pi";
 
 // Trainer assignment options
@@ -78,7 +78,7 @@ const validationSchema = Yup.object({
 });
 
 const CreateLeadForm = ({ setLeadModal, selectedLead, onLeadUpdate }) => {
-  console.log(selectedLead,'selectedLead')
+  console.log(selectedLead, "selectedLead");
   const [allLeads, setAllLeads] = useState([]);
   const leadBoxRef = useRef(null);
   const [matchingUsers, setMatchingUsers] = useState([]);
@@ -233,7 +233,7 @@ const CreateLeadForm = ({ setLeadModal, selectedLead, onLeadUpdate }) => {
 
         // ✅ Update or create
         if (selectedLead) {
-          console.log(selectedLead,'selectedLead')
+          console.log(selectedLead, "selectedLead");
           await apiAxios().put(`/lead/${selectedLead}`, payload);
           toast.success("Lead updated successfully!");
           setAllLeads((prev) =>
@@ -244,7 +244,7 @@ const CreateLeadForm = ({ setLeadModal, selectedLead, onLeadUpdate }) => {
             )
           );
         } else {
-          console.log('create working')
+          console.log("create working");
           const res = await authAxios().post("/lead/create", payload);
           toast.success("Lead created successfully!");
           setAllLeads((prev) => [
@@ -427,90 +427,55 @@ const CreateLeadForm = ({ setLeadModal, selectedLead, onLeadUpdate }) => {
     formik.setFieldError("mobile", "");
   };
 
-  // Handle phone blur (validation and duplicate check)
-  const handlePhoneBlur = () => {
-    formik.setFieldTouched("mobile", true);
-    const { id, mobile, country_code } = formik.values;
+  const handlePhoneBlur = async () => {
+    formik.setFieldTouched("phoneFull", true);
 
-    // If incomplete
-    if (!mobile || !country_code) {
-      formik.setFieldError("mobile", "Invalid phone number");
+    const rawPhone = formik.values.phoneFull;
+    if (!rawPhone) {
+      formik.setFieldError("phoneFull", "Phone number is required");
       return;
     }
 
-    // Validate phone
-    const phoneNumber = parsePhoneNumberFromString("+" + country_code + mobile);
+    const phoneNumber = parsePhoneNumberFromString(rawPhone);
     if (!phoneNumber || !phoneNumber.isValid()) {
-      formik.setFieldError("mobile", "Invalid phone number");
+      formik.setFieldError("phoneFull", "Invalid phone number");
       return;
-    } else {
-      formik.setFieldError("mobile", "");
     }
 
-    const inputCode = country_code.replace("+", "");
-    const inputMobile = mobile.replace(/\s/g, "");
+    const payload = {
+      mobile: phoneNumber.nationalNumber,
+    };
 
-    // Find duplicates
-    const matches = allLeads.filter((user) => {
-      const userCode = (user.country_code || "").replace("+", "");
-      const userMobile = (user.mobile || "").replace(/\s/g, "");
+    console.log(payload.mobile);
 
-      // ✅ Condition 1: Same ID & same phone → allow
-      if (
-        user.id === id &&
-        userCode === inputCode &&
-        userMobile === inputMobile
-      ) {
-        return false;
+    try {
+      // ✅ Use POST method
+      const response = await phoneAxios.post("/lead/check/unique", payload);
+
+      console.log(response?.data?.status,'response')
+
+      if (response?.data?.status === true) {
+        formik.setFieldError("phoneFull", "This phone number already exists");
+        setDuplicateError(response?.data?.message);
+        setShowDuplicateModal(true);
+      } else {
+        formik.setFieldError("phoneFull", "");
+        setDuplicateError("");
+        setShowDuplicateModal(false);
       }
-
-      // ✅ Condition 2: Same ID but different phone → still check other leads
-      if (
-        user.id === id &&
-        (userCode !== inputCode || userMobile !== inputMobile)
-      ) {
-        return false; // Skip self, let other users decide
-      }
-
-      // ✅ Other users: duplicate if phone matches
-      return userCode === inputCode && userMobile === inputMobile;
-    });
-
-    if (matches.length > 0) {
-      setDuplicateError("This phone number already exists");
-      setShowDuplicateModal(true);
-    } else {
-      setDuplicateError("");
-      setShowDuplicateModal(false);
+    } catch (error) {
+      console.error(
+        "Error checking phone uniqueness:",
+        error.response || error
+      );
+      formik.setFieldError(
+        "phoneFull",
+        "Unable to check phone number. Please try again."
+      );
     }
   };
 
-  // const handleEmailBlur = () => {
-  //   const inputValue = formik.values.email?.trim().toLowerCase();
-  //   const { id } = formik.values;
-
-  //   // 👇 Clear error if field is empty
-  //   if (!inputValue) {
-  //     setDuplicateEmailError("");
-  //     setShowDuplicateEmailModal(false);
-  //     return;
-  //   }
-
-  //   const matches = allLeads.filter(
-  //     (user) =>
-  //       user.email?.trim().toLowerCase() === inputValue && user.id !== id,
-  //   );
-
-  //   if (matches.length > 0) {
-  //     setDuplicateEmailError("This email already exists");
-  //     setShowDuplicateEmailModal(true);
-  //   } else {
-  //     setDuplicateEmailError("");
-  //     setShowDuplicateEmailModal(false);
-  //   }
-  // };
-
-  const handleEmailBlur = () => {
+  const handleEmailBlur = async () => {
     const inputValue = formik.values.email?.trim().toLowerCase();
     const { id } = formik.values;
 
@@ -536,23 +501,37 @@ const CreateLeadForm = ({ setLeadModal, selectedLead, onLeadUpdate }) => {
       return;
     }
 
-    // Check for duplicates excluding the current lead ID
-    const matches = allLeads.filter(
-      (user) =>
-        user.email?.trim().toLowerCase() === inputValue &&
-        user.id !== selectedLead
-    );
+    const payload ={
+      email: inputValue
+    }
 
-    if (matches.length > 0) {
-      setDuplicateEmailError("This email already exists");
-      setShowDuplicateEmailModal(true);
-    } else {
-      setDuplicateEmailError("");
-      setShowDuplicateEmailModal(false);
+    // Check for duplicates excluding the current lead ID
+     try {
+      // ✅ Use POST method
+      const response = await phoneAxios.post("/lead/check/unique", payload);
+
+      console.log(response?.data?.status,'response')
+
+      if (response?.data?.status === true) {
+        formik.setFieldError("email", "This email already exists");
+        setDuplicateEmailError(response?.data?.message);
+        setShowDuplicateEmailModal(true);
+      } else {
+        formik.setFieldError("phoneFull", "");
+        setDuplicateEmailError("");
+        setShowDuplicateEmailModal(false);
+      }
+    } catch (error) {
+      console.error(
+        "Error checking phone uniqueness:",
+        error.response || error
+      );
+      formik.setFieldError(
+        "phoneFull",
+        "Unable to check phone number. Please try again."
+      );
     }
   };
-
-  console.log(allLeads, "alllead data");
 
   const getAvailableTrainers = () => {
     const dt = formik.values.schedule_date_time;
@@ -818,7 +797,6 @@ const CreateLeadForm = ({ setLeadModal, selectedLead, onLeadUpdate }) => {
                         />
                       </div>
                     </div>
-                    
                   </div>
 
                   <hr className="my-3 mt-5" />

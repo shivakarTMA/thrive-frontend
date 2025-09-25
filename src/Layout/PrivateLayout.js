@@ -14,7 +14,7 @@ export default function PrivateLayout({ children }) {
         />
         <div
           className={`${
-            toggleMenuBar ? "w-[calc(100%-70px)]" : "w-[calc(100%-250px)]"
+            toggleMenuBar ? "w-[calc(100%-100px)]" : "w-[calc(100%-250px)]"
           } ml-[auto] side--content--area transition duration-150`}
         >
           <Topbar
