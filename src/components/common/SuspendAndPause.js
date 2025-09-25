@@ -15,8 +15,6 @@ const SuspendAndPause = ({ setSuspendPause, actionType }) => {
     switch (actionType) {
       case "suspend":
         return "Suspend Membership";
-      case "banned":
-        return "Banned Membership";
       case "pause":
         return "Pause Membership";
       default:

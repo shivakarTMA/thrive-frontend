@@ -81,11 +81,11 @@ const CreateAppointment = ({ setAppointmentModal, defaultCategory }) => {
         then: (schema) => schema.required("Please select a service"),
         otherwise: (schema) => schema.nullable(),
       }),
-      serviceVariation: Yup.object().when("appointmentCategory", {
-        is: "service",
-        then: (schema) => schema.required("Please select a service variation"),
-        otherwise: (schema) => schema.nullable(),
-      }),
+      // serviceVariation: Yup.object().when("appointmentCategory", {
+      //   is: "service",
+      //   then: (schema) => schema.required("Please select a service variation"),
+      //   otherwise: (schema) => schema.nullable(),
+      // }),
       complementaryType: Yup.object().when("appointmentCategory", {
         is: "complementary",
         then: (schema) => schema.required("Please select appointment type"),
@@ -100,7 +100,7 @@ const CreateAppointment = ({ setAppointmentModal, defaultCategory }) => {
         ...(values.appointmentCategory === "service"
           ? {
               service: values.selectedService,
-              serviceVariation: values.serviceVariation,
+              // serviceVariation: values.serviceVariation,
             }
           : { complementaryType: values.complementaryType }),
         date: values.selectedDate,
@@ -133,7 +133,7 @@ const CreateAppointment = ({ setAppointmentModal, defaultCategory }) => {
       formik.setValues({
         appointmentCategory: "service",
         selectedService: null,
-        serviceVariation: null,
+        // serviceVariation: null,
         complementaryType: null,
         selectedDate: null,
         selectedDateTime: null,
@@ -144,7 +144,7 @@ const CreateAppointment = ({ setAppointmentModal, defaultCategory }) => {
       formik.setValues({
         appointmentCategory: "complementary",
         selectedService: null,
-        serviceVariation: null,
+        // serviceVariation: null,
         complementaryType: null,
         selectedDate: null,
         selectedDateTime: null,
@@ -262,7 +262,7 @@ const CreateAppointment = ({ setAppointmentModal, defaultCategory }) => {
                 </div>
 
                 {/* Service Variation */}
-                <div className="mb-4">
+                {/* <div className="mb-4">
                   <label className="block text-sm font-medium text-black mb-2">
                     Service Variation <span className="text-red-500">*</span>
                   </label>
@@ -281,7 +281,7 @@ const CreateAppointment = ({ setAppointmentModal, defaultCategory }) => {
                         {formik.errors.serviceVariation}
                       </div>
                     )}
-                </div>
+                </div> */}
               </>
             )}
 

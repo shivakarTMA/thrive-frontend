@@ -60,7 +60,6 @@ const AllLeads = () => {
   const [sendPaymentModal, setSendPaymentModal] = useState(false);
   const [appointmentModal, setAppointmentModal] = useState(false);
   const [leadPaymentSend, setLeadPaymentSend] = useState(null);
-  const [activeTab, setActiveTab] = useState("Allleads");
 
   const [selectedIds, setSelectedIds] = useState([]);
   const [assignedOwners, setAssignedOwners] = useState({});
@@ -282,6 +281,22 @@ const AllLeads = () => {
 
   console.log(allLeads, "cikid");
 
+  const handleCommunicate = () => {
+    if (!sendCommunicate) {
+      toast.error("Please select a communication method.");
+      return;
+    }
+
+    // Check if at least one lead is selected
+    if (selectedIds.length === 0) {
+      toast.error("Please select at least one lead.");
+      return;
+    }
+
+    // If both conditions are met, proceed with submission logic
+    console.log("Form Submitted", { sendCommunicate, selectedIds });
+  };
+
   return (
     <>
       <div className="page--content">
@@ -398,23 +413,36 @@ const AllLeads = () => {
               className="w-full max-w-xs px-3 py-2 border-none rounded-[50px] focus:outline-none"
             />
           </div> */}
-          <div className="flex gap-1 items-center max-w-[180px] w-full">
-            <Select
-              placeholder="Communicate"
-              options={communicateOptions}
-              value={sendCommunicate}
-              onChange={(selected) => {
-                setSendCommunicate(selected);
-              }}
-              isClearable
-              styles={customStyles}
-              className="w-full"
-            />
+          <div className="flex gap-1 items-center w-full justify-end">
+            <div className="max-w-[180px] w-full">
+              <Select
+                placeholder="Communicate"
+                options={communicateOptions}
+                value={sendCommunicate}
+                onChange={(selected) => {
+                  setSendCommunicate(selected);
+                }}
+                styles={customStyles}
+                className="w-full"
+                isClearable
+              />
+            </div>
+
+            <button
+              type="button"
+              onClick={handleCommunicate} // Corrected to onClick
+              className="px-4 py-2 bg-black text-white rounded-lg flex items-center gap-2 min-h-[44px]"
+            >
+              Submit
+            </button>
           </div>
         </div>
         <div className="grid grid-cols-2 gap-5 mb-5">
           <div className="border rounded p-4 w-full">
-            <div className="text-2xl font-bold">Total Enquiries</div>
+            <div className="flex gap-1 justify-between">
+              <div className="text-2xl font-bold">Total Enquiries</div>
+              <div className="text-2xl font-bold">15</div>
+            </div>
             <div className="grid grid-cols-3 gap-3 mt-4">
               <div className="flex flex-col border rounded p-3 w-full">
                 <div className="text-sm font-medium text-gray-600">Open</div>
@@ -439,7 +467,10 @@ const AllLeads = () => {
             </div>
           </div>
           <div className="border rounded p-4 w-full">
-            <div className="text-2xl font-bold">Open Enquiries</div>
+             <div className="flex gap-1 justify-between">
+              <div className="text-2xl font-bold">Open Enquiries</div>
+              <div className="text-2xl font-bold">15</div>
+            </div>
             <div className="grid grid-cols-3 gap-3 mt-4">
               <div className="flex flex-col border rounded p-3 w-full">
                 <div className="text-sm font-medium text-gray-600">Enquiry</div>
@@ -514,331 +545,174 @@ const AllLeads = () => {
           </div>
         )}
 
-        <div className="flex gap-3 mb-3 items-center">
-          <button
-            onClick={() => setActiveTab("Allleads")}
-            className={`flex items-center gap-1 ${
-              activeTab == "Allleads" ? "text-black underline" : "text-gray-500"
-            }`}
-          >
-            <FaCircle className="text-[10px]" />
-            All Leads
-          </button>
-          <button
-            onClick={() => setActiveTab("Assignleads")}
-            className={`flex items-center gap-1 ${
-              activeTab == "Assignleads"
-                ? "text-black underline"
-                : "text-gray-500"
-            }`}
-          >
-            <FaCircle className="text-[10px]" />
-            Assign Leads
-          </button>
-        </div>
+        <div className="relative overflow-x-auto">
+          <table className="w-full text-sm text-left text-gray-500">
+            <thead className="text-xs text-gray-700 uppercase bg-gray-50">
+              <tr>
+                <th className="px-2 py-4">#</th>
+                <th className="px-2 py-4">S.No</th>
+                <th className="px-2 py-4">Enquiry ID</th>
+                <th className="px-2 py-4">Created on</th>
+                {/* <th className="px-2 py-4">Last Updated</th> */}
+                <th className="px-2 py-4">Name</th>
+                <th className="px-2 py-4">Service Name</th>
+                <th className="px-2 py-4">Lead Source</th>
+                <th className="px-2 py-4">Lead Status</th>
+                <th className="px-2 py-4">Last Call Status</th>
+                <th className="px-2 py-4">Lead Owner</th>
+                {/* <th className="px-2 py-4">Action</th> */}
+              </tr>
+            </thead>
+            <tbody>
+              {allLeads.map((row, id) => (
+                <tr
+                  key={row.id}
+                  className="group bg-white border-b hover:bg-gray-50 relative transition duration-700"
+                >
+                  <td className="px-2 py-4">
+                    <div className="flex items-center custom--checkbox--2">
+                      <input
+                        type="checkbox"
+                        className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                        checked={selectedIds.includes(row.id)}
+                        onChange={() => handleCheckboxChange(row.id)}
+                      />
+                      <span className="checkmark--custom"></span>
+                    </div>
+                  </td>
+                  <td className="px-2 py-4">{row?.id}</td>
+                  <td className="px-2 py-4">4339161</td>
 
-        {/* Table */}
-        {activeTab == "Allleads" && (
-          <>
-            <div className="relative overflow-x-auto">
-              <table className="w-full text-sm text-left text-gray-500">
-                <thead className="text-xs text-gray-700 uppercase bg-gray-50">
-                  <tr>
-                    <th className="px-2 py-4">#</th>
-                    <th className="px-2 py-4">S.No</th>
-                    <th className="px-2 py-4">Enquiry ID</th>
-                    <th className="px-2 py-4">Created on</th>
-                    {/* <th className="px-2 py-4">Last Updated</th> */}
-                    <th className="px-2 py-4">Name</th>
-                    <th className="px-2 py-4">Service Name</th>
-                    <th className="px-2 py-4">Lead Source</th>
-                    <th className="px-2 py-4">Lead Status</th>
-                    <th className="px-2 py-4">Last Call Status</th>
-                    <th className="px-2 py-4">Lead Owner</th>
-                    {/* <th className="px-2 py-4">Action</th> */}
-                  </tr>
-                </thead>
-                <tbody>
-                  {allLeads.map((row, id) => (
-                    <tr
-                      key={row.id}
-                      className="group bg-white border-b hover:bg-gray-50 relative transition duration-700"
-                    >
-                      <td className="px-2 py-4">
-                        <div className="flex items-center custom--checkbox--2">
-                          <input
-                            type="checkbox"
-                            className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
-                            checked={selectedIds.includes(row.id)}
-                            onChange={() => handleCheckboxChange(row.id)}
-                          />
-                          <span className="checkmark--custom"></span>
-                        </div>
-                      </td>
-                      <td className="px-2 py-4">{row?.id}</td>
-                      <td className="px-2 py-4">4339161</td>
-
-                      <td className="px-2 py-4">
-                        {formatAutoDate(row?.createdAt)}
-                      </td>
-                      {/* <td className="px-2 py-4">
+                  <td className="px-2 py-4">
+                    {formatAutoDate(row?.createdAt)}
+                  </td>
+                  {/* <td className="px-2 py-4">
                         {formatAutoDate(row?.updatedAt)}
                       </td> */}
-                      <td className="px-2 py-4">{row?.full_name}</td>
-                      <td className="px-2 py-4">
-                        {row?.interested_in ? row?.interested_in : "--"}
-                      </td>
-                      <td className="px-2 py-4">
-                        {row?.lead_source == null ? "--" : row?.lead_source}
-                      </td>
-                      <td className="px-2 py-4">
-                        {row?.lead_status == null ? "--" : row?.lead_status}
-                      </td>
-                      <td className="px-2 py-4">
-                        {row?.last_call_status == null
-                          ? "--"
-                          : row?.last_call_status}
-                      </td>
-                      <td className="px-2 py-4">
-                        {row?.created_by == null ? "--" : row?.created_by}
-                      </td>
+                  <td className="px-2 py-4">{row?.full_name}</td>
+                  <td className="px-2 py-4">
+                    {row?.interested_in ? row?.interested_in : "--"}
+                  </td>
+                  <td className="px-2 py-4">
+                    {row?.lead_source == null ? "--" : row?.lead_source}
+                  </td>
+                  <td className="px-2 py-4">
+                    {row?.lead_status == null ? "--" : row?.lead_status}
+                  </td>
+                  <td className="px-2 py-4">
+                    {row?.last_call_status == null
+                      ? "--"
+                      : row?.last_call_status}
+                  </td>
+                  <td className="px-2 py-4">
+                    {row?.created_by == null ? "--" : row?.created_by}
+                  </td>
 
-                      <div className="absolute hidden group-hover:flex gap-2 right-0 h-full top-0 w-[50%] items-center justify-end bg-[linear-gradient(269deg,_#ffffff_30%,_transparent)] pr-5 transition duration-700">
-                        <Tooltip
-                          id={`tooltip-edit-${row.id}`}
-                          content="Edit Lead"
-                          place="top"
-                        >
-                          <div
-                            onClick={() => {
-                              setSelectedLead(row?.id);
-                              setLeadModal(true);
-                            }}
-                            className="p-1 cursor-pointer"
-                          >
-                            <LiaEdit className="text-[25px] text-black" />
-                          </div>
-                        </Tooltip>
-                        <Tooltip
-                          id={`tooltip-call-${row.id}`}
-                          content="Add Call log"
-                          place="top"
-                        >
-                          <div className="p-1 cursor-pointer">
-                            <Link
-                              to={`/lead-follow-up/${row.id}`}
-                              className="p-0"
-                            >
-                              <MdCall className="text-[25px] text-black" />
-                            </Link>
-                          </div>
-                        </Tooltip>
-                        <Tooltip
-                          id={`tooltip-convert-${row.id}`}
-                          content="Convert to member"
-                          place="top"
-                        >
-                          <div
-                            onClick={() => {
-                              setSelectedLeadMember(row);
-                              setMemberModal(true);
-                            }}
-                            className="p-1 cursor-pointer"
-                          >
-                            <TbArrowsExchange className="text-[25px] text-black" />
-                          </div>
-                        </Tooltip>
-                        <Tooltip
-                          id={`tooltip-schedule-${row.id}`}
-                          content="Schedule Tour / Trial"
-                          place="top"
-                        >
-                          <div className="p-1 cursor-pointer">
-                            <Link
-                              to={`/lead-follow-up/${row.id}?action=schedule-tour-trial`}
-                              className="p-0"
-                            >
-                              <RiCalendarScheduleLine className="text-[25px] text-black" />
-                            </Link>
-                          </div>
-                        </Tooltip>
-
-                        <Tooltip
-                          id={`tooltip-appointment-${row.id}`}
-                          content="Add Appointment"
-                          place="top"
-                        >
-                          <div
-                            onClick={() => {
-                              setAppointmentModal(true);
-                            }}
-                            className="p-1 cursor-pointer"
-                          >
-                            <LuCalendarPlus className="text-[25px] text-black" />
-                          </div>
-                        </Tooltip>
-
-                        <Tooltip
-                          id={`tooltip-send-${row.id}`}
-                          content="Send Payment Link"
-                          place="top"
-                        >
-                          <div
-                            onClick={() => {
-                              setLeadPaymentSend(row);
-                              setSendPaymentModal(true);
-                            }}
-                            className="p-1 cursor-pointer"
-                          >
-                            <IoIosAddCircleOutline className="text-[25px] text-black" />
-                          </div>
-                        </Tooltip>
+                  <div className="absolute hidden group-hover:flex gap-2 right-0 h-full top-0 w-[50%] items-center justify-end bg-[linear-gradient(269deg,_#ffffff_30%,_transparent)] pr-5 transition duration-700">
+                    <Tooltip
+                      id={`tooltip-edit-${row.id}`}
+                      content="Edit Lead"
+                      place="top"
+                    >
+                      <div
+                        onClick={() => {
+                          setSelectedLead(row?.id);
+                          setLeadModal(true);
+                        }}
+                        className="p-1 cursor-pointer"
+                      >
+                        <LiaEdit className="text-[25px] text-black" />
                       </div>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            {/* Pagination */}
-            <Pagination
-              page={page}
-              totalPages={totalPages}
-              rowsPerPage={rowsPerPage}
-              totalCount={totalCount}
-              currentDataLength={allLeads.length}
-              onPageChange={(newPage) => {
-                setPage(newPage);
-                fetchLeadList(searchTerm, newPage);
-              }}
-            />
-          </>
-        )}
-        {activeTab == "Assignleads" && (
-          <div className="relative overflow-x-auto">
-            <table className="w-full text-sm text-left text-gray-500">
-              <thead className="text-xs text-gray-700 uppercase bg-gray-50">
-                <tr>
-                  <th className="px-2 py-4">Created on</th>
-                  <th className="px-2 py-4">Last Updated</th>
-                  <th className="px-2 py-4">Name</th>
-                  <th className="px-2 py-4">Lead Source</th>
-                  <th className="px-2 py-4">Lead Status</th>
-                  <th className="px-2 py-4">Last Call Status</th>
-                  <th className="px-2 py-4">Lead Owner</th>
+                    </Tooltip>
+                    <Tooltip
+                      id={`tooltip-call-${row.id}`}
+                      content="Add Call log"
+                      place="top"
+                    >
+                      <div className="p-1 cursor-pointer">
+                        <Link to={`/lead-follow-up/${row.id}`} className="p-0">
+                          <MdCall className="text-[25px] text-black" />
+                        </Link>
+                      </div>
+                    </Tooltip>
+                    <Tooltip
+                      id={`tooltip-convert-${row.id}`}
+                      content="Convert to member"
+                      place="top"
+                    >
+                      <div
+                        onClick={() => {
+                          setSelectedLeadMember(row);
+                          setMemberModal(true);
+                        }}
+                        className="p-1 cursor-pointer"
+                      >
+                        <TbArrowsExchange className="text-[25px] text-black" />
+                      </div>
+                    </Tooltip>
+                    <Tooltip
+                      id={`tooltip-schedule-${row.id}`}
+                      content="Schedule Trial"
+                      place="top"
+                    >
+                      <div className="p-1 cursor-pointer">
+                        <Link
+                          to={`/lead-follow-up/${row.id}?action=schedule-tour-trial`}
+                          className="p-0"
+                        >
+                          <RiCalendarScheduleLine className="text-[25px] text-black" />
+                        </Link>
+                      </div>
+                    </Tooltip>
+
+                    <Tooltip
+                      id={`tooltip-appointment-${row.id}`}
+                      content="Add Appointment"
+                      place="top"
+                    >
+                      <div
+                        onClick={() => {
+                          setAppointmentModal(true);
+                        }}
+                        className="p-1 cursor-pointer"
+                      >
+                        <LuCalendarPlus className="text-[25px] text-black" />
+                      </div>
+                    </Tooltip>
+
+                    <Tooltip
+                      id={`tooltip-send-${row.id}`}
+                      content="Send Payment Link"
+                      place="top"
+                    >
+                      <div
+                        onClick={() => {
+                          setLeadPaymentSend(row.id);
+                          setSendPaymentModal(true);
+                        }}
+                        className="p-1 cursor-pointer"
+                      >
+                        <IoIosAddCircleOutline className="text-[25px] text-black" />
+                      </div>
+                    </Tooltip>
+                  </div>
                 </tr>
-              </thead>
-              <tbody>
-                {assignLead.map((row, id) => (
-                  <tr
-                    key={row.id}
-                    className="group bg-white border-b hover:bg-gray-50 relative transition duration-700"
-                  >
-                    <td className="px-2 py-4">
-                      {formatAutoDate(row?.createdAt)}
-                    </td>
-                    <td className="px-2 py-4">
-                      {formatAutoDate(row?.updatedAt)}
-                    </td>
-                    <td className="px-2 py-4">
-                      {row?.firstname} {row?.lastname}
-                    </td>
-                    <td className="px-2 py-4">
-                      {row?.lead_source == null ? "--" : row?.lead_source}
-                    </td>
-                    <td className="px-2 py-4">
-                      {row?.lead_status == null ? "--" : row?.lead_status}
-                    </td>
-                    <td className="px-2 py-4">
-                      {row?.last_call_status == null
-                        ? "--"
-                        : row?.last_call_status}
-                    </td>
-                    <td className="px-2 py-4">
-                      {row?.created_by == null ? "--" : row?.created_by}
-                    </td>
-
-                    <div className="absolute hidden group-hover:flex gap-2 items-center right-0 h-full top-0 w-[80%] flex items-center justify-end bg-[linear-gradient(269deg,_#ffffff_30%,_transparent)] pr-5 transition duration-700">
-                      <Tooltip
-                        id={`tooltip-edit-${row.id}`}
-                        content="Edit Lead"
-                        place="top"
-                      >
-                        <div
-                          onClick={() => {
-                            setSelectedLead(row?.id);
-                            setLeadModal(true);
-                          }}
-                          className="p-1 cursor-pointer"
-                        >
-                          <LiaEdit className="text-[25px] text-black" />
-                        </div>
-                      </Tooltip>
-                      <Tooltip
-                        id={`tooltip-call-${row.id}`}
-                        content="Add Call log"
-                        place="top"
-                      >
-                        <div className="p-1 cursor-pointer">
-                          <Link
-                            to={`/lead-follow-up/${row.id}`}
-                            className="p-0"
-                          >
-                            <MdCall className="text-[25px] text-black" />
-                          </Link>
-                        </div>
-                      </Tooltip>
-                      <Tooltip
-                        id={`tooltip-convert-${row.id}`}
-                        content="Convert to member"
-                        place="top"
-                      >
-                        <div
-                          onClick={() => {
-                            setSelectedLeadMember(row);
-                            setMemberModal(true);
-                          }}
-                          className="p-1 cursor-pointer"
-                        >
-                          <TbArrowsExchange className="text-[25px] text-black" />
-                        </div>
-                      </Tooltip>
-                      <Tooltip
-                        id={`tooltip-schedule-${row.id}`}
-                        content="Schedule Tour / Trial"
-                        place="top"
-                      >
-                        <div className="p-1 cursor-pointer">
-                          <Link
-                            to={`/lead-follow-up/${row.id}?action=schedule-tour-trial`}
-                            className="p-0"
-                          >
-                            <RiCalendarScheduleLine className="text-[25px] text-black" />
-                          </Link>
-                        </div>
-                      </Tooltip>
-
-                      <Tooltip
-                        id={`tooltip-send-${row.id}`}
-                        content="Send Payment Link"
-                        place="top"
-                      >
-                        <div
-                          onClick={() => {
-                            setLeadPaymentSend(row);
-                            setSendPaymentModal(true);
-                          }}
-                          className="p-1 cursor-pointer"
-                        >
-                          <IoIosAddCircleOutline className="text-[25px] text-black" />
-                        </div>
-                      </Tooltip>
-                    </div>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+              ))}
+            </tbody>
+          </table>
+        </div>
+        {/* Pagination */}
+        <Pagination
+          page={page}
+          totalPages={totalPages}
+          rowsPerPage={rowsPerPage}
+          totalCount={totalCount}
+          currentDataLength={allLeads.length}
+          onPageChange={(newPage) => {
+            setPage(newPage);
+            fetchLeadList(searchTerm, newPage);
+          }}
+        />
       </div>
 
       {leadModal && (

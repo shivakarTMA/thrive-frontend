@@ -78,6 +78,7 @@ const validationSchema = Yup.object({
 });
 
 const CreateLeadForm = ({ setLeadModal, selectedLead, onLeadUpdate }) => {
+  console.log(selectedLead,'selectedLead')
   const [allLeads, setAllLeads] = useState([]);
   const leadBoxRef = useRef(null);
   const [matchingUsers, setMatchingUsers] = useState([]);
@@ -231,17 +232,19 @@ const CreateLeadForm = ({ setLeadModal, selectedLead, onLeadUpdate }) => {
         // });
 
         // ✅ Update or create
-        if (values.id) {
-          await apiAxios().put(`/lead/${values.id}`, payload);
+        if (selectedLead) {
+          console.log(selectedLead,'selectedLead')
+          await apiAxios().put(`/lead/${selectedLead}`, payload);
           toast.success("Lead updated successfully!");
           setAllLeads((prev) =>
             prev.map((lead) =>
-              lead.id === values.id
-                ? { ...lead, ...payload, id: values.id }
+              lead.id === selectedLead
+                ? { ...lead, ...payload, id: selectedLead }
                 : lead
             )
           );
         } else {
+          console.log('create working')
           const res = await authAxios().post("/lead/create", payload);
           toast.success("Lead created successfully!");
           setAllLeads((prev) => [
@@ -807,11 +810,10 @@ const CreateLeadForm = ({ setLeadModal, selectedLead, onLeadUpdate }) => {
                     <div className="col-span-3">
                       <label className="mb-2 block">Address</label>
                       <div className="relative">
-                        <textarea
+                        <input
                           name="address"
                           value={formik.values.address}
                           onChange={formik.handleChange}
-                          rows={4}
                           className="custom--input w-full"
                         />
                       </div>

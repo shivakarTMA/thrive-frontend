@@ -6,12 +6,45 @@ const ProductModal = ({ selectedType, onClose, onSubmit }) => {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [filteredProducts, setFilteredProducts] = useState([]);
 
+  console.log(selectedType,'selectedType')
+  console.log(filteredProducts,'filteredProducts')
+
+// normalize helper
+  const norm = (s) => (s || "").toString().trim().toLowerCase();
+
   useEffect(() => {
-    if (selectedType) {
-      setFilteredProducts(productsByType[selectedType.toLowerCase()] || []);
-    } else {
+    setSelectedProduct(null); // clear selection when type changes
+
+    if (!selectedType) {
       setFilteredProducts([]);
+      return;
     }
+
+    const input = norm(selectedType);
+
+    // 1) Try direct key match (productsByType keys should ideally be normalized)
+    if (productsByType[input]) {
+      setFilteredProducts(productsByType[input]);
+      return;
+    }
+
+    // 2) Try to find a category that contains a product matching the passed string
+    const foundCategory = Object.keys(productsByType).find((key) =>
+      productsByType[key].some((p) => {
+        const pName = norm(p.productName);
+        const pDesc = norm(p.shortDescription || "");
+        return pName === input || pDesc === input || pName.includes(input) || pDesc.includes(input);
+      })
+    );
+
+    if (foundCategory) {
+      setFilteredProducts(productsByType[foundCategory]);
+      return;
+    }
+
+    // 3) Nothing found
+    setFilteredProducts([]);
+    console.warn(`ProductModal: no products found for selectedType="${selectedType}"`);
   }, [selectedType]);
 
   const handleSubmit = () => {

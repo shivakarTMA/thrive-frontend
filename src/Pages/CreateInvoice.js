@@ -29,8 +29,13 @@ const validationSchema = Yup.object({
   productType: Yup.string().required("Product Type is required"),
 });
 
-const CreateInvoice = ({ setInvoiceModal, leadPaymentSend }) => {
-  console.log(leadPaymentSend, "leadPaymentSend");
+const CreateInvoice = ({
+  setInvoiceModal,
+  leadPaymentSend,
+  upgradePlan,
+  renewPlan,
+}) => {
+  console.log(upgradePlan, "upgradePlan");
   const [showProductModal, setShowProductModal] = useState(false);
   const [editingProductIndex, setEditingProductIndex] = useState(null);
   const { user } = useSelector((state) => state.auth);
@@ -102,6 +107,14 @@ const CreateInvoice = ({ setInvoiceModal, leadPaymentSend }) => {
   }, []);
 
   useEffect(() => {
+    if (upgradePlan) {
+      formik.setFieldValue("productInfo.0.productType", "membership plan");
+    }
+  }, [upgradePlan]);
+
+  console.log(formik.values, "initialValues");
+
+  useEffect(() => {
     if (formik?.values?.memberDetails?.name) {
       formik.setFieldValue(
         "invoiceDetails.leadOwner",
@@ -117,7 +130,7 @@ const CreateInvoice = ({ setInvoiceModal, leadPaymentSend }) => {
   const handleProductSubmit = (product) => {
     const newItem = {
       ...formik.values.productInfo[editingProductIndex],
-      productType: product.productName,
+      productType: upgradePlan ? "membership plan" : product.productName,
       serviceVariation: product.shortDescription,
       duration: product.servicesDuration,
       productAmount: product.amount,
@@ -308,6 +321,7 @@ const CreateInvoice = ({ setInvoiceModal, leadPaymentSend }) => {
                         value={formik.values.invoiceDetails.leadOwner}
                         onChange={formik.handleChange}
                         className="custom--input w-full"
+                        disabled={upgradePlan ? true : false}
                         // readOnly={true}
                       />
                       {formik.errors.invoiceDetails?.leadOwner &&
@@ -326,6 +340,7 @@ const CreateInvoice = ({ setInvoiceModal, leadPaymentSend }) => {
                         onChange={handleSearchInputChange}
                         className="custom--input w-full"
                         autoComplete="off"
+                        disabled={upgradePlan ? true : false}
                       />
                       {formik.errors.invoiceDetails?.memberName &&
                         formik.touched.invoiceDetails?.memberName && (
@@ -364,8 +379,15 @@ const CreateInvoice = ({ setInvoiceModal, leadPaymentSend }) => {
                         <Select
                           name={`productInfo.${index}.productType`}
                           value={servicesList.find(
-                            (s) => s.value === product.productType
+                            (s) =>
+                              s.value ===
+                              formik.values.productInfo?.[index]?.productType
                           )}
+                          //                          value={
+                          //   servicesList.find(
+                          //     (s) => s.value === formik.values.productInfo?.[index]?.productType
+                          //   ) || null
+                          // }
                           onChange={(selected) =>
                             formik.setFieldValue(
                               `productInfo.${index}.productType`,
@@ -383,6 +405,7 @@ const CreateInvoice = ({ setInvoiceModal, leadPaymentSend }) => {
                               : servicesList
                           }
                           styles={customStyles}
+                          isDisabled={upgradePlan ? true : false}
                         />
                       </div>
 
@@ -429,6 +452,12 @@ const CreateInvoice = ({ setInvoiceModal, leadPaymentSend }) => {
                               dateFormat="dd MMM yyyy"
                               placeholderText="Select date"
                               readOnly={!product.serviceVariation}
+                              isDisabled={upgradePlan && !renewPlan ? true : false}
+                              className={`${
+                                upgradePlan && !renewPlan
+                                  ? "bg-[#fafafa] pointer-events-none"
+                                  : ""
+                              }`}
                             />
                           </div>
                         </div>
@@ -535,19 +564,21 @@ const CreateInvoice = ({ setInvoiceModal, leadPaymentSend }) => {
                         </div>
                       )}
 
-                      {product.voucherStatus === "success" && (
+                      {/* {product.voucherStatus === "success" && (
                         <div className="text-lg text-black">
                           Final Price after discount:{" "}
                           <strong>₹{product.finalAmount}</strong>
                         </div>
-                      )}
+                      )} */}
                     </div>
                   ))}
 
                   {!leadPaymentSend && (
                     <button
                       type="button"
-                      className="px-5 py-3 text-sm rounded bg-black text-white flex items-center justify-center gap-2"
+                      className={`px-5 py-3 text-sm rounded bg-black text-white items-center justify-center gap-2 ${
+                        upgradePlan ? "hidden" : "flex"
+                      }`}
                       onClick={() => {
                         const newProduct = {
                           productType: "",

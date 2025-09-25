@@ -466,6 +466,7 @@ const ProfileDetails = ({ member }) => {
                     onChange={(value) => handleInputChange("leadSource", value)}
                     styles={customStyles}
                     className="!capitalize"
+                    isDisabled={true}
                   />
                 </div>
                 <div>

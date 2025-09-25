@@ -102,9 +102,6 @@ const stepValidationSchemas = [
   Yup.object({
     invoiceDetails: Yup.object({
       invoiceDate: Yup.string().required("Invoice Date is required"),
-      // leadOwner: Yup.string().required("Lead Owner is required"),
-      memberName: Yup.string().required("Member Name is required"),
-      productName: Yup.string().required("Product is required"),
     }),
     productDetails: Yup.object({
       productName: Yup.string().required("Product is required"),
@@ -203,7 +200,6 @@ const ConvertMemberForm = ({
     invoiceDetails: {
       invoiceDate: "",
       leadOwner: "Shivakar",
-      memberName: "",
     },
     productType: "membership plan",
     productDetails: {
@@ -332,12 +328,13 @@ const ConvertMemberForm = ({
         invoiceDetails: {
           invoiceDate: "",
           leadOwner: "Shivakar",
-          memberName: selectedLeadMember.full_name,
         },
         productType: "membership plan",
       });
     }
   }, [selectedLeadMember]);
+
+  console.log(selectedLeadMember,'selectedLeadMember')
 
   const fetchLeadList = async () => {
     try {
@@ -436,6 +433,7 @@ const ConvertMemberForm = ({
 
       const touchedFields = markTouched(errors);
       formik.setTouched(touchedFields);
+      console.log("Validation errors:", errors);
       return { errors, touched: touchedFields };
     }
   };
@@ -456,14 +454,6 @@ const ConvertMemberForm = ({
     );
   }, []);
 
-  useEffect(() => {
-    if (formik?.values?.memberDetails?.name) {
-      formik.setFieldValue(
-        "invoiceDetails.memberName",
-        formik?.values?.memberDetails?.name
-      );
-    }
-  }, [formik?.values?.memberDetails?.name]);
 
   const handleProductSubmit = (product) => {
     formik.setFieldValue("productDetails.productName", product.productName);
@@ -884,11 +874,10 @@ const ConvertMemberForm = ({
                           <div className="col-span-3">
                             <label className="mb-2 block">Address</label>
                             <div className="relative">
-                              <textarea
+                              <input
                                 name="address"
                                 value={formik.values.address}
                                 onChange={formik.handleChange}
-                                rows={4}
                                 className="custom--input w-full"
                               />
                             </div>
@@ -1350,8 +1339,8 @@ const ConvertMemberForm = ({
                               <FaUser />
                             </span>
                             <input
-                              name="invoiceDetails.memberName"
-                              value={formik.values?.invoiceDetails?.memberName}
+                              name="full_name"
+                              value={formik.values?.full_name}
                               // onChange={handleInput}
                               className="custom--input w-full input--icon bg-[#fafafa] pointer-events-none"
                               readOnly={true}
@@ -1391,15 +1380,15 @@ const ConvertMemberForm = ({
                             <input
                               name="productDetails.productName"
                               value={formik.values?.productDetails?.productName}
-                              // onChange={handleInput}
+                              onChange={formik.handleChange}
                               className="custom--input w-full input--icon"
                               readOnly={true}
                             />
                           </div>
-                          {formik.errors?.productDetails.productName &&
-                            formik.touched?.productDetails.productName && (
+                          {formik.errors?.productDetails?.productName &&
+                            formik.touched?.productDetails?.productName && (
                               <div className="text-red-500 text-sm">
-                                {formik.errors.productDetails.productName}
+                                {formik.errors?.productDetails?.productName}
                               </div>
                             )}
                         </div>
@@ -1563,7 +1552,7 @@ const ConvertMemberForm = ({
                   onClick={handleNextStep}
                 >
                   {step === stepValidationSchemas.length - 1
-                    ? "Make Payment"
+                    ? "Send Payment"
                     : "Next"}
                 </button>
               </div>

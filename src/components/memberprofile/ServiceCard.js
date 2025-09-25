@@ -12,7 +12,7 @@ import SuspendAndPause from "../common/SuspendAndPause";
 
 const statusOptions = [
   { value: "active", label: "Active" },
-  { value: "inactive", label: "Inactive" },
+  { value: "expired", label: "Expired" },
 ];
 
 const ServiceCard = () => {
@@ -36,7 +36,7 @@ const ServiceCard = () => {
       duration: "3 months",
       sessions: "10/12",
       lastVisited: "24 Aug, 2025",
-      status: "inactive",
+      status: "expired",
       startDate: {
         day: 15,
         month: "Jul, 2025",
@@ -76,6 +76,9 @@ const ServiceCard = () => {
   const [invoiceModal, setInvoiceModal] = useState(false);
   const [coinsModal, setCoinsModal] = useState(false);
   const [appointmentModal, setAppointmentModal] = useState(false);
+
+  const [upgradePlan, setUpgradePlan] = useState(null);
+  const [renewPlan, setRenewPlan] = useState(null);
 
   const [suspendPauseModal, setSuspendPauseModal] = useState(false);
   const [membershipActionType, setMembershipActionType] = useState(null);
@@ -156,12 +159,12 @@ const ServiceCard = () => {
                 <div className="flex space-x-2">
                   <button
                     className="px-4 py-2 bg-black text-white rounded flex items-center gap-2 border border-black text-sm"
-                    onClick={() => setInvoiceModal(true)}
+                    onClick={() => {
+                      setUpgradePlan(membershipData.membershipId);
+                      setInvoiceModal(true);
+                    }}
                   >
                     UPGRADE PLAN
-                  </button>
-                  <button className="px-4 py-2 bg-white text-black rounded flex items-center gap-2 border border-black text-sm">
-                    PAUSE MEMBERSHIP
                   </button>
                 </div>
               </div>
@@ -262,7 +265,10 @@ const ServiceCard = () => {
                           {/* Show these buttons only if service is active */}
                           <button
                             className="px-3 py-2 bg-black text-white rounded flex items-center gap-2 border border-black text-sm"
-                            onClick={() => setInvoiceModal(true)}
+                            onClick={() => {
+                              setUpgradePlan(membershipData.membershipId);
+                              setInvoiceModal(true);
+                            }}
                           >
                             Upgrage
                           </button>
@@ -282,15 +288,6 @@ const ServiceCard = () => {
                             Suspend Membership
                           </button>
                           <button
-                            className="px-3 py-2 bg-white text-black rounded flex items-center gap-2 border border-black text-sm"
-                            onClick={() => {
-                              setMembershipActionType("banned");
-                              setSuspendPauseModal(true);
-                            }}
-                          >
-                            Banned Membership
-                          </button>
-                          <button
                             onClick={() => {
                               setMembershipActionType("pause");
                               setSuspendPauseModal(true);
@@ -302,10 +299,13 @@ const ServiceCard = () => {
                         </>
                       ) : (
                         <>
-                          {/* Show renew button if service is inactive */}
+                          {/* Show renew button if service is expired */}
                           <button
                             className="px-3 py-2 bg-black text-white rounded flex items-center gap-2 border border-black text-sm"
-                            onClick={() => setInvoiceModal(true)}
+                            onClick={() => {
+                              setRenewPlan(membershipData.membershipId);
+                              setInvoiceModal(true);
+                            }}
                           >
                             RENEW
                           </button>
@@ -367,7 +367,13 @@ const ServiceCard = () => {
           </div>
         </div>
       </div>
-      {invoiceModal && <CreateInvoice setInvoiceModal={setInvoiceModal} />}
+      {invoiceModal && (
+        <CreateInvoice
+          setInvoiceModal={setInvoiceModal}
+          upgradePlan={upgradePlan}
+          renewPlan={renewPlan}
+        />
+      )}
       {coinsModal && <AddCoins setCoinsModal={setCoinsModal} />}
       {appointmentModal && (
         <CreateAppointment setAppointmentModal={setAppointmentModal} />

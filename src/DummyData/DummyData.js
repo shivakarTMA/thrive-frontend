@@ -35,6 +35,7 @@ export const workoutTemplateWithExercises  = {
   name: "Leg Day + Cardio Mix",
   type: "multiple",
   numDays: 3,
+  description:"testing Leg Day + Cardio Mix",
   days: [
     {
       name: "Day 1",
@@ -220,6 +221,7 @@ export const workoutTemplatePushDay = {
   name: "Push Day Strength",
   type: "multiple",
   numDays: 2,
+  description:"testing Push Day Strength",
   days: [
     {
       name: "Day 1",
@@ -304,6 +306,7 @@ export const workoutTemplateHIIT = {
   name: "Full Body HIIT",
   type: "single",
   numDays: 1,
+  description:"testing Full Body HIIT",
   days: [
     {
       name: "Day 1",

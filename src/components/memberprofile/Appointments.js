@@ -5,6 +5,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import { customStyles } from "../../Helper/helper";
 import { FiPlus } from "react-icons/fi";
 import CreateAppointment from "../Appointment/CreateAppointment";
+import { toast } from "react-toastify";
 
 const Appointments = () => {
   const [appointmentTypeFilter, setAppointmentTypeFilter] = useState({
@@ -164,11 +165,11 @@ const Appointments = () => {
         </div>
         <div>
           <div
-              className="px-4 py-2 bg-white text-black flex items-center gap-2 cursor-pointer"
-              onClick={() => setAppointmentModal(true)}
-            >
-              <FiPlus /> Add Appointment
-            </div>
+            className="px-4 py-2 bg-white text-black flex items-center gap-2 cursor-pointer"
+            onClick={() => setAppointmentModal(true)}
+          >
+            <FiPlus /> Add Appointment
+          </div>
         </div>
       </div>
 
@@ -185,6 +186,7 @@ const Appointments = () => {
               <th className="border px-3 py-2">Assigned Staff</th>
               <th className="border px-3 py-2">Source</th>
               <th className="border px-3 py-2">Status</th>
+              <th className="border px-3 py-2">Action</th>
             </tr>
           </thead>
           <tbody>
@@ -200,6 +202,15 @@ const Appointments = () => {
                   <td className="border px-3 py-2">{appt.assignedStaff}</td>
                   <td className="border px-3 py-2">{appt.bookingChannel}</td>
                   <td className="border px-3 py-2">{appt.status}</td>
+                  <td className="border px-3 py-2">
+                    <button
+                      type="button"
+                      onClick={() => toast.success('Appointment cancelled successfully')}
+                      className={`px-4 py-2 bg-black text-white font-semibold rounded max-w-[150px] w-full`}
+                    >
+                      Cancel
+                    </button>
+                  </td>
                 </tr>
               ))
             ) : (
@@ -213,8 +224,9 @@ const Appointments = () => {
         </table>
       </div>
 
-{appointmentModal && <CreateAppointment setAppointmentModal={setAppointmentModal} />}
-
+      {appointmentModal && (
+        <CreateAppointment setAppointmentModal={setAppointmentModal} />
+      )}
     </div>
   );
 };

@@ -54,6 +54,7 @@ const WorkoutPlan = ({ handleCancelWorkout, editingId }) => {
   const [selectedWorkoutType, setSelectedWorkoutType] = useState(null);
   const [selectedTemplate, setSelectedTemplate] = useState(null);
 
+  console.log(selectedTemplate,'selectedTemplate')
   // useEffect(() => {
   //   if (data.startDate && data.numDays > 0) {
   //     const calculatedDate = new Date(data.startDate);
@@ -647,9 +648,11 @@ const WorkoutPlan = ({ handleCancelWorkout, editingId }) => {
 
     setData((prev) => ({
       ...prev,
+      workoutName: templateData.name,
       workoutType: templateData.type,
       numDays: templateData.numDays,
       days: templateData.days,
+      description: templateData.description,
     }));
 
     setActiveDayIndex(0);

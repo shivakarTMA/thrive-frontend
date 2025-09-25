@@ -238,7 +238,7 @@ const LeadCallLogs = () => {
 
   useEffect(() => {
     if (action === "schedule-tour-trial") {
-      formik.setFieldValue("callStatus", "trial scheduled");
+      formik.setFieldValue("callStatus", "Trial/Tour Scheduled");
     }
   }, [action]);
 

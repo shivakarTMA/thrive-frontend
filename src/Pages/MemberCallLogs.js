@@ -261,20 +261,20 @@ const MemberCallLogs = () => {
                 <button
                   type="button"
                   className={`px-4 py-2 rounded ${
-                    activeTab === "Member Logs" ? "bg--color text-white" : ""
-                  }`}
-                  onClick={() => setActiveTab("Member Logs")}
-                >
-                  Member Logs
-                </button>
-                <button
-                  type="button"
-                  className={`px-4 py-2 rounded ${
                     activeTab === "Enquiry Logs" ? "bg--color text-white" : ""
                   }`}
                   onClick={() => setActiveTab("Enquiry Logs")}
                 >
                   Enquiry Logs
+                </button>
+                <button
+                  type="button"
+                  className={`px-4 py-2 rounded ${
+                    activeTab === "Member Logs" ? "bg--color text-white" : ""
+                  }`}
+                  onClick={() => setActiveTab("Member Logs")}
+                >
+                  Member Logs
                 </button>
               </div>
             </div>
