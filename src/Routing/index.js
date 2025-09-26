@@ -58,6 +58,7 @@ import PackagesList from "../components/PackagesList/PackagesList";
 import EmailModule from "../components/Marketing/EmailModule";
 import SmsModule from "../components/Marketing/SmsModule";
 import WhatsappModule from "../components/Marketing/WhatsappModule";
+import ClubManagerDashboard from "../Pages/ClubManagerDashboard";
 
 
 export default function Routing() {
@@ -602,6 +603,14 @@ export default function Routing() {
               element={
                 <PrivateRoute>
                   <WhatsappModule />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/club-manager/"
+              element={
+                <PrivateRoute>
+                  <ClubManagerDashboard />
                 </PrivateRoute>
               }
             />

@@ -1,9 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { FaUserCircle } from "react-icons/fa";
-import { GoPlusCircle } from "react-icons/go";
-import { IoIosArrowDown, IoIosSearch } from "react-icons/io";
-import { LuBell } from "react-icons/lu";
-import { RiBarChartHorizontalLine } from "react-icons/ri";
+import Papa from "papaparse";
+import { IoIosArrowDown, IoIosList, IoIosSearch } from "react-icons/io";
 import { LiaFileInvoiceSolid } from "react-icons/lia";
 import ItemsList from "../ItemsList";
 import {
@@ -12,7 +9,7 @@ import {
   IoSettingsOutline,
 } from "react-icons/io5";
 import { Link, useNavigate } from "react-router-dom";
-import { FiUser, FiUsers } from "react-icons/fi";
+import { FiPlus, FiUser, FiUsers } from "react-icons/fi";
 import { useDispatch, useSelector } from "react-redux";
 import { logout } from "../../Redux/Reducers/authSlice";
 import DropdownMenu from "../DropdownMenu";
@@ -23,6 +20,7 @@ import ToggleMenu from "../../assets/images/togglemenu.svg";
 import quickLinksImg from "../../assets/images/quicklinks.svg";
 import notificationBell from "../../assets/images/bellnotification.svg";
 import CreateMemberForm from "../../Pages/CreateMemberForm";
+import { useDropzone } from "react-dropzone";
 
 const Topbar = ({ setToggleMenuBar, toggleMenuBar }) => {
   const dispatch = useDispatch();
@@ -38,6 +36,11 @@ const Topbar = ({ setToggleMenuBar, toggleMenuBar }) => {
   const [invoiceModal, setInvoiceModal] = useState(false);
   const [profileModal, setProfileModal] = useState(false);
   const { user } = useSelector((state) => state.auth);
+
+  const [allLeads, setAllLeads] = useState([]);
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [previewNewLeads, setPreviewNewLeads] = useState([]);
+  const [previewDuplicateLeads, setPreviewDuplicateLeads] = useState([]);
 
   const toggleDropdown = (name) => {
     setActiveDropdown((prev) => (prev === name ? null : name));
@@ -78,6 +81,70 @@ const Topbar = ({ setToggleMenuBar, toggleMenuBar }) => {
 
     setFilteredUsers(filteredItems);
   };
+
+  const handleBulkUpload = (acceptedFiles) => {
+    const file = acceptedFiles[0];
+
+    Papa.parse(file, {
+      header: true,
+      skipEmptyLines: true,
+      complete: (results) => {
+        const existingPhones = new Set(
+          allLeads.map((lead) => lead.phoneNumber)
+        );
+        const newLeads = [];
+        const duplicates = [];
+        const errors = [];
+
+        results.data.forEach((row, idx) => {
+          const name = row["Name"]?.trim();
+          const phone = row["Phone Number"]?.trim();
+          const email = row["Email"]?.trim();
+
+          // Check required fields
+          if (!name || !phone || !email) {
+            errors.push({
+              row: idx + 2,
+              reason: "Missing Name, Phone, or Email",
+            });
+            return;
+          }
+
+          const isDuplicatePhone = existingPhones.has(phone);
+
+          const leadObj = {
+            id: allLeads.length + newLeads.length + 1,
+            enquiryId: `ENQ${allLeads.length + newLeads.length + 1000}`,
+            createdOn: new Date().toLocaleDateString("en-GB"),
+            name,
+            phoneNumber: phone,
+            email,
+            leadType: row["Lead Type"] || "Phone",
+            leadSource: row["Lead Source"] || "Unknown",
+            leadStatus: row["Lead Status"] || "New",
+            lastUpdated: new Date().toLocaleDateString("en-GB"),
+            callTag: "Not Called",
+            staff: row["Staff"] || "Unassigned",
+          };
+
+          if (isDuplicatePhone) {
+            duplicates.push(leadObj); // Only duplicates by phone
+          } else {
+            newLeads.push(leadObj);
+          }
+        });
+
+        setPreviewNewLeads(newLeads);
+        setPreviewDuplicateLeads(duplicates);
+        setShowUploadModal(true);
+      },
+    });
+  };
+
+  const { getRootProps, getInputProps } = useDropzone({
+    onDrop: handleBulkUpload,
+    accept: ".csv",
+  });
 
   return (
     <>
@@ -160,6 +227,14 @@ const Topbar = ({ setToggleMenuBar, toggleMenuBar }) => {
                     <LiaFileInvoiceSolid className="menu--icon" />
                     <span className="nav-text">Create Invoice</span>
                   </div>
+                  <div
+                    {...getRootProps()}
+                    className="nav-link flex items-center gap-2 px-3 py-2 hover:bg-black hover:text-white transition border-b cursor-pointer"
+                  >
+                    <input {...getInputProps()} />
+                    <IoIosList className="menu--icon" />
+                    <span className="nav-text">Bulk Lead Upload</span>
+                  </div>
                 </DropdownMenu>
               )}
             </div>
@@ -218,6 +293,107 @@ const Topbar = ({ setToggleMenuBar, toggleMenuBar }) => {
       {invoiceModal && <CreateInvoice setInvoiceModal={setInvoiceModal} />}
       {profileModal && (
         <ProfileDetails setProfileModal={setProfileModal} profile={user} />
+      )}
+      {showUploadModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-30 z-50 flex items-center justify-center">
+          <div className="bg-white rounded-lg shadow-lg p-6 max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+            <h2 className="text-xl font-semibold mb-4">CSV Upload Preview</h2>
+
+            {previewDuplicateLeads.length > 0 && (
+              <div className="mb-4">
+                <h3 className="font-semibold text-red-600 mb-1">
+                  ❗ Duplicate Phone Numbers Found:
+                </h3>
+                <table className="w-full text-sm border">
+                  <thead className="bg-red-100">
+                    <tr>
+                      <th className="p-2 border">Name</th>
+                      <th className="p-2 border">Phone Number</th>
+                      <th className="p-2 border">Email</th>
+                      <th className="p-2 border">Lead Type</th>
+                      <th className="p-2 border">Lead Source</th>
+                      <th className="p-2 border">Lead Status</th>
+                      <th className="p-2 border">Staff</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {previewDuplicateLeads.map((lead, idx) => (
+                      <tr key={idx}>
+                        <td className="p-2 border">{lead?.name}</td>
+                        <td className="p-2 border">{lead?.phone}</td>
+                        <td className="p-2 border">{lead?.email}</td>
+                        <td className="p-2 border">{lead?.leadType}</td>
+                        <td className="p-2 border">{lead?.leadSource}</td>
+                        <td className="p-2 border">{lead?.leadStatus}</td>
+                        <td className="p-2 border">{lead?.staff}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {previewNewLeads.length > 0 && (
+              <div className="mb-4">
+                <h3 className="font-semibold text-green-700 mb-1">
+                  ✅ Leads Ready to Import:
+                </h3>
+                <table className="w-full text-sm border">
+                  <thead className="bg-green-100">
+                    <tr>
+                      <th className="p-2 border">Name</th>
+                      <th className="p-2 border">Phone Number</th>
+                      <th className="p-2 border">Email</th>
+                      <th className="p-2 border">Lead Type</th>
+                      <th className="p-2 border">Lead Source</th>
+                      <th className="p-2 border">Lead Status</th>
+                      <th className="p-2 border">Staff</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {previewNewLeads.map((lead, idx) => (
+                      <tr key={idx}>
+                        <td className="p-2 border">{lead?.name}</td>
+                        <td className="p-2 border">{lead?.phone}</td>
+                        <td className="p-2 border">{lead?.email}</td>
+                        <td className="p-2 border">{lead?.leadType}</td>
+                        <td className="p-2 border">{lead?.leadSource}</td>
+                        <td className="p-2 border">{lead?.leadStatus}</td>
+                        <td className="p-2 border">{lead?.staff}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            <div className="flex justify-end gap-4 mt-4">
+              <button
+                onClick={() => {
+                  setShowUploadModal(false);
+                  setPreviewNewLeads([]);
+                  setPreviewDuplicateLeads([]);
+                }}
+                className="px-4 py-2 rounded bg-gray-200 text-gray-800 hover:bg-gray-300"
+              >
+                Cancel
+              </button>
+              {previewDuplicateLeads.length > 0 ? null : (
+                <button
+                  onClick={() => {
+                    setAllLeads((prev) => [...prev, ...previewNewLeads]);
+                    setShowUploadModal(false);
+                    setPreviewNewLeads([]);
+                    setPreviewDuplicateLeads([]);
+                  }}
+                  className="px-4 py-2 rounded bg-black text-white hover:bg-gray-800"
+                >
+                  Confirm Upload
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
       )}
     </>
   );

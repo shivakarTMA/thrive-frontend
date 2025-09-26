@@ -66,6 +66,7 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
           <span className="nav-text">Dashboard</span>
         </Link>
 
+
         <p className="text-white mt-5 text-uppercase menu--head mb-5">
           General settings
         </p>
@@ -107,6 +108,15 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
           </div>
         )} */}
 
+        <Link
+          to="/club-manager"
+          className={`nav-link mb-2 ${
+            location.pathname === "/club-manager" ? "active" : ""
+          }`}
+        >
+          <AiOutlineHome className="menu--icon" />
+          <span className="nav-text">Club Manager</span>
+        </Link>
         <Link
           to="/all-leads"
           className={`nav-link mb-2 ${
@@ -245,7 +255,7 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
           <span className="nav-text">Group Classes</span>
         </Link>
 
-<div
+        <div
           className="nav-link d-flex justify-between align-items-center mb-2"
           onClick={() => toggleMenu("marketing")}
           style={{ cursor: "pointer" }}
@@ -301,7 +311,6 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
             </Link>
           </div>
         )}
-
 
         <div
           className="nav-link d-flex justify-between align-items-center mb-2"

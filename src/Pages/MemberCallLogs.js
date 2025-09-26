@@ -17,6 +17,7 @@ import { apiAxios } from "../config/config";
 import ContactHistory from "./ContactHistory";
 import { FaCalendarDays } from "react-icons/fa6";
 import { format } from "date-fns";
+import { BsExclamationCircle } from "react-icons/bs";
 
 const callDataList = [
   {
@@ -75,6 +76,7 @@ const MemberCallLogs = () => {
   const [filteredCallStatus, setFilteredCallStatus] = useState([]);
   const [activeTab, setActiveTab] = useState("Member Logs");
   const [staffList, setStaffList] = useState([]);
+  const [editData, setEditData] = useState(null);
 
   const now = new Date();
   const minTime = new Date();
@@ -120,8 +122,6 @@ const MemberCallLogs = () => {
   const callStatusOption = lists["MEMBER_CALL_STATUS"] || [];
   const notInterestedOption = lists["NOT_INTERESTED_REASON"] || [];
 
-  const isDisabled = activeTab === "Enquiry Logs";
-
   const formik = useFormik({
     initialValues: {
       calledBy: "Nitin",
@@ -149,8 +149,23 @@ const MemberCallLogs = () => {
           discussion: "",
         },
       });
+      setEditData(null);
     },
   });
+
+  // Function to handle edit and set data inside form
+  const handleEditLog = (log) => {
+    setActiveTab("Member Logs"); // Switch tab to Member Logs
+    setEditData(log); // Store selected log
+    formik.setValues({
+      calledBy: "Nitin", // Example value, could be dynamic
+      callType: log.callType,
+      callStatus: log.callStatus,
+      notInterested: log.notInterested || "",
+      schedule_date_time: log.schedule_date_time || null,
+      discussion: log.remarks || "",
+    });
+  };
 
   const filteredData = callDataList.filter((item) => {
     const matchesType =
@@ -279,199 +294,218 @@ const MemberCallLogs = () => {
               </div>
             </div>
 
-            <form onSubmit={formik.handleSubmit} className="block w-full">
-              <div className="grid grid-cols-2 gap-4">
-                {/* Call Type */}
-                <div>
-                  <label className="mb-2 block">
-                    Call Type<span className="text-red-500">*</span>
-                  </label>
-                  <Select
-                    name="callType"
-                    value={callTypeOption.find(
-                      (opt) => opt.value === formik.values?.callType
-                    )}
-                    onChange={(option) => {
-                      formik.setFieldValue("callType", option.value);
-                      formik.setFieldValue("callStatus", ""); // Reset callStatus when callType changes
-                    }}
-                    options={callTypeOption}
-                    styles={customStyles}
-                    isDisabled={isDisabled}
-                  />
-                  {formik.errors?.callType && formik.touched?.callType && (
-                    <div className="text-red-500 text-sm">
-                      {formik.errors?.callType}
-                    </div>
-                  )}
+            {activeTab === "Enquiry Logs" ? (
+              <div className="pt-20">
+                <div className="text-center flex flex-col items-center mx-auto max-w-[75%] w-full">
+                  <BsExclamationCircle className="text-5xl mb-2 text-[#6F6F6F]" />
+                  <h3 className="font-bold text-2xl text-black mb-1">
+                    This user is now a member.
+                  </h3>
+                  <p className="text-md text-[#6F6F6F]">
+                    New calls can only be logged under Member Call Log.
+                  </p>
                 </div>
-
-                {/* Call Status */}
-                <div>
-                  <label className="mb-2 block">
-                    Call Status<span className="text-red-500">*</span>
-                  </label>
-                  <Select
-                    name="callStatus"
-                    value={
-                      formik.values?.callStatus
-                        ? filteredCallStatus.find(
-                            (opt) => opt.name === formik.values?.callStatus
-                          )
-                        : null
-                    } // Only show a value if callStatus is not empty
-                    onChange={(option) =>
-                      formik.setFieldValue("callStatus", option.name)
-                    }
-                    options={filteredCallStatus.map((opt) => ({
-                      label: opt.name,
-                      value: opt.name,
-                      name: opt.name,
-                    }))}
-                    styles={customStyles}
-                    isDisabled={isDisabled}
-                  />
-                  {formik.errors?.callStatus && formik.touched?.callStatus && (
-                    <div className="text-red-500 text-sm">
-                      {formik.errors?.callStatus}
-                    </div>
-                  )}
-                </div>
-                {/* Conditional Not Interested Reason */}
-                {showNotInterestedField && (
-                  <div>
-                    <label className="mb-2 block">
-                      Not Interested Reason
-                      <span className="text-red-500">*</span>
-                    </label>
-                    <Select
-                      name="notInterested"
-                      value={notInterestedOption.find(
-                        (opt) => opt.name === formik.values?.notInterested
-                      )}
-                      onChange={(option) =>
-                        formik.setFieldValue("notInterested", option.name)
-                      }
-                      options={notInterestedOption.map((opt) => ({
-                        label: opt.name,
-                        value: opt.name,
-                        name: opt.name,
-                      }))}
-                      styles={customStyles}
-                      isDisabled={isDisabled}
-                    />
-                    {formik.errors?.notInterested &&
-                      formik.touched?.notInterested && (
-                        <div className="text-red-500 text-sm">
-                          {formik.errors?.notInterested}
-                        </div>
-                      )}
-                  </div>
-                )}
-
-                {/* Conditional Schedule Date */}
-                {showScheduleFields && (
-                  <div>
-                    <label className="mb-2 block">
-                      Date & Time<span className="text-red-500">*</span>
-                    </label>
-                    <div className="custom--date flex-1">
-                      <span className="absolute z-[1] mt-[15px] ml-[15px]">
-                        <FaCalendarDays />
-                      </span>
-                      <DatePicker
-                        selected={formik.values.schedule_date_time}
-                        onChange={handleDateChange}
-                        showTimeSelect
-                        timeFormat="hh:mm aa"
-                        dateFormat="MM/dd/yyyy hh:mm aa"
-                        placeholderText="Select date & time"
-                        className="border px-3 py-2 w-full input--icon"
-                        minDate={now}
-                        minTime={minTime}
-                        maxTime={maxTime}
-                        disabled={isDisabled}
+              </div>
+            ) : (
+              <>
+                <form onSubmit={formik.handleSubmit} className="block w-full">
+                  <div className="grid grid-cols-2 gap-4">
+                    {/* Call Type */}
+                    <div>
+                      <label className="mb-2 block">
+                        Call Type<span className="text-red-500">*</span>
+                      </label>
+                      <Select
+                        name="callType"
+                        value={callTypeOption.find(
+                          (opt) => opt.value === formik.values?.callType
+                        )}
+                        onChange={(option) => {
+                          formik.setFieldValue("callType", option.value);
+                          formik.setFieldValue("callStatus", ""); // Reset callStatus when callType changes
+                        }}
+                        options={callTypeOption}
+                        styles={customStyles}
+                        // isDisabled={isDisabled}
                       />
+                      {formik.errors?.callType && formik.touched?.callType && (
+                        <div className="text-red-500 text-sm">
+                          {formik.errors?.callType}
+                        </div>
+                      )}
                     </div>
 
-                    {formik.errors?.schedule_date_time &&
-                      formik.touched?.schedule_date_time && (
+                    {/* Call Status */}
+                    <div>
+                      <label className="mb-2 block">
+                        Call Status<span className="text-red-500">*</span>
+                      </label>
+                      <Select
+                        name="callStatus"
+                        value={
+                          formik.values?.callStatus
+                            ? filteredCallStatus.find(
+                                (opt) => opt.name === formik.values?.callStatus
+                              )
+                            : null
+                        } // Only show a value if callStatus is not empty
+                        onChange={(option) =>
+                          formik.setFieldValue("callStatus", option.name)
+                        }
+                        options={filteredCallStatus.map((opt) => ({
+                          label: opt.name,
+                          value: opt.name,
+                          name: opt.name,
+                        }))}
+                        styles={customStyles}
+                        // isDisabled={isDisabled}
+                      />
+                      {formik.errors?.callStatus &&
+                        formik.touched?.callStatus && (
+                          <div className="text-red-500 text-sm">
+                            {formik.errors?.callStatus}
+                          </div>
+                        )}
+                    </div>
+                    {/* Conditional Not Interested Reason */}
+                    {showNotInterestedField && (
+                      <div>
+                        <label className="mb-2 block">
+                          Not Interested Reason
+                          <span className="text-red-500">*</span>
+                        </label>
+                        <Select
+                          name="notInterested"
+                          value={notInterestedOption.find(
+                            (opt) => opt.name === formik.values?.notInterested
+                          )}
+                          onChange={(option) =>
+                            formik.setFieldValue("notInterested", option.name)
+                          }
+                          options={notInterestedOption.map((opt) => ({
+                            label: opt.name,
+                            value: opt.name,
+                            name: opt.name,
+                          }))}
+                          styles={customStyles}
+                          // isDisabled={isDisabled}
+                        />
+                        {formik.errors?.notInterested &&
+                          formik.touched?.notInterested && (
+                            <div className="text-red-500 text-sm">
+                              {formik.errors?.notInterested}
+                            </div>
+                          )}
+                      </div>
+                    )}
+
+                    {/* Conditional Schedule Date */}
+                    {showScheduleFields && (
+                      <div>
+                        <label className="mb-2 block">
+                          Date & Time<span className="text-red-500">*</span>
+                        </label>
+                        <div className="custom--date flex-1">
+                          <span className="absolute z-[1] mt-[15px] ml-[15px]">
+                            <FaCalendarDays />
+                          </span>
+                          <DatePicker
+                            selected={formik.values.schedule_date_time}
+                            onChange={handleDateChange}
+                            showTimeSelect
+                            timeFormat="hh:mm aa"
+                            dateFormat="MM/dd/yyyy hh:mm aa"
+                            placeholderText="Select date & time"
+                            className="border px-3 py-2 w-full input--icon"
+                            minDate={now}
+                            minTime={minTime}
+                            maxTime={maxTime}
+                            // disabled={isDisabled}
+                          />
+                        </div>
+
+                        {formik.errors?.schedule_date_time &&
+                          formik.touched?.schedule_date_time && (
+                            <div className="text-red-500 text-sm">
+                              {formik.errors?.schedule_date_time}
+                            </div>
+                          )}
+                      </div>
+                    )}
+
+                    {/* Staff Name */}
+                    <div>
+                      <label className="mb-2 block">
+                        Assign to<span className="text-red-500">*</span>
+                      </label>
+
+                      <Select
+                        name="calledBy"
+                        value={
+                          staffListOptions.find(
+                            (opt) => opt.value === formik.values?.calledBy
+                          ) || null
+                        }
+                        options={staffListOptions}
+                        onChange={(option) =>
+                          formik.setFieldValue("calledBy", option.value)
+                        }
+                        onBlur={() => formik.setFieldTouched("calledBy", true)}
+                        styles={customStyles}
+                        // isDisabled={isDisabled}
+                      />
+                      {formik.errors?.calledBy && formik.touched?.calledBy && (
                         <div className="text-red-500 text-sm">
-                          {formik.errors?.schedule_date_time}
+                          {formik.errors?.calledBy}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Discussion */}
+                  <div className="mb-3 mt-3">
+                    <label className="mb-2 block">
+                      Discussion Details<span className="text-red-500">*</span>
+                    </label>
+                    <textarea
+                      name="discussion"
+                      placeholder="Discussion (max 1800 characters)"
+                      maxLength={1800}
+                      value={formik.values?.discussion}
+                      onChange={formik.handleChange}
+                      className="custom--input w-full"
+                      rows={4}
+                      // disabled={isDisabled ? true : false}
+                    />
+                    {formik.errors?.discussion &&
+                      formik.touched?.discussion && (
+                        <div className="text-red-500 text-sm">
+                          {formik.errors?.discussion}
                         </div>
                       )}
                   </div>
-                )}
 
-                {/* Staff Name */}
-                <div>
-                  <label className="mb-2 block">
-                    Assign to<span className="text-red-500">*</span>
-                  </label>
-
-                  <Select
-                    name="calledBy"
-                    value={
-                      staffListOptions.find(
-                        (opt) => opt.value === formik.values?.calledBy
-                      ) || null
-                    }
-                    options={staffListOptions}
-                    onChange={(option) =>
-                      formik.setFieldValue("calledBy", option.value)
-                    }
-                    onBlur={() => formik.setFieldTouched("calledBy", true)}
-                    styles={customStyles}
-                    isDisabled={isDisabled}
-                  />
-                  {formik.errors?.calledBy && formik.touched?.calledBy && (
-                    <div className="text-red-500 text-sm">
-                      {formik.errors?.calledBy}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Discussion */}
-              <div className="mb-3 mt-3">
-                <label className="mb-2 block">
-                  Discussion Details<span className="text-red-500">*</span>
-                </label>
-                <textarea
-                  name="discussion"
-                  placeholder="Discussion (max 1800 characters)"
-                  maxLength={1800}
-                  value={formik.values?.discussion}
-                  onChange={formik.handleChange}
-                  className="custom--input w-full"
-                  rows={4}
-                  disabled={isDisabled ? true : false}
-                />
-                {formik.errors?.discussion && formik.touched?.discussion && (
-                  <div className="text-red-500 text-sm">
-                    {formik.errors?.discussion}
+                  {/* Submit Button */}
+                  <div className="flex justify-end gap-2 mt-3">
+                    <button
+                      type="submit"
+                      // disabled={isDisabled ? true : false}
+                      className="px-4 py-2 bg-black text-white rounded"
+                    >
+                      Submit
+                    </button>
                   </div>
-                )}
-              </div>
-
-              {/* Submit Button */}
-              <div className="flex justify-end gap-2 mt-3">
-                <button
-                  type="submit"
-                  disabled={isDisabled ? true : false}
-                  className="px-4 py-2 bg-black text-white rounded"
-                >
-                  Submit
-                </button>
-              </div>
-            </form>
+                </form>
+              </>
+            )}
           </div>
         </div>
 
         {/* Contact History */}
         <div className="bg-white p-4 rounded-[10px] w-full box--shadow">
-          <div className="flex gap-2 justify-between items-center mb-5">
+          <div className="flex pt-2 gap-2 items-center pb-3 mb-5 border-b border-b-[#D4D4D4]">
             <h2 className="text-xl font-semibold">Contact History</h2>
+            <span className="font-bold">{"-"}</span>
             <div>
               <PhoneInput
                 name="text"
@@ -496,66 +530,42 @@ const MemberCallLogs = () => {
                 styles={customStyles}
                 className="w-full"
               />
-              <div className="custom--date">
+              <div className="custom--date flex-1">
+                <span className="absolute z-[1] mt-[15px] ml-[15px]">
+                  <FaCalendarDays />
+                </span>
                 <DatePicker
                   selected={startDate}
                   onChange={setStartDate}
                   placeholderText="Start Date"
-                  className="custom--input"
+                  className="border px-3 py-2 w-full input--icon"
                   isClearable
                 />
               </div>
-              <div className="custom--date">
+              <div className="custom--date flex-1">
+                <span className="absolute z-[1] mt-[15px] ml-[15px]">
+                  <FaCalendarDays />
+                </span>
                 <DatePicker
                   selected={endDate}
                   onChange={setEndDate}
                   placeholderText="End Date"
-                  className="custom--input"
+                  className="border px-3 py-2 w-full input--icon"
                   isClearable
                 />
               </div>
             </div>
           </div>
 
-          {/* {filteredLogs.length === 0 && (
-            <p className="text-gray-500">No call logs found.</p>
-          )} */}
-
-          {/* {filteredLogs.map((log, index) => (
-            <div
-              key={index}
-              className="border rounded p-4 w-full mb-3 calllogdetails"
-            >
-              <div className="grid grid-cols-2 gap-2 mb-3">
-                <p className="border p-2 rounded">
-                  <span className="text-sm font-semibold flex flex-col">
-                    Called by:
-                  </span>{" "}
-                  {log.calledBy}
-                </p>
-                <p className="border p-2 rounded">
-                  <span className="text-sm font-semibold flex flex-col">
-                    Call Type
-                  </span>{" "}
-                  {log.callType}
-                </p>
-                <p className="border p-2 rounded">
-                  <span className="text-sm font-semibold flex flex-col">
-                    Call Status:
-                  </span>{" "}
-                  {log.callStatus}
-                </p>
-              </div>
-              <div className="bg-gray-50 p-3 rounded">
-                <h3 className="text-sm font-semibold">Remarks:</h3>
-                <p>{log.discussion}</p>
-              </div>
-            </div>
-          ))} */}
-
           {filteredData.length > 0 ? (
             filteredData.map((filteredLogs, index) => (
-              <ContactHistory key={index} filteredLogs={filteredLogs} />
+              <>
+                <ContactHistory
+                  key={index}
+                  filteredLogs={filteredLogs}
+                  handleEditLog={handleEditLog}
+                />
+              </>
             ))
           ) : (
             <p className="text-center text-gray-500">No records found</p>

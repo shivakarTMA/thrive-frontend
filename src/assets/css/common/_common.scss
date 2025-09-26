@@ -61,7 +61,7 @@ input.number--appearance-none[type="number"]::-webkit-outer-spin-button {
 .custom--input {
   border: 1px solid #c5c5c5;
   padding: 10px 15px;
-  border-radius: 10px;
+  border-radius: 5px;
   font-size: 15px;
 }
 
@@ -69,11 +69,20 @@ input.number--appearance-none[type="number"]::-webkit-outer-spin-button {
   width: 100%;
 }
 
+.shodow--box{
+  box-shadow: 0px 1px 4px 0px rgb(0 0 0 / 4%);
+}
+
+.inner-shodow{
+  box-shadow: 0px 2px 4px 0px #00000026 inset;
+}
+
 .custom--date .react-datepicker-wrapper input {
   width: 100%;
   border: 1px solid #c5c5c5;
   padding: 10px 15px;
-  border-radius: 10px;
+  border-radius: 5px;
+  min-height: 45px;
 }
 
 .custom--phone input:focus-visible {

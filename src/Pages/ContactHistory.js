@@ -1,7 +1,7 @@
 import React, { useState } from "react"; // Import React and useState hook
 
 // Component to render individual call card details
-export default function ContactHistory({ filteredLogs }) {
+export default function ContactHistory({ filteredLogs, handleEditLog }) {
   console.log(filteredLogs,'filteredLogs')
   const [isExpanded, setIsExpanded] = useState(false); // State to manage remarks expand/collapse
 
@@ -55,7 +55,7 @@ export default function ContactHistory({ filteredLogs }) {
         </div>
 
         {/* Remarks section */}
-        <div className="mt-3 border-t p-2 border border-[#D4D4D4] rounded-xl bg-[#F7F7F7]">
+        <div className="mt-3 border-t p-2 border border-[#D4D4D4] rounded-[5px] bg-[#F7F7F7]">
           <div className="flex gap-3 justify-between pb-2 border-b border-b-[#D4D4D4] mb-2">
             <strong className="block ">Remarks:</strong>
             {filteredLogs?.remarks?.length > 50 && (
@@ -80,7 +80,7 @@ export default function ContactHistory({ filteredLogs }) {
         </div>
 
         {/* Update button */}
-        <button className="mt-3 bg-black text-white py-1 px-4 rounded-xl hover:bg-gray-800">
+        <button className="mt-3 bg-black text-white py-1 px-4 rounded-[5px] hover:bg-gray-800" onClick={() => handleEditLog(filteredLogs)}>
           Update
         </button>
       </div>
