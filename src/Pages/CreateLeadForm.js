@@ -254,7 +254,7 @@ const CreateLeadForm = ({ setLeadModal, selectedLead, onLeadUpdate }) => {
         }
         setLeadModal(false);
         // ✅ Trigger parent refresh
-        onLeadUpdate();
+        // onLeadUpdate();
       } catch (err) {
         console.error("❌ API Error:", err.response?.data || err.message);
         toast.error(err.response?.data?.message || err.message);

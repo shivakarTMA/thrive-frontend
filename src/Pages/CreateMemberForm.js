@@ -35,7 +35,7 @@ import { RiDiscountPercentFill } from "react-icons/ri";
 import { IoIosTime } from "react-icons/io";
 import { LuIndianRupee } from "react-icons/lu";
 import { toast } from "react-toastify";
-import { apiAxios } from "../config/config";
+import { apiAxios, phoneAxios } from "../config/config";
 import { fetchOptionList } from "../Redux/Reducers/optionListSlice";
 import Webcam from "react-webcam";
 import { IoCheckmark, IoClose } from "react-icons/io5";
@@ -130,6 +130,9 @@ const CreateMemberForm = ({ setMemberModal, onMemberUpdate }) => {
   const leadBoxRef = useRef(null);
   const [matchingUsers, setMatchingUsers] = useState([]);
   const [duplicateError, setDuplicateError] = useState("");
+  const [duplicateEmailError, setDuplicateEmailError] = useState("");
+  const [showDuplicateEmailModal, setShowDuplicateEmailModal] = useState(false);
+
   const [showDuplicateModal, setShowDuplicateModal] = useState(false);
   const [hasDismissedDuplicateModal, setHasDismissedDuplicateModal] =
     useState(false);
@@ -408,6 +411,89 @@ const CreateMemberForm = ({ setMemberModal, onMemberUpdate }) => {
     setDuplicateError(false);
   };
 
+  const handlePhoneBlur = async () => {
+    formik.setFieldTouched("phoneFull", true);
+
+    const rawPhone = formik.values.phoneFull;
+    if (!rawPhone) {
+      formik.setFieldError("phoneFull", "Phone number is required");
+      return;
+    }
+
+    const phoneNumber = parsePhoneNumberFromString(rawPhone);
+    if (!phoneNumber || !phoneNumber.isValid()) {
+      formik.setFieldError("phoneFull", "Invalid phone number");
+      return;
+    }
+
+    const payload = {
+      mobile: phoneNumber.nationalNumber,
+    };
+
+    console.log(payload.mobile);
+
+    try {
+      // ✅ Use POST method
+      const response = await phoneAxios.post("/lead/check/unique", payload);
+
+      console.log(response?.data?.status,'response')
+
+      if (response?.data?.status === true) {
+        formik.setFieldError("phoneFull", "This phone number already exists");
+        setDuplicateError(response?.data?.message);
+        // setShowDuplicateModal(true);
+      } else {
+        formik.setFieldError("phoneFull", "");
+        setDuplicateError("");
+        // setShowDuplicateModal(false);
+      }
+    } catch (error) {
+      console.error(
+        "Error checking phone uniqueness:",
+        error.response || error
+      );
+      formik.setFieldError(
+        "phoneFull",
+        "Unable to check phone number. Please try again."
+      );
+    }
+  };
+
+   const handleEmailBlur = async () => {
+    const inputValue = formik.values.email?.trim().toLowerCase();
+   
+    const payload ={
+      email: inputValue
+    }
+
+    // Check for duplicates excluding the current lead ID
+     try {
+      // ✅ Use POST method
+      const response = await phoneAxios.post("/lead/check/unique", payload);
+
+      console.log(response?.data?.status,'response')
+
+      if (response?.data?.status === true) {
+        formik.setFieldError("email", "This email already exists");
+        setDuplicateEmailError(response?.data?.message);
+        setShowDuplicateEmailModal(true);
+      } else {
+        formik.setFieldError("phoneFull", "");
+        setDuplicateEmailError("");
+        setShowDuplicateEmailModal(false);
+      }
+    } catch (error) {
+      console.error(
+        "Error checking phone uniqueness:",
+        error.response || error
+      );
+      formik.setFieldError(
+        "phoneFull",
+        "Unable to check phone number. Please try again."
+      );
+    }
+  };
+
   const handleDobChange = (date) => {
     if (!date) return;
 
@@ -566,7 +652,7 @@ const CreateMemberForm = ({ setMemberModal, onMemberUpdate }) => {
                               name="phoneFull"
                               value={formik.values.phoneFull} // 👈 use phoneFull for UI binding
                               onChange={handlePhoneChange}
-                              // onBlur={handlePhoneBlur}
+                              onBlur={handlePhoneBlur}
                               international
                               defaultCountry="IN"
                               countryCallingCodeEditable={false}
@@ -590,16 +676,10 @@ const CreateMemberForm = ({ setMemberModal, onMemberUpdate }) => {
                               </div>
                             )} */}
 
-                            {duplicateError && showDuplicateModal && (
-                              <div className="text-red-500 text-sm">
-                                Duplicate Entry
-                              </div>
-                            )}
-
-                            {formik.errors?.mobile &&
-                              formik.touched?.mobile && (
+                             {((formik.errors?.mobile && formik.touched?.mobile) ||
+                                duplicateError) && (
                                 <div className="text-red-500 text-sm">
-                                  {formik.errors.mobile}
+                                  {formik.errors?.mobile || duplicateError}
                                 </div>
                               )}
                           </div>
@@ -639,6 +719,7 @@ const CreateMemberForm = ({ setMemberModal, onMemberUpdate }) => {
                                 name="email"
                                 value={formik.values.email}
                                 onChange={formik.handleChange}
+                                onBlur={handleEmailBlur}
                                 className="custom--input w-full input--icon"
                               />
                             </div>
@@ -647,6 +728,11 @@ const CreateMemberForm = ({ setMemberModal, onMemberUpdate }) => {
                                 {formik.errors.email}
                               </div>
                             )}
+                             {duplicateEmailError && showDuplicateEmailModal && (
+                                <div className="text-red-500 text-sm">
+                                  {duplicateEmailError}
+                                </div>
+                              )}
                           </div>
 
                           <div>
@@ -1510,7 +1596,7 @@ const CreateMemberForm = ({ setMemberModal, onMemberUpdate }) => {
         />
       )}
 
-      {duplicateError && showDuplicateModal && (
+      {/* {duplicateError && showDuplicateModal && (
         <div className="fixed h-full inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]">
           <div className="bg-white p-6 rounded shadow-lg max-w-sm w-full text-center">
             <h2 className="text-lg font-semibold text-red-600 mb-4">
@@ -1528,7 +1614,7 @@ const CreateMemberForm = ({ setMemberModal, onMemberUpdate }) => {
             </button>
           </div>
         </div>
-      )}
+      )} */}
     </>
   );
 };

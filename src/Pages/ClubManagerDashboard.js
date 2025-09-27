@@ -469,16 +469,18 @@ const ClubManagerDashboard = () => {
               totalSales="17"
               items={[
                 { label: "With Packages", value: "10", link: "#" },
-                { label: "Without Packages", value: "07", link: "#" },
+                { label: "Without Packages", value: "05", link: "#" },
+                { label: "Products", value: "02", link: "#" },
               ]}
             />
             <SalesSummary
               icon={renewalIcon}
               title="Renewal"
-              totalSales="30"
+              totalSales="12"
               items={[
-                { label: "With Packages", value: "17", link: "#" },
-                { label: "Without Packages", value: "13", link: "#" },
+                { label: "With Packages", value: "05", link: "#" },
+                { label: "Without Packages", value: "05", link: "#" },
+                { label: "Products", value: "02", link: "#" },
               ]}
             />
 
@@ -489,7 +491,7 @@ const ClubManagerDashboard = () => {
               items={[
                 { label: "Scheduled", value: "10", link: "#" },
                 { label: "Completed", value: "20", link: "#" },
-                { label: "Not - Attended", value: "12", link: "#" },
+                { label: "No-Show", value: "12", link: "#" },
               ]}
             />
             <SalesSummary
