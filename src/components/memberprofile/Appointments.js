@@ -203,13 +203,12 @@ const Appointments = () => {
                   <td className="border px-3 py-2">{appt.bookingChannel}</td>
                   <td className="border px-3 py-2">{appt.status}</td>
                   <td className="border px-3 py-2">
-                    <button
-                      type="button"
+                    <p
                       onClick={() => toast.success('Appointment cancelled successfully')}
-                      className={`px-4 py-2 bg-black text-white font-semibold rounded max-w-[150px] w-full`}
+                      className={`text-[#009EB2] underline text-sm cursor-pointer`}
                     >
                       Cancel
-                    </button>
+                    </p>
                   </td>
                 </tr>
               ))
