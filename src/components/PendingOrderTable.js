@@ -25,7 +25,7 @@ const PendingOrderTable = ({orders, setOrders}) => {
   return (
     <div className="relative overflow-x-auto">
       <table className="min-w-full text-sm text-left">
-        <thead className="bg-gray-200">
+        <thead className="bg-[#F1F1F1]">
           <tr>
             <th className="p-2">Order ID</th>
             <th className="p-2">Member</th>

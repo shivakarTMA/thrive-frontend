@@ -6,6 +6,7 @@ import renewalIcon from "../assets/images/icons/renewal.png";
 import enquiriesIcon from "../assets/images/icons/conversion.png";
 import trialIcon from "../assets/images/icons/trial.png";
 import checkInIcon from "../assets/images/icons/checkin.png";
+import eyeIcon from "../assets/images/icons/eye.svg";
 import PendingOrderTable from "../components/PendingOrderTable";
 import { FaCircle } from "react-icons/fa";
 import { FaCalendarDays } from "react-icons/fa6";
@@ -20,6 +21,7 @@ import Highcharts from "highcharts";
 import { CiLocationOn } from "react-icons/ci";
 import SummaryDashboard from "../components/common/SummaryDashboard";
 import { LiaAngleLeftSolid, LiaAngleRightSolid } from "react-icons/lia";
+import SolidGaugeChart from "../components/ClubManagerChild/SolidGaugeChart";
 
 const summaryData = {
   Yesterday: {
@@ -65,6 +67,37 @@ const dateFilterOptions = [
   { value: "last_7_days", label: "Last 7 Days" },
   { value: "month_till_date", label: "Month Till Date" },
   { value: "custom", label: "Custom Date" },
+];
+
+const classPerformance = [
+  {
+    id: 1,
+    classType: "Group Classes",
+    bookings: 4,
+    reservations: 95,
+    cancellations: 3,
+  },
+  {
+    id: 2,
+    classType: "Pilates",
+    bookings: 10,
+    reservations: 10,
+    cancellations: 0,
+  },
+  {
+    id: 3,
+    classType: "Recovery",
+    bookings: 5,
+    reservations: 5,
+    cancellations: 1,
+  },
+  {
+    id: 4,
+    classType: "Personal Training",
+    bookings: 8,
+    reservations: 8,
+    cancellations: 2,
+  },
 ];
 
 const ClubManagerDashboard = () => {
@@ -173,8 +206,8 @@ const ClubManagerDashboard = () => {
         color: {
           linearGradient: { x1: 0, y1: 0, x2: 0, y2: 1 },
           stops: [
-            [0, "#3CA5F6"],
-            [1, "#EA80FC"],
+            [0, "#009EB2"],
+            [1, "#EC71BC"],
           ],
         },
       },
@@ -273,8 +306,8 @@ const ClubManagerDashboard = () => {
         color: {
           linearGradient: { x1: 0, y1: 0, x2: 0, y2: 1 },
           stops: [
-            [0, "#3CA5F6"],
-            [1, "#EA80FC"],
+            [0, "#009EB2"],
+            [1, "#EC71BC"],
           ],
         },
       },
@@ -468,8 +501,8 @@ const ClubManagerDashboard = () => {
               title="New Clients"
               totalSales="17"
               items={[
-                { label: "With Packages", value: "10", link: "#" },
-                { label: "Without Packages", value: "05", link: "#" },
+                { label: "Memberships", value: "10", link: "#" },
+                { label: "Packages", value: "05", link: "#" },
                 { label: "Products", value: "02", link: "#" },
               ]}
             />
@@ -478,8 +511,8 @@ const ClubManagerDashboard = () => {
               title="Renewal"
               totalSales="12"
               items={[
-                { label: "With Packages", value: "05", link: "#" },
-                { label: "Without Packages", value: "05", link: "#" },
+                { label: "Memberships", value: "05", link: "#" },
+                { label: "Packages", value: "05", link: "#" },
                 { label: "Products", value: "02", link: "#" },
               ]}
             />
@@ -514,8 +547,8 @@ const ClubManagerDashboard = () => {
             />
           </div>
           <div className="mt-3 w-full grid grid-cols-7 gap-3">
-            <div className="border border-[#D4D4D4] rounded-[5px] bg-white p-4 w-full relative col-span-4">
-              <span className="absolute top-[20px] right-[20px] z-[2] text-lg font-bold">
+            <div className="border border-[#D4D4D4] rounded-[5px] bg-white p-2 pb-1 w-full relative col-span-4">
+              <span className="absolute top-[10px] right-[20px] z-[2] text-lg font-bold">
                 {totalProcutValue}
               </span>
               <HighchartsReact
@@ -523,51 +556,87 @@ const ClubManagerDashboard = () => {
                 options={productStatus}
               />
             </div>
-            <div className="border border-[#D4D4D4] rounded-[5px] bg-white p-4 w-full relative col-span-3">
-              <span className="absolute top-[20px] right-[20px] z-[2] text-lg font-bold">
+            <div className="border border-[#D4D4D4] rounded-[5px] bg-white p-2 pb-1 w-full relative col-span-3">
+              <span className="absolute top-[10px] right-[20px] z-[2] text-lg font-bold">
                 {totalValue}
               </span>
               <HighchartsReact highcharts={Highcharts} options={leadsStatus} />
             </div>
           </div>
-        </div>
 
-        <div className="rounded-[15px] p-4 w-[25%] box--shadow bg-white">
-          <div>
-            <p className="text-lg font-[600] mb-3 text-center">Summary </p>
-            <div className="flex justify-between gap-3 items-center rounded-full bg-[#F1F1F1] px-3 py-2">
-              <button
-                onClick={handlePrevious}
-                disabled={currentDayIndex === 0}
-                className={`${
-                  currentDayIndex === 0 ? "opacity-0 invisible" : ""
-                }`}
-              >
-                <LiaAngleLeftSolid />
-              </button>
-              <span>{currentDay}</span>
-              <button
-                onClick={handleNext}
-                disabled={currentDayIndex === days.length - 1}
-                className={`${
-                  currentDayIndex === days.length - 1
-                    ? "opacity-0 invisible"
-                    : ""
-                }`}
-              >
-                <LiaAngleRightSolid />
-              </button>
+          <div className="border border-[#D4D4D4] rounded-[5px] bg-white p-2 pb-1 w-full relative mt-3">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="font-semibold">Class Performances Overview</h2>
             </div>
-            <SummaryDashboard data={currentData} />
+            <div className="relative overflow-x-auto">
+              <table className="min-w-full text-sm text-left">
+                <thead className="bg-[#F1F1F1]">
+                  <tr>
+                    <th className="p-2">Class Type</th>
+                    <th className="p-2">Bookings</th>
+                    <th className="p-2">Reservations</th>
+                    <th className="p-2">Cancellations</th>
+                    <th className="p-2">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {classPerformance.map((item, index) => (
+                    <tr key={item.id} className="border-t">
+                      <td className="p-2">{item.classType}</td>
+                      <td className="p-2">{item.bookings}</td>
+                      <td className="p-2">{item.reservations}</td>
+                      <td className="p-2">{item.cancellations}</td>
+                      <td className="p-2">
+                        <div className="bg-[#F1F1F1] border border-[#D4D4D4] rounded-[5px] w-[32px] h-[32px] flex items-center justify-center cursor-pointer">
+                          <img src={eyeIcon} />
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <div className="w-[25%]">
+          <div className="rounded-[15px] p-4 box--shadow bg-white">
+            <div>
+              <p className="text-lg font-[600] mb-3 text-center">Summary </p>
+              <div className="flex justify-between gap-3 items-center rounded-full bg-[#F1F1F1] px-3 py-2">
+                <button
+                  onClick={handlePrevious}
+                  disabled={currentDayIndex === 0}
+                  className={`${
+                    currentDayIndex === 0 ? "opacity-0 invisible" : ""
+                  }`}
+                >
+                  <LiaAngleLeftSolid />
+                </button>
+                <span>{currentDay}</span>
+                <button
+                  onClick={handleNext}
+                  disabled={currentDayIndex === days.length - 1}
+                  className={`${
+                    currentDayIndex === days.length - 1
+                      ? "opacity-0 invisible"
+                      : ""
+                  }`}
+                >
+                  <LiaAngleRightSolid />
+                </button>
+              </div>
+              <SummaryDashboard data={currentData} />
+            </div>
+          </div>
+          <div className="rounded-[15px] p-4 box--shadow bg-white mt-4">
+            <SolidGaugeChart />
           </div>
         </div>
       </div>
 
       <div className="rounded-[15px] p-4 w-full mt-2 box--shadow bg-white">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="font-semibold">
-            Pending Orders {`(${orders.length})`}
-          </h2>
+          <h2 className="font-semibold">Pending Orders</h2>
           <a href="#" className="text-[#009EB2] underline text-sm">
             View All
           </a>
