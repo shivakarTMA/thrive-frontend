@@ -4,7 +4,7 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import "react-phone-number-input/style.css";
 import PhoneInput, { isValidPhoneNumber } from "react-phone-number-input";
-import { parsePhoneNumberFromString } from "libphonenumber-js";
+import { parsePhoneNumberFromString, isPossiblePhoneNumber } from "libphonenumber-js";
 import {
   FaMale,
   FaFemale,
@@ -55,9 +55,15 @@ const validationSchema = Yup.object({
     .test("is-valid-phone", "Invalid phone number", function (value) {
       const { country_code } = this.parent;
       if (!value || !country_code) return false;
-      const phoneNumber = parsePhoneNumberFromString(
-        "+" + country_code + value
-      );
+
+      // Combine country code and number to full international format
+      const phoneNumberString = `+${country_code}${value}`;
+
+      // First check if the number is even possible (not just valid)
+      if (!isPossiblePhoneNumber(phoneNumberString)) return false;
+
+      // Parse and check validity strictly according to country
+      const phoneNumber = parsePhoneNumberFromString(phoneNumberString);
       return phoneNumber?.isValid() || false;
     }),
   lead_source: Yup.string().required("Lead Source is required"),
@@ -330,7 +336,7 @@ const CreateLeadForm = ({ setLeadModal, selectedLead, onLeadUpdate }) => {
   useEffect(() => {
     if (selectedLead) {
       formik.setValues({
-        id: selectedLead.id || "",
+        id: selectedLead || "",
         full_name: selectedLead.full_name || "",
         mobile: selectedLead.mobile || "",
         country_code: selectedLead.country_code || "",
@@ -450,16 +456,18 @@ const CreateLeadForm = ({ setLeadModal, selectedLead, onLeadUpdate }) => {
 
     try {
       // ✅ Use POST method
-      const response = await phoneAxios.post("/lead/check/unique", payload);
+      const endpoint = selectedLead
+        ? `/lead/verify/availability/${selectedLead}` // If lead is selected, use verification endpoint
+        : "/lead/check/unique";
 
-      console.log(response?.data?.status,'response')
+      const response = await phoneAxios.post(endpoint, payload);
+
+      console.log(response?.data?.status, "response");
 
       if (response?.data?.status === true) {
-        formik.setFieldError("phoneFull", "This phone number already exists");
         setDuplicateError(response?.data?.message);
         setShowDuplicateModal(true);
       } else {
-        formik.setFieldError("phoneFull", "");
         setDuplicateError("");
         setShowDuplicateModal(false);
       }
@@ -477,12 +485,6 @@ const CreateLeadForm = ({ setLeadModal, selectedLead, onLeadUpdate }) => {
 
   const handleEmailBlur = async () => {
     const inputValue = formik.values.email?.trim().toLowerCase();
-    const { id } = formik.values;
-
-    // Debug logs
-    console.log("Input Value:", inputValue);
-    console.log("Formik ID:", id);
-    console.log("Selected Lead ID:", selectedLead);
 
     // Clear error if field is empty
     if (!inputValue) {
@@ -491,33 +493,26 @@ const CreateLeadForm = ({ setLeadModal, selectedLead, onLeadUpdate }) => {
       return;
     }
 
-    // Get the currently selected lead object using the ID
-    const currentLead = allLeads.find((user) => user.id === selectedLead);
-
-    // Skip duplicate check if the email hasn't changed
-    if (currentLead && inputValue === currentLead.email?.trim().toLowerCase()) {
-      setDuplicateEmailError("");
-      setShowDuplicateEmailModal(false);
-      return;
-    }
-
-    const payload ={
-      email: inputValue
-    }
+    const payload = {
+      email: inputValue,
+    };
 
     // Check for duplicates excluding the current lead ID
-     try {
+    try {
       // ✅ Use POST method
-      const response = await phoneAxios.post("/lead/check/unique", payload);
+      // ✅ Use POST method
+      const endpoint = selectedLead
+        ? `/lead/verify/availability/${selectedLead}` // If lead is selected, use verification endpoint
+        : "/lead/check/unique";
 
-      console.log(response?.data?.status,'response')
+      const response = await phoneAxios.post(endpoint, payload);
+
+      console.log(response?.data?.status, "response");
 
       if (response?.data?.status === true) {
-        formik.setFieldError("email", "This email already exists");
         setDuplicateEmailError(response?.data?.message);
         setShowDuplicateEmailModal(true);
       } else {
-        formik.setFieldError("phoneFull", "");
         setDuplicateEmailError("");
         setShowDuplicateEmailModal(false);
       }
@@ -527,7 +522,7 @@ const CreateLeadForm = ({ setLeadModal, selectedLead, onLeadUpdate }) => {
         error.response || error
       );
       formik.setFieldError(
-        "phoneFull",
+        "Email",
         "Unable to check phone number. Please try again."
       );
     }

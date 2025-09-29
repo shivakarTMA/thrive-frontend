@@ -120,8 +120,8 @@ const Appointments = () => {
 
   return (
     <div className="p-4 bg-white rounded shadow">
-      <div className="flex gap-3 justify-between">
-        <div className="flex flex-wrap items-center gap-2 mb-4">
+      <div className="flex gap-3 justify-between mb-4">
+        <div className="flex flex-wrap items-center gap-2">
           <Select
             options={appointmentTypeOptions}
             value={appointmentTypeFilter}
@@ -165,7 +165,7 @@ const Appointments = () => {
         </div>
         <div>
           <div
-            className="px-4 py-2 bg-white text-black flex items-center gap-2 cursor-pointer"
+            className="px-4 py-2 bg-black text-white rounded flex items-center gap-2 cursor-pointer"
             onClick={() => setAppointmentModal(true)}
           >
             <FiPlus /> Add Appointment

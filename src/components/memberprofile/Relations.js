@@ -76,7 +76,7 @@ const Relations = () => {
       <div className="flex justify-end mb-3">
         <button
           onClick={() => setIsModalOpen(true)}
-          className="px-4 py-2 bg-white text-black flex items-center gap-2 cursor-pointer"
+          className="px-4 py-2 bg-black text-white rounded flex items-center gap-2 cursor-pointer"
         >
          <FiPlus /> Add Referral
         </button>

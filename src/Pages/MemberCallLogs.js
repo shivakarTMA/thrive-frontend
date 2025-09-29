@@ -295,7 +295,7 @@ const MemberCallLogs = () => {
             </div>
 
             {activeTab === "Enquiry Logs" ? (
-              <div className="pt-20">
+              <div className="pt-[150px]">
                 <div className="text-center flex flex-col items-center mx-auto max-w-[75%] w-full">
                   <BsExclamationCircle className="text-5xl mb-2 text-[#6F6F6F]" />
                   <h3 className="font-bold text-2xl text-black mb-1">

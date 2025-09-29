@@ -254,9 +254,9 @@ export default function LeadFilterPanel({
             <div className="flex justify-between pt-3">
               <button
                 onClick={handleSubmitFilters}
-                className="text-[12px] flex items-center gap-1 justify-end ml-auto bg-black text-white p-1 rounded-[5px]"
+                className="px-4 py-2 bg-black text-white rounded flex items-center gap-2 cursor-pointer ml-auto"
               >
-                Apply Filters
+                Apply
               </button>
               {/* <button
                 onClick={resetFilters}
