@@ -391,7 +391,7 @@ const ClubManagerDashboard = () => {
       </div>
 
       <div className="flex gap-3">
-        <div className="rounded-[15px] p-4 w-full box--shadow bg-white">
+        <div className="rounded-[15px] p-4 box--shadow bg-white w-[75%]">
           <div className="flex gap-2 w-full mb-4">
             <div className="max-w-[180px] w-full">
               <Select
@@ -532,7 +532,7 @@ const ClubManagerDashboard = () => {
           </div>
         </div>
 
-        <div className="rounded-[15px] p-4 w-full box--shadow bg-white max-w-[300px]">
+        <div className="rounded-[15px] p-4 w-[25%] box--shadow bg-white">
           <div>
             <p className="text-lg font-[600] mb-3 text-center">Summary </p>
             <div className="flex justify-between gap-3 items-center rounded-full bg-[#F1F1F1] px-3 py-2">
