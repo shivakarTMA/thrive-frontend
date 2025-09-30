@@ -551,7 +551,7 @@ const CreateWorkoutPlan = ({ handleCancelWorkout }) => {
   );
 
   return (
-    <div className="p-6">
+    <div className="box--shadow bg-white rounded-[15px] p-4">
       <h1 className="text-2xl font-semibold mb-4">Create Workout Plan</h1>
       {step === 1 && (
         <form onSubmit={handleFormSubmit} className="space-y-4 mb-6">

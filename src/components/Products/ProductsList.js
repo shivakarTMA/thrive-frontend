@@ -163,71 +163,73 @@ const handleStatusToggle = (productId) => {
       </div>
 
       {/* Table */}
-      <div className="relative overflow-x-auto mt-6">
-        <table className="w-full text-sm text-left text-gray-500">
-          <thead className="text-xs text-gray-700 uppercase bg-gray-50">
-            <tr>
-              <th className="px-2 py-4">Product ID</th>
-              <th className="px-2 py-4">Product Name</th>
-              <th className="px-2 py-4">Product Type</th>
-              <th className="px-2 py-4">Centre Name</th>
-              <th className="px-2 py-4">Quantity</th>
-              <th className="px-2 py-4">MRP</th>
-              <th className="px-2 py-4">Selling Price</th>
-              <th className="px-2 py-4">Listing Status</th>
-              <th className="px-2 py-4">Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {paginatedData.map((row, idx) => (
-              <tr
-                key={row.id}
-                className="group bg-white border-b hover:bg-gray-50 transition duration-700"
-              >
-                <td className="px-2 py-4">
-                  {(page - 1) * rowsPerPage + idx + 1}
-                </td>
-                <td className="px-2 py-4">{row.productName}</td>
-                <td className="px-2 py-4">{row.productType}</td>
-                <td className="px-2 py-4">{row.centreName}</td>
-                <td className="px-2 py-4">{row.quantity}</td>
-                <td className="px-2 py-4">₹{row.mrp}</td>
-                <td className="px-2 py-4">₹{row.sellingPrice}</td>
-                <td className="px-2 py-4">
-                  <Switch
-                    onChange={() => handleStatusToggle(row.id)}
-                    checked={row.listingStatus === "active"}
-                    uncheckedIcon={false}
-                    checkedIcon={false}
-                    onColor="#000"
-                    offColor="#e5e7eb"
-                    handleDiameter={22}
-                    height={25}
-                    width={50}
-                    className="custom-switch"
-                  />
-                </td>
-                <td className="px-2 py-4">
-                  <Tooltip
-                    id={`edit-product-${row.id}`}
-                    content="Edit Product"
-                    place="left"
-                  >
-                    <div
-                      onClick={() => {
-                        setEditingProduct(row);
-                        setShowModal(true);
-                      }}
-                      className="p-1 cursor-pointer"
-                    >
-                      <LiaEdit className="text-[25px] text-black" />
-                    </div>
-                  </Tooltip>
-                </td>
+      <div className="box--shadow bg-white rounded-[15px] p-4">
+        <div className="relative overflow-x-auto">
+          <table className="w-full text-sm text-left text-gray-500">
+            <thead className="text-xs text-gray-700 uppercase bg-gray-50">
+              <tr>
+                <th className="px-2 py-4">Product ID</th>
+                <th className="px-2 py-4">Product Name</th>
+                <th className="px-2 py-4">Product Type</th>
+                <th className="px-2 py-4">Centre Name</th>
+                <th className="px-2 py-4">Quantity</th>
+                <th className="px-2 py-4">MRP</th>
+                <th className="px-2 py-4">Selling Price</th>
+                <th className="px-2 py-4">Listing Status</th>
+                <th className="px-2 py-4">Action</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {paginatedData.map((row, idx) => (
+                <tr
+                  key={row.id}
+                  className="group bg-white border-b hover:bg-gray-50 transition duration-700"
+                >
+                  <td className="px-2 py-4">
+                    {(page - 1) * rowsPerPage + idx + 1}
+                  </td>
+                  <td className="px-2 py-4">{row.productName}</td>
+                  <td className="px-2 py-4">{row.productType}</td>
+                  <td className="px-2 py-4">{row.centreName}</td>
+                  <td className="px-2 py-4">{row.quantity}</td>
+                  <td className="px-2 py-4">₹{row.mrp}</td>
+                  <td className="px-2 py-4">₹{row.sellingPrice}</td>
+                  <td className="px-2 py-4">
+                    <Switch
+                      onChange={() => handleStatusToggle(row.id)}
+                      checked={row.listingStatus === "active"}
+                      uncheckedIcon={false}
+                      checkedIcon={false}
+                      onColor="#000"
+                      offColor="#e5e7eb"
+                      handleDiameter={22}
+                      height={25}
+                      width={50}
+                      className="custom-switch"
+                    />
+                  </td>
+                  <td className="px-2 py-4">
+                    <Tooltip
+                      id={`edit-product-${row.id}`}
+                      content="Edit Product"
+                      place="left"
+                    >
+                      <div
+                        onClick={() => {
+                          setEditingProduct(row);
+                          setShowModal(true);
+                        }}
+                        className="p-1 cursor-pointer"
+                      >
+                        <LiaEdit className="text-[25px] text-black" />
+                      </div>
+                    </Tooltip>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* Pagination */}

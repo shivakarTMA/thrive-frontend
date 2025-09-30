@@ -84,7 +84,7 @@ const RoleList = () => {
     }),
     onSubmit: async (values, { resetForm }) => {
       try {
-        const payload = { ...values};
+        const payload = { ...values };
 
         if (editingOption && editingOption) {
           // Update
@@ -161,86 +161,87 @@ const RoleList = () => {
           />
         </div>
       </div>
-
-      <div className="relative overflow-x-auto">
-        <table className="w-full text-sm text-left text-gray-500">
-          <thead className="text-xs text-gray-700 uppercase bg-gray-50">
-            <tr>
-              {/* <th className="px-2 py-4">Role ID</th> */}
-              <th className="px-2 py-4">Name</th>
-              <th className="px-2 py-4">Description</th>
-              <th className="px-2 py-4">Status</th>
-              <th className="px-2 py-4">Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {role.length === 0 ? (
+      <div className="box--shadow bg-white rounded-[15px] p-4">
+        <div className="relative overflow-x-auto">
+          <table className="w-full text-sm text-left text-gray-500">
+            <thead className="text-xs text-gray-700 uppercase bg-gray-50">
               <tr>
-                <td colSpan="8" className="text-center py-4">
-                  No role added yet.
-                </td>
+                {/* <th className="px-2 py-4">Role ID</th> */}
+                <th className="px-2 py-4">Name</th>
+                <th className="px-2 py-4">Description</th>
+                <th className="px-2 py-4">Status</th>
+                <th className="px-2 py-4">Action</th>
               </tr>
-            ) : (
-              role.map((company, index) => (
-                <tr
-                  key={company.id || index}
-                  className="group bg-white border-b hover:bg-gray-50 relative transition duration-700"
-                >
-                  {/* <td className="px-2 py-4">{company?.id || "—"}</td> */}
-                  <td className="px-2 py-4">{company?.name}</td>
-                  <td>{company.description ?? "—"}</td>
-                  <td className="px-2 py-4">
-                    <div
-                      className={`flex gap-1 items-center ${
-                        company?.status === "ACTIVE"
-                          ? "text-green-500"
-                          : "text-red-500"
-                      }`}
-                    >
-                      <FaCircle />
-                      {company?.status
-                        ? company.status.charAt(0) +
-                          company.status.slice(1).toLowerCase()
-                        : ""}
-                    </div>
-                  </td>
-                  <td className="px-2 py-4">
-                    <div className="w-fit">
-                      <Tooltip
-                        id={`tooltip-edit-${company.id || index}`}
-                        content="Edit Club"
-                        place="left"
-                      >
-                        <div
-                          className="p-1 cursor-pointer"
-                          onClick={() => {
-                            setEditingOption(company?.id);
-                            setShowModal(true);
-                          }}
-                        >
-                          <LiaEdit className="text-[25px] text-black" />
-                        </div>
-                      </Tooltip>
-                    </div>
+            </thead>
+            <tbody>
+              {role.length === 0 ? (
+                <tr>
+                  <td colSpan="8" className="text-center py-4">
+                    No role added yet.
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+              ) : (
+                role.map((company, index) => (
+                  <tr
+                    key={company.id || index}
+                    className="group bg-white border-b hover:bg-gray-50 relative transition duration-700"
+                  >
+                    {/* <td className="px-2 py-4">{company?.id || "—"}</td> */}
+                    <td className="px-2 py-4">{company?.name}</td>
+                    <td>{company.description ?? "—"}</td>
+                    <td className="px-2 py-4">
+                      <div
+                        className={`flex gap-1 items-center ${
+                          company?.status === "ACTIVE"
+                            ? "text-green-500"
+                            : "text-red-500"
+                        }`}
+                      >
+                        <FaCircle />
+                        {company?.status
+                          ? company.status.charAt(0) +
+                            company.status.slice(1).toLowerCase()
+                          : ""}
+                      </div>
+                    </td>
+                    <td className="px-2 py-4">
+                      <div className="w-fit">
+                        <Tooltip
+                          id={`tooltip-edit-${company.id || index}`}
+                          content="Edit Club"
+                          place="left"
+                        >
+                          <div
+                            className="p-1 cursor-pointer"
+                            onClick={() => {
+                              setEditingOption(company?.id);
+                              setShowModal(true);
+                            }}
+                          >
+                            <LiaEdit className="text-[25px] text-black" />
+                          </div>
+                        </Tooltip>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
 
-      <Pagination
-        page={page}
-        totalPages={totalPages}
-        rowsPerPage={rowsPerPage}
-        totalCount={totalCount}
-        currentDataLength={role.length}
-        onPageChange={(newPage) => {
-          setPage(newPage);
-          fetchRole(searchTerm, newPage);
-        }}
-      />
+        <Pagination
+          page={page}
+          totalPages={totalPages}
+          rowsPerPage={rowsPerPage}
+          totalCount={totalCount}
+          currentDataLength={role.length}
+          onPageChange={(newPage) => {
+            setPage(newPage);
+            fetchRole(searchTerm, newPage);
+          }}
+        />
+      </div>
 
       {showModal && (
         <CreateRole

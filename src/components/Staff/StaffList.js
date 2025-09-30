@@ -233,82 +233,83 @@ const StaffList = () => {
       </div>
 
       {/* Table */}
-      <div className="relative overflow-x-auto mt-6">
-        <table className="w-full text-sm text-left text-gray-500">
-          <thead className="text-xs text-gray-700 uppercase bg-gray-50">
-            <tr>
-              <th className="px-2 py-4">Staff ID</th>
-              <th className="px-2 py-4">Staff Name</th>
-              <th className="px-2 py-4">Role</th>
-              <th className="px-2 py-4">Assigned Center</th>
-              <th className="px-2 py-4">Staff Status</th>
-              <th className="px-2 py-4">Show on App</th>
-              <th className="px-2 py-4">Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {paginatedData.map((row, idx) => (
-              <tr
-                key={row.id}
-                className="group bg-white border-b hover:bg-gray-50 transition duration-700"
-              >
-                <td className="px-2 py-4">
-                  {(page - 1) * rowsPerPage + idx + 1}
-                </td>
-                <td className="px-2 py-4">{row.fullName}</td>
-                <td className="px-2 py-4">{row.role}</td>
-                <td className="px-2 py-4">
-                  {row.assignedCenters?.join(", ") || "N/A"}
-                </td>
-                <td className="px-2 py-4">
-                  <Switch
-                    onChange={() => handleStatusToggle(row.id, "status")}
-                    checked={row.status === "active"}
-                    uncheckedIcon={false}
-                    checkedIcon={false}
-                    onColor="#000"
-                    offColor="#e5e7eb"
-                    handleDiameter={22}
-                    height={25}
-                    width={50}
-                    className="custom-switch"
-                  />
-                </td>
-                <td className="px-2 py-4">
-                  <span
-                    className={`px-3 py-1 rounded-full text-sm font-medium ${
-                      row.showOnApp === "active"
-                        ? "bg-green-100 text-green-800"
-                        : "bg-red-100 text-red-800"
-                    }`}
-                  >
-                    {row.showOnApp === "active" ? "Active" : "Inactive"}
-                  </span>
-                </td>
-
-                <td className="px-2 py-4">
-                  <Tooltip
-                    id={`edit-product-${row.id}`}
-                    content="Edit Product"
-                    place="left"
-                  >
-                    <div
-                      onClick={() => {
-                        setEditingService(row);
-                        setShowModal(true);
-                      }}
-                      className="p-1 cursor-pointer"
-                    >
-                      <LiaEdit className="text-[25px] text-black" />
-                    </div>
-                  </Tooltip>
-                </td>
+      <div className="box--shadow bg-white rounded-[15px] p-4">
+        <div className="relative overflow-x-auto">
+          <table className="w-full text-sm text-left text-gray-500">
+            <thead className="text-xs text-gray-700 uppercase bg-gray-50">
+              <tr>
+                <th className="px-2 py-4">Staff ID</th>
+                <th className="px-2 py-4">Staff Name</th>
+                <th className="px-2 py-4">Role</th>
+                <th className="px-2 py-4">Assigned Center</th>
+                <th className="px-2 py-4">Staff Status</th>
+                <th className="px-2 py-4">Show on App</th>
+                <th className="px-2 py-4">Action</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              {paginatedData.map((row, idx) => (
+                <tr
+                  key={row.id}
+                  className="group bg-white border-b hover:bg-gray-50 transition duration-700"
+                >
+                  <td className="px-2 py-4">
+                    {(page - 1) * rowsPerPage + idx + 1}
+                  </td>
+                  <td className="px-2 py-4">{row.fullName}</td>
+                  <td className="px-2 py-4">{row.role}</td>
+                  <td className="px-2 py-4">
+                    {row.assignedCenters?.join(", ") || "N/A"}
+                  </td>
+                  <td className="px-2 py-4">
+                    <Switch
+                      onChange={() => handleStatusToggle(row.id, "status")}
+                      checked={row.status === "active"}
+                      uncheckedIcon={false}
+                      checkedIcon={false}
+                      onColor="#000"
+                      offColor="#e5e7eb"
+                      handleDiameter={22}
+                      height={25}
+                      width={50}
+                      className="custom-switch"
+                    />
+                  </td>
+                  <td className="px-2 py-4">
+                    <span
+                      className={`px-3 py-1 rounded-full text-sm font-medium ${
+                        row.showOnApp === "active"
+                          ? "bg-green-100 text-green-800"
+                          : "bg-red-100 text-red-800"
+                      }`}
+                    >
+                      {row.showOnApp === "active" ? "Active" : "Inactive"}
+                    </span>
+                  </td>
 
+                  <td className="px-2 py-4">
+                    <Tooltip
+                      id={`edit-product-${row.id}`}
+                      content="Edit Product"
+                      place="left"
+                    >
+                      <div
+                        onClick={() => {
+                          setEditingService(row);
+                          setShowModal(true);
+                        }}
+                        className="p-1 cursor-pointer"
+                      >
+                        <LiaEdit className="text-[25px] text-black" />
+                      </div>
+                    </Tooltip>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
       {/* Pagination */}
       <div className="flex justify-between items-center mt-4 gap-2">
         <p className="text-gray-700">

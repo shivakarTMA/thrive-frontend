@@ -13,7 +13,6 @@ import Pagination from "../common/Pagination";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchOptionList } from "../../Redux/Reducers/optionListSlice";
 
-
 const validationSchema = Yup.object({
   studio_id: Yup.string().required("Studio is required"),
   service_id: Yup.string().required("Service is required"),
@@ -40,11 +39,11 @@ const PackagesList = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
 
-    // Redux state
+  // Redux state
   const dispatch = useDispatch();
   const { lists, loading } = useSelector((state) => state.optionList);
 
-  console.log(service,'shivakar')
+  console.log(service, "shivakar");
 
   // Fetch option lists
   useEffect(() => {
@@ -154,7 +153,7 @@ const PackagesList = () => {
     service?.map((item) => ({
       label: item.name,
       value: item.id,
-      service_type: item.service_type
+      service_type: item.service_type,
     })) || [];
   const packageCategoryOptions =
     packageCategory?.map((item) => ({
@@ -169,47 +168,46 @@ const PackagesList = () => {
   };
 
   const initialValues = {
-      studio_id: "", // done
-      service_id: 1, // done
-      staff_id: "", // done
-      package_category_id: "", // done
-      name: "", // done
-      caption: "", // done
-      description: "", // done
-      image: "", // done
-      package_type: "", // done
-      session_level: "", // done
-      no_of_sessions: "", // done
-      session_duration: "", // done
-      session_validity: "", // done
-      start_date: "", // done
-      start_time: "", // done
-      end_time: "", // done
-      max_capacity: "",
-      waitlist_capacity: "",
-      tags: "", // done
-      amount: "", // done
-      discount: "", // done
-      gst: "", // done
-      position: "", // done
-      trainer_id: "", // done
-      booking_type: "", // done
-      status: "ACTIVE", // done
-    }
+    studio_id: "", // done
+    service_id: 1, // done
+    staff_id: "", // done
+    package_category_id: "", // done
+    name: "", // done
+    caption: "", // done
+    description: "", // done
+    image: "", // done
+    package_type: "", // done
+    session_level: "", // done
+    no_of_sessions: "", // done
+    session_duration: "", // done
+    session_validity: "", // done
+    start_date: "", // done
+    start_time: "", // done
+    end_time: "", // done
+    max_capacity: "",
+    waitlist_capacity: "",
+    tags: "", // done
+    amount: "", // done
+    discount: "", // done
+    gst: "", // done
+    position: "", // done
+    trainer_id: "", // done
+    booking_type: "", // done
+    status: "ACTIVE", // done
+  };
 
   const formik = useFormik({
     initialValues,
     // validationSchema,
     onSubmit: async (values, { resetForm }) => {
       try {
-          const formData = new FormData();
-          Object.keys(values).forEach((key) => {
+        const formData = new FormData();
+        Object.keys(values).forEach((key) => {
+          // ✅ Skip image key if it is just a string (URL from DB)
+          if (key === "image" && typeof values.image === "string") return;
 
-            // ✅ Skip image key if it is just a string (URL from DB)
-            if (key === "image" && typeof values.image === "string") return;
-
-            formData.append(key, values[key]);
-          });
+          formData.append(key, values[key]);
+        });
 
         // if file exists, append it (instead of just file name)
         if (values.image instanceof File) {
@@ -277,96 +275,97 @@ const PackagesList = () => {
           />
         </div>
       </div>
-
-      <div className="relative overflow-x-auto">
-        <table className="w-full text-sm text-left text-gray-500">
-          <thead className="text-xs text-gray-700 uppercase bg-gray-50">
-            <tr>
-              {/* <th className="px-2 py-4">Module ID</th> */}
-              <th className="px-2 py-4">Image</th>
-              <th className="px-2 py-4">Title</th>
-              <th className="px-2 py-4">Position</th>
-              <th className="px-2 py-4">Status</th>
-              <th className="px-2 py-4">Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {packages.length === 0 ? (
+      <div className="box--shadow bg-white rounded-[15px] p-4">
+        <div className="relative overflow-x-auto">
+          <table className="w-full text-sm text-left text-gray-500">
+            <thead className="text-xs text-gray-700 uppercase bg-gray-50">
               <tr>
-                <td colSpan="8" className="text-center py-4">
-                  No packages added yet.
-                </td>
+                {/* <th className="px-2 py-4">Module ID</th> */}
+                <th className="px-2 py-4">Image</th>
+                <th className="px-2 py-4">Title</th>
+                <th className="px-2 py-4">Position</th>
+                <th className="px-2 py-4">Status</th>
+                <th className="px-2 py-4">Action</th>
               </tr>
-            ) : (
-              packages.map((item, index) => (
-                <tr
-                  key={item.id || index}
-                  className="group bg-white border-b hover:bg-gray-50 relative transition duration-700"
-                >
-                  {/* <td className="px-2 py-4">{item?.id || "—"}</td> */}
-                  <td>
-                    <div className="bg-black rounded-lg w-14 h-14 overflow-hidden">
-                      <img
-                        src={item.image}
-                        className="w-full h-full object-contain"
-                      />
-                    </div>
-                  </td>
-                  <td className="px-2 py-4">{item?.name}</td>
-                  <td>{item.position}</td>
-                  <td className="px-2 py-4">
-                    <div
-                      className={`flex gap-1 items-center ${
-                        item?.status === "ACTIVE"
-                          ? "text-green-500"
-                          : "text-red-500"
-                      }`}
-                    >
-                      <FaCircle />
-                      {item?.status
-                        ? item.status.charAt(0) +
-                          item.status.slice(1).toLowerCase()
-                        : ""}
-                    </div>
-                  </td>
-                  <td className="px-2 py-4">
-                    <div className="w-fit">
-                      <Tooltip
-                        id={`tooltip-edit-${item.id || index}`}
-                        content="Edit Club"
-                        place="left"
-                      >
-                        <div
-                          className="p-1 cursor-pointer"
-                          onClick={() => {
-                            setEditingOption(item);
-                            formik.setValues(item);
-                            setShowModal(true);
-                          }}
-                        >
-                          <LiaEdit className="text-[25px] text-black" />
-                        </div>
-                      </Tooltip>
-                    </div>
+            </thead>
+            <tbody>
+              {packages.length === 0 ? (
+                <tr>
+                  <td colSpan="8" className="text-center py-4">
+                    No packages added yet.
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ) : (
+                packages.map((item, index) => (
+                  <tr
+                    key={item.id || index}
+                    className="group bg-white border-b hover:bg-gray-50 relative transition duration-700"
+                  >
+                    {/* <td className="px-2 py-4">{item?.id || "—"}</td> */}
+                    <td>
+                      <div className="bg-black rounded-lg w-14 h-14 overflow-hidden">
+                        <img
+                          src={item.image}
+                          className="w-full h-full object-contain"
+                        />
+                      </div>
+                    </td>
+                    <td className="px-2 py-4">{item?.name}</td>
+                    <td>{item.position}</td>
+                    <td className="px-2 py-4">
+                      <div
+                        className={`flex gap-1 items-center ${
+                          item?.status === "ACTIVE"
+                            ? "text-green-500"
+                            : "text-red-500"
+                        }`}
+                      >
+                        <FaCircle />
+                        {item?.status
+                          ? item.status.charAt(0) +
+                            item.status.slice(1).toLowerCase()
+                          : ""}
+                      </div>
+                    </td>
+                    <td className="px-2 py-4">
+                      <div className="w-fit">
+                        <Tooltip
+                          id={`tooltip-edit-${item.id || index}`}
+                          content="Edit Club"
+                          place="left"
+                        >
+                          <div
+                            className="p-1 cursor-pointer"
+                            onClick={() => {
+                              setEditingOption(item);
+                              formik.setValues(item);
+                              setShowModal(true);
+                            }}
+                          >
+                            <LiaEdit className="text-[25px] text-black" />
+                          </div>
+                        </Tooltip>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+        {/* Pagination */}
+        <Pagination
+          page={page}
+          totalPages={totalPages}
+          rowsPerPage={rowsPerPage}
+          totalCount={totalCount}
+          currentDataLength={packages.length}
+          onPageChange={(newPage) => {
+            setPage(newPage);
+            fetchPackagesList(searchTerm, newPage);
+          }}
+        />
       </div>
-      {/* Pagination */}
-      <Pagination
-        page={page}
-        totalPages={totalPages}
-        rowsPerPage={rowsPerPage}
-        totalCount={totalCount}
-        currentDataLength={packages.length}
-        onPageChange={(newPage) => {
-          setPage(newPage);
-          fetchPackagesList(searchTerm, newPage);
-        }}
-      />
       {showModal && (
         <CreatePackage
           setShowModal={setShowModal}

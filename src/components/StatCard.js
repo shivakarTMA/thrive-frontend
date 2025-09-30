@@ -4,7 +4,7 @@ import StatItem from "./StatItem";
 
 const StatCard = ({ title, value, description, items }) => {
   return (
-    <div className="border rounded p-4 w-full">
+    <div className="border p-4 w-full box--shadow bg-white rounded-[15px]">
       <div className="text-gray-600 text-sm">{title}</div>
       <div className="text-2xl font-bold">{value}</div>
       <p className="text-sm text-gray-500 mt-1">{description}</p>

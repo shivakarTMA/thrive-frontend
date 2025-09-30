@@ -103,81 +103,83 @@ const WorkoutPlanList = () => {
       </div>
 
       {/* Table */}
-      <div className="relative overflow-x-auto mt-6">
-        <table className="w-full text-sm text-left text-gray-500">
-          <thead className="text-xs text-gray-700 uppercase bg-gray-50">
-            <tr>
-              <th className="px-2 py-4">S.NO</th>
-              <th className="px-2 py-4">Workout Name</th>
-              <th className="px-2 py-4">No of Days</th>
-              <th className="px-2 py-4">Created Date</th>
-              <th className="px-2 py-4">Center Name</th>
-              <th className="px-2 py-4">Created By</th>
-              <th className="px-2 py-4">Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {paginatedData.map((row, idx) => (
-              <tr
-                key={row.id}
-                className="group bg-white border-b hover:bg-gray-50 transition duration-700 relative"
-              >
-                <td className="px-2 py-4">
-                  {(page - 1) * rowsPerPage + idx + 1}
-                </td>
-                <td className="px-2 py-4">{row?.workoutName}</td>
-                <td className="px-2 py-4">{row?.numberOfDays}</td>
-                <td className="px-2 py-4">{row?.createdDate}</td>
-                <td className="px-2 py-4">{row?.centerName}</td>
-                <td className="px-2 py-4">{row?.createdBy}</td>
-                <td className="px-2 py-4">
-                  <div className="flex gap-2 items-center">
-                    <Tooltip
-                      content="Edit Workout"
-                      id={`edit-workout-${row.id}`}
-                      place="top"
-                    >
-                      <div className="p-1 cursor-pointer">
-                        <Link
-                          to={`/create-workout-plan/${row.id}`}
-                          className="p-0"
-                        >
-                          <LiaEdit className="text-[25px] text-black" />
-                        </Link>
-                      </div>
-                    </Tooltip>
-
-                    <Tooltip
-                      content="Clone Workout"
-                      id={`clone-workout-${row.id}`}
-                      place="top"
-                    >
-                      <div
-                        onClick={() => handleClone(row)}
-                        className="p-1 cursor-pointer"
-                      >
-                        <FaClone className="text-[20px] text-black" />
-                      </div>
-                    </Tooltip>
-
-                    <Tooltip
-                      content="Delete Workout"
-                      id={`delete-workout-${row.id}`}
-                      place="top"
-                    >
-                      <div
-                        onClick={() => handleDeleteClick(row)}
-                        className="p-1 cursor-pointer"
-                      >
-                        <RiDeleteBin6Fill className="text-[20px] text-black" />
-                      </div>
-                    </Tooltip>
-                  </div>
-                </td>
+      <div className="box--shadow bg-white rounded-[15px] p-4">
+        <div className="relative overflow-x-auto">
+          <table className="w-full text-sm text-left text-gray-500">
+            <thead className="text-xs text-gray-700 uppercase bg-gray-50">
+              <tr>
+                <th className="px-2 py-4">S.NO</th>
+                <th className="px-2 py-4">Workout Name</th>
+                <th className="px-2 py-4">No of Days</th>
+                <th className="px-2 py-4">Created Date</th>
+                <th className="px-2 py-4">Center Name</th>
+                <th className="px-2 py-4">Created By</th>
+                <th className="px-2 py-4">Action</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {paginatedData.map((row, idx) => (
+                <tr
+                  key={row.id}
+                  className="group bg-white border-b hover:bg-gray-50 transition duration-700 relative"
+                >
+                  <td className="px-2 py-4">
+                    {(page - 1) * rowsPerPage + idx + 1}
+                  </td>
+                  <td className="px-2 py-4">{row?.workoutName}</td>
+                  <td className="px-2 py-4">{row?.numberOfDays}</td>
+                  <td className="px-2 py-4">{row?.createdDate}</td>
+                  <td className="px-2 py-4">{row?.centerName}</td>
+                  <td className="px-2 py-4">{row?.createdBy}</td>
+                  <td className="px-2 py-4">
+                    <div className="flex gap-2 items-center">
+                      <Tooltip
+                        content="Edit Workout"
+                        id={`edit-workout-${row.id}`}
+                        place="top"
+                      >
+                        <div className="p-1 cursor-pointer">
+                          <Link
+                            to={`/create-workout-plan/${row.id}`}
+                            className="p-0"
+                          >
+                            <LiaEdit className="text-[25px] text-black" />
+                          </Link>
+                        </div>
+                      </Tooltip>
+
+                      <Tooltip
+                        content="Clone Workout"
+                        id={`clone-workout-${row.id}`}
+                        place="top"
+                      >
+                        <div
+                          onClick={() => handleClone(row)}
+                          className="p-1 cursor-pointer"
+                        >
+                          <FaClone className="text-[20px] text-black" />
+                        </div>
+                      </Tooltip>
+
+                      <Tooltip
+                        content="Delete Workout"
+                        id={`delete-workout-${row.id}`}
+                        place="top"
+                      >
+                        <div
+                          onClick={() => handleDeleteClick(row)}
+                          className="p-1 cursor-pointer"
+                        >
+                          <RiDeleteBin6Fill className="text-[20px] text-black" />
+                        </div>
+                      </Tooltip>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* Pagination */}

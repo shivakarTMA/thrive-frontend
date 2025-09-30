@@ -1,47 +1,61 @@
-import React, { useRef } from "react";
+import React, { useEffect, useRef } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { IoCloseCircle } from "react-icons/io5";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchOptionList } from "../../Redux/Reducers/optionListSlice";
+import { customStyles } from "../../Helper/helper";
+import Select from "react-select";
+import { FaCalendarDays } from "react-icons/fa6";
+import { toast } from "react-toastify";
 
-const AddNewItemModal = ({ item, onClose, onSubmit }) => {
+const AddNewItemModal = ({ onClose }) => {
   const { user } = useSelector((state) => state.auth);
+  console.log(user, "user");
   const leadBoxRef = useRef(null);
   const formik = useFormik({
     initialValues: {
       item: "",
-      date: new Date(),
+      category: null,
       description: "",
-      location: "",
-      image: null,
-      clubName: "",
+      foundAt: null,
+      date_time: new Date(),
+      loggedBy: "Nitin",
+      notes: "",
     },
     validationSchema: Yup.object({
       item: Yup.string().required("Item Name is required"),
-      date: Yup.date().required("Date is required"),
+      category: Yup.string().required("Category Name is required"),
       description: Yup.string().required("Description is required"),
-      clubName: Yup.string().required("Club Name is required"),
+      foundAt: Yup.string().required("Location is required"),
+      date_time: Yup.date().required("Date & Time is required"),
     }),
     onSubmit: (values) => {
-      const newItem = {
-        id: Date.now(),
-        item: values.item,
-        date: values.date.toISOString().split("T")[0],
-        description: values.description,
-        location: values.location,
-        itemImage: values.image ? URL.createObjectURL(values.image) : null,
-        foundBy: user?.name,
-        clubName: values.clubName,
-        status: "Lost",
-      };
-
-      console.log(newItem, "newItem");
-
-      onSubmit(newItem);
+      console.log(values, "Lost & found");
+      toast.success('Item Successfully Added')
+      onClose();
     },
   });
+
+  // Redux state
+  const dispatch = useDispatch();
+  const { lists, loading } = useSelector((state) => state.optionList);
+
+  // Fetch option lists
+  useEffect(() => {
+    dispatch(fetchOptionList("FOUND_LOCATION"));
+    dispatch(fetchOptionList("LOST_CATEGORY"));
+  }, [dispatch]);
+
+  // Extract Redux lists
+  const foundLocation = lists["FOUND_LOCATION"] || [];
+  const lostCategory = lists["LOST_CATEGORY"] || [];
+
+  const handleDateTime = (date) => {
+    formik.setFieldValue("date_time", date); // Store Date object in Formik
+  };
 
   const handleOverlayClick = (e) => {
     if (leadBoxRef.current && !leadBoxRef.current.contains(e.target)) {
@@ -93,73 +107,114 @@ const AddNewItemModal = ({ item, onClose, onSubmit }) => {
                 </div>
                 <div>
                   <label className="mb-2 block">
-                    Date<span className="text-red-500">*</span>
+                    Category<span className="text-red-500">*</span>
                   </label>
-                  <div className="custom--date relative">
+                  <Select
+                    name="category"
+                    value={
+                      lostCategory.find(
+                        (option) => option.value === formik.values.category
+                      ) || null
+                    }
+                    onChange={(option) => formik.setFieldValue("category", option ? option.value : "")} 
+                    options={lostCategory}
+                    placeholder="Select Category"
+                    styles={customStyles}
+                  />
+                  {formik.touched.category && formik.errors.category && (
+                    <div className="text-red-500 text-sm">
+                      {formik.errors.category}
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <label className="mb-2 block">
+                    Found At (Location)<span className="text-red-500">*</span>
+                  </label>
+                  <Select
+                    name="foundAt"
+                    value={
+                      foundLocation.find(
+                        (option) => option.value === formik.values.foundAt
+                      ) || null
+                    }
+                    onChange={(option) => formik.setFieldValue("foundAt", option ? option.value : "")} 
+                    options={foundLocation}
+                    placeholder="Select Location"
+                    styles={customStyles}
+                  />
+                  {formik.touched.foundAt && formik.errors.foundAt && (
+                    <div className="text-red-500 text-sm">
+                      {formik.errors.foundAt}
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <label className="mb-2 block">
+                    Date & Time <span className="text-red-500">*</span>
+                  </label>
+                  <div className="custom--date flex-1">
+                    <span className="absolute z-[1] mt-[15px] ml-[15px]">
+                      <FaCalendarDays />
+                    </span>
                     <DatePicker
-                      selected={formik.values.date}
-                      onChange={(date) => formik.setFieldValue("date", date)}
+                      selected={
+                        formik.values.date_time
+                          ? new Date(formik.values.date_time)
+                          : null
+                      }
+                      onChange={handleDateTime}
+                      showTimeSelect
+                      timeFormat="hh:mm aa"
+                      dateFormat="MM/dd/yyyy hh:mm aa"
+                      placeholderText="Select date & time"
+                      className="border px-3 py-2 w-full input--icon"
+                      maxDate={new Date()}
                     />
                   </div>
-                  {formik.touched.date && formik.errors.date && (
-                    <div className="text-red-500 text-sm">
-                      {formik.errors.date}
-                    </div>
+                  {formik.touched.date_time && formik.errors.date_time && (
+                    <p className="text-sm text-red-500 mt-1">
+                      {formik.errors.date_time}
+                    </p>
                   )}
                 </div>
                 <div>
-                  <label className="mb-2 block">Location</label>
+                  <label className="mb-2 block">Logged By</label>
                   <input
+                    name="loggedBy"
                     type="text"
-                    name="location"
-                    value={formik.values.location}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    placeholder="Location"
+                    value={formik.values.loggedBy}
+                    disabled={true}
                     className="custom--input w-full"
                   />
                 </div>
-                <div>
-                  <label className="mb-2 block">Image</label>
-                  <input
-                    type="file"
-                    name="image"
-                    onChange={(event) =>
-                      formik.setFieldValue(
-                        "image",
-                        event.currentTarget.files[0]
-                      )
-                    }
-                    className="custom--input w-full"
-                  />
-                </div>
-                <div className="col-span-2">
-                  <label className="mb-2 block">
-                    Club Name<span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="clubName"
-                    value={formik.values.clubName}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    placeholder="Club Name"
-                    className="custom--input w-full"
-                  />
-                  {formik.touched.clubName && formik.errors.clubName && (
-                    <div className="text-red-500 text-sm">
-                      {formik.errors.clubName}
-                    </div>
-                  )}
-                </div>
-                <div className="col-span-2">
-                  <label className="mb-2 block">Description</label>
 
-                  <textarea
+                <div>
+                  <label className="mb-2 block">
+                    Description<span className="text-red-500">*</span>
+                  </label>
+
+                  <input
                     name="description"
                     value={formik.values.description}
                     onChange={formik.handleChange}
                     placeholder="Description"
+                    className="custom--input w-full"
+                  />
+                  {formik.touched.description && formik.errors.description && (
+                    <div className="text-red-500 text-sm">
+                      {formik.errors.description}
+                    </div>
+                  )}
+                </div>
+                <div className="col-span-2">
+                  <label className="mb-2 block">Notes</label>
+
+                  <textarea
+                    name="notes"
+                    value={formik.values.notes}
+                    onChange={formik.handleChange}
+                    placeholder="Any additional remarks"
                     className="custom--input w-full"
                   />
                 </div>
@@ -168,7 +223,7 @@ const AddNewItemModal = ({ item, onClose, onSubmit }) => {
             <div className="flex gap-4 py-5 pt-0 justify-end">
               <button
                 type="button"
-                className="px-4 py-2 bg-black border border-black text-white font-semibold rounded max-w-[150px] w-full"
+                className="px-4 py-2 bg-transparent border border-white text-white font-semibold rounded max-w-[150px] w-full"
                 onClick={onClose}
               >
                 Cancel
@@ -177,7 +232,7 @@ const AddNewItemModal = ({ item, onClose, onSubmit }) => {
                 type="submit"
                 className="px-4 py-2 bg-white text-black font-semibold rounded max-w-[150px] w-full"
               >
-                Add
+                Submit
               </button>
             </div>
           </form>

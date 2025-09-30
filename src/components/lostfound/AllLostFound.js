@@ -8,7 +8,7 @@ import AddNewItemModal from "./AddNewItemModal";
 import MarkReturnedModal from "./MarkReturnedModal";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { addYears, subYears } from "date-fns";
+import { addYears, format, subYears } from "date-fns";
 import { customStyles } from "../../Helper/helper";
 import viewIcon from "../../assets/images/icons/eye.svg";
 import returnIcon from "../../assets/images/icons/return.svg";
@@ -25,7 +25,8 @@ const dateFilterOptions = [
 const AllLostFound = () => {
   const [data, setData] = useState(initialData);
   const [modalOpen, setModalOpen] = useState(false);
-  const [markReturnedData, setMarkReturnedData] = useState(null);
+  const [returnedModalOpen, setReturnedModalOpen] = useState(false);
+  const [markReturnedData, setMarkReturnedData] = useState([]);
 
   const [dateFilter, setDateFilter] = useState(dateFilterOptions[1]);
   const [customFrom, setCustomFrom] = useState(null);
@@ -39,24 +40,6 @@ const AllLostFound = () => {
   const [itemFoundTo, setItemFoundTo] = useState(null);
   const [itemReturnedFrom, setItemReturnedFrom] = useState(null);
   const [itemReturnedTo, setItemReturnedTo] = useState(null);
-
-  const handleMarkAsReturned = (item) => {
-    setMarkReturnedData(item);
-  };
-
-  const handleReturnSubmit = (itemId, returnInfo) => {
-    const updated = data.map((item) =>
-      item.id === itemId
-        ? {
-            ...item,
-            status: "Returned",
-            returnedInfo: returnInfo,
-          }
-        : item
-    );
-    setData(updated);
-    setMarkReturnedData(null);
-  };
 
   return (
     <div className="page--content">
@@ -181,7 +164,10 @@ const AllLostFound = () => {
                     <td className="px-2 py-4">{row?.itemName}</td>
                     <td className="px-2 py-4">{row?.category}</td>
                     <td className="px-2 py-4">{row?.foundAt}</td>
-                    <td className="px-2 py-4">{row?.dateTime}</td>
+                    <td className="px-2 py-4">
+                      {/* {row?.dateTime} */}
+                      {format(new Date(row?.dateTime), 'MM/dd/yyyy hh:mm a')}
+                      </td>
                     <td className="px-2 py-4">
                       <span
                         className={`
@@ -209,7 +195,10 @@ const AllLostFound = () => {
                               ? "cursor-not-allowed pointer-events-none opacity-[0.5]"
                               : "cursor-pointer"
                           } `}
-                          onClick={() => handleMarkAsReturned(row)}
+                          onClick={() => {
+                            setReturnedModalOpen(true);
+                            setMarkReturnedData(row?.id);
+                          }}
                         >
                           <img src={returnIcon} />
                         </div>
@@ -224,21 +213,12 @@ const AllLostFound = () => {
       </div>
 
       {/* Modals */}
-      {modalOpen && (
-        <AddNewItemModal
-          onClose={() => setModalOpen(false)}
-          onSubmit={(newItem) => {
-            setData((prev) => [...prev, newItem]);
-            setModalOpen(false);
-          }}
-        />
-      )}
+      {modalOpen && <AddNewItemModal onClose={() => setModalOpen(false)} />}
 
-      {markReturnedData && (
+      {returnedModalOpen && (
         <MarkReturnedModal
-          item={markReturnedData}
-          onClose={() => setMarkReturnedData(null)}
-          onSubmit={handleReturnSubmit}
+          data={markReturnedData}
+          onClose={() => setReturnedModalOpen(false)}
         />
       )}
     </div>

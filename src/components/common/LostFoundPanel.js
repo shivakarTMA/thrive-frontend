@@ -7,7 +7,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchOptionList } from "../../Redux/Reducers/optionListSlice";
 import { customStyles } from "../../Helper/helper";
 import { HiOutlineAdjustmentsHorizontal } from "react-icons/hi2";
-import { format } from "date-fns"; 
+import { format } from "date-fns";
 
 const StatusOptions = [
   { value: "Available", label: "Available" },
@@ -47,7 +47,7 @@ export default function LostFoundPanel({
     returned_to: itemReturnedTo,
   });
 
-  console.log(appliedFilters,'appliedFilters')
+  console.log(appliedFilters, "appliedFilters");
 
   // Redux state
   const dispatch = useDispatch();
@@ -88,21 +88,23 @@ export default function LostFoundPanel({
   ];
 
   const handleSubmitFilters = () => {
-  const filters = {
-    status: itemStatus?.value,
-    category: itemCategory?.value,
-    location: itemLocation?.value,
-    floor: itemFloor?.value,
-    found_from: itemFoundFrom ? format(itemFoundFrom, "MM/dd/yyyy") : null,
-    found_to: itemFoundTo ? format(itemFoundTo, "MM/dd/yyyy") : null,
-    returned_from: itemReturnedFrom ? format(itemReturnedFrom, "MM/dd/yyyy") : null,
-    returned_to: itemReturnedTo ? format(itemReturnedTo, "MM/dd/yyyy") : null,
-  };
+    const filters = {
+      status: itemStatus?.value,
+      category: itemCategory?.value,
+      location: itemLocation?.value,
+      floor: itemFloor?.value,
+      found_from: itemFoundFrom ? format(itemFoundFrom, "MM/dd/yyyy") : null,
+      found_to: itemFoundTo ? format(itemFoundTo, "MM/dd/yyyy") : null,
+      returned_from: itemReturnedFrom
+        ? format(itemReturnedFrom, "MM/dd/yyyy")
+        : null,
+      returned_to: itemReturnedTo ? format(itemReturnedTo, "MM/dd/yyyy") : null,
+    };
 
-  setAppliedFilters(filters); // ✅ Only update on click
-  console.log(filters, "✅ Submitted Filters");
-  setShowFilters(false);
-};
+    setAppliedFilters(filters); // ✅ Only update on click
+    console.log(filters, "✅ Submitted Filters");
+    setShowFilters(false);
+  };
 
   const removeFilter = (filter) => {
     if (filter === "status") {
@@ -131,6 +133,15 @@ export default function LostFoundPanel({
       setAppliedFilters((prev) => ({ ...prev, returned_to: null }));
     }
   };
+
+  // Reset dates whenever the itemStatus changes
+  useEffect(() => {
+    // Reset all dates when the status changes
+    setItemFoundFrom(null);
+    setItemFoundTo(null);
+    setItemReturnedFrom(null);
+    setItemReturnedTo(null);
+  }, [itemStatus]);
 
   return (
     <div className="relative max-w-fit w-full" ref={panelRef}>
@@ -205,73 +216,83 @@ export default function LostFoundPanel({
                 />
               </div>
 
-              {/* Found From Date */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Found From
-                </label>
-                <div className="custom--date flex-1">
-                  <DatePicker
-                    selected={itemFoundFrom}
-                    onChange={(date) => setItemFoundFrom(date)}
-                    placeholderText="Select start date"
-                    className=" w-full"
-                    dateFormat="MM/dd/yyyy"
-                    maxDate={new Date()}
-                  />
-                </div>
-              </div>
+              {itemStatus?.value === "Available" ||
+              itemStatus?.value === "Claimed Pending" ? (
+                <>
+                  {/* Found From Date */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Found From
+                    </label>
+                    <div className="custom--date flex-1">
+                      <DatePicker
+                        selected={itemFoundFrom}
+                        onChange={(date) => setItemFoundFrom(date)}
+                        placeholderText="Select start date"
+                        className="w-full"
+                        dateFormat="MM/dd/yyyy"
+                        maxDate={new Date()}
+                      />
+                    </div>
+                  </div>
 
-              {/* Found To Date */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Found To
-                </label>
-                <div className="custom--date flex-1">
-                  <DatePicker
-                    selected={itemFoundTo}
-                    onChange={(date) => setItemFoundTo(date)}
-                    placeholderText="Select end date"
-                    className=" w-full"
-                    dateFormat="MM/dd/yyyy"
-                    maxDate={new Date()}
-                  />
-                </div>
-              </div>
+                  {/* Found To Date */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Found To
+                    </label>
+                    <div className="custom--date flex-1">
+                      <DatePicker
+                        selected={itemFoundTo}
+                        onChange={(date) => setItemFoundTo(date)}
+                        placeholderText="Select end date"
+                        className="w-full"
+                        dateFormat="MM/dd/yyyy"
+                        maxDate={new Date()}
+                      />
+                    </div>
+                  </div>
+                </>
+              ) : null}
 
-              {/* Returned From Date */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Returned From
-                </label>
-                <div className="custom--date flex-1">
-                  <DatePicker
-                    selected={itemReturnedFrom}
-                    onChange={(date) => setItemReturnedFrom(date)}
-                    placeholderText="Select start date"
-                    className="w-full"
-                    dateFormat="MM/dd/yyyy"
-                    maxDate={new Date()}
-                  />
-                </div>
-              </div>
+              {itemStatus?.value === "Returned" ||
+              itemStatus?.value === "Claimed Pending" ? (
+                <>
+                  {/* Returned From Date */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Returned From
+                    </label>
+                    <div className="custom--date flex-1">
+                      <DatePicker
+                        selected={itemReturnedFrom}
+                        onChange={(date) => setItemReturnedFrom(date)}
+                        placeholderText="Select start date"
+                        className="w-full"
+                        dateFormat="MM/dd/yyyy"
+                        maxDate={new Date()}
+                      />
+                    </div>
+                  </div>
 
-              {/* Returned To Date */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Returned To
-                </label>
-                <div className="custom--date flex-1">
-                  <DatePicker
-                    selected={itemReturnedTo}
-                    onChange={(date) => setItemReturnedTo(date)}
-                    placeholderText="Select end date"
-                    className="w-full"
-                    dateFormat="MM/dd/yyyy"
-                    maxDate={new Date()}
-                  />
-                </div>
-              </div>
+                  {/* Returned To Date */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Returned To
+                    </label>
+                    <div className="custom--date flex-1">
+                      <DatePicker
+                        selected={itemReturnedTo}
+                        onChange={(date) => setItemReturnedTo(date)}
+                        placeholderText="Select end date"
+                        className="w-full"
+                        dateFormat="MM/dd/yyyy"
+                        maxDate={new Date()}
+                      />
+                    </div>
+                  </div>
+                </>
+              ) : null}
             </div>
 
             {/* Reset */}

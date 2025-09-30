@@ -494,19 +494,19 @@ export default function Routing() {
                 </PrivateRoute>
               }
             />
+              <Route
+                path="/package-category"
+                element={
+                  <PrivateRoute>
+                    <PackageCategoryList />
+                  </PrivateRoute>
+                }
+              />
             <Route
               path="/packages"
               element={
                 <PrivateRoute>
                   <PackagesList />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/package-category"
-              element={
-                <PrivateRoute>
-                  <PackageCategoryList />
                 </PrivateRoute>
               }
             />

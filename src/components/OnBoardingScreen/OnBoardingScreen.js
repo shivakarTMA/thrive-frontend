@@ -166,78 +166,79 @@ const OnBoardingScreen = () => {
           />
         </div>
       </div>
-
-      <div className="relative overflow-x-auto">
-        <table className="w-full text-sm text-left text-gray-500">
-          <thead className="text-xs text-gray-700 uppercase bg-gray-50">
-            <tr>
-              {/* <th className="px-2 py-4">Module ID</th> */}
-              <th className="px-2 py-4">Image</th>
-              <th className="px-2 py-4">Title</th>
-              <th className="px-2 py-4">Position</th>
-              <th className="px-2 py-4">Status</th>
-              <th className="px-2 py-4">Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {module.length === 0 ? (
+      <div className="box--shadow bg-white rounded-[15px] p-4">
+        <div className="relative overflow-x-auto">
+          <table className="w-full text-sm text-left text-gray-500">
+            <thead className="text-xs text-gray-700 uppercase bg-gray-50">
               <tr>
-                <td colSpan="8" className="text-center py-4">
-                  No boarding added yet.
-                </td>
+                {/* <th className="px-2 py-4">Module ID</th> */}
+                <th className="px-2 py-4">Image</th>
+                <th className="px-2 py-4">Title</th>
+                <th className="px-2 py-4">Position</th>
+                <th className="px-2 py-4">Status</th>
+                <th className="px-2 py-4">Action</th>
               </tr>
-            ) : (
-              module.map((item, index) => (
-                <tr
-                  key={item.id || index}
-                  className="group bg-white border-b hover:bg-gray-50 relative transition duration-700"
-                >
-                  {/* <td className="px-2 py-4">{item?.id || "—"}</td> */}
-                  <td>
-                    <img src={item.screen_image} className="w-14" />
-                  </td>
-                  <td className="px-2 py-4">{item?.title}</td>
-                  <td>{item.position}</td>
-                  <td className="px-2 py-4">
-                    <div
-                      className={`flex gap-1 items-center ${
-                        item?.status === "ACTIVE"
-                          ? "text-green-500"
-                          : "text-red-500"
-                      }`}
-                    >
-                      <FaCircle />
-                      {item?.status
-                        ? item.status.charAt(0) +
-                          item.status.slice(1).toLowerCase()
-                        : ""}
-                    </div>
-                  </td>
-                  <td className="px-2 py-4">
-                    <div className="w-fit">
-                      <Tooltip
-                        id={`tooltip-edit-${item.id || index}`}
-                        content="Edit Club"
-                        place="left"
-                      >
-                        <div
-                          className="p-1 cursor-pointer"
-                          onClick={() => {
-                            setEditingOption(item);
-                            formik.setValues(item);
-                            setShowModal(true);
-                          }}
-                        >
-                          <LiaEdit className="text-[25px] text-black" />
-                        </div>
-                      </Tooltip>
-                    </div>
+            </thead>
+            <tbody>
+              {module.length === 0 ? (
+                <tr>
+                  <td colSpan="8" className="text-center py-4">
+                    No boarding added yet.
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ) : (
+                module.map((item, index) => (
+                  <tr
+                    key={item.id || index}
+                    className="group bg-white border-b hover:bg-gray-50 relative transition duration-700"
+                  >
+                    {/* <td className="px-2 py-4">{item?.id || "—"}</td> */}
+                    <td>
+                      <img src={item.screen_image} className="w-14" />
+                    </td>
+                    <td className="px-2 py-4">{item?.title}</td>
+                    <td>{item.position}</td>
+                    <td className="px-2 py-4">
+                      <div
+                        className={`flex gap-1 items-center ${
+                          item?.status === "ACTIVE"
+                            ? "text-green-500"
+                            : "text-red-500"
+                        }`}
+                      >
+                        <FaCircle />
+                        {item?.status
+                          ? item.status.charAt(0) +
+                            item.status.slice(1).toLowerCase()
+                          : ""}
+                      </div>
+                    </td>
+                    <td className="px-2 py-4">
+                      <div className="w-fit">
+                        <Tooltip
+                          id={`tooltip-edit-${item.id || index}`}
+                          content="Edit Club"
+                          place="left"
+                        >
+                          <div
+                            className="p-1 cursor-pointer"
+                            onClick={() => {
+                              setEditingOption(item);
+                              formik.setValues(item);
+                              setShowModal(true);
+                            }}
+                          >
+                            <LiaEdit className="text-[25px] text-black" />
+                          </div>
+                        </Tooltip>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {showModal && (

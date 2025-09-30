@@ -36,7 +36,9 @@ const OptionList = () => {
           page: currentPage,
           limit: rowsPerPage,
           ...(search ? { search } : {}),
-          ...(selectedType?.value ? { optionListType: selectedType.value } : {}),
+          ...(selectedType?.value
+            ? { optionListType: selectedType.value }
+            : {}),
           ...(statusFilter?.value ? { status: statusFilter.value } : {}),
         },
       });
@@ -47,7 +49,6 @@ const OptionList = () => {
       setPage(res.data?.currentPage || 1);
       setTotalPages(res.data?.totalPage || 1);
       setTotalCount(res.data?.totalCount || data.length);
-
     } catch (err) {
       console.error(err);
       toast.error("Failed to fetch options");
@@ -55,21 +56,21 @@ const OptionList = () => {
   };
 
   const fetchOptionTypes = async () => {
-  try {
-    const res = await apiAxios().get("/option-list/type");
-    const types = res.data?.data || [];
+    try {
+      const res = await apiAxios().get("/option-list/type");
+      const types = res.data?.data || [];
 
-    setOptionTypes(
-      types.map((item) => ({
-        label: item.option_list_type,
-        value: item.option_list_type,
-      }))
-    );
-  } catch (err) {
-    console.error(err);
-    toast.error("Failed to fetch option types");
-  }
-};
+      setOptionTypes(
+        types.map((item) => ({
+          label: item.option_list_type,
+          value: item.option_list_type,
+        }))
+      );
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to fetch option types");
+    }
+  };
 
   // 🔄 Run on first load
   useEffect(() => {
@@ -195,86 +196,88 @@ const OptionList = () => {
       </div>
 
       {/* Table */}
-      <div className="relative overflow-x-auto">
-        <table className="w-full text-sm text-left text-gray-500">
-          <thead className="text-xs text-gray-700 uppercase bg-gray-50">
-            <tr>
-              <th className="px-2 py-4">Name</th>
-              <th className="px-2 py-4">Type of list</th>
-              <th className="px-2 py-4">Position</th>
-              <th className="px-2 py-4">Status</th>
-              <th className="px-2 py-4">Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {option.length === 0 ? (
+      <div className="box--shadow bg-white rounded-[15px] p-4">
+        <div className="relative overflow-x-auto">
+          <table className="w-full text-sm text-left text-gray-500">
+            <thead className="text-xs text-gray-700 uppercase bg-gray-50">
               <tr>
-                <td colSpan="8" className="text-center py-4">
-                  No option added yet.
-                </td>
+                <th className="px-2 py-4">Name</th>
+                <th className="px-2 py-4">Type of list</th>
+                <th className="px-2 py-4">Position</th>
+                <th className="px-2 py-4">Status</th>
+                <th className="px-2 py-4">Action</th>
               </tr>
-            ) : (
-              option.map((company, index) => (
-                <tr
-                  key={company.id || index}
-                  className="group bg-white border-b hover:bg-gray-50 transition duration-700"
-                >
-                  <td className="px-2 py-4">{company?.name}</td>
-                  <td className="px-2 py-4">
-                    {company.option_list_type || "—"}
-                  </td>
-                  <td>{company.position ?? "—"}</td>
-                  <td className="px-2 py-4">
-                    <div
-                      className={`flex gap-1 items-center ${
-                        company?.status === "ACTIVE"
-                          ? "text-green-500"
-                          : "text-red-500"
-                      }`}
-                    >
-                      <FaCircle />
-                      {company?.status
-                        ? company.status.charAt(0) +
-                          company.status.slice(1).toLowerCase()
-                        : ""}
-                    </div>
-                  </td>
-                  <td className="px-2 py-4">
-                    <Tooltip
-                      id={`tooltip-edit-${company.id || index}`}
-                      content="Edit Option"
-                      place="top"
-                    >
-                      <div
-                        className="p-1 cursor-pointer"
-                        onClick={() => {
-                          setEditingOption(company);
-                          formik.setValues(company);
-                          setShowModal(true);
-                        }}
-                      >
-                        <LiaEdit className="text-[25px] text-black" />
-                      </div>
-                    </Tooltip>
+            </thead>
+            <tbody>
+              {option.length === 0 ? (
+                <tr>
+                  <td colSpan="8" className="text-center py-4">
+                    No option added yet.
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+              ) : (
+                option.map((company, index) => (
+                  <tr
+                    key={company.id || index}
+                    className="group bg-white border-b hover:bg-gray-50 transition duration-700"
+                  >
+                    <td className="px-2 py-4">{company?.name}</td>
+                    <td className="px-2 py-4">
+                      {company.option_list_type || "—"}
+                    </td>
+                    <td>{company.position ?? "—"}</td>
+                    <td className="px-2 py-4">
+                      <div
+                        className={`flex gap-1 items-center ${
+                          company?.status === "ACTIVE"
+                            ? "text-green-500"
+                            : "text-red-500"
+                        }`}
+                      >
+                        <FaCircle />
+                        {company?.status
+                          ? company.status.charAt(0) +
+                            company.status.slice(1).toLowerCase()
+                          : ""}
+                      </div>
+                    </td>
+                    <td className="px-2 py-4">
+                      <Tooltip
+                        id={`tooltip-edit-${company.id || index}`}
+                        content="Edit Option"
+                        place="top"
+                      >
+                        <div
+                          className="p-1 cursor-pointer"
+                          onClick={() => {
+                            setEditingOption(company);
+                            formik.setValues(company);
+                            setShowModal(true);
+                          }}
+                        >
+                          <LiaEdit className="text-[25px] text-black" />
+                        </div>
+                      </Tooltip>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
 
-      <Pagination
-        page={page}
-        totalPages={totalPages}
-        rowsPerPage={rowsPerPage}
-        totalCount={totalCount}
-        currentDataLength={option.length}
-        onPageChange={(newPage) => {
-          setPage(newPage);
-          fetchOptions(searchTerm, newPage);
-        }}
-      />
+        <Pagination
+          page={page}
+          totalPages={totalPages}
+          rowsPerPage={rowsPerPage}
+          totalCount={totalCount}
+          currentDataLength={option.length}
+          onPageChange={(newPage) => {
+            setPage(newPage);
+            fetchOptions(searchTerm, newPage);
+          }}
+        />
+      </div>
 
       {showModal && (
         <CreateClub

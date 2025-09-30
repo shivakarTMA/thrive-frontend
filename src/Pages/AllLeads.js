@@ -374,7 +374,7 @@ const AllLeads = () => {
           <div className="border rounded-[5px] overflow-hidden w-full">
             <div className="flex gap-1 justify-between bg-[#F1F1F1] p-4 py-3">
               <div className="text-xl font-bold">Open Enquiries</div>
-              <div className="text-xl font-bold">15</div>
+              <div className="text-xl font-bold">10</div>
             </div>
             <div className="grid grid-cols-3 h-full">
               <div className="flex flex-col border-r text-center p-3 py-5 w-full">

@@ -73,7 +73,7 @@ const ClubList = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
 
-    const fetchClubs = async (search = "", currentPage = page) => {
+  const fetchClubs = async (search = "", currentPage = page) => {
     try {
       const res = await apiAxios().get("/club/list", {
         params: {
@@ -120,87 +120,89 @@ const ClubList = () => {
   };
 
   const formik = useFormik({
-  initialValues: {
-    logo: null,
-    name: "",
-    email: "",
-    phone: "",
-    address: "",
-    city: "",
-    state: indianStates[0],
-    country: "India",
-    zipcode: "",
-    status: "",
-  },
-  validationSchema: Yup.object({
-    name: Yup.string().required("Club name is required"),
-    email: Yup.string().required("Club email is required"),
-    phone: Yup.string()
-      .required("Contact number is required")
-      .test("is-valid-phone", "Invalid contact number", (value) => {
-        if (!value) return false;
-        return isValidPhoneNumber(value);
-      }),
-    city: Yup.string().required("City is required"),
-    state: Yup.mixed()
-      .test(
-        "is-valid-state",
-        "State/Province is required",
-        (value) =>
-          value && (typeof value === "object" || typeof value === "string")
-      )
-      .required("State/Province is required"),
-    country: Yup.string().required("Country is required"),
-    zipcode: Yup.string().required("ZIP or Postal is required"),
-    status: Yup.string().required("Status is required"),
-  }),
-  onSubmit: async (values, { resetForm }) => {
-    try {
-      const formData = new FormData();
-      formData.append("name", values.name);
-      formData.append("email", values.email);
-      formData.append("phone", values.phone?.startsWith("+") ? values.phone.slice(1) : values.phone);
-      formData.append("address", values.address);
-      formData.append("city", values.city);
-      formData.append("state", values.state?.value || values.state);
-      formData.append("country", values.country);
-      formData.append("zipcode", values.zipcode);
-      formData.append("status", values.status);
+    initialValues: {
+      logo: null,
+      name: "",
+      email: "",
+      phone: "",
+      address: "",
+      city: "",
+      state: indianStates[0],
+      country: "India",
+      zipcode: "",
+      status: "",
+    },
+    validationSchema: Yup.object({
+      name: Yup.string().required("Club name is required"),
+      email: Yup.string().required("Club email is required"),
+      phone: Yup.string()
+        .required("Contact number is required")
+        .test("is-valid-phone", "Invalid contact number", (value) => {
+          if (!value) return false;
+          return isValidPhoneNumber(value);
+        }),
+      city: Yup.string().required("City is required"),
+      state: Yup.mixed()
+        .test(
+          "is-valid-state",
+          "State/Province is required",
+          (value) =>
+            value && (typeof value === "object" || typeof value === "string")
+        )
+        .required("State/Province is required"),
+      country: Yup.string().required("Country is required"),
+      zipcode: Yup.string().required("ZIP or Postal is required"),
+      status: Yup.string().required("Status is required"),
+    }),
+    onSubmit: async (values, { resetForm }) => {
+      try {
+        const formData = new FormData();
+        formData.append("name", values.name);
+        formData.append("email", values.email);
+        formData.append(
+          "phone",
+          values.phone?.startsWith("+") ? values.phone.slice(1) : values.phone
+        );
+        formData.append("address", values.address);
+        formData.append("city", values.city);
+        formData.append("state", values.state?.value || values.state);
+        formData.append("country", values.country);
+        formData.append("zipcode", values.zipcode);
+        formData.append("status", values.status);
 
-      // ✅ Append logo only if it's a file
-      if (values.logo instanceof File) {
-        formData.append("logo", values.logo);
+        // ✅ Append logo only if it's a file
+        if (values.logo instanceof File) {
+          formData.append("logo", values.logo);
+        }
+
+        if (editingClub && editingClub) {
+          // Update
+          await apiAxios().put(`/club/${editingClub}`, formData, {
+            headers: { "Content-Type": "multipart/form-data" },
+          });
+          toast.success("Updated Successfully");
+        } else {
+          // Create
+          await apiAxios().post("/club/create", formData, {
+            headers: { "Content-Type": "multipart/form-data" },
+          });
+          toast.success("Created Successfully");
+        }
+
+        setShowModal(false);
+
+        // 🔄 Re-fetch after save
+        fetchClubs();
+      } catch (err) {
+        console.error("API Error:", err.response?.data || err.message);
+        toast.error("Failed to save club");
       }
 
-      if (editingClub && editingClub) {
-        // Update
-        await apiAxios().put(`/club/${editingClub}`, formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
-        toast.success("Updated Successfully");
-      } else {
-        // Create
-        await apiAxios().post("/club/create", formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
-        toast.success("Created Successfully");
-      }
-
-      setShowModal(false);
-
-      // 🔄 Re-fetch after save
-      fetchClubs();
-    } catch (err) {
-      console.error("API Error:", err.response?.data || err.message);
-      toast.error("Failed to save club");
-    }
-
-    resetForm();
-    setEditingClub(null);
-    // setShowModal(false);
-  },
-});
-
+      resetForm();
+      setEditingClub(null);
+      // setShowModal(false);
+    },
+  });
 
   const handlePhoneChange = (value) => {
     formik.setFieldValue("phone", value);
@@ -230,7 +232,7 @@ const ClubList = () => {
         </div>
       </div>
 
-            {/* Filters */}
+      {/* Filters */}
       <div className="flex gap-3 mb-4">
         {/* Search */}
         <div className="w-full max-w-[200px] relative">
@@ -245,7 +247,6 @@ const ClubList = () => {
             className="custom--input w-full input--icon"
           />
         </div>
-
 
         {/* Status filter */}
         <div className="w-full max-w-[200px]">
@@ -262,99 +263,100 @@ const ClubList = () => {
           />
         </div>
       </div>
-
-      <div className="relative overflow-x-auto">
-        <table className="w-full text-sm text-left text-gray-500">
-          <thead className="text-xs text-gray-700 uppercase bg-gray-50">
-            <tr>
-              {/* <th className="px-2 py-4">Club ID</th> */}
-              <th className="px-2 py-4">Name</th>
-              <th className="px-2 py-4">Email</th>
-              <th className="px-2 py-4">City</th>
-              <th className="px-2 py-4">State</th>
-              <th className="px-2 py-4">Country</th>
-              <th className="px-2 py-4">Status</th>
-              <th className="px-2 py-4">Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {club.length === 0 ? (
+      <div className="box--shadow bg-white rounded-[15px] p-4">
+        <div className="relative overflow-x-auto">
+          <table className="w-full text-sm text-left text-gray-500">
+            <thead className="text-xs text-gray-700 uppercase bg-gray-50">
               <tr>
-                <td colSpan="8" className="text-center py-4">
-                  No club added yet.
-                </td>
+                {/* <th className="px-2 py-4">Club ID</th> */}
+                <th className="px-2 py-4">Name</th>
+                <th className="px-2 py-4">Email</th>
+                <th className="px-2 py-4">City</th>
+                <th className="px-2 py-4">State</th>
+                <th className="px-2 py-4">Country</th>
+                <th className="px-2 py-4">Status</th>
+                <th className="px-2 py-4">Action</th>
               </tr>
-            ) : (
-              club.map((club, index) => (
-                <tr
-                  key={club.id || index}
-                  className="group bg-white border-b hover:bg-gray-50 relative transition duration-700"
-                >
-                  {/* <td className="px-2 py-4">{club?.id || "—"}</td> */}
-                  <td className="px-2 py-4">{club?.name}</td>
-                  <td className="px-2 py-4">{club?.email}</td>
-                  <td className="px-2 py-4">{club?.city}</td>
-                  <td className="px-2 py-4">
-                    {club?.state?.label || club?.state}
-                  </td>
-                  <td className="px-2 py-4">{club?.country}</td>
-                  <td className="px-2 py-4">
-                    <div
-                      className={`flex gap-1 items-center ${
-                        club?.status === "ACTIVE"
-                          ? "text-green-500"
-                          : "text-red-500"
-                      }`}
-                    >
-                      <FaCircle />
-                      {club?.status
-                        ? club.status.charAt(0) +
-                          club.status.slice(1).toLowerCase()
-                        : ""}
-                    </div>
-                  </td>
-                  <td className="px-2 py-4">
-                    <Tooltip
-                      id={`tooltip-edit-${club.id || index}`}
-                      content="Edit Club"
-                      place="top"
-                    >
-                      <div
-                        className="p-1 cursor-pointer"
-                        onClick={() => {
-                          setEditingClub(club?.id);
-                          // formik.setValues({
-                          //   ...club,
-                          //   state:
-                          //     typeof club.state === "string"
-                          //       ? { label: club.state, value: club.state }
-                          //       : club.state,
-                          // });
-                          setShowModal(true);
-                        }}
-                      >
-                        <LiaEdit className="text-[25px] text-black" />
-                      </div>
-                    </Tooltip>
+            </thead>
+            <tbody>
+              {club.length === 0 ? (
+                <tr>
+                  <td colSpan="8" className="text-center py-4">
+                    No club added yet.
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+              ) : (
+                club.map((club, index) => (
+                  <tr
+                    key={club.id || index}
+                    className="group bg-white border-b hover:bg-gray-50 relative transition duration-700"
+                  >
+                    {/* <td className="px-2 py-4">{club?.id || "—"}</td> */}
+                    <td className="px-2 py-4">{club?.name}</td>
+                    <td className="px-2 py-4">{club?.email}</td>
+                    <td className="px-2 py-4">{club?.city}</td>
+                    <td className="px-2 py-4">
+                      {club?.state?.label || club?.state}
+                    </td>
+                    <td className="px-2 py-4">{club?.country}</td>
+                    <td className="px-2 py-4">
+                      <div
+                        className={`flex gap-1 items-center ${
+                          club?.status === "ACTIVE"
+                            ? "text-green-500"
+                            : "text-red-500"
+                        }`}
+                      >
+                        <FaCircle />
+                        {club?.status
+                          ? club.status.charAt(0) +
+                            club.status.slice(1).toLowerCase()
+                          : ""}
+                      </div>
+                    </td>
+                    <td className="px-2 py-4">
+                      <Tooltip
+                        id={`tooltip-edit-${club.id || index}`}
+                        content="Edit Club"
+                        place="top"
+                      >
+                        <div
+                          className="p-1 cursor-pointer"
+                          onClick={() => {
+                            setEditingClub(club?.id);
+                            // formik.setValues({
+                            //   ...club,
+                            //   state:
+                            //     typeof club.state === "string"
+                            //       ? { label: club.state, value: club.state }
+                            //       : club.state,
+                            // });
+                            setShowModal(true);
+                          }}
+                        >
+                          <LiaEdit className="text-[25px] text-black" />
+                        </div>
+                      </Tooltip>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
 
-      <Pagination
-        page={page}
-        totalPages={totalPages}
-        rowsPerPage={rowsPerPage}
-        totalCount={totalCount}
-        currentDataLength={club.length}
-        onPageChange={(newPage) => {
-          setPage(newPage);
-          fetchClubs(searchTerm, newPage);
-        }}
-      />
+        <Pagination
+          page={page}
+          totalPages={totalPages}
+          rowsPerPage={rowsPerPage}
+          totalCount={totalCount}
+          currentDataLength={club.length}
+          onPageChange={(newPage) => {
+            setPage(newPage);
+            fetchClubs(searchTerm, newPage);
+          }}
+        />
+      </div>
 
       {showModal && (
         <CreateClub

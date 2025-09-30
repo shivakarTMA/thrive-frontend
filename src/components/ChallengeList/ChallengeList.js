@@ -113,70 +113,70 @@ const ChallengeList = () => {
           <FiPlus /> Create Challenge
         </button>
       </div>
-
-      <div className="relative overflow-x-auto">
-        <table className="w-full text-sm text-left text-gray-500">
-          <thead className="text-xs text-gray-700 uppercase bg-gray-50">
-            <tr>
-              <th className="px-2 py-4">ID</th>
-              <th className="px-2 py-4">Name</th>
-              <th className="px-2 py-4">Goal</th>
-              <th className="px-2 py-4">Participants</th>
-              <th className="px-2 py-4">Start Dates</th>
-              <th className="px-2 py-4">End Dates</th>
-              <th className="px-2 py-4">Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {challenges.length === 0 ? (
+      <div className="box--shadow bg-white rounded-[15px] p-4">
+        <div className="relative overflow-x-auto">
+          <table className="w-full text-sm text-left text-gray-500">
+            <thead className="text-xs text-gray-700 uppercase bg-gray-50">
               <tr>
-                <td colSpan="6" className="text-center py-4">
-                  No challenge added yet.
-                </td>
+                <th className="px-2 py-4">ID</th>
+                <th className="px-2 py-4">Name</th>
+                <th className="px-2 py-4">Goal</th>
+                <th className="px-2 py-4">Participants</th>
+                <th className="px-2 py-4">Start Dates</th>
+                <th className="px-2 py-4">End Dates</th>
+                <th className="px-2 py-4">Action</th>
               </tr>
-            ) : (
-              challenges.map((ch, index) => (
-                <tr
-                  key={ch.id || index}
-                  className="bg-white border-b hover:bg-gray-50"
-                >
-                  <td className="px-2 py-4">{ch.id}</td>
-                  <td className="px-2 py-4">{ch.name}</td>
-                  <td className="px-2 py-4">{ch.goalTitle}</td>
-                  <td className="px-2 py-4">{ch.totalParticipants}</td>
-                  <td className="px-2 py-4">
-                    {formatDate(ch.durationStart)}
-                  </td>
-                  <td className="px-2 py-4">
-                    {formatDate(ch.durationEnd)}
-                  </td>
-                  <td className="px-2 py-4">
-                    <Tooltip
-                      id={`tooltip-edit-${ch.id}`}
-                      content="Edit Challenge"
-                      place="left"
-                    >
-                      <div
-                        className="p-1 cursor-pointer"
-                        onClick={() => {
-                          setEditingOption(ch);
-                          formik.setValues({
-                            ...formik.initialValues, // keep default structure
-                            ...ch, // overwrite with challenge data
-                            rewards: ch.rewards ?? formik.initialValues.rewards, // keep rewards if missing
-                          });
-                          setShowModal(true);
-                        }}
-                      >
-                        <LiaEdit className="text-[25px] text-black" />
-                      </div>
-                    </Tooltip>
+            </thead>
+            <tbody>
+              {challenges.length === 0 ? (
+                <tr>
+                  <td colSpan="6" className="text-center py-4">
+                    No challenge added yet.
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ) : (
+                challenges.map((ch, index) => (
+                  <tr
+                    key={ch.id || index}
+                    className="bg-white border-b hover:bg-gray-50"
+                  >
+                    <td className="px-2 py-4">{ch.id}</td>
+                    <td className="px-2 py-4">{ch.name}</td>
+                    <td className="px-2 py-4">{ch.goalTitle}</td>
+                    <td className="px-2 py-4">{ch.totalParticipants}</td>
+                    <td className="px-2 py-4">
+                      {formatDate(ch.durationStart)}
+                    </td>
+                    <td className="px-2 py-4">{formatDate(ch.durationEnd)}</td>
+                    <td className="px-2 py-4">
+                      <Tooltip
+                        id={`tooltip-edit-${ch.id}`}
+                        content="Edit Challenge"
+                        place="left"
+                      >
+                        <div
+                          className="p-1 cursor-pointer"
+                          onClick={() => {
+                            setEditingOption(ch);
+                            formik.setValues({
+                              ...formik.initialValues, // keep default structure
+                              ...ch, // overwrite with challenge data
+                              rewards:
+                                ch.rewards ?? formik.initialValues.rewards, // keep rewards if missing
+                            });
+                            setShowModal(true);
+                          }}
+                        >
+                          <LiaEdit className="text-[25px] text-black" />
+                        </div>
+                      </Tooltip>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {showModal && (

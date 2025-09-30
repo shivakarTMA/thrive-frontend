@@ -148,80 +148,82 @@ const ExercisesList = () => {
       </div>
 
       {/* Table */}
-      <div className="relative overflow-x-auto mt-6">
-        <table className="w-full text-sm text-left text-gray-500">
-          <thead className="text-xs text-gray-700 uppercase bg-gray-50">
-            <tr>
-              <th className="px-2 py-4">S.NO</th>
-              <th className="px-2 py-4">Category Name</th>
-              <th className="px-2 py-4">Exercise Image</th>
-              <th className="px-2 py-4">Exercise Name</th>
-              <th className="px-2 py-4">Created By</th>
-              <th className="px-2 py-4">Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {paginatedData.map((row, idx) => (
-              <tr
-                key={row.id}
-                className="group bg-white border-b hover:bg-gray-50 transition duration-700 relative"
-              >
-                <td className="px-2 py-4">
-                  {(page - 1) * rowsPerPage + idx + 1}
-                </td>
-                <td className="px-2 py-4">{row.exerciseCategory}</td>
-                <td className="px-2 py-4">
-                  {row.exerciseImage ? (
-                    <img
-                      src={
-                        typeof row.exerciseImage === "string"
-                          ? row.exerciseImage
-                          : URL.createObjectURL(row.exerciseImage)
-                      }
-                      alt="Exercise"
-                      className="w-[40px] h-[40px] object-cover rounded"
-                    />
-                  ) : (
-                    "N/A"
-                  )}
-                </td>
-                <td className="px-2 py-4">{row.exerciseName}</td>
-                <td className="px-2 py-4">Admin</td>
-                <td className="px-2 py-4">
-                  <div className="flex">
-                    <Tooltip
-                      id={`edit-exercise-${row.id}`}
-                      content="Edit Exercise"
-                      place="top"
-                    >
-                      <div
-                        onClick={() => {
-                          setEditingExercise(row);
-                          setShowModal(true);
-                        }}
-                        className="p-1 cursor-pointer"
-                      >
-                        <LiaEdit className="text-[25px] text-black" />
-                      </div>
-                    </Tooltip>
-                    <Tooltip
-                      id={`delete-exercise-${row.id}`}
-                      content="Delete Exercise"
-                      place="top"
-                    >
-                      <div
-                        onClick={() => handleDeleteClick(row)}
-                        className="p-1 cursor-pointer"
-                      >
-                        <RiDeleteBin6Fill className="text-[25px] text-black" />
-                      </div>
-                    </Tooltip>
-                  </div>
-                </td>
+      <div className="box--shadow bg-white rounded-[15px] p-4">
+        <div className="relative overflow-x-auto">
+          <table className="w-full text-sm text-left text-gray-500">
+            <thead className="text-xs text-gray-700 uppercase bg-gray-50">
+              <tr>
+                <th className="px-2 py-4">S.NO</th>
+                <th className="px-2 py-4">Category Name</th>
+                <th className="px-2 py-4">Exercise Image</th>
+                <th className="px-2 py-4">Exercise Name</th>
+                <th className="px-2 py-4">Created By</th>
+                <th className="px-2 py-4">Action</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {paginatedData.map((row, idx) => (
+                <tr
+                  key={row.id}
+                  className="group bg-white border-b hover:bg-gray-50 transition duration-700 relative"
+                >
+                  <td className="px-2 py-4">
+                    {(page - 1) * rowsPerPage + idx + 1}
+                  </td>
+                  <td className="px-2 py-4">{row.exerciseCategory}</td>
+                  <td className="px-2 py-4">
+                    {row.exerciseImage ? (
+                      <img
+                        src={
+                          typeof row.exerciseImage === "string"
+                            ? row.exerciseImage
+                            : URL.createObjectURL(row.exerciseImage)
+                        }
+                        alt="Exercise"
+                        className="w-[40px] h-[40px] object-cover rounded"
+                      />
+                    ) : (
+                      "N/A"
+                    )}
+                  </td>
+                  <td className="px-2 py-4">{row.exerciseName}</td>
+                  <td className="px-2 py-4">Admin</td>
+                  <td className="px-2 py-4">
+                    <div className="flex">
+                      <Tooltip
+                        id={`edit-exercise-${row.id}`}
+                        content="Edit Exercise"
+                        place="top"
+                      >
+                        <div
+                          onClick={() => {
+                            setEditingExercise(row);
+                            setShowModal(true);
+                          }}
+                          className="p-1 cursor-pointer"
+                        >
+                          <LiaEdit className="text-[25px] text-black" />
+                        </div>
+                      </Tooltip>
+                      <Tooltip
+                        id={`delete-exercise-${row.id}`}
+                        content="Delete Exercise"
+                        place="top"
+                      >
+                        <div
+                          onClick={() => handleDeleteClick(row)}
+                          className="p-1 cursor-pointer"
+                        >
+                          <RiDeleteBin6Fill className="text-[25px] text-black" />
+                        </div>
+                      </Tooltip>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* Pagination */}

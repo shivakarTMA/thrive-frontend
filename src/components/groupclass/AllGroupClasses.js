@@ -280,7 +280,8 @@ const AllGroupClasses = () => {
       </div>
 
       {/* Table */}
-      <div className="relative overflow-x-auto mt-6">
+      <div className="box--shadow bg-white rounded-[15px] p-4">
+      <div className="relative overflow-x-auto">
         <table className="w-full text-sm text-left text-gray-500">
           <thead className="text-xs text-gray-700 uppercase bg-gray-50">
             <tr>
@@ -362,6 +363,7 @@ const AllGroupClasses = () => {
             ))}
           </tbody>
         </table>
+      </div>
       </div>
 
       {/* Pagination */}

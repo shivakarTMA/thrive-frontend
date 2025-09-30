@@ -264,10 +264,10 @@ const Home = () => {
           <div className="grid grid-cols-2 gap-2">
             <StatCard {...salesData} />
             <StatCard {...leadsData} />
-            <div className="border rounded p-4 w-full">
+            <div className="border box--shadow bg-white rounded-[15px] p-4 w-full">
               <HighchartsReact highcharts={Highcharts} options={leadsStatus} />
             </div>
-            <div className="border rounded p-4 w-full">
+            <div className="border box--shadow bg-white rounded-[15px] p-4 w-full">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="font-semibold">
                   Trial Scheduled ({trialLeads.length})
@@ -286,11 +286,11 @@ const Home = () => {
             </div>
           </div>
 
-          <div className="border rounded p-4 w-full mt-2">
+          <div className="border box--shadow bg-white rounded-[15px] p-4 w-full mt-2">
             <HighchartsReact highcharts={Highcharts} options={groupClasses} />
           </div>
         </div>
-        <div className="right--side">
+        <div className="right--side box--shadow bg-white rounded-[15px] p-4">
           <div className="top--side flex items-center gap-2 justify-between">
             <h2>Follow-Ups ({filteredData.length})</h2>
             <Link to="#" className="underline text-blue-500">
@@ -403,12 +403,12 @@ const Home = () => {
         </div>
       </div>
 
-      <div className="border rounded p-4 w-full mt-2">
+      <div className="border box--shadow bg-white rounded-[15px] p-4 w-full mt-2">
         <div className="flex justify-between items-center mb-4">
           <h2 className="font-semibold">
             Pending Orders {`(${orders.length})`}
           </h2>
-          <a href="#" className="text-blue-500 underline text-sm">
+          <a href="#" className="text-[#009EB2] underline text-sm">
             View All
           </a>
         </div>

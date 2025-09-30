@@ -33,7 +33,7 @@ const ModuleList = () => {
           page: currentPage,
           limit: rowsPerPage,
           ...(search ? { search } : {}),
-        }
+        },
       });
       let data = res.data?.data || res.data || [];
       if (statusFilter?.value) {
@@ -80,7 +80,7 @@ const ModuleList = () => {
       name: Yup.string().required("Module name is required"),
       status: Yup.string().required("Status is required"),
     }),
-     onSubmit: async (values, { resetForm }) => {
+    onSubmit: async (values, { resetForm }) => {
       try {
         const payload = {
           ...values,
@@ -132,7 +132,7 @@ const ModuleList = () => {
         </div>
       </div>
 
-       <div className="flex gap-3 mb-4">
+      <div className="flex gap-3 mb-4">
         <div className="mb-4 w-full max-w-[200px]">
           <div className="relative">
             <span className="absolute top-[50%] translate-y-[-50%] left-[15px]">
@@ -162,91 +162,92 @@ const ModuleList = () => {
           />
         </div>
       </div>
-
-      <div className="relative overflow-x-auto">
-        <table className="w-full text-sm text-left text-gray-500">
-          <thead className="text-xs text-gray-700 uppercase bg-gray-50">
-            <tr>
-              {/* <th className="px-2 py-4">Module ID</th> */}
-              <th className="px-2 py-4">Name</th>
-              <th className="px-2 py-4">Description</th>
-              <th className="px-2 py-4">Status</th>
-              <th className="px-2 py-4">Created At</th>
-              <th className="px-2 py-4">Updated At</th>
-              <th className="px-2 py-4">Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {module.length === 0 ? (
+      <div className="box--shadow bg-white rounded-[15px] p-4">
+        <div className="relative overflow-x-auto">
+          <table className="w-full text-sm text-left text-gray-500">
+            <thead className="text-xs text-gray-700 uppercase bg-gray-50">
               <tr>
-                <td colSpan="8" className="text-center py-4">
-                  No module added yet.
-                </td>
+                {/* <th className="px-2 py-4">Module ID</th> */}
+                <th className="px-2 py-4">Name</th>
+                <th className="px-2 py-4">Description</th>
+                <th className="px-2 py-4">Status</th>
+                <th className="px-2 py-4">Created At</th>
+                <th className="px-2 py-4">Updated At</th>
+                <th className="px-2 py-4">Action</th>
               </tr>
-            ) : (
-              module.map((company, index) => (
-                <tr
-                  key={company.id || index}
-                  className="group bg-white border-b hover:bg-gray-50 relative transition duration-700"
-                >
-                  {/* <td className="px-2 py-4">{company?.id || "—"}</td> */}
-                  <td className="px-2 py-4">{company?.name}</td>
-                  <td>{company.description ?? "—"}</td>
-                  <td className="px-2 py-4">
-                    <div
-                      className={`flex gap-1 items-center ${
-                        company?.status === "ACTIVE"
-                          ? "text-green-500"
-                          : "text-red-500"
-                      }`}
-                    >
-                      <FaCircle />
-                      {company?.status
-                        ? company.status.charAt(0) +
-                          company.status.slice(1).toLowerCase()
-                        : ""}
-                    </div>
-                  </td>
-                  <td>{formatDate(company.createdAt)}</td>
-                  <td>{formatDate(company.updatedAt)}</td>
-
-                  <td className="px-2 py-4">
-                    <div className="w-fit">
-                      <Tooltip
-                        id={`tooltip-edit-${company.id || index}`}
-                        content="Edit Club"
-                        place="left"
-                      >
-                        <div
-                          className="p-1 cursor-pointer"
-                          onClick={() => {
-                            setEditingOption(company?.id);
-                            setShowModal(true);
-                          }}
-                        >
-                          <LiaEdit className="text-[25px] text-black" />
-                        </div>
-                      </Tooltip>
-                    </div>
+            </thead>
+            <tbody>
+              {module.length === 0 ? (
+                <tr>
+                  <td colSpan="8" className="text-center py-4">
+                    No module added yet.
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+              ) : (
+                module.map((company, index) => (
+                  <tr
+                    key={company.id || index}
+                    className="group bg-white border-b hover:bg-gray-50 relative transition duration-700"
+                  >
+                    {/* <td className="px-2 py-4">{company?.id || "—"}</td> */}
+                    <td className="px-2 py-4">{company?.name}</td>
+                    <td>{company.description ?? "—"}</td>
+                    <td className="px-2 py-4">
+                      <div
+                        className={`flex gap-1 items-center ${
+                          company?.status === "ACTIVE"
+                            ? "text-green-500"
+                            : "text-red-500"
+                        }`}
+                      >
+                        <FaCircle />
+                        {company?.status
+                          ? company.status.charAt(0) +
+                            company.status.slice(1).toLowerCase()
+                          : ""}
+                      </div>
+                    </td>
+                    <td>{formatDate(company.createdAt)}</td>
+                    <td>{formatDate(company.updatedAt)}</td>
 
-      <Pagination
-        page={page}
-        totalPages={totalPages}
-        rowsPerPage={rowsPerPage}
-        totalCount={totalCount}
-        currentDataLength={module.length}
-        onPageChange={(newPage) => {
-          setPage(newPage);
-          fetchModuleList(searchTerm, newPage);
-        }}
-      />
+                    <td className="px-2 py-4">
+                      <div className="w-fit">
+                        <Tooltip
+                          id={`tooltip-edit-${company.id || index}`}
+                          content="Edit Club"
+                          place="left"
+                        >
+                          <div
+                            className="p-1 cursor-pointer"
+                            onClick={() => {
+                              setEditingOption(company?.id);
+                              setShowModal(true);
+                            }}
+                          >
+                            <LiaEdit className="text-[25px] text-black" />
+                          </div>
+                        </Tooltip>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        <Pagination
+          page={page}
+          totalPages={totalPages}
+          rowsPerPage={rowsPerPage}
+          totalCount={totalCount}
+          currentDataLength={module.length}
+          onPageChange={(newPage) => {
+            setPage(newPage);
+            fetchModuleList(searchTerm, newPage);
+          }}
+        />
+      </div>
 
       {showModal && (
         <CreateModule
