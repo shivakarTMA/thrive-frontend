@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { IoCloseCircle } from "react-icons/io5";
@@ -14,6 +14,7 @@ import { toast } from "react-toastify";
 
 const MarkReturnedModal = ({ data, onClose, onSubmit }) => {
   const leadBoxRef = useRef(null);
+  const [mobileError, setMobileError] = useState("");
   const formik = useFormik({
     initialValues: {
       item: "Water Bottle",
@@ -107,20 +108,24 @@ const MarkReturnedModal = ({ data, onClose, onSubmit }) => {
             String(member.mobile) === String(formik.values.mobile) &&
             String(member.country_code) === String(formik.values.country_code)
         );
-        console.log(matchedMember,'matchedMember')
+        console.log(matchedMember, "matchedMember");
 
         if (matchedMember) {
           formik.setFieldValue("claimant_name", matchedMember.full_name);
           formik.setFieldError("claimant_name", "");
+          setMobileError("");
         } else {
           formik.setFieldValue("claimant_name", "");
-          toast.error("User not registered");
+          setMobileError("User not registered");
         }
       }
     } catch (error) {
       console.error("Error fetching member list:", error);
+      setMobileError("Something went wrong, try again later.");
     }
   };
+
+  console.log("Mobile error:", formik.errors.mobile);
 
   console.log(data, "data");
 
@@ -135,9 +140,7 @@ const MarkReturnedModal = ({ data, onClose, onSubmit }) => {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="bg-white rounded-t-[10px] flex gap-3 items-center justify-between py-4 px-4 border-b">
-          <h2 className="text-xl font-semibold">
-            Mark as Returned
-          </h2>
+          <h2 className="text-xl font-semibold">Mark as Returned</h2>
           <div className="close--lead cursor-pointer" onClick={onClose}>
             <IoCloseCircle className="text-3xl" />
           </div>
@@ -219,9 +222,9 @@ const MarkReturnedModal = ({ data, onClose, onSubmit }) => {
                     countryCallingCodeEditable={false}
                     className="custom--input w-full custom--phone"
                   />
-                  {formik.touched.mobile && formik.errors.mobile && (
+                  {(formik.errors.mobile || mobileError) && (
                     <div className="text-red-500 text-sm">
-                      {formik.errors.mobile}
+                      {mobileError || formik.errors.mobile}
                     </div>
                   )}
                 </div>
