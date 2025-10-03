@@ -3,7 +3,7 @@ import PropTypes from "prop-types"; // Import PropTypes for type checking
 import { Link } from "react-router-dom"; // Import Link for navigation
 
 // Functional component to display sales summary dynamically
-const SalesSummary = ({ icon, title, totalSales, items }) => {
+const SalesSummary = ({ icon, title, totalSales, items, titleLink }) => {
   return (
     <div className="bg-white rounded-[5px] overflow-hidden border border-[#D4D4D4]">
       {/* Header with dynamic icon and total sales */}
@@ -14,7 +14,7 @@ const SalesSummary = ({ icon, title, totalSales, items }) => {
           <span className="font-bold text-black text-md">{title}</span>
         </span>
         {/* Total Sales Value */}
-        <span className="font-bold text-md text-black">{totalSales}</span>
+        <Link to={titleLink} className="font-bold text-md text-black">{totalSales}</Link>
       </div>
 
       {/* Dynamically render all items */}
@@ -37,6 +37,7 @@ const SalesSummary = ({ icon, title, totalSales, items }) => {
 SalesSummary.propTypes = {
   icon: PropTypes.string.isRequired, // Dynamic icon image source
   title: PropTypes.string.isRequired, // Title text
+  titleLink: PropTypes.string.isRequired, // Title text
   totalSales: PropTypes.string.isRequired, // Total sales value
   items: PropTypes.arrayOf(
     PropTypes.shape({

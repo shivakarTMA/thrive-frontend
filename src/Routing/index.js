@@ -59,6 +59,8 @@ import EmailModule from "../components/Marketing/EmailModule";
 import SmsModule from "../components/Marketing/SmsModule";
 import WhatsappModule from "../components/Marketing/WhatsappModule";
 import ClubManagerDashboard from "../Pages/ClubManagerDashboard";
+import TrainerDashboard from "../Pages/TrainerDashboard";
+import SalesReportDashboard from "../Pages/SalesReportDashboard";
 
 
 export default function Routing() {
@@ -611,6 +613,22 @@ export default function Routing() {
               element={
                 <PrivateRoute>
                   <ClubManagerDashboard />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/sales-report/"
+              element={
+                <PrivateRoute>
+                  <SalesReportDashboard />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/trainer-dashboard/"
+              element={
+                <PrivateRoute>
+                  <TrainerDashboard />
                 </PrivateRoute>
               }
             />

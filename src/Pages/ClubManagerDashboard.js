@@ -105,7 +105,7 @@ const ClubManagerDashboard = () => {
   const days = ["Yesterday", "Today", "Tomorrow"];
   const [currentDayIndex, setCurrentDayIndex] = useState(1); // Default to Today
   const [activeTab, setActiveTab] = useState("Snapshot");
-  const [dateFilter, setDateFilter] = useState(dateFilterOptions[0]);
+  const [dateFilter, setDateFilter] = useState(dateFilterOptions[1]);
   const [customFrom, setCustomFrom] = useState(null);
   const [customTo, setCustomTo] = useState(null);
   const [orders, setOrders] = useState([
@@ -488,10 +488,11 @@ const ClubManagerDashboard = () => {
             <SalesSummary
               icon={totalSalesIcon}
               title="Total Sales"
+              titleLink="/sales-report?data=memberships"
               totalSales="3,20,00,000"
               items={[
                 { label: "Memberships", value: "2,00,00,000", link: "#" },
-                //   { label: "Memberships", value: "2,00,00,000", link: "/link?data=memberships" },
+                //   { label: "Memberships", value: "2,00,00,000", link: "/sales-report?data=memberships" },
                 { label: "Packages", value: "20,00,000", link: "#" },
                 { label: "Products", value: "1,00,00,000", link: "#" },
               ]}
@@ -499,6 +500,7 @@ const ClubManagerDashboard = () => {
             <SalesSummary
               icon={newClientIcon}
               title="New Clients"
+              titleLink="/sales-report?data=memberships"
               totalSales="17"
               items={[
                 { label: "Memberships", value: "10", link: "#" },
@@ -509,6 +511,7 @@ const ClubManagerDashboard = () => {
             <SalesSummary
               icon={renewalIcon}
               title="Renewal"
+              titleLink="/sales-report?data=memberships"
               totalSales="12"
               items={[
                 { label: "Memberships", value: "05", link: "#" },
@@ -520,6 +523,7 @@ const ClubManagerDashboard = () => {
             <SalesSummary
               icon={trialIcon}
               title="Trials"
+              titleLink="/sales-report?data=memberships"
               totalSales="32"
               items={[
                 { label: "Scheduled", value: "10", link: "#" },
@@ -530,6 +534,7 @@ const ClubManagerDashboard = () => {
             <SalesSummary
               icon={checkInIcon}
               title="Check-ins"
+              titleLink="/sales-report?data=memberships"
               totalSales="905"
               items={[
                 { label: "Unique Check-ins", value: "881", link: "#" },
@@ -539,6 +544,7 @@ const ClubManagerDashboard = () => {
             <SalesSummary
               icon={enquiriesIcon}
               title="Conversion"
+              titleLink="/sales-report?data=memberships"
               totalSales="2%"
               items={[
                 { label: "Lead To Trial", value: "13%", link: "#" },
@@ -583,9 +589,9 @@ const ClubManagerDashboard = () => {
                   {classPerformance.map((item, index) => (
                     <tr key={item.id} className="border-t">
                       <td className="p-2">{item.classType}</td>
-                      <td className="p-2">{item.bookings}</td>
-                      <td className="p-2">{item.reservations}</td>
-                      <td className="p-2">{item.cancellations}</td>
+                      <td className="p-2">{String(item.bookings).padStart(2, '0')}</td>
+                      <td className="p-2">{String(item.reservations).padStart(2, '0')}</td>
+                      <td className="p-2">{String(item.cancellations).padStart(2, '0')}</td>
                       <td className="p-2">
                         <div className="bg-[#F1F1F1] border border-[#D4D4D4] rounded-[5px] w-[32px] h-[32px] flex items-center justify-center cursor-pointer">
                           <img src={eyeIcon} />
