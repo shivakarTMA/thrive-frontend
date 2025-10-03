@@ -127,6 +127,15 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
           <span className="nav-text">Sales Report</span>
         </Link>
         <Link
+          to="/trial-appointments"
+          className={`nav-link mb-2 ${
+            location.pathname === "/trial-appointments" ? "active" : ""
+          }`}
+        >
+          <AiOutlineHome className="menu--icon" />
+          <span className="nav-text">Trial Appointments</span>
+        </Link>
+        <Link
           to="/trainer-dashboard"
           className={`nav-link mb-2 ${
             location.pathname === "/trainer-dashboard" ? "active" : ""

@@ -498,23 +498,21 @@ const ClubManagerDashboard = () => {
                   value: `₹${formatIndianNumber(20000000)}`,
                   link: `/sales-report?date=${encodeURIComponent(
                     dateFilter?.value
-                  )}&serviceType=Membership&value=${encodeURIComponent(
-                    20000000
-                  )}`,
+                  )}&serviceType=Membership`,
                 },
                 {
                   label: "Packages",
                   value: `₹${formatIndianNumber(2000000)}`,
                   link: `/sales-report?date=${encodeURIComponent(
                     dateFilter?.value
-                  )}&serviceType=Package&value=${encodeURIComponent(2000000)}`,
+                  )}&serviceType=Package`,
                 },
                 {
                   label: "Products",
                   value: `₹${formatIndianNumber(2000000)}`,
                   link: `/sales-report?date=${encodeURIComponent(
                     dateFilter?.value
-                  )}&serviceType=Product&value=${encodeURIComponent(2000000)}`,
+                  )}&serviceType=Product`,
                 },
               ]}
             />
@@ -530,27 +528,21 @@ const ClubManagerDashboard = () => {
                   value: "01",
                   link: `/sales-report?date=${encodeURIComponent(
                     dateFilter?.value
-                  )}&billType=New&serviceType=Membership&value=${encodeURIComponent(
-                    1
-                  )}`,
+                  )}&billType=New&serviceType=Membership`,
                 },
                 {
                   label: "Packages",
                   value: "01",
                   link: `/sales-report?date=${encodeURIComponent(
                     dateFilter?.value
-                  )}&billType=New&serviceType=Package&value=${encodeURIComponent(
-                    1
-                  )}`,
+                  )}&billType=New&serviceType=Package`,
                 },
                 {
                   label: "Products",
                   value: "01",
                   link: `/sales-report?date=${encodeURIComponent(
                     dateFilter?.value
-                  )}&billType=New&serviceType=Product&value=${encodeURIComponent(
-                    1
-                  )}`,
+                  )}&billType=New&serviceType=Product`,
                 },
               ]}
             />
@@ -565,27 +557,21 @@ const ClubManagerDashboard = () => {
                   value: "01",
                   link: `/sales-report?date=${encodeURIComponent(
                     dateFilter?.value
-                  )}&billType=Renewal&serviceType=Membership&value=${encodeURIComponent(
-                    1
-                  )}`,
+                  )}&billType=Renewal&serviceType=Membership`,
                 },
                 {
                   label: "Packages",
                   value: "01",
                   link: `/sales-report?date=${encodeURIComponent(
                     dateFilter?.value
-                  )}&billType=Renewal&serviceType=Package&value=${encodeURIComponent(
-                    1
-                  )}`,
+                  )}&billType=Renewal&serviceType=Package`,
                 },
                 {
                   label: "Products",
                   value: "01",
                   link: `/sales-report?date=${encodeURIComponent(
                     dateFilter?.value
-                  )}&billType=Renewal&serviceType=Product&value=${encodeURIComponent(
-                    1
-                  )}`,
+                  )}&billType=Renewal&serviceType=Product`,
                 },
               ]}
             />
@@ -593,12 +579,30 @@ const ClubManagerDashboard = () => {
             <SalesSummary
               icon={trialIcon}
               title="Trials"
-              titleLink="/sales-report?data=memberships"
-              totalSales="32"
+              titleLink={`/trial-appointments?date=${dateFilter?.value}`}
+              totalSales="4"
               items={[
-                { label: "Scheduled", value: "10", link: "#" },
-                { label: "Completed", value: "20", link: "#" },
-                { label: "No-Show", value: "12", link: "#" },
+                {
+                  label: "Scheduled",
+                  value: "01",
+                  link: `/trial-appointments?date=${encodeURIComponent(
+                    dateFilter?.value
+                  )}&status=Scheduled`,
+                },
+                {
+                  label: "Completed",
+                  value: "02",
+                  link: `/trial-appointments?date=${encodeURIComponent(
+                    dateFilter?.value
+                  )}&status=Completed`,
+                },
+                {
+                  label: "No-Show",
+                  value: "01",
+                  link: `/trial-appointments?date=${encodeURIComponent(
+                    dateFilter?.value
+                  )}&status=No-Show`,
+                },
               ]}
             />
             <SalesSummary

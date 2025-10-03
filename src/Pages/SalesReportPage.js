@@ -57,7 +57,6 @@ const SalesReportDashboard = () => {
       date: params.get("date"),
       service_type: params.get("serviceType"), // e.g., Memberships
       billType: params.get("billType"),
-      value: params.get("value"), // e.g., 20000000 (string)
     };
   }, [location.search]);
 

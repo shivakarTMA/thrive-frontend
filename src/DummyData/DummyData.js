@@ -1994,6 +1994,50 @@ export const salesReportData = [
   },
 ];
 
+// Trial Appointments
+export const trialAppointments = [
+  {
+    enquiryDate: "01/10/2025",
+    appointmentCategory: "Complimentary",
+    appointmentName: "Trial/Test",
+    leadName: "Shivakar Sharma",
+    dateTime: "18/09/2025 09:38AM",
+    staffName: "Ritu Sharma",
+    scheduledBy: "Nitin Sehgal",
+    status: "No-Show",
+  },
+  {
+    enquiryDate: "02/10/2025",
+    appointmentCategory: "Complimentary",
+    appointmentName: "Trial/Test",
+    leadName: "Tapan Nayak",
+    dateTime: "18/09/2025 09:38AM",
+    staffName: "Supriya Sanyal",
+    scheduledBy: "Preeti Singh",
+    status: "Completed",
+  },
+  {
+    enquiryDate: "29/09/2025",
+    appointmentCategory: "Complimentary",
+    appointmentName: "Trial/Test",
+    leadName: "Anurag Jha",
+    dateTime: "18/09/2025 09:38AM",
+    staffName: "Preeti Singh",
+    scheduledBy: "Anushka Sharma",
+    status: "Completed",
+  },
+  {
+    enquiryDate: "30/09/2025",
+    appointmentCategory: "Complimentary",
+    appointmentName: "Trial/Test",
+    leadName: "Aman Rawat",
+    dateTime: "18/09/2025 09:38AM",
+    staffName: "Sushant Singh",
+    scheduledBy: "Samarjeet Singh",
+    status: "Scheduled",
+  },
+];
+
 export const trainerAvailability = {
   shivakar: [
     { date_time: "2025-09-01T08:00:00.000Z" },

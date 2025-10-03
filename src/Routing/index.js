@@ -61,6 +61,7 @@ import WhatsappModule from "../components/Marketing/WhatsappModule";
 import ClubManagerDashboard from "../Pages/ClubManagerDashboard";
 import TrainerDashboard from "../Pages/TrainerDashboard";
 import SalesReportPage from "../Pages/SalesReportPage";
+import TrialAppointments from "../Pages/TrialAppointments";
 
 
 export default function Routing() {
@@ -621,6 +622,14 @@ export default function Routing() {
               element={
                 <PrivateRoute>
                   <SalesReportPage />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/trial-appointments/"
+              element={
+                <PrivateRoute>
+                  <TrialAppointments />
                 </PrivateRoute>
               }
             />
