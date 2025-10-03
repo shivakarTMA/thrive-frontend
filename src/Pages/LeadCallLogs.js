@@ -349,7 +349,7 @@ const LeadCallLogs = () => {
                         onChange={handleDateTime}
                         showTimeSelect
                         timeFormat="hh:mm aa"
-                        dateFormat="MM/dd/yyyy hh:mm aa"
+                        dateFormat="dd/MM/yyyy hh:mm aa"
                         placeholderText="Select date & time"
                         className="border px-3 py-2 w-full input--icon"
                         minDate={now}
@@ -384,7 +384,7 @@ const LeadCallLogs = () => {
                         onChange={handleDateTrainerChange}
                         showTimeSelect
                         timeFormat="hh:mm aa"
-                        dateFormat="MM/dd/yyyy hh:mm aa"
+                        dateFormat="dd/MM/yyyy hh:mm aa"
                         placeholderText="Select date & time"
                         className="border px-3 py-2 w-full input--icon"
                         minDate={now}
@@ -453,7 +453,7 @@ const LeadCallLogs = () => {
                             onChange={handleDateChange}
                             showTimeSelect
                             timeFormat="hh:mm aa"
-                            dateFormat="MM/dd/yyyy hh:mm aa"
+                            dateFormat="dd/MM/yyyy hh:mm aa"
                             placeholderText="Select date & time"
                             className="border px-3 py-2 w-full input--icon"
                             minDate={now}
@@ -557,7 +557,7 @@ const LeadCallLogs = () => {
                         onChange={(val) =>
                           formik.setFieldValue("closureDate", val)
                         }
-                        dateFormat="MM/dd/yyyy hh:mm aa"
+                        dateFormat="dd/MM/yyyy hh:mm aa"
                         placeholderText="Select Date"
                         className="border px-3 py-2 w-full input--icon"
                         minDate={now}

@@ -93,12 +93,12 @@ export default function LostFoundPanel({
       category: itemCategory?.value,
       location: itemLocation?.value,
       floor: itemFloor?.value,
-      found_from: itemFoundFrom ? format(itemFoundFrom, "MM/dd/yyyy") : null,
-      found_to: itemFoundTo ? format(itemFoundTo, "MM/dd/yyyy") : null,
+      found_from: itemFoundFrom ? format(itemFoundFrom, "dd/MM/yyyy") : null,
+      found_to: itemFoundTo ? format(itemFoundTo, "dd/MM/yyyy") : null,
       returned_from: itemReturnedFrom
-        ? format(itemReturnedFrom, "MM/dd/yyyy")
+        ? format(itemReturnedFrom, "dd/MM/yyyy")
         : null,
-      returned_to: itemReturnedTo ? format(itemReturnedTo, "MM/dd/yyyy") : null,
+      returned_to: itemReturnedTo ? format(itemReturnedTo, "dd/MM/yyyy") : null,
     };
 
     setAppliedFilters(filters); // ✅ Only update on click
@@ -230,7 +230,7 @@ export default function LostFoundPanel({
                         onChange={(date) => setItemFoundFrom(date)}
                         placeholderText="Select start date"
                         className="w-full"
-                        dateFormat="MM/dd/yyyy"
+                        dateFormat="dd/MM/yyyy"
                         maxDate={new Date()}
                       />
                     </div>
@@ -247,7 +247,7 @@ export default function LostFoundPanel({
                         onChange={(date) => setItemFoundTo(date)}
                         placeholderText="Select end date"
                         className="w-full"
-                        dateFormat="MM/dd/yyyy"
+                        dateFormat="dd/MM/yyyy"
                         maxDate={new Date()}
                       />
                     </div>
@@ -269,7 +269,7 @@ export default function LostFoundPanel({
                         onChange={(date) => setItemReturnedFrom(date)}
                         placeholderText="Select start date"
                         className="w-full"
-                        dateFormat="MM/dd/yyyy"
+                        dateFormat="dd/MM/yyyy"
                         maxDate={new Date()}
                       />
                     </div>
@@ -286,7 +286,7 @@ export default function LostFoundPanel({
                         onChange={(date) => setItemReturnedTo(date)}
                         placeholderText="Select end date"
                         className="w-full"
-                        dateFormat="MM/dd/yyyy"
+                        dateFormat="dd/MM/yyyy"
                         maxDate={new Date()}
                       />
                     </div>

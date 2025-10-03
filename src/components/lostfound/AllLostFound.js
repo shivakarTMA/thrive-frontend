@@ -13,7 +13,8 @@ import { customStyles } from "../../Helper/helper";
 import viewIcon from "../../assets/images/icons/eye.svg";
 import returnIcon from "../../assets/images/icons/return.svg";
 import { FaCalendarDays } from "react-icons/fa6";
-import LostFoundPanel from "../common/LostFoundPanel";
+import LostFoundPanel from "../FilterPanel/LostFoundPanel";
+
 
 const dateFilterOptions = [
   { value: "today", label: "Today" },
@@ -166,7 +167,7 @@ const AllLostFound = () => {
                     <td className="px-2 py-4">{row?.foundAt}</td>
                     <td className="px-2 py-4">
                       {/* {row?.dateTime} */}
-                      {format(new Date(row?.dateTime), 'MM/dd/yyyy hh:mm a')}
+                      {format(new Date(row?.dateTime), 'dd/MM/yyyy hh:mm a')}
                       </td>
                     <td className="px-2 py-4">
                       <span

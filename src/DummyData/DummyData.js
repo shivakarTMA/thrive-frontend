@@ -30,12 +30,12 @@ export const workoutPlansList = [
   },
 ];
 
-export const workoutTemplateWithExercises  = {
+export const workoutTemplateWithExercises = {
   id: 1,
   name: "Leg Day + Cardio Mix",
   type: "multiple",
   numDays: 3,
-  description:"testing Leg Day + Cardio Mix",
+  description: "testing Leg Day + Cardio Mix",
   days: [
     {
       name: "Day 1",
@@ -221,7 +221,7 @@ export const workoutTemplatePushDay = {
   name: "Push Day Strength",
   type: "multiple",
   numDays: 2,
-  description:"testing Push Day Strength",
+  description: "testing Push Day Strength",
   days: [
     {
       name: "Day 1",
@@ -246,8 +246,8 @@ export const workoutTemplatePushDay = {
           sets: [
             { weight: "70", reps: "12", rest: "90", notes: "" },
             { weight: "75", reps: "10", rest: "120", notes: "" },
-            { weight: "80", reps: "8", rest: "150", notes: "" }
-          ]
+            { weight: "80", reps: "8", rest: "150", notes: "" },
+          ],
         },
         {
           id: 2,
@@ -267,8 +267,8 @@ export const workoutTemplatePushDay = {
           notes: "Keep core tight, avoid arching back.",
           sets: [
             { weight: "40", reps: "12", rest: "90", notes: "" },
-            { weight: "45", reps: "10", rest: "120", notes: "" }
-          ]
+            { weight: "45", reps: "10", rest: "120", notes: "" },
+          ],
         },
         {
           id: 3,
@@ -283,22 +283,21 @@ export const workoutTemplatePushDay = {
           groupType: null,
           groupId: null,
           workoutTag: "workout",
-          image:
-            "https://barbend.com/wp-content/uploads/2021/09/Dips.jpg",
+          image: "https://barbend.com/wp-content/uploads/2021/09/Dips.jpg",
           notes: "Keep elbows close to body.",
           sets: [
             { reps: "12", rest: "60", notes: "" },
-            { reps: "10", rest: "60", notes: "" }
-          ]
-        }
-      ]
+            { reps: "10", rest: "60", notes: "" },
+          ],
+        },
+      ],
     },
     {
       name: "Day 2",
       isRestDay: true,
-      exercises: []
-    }
-  ]
+      exercises: [],
+    },
+  ],
 };
 
 export const workoutTemplateHIIT = {
@@ -306,7 +305,7 @@ export const workoutTemplateHIIT = {
   name: "Full Body HIIT",
   type: "single",
   numDays: 1,
-  description:"testing Full Body HIIT",
+  description: "testing Full Body HIIT",
   days: [
     {
       name: "Day 1",
@@ -325,13 +324,12 @@ export const workoutTemplateHIIT = {
           groupType: null,
           groupId: null,
           workoutTag: "hiit",
-          image:
-            "https://barbend.com/wp-content/uploads/2020/04/Burpee.jpg",
+          image: "https://barbend.com/wp-content/uploads/2020/04/Burpee.jpg",
           notes: "Explosive movement, maintain pace.",
           sets: [
             { reps: "12", rest: "30", notes: "" },
-            { reps: "10", rest: "30", notes: "" }
-          ]
+            { reps: "10", rest: "30", notes: "" },
+          ],
         },
         {
           id: 2,
@@ -351,8 +349,8 @@ export const workoutTemplateHIIT = {
           notes: "Drive knees fast, keep hips low.",
           sets: [
             { duration: "30", rest: "20", notes: "" },
-            { duration: "30", rest: "20", notes: "" }
-          ]
+            { duration: "30", rest: "20", notes: "" },
+          ],
         },
         {
           id: 3,
@@ -372,8 +370,8 @@ export const workoutTemplateHIIT = {
           notes: "Land softly to protect knees.",
           sets: [
             { reps: "15", rest: "40", notes: "" },
-            { reps: "12", rest: "40", notes: "" }
-          ]
+            { reps: "12", rest: "40", notes: "" },
+          ],
         },
         {
           id: 4,
@@ -388,102 +386,97 @@ export const workoutTemplateHIIT = {
           groupType: null,
           groupId: null,
           workoutTag: "hiit",
-          image:
-            "https://barbend.com/wp-content/uploads/2020/01/Plank.jpg",
+          image: "https://barbend.com/wp-content/uploads/2020/01/Plank.jpg",
           notes: "Keep spine neutral, squeeze glutes.",
-          sets: [
-            { duration: "45", rest: "30", notes: "" }
-          ]
-        }
-      ]
-    }
-  ]
+          sets: [{ duration: "45", rest: "30", notes: "" }],
+        },
+      ],
+    },
+  ],
 };
-
 
 export const TrainingList = [
   {
     id: 1, // Unique workout identifier
     name: "Push Day Strength",
-  type: "multiple",
-  numDays: 2,
-  days: [
-    {
-      name: "Day 1",
-      isRestDay: false,
-      exercises: [
-        {
-          id: 1,
-          name: "Barbell Bench Press",
-          resps: true,
-          duration: false,
-          distance: false,
-          weight: true,
-          category: "chest",
-          isSelected: false,
-          setExercise: "45",
-          groupType: null,
-          groupId: null,
-          workoutTag: "workout",
-          image:
-            "https://barbend.com/wp-content/uploads/2023/05/shutterstock_123456789.jpg",
-          notes: "Focus on controlled reps, full ROM.",
-          sets: [
-            { weight: "70", reps: "12", rest: "90", notes: "" },
-            { weight: "75", reps: "10", rest: "120", notes: "" },
-            { weight: "80", reps: "8", rest: "150", notes: "" }
-          ]
-        },
-        {
-          id: 2,
-          name: "Overhead Shoulder Press",
-          resps: true,
-          duration: false,
-          distance: false,
-          weight: true,
-          category: "shoulders",
-          isSelected: false,
-          setExercise: "46",
-          groupType: null,
-          groupId: null,
-          workoutTag: "workout",
-          image:
-            "https://barbend.com/wp-content/uploads/2020/10/Overhead-Press.jpg",
-          notes: "Keep core tight, avoid arching back.",
-          sets: [
-            { weight: "40", reps: "12", rest: "90", notes: "" },
-            { weight: "45", reps: "10", rest: "120", notes: "" }
-          ]
-        },
-        {
-          id: 3,
-          name: "Tricep Dips",
-          resps: true,
-          duration: false,
-          distance: false,
-          weight: false,
-          category: "triceps",
-          isSelected: false,
-          setExercise: "47",
-          groupType: null,
-          groupId: null,
-          workoutTag: "workout",
-          image:
-            "https://barbend.com/wp-content/uploads/2021/09/Dips.jpg",
-          notes: "Keep elbows close to body.",
-          sets: [
-            { reps: "12", rest: "60", notes: "" },
-            { reps: "10", rest: "60", notes: "" }
-          ]
-        }
-      ]
-    },
-    {
-      name: "Day 2",
-      isRestDay: true,
-      exercises: []
-    }
-  ]
+    type: "multiple",
+    numDays: 2,
+    days: [
+      {
+        name: "Day 1",
+        isRestDay: false,
+        exercises: [
+          {
+            id: 1,
+            name: "Barbell Bench Press",
+            resps: true,
+            duration: false,
+            distance: false,
+            weight: true,
+            category: "chest",
+            isSelected: false,
+            setExercise: "45",
+            groupType: null,
+            groupId: null,
+            workoutTag: "workout",
+            image:
+              "https://barbend.com/wp-content/uploads/2023/05/shutterstock_123456789.jpg",
+            notes: "Focus on controlled reps, full ROM.",
+            sets: [
+              { weight: "70", reps: "12", rest: "90", notes: "" },
+              { weight: "75", reps: "10", rest: "120", notes: "" },
+              { weight: "80", reps: "8", rest: "150", notes: "" },
+            ],
+          },
+          {
+            id: 2,
+            name: "Overhead Shoulder Press",
+            resps: true,
+            duration: false,
+            distance: false,
+            weight: true,
+            category: "shoulders",
+            isSelected: false,
+            setExercise: "46",
+            groupType: null,
+            groupId: null,
+            workoutTag: "workout",
+            image:
+              "https://barbend.com/wp-content/uploads/2020/10/Overhead-Press.jpg",
+            notes: "Keep core tight, avoid arching back.",
+            sets: [
+              { weight: "40", reps: "12", rest: "90", notes: "" },
+              { weight: "45", reps: "10", rest: "120", notes: "" },
+            ],
+          },
+          {
+            id: 3,
+            name: "Tricep Dips",
+            resps: true,
+            duration: false,
+            distance: false,
+            weight: false,
+            category: "triceps",
+            isSelected: false,
+            setExercise: "47",
+            groupType: null,
+            groupId: null,
+            workoutTag: "workout",
+            image: "https://barbend.com/wp-content/uploads/2021/09/Dips.jpg",
+            notes: "Keep elbows close to body.",
+            sets: [
+              { reps: "12", rest: "60", notes: "" },
+              { reps: "10", rest: "60", notes: "" },
+            ],
+          },
+        ],
+      },
+      {
+        name: "Day 2",
+        isRestDay: true,
+        exercises: [],
+      },
+    ],
   },
   {
     id: 2,
@@ -1865,6 +1858,141 @@ export const lostFoundData = [
   },
 ];
 
+// Sales report dummy
+export const salesReportData = [
+  {
+    serialNumber: "01",
+    purchaseDate: "03/10/2025",
+    billType: "New",
+    clubName: "Cybercity",
+    memberId: "TL317432",
+    memberName: "Shivakar Sharma",
+    invoiceNumber: "THR327",
+    serviceType: "Membership",
+    serviceName: "6 months plan",
+    startDate: "18 Sep, 2025",
+    endDate: "18 Feb, 2025",
+    leadOwner: "Vaibhav Bhardwaj",
+    amount: 15000,
+    discount: 1000,
+    subtotal: 14000,
+    cgst: 191.05,
+    sgst: 191.05,
+    igst: 0,
+    finalAmount: 10000000,
+    payMode: "UPI",
+  },
+  {
+    serialNumber: "02",
+    purchaseDate: "30/09/2025",
+    billType: "Renewal",
+    clubName: "Cyberhub",
+    memberId: "TL317432",
+    memberName: "Ashish Choudhary",
+    invoiceNumber: "THR327",
+    serviceType: "Membership",
+    serviceName: "Power Pilates",
+    startDate: "18 Sep, 2025",
+    endDate: "18 Sep, 2025",
+    leadOwner: "Tapan Nayak",
+    amount: 1200,
+    discount: 100,
+    subtotal: 1100,
+    cgst: 23.45,
+    sgst: 23.45,
+    igst: 0,
+    finalAmount: 10000000,
+    payMode: "Credit Card",
+  },
+  {
+    serialNumber: "03",
+    purchaseDate: "01/10/2025",
+    billType: "Renewal",
+    clubName: "Club 5",
+    memberId: "TL317432",
+    memberName: "Shashikant Tyagi",
+    invoiceNumber: "THR327",
+    serviceType: "Package",
+    serviceName: "12 months plan",
+    startDate: "18 Sep, 2025",
+    endDate: "18 Sep, 2026",
+    leadOwner: "Prem Kumar",
+    amount: 30000,
+    discount: 1000,
+    subtotal: 29000,
+    cgst: 382.1,
+    sgst: 382.1,
+    igst: 0,
+    finalAmount: 1000000,
+    payMode: "Credit Card",
+  },
+  {
+    serialNumber: "04",
+    purchaseDate: "02/10/2025",
+    billType: "New",
+    clubName: "Club 4",
+    memberId: "TL317432",
+    memberName: "Aman Kumar Gupta",
+    invoiceNumber: "THR327",
+    serviceType: "Package",
+    serviceName: "Almond Mocha",
+    startDate: "18 Sep, 2025",
+    endDate: "18 Oct, 2025",
+    leadOwner: "Khushi Singh",
+    amount: 250,
+    discount: 20,
+    subtotal: 230,
+    cgst: 5.48,
+    sgst: 5.48,
+    igst: 0,
+    finalAmount: 1000000,
+    payMode: "UPI",
+  },
+  {
+    serialNumber: "05",
+    purchaseDate: "02/10/2025",
+    billType: "New",
+    clubName: "Club 4",
+    memberId: "TL317432",
+    memberName: "Aman Kumar Gupta",
+    invoiceNumber: "THR327",
+    serviceType: "Product",
+    serviceName: "Almond Mocha",
+    startDate: "18 Sep, 2025",
+    endDate: "18 Oct, 2025",
+    leadOwner: "Khushi Singh",
+    amount: 250,
+    discount: 20,
+    subtotal: 230,
+    cgst: 5.48,
+    sgst: 5.48,
+    igst: 0,
+    finalAmount: 1000000,
+    payMode: "UPI",
+  },
+  {
+    serialNumber: "06",
+    purchaseDate: "01/10/2025",
+    billType: "Renewal",
+    clubName: "Club 5",
+    memberId: "TL317432",
+    memberName: "Divakar Tyagi",
+    invoiceNumber: "THR327",
+    serviceType: "Product",
+    serviceName: "12 months plan",
+    startDate: "18 Sep, 2025",
+    endDate: "18 Sep, 2026",
+    leadOwner: "Prem Kumar",
+    amount: 30000,
+    discount: 1000,
+    subtotal: 29000,
+    cgst: 382.1,
+    sgst: 382.1,
+    igst: 0,
+    finalAmount: 1000000,
+    payMode: "Credit Card",
+  },
+];
 
 export const trainerAvailability = {
   shivakar: [

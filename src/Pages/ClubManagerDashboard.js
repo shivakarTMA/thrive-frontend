@@ -100,6 +100,8 @@ const classPerformance = [
   },
 ];
 
+const formatIndianNumber = (num) => new Intl.NumberFormat("en-IN").format(num);
+
 const ClubManagerDashboard = () => {
   const navigate = useNavigate();
   const days = ["Yesterday", "Today", "Tomorrow"];
@@ -488,35 +490,103 @@ const ClubManagerDashboard = () => {
             <SalesSummary
               icon={totalSalesIcon}
               title="Total Sales"
-              titleLink="/sales-report?data=memberships"
-              totalSales="3,20,00,000"
+              titleLink={`/sales-report?date=${dateFilter?.value}`}
+              totalSales={`₹${formatIndianNumber(24000000)}`}
               items={[
-                { label: "Memberships", value: "2,00,00,000", link: "#" },
-                //   { label: "Memberships", value: "2,00,00,000", link: "/sales-report?data=memberships" },
-                { label: "Packages", value: "20,00,000", link: "#" },
-                { label: "Products", value: "1,00,00,000", link: "#" },
+                {
+                  label: "Memberships",
+                  value: `₹${formatIndianNumber(20000000)}`,
+                  link: `/sales-report?date=${encodeURIComponent(
+                    dateFilter?.value
+                  )}&serviceType=Membership&value=${encodeURIComponent(
+                    20000000
+                  )}`,
+                },
+                {
+                  label: "Packages",
+                  value: `₹${formatIndianNumber(2000000)}`,
+                  link: `/sales-report?date=${encodeURIComponent(
+                    dateFilter?.value
+                  )}&serviceType=Package&value=${encodeURIComponent(2000000)}`,
+                },
+                {
+                  label: "Products",
+                  value: `₹${formatIndianNumber(2000000)}`,
+                  link: `/sales-report?date=${encodeURIComponent(
+                    dateFilter?.value
+                  )}&serviceType=Product&value=${encodeURIComponent(2000000)}`,
+                },
               ]}
             />
+
             <SalesSummary
               icon={newClientIcon}
               title="New Clients"
-              titleLink="/sales-report?data=memberships"
-              totalSales="17"
+              titleLink={`/sales-report?date=${dateFilter?.value}&billType=New`}
+              totalSales="03"
               items={[
-                { label: "Memberships", value: "10", link: "#" },
-                { label: "Packages", value: "05", link: "#" },
-                { label: "Products", value: "02", link: "#" },
+                {
+                  label: "Memberships",
+                  value: "01",
+                  link: `/sales-report?date=${encodeURIComponent(
+                    dateFilter?.value
+                  )}&billType=New&serviceType=Membership&value=${encodeURIComponent(
+                    1
+                  )}`,
+                },
+                {
+                  label: "Packages",
+                  value: "01",
+                  link: `/sales-report?date=${encodeURIComponent(
+                    dateFilter?.value
+                  )}&billType=New&serviceType=Package&value=${encodeURIComponent(
+                    1
+                  )}`,
+                },
+                {
+                  label: "Products",
+                  value: "01",
+                  link: `/sales-report?date=${encodeURIComponent(
+                    dateFilter?.value
+                  )}&billType=New&serviceType=Product&value=${encodeURIComponent(
+                    1
+                  )}`,
+                },
               ]}
             />
             <SalesSummary
               icon={renewalIcon}
               title="Renewal"
-              titleLink="/sales-report?data=memberships"
-              totalSales="12"
+              titleLink={`/sales-report?date=${dateFilter?.value}&billType=Renewal`}
+              totalSales="03"
               items={[
-                { label: "Memberships", value: "05", link: "#" },
-                { label: "Packages", value: "05", link: "#" },
-                { label: "Products", value: "02", link: "#" },
+                {
+                  label: "Memberships",
+                  value: "01",
+                  link: `/sales-report?date=${encodeURIComponent(
+                    dateFilter?.value
+                  )}&billType=Renewal&serviceType=Membership&value=${encodeURIComponent(
+                    1
+                  )}`,
+                },
+                {
+                  label: "Packages",
+                  value: "01",
+                  link: `/sales-report?date=${encodeURIComponent(
+                    dateFilter?.value
+                  )}&billType=Renewal&serviceType=Package&value=${encodeURIComponent(
+                    1
+                  )}`,
+                },
+                {
+                  label: "Products",
+                  value: "01",
+                  link: `/sales-report?date=${encodeURIComponent(
+                    dateFilter?.value
+                  )}&billType=Renewal&serviceType=Product&value=${encodeURIComponent(
+                    1
+                  )}`,
+                },
               ]}
             />
 
@@ -589,9 +659,15 @@ const ClubManagerDashboard = () => {
                   {classPerformance.map((item, index) => (
                     <tr key={item.id} className="border-t">
                       <td className="p-2">{item.classType}</td>
-                      <td className="p-2">{String(item.bookings).padStart(2, '0')}</td>
-                      <td className="p-2">{String(item.reservations).padStart(2, '0')}</td>
-                      <td className="p-2">{String(item.cancellations).padStart(2, '0')}</td>
+                      <td className="p-2">
+                        {String(item.bookings).padStart(2, "0")}
+                      </td>
+                      <td className="p-2">
+                        {String(item.reservations).padStart(2, "0")}
+                      </td>
+                      <td className="p-2">
+                        {String(item.cancellations).padStart(2, "0")}
+                      </td>
                       <td className="p-2">
                         <div className="bg-[#F1F1F1] border border-[#D4D4D4] rounded-[5px] w-[32px] h-[32px] flex items-center justify-center cursor-pointer">
                           <img src={eyeIcon} />

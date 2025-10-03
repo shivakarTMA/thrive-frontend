@@ -35,8 +35,8 @@ import { apiAxios } from "../config/config";
 import Pagination from "../components/common/Pagination";
 import { LuCalendarPlus } from "react-icons/lu";
 import CreateAppointment from "../components/Appointment/CreateAppointment";
-import LeadFilterPanel from "../components/common/LeadFilterPanel";
 import { FaCalendarDays } from "react-icons/fa6";
+import LeadFilterPanel from "../components/FilterPanel/LeadFilterPanel";
 const useQuery = () => {
   return new URLSearchParams(useLocation().search);
 };

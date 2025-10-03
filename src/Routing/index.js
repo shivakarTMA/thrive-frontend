@@ -60,7 +60,7 @@ import SmsModule from "../components/Marketing/SmsModule";
 import WhatsappModule from "../components/Marketing/WhatsappModule";
 import ClubManagerDashboard from "../Pages/ClubManagerDashboard";
 import TrainerDashboard from "../Pages/TrainerDashboard";
-import SalesReportDashboard from "../Pages/SalesReportDashboard";
+import SalesReportPage from "../Pages/SalesReportPage";
 
 
 export default function Routing() {
@@ -620,7 +620,7 @@ export default function Routing() {
               path="/sales-report/"
               element={
                 <PrivateRoute>
-                  <SalesReportDashboard />
+                  <SalesReportPage />
                 </PrivateRoute>
               }
             />

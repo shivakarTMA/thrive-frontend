@@ -801,7 +801,7 @@ const CreateLeadForm = ({ setLeadModal, selectedLead, onLeadUpdate }) => {
                   </h3>
                   <div className="grid grid-cols-3 gap-4">
                     <div>
-                      <label className="mb-2 block">Service Name</label>
+                      <label className="mb-2 block">Interested In</label>
                       <div className="relative">
                         <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
                           <FaListCheck />
@@ -996,7 +996,7 @@ const CreateLeadForm = ({ setLeadModal, selectedLead, onLeadUpdate }) => {
                                 onChange={handleDateTrainerChange}
                                 showTimeSelect
                                 timeFormat="hh:mm aa"
-                                dateFormat="MM/dd/yyyy hh:mm aa"
+                                dateFormat="dd/MM/yyyy hh:mm aa"
                                 placeholderText="Select date & time"
                                 className="border px-3 py-2 w-full input--icon"
                                 minDate={now}

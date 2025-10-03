@@ -166,7 +166,7 @@ const AddNewItemModal = ({ onClose }) => {
                       onChange={handleDateTime}
                       showTimeSelect
                       timeFormat="hh:mm aa"
-                      dateFormat="MM/dd/yyyy hh:mm aa"
+                      dateFormat="dd/MM/yyyy hh:mm aa"
                       placeholderText="Select date & time"
                       className="border px-3 py-2 w-full input--icon"
                       maxDate={new Date()}

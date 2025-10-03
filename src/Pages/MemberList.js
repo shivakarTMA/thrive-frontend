@@ -25,10 +25,10 @@ import { toast } from "react-toastify";
 import Pagination from "../components/common/Pagination";
 import { FiPlus } from "react-icons/fi";
 import CreateMemberForm from "./CreateMemberForm";
-import MemberFilterPanel from "../components/common/MemberFilterPanel";
 import MailIcon from "../assets/images/icons/mail.png";
 import SmsIcon from "../assets/images/icons/sms.png";
 import AssignIcon from "../assets/images/icons/assign.png";
+import MemberFilterPanel from "../components/FilterPanel/MemberFilterPanel";
 
 const communicateOptions = [
   { value: "sms", label: "Send SMS" },
