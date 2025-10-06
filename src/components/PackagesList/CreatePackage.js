@@ -103,6 +103,10 @@ const CreatePackage = ({
       if (service_type === "SESSION") {
         schema = {
           ...schema,
+
+          number_of_session: Yup.string().required(
+            "Number of session is required"
+          ),
           session_duration: Yup.number().required(
             "Session duration is required"
           ),
@@ -149,6 +153,7 @@ const CreatePackage = ({
       waitlist_capacity: "",
       tags: [],
       booking_type: "",
+      number_of_session:"",
       session_duration: "",
       session_level: null,
       amount: "",
@@ -190,6 +195,7 @@ const CreatePackage = ({
         waitlist_capacity: "",
         tags: [],
         booking_type: "",
+        number_of_session:"",
         session_duration: "",
         session_level: null,
         amount: "",
@@ -661,6 +667,29 @@ const CreatePackage = ({
 
                   {/* Session Duration */}
                   {service_type_check !== "CLASS" ? (
+                    <>
+                     <div>
+                      <label className="mb-2 block">
+                        No. of Sessions
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="text"
+                          name="number_of_session"
+                          value={formik.values.number_of_session}
+                          onChange={formik.handleChange}
+                          onBlur={formik.handleBlur}
+                          className="custom--input w-full"
+                        />
+                      </div>
+                      {(formik.submitCount > 0 ||
+                        formik.touched.number_of_session) &&
+                        formik.errors.number_of_session && (
+                          <p className="text-red-500 text-sm">
+                            {formik.errors.number_of_session}
+                          </p>
+                        )}
+                    </div>
                     <div>
                       <label className="mb-2 block">
                         Session Duration{" "}
@@ -684,6 +713,7 @@ const CreatePackage = ({
                           </p>
                         )}
                     </div>
+                    </>
                   ) : null}
 
                   {/* Level */}

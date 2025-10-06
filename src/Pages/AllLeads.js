@@ -160,50 +160,67 @@ const AllLeads = () => {
     }
   };
 
-  const fetchLeadList = async (search = searchTerm, currentPage = page) => {
+  const fetchLeadList = async (
+    search = searchTerm,
+    currentPage = page,
+    overrideSelected = {}
+  ) => {
     try {
       const params = {
         page: currentPage,
         limit: rowsPerPage,
       };
 
+      const selLeadSource = overrideSelected.hasOwnProperty("leadSource")
+        ? overrideSelected.leadSource
+        : selectedLeadSource;
+      const selLeadStatus = overrideSelected.hasOwnProperty("leadStatus")
+        ? overrideSelected.leadStatus
+        : selectedLeadStatus;
+      const selLastCallType = overrideSelected.hasOwnProperty("lastCallType")
+        ? overrideSelected.lastCallType
+        : selectedLastCallType;
+      const selCallTag = overrideSelected.hasOwnProperty("callTag")
+        ? overrideSelected.callTag
+        : selectedCallTag;
+      const selServiceName = overrideSelected.hasOwnProperty("serviceName")
+        ? overrideSelected.serviceName
+        : selectedServiceName;
+      const selGender = overrideSelected.hasOwnProperty("gender")
+        ? overrideSelected.gender
+        : selectedGender;
+      const selDateFilter = overrideSelected.hasOwnProperty("dateFilter")
+        ? overrideSelected.dateFilter
+        : dateFilter;
+      const selCustomFrom = overrideSelected.hasOwnProperty("customFrom")
+        ? overrideSelected.customFrom
+        : customFrom;
+      const selCustomTo = overrideSelected.hasOwnProperty("customTo")
+        ? overrideSelected.customTo
+        : customTo;
+
       // Search param
       if (search) params.search = search;
 
-      // Lead Source
-      if (selectedLeadSource?.value) {
-        params.lead_source = selectedLeadSource.value;
-      }
+      // Add filters only if the selected value exists (prevents sending removed keys)
+      if (selLeadSource?.value) params.lead_source = selLeadSource.value;
+      if (selLeadStatus?.value) params.lead_status = selLeadStatus.value;
+      if (selLastCallType?.value)
+        params.last_call_status = selLastCallType.value;
+      if (selCallTag?.value) params.created_by = selCallTag.value;
+      if (selServiceName?.value) params.interested_in = selServiceName.value;
+      if (selGender?.value) params.gender = selGender.value;
 
-      // Lead Status
-      if (selectedLeadStatus?.value) {
-        params.lead_status = selectedLeadStatus.value;
-      }
-
-      // Last Call Status
-      if (selectedLastCallType?.value) {
-        params.last_call_status = selectedLastCallType.value;
-      }
-
-      // Lead Owner
-      if (selectedCallTag?.value) {
-        params.created_by = selectedCallTag.value;
-      }
-      // Service Name
-      if (selectedServiceName?.value) {
-        params.interested_in = selectedServiceName.value;
-      }
-      // Gender
-      if (selectedGender?.value) {
-        params.gender = selectedGender.value;
-      }
-
-      // Date Filter
-      if (dateFilter?.value && dateFilter.value !== "custom") {
-        params.dateFilter = dateFilter.value; // today, last_7_days, etc.
-      } else if (dateFilter?.value === "custom" && customFrom && customTo) {
-        params.startDate = customFrom.toISOString().split("T")[0];
-        params.endDate = customTo.toISOString().split("T")[0];
+      // Date filter handling (use merged values)
+      if (selDateFilter?.value && selDateFilter.value !== "custom") {
+        params.dateFilter = selDateFilter.value;
+      } else if (
+        selDateFilter?.value === "custom" &&
+        selCustomFrom &&
+        selCustomTo
+      ) {
+        params.startDate = selCustomFrom.toISOString().split("T")[0];
+        params.endDate = selCustomTo.toISOString().split("T")[0];
       }
 
       const res = await apiAxios().get("/lead/list", { params });
@@ -226,10 +243,6 @@ const AllLeads = () => {
   };
 
   useEffect(() => {
-    fetchLeadList();
-  }, []);
-
-  useEffect(() => {
     const delayDebounce = setTimeout(() => {
       fetchLeadList(searchTerm, 1);
       setPage(1);
@@ -238,19 +251,30 @@ const AllLeads = () => {
     return () => clearTimeout(delayDebounce);
   }, [searchTerm]);
 
+  const handleRemoveFilter = (filterKey) => {
+    const setterMap = {
+      leadSource: setSelectedLeadSource,
+      lastCallType: setSelectedLastCallType,
+      leadStatus: setSelectedLeadStatus,
+      callTag: setSelectedCallTag,
+      serviceName: setSelectedServiceName,
+      gender: setSelectedGender,
+    };
+    setterMap[filterKey]?.(null);
+    const overrideSelected = { [filterKey]: null };
+    fetchLeadList("", 1, overrideSelected);
+  };
+
+  const handleApplyFiltersFromChild = () => {
+    fetchLeadList("", 1);
+  };
+
+  useEffect(() => {
+    fetchLeadList("", 1);
+  }, []);
   useEffect(() => {
     fetchLeadList(searchTerm, 1);
-  }, [
-    selectedLeadSource,
-    selectedLeadStatus,
-    selectedLastCallType,
-    selectedCallTag,
-    selectedServiceName,
-    selectedGender,
-    dateFilter,
-    customFrom,
-    customTo,
-  ]);
+  }, [dateFilter, customFrom, customTo]);
 
   return (
     <>
@@ -419,6 +443,8 @@ const AllLeads = () => {
                 setSelectedGender={setSelectedGender}
                 selectedServiceName={selectedServiceName}
                 setSelectedServiceName={setSelectedServiceName}
+                onApplyFilters={handleApplyFiltersFromChild} // child "Apply" -> parent fetch
+                onRemoveFilter={handleRemoveFilter}
               />
             </div>
             <div>
@@ -518,7 +544,7 @@ const AllLeads = () => {
                       </td>
                       <td className="px-2 py-4">{row?.id}</td>
 
-                      <td className="px-2 py-4">{row?.full_name}</td>
+                      <td className="px-2 py-4">{row?.gender}</td>
                       <td className="px-2 py-4">
                         {row?.interested_in ? row?.interested_in : "--"}
                       </td>

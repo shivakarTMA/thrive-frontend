@@ -580,7 +580,7 @@ const ClubManagerDashboard = () => {
               icon={trialIcon}
               title="Trials"
               titleLink={`/trial-appointments?date=${dateFilter?.value}`}
-              totalSales="4"
+              totalSales="3"
               items={[
                 {
                   label: "Scheduled",
@@ -591,7 +591,7 @@ const ClubManagerDashboard = () => {
                 },
                 {
                   label: "Completed",
-                  value: "02",
+                  value: "01",
                   link: `/trial-appointments?date=${encodeURIComponent(
                     dateFilter?.value
                   )}&status=Completed`,

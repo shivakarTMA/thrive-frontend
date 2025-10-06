@@ -1,13 +1,6 @@
 import axios from "axios";
 import { store } from '../Redux/store';
 
-
-export const withoutAuthAxios = () => {
-  return axios.create({
-    baseURL: `http://thrivecrmapi.themarcomavenue.in/crm/api/v1`
-  });
-};
-
 export const apiAxios = () => {
   return axios.create({
     baseURL: process.env.REACT_APP_BASEURL,
