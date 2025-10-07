@@ -368,10 +368,11 @@ const CreateLeadForm = ({ setLeadModal, selectedLead, onLeadUpdate }) => {
   const handleDobChange = (date) => {
     if (!date) return;
     const today = new Date();
+    const birthDate = new Date(date); 
     const age =
       today.getFullYear() -
       date.getFullYear() -
-      (today < new Date(date.setFullYear(today.getFullYear())) ? 1 : 0);
+      (today < new Date(birthDate.setFullYear(today.getFullYear())) ? 1 : 0);
 
     if (age < 15) {
       toast.error("Age must be at least 15 years");
