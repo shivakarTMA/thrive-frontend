@@ -60,8 +60,10 @@ import SmsModule from "../components/Marketing/SmsModule";
 import WhatsappModule from "../components/Marketing/WhatsappModule";
 import ClubManagerDashboard from "../Pages/ClubManagerDashboard";
 import TrainerDashboard from "../Pages/TrainerDashboard";
-import SalesReportPage from "../Pages/SalesReportPage";
-import TrialAppointments from "../Pages/TrialAppointments";
+import SalesReportPage from "../Pages/Reports/Finance/SalesReportPage";
+import TrialAppointments from "../Pages/Reports/Appointments/TrialAppointments";
+import MemberCheckIn from "../Pages/Reports/MemberManagement/MemberCheckIn";
+import ProductsSold from "../Pages/Reports/ProductsSold";
 
 
 export default function Routing() {
@@ -618,7 +620,7 @@ export default function Routing() {
               }
             />
             <Route
-              path="/sales-report/"
+              path="/reports/finance/sales-report/"
               element={
                 <PrivateRoute>
                   <SalesReportPage />
@@ -626,10 +628,26 @@ export default function Routing() {
               }
             />
             <Route
-              path="/trial-appointments/"
+              path="/reports/appointments/trial-appointments/"
               element={
                 <PrivateRoute>
                   <TrialAppointments />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/reports/member-management/member-check-ins/"
+              element={
+                <PrivateRoute>
+                  <MemberCheckIn />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/reports/products-sold/"
+              element={
+                <PrivateRoute>
+                  <ProductsSold />
                 </PrivateRoute>
               }
             />

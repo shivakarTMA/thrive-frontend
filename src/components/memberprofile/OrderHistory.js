@@ -1,13 +1,16 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Select from "react-select";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { customStyles } from "../../Helper/helper";
+import { apiAxios } from "../../config/config";
+import { toast } from "react-toastify";
 
-const OrderHistory = () => {
+const OrderHistory = ({details}) => {
   const [category, setCategory] = useState({ value: "All", label: "All" });
   const [dateFrom, setDateFrom] = useState(null);
   const [dateTo, setDateTo] = useState(null);
+  const [ordersList, setOrdersList] = useState([]);
 
   const orders = [
     {
@@ -205,6 +208,23 @@ const OrderHistory = () => {
     );
   });
 
+  // Fetch coins with filters applied
+  const fetchMemberOrders = async () => {
+    try {
+      // Make the API call with query parameters
+      const res = await apiAxios().get(`/member/order/${details?.id}`);
+      const data = res.data?.data || [];
+      setOrdersList(data);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to fetch coins");
+    }
+  };
+
+  useEffect(() => {
+    fetchMemberOrders();
+  }, [ordersList]);
+
   return (
     <div className="p-4 bg-white rounded shadow">
       {/* Filters */}
@@ -269,20 +289,20 @@ const OrderHistory = () => {
             </tr>
           </thead>
           <tbody>
-            {filteredOrders.length > 0 ? (
-              filteredOrders.map((order) => (
+            {ordersList.length > 0 ? (
+              ordersList.map((order) => (
                 <tr key={order.orderId} className="hover:bg-gray-50">
-                  <td className="border px-3 py-2">{order.orderId}</td>
-                  <td className="border px-3 py-2">{order.date}</td>
-                  <td className="border px-3 py-2">{order.service}</td>
-                  <td className="border px-3 py-2">{order.category}</td>
-                  <td className="border px-3 py-2">{order.duration || "-"}</td>
-                  <td className="border px-3 py-2">₹{order.amount}</td>
-                  <td className="border px-3 py-2">₹{order.tax}</td>
-                  <td className="border px-3 py-2">₹{order.net}</td>
-                  <td className="border px-3 py-2">{order.orderStatus}</td>
-                  <td className="border px-3 py-2">{order.paymentMode}</td>
-                  <td className="border px-3 py-2">{order.invoiceNumber}</td>
+                  <td className="border px-3 py-2">{order?.order_no}</td>
+                  <td className="border px-3 py-2">{order?.order_date}</td>
+                  <td className="border px-3 py-2">{order?.order_type}</td>
+                  <td className="border px-3 py-2">{order?.order_type}</td>
+                  <td className="border px-3 py-2">{order?.duration || "-"}</td>
+                  <td className="border px-3 py-2">₹{order?.total_amount ? order?.total_amount : 0}</td>
+                  <td className="border px-3 py-2">₹{order?.tax ? order?.tax : 0}</td>
+                  <td className="border px-3 py-2">₹{order?.net ? order?.net : 0}</td>
+                  <td className="border px-3 py-2">{order?.payment_status}</td>
+                  <td className="border px-3 py-2">{order?.paymentMode}</td>
+                  <td className="border px-3 py-2">{order?.invoiceNumber}</td>
                 </tr>
               ))
             ) : (

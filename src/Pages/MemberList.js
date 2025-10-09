@@ -40,6 +40,13 @@ const MemberList = () => {
   const [memberList, setMemberList] = useState([]);
   const [memberModal, setMemberModal] = useState(false);
   const [sendCommunicate, setSendCommunicate] = useState(null);
+  const [stats, setStats] = useState({
+    total_members: 0,
+    active_members: 0,
+    inactive_members: 0,
+  });
+
+  const [filterStatus, setFilterStatus] = useState(null);
   const [filterService, setFilterService] = useState(null);
   const [filterServiceVariation, setFilterServiceVariation] = useState(null);
   const [filterAgeGroup, setFilterAgeGroup] = useState(null);
@@ -86,8 +93,23 @@ const MemberList = () => {
     }
   };
 
+  const fetchMemberStats = async () => {
+    try {
+      const response = await apiAxios().get('/member/stats/count'); // Update with your actual endpoint
+      if (response.data.status) {
+        setStats(response.data.data);
+      } else {
+        console.error("Failed to fetch stats:", response.data.message);
+      }
+    } catch (error) {
+      console.error("Error fetching stats:", error);
+    }
+  };
+
+
   useEffect(() => {
     fetchMemberList();
+    fetchMemberStats();
   }, []);
 
   const handleMemberUpdate = () => {
@@ -177,57 +199,6 @@ const MemberList = () => {
     }
   };
 
-  // const applyDateFilter = (memberDate) => {
-  //   if (!dateFilter) return true;
-  //   const date = parseISO(memberDate);
-  //   const today = startOfToday();
-
-  //   switch (dateFilter.value) {
-  //     case "today":
-  //       return format(date, "yyyy-MM-dd") === format(today, "yyyy-MM-dd");
-  //     case "last7":
-  //       return isWithinInterval(date, { start: subDays(today, 6), end: today });
-  //     case "monthTillDate":
-  //       return isWithinInterval(date, {
-  //         start: startOfMonth(today),
-  //         end: today,
-  //       });
-  //     case "custom":
-  //       if (!customFrom || !customTo) return true;
-  //       return isWithinInterval(date, {
-  //         start: customFrom,
-  //         end: customTo,
-  //       });
-  //     default:
-  //       return true;
-  //   }
-  // };
-
-  // const filteredData = memberMockData.filter((member) => {
-  //   const matchesSearch =
-  //     search === "" || member.name.toLowerCase().includes(search.toLowerCase());
-  //   const matchesMembership =
-  //     !membershipFilter || member.membershipType === membershipFilter.value;
-  //   const matchesTrainerType =
-  //     !trainerTypeFilter || member.trainerType === trainerTypeFilter.value;
-  //   const matchesFoh = !fohFilter || member.fohAssigned === fohFilter.value;
-  //   const matchesDate = applyDateFilter(member.memberFrom);
-
-  //   return (
-  //     matchesSearch &&
-  //     matchesMembership &&
-  //     matchesTrainerType &&
-  //     matchesFoh &&
-  //     matchesDate
-  //   );
-  // });
-
-  // const paginatedData = filteredData.slice(
-  //   (page - 1) * rowsPerPage,
-  //   page * rowsPerPage
-  // );
-  // const totalPages = Math.ceil(filteredData.length / rowsPerPage);
-
   return (
     <>
       <div className="page--content">
@@ -245,16 +216,16 @@ const MemberList = () => {
                   Members
                 </div>
                 <div className="flex flex-wrap items-center justify-between">
-                  <span className="text-md font-semibold">2315</span>
+                  <span className="text-md font-semibold">{stats?.total_members}</span>
                 </div>
               </div>
               <div className="flex items-center gap-5 border-r">
                 <div className="text-md font-medium text-gray-600 flex gap-2 items-center">
-                  <FaCircle className="text-[10px] text-[#1F9254]" /> 
+                  <FaCircle className="text-[10px] text-[#1F9254]" />
                   Active Members
                 </div>
                 <div className="flex flex-wrap items-center justify-between">
-                  <span className="text-md font-semibold">590</span>
+                  <span className="text-md font-semibold">{stats?.active_members}</span>
                 </div>
               </div>
               <div className="flex items-center gap-5">
@@ -263,7 +234,7 @@ const MemberList = () => {
                   Inactive Members
                 </div>
                 <div className="flex flex-wrap items-center justify-between">
-                  <span className="text-md font-semibold">1725</span>
+                  <span className="text-md font-semibold">{stats?.inactive_members}</span>
                 </div>
               </div>
             </div>
@@ -302,6 +273,8 @@ const MemberList = () => {
           <div className="flex items-start gap-3 justify-between w-full mb-3 border-b border-b-[#D4D4D4] pb-3">
             <div>
               <MemberFilterPanel
+                filterStatus={filterStatus}
+                setFilterStatus={setFilterStatus}
                 filterService={filterService}
                 setFilterService={setFilterService}
                 filterServiceVariation={filterServiceVariation}
@@ -421,19 +394,24 @@ const MemberList = () => {
                       <td className="px-2 py-4">
                         <span
                           className={`
-                            flex items-center justify-between gap-1 rounded-full bg-[#EEEEEE] min-h-[30px] px-3 text-sm w-fit
+                            flex items-center justify-between gap-1 rounded-full min-h-[30px] px-3 text-sm w-fit
                           ${
-                            member?.status == "inactive"
+                            member?.is_subscribed !== true
                               ? "bg-[#EEEEEE]"
                               : "bg-[#E8FFE6] text-[#138808]"
                           }
                           `}
                         >
-                          <FaCircle className="text-[10px]" /> Active
+                          <FaCircle className="text-[10px]" />{" "}
+                          {member?.is_subscribed !== true
+                            ? "Inactive"
+                            : "Active"}
                         </span>
                       </td>
                       <td className="px-2 py-4">
-                        {formatAutoDate(member?.updatedAt)}
+                        {member?.subscription_expiry_date
+                          ? formatAutoDate(member?.subscription_expiry_date)
+                          : "--"}
                       </td>
                       <td className="px-2 py-4">
                         {member?.trainer ? member?.trainer : "--"}

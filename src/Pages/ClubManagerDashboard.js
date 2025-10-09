@@ -154,7 +154,7 @@ const ClubManagerDashboard = () => {
     0
   );
 
-  const dataSeries = [5, 2, 3, 1];
+  const dataSeries = [5, 6, 2, 3, 1];
   const totalValue = dataSeries.reduce((sum, value) => sum + value, 0);
 
   const leadsStatus = {
@@ -173,7 +173,7 @@ const ClubManagerDashboard = () => {
       },
     },
     xAxis: {
-      categories: ["New", "Lead", "Won", "Lost"],
+      categories: ["New", "Opportunity","Lead", "Won", "Lost"],
       labels: {
         style: {
           fontSize: "13px",
@@ -220,10 +220,11 @@ const ClubManagerDashboard = () => {
             click: function () {
               // Example: open a link based on category
               const linkMap = {
-                New: "/all-leads?month=jan",
-                Lead: "/all-leads?month=feb",
-                Won: "/all-leads?month=mar",
-                Lost: "/all-leads?month=apr",
+                New: generateUrl(`/all-leads?leadStatus=New`),
+                Opportunity: generateUrl(`/all-leads?leadStatus=Opportunity`),
+                Lead: generateUrl(`/all-leads?leadStatus=Lead`),
+                Won: generateUrl(`/all-leads?leadStatus=Won`),
+                Lost: generateUrl(`/all-leads?leadStatus=Lost`),
               };
               const targetLink = linkMap[this.category];
               if (targetLink) {
@@ -320,11 +321,11 @@ const ClubManagerDashboard = () => {
             click: function () {
               // Example: open a link based on category
               const linkMap = {
-                Membership: "/all-leads?month=jan",
-                "Personal Training": "/all-leads?month=feb",
-                Pilates: "/all-leads?month=mar",
-                Recovery: "/all-leads?month=apr",
-                Cafe: "/all-leads?month=may",
+                Membership: "/reports/products-sold/",
+                "Personal Training": "/reports/products-sold/",
+                Pilates: "/reports/products-sold/",
+                Recovery: "/reports/products-sold/",
+                Cafe: "/reports/products-sold/",
               };
               const targetLink = linkMap[this.category];
               if (targetLink) {
@@ -363,6 +364,20 @@ const ClubManagerDashboard = () => {
 
   const currentDay = days[currentDayIndex];
   const currentData = summaryData[currentDay];
+
+  // Memoize the URL generation
+  const generateUrl = (baseUrl) => {
+    let url = `${baseUrl}&date=${encodeURIComponent(dateFilter?.value)}`;
+
+    // If custom dates are selected, append customFrom and customTo to the URL
+    if (dateFilter?.value === "custom") {
+      url += `&customFrom=${encodeURIComponent(
+        customFrom
+      )}&customTo=${encodeURIComponent(customTo)}`;
+    }
+
+    return url;
+  };
 
   return (
     <div className="page--content">
@@ -490,29 +505,29 @@ const ClubManagerDashboard = () => {
             <SalesSummary
               icon={totalSalesIcon}
               title="Total Sales"
-              titleLink={`/sales-report?date=${dateFilter?.value}`}
+              titleLink={generateUrl(`/reports/finance/sales-report?`)}
               totalSales={`₹${formatIndianNumber(24000000)}`}
               items={[
                 {
                   label: "Memberships",
                   value: `₹${formatIndianNumber(20000000)}`,
-                  link: `/sales-report?date=${encodeURIComponent(
-                    dateFilter?.value
-                  )}&serviceType=Membership`,
+                  link: generateUrl(
+                    `/reports/finance/sales-report?serviceType=Membership`
+                  ),
                 },
                 {
                   label: "Packages",
                   value: `₹${formatIndianNumber(2000000)}`,
-                  link: `/sales-report?date=${encodeURIComponent(
-                    dateFilter?.value
-                  )}&serviceType=Package`,
+                  link: generateUrl(
+                    `/reports/finance/sales-report?serviceType=Package`
+                  ),
                 },
                 {
                   label: "Products",
                   value: `₹${formatIndianNumber(2000000)}`,
-                  link: `/sales-report?date=${encodeURIComponent(
-                    dateFilter?.value
-                  )}&serviceType=Product`,
+                  link: generateUrl(
+                    `/reports/finance/sales-report?serviceType=Product`
+                  ),
                 },
               ]}
             />
@@ -520,58 +535,62 @@ const ClubManagerDashboard = () => {
             <SalesSummary
               icon={newClientIcon}
               title="New Clients"
-              titleLink={`/sales-report?date=${dateFilter?.value}&billType=New`}
+              titleLink={generateUrl(
+                `/reports/finance/sales-report?billType=New`
+              )}
               totalSales="03"
               items={[
                 {
                   label: "Memberships",
                   value: "01",
-                  link: `/sales-report?date=${encodeURIComponent(
-                    dateFilter?.value
-                  )}&billType=New&serviceType=Membership`,
+                  link: generateUrl(
+                    `/reports/finance/sales-report?billType=New&serviceType=Membership`
+                  ),
                 },
                 {
                   label: "Packages",
                   value: "01",
-                  link: `/sales-report?date=${encodeURIComponent(
-                    dateFilter?.value
-                  )}&billType=New&serviceType=Package`,
+                  link: generateUrl(
+                    `/reports/finance/sales-report?billType=New&serviceType=Package`
+                  ),
                 },
                 {
                   label: "Products",
                   value: "01",
-                  link: `/sales-report?date=${encodeURIComponent(
-                    dateFilter?.value
-                  )}&billType=New&serviceType=Product`,
+                  link: generateUrl(
+                    `/reports/finance/sales-report?billType=New&serviceType=Product`
+                  ),
                 },
               ]}
             />
             <SalesSummary
               icon={renewalIcon}
               title="Renewal"
-              titleLink={`/sales-report?date=${dateFilter?.value}&billType=Renewal`}
+              titleLink={generateUrl(
+                `/reports/finance/sales-report?billType=Renewal`
+              )}
               totalSales="03"
               items={[
                 {
                   label: "Memberships",
                   value: "01",
-                  link: `/sales-report?date=${encodeURIComponent(
-                    dateFilter?.value
-                  )}&billType=Renewal&serviceType=Membership`,
+                  link: generateUrl(
+                    `/reports/finance/sales-report?billType=Renewal&serviceType=Membership`
+                  ),
                 },
                 {
                   label: "Packages",
                   value: "01",
-                  link: `/sales-report?date=${encodeURIComponent(
-                    dateFilter?.value
-                  )}&billType=Renewal&serviceType=Package`,
+                  link: generateUrl(
+                    `/reports/finance/sales-report?billType=Renewal&serviceType=Package`
+                  ),
                 },
                 {
                   label: "Products",
                   value: "01",
-                  link: `/sales-report?date=${encodeURIComponent(
-                    dateFilter?.value
-                  )}&billType=Renewal&serviceType=Product`,
+                  link: generateUrl(
+                    `/reports/finance/sales-report?billType=Renewal&serviceType=Product`
+                  ),
                 },
               ]}
             />
@@ -579,46 +598,62 @@ const ClubManagerDashboard = () => {
             <SalesSummary
               icon={trialIcon}
               title="Trials"
-              titleLink={`/trial-appointments?date=${dateFilter?.value}`}
-              totalSales="3"
+              titleLink={generateUrl(
+                `/reports/appointments/trial-appointments?`
+              )}
+              totalSales="03"
               items={[
                 {
                   label: "Scheduled",
                   value: "01",
-                  link: `/trial-appointments?date=${encodeURIComponent(
-                    dateFilter?.value
-                  )}&status=Scheduled`,
+                  link: generateUrl(
+                    `/reports/appointments/trial-appointments?status=Scheduled`
+                  ),
                 },
                 {
                   label: "Completed",
                   value: "01",
-                  link: `/trial-appointments?date=${encodeURIComponent(
-                    dateFilter?.value
-                  )}&status=Completed`,
+                  link: generateUrl(
+                    `/reports/appointments/trial-appointments?status=Completed`
+                  ),
                 },
                 {
                   label: "No-Show",
                   value: "01",
-                  link: `/trial-appointments?date=${encodeURIComponent(
-                    dateFilter?.value
-                  )}&status=No-Show`,
+                  link: generateUrl(
+                    `/reports/appointments/trial-appointments?status=No-Show`
+                  ),
                 },
               ]}
             />
             <SalesSummary
               icon={checkInIcon}
               title="Check-ins"
-              titleLink="/sales-report?data=memberships"
-              totalSales="905"
+              titleLink={generateUrl(
+                `/reports/member-management/member-check-ins?`
+              )}
+              totalSales="09"
               items={[
-                { label: "Unique Check-ins", value: "881", link: "#" },
-                { label: "Unique Members", value: "305", link: "#" },
+                {
+                  label: "Unique Check-ins",
+                  value: "03",
+                  link: generateUrl(
+                    `/reports/member-management/member-check-ins?checkin-type=unique-check-in`
+                  ),
+                },
+                {
+                  label: "Unique Members",
+                  value: "03",
+                  link: generateUrl(
+                    `/reports/member-management/member-check-ins?checkin-type=unique-members`
+                  ),
+                },
               ]}
             />
             <SalesSummary
               icon={enquiriesIcon}
               title="Conversion"
-              titleLink="/sales-report?data=memberships"
+              titleLink="/reports/finance/sales-report?data=memberships"
               totalSales="2%"
               items={[
                 { label: "Lead To Trial", value: "13%", link: "#" },

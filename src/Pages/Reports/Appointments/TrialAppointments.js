@@ -4,13 +4,13 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { addYears, subYears } from "date-fns";
 import { FaCalendarDays } from "react-icons/fa6";
-import { customStyles } from "../Helper/helper";
+import { customStyles } from "../../../Helper/helper";
 import Select from "react-select";
-import TrialAppointmentPanel from "../components/FilterPanel/TrialAppointmentPanel";
-import { trialAppointments } from "../DummyData/DummyData"; // Dummy data file
-import viewIcon from "../assets/images/icons/eye.svg";
-import printIcon from "../assets/images/icons/print-icon.svg";
-import mailIcon from "../assets/images/icons/mail-icon.svg";
+import TrialAppointmentPanel from "../../../components/FilterPanel/TrialAppointmentPanel";
+import { trialAppointments } from "../../../DummyData/DummyData"; // Dummy data file
+import viewIcon from "../../../assets/images/icons/eye.svg";
+import printIcon from "../../../assets/images/icons/print-icon.svg";
+import mailIcon from "../../../assets/images/icons/mail-icon.svg";
 import { useLocation } from "react-router-dom";
 import {
   parse,
@@ -31,24 +31,21 @@ const dateFilterOptions = [
 ];
 
 const TrialAppointments = () => {
-  // State for appointment data
-  const [data, setData] = useState(trialAppointments);
 
-  // State for date filters
+  const [data, setData] = useState(trialAppointments);
   const [dateFilter, setDateFilter] = useState(dateFilterOptions[1]);
   const [customFrom, setCustomFrom] = useState(null);
   const [customTo, setCustomTo] = useState(null);
 
-  // State for selected checkboxes
   const [selectedIds, setSelectedIds] = useState([]);
 
-  // React Router location hook
   const location = useLocation();
 
-  // Read `date` param from URL and apply automatically
   useEffect(() => {
     const params = new URLSearchParams(location.search);
-    const filterValue = params.get("date");
+    const filterValue = params.get('date');
+    const customFromValue = params.get('customFrom');
+    const customToValue = params.get('customTo');
 
     if (filterValue) {
       const matchedOption = dateFilterOptions.find(
@@ -58,6 +55,13 @@ const TrialAppointments = () => {
         setDateFilter(matchedOption);
       }
     }
+    if (customFromValue) {
+      setCustomFrom(customFromValue);
+    }
+    if (customToValue) {
+      setCustomTo(customToValue);
+    }
+
   }, [location.search]);
 
   // Extract query params
@@ -66,6 +70,8 @@ const TrialAppointments = () => {
     return {
       date: params.get("date"),
       status: params.get("status"),
+      customFrom: params.get('customFrom'),
+      customTo: params.get('customTo'),
     };
   }, [location.search]);
 
@@ -101,21 +107,33 @@ const TrialAppointments = () => {
   useEffect(() => {
     let filteredData = [...trialAppointments];
 
-    // Apply date filter
-    if (queryParams.date) {
-      const range = getDateRangeFromFilter(queryParams.date);
-      if (range) {
-        filteredData = filteredData.filter((item) => {
-          const enquiryDate = parse(item.enquiryDate, "dd/MM/yyyy", new Date());
-          if (isNaN(enquiryDate)) return false;
+     // Handle custom date filter
+  if (dateFilter?.value === "custom") {
+    const from = customFrom ? startOfDay(customFrom) : null;
+    const to = customTo ? endOfDay(customTo) : null;
 
-          return isWithinInterval(enquiryDate, {
-            start: range.from,
-            end: range.to,
-          });
-        });
-      }
+    if (from && to) {
+      filteredData = filteredData.filter((item) => {
+        const enquiryDate = parse(item.enquiryDate, "dd/MM/yyyy", new Date());
+        return isWithinInterval(enquiryDate, { start: from, end: to });
+      });
     }
+  } else {
+    const range = getDateRangeFromFilter(dateFilter?.value);
+
+    if (range) {
+      filteredData = filteredData.filter((item) => {
+        const enquiryDate = parse(item.enquiryDate, "dd/MM/yyyy", new Date());
+
+        if (isNaN(enquiryDate)) return false;
+
+        return isWithinInterval(enquiryDate, {
+          start: range.from,
+          end: range.to,
+        });
+      });
+    }
+  }
 
     // Apply status filter
     if (queryParams.status) {
@@ -126,7 +144,7 @@ const TrialAppointments = () => {
     }
 
     setData(filteredData);
-  }, [queryParams.date, queryParams.status]);
+  }, [dateFilter, queryParams.date, queryParams.status, customFrom, customTo]);
 
   // Function to calculate stats dynamically
   const calculateStats = () => {

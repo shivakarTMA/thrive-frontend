@@ -7,6 +7,7 @@ import { toast } from "react-toastify";
 import { apiAxios } from "../../config/config";
 import { fetchOptionList } from "../../Redux/Reducers/optionListSlice";
 import { customStyles } from "../../Helper/helper";
+import { useSearchParams } from "react-router-dom";
 
 export default function LeadFilterPanel({
   selectedLeadSource,
@@ -22,8 +23,9 @@ export default function LeadFilterPanel({
   selectedServiceName,
   setSelectedServiceName,
   onApplyFilters,
-  onRemoveFilter
+  onRemoveFilter,
 }) {
+  const [searchParams] = useSearchParams();
   const [showFilters, setShowFilters] = useState(false);
   const panelRef = useRef(null);
   const [staffList, setStaffList] = useState([]);
@@ -37,7 +39,9 @@ export default function LeadFilterPanel({
   // Fetch staff list
   const fetchStaff = async (search = "") => {
     try {
-      const res = await apiAxios().get("/staff/list", { params: search ? { search } : {} });
+      const res = await apiAxios().get("/staff/list", {
+        params: search ? { search } : {},
+      });
       const data = res.data?.data || [];
       const activeStaff = data.filter((item) => item.status === "ACTIVE");
       setStaffList(activeStaff);
@@ -47,7 +51,9 @@ export default function LeadFilterPanel({
     }
   };
 
-  useEffect(() => { fetchStaff(); }, []);
+  useEffect(() => {
+    fetchStaff();
+  }, []);
 
   // Fetch dropdown options from Redux
   useEffect(() => {
@@ -59,7 +65,8 @@ export default function LeadFilterPanel({
   const leadsSources = lists["LEAD_SOURCE"] || [];
   const lastCallStatusOptions = lists["LEAD_CALL_STATUS"] || [];
   const leadServiceOptions = lists["INTERESTED_IN"] || [];
-  const leadOwnerOptions = staffList.map((item) => ({ label: item.name, value: item.id })) || [];
+  const leadOwnerOptions =
+    staffList.map((item) => ({ label: item.name, value: item.id })) || [];
   const genderOptions = [
     { value: "MALE", label: "Male" },
     { value: "FEMALE", label: "Female" },
@@ -129,6 +136,24 @@ export default function LeadFilterPanel({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [showFilters]);
 
+  useEffect(() => {
+    const urlLeadStatus = searchParams.get("leadStatus");
+
+    const initialFilters = {};
+
+    if (urlLeadStatus) {
+      initialFilters.leadStatus = {
+        label: urlLeadStatus,
+        value: urlLeadStatus,
+      };
+      setSelectedLeadStatus({ label: urlLeadStatus, value: urlLeadStatus });
+    }
+
+    // Add other filters if needed (e.g., leadSource, dateFilter)
+
+    setAppliedFilters(initialFilters);
+  }, []);
+
   return (
     <div className="relative max-w-fit w-full" ref={panelRef}>
       <div className="flex gap-2 items-center">
@@ -150,38 +175,86 @@ export default function LeadFilterPanel({
             <div className="grid grid-cols-2 gap-4 min-w-[500px]">
               {/* Lead Source */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Lead Source</label>
-                <Select value={selectedLeadSource} onChange={setSelectedLeadSource} options={leadsSources} placeholder="Select Lead Source" styles={customStyles} />
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Lead Source
+                </label>
+                <Select
+                  value={selectedLeadSource}
+                  onChange={setSelectedLeadSource}
+                  options={leadsSources}
+                  placeholder="Select Lead Source"
+                  styles={customStyles}
+                />
               </div>
 
               {/* Lead Status */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Lead Status</label>
-                <Select value={selectedLeadStatus} onChange={setSelectedLeadStatus} options={leadStatusOptions} placeholder="Select Lead Status" styles={customStyles} />
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Lead Status
+                </label>
+                <Select
+                  value={selectedLeadStatus}
+                  onChange={setSelectedLeadStatus}
+                  options={leadStatusOptions}
+                  placeholder="Select Lead Status"
+                  styles={customStyles}
+                />
               </div>
 
               {/* Last Call Status */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Last Call Status</label>
-                <Select value={selectedLastCallType} onChange={setSelectedLastCallType} options={lastCallStatusOptions} placeholder="Select Last Call Type" styles={customStyles} />
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Last Call Status
+                </label>
+                <Select
+                  value={selectedLastCallType}
+                  onChange={setSelectedLastCallType}
+                  options={lastCallStatusOptions}
+                  placeholder="Select Last Call Type"
+                  styles={customStyles}
+                />
               </div>
 
               {/* Lead Owner */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Lead Owner</label>
-                <Select value={selectedCallTag} onChange={setSelectedCallTag} options={leadOwnerOptions} placeholder="Select Lead Owner" styles={customStyles} />
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Lead Owner
+                </label>
+                <Select
+                  value={selectedCallTag}
+                  onChange={setSelectedCallTag}
+                  options={leadOwnerOptions}
+                  placeholder="Select Lead Owner"
+                  styles={customStyles}
+                />
               </div>
 
               {/* Service Name */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Interested In</label>
-                <Select value={selectedServiceName} onChange={setSelectedServiceName} options={leadServiceOptions} placeholder="Select Interested" styles={customStyles} />
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Interested In
+                </label>
+                <Select
+                  value={selectedServiceName}
+                  onChange={setSelectedServiceName}
+                  options={leadServiceOptions}
+                  placeholder="Select Interested"
+                  styles={customStyles}
+                />
               </div>
 
               {/* Gender */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Gender</label>
-                <Select value={selectedGender} onChange={setSelectedGender} options={genderOptions} placeholder="Select Gender" styles={customStyles} />
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Gender
+                </label>
+                <Select
+                  value={selectedGender}
+                  onChange={setSelectedGender}
+                  options={genderOptions}
+                  placeholder="Select Gender"
+                  styles={customStyles}
+                />
               </div>
             </div>
 
@@ -204,7 +277,10 @@ export default function LeadFilterPanel({
           {Object.entries(appliedFilters).map(([key, value]) => {
             if (!value) return null;
             return (
-              <div key={key} className="flex items-center justify-between gap-1 border rounded-full bg-[#EEEEEE] min-h-[30px] px-3 text-sm">
+              <div
+                key={key}
+                className="flex items-center justify-between gap-1 border rounded-full bg-[#EEEEEE] min-h-[30px] px-3 text-sm"
+              >
                 <span>{value.label || value}</span>
                 <IoClose
                   onClick={() => removeFilter(key)}

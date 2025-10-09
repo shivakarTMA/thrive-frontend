@@ -3,13 +3,13 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { addYears, subYears } from "date-fns";
 import { FaCalendarDays } from "react-icons/fa6";
-import { customStyles } from "../Helper/helper";
+import { customStyles } from "../../../Helper/helper";
 import Select from "react-select";
-import SalesReportPanel from "../components/FilterPanel/SalesReportPanel";
-import { salesReportData } from "../DummyData/DummyData";
-import viewIcon from "../assets/images/icons/eye.svg";
-import printIcon from "../assets/images/icons/print-icon.svg";
-import mailIcon from "../assets/images/icons/mail-icon.svg";
+import SalesReportPanel from "../../../components/FilterPanel/SalesReportPanel";
+import { salesReportData } from "../../../DummyData/DummyData";
+import viewIcon from "../../../assets/images/icons/eye.svg";
+import printIcon from "../../../assets/images/icons/print-icon.svg";
+import mailIcon from "../../../assets/images/icons/mail-icon.svg";
 import { useLocation } from "react-router-dom";
 import {
   parse,
@@ -29,7 +29,7 @@ const dateFilterOptions = [
 ];
 
 const formatIndianNumber = (num) => new Intl.NumberFormat("en-IN").format(num);
-const SalesReportDashboard = () => {
+const SalesReportPage = () => {
   const [data, setData] = useState(salesReportData);
   const [dateFilter, setDateFilter] = useState(dateFilterOptions[1]);
   const [customFrom, setCustomFrom] = useState(null);
@@ -39,8 +39,11 @@ const SalesReportDashboard = () => {
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
-    const filterValue = params.get("date");
+    const filterValue = params.get('date');
+    const customFromValue = params.get('customFrom');
+    const customToValue = params.get('customTo');
 
+    // Set the date filter based on the URL
     if (filterValue) {
       const matchedOption = dateFilterOptions.find(
         (option) => option.value === filterValue
@@ -48,6 +51,14 @@ const SalesReportDashboard = () => {
       if (matchedOption) {
         setDateFilter(matchedOption);
       }
+    }
+
+    // Set customFrom and customTo from the URL query parameters
+    if (customFromValue) {
+      setCustomFrom(customFromValue);
+    }
+    if (customToValue) {
+      setCustomTo(customToValue);
     }
   }, [location.search]);
 
@@ -57,6 +68,8 @@ const SalesReportDashboard = () => {
       date: params.get("date"),
       service_type: params.get("serviceType"), // e.g., Memberships
       billType: params.get("billType"),
+      customFrom: params.get('customFrom'),
+      customTo: params.get('customTo'),
     };
   }, [location.search]);
 
@@ -75,11 +88,8 @@ const SalesReportDashboard = () => {
   const totalSales =
     salesData.Membership + salesData.Package + salesData.Product;
 
-  console.log(totalSales, "totalSales ");
-
   const [itemBillType, setItemBillType] = useState(null);
   const [itemServiceType, setItemServiceType] = useState(null);
-  console.log(itemBillType, "itemBillType");
 
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
@@ -110,78 +120,72 @@ const SalesReportDashboard = () => {
     }
   });
 
-  const getDateRangeFromFilter = (filterValue) => {
+const getDateRangeFromFilter = (filterValue) => {
     const today = new Date();
 
     switch (filterValue) {
       case "today":
-        return {
-          from: startOfDay(today),
-          to: endOfDay(today),
-        };
-
+        return { from: startOfDay(today), to: endOfDay(today) };
       case "last_7_days":
-        return {
-          from: startOfDay(subDays(today, 6)), // includes today + 6 previous days
-          to: endOfDay(today),
-        };
-
+        return { from: startOfDay(subDays(today, 6)), to: endOfDay(today) };
       case "month_till_date":
-        return {
-          from: startOfDay(startOfMonth(today)),
-          to: endOfDay(today),
-        };
-
+        return { from: startOfDay(startOfMonth(today)), to: endOfDay(today) };
       default:
         return null;
     }
   };
 
   useEffect(() => {
-    let filteredData = [...salesReportData];
+  let filteredData = [...salesReportData];
 
-    // Filter by date range
-    if (queryParams.date) {
-      const range = getDateRangeFromFilter(queryParams.date);
+  // Handle custom date filter
+  if (dateFilter?.value === "custom") {
+    const from = customFrom ? startOfDay(customFrom) : null;
+    const to = customTo ? endOfDay(customTo) : null;
 
-      if (range) {
-        filteredData = filteredData.filter((item) => {
-          const purchaseDate = parse(
-            item.purchaseDate,
-            "dd/MM/yyyy",
-            new Date()
-          );
+    if (from && to) {
+      filteredData = filteredData.filter((item) => {
+        const purchaseDate = parse(item.purchaseDate, "dd/MM/yyyy", new Date());
+        return isWithinInterval(purchaseDate, { start: from, end: to });
+      });
+    }
+  } else {
+    const range = getDateRangeFromFilter(dateFilter?.value);
 
-          console.log("Checking date:", item.purchaseDate, "->", purchaseDate);
+    if (range) {
+      filteredData = filteredData.filter((item) => {
+        const purchaseDate = parse(item.purchaseDate, "dd/MM/yyyy", new Date());
 
-          if (isNaN(purchaseDate)) return false;
+        if (isNaN(purchaseDate)) return false;
 
-          return isWithinInterval(purchaseDate, {
-            start: range.from,
-            end: range.to,
-          });
+        return isWithinInterval(purchaseDate, {
+          start: range.from,
+          end: range.to,
         });
-      }
+      });
     }
+  }
 
-    // Filter by label (serviceType)
-    if (queryParams.service_type) {
-      filteredData = filteredData.filter(
-        (item) =>
-          item.serviceType?.toLowerCase() ===
-          queryParams.service_type?.toLowerCase()
-      );
-    }
-    // Filter by label (serviceType)
-    if (queryParams.billType) {
-      filteredData = filteredData.filter(
-        (item) =>
-          item.billType?.toLowerCase() === queryParams.billType?.toLowerCase()
-      );
-    }
+  // Filter by serviceType
+  if (queryParams.service_type) {
+    filteredData = filteredData.filter(
+      (item) =>
+        item.serviceType?.toLowerCase() === queryParams.service_type?.toLowerCase()
+    );
+  }
 
-    setData(filteredData);
-  }, [queryParams.date, queryParams.service_type, queryParams.billType]);
+  // Filter by billType
+  if (queryParams.billType) {
+    filteredData = filteredData.filter(
+      (item) =>
+        item.billType?.toLowerCase() === queryParams.billType?.toLowerCase()
+    );
+  }
+
+  setData(filteredData);
+}, [dateFilter, queryParams.date, queryParams.service_type, queryParams.billType, customFrom, customTo]);
+
+
 
   console.log(data, "SHIVAKAR");
 
@@ -456,4 +460,4 @@ const SalesReportDashboard = () => {
   );
 };
 
-export default SalesReportDashboard;
+export default SalesReportPage;

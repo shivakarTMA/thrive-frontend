@@ -118,22 +118,40 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
           <span className="nav-text">Club Manager</span>
         </Link>
         <Link
-          to="/sales-report"
+          to="/reports/finance/sales-report"
           className={`nav-link mb-2 ${
-            location.pathname === "/sales-report" ? "active" : ""
+            location.pathname === "/reports/finance/sales-report" ? "active" : ""
           }`}
         >
           <AiOutlineHome className="menu--icon" />
           <span className="nav-text">Sales Report</span>
         </Link>
         <Link
-          to="/trial-appointments"
+          to="/reports/appointments/trial-appointments"
           className={`nav-link mb-2 ${
-            location.pathname === "/trial-appointments" ? "active" : ""
+            location.pathname === "/reports/appointments/trial-appointments" ? "active" : ""
           }`}
         >
           <AiOutlineHome className="menu--icon" />
           <span className="nav-text">Trial Appointments</span>
+        </Link>
+        <Link
+          to="/reports/member-management/member-check-ins"
+          className={`nav-link mb-2 ${
+            location.pathname === "/reports/member-management/member-check-ins" ? "active" : ""
+          }`}
+        >
+          <AiOutlineHome className="menu--icon" />
+          <span className="nav-text">Member Check-ins</span>
+        </Link>
+        <Link
+          to="/reports/products-sold/"
+          className={`nav-link mb-2 ${
+            location.pathname === "/reports/products-sold/" ? "active" : ""
+          }`}
+        >
+          <AiOutlineHome className="menu--icon" />
+          <span className="nav-text">Products Sold</span>
         </Link>
         <Link
           to="/trainer-dashboard"

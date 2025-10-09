@@ -1,16 +1,12 @@
-// Import required libraries and components
 import React, { useEffect, useMemo, useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { addYears, subYears } from "date-fns";
 import { FaCalendarDays } from "react-icons/fa6";
-import { customStyles } from "../Helper/helper";
+import { customStyles } from "../../../Helper/helper";
 import Select from "react-select";
-import TrialAppointmentPanel from "../components/FilterPanel/TrialAppointmentPanel";
-import { trialAppointments } from "../DummyData/DummyData"; // Dummy data file
-import viewIcon from "../assets/images/icons/eye.svg";
-import printIcon from "../assets/images/icons/print-icon.svg";
-import mailIcon from "../assets/images/icons/mail-icon.svg";
+import TrialAppointmentPanel from "../../../components/FilterPanel/TrialAppointmentPanel";
+import { memberCheckInData } from "../../../DummyData/DummyData";
 import { useLocation } from "react-router-dom";
 import {
   parse,
@@ -30,25 +26,19 @@ const dateFilterOptions = [
   { value: "custom", label: "Custom Date" },
 ];
 
-const TrialAppointments = () => {
-  // State for appointment data
-  const [data, setData] = useState(trialAppointments);
-
-  // State for date filters
+const MemberCheckIn = () => {
+  const [data, setData] = useState(memberCheckInData);
   const [dateFilter, setDateFilter] = useState(dateFilterOptions[1]);
   const [customFrom, setCustomFrom] = useState(null);
   const [customTo, setCustomTo] = useState(null);
 
-  // State for selected checkboxes
-  const [selectedIds, setSelectedIds] = useState([]);
-
-  // React Router location hook
   const location = useLocation();
 
-  // Read `date` param from URL and apply automatically
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const filterValue = params.get("date");
+    const customFromValue = params.get("customFrom");
+    const customToValue = params.get("customTo");
 
     if (filterValue) {
       const matchedOption = dateFilterOptions.find(
@@ -58,6 +48,12 @@ const TrialAppointments = () => {
         setDateFilter(matchedOption);
       }
     }
+    if (customFromValue) {
+      setCustomFrom(customFromValue);
+    }
+    if (customToValue) {
+      setCustomTo(customToValue);
+    }
   }, [location.search]);
 
   // Extract query params
@@ -66,6 +62,8 @@ const TrialAppointments = () => {
     return {
       date: params.get("date"),
       status: params.get("status"),
+      customFrom: params.get("customFrom"),
+      customTo: params.get("customTo"),
     };
   }, [location.search]);
 
@@ -99,17 +97,29 @@ const TrialAppointments = () => {
 
   // Filter data dynamically
   useEffect(() => {
-    let filteredData = [...trialAppointments];
+    let filteredData = [...memberCheckInData];
 
-    // Apply date filter
-    if (queryParams.date) {
-      const range = getDateRangeFromFilter(queryParams.date);
+    // Handle custom date filter
+    if (dateFilter?.value === "custom") {
+      const from = customFrom ? startOfDay(customFrom) : null;
+      const to = customTo ? endOfDay(customTo) : null;
+
+      if (from && to) {
+        filteredData = filteredData.filter((item) => {
+          const checkinDate = parse(item.checkinDate, "dd/MM/yyyy", new Date());
+          return isWithinInterval(checkinDate, { start: from, end: to });
+        });
+      }
+    } else {
+      const range = getDateRangeFromFilter(dateFilter?.value);
+
       if (range) {
         filteredData = filteredData.filter((item) => {
-          const enquiryDate = parse(item.enquiryDate, "dd/MM/yyyy", new Date());
-          if (isNaN(enquiryDate)) return false;
+          const checkinDate = parse(item.checkinDate, "dd/MM/yyyy", new Date());
 
-          return isWithinInterval(enquiryDate, {
+          if (isNaN(checkinDate)) return false;
+
+          return isWithinInterval(checkinDate, {
             start: range.from,
             end: range.to,
           });
@@ -126,26 +136,55 @@ const TrialAppointments = () => {
     }
 
     setData(filteredData);
-  }, [queryParams.date, queryParams.status]);
+  }, [dateFilter, queryParams.status, customFrom, customTo]);
+
+  console.log(dateFilter?.value, "dateFilter");
 
   // Function to calculate stats dynamically
   const calculateStats = () => {
-    const scheduled = data.filter((item) => item.status === "Scheduled").length;
-    const completed = data.filter((item) => item.status === "Completed").length;
-    const noShow = data.filter((item) => item.status === "No-Show").length;
+    // Get the correct date range for the current date filter
+    const { from, to } = getDateRangeFromFilter(dateFilter?.value) || {
+    from: customFrom ? startOfDay(customFrom) : null,
+    to: customTo ? endOfDay(customTo) : null,
+  };
 
-    return { scheduled, completed, noShow };
+    console.log("Filtering from:", from);
+    console.log("Filtering to:", to);
+
+    let filteredData = data.filter((item) => {
+      const checkinDate = parse(item.checkinDate, "dd/MM/yyyy", new Date());
+
+      console.log("Parsed checkinDate:", checkinDate);
+      console.log(
+        "Checking date in range:",
+        isWithinInterval(checkinDate, { start: from, end: to })
+      );
+
+      // Check if date is within the range if the range is defined
+      const dateInRange =
+        from && to
+          ? isWithinInterval(checkinDate, { start: from, end: to })
+          : true;
+
+      return dateInRange // Make sure status exists and is correctly matched
+    });
+
+    console.log("Filtered Data Length:", filteredData.length);
+
+    const totalCheckIn = filteredData.length;
+    const totalUniqueCheckIn = filteredData.length;
+    const totalUniqueMembers = filteredData.length;
+
+    return { totalCheckIn, totalUniqueCheckIn, totalUniqueMembers };
   };
 
   // Call stats function
-  const { scheduled, completed, noShow } = calculateStats();
+  const { totalCheckIn, totalUniqueCheckIn, totalUniqueMembers } =
+    calculateStats();
 
-  // Handle row selection
-  const handleCheckboxChange = (id) => {
-    setSelectedIds((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
-    );
-  };
+  console.log("Total Check-In: ", totalCheckIn);
+  console.log("Total Unique Check-In: ", totalUniqueCheckIn);
+  console.log("Total Unique No-Show: ", totalUniqueMembers);
 
   return (
     <>
@@ -153,8 +192,8 @@ const TrialAppointments = () => {
         {/* Page heading */}
         <div className="flex items-end justify-between gap-2 mb-2">
           <div className="title--breadcrumbs">
-            <p className="text-sm">{`Home > Reports > Appointments > Trial Appointments`}</p>
-            <h1 className="text-3xl font-semibold">Trial Appointments</h1>
+            <p className="text-sm">{`Home >  Reports > Member Management > Member Check-ins`}</p>
+            <h1 className="text-3xl font-semibold">Member Check-ins</h1>
           </div>
         </div>
 
@@ -224,26 +263,32 @@ const TrialAppointments = () => {
         <div className="grid grid-cols-3 gap-5 mb-5 p-3 border bg-white shodow--box rounded-[10px]">
           <div className="border rounded-[5px] overflow-hidden w-full">
             <div className="flex gap-1 justify-center bg-[#F1F1F1] p-4 py-3">
-              <div className="text-lg font-bold">Scheduled</div>
+              <div className="text-lg font-bold">Total Check-ins</div>
             </div>
             <div>
-              <p className="text-3xl font-bold p-2 text-center py-5">{scheduled}</p>
+              <p className="text-3xl font-bold p-2 text-center py-5">
+                {totalCheckIn}
+              </p>
             </div>
           </div>
           <div className="border rounded-[5px] overflow-hidden w-full">
             <div className="flex gap-1 justify-center bg-[#F1F1F1] p-4 py-3">
-              <div className="text-lg font-bold">Completed</div>
+              <div className="text-lg font-bold">Total Unique Check-ins</div>
             </div>
             <div>
-              <p className="text-3xl font-bold p-2 text-center py-5">{completed}</p>
+              <p className="text-3xl font-bold p-2 text-center py-5">
+                {totalUniqueCheckIn}
+              </p>
             </div>
           </div>
           <div className="border rounded-[5px] overflow-hidden w-full">
             <div className="flex gap-1 justify-center bg-[#F1F1F1] p-4 py-3">
-              <div className="text-lg font-bold">No Show</div>
+              <div className="text-lg font-bold">Total Unique Members</div>
             </div>
             <div>
-              <p className="text-3xl font-bold p-2 text-center py-5">{noShow}</p>
+              <p className="text-3xl font-bold p-2 text-center py-5">
+                {totalUniqueMembers}
+              </p>
             </div>
           </div>
         </div>
@@ -264,74 +309,44 @@ const TrialAppointments = () => {
               <table className="w-full text-sm text-left text-gray-500">
                 <thead className="text-xs text-gray-700 uppercase bg-gray-50">
                   <tr>
-                    <th className="px-2 py-4 min-w-[50px]">#</th>
+                    <th className="px-2 py-4 min-w-[50px]">S.No.</th>
                     <th className="px-2 py-4 min-w-[110px] max-w-fit">
-                      Enquiry Date
+                      Member ID
+                    </th>
+                    <th className="px-2 py-4 min-w-[150px] max-w-fit">Name</th>
+                    <th className="px-2 py-4 min-w-[140px] max-w-fit">
+                      Service Name
+                    </th>
+                    <th className="px-2 py-4 min-w-[110px] max-w-fit">Date</th>
+                    <th className="px-2 py-4 min-w-[110px] max-w-fit">
+                      Location
+                    </th>
+                    <th className="px-2 py-4 min-w-[110px] max-w-fit">
+                      Clock In
+                    </th>
+                    <th className="px-2 py-4 min-w-[110px] max-w-fit">
+                      Clock Out
                     </th>
                     <th className="px-2 py-4 min-w-[170px] max-w-fit">
-                      Appointment Category
+                      Conducted By
                     </th>
-                    <th className="px-2 py-4 min-w-[170px] max-w-fit">
-                      Appointment Name
-                    </th>
-                    <th className="px-2 py-4 min-w-[170px] max-w-fit">
-                      Lead Name
-                    </th>
-                    <th className="px-2 py-4 min-w-[170px] max-w-fit">
-                      Date & Time
-                    </th>
-                    <th className="px-2 py-4 min-w-[170px] max-w-fit">
-                      Staff Name
-                    </th>
-                    <th className="px-2 py-4 min-w-[170px] max-w-fit">
-                      Scheduled By
-                    </th>
-                    <th className="px-2 py-4 min-w-[120px] max-w-fit">Status</th>
-                    <th className="px-2 py-4 min-w-[200px] max-w-fit">Action</th>
                   </tr>
                 </thead>
                 <tbody>
                   {data.map((row, idx) => (
                     <tr
-                      key={row.id}
+                      key={row.serialNumber}
                       className="bg-white border-b hover:bg-gray-50 border-gray-200"
                     >
-                      <td className="px-2 py-4">
-                        <div className="flex items-center custom--checkbox--2">
-                          <input
-                            type="checkbox"
-                            className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
-                            checked={selectedIds.includes(row.id)}
-                            onChange={() => handleCheckboxChange(row.id)}
-                          />
-                          <span className="checkmark--custom"></span>
-                        </div>
-                      </td>
-                      <td className="px-2 py-4">{row?.enquiryDate}</td>
-                      <td className="px-2 py-4">{row?.appointmentCategory}</td>
-                      <td className="px-2 py-4">{row?.appointmentName}</td>
-                      <td className="px-2 py-4">{row?.leadName}</td>
-                      <td className="px-2 py-4">{row.dateTime}</td>
-                      <td className="px-2 py-4">{row.staffName}</td>
-                      <td className="px-2 py-4">{row.scheduledBy}</td>
-                      <td className="px-2 py-4">{row.status}</td>
-                      <td className="px-2 py-4">
-                        <div className="flex">
-                          <div className="bg-[#F1F1F1] border border-[#D4D4D4] rounded-l-[5px] w-[32px] h-[32px] flex items-center justify-center cursor-pointer">
-                            <img src={viewIcon} />
-                          </div>
-                          <div
-                            className={`bg-[#F1F1F1] border border-[#D4D4D4] rounded-[0px] w-[32px] h-[32px] flex items-center justify-center`}
-                          >
-                            <img src={printIcon} />
-                          </div>
-                          <div
-                            className={`bg-[#F1F1F1] border border-[#D4D4D4] rounded-r-[5px] w-[32px] h-[32px] flex items-center justify-center`}
-                          >
-                            <img src={mailIcon} />
-                          </div>
-                        </div>
-                      </td>
+                      <td className="px-2 py-4">{row?.serialNumber}</td>
+                      <td className="px-2 py-4">{row?.memberId}</td>
+                      <td className="px-2 py-4">{row?.name}</td>
+                      <td className="px-2 py-4">{row?.serviceName}</td>
+                      <td className="px-2 py-4">{row?.checkinDate}</td>
+                      <td className="px-2 py-4">{row?.location}</td>
+                      <td className="px-2 py-4">{row?.clockIn}</td>
+                      <td className="px-2 py-4">{row?.clockOut}</td>
+                      <td className="px-2 py-4">{row?.conductedBy}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -344,4 +359,4 @@ const TrialAppointments = () => {
   );
 };
 
-export default TrialAppointments;
+export default MemberCheckIn;

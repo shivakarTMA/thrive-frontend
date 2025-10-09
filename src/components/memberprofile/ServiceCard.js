@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { HiChevronDown } from "react-icons/hi2";
 import Coins from "../../assets/images/coins.svg";
 import { FaCirclePlus } from "react-icons/fa6";
@@ -9,13 +9,16 @@ import CreateInvoice from "../../Pages/CreateInvoice";
 import AddCoins from "../CoinsList/AddCoins";
 import CreateAppointment from "../Appointment/CreateAppointment";
 import SuspendAndPause from "../common/SuspendAndPause";
+import { apiAxios } from "../../config/config";
+import { toast } from "react-toastify";
 
 const statusOptions = [
   { value: "active", label: "Active" },
   { value: "expired", label: "Expired" },
 ];
 
-const ServiceCard = () => {
+const ServiceCard = ({ details }) => {
+  console.log(details, "details");
   const membershipData = {
     membershipId: "TL317432",
     relationshipSince: "19 Apr, 2024",
@@ -74,6 +77,7 @@ const ServiceCard = () => {
   // State to store selected status option, default is "active"
   const [selectedStatus, setSelectedStatus] = useState(statusOptions[0]);
   const [invoiceModal, setInvoiceModal] = useState(false);
+  const [coinsList, setCoinsList] = useState([]);
   const [coinsModal, setCoinsModal] = useState(false);
   const [appointmentModal, setAppointmentModal] = useState(false);
 
@@ -87,6 +91,31 @@ const ServiceCard = () => {
   const filteredServices = purchasedServices.filter(
     (service) => service.status === selectedStatus.value
   );
+
+  // Fetch coins with filters applied
+  const fetchMemberCoins = async () => {
+    try {
+      // Make the API call with query parameters
+      const res = await apiAxios().get(`/coin/transaction/list/${details?.id}`);
+      const data = res.data?.data || [];
+      const total = data.reduce((sum, coin) => sum + coin.coins, 0);
+      setCoinsList(total);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to fetch coins");
+    }
+  };
+
+  useEffect(() => {
+    fetchMemberCoins();
+  }, [coinsList]);
+
+  // This will be passed to AddCoins to update the list
+  const handleUpdateCoins = () => {
+    fetchMemberCoins(); // Refreshes the coins list
+  };
+
+  console.log(coinsList, "coinsList");
 
   return (
     <>
@@ -107,7 +136,7 @@ const ServiceCard = () => {
               onClick={() => setCoinsModal(true)}
             >
               <img src={Coins} className="mr-1" />
-              <span className="text-xl font-medium text-black mr-3">250</span>
+              <span className="text-xl font-medium text-black mr-3">{coinsList}</span>
               <FaCirclePlus className="text-black text-2xl cursor-pointer" />
             </div>
           </div>
@@ -374,7 +403,13 @@ const ServiceCard = () => {
           renewPlan={renewPlan}
         />
       )}
-      {coinsModal && <AddCoins setCoinsModal={setCoinsModal} />}
+      {coinsModal && (
+        <AddCoins
+          setCoinsModal={setCoinsModal}
+          handleUpdateCoins={handleUpdateCoins}
+          details={details}
+        />
+      )}
       {appointmentModal && (
         <CreateAppointment setAppointmentModal={setAppointmentModal} />
       )}

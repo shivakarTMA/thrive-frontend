@@ -10,13 +10,14 @@ import { HiOutlineAdjustmentsHorizontal } from "react-icons/hi2";
 import { apiAxios } from "../../config/config";
 import { toast } from "react-toastify";
 
-const genderOptions = [
-  { value: "MALE", label: "Male" },
-  { value: "FEMALE", label: "Female" },
-  { value: "NOTDISCLOSE", label: "Not to Disclose" },
+const memberStatus = [
+  { value: "ACTIVE", label: "Active" },
+  { value: "INACTIVE", label: "Inactive" },
 ];
 
 export default function MemberFilterPanel({
+  filterStatus,
+  setFilterStatus,
   filterService,
   setFilterService,
   filterServiceVariation,
@@ -39,6 +40,7 @@ export default function MemberFilterPanel({
   const [staffList, setStaffList] = useState([]);
 
   const [appliedFilters, setAppliedFilters] = useState({
+    status: filterStatus,
     serviceName: filterService,
     service_variation: filterServiceVariation,
     ageGroup: filterAgeGroup,
@@ -132,6 +134,7 @@ export default function MemberFilterPanel({
   // Handle Submit (apply filters)
   const handleSubmitFilters = () => {
     setAppliedFilters({
+      status: filterStatus,
       serviceName: filterService,
       service_variation: filterServiceVariation,
       ageGroup: filterAgeGroup,
@@ -145,7 +148,10 @@ export default function MemberFilterPanel({
   };
 
   const removeFilter = (filter) => {
-    if (filter === "serviceName") {
+    if (filter === "status") {
+      setFilterStatus(null); // Reset setFilterStatus state
+      setAppliedFilters((prev) => ({ ...prev, status: null })); // Update appliedFilters
+    } else if (filter === "serviceName") {
       setFilterService(null); // Reset filterService state
       setAppliedFilters((prev) => ({ ...prev, serviceName: null })); // Update appliedFilters
     } else if (filter === "service_variation") {
@@ -202,6 +208,20 @@ export default function MemberFilterPanel({
           </div>
           <div className="p-4">
             <div className="grid grid-cols-2 gap-4 min-w-[500px]">
+              {/* Status */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Member Status
+                </label>
+                <Select
+                  value={filterStatus}
+                  onChange={setFilterStatus}
+                  options={memberStatus}
+                  // isClearable
+                  placeholder="Select Status"
+                  styles={customStyles}
+                />
+              </div>
               {/* Service */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">

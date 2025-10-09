@@ -260,7 +260,7 @@ const CreateLeadForm = ({ setLeadModal, selectedLead, onLeadUpdate }) => {
         }
         setLeadModal(false);
         // ✅ Trigger parent refresh
-        // onLeadUpdate();
+        onLeadUpdate();
       } catch (err) {
         console.error("❌ API Error:", err.response?.data || err.message);
         toast.error(err.response?.data?.message || err.message);
@@ -970,6 +970,23 @@ const CreateLeadForm = ({ setLeadModal, selectedLead, onLeadUpdate }) => {
                                 />
                                 <span className="radio-checkmark"></span>
                               </label>
+                              <label className="custom--radio">
+                                No Trial
+                                <input
+                                  type="radio"
+                                  name="schedule"
+                                  value="NoTrial"
+                                  checked={formik.values.schedule === "NoTrial"}
+                                   onChange={(e) => {
+                                    formik.setFieldValue("schedule", e.target.value);
+                                    // Reset staff_name and schedule_date_time when NoTrial is selected
+                                    formik.setFieldValue("staff_name", "");
+                                    formik.setFieldValue("schedule_date_time", "");
+                                  }}
+                                  className="w-4 h-4 mr-1"
+                                />
+                                <span className="radio-checkmark"></span>
+                              </label>
                             </div>
                           </div>
 
@@ -1003,7 +1020,7 @@ const CreateLeadForm = ({ setLeadModal, selectedLead, onLeadUpdate }) => {
                                 minDate={now}
                                 minTime={minTime}
                                 maxTime={maxTime}
-                                disabled={!formik.values.schedule}
+                                disabled={!formik.values.schedule || formik.values.schedule === 'NoTrial'}
                               />
                             </div>
                             {formik.touched.schedule_date_time &&
@@ -1043,7 +1060,7 @@ const CreateLeadForm = ({ setLeadModal, selectedLead, onLeadUpdate }) => {
                                 options={getAvailableTrainers()}
                                 placeholder="Select available trainer"
                                 styles={selectIcon}
-                                isDisabled={!formik.values.schedule}
+                                isDisabled={!formik.values.schedule || formik.values.schedule === 'NoTrial'}
                               />
                             </div>
 

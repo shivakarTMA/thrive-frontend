@@ -5,12 +5,14 @@ import Select from "react-select";
 import { customStyles } from "../../Helper/helper";
 import { IoCloseCircle } from "react-icons/io5";
 import { toast } from "react-toastify";
+import { phoneAxios } from "../../config/config";
 
 // Main component
-const AddCoins = ({ setCoinsModal }) => {
+const AddCoins = ({ setCoinsModal, details, handleUpdateCoins }) => {
+  console.log(details, "details Add coins");
   const leadBoxRef = useRef(null);
 
-  const reasonVariations = [
+  const sourceData = [
     { value: "Challlenges", label: "Challlenges" },
     { value: "Referral", label: "Referral" },
     { value: "Compensation", label: "Compensation" },
@@ -19,18 +21,30 @@ const AddCoins = ({ setCoinsModal }) => {
   // Formik setup
   const formik = useFormik({
     initialValues: {
-      no_of_coins: null,
-      reasonVariations: "",
-      remarks: "",
+      member_id: details?.id,
+      coins: null,
+      source: "",
+      remark: "",
     },
     validationSchema: Yup.object({
-      no_of_coins: Yup.number().required("Coins is required"),
-      reasonVariations: Yup.string().required("Product Type is required"),
+      coins: Yup.number().required("Coins is required"),
+      source: Yup.string().required("Product Type is required"),
     }),
     onSubmit: (values, { resetForm }) => {
-      toast.success("Appointment booked successfully!");
-      resetForm(values);
-      handleLeadModal();
+      try {
+        const response = phoneAxios.post("/coin/transaction/create", values);
+        toast.success("Coins added successfully!");
+
+        // Reset form and close modal
+        resetForm();
+        handleLeadModal();
+
+        // Trigger the parent component to fetch updated coins list
+        handleUpdateCoins();
+      } catch (error) {
+        toast.error("Something went wrong. Please try again.");
+        console.error("Error submitting form:", error);
+      }
     },
   });
 
@@ -68,14 +82,15 @@ const AddCoins = ({ setCoinsModal }) => {
                 No of Coins added<span className="text-red-500">*</span>
               </label>
               <input
-                name="no_of_coins"
-                value={formik.values.no_of_coins}
+                type="number"
+                name="coins"
+                value={formik?.values?.coins}
                 onChange={formik.handleChange}
                 className="custom--input w-full"
               />
-              {formik.errors.no_of_coins && formik.touched.no_of_coins && (
+              {formik.errors.coins && formik.touched.coins && (
                 <div className="text-red-500 text-sm">
-                  {formik.errors.no_of_coins}
+                  {formik.errors.coins}
                 </div>
               )}
             </div>
@@ -85,19 +100,28 @@ const AddCoins = ({ setCoinsModal }) => {
                 Reason<span className="text-red-500">*</span>
               </label>
               <Select
-                value={formik.values.reasonVariations}
-                onChange={(value) =>
-                  formik.setFieldValue("reasonVariations", value)
+                value={
+                  formik.values.source
+                    ? {
+                        value: formik.values.source,
+                        label: formik.values.source,
+                      }
+                    : null
                 }
-                options={reasonVariations}
+                onChange={(selectedOption) =>
+                  formik.setFieldValue(
+                    "source",
+                    selectedOption ? selectedOption.value : ""
+                  )
+                }
+                options={sourceData}
                 styles={customStyles}
               />
-              {formik.errors.reasonVariations &&
-                formik.touched.reasonVariations && (
-                  <div className="text-red-500 text-sm">
-                    {formik.errors.reasonVariations}
-                  </div>
-                )}
+              {formik.errors.source && formik.touched.source && (
+                <div className="text-red-500 text-sm">
+                  {formik.errors.source}
+                </div>
+              )}
             </div>
 
             {/* Remarks */}
@@ -106,8 +130,8 @@ const AddCoins = ({ setCoinsModal }) => {
                 Remarks
               </label>
               <textarea
-                name="remarks"
-                value={formik.values.remarks}
+                name="remark"
+                value={formik?.values?.remark}
                 onChange={formik.handleChange}
                 className="custom--input w-full"
                 rows={4}

@@ -30,13 +30,13 @@ const assignTrainers = [
 ];
 
 const validationSchema = Yup.object().shape({
-  scheduleFor: Yup.string()
-    .nullable()
-    .when("callStatus", {
-      is: (val) => val !== "Not Relevant" && val !== "Invalid number",
-      then: (schema) => schema.required("Schedule For is required"),
-      otherwise: (schema) => schema.notRequired(),
-    }),
+  // scheduleFor: Yup.string()
+  //   .nullable()
+  //   .when("callStatus", {
+  //     is: (val) => val !== "Not Relevant" && val !== "Invalid number",
+  //     then: (schema) => schema.required("Schedule For is required"),
+  //     otherwise: (schema) => schema.notRequired(),
+  //   }),
 
   callStatus: Yup.string().required("Call status is required"),
 
@@ -71,12 +71,7 @@ const validationSchema = Yup.object().shape({
     otherwise: (schema) => schema.notRequired(),
   }),
 
-  // Remarks (Discussion) - Hide when Not Relevant or Invalid number
-  remarks: Yup.string().when("callStatus", {
-    is: (val) => val !== "Not Relevant" && val !== "Invalid number",
-    then: (schema) => schema.required("Discussion is required"),
-    otherwise: (schema) => schema.notRequired(),
-  }),
+  remarks: Yup.string().required("Discussion is required"),
 
   // Optional fields (won case)
   closureDate: Yup.date().nullable(),
@@ -172,6 +167,7 @@ const LeadCallLogs = () => {
     initialValues,
     validationSchema,
     onSubmit: (values, { resetForm }) => {
+      console.log("Form validation errors:", formik.errors);
       const newEntry = {
         ...values,
         createdAt: new Date(),
@@ -184,6 +180,7 @@ const LeadCallLogs = () => {
 
       // Reset form and external states
       resetForm({ values: initialValues });
+      
     },
   });
 
@@ -257,8 +254,6 @@ const LeadCallLogs = () => {
     );
   };
 
-  console.log(leadDetails, "SHIVAKAR");
-
   return (
     <div className="page--content">
       <div className="flex items-end justify-between gap-2 mb-5">
@@ -277,7 +272,7 @@ const LeadCallLogs = () => {
 
             <div className="grid grid-cols-2 gap-4">
               {/* Schedule For only admin */}
-              <div>
+              {/* <div>
                 <label className="mb-2 block">
                   Schedule For<span className="text-red-500">*</span>
                 </label>
@@ -301,7 +296,7 @@ const LeadCallLogs = () => {
                     {formik.errors?.scheduleFor}
                   </div>
                 )}
-              </div>
+              </div> */}
 
               <div>
                 <label className="mb-2 block">
@@ -331,7 +326,8 @@ const LeadCallLogs = () => {
               {formik.values.callStatus !== "Trial/Tour Scheduled" &&
                 formik.values.callStatus !== "Not Interested" &&
                 formik.values.callStatus !== "Not Relevant" &&
-                formik.values.callStatus !== "Invalid number" && formik.values.callStatus !== "Won" && (
+                formik.values.callStatus !== "Invalid number" &&
+                formik.values.callStatus !== "Won" && (
                   <div>
                     <label className="mb-2 block">
                       Date & Time <span className="text-red-500">*</span>
@@ -441,9 +437,7 @@ const LeadCallLogs = () => {
 
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="mb-2 block">
-                          Date & Time
-                        </label>
+                        <label className="mb-2 block">Date & Time</label>
                         <div className="custom--date flex-1">
                           <span className="absolute z-[1] mt-[15px] ml-[15px]">
                             <FaCalendarDays />
@@ -472,9 +466,7 @@ const LeadCallLogs = () => {
 
                       {/* Schedule For */}
                       <div>
-                        <label className="mb-2 block">
-                          Schedule For
-                        </label>
+                        <label className="mb-2 block">Schedule For</label>
 
                         <Select
                           name="followup_staff_name"
@@ -583,30 +575,25 @@ const LeadCallLogs = () => {
               )}
             </div>
 
-            {formik?.values?.callStatus === "Not Relevant" ||
-            formik?.values?.callStatus === "Invalid number" ? null : (
-              <>
-                <div className="mb-3 mt-3">
-                  <label className="mb-2 block">
-                    Discussion Details<span className="text-red-500">*</span>
-                  </label>
-                  <textarea
-                    name="remarks"
-                    placeholder="Discussion (max 1800 characters)"
-                    maxLength={1800}
-                    value={formik.values.remarks}
-                    onChange={formik.handleChange}
-                    rows={4}
-                    className="custom--input w-full"
-                  />
-                  {formik.errors?.remarks && formik.touched?.remarks && (
-                    <div className="text-red-500 text-sm">
-                      {formik.errors?.remarks}
-                    </div>
-                  )}
+            <div className="mb-3 mt-3">
+              <label className="mb-2 block">
+                Discussion Details<span className="text-red-500">*</span>
+              </label>
+              <textarea
+                name="remarks"
+                placeholder="Discussion (max 1800 characters)"
+                maxLength={1800}
+                value={formik.values.remarks}
+                onChange={formik.handleChange}
+                rows={4}
+                className="custom--input w-full"
+              />
+              {formik.errors?.remarks && formik.touched?.remarks && (
+                <div className="text-red-500 text-sm">
+                  {formik.errors?.remarks}
                 </div>
-              </>
-            )}
+              )}
+            </div>
 
             {/* Buttons */}
             <div className="flex justify-end gap-2 mt-3">
@@ -622,8 +609,9 @@ const LeadCallLogs = () => {
 
         {/* Contact History Placeholder */}
         <div className="bg-white p-4 rounded-[10px] w-full box--shadow">
-          <div className="flex gap-2 justify-between items-center mb-5">
+          <div className="flex pt-2 gap-2 items-center pb-3 mb-5 border-b border-b-[#D4D4D4]">
             <h2 className="text-xl font-semibold">Contact History</h2>
+            <span className="font-bold">{"-"}</span>
             <div>
               <PhoneInput
                 name="text"
@@ -645,130 +633,35 @@ const LeadCallLogs = () => {
                 onChange={setFilterStatus}
                 placeholder="Call Status"
                 styles={customStyles}
+                className="w-full"
               />
 
-              <div className="custom--date">
+              <div className="custom--date flex-1">
+                <span className="absolute z-[1] mt-[15px] ml-[15px]">
+                  <FaCalendarDays />
+                </span>
                 <DatePicker
                   selected={startDate}
                   onChange={setStartDate}
                   placeholderText="Start Date"
-                  className="custom--input"
+                  className="border px-3 py-2 w-full input--icon"
+                  isClearable
                 />
               </div>
-              <div className="custom--date">
+              <div className="custom--date flex-1">
+                <span className="absolute z-[1] mt-[15px] ml-[15px]">
+                  <FaCalendarDays />
+                </span>
                 <DatePicker
                   selected={endDate}
                   onChange={setEndDate}
                   placeholderText="End Date"
-                  className="custom--input"
+                  className="border px-3 py-2 w-full input--icon"
                 />
               </div>
             </div>
           </div>
 
-          {/* {filteredLogs.length === 0 && (
-            <p className="text-gray-500">No call logs found.</p>
-          )} */}
-
-          {/* {filteredLogs.map((log, index) => (
-            <div
-              key={index}
-              className="border rounded p-4 w-full mb-3 calllogdetails"
-            >
-              <div className="grid grid-cols-2 gap-2 mb-3">
-                <p className="border p-2 rounded">
-                  <span className="text-sm font-semibold flex flex-col">
-                    Called by:
-                  </span>{" "}
-                  {log.calledBy}
-                </p>
-                <p className="border p-2 rounded">
-                  <span className="text-sm font-semibold flex flex-col">
-                    Call Status
-                  </span>{" "}
-                  {log.callStatus}
-                </p>
-                <p className="border p-2 rounded">
-                  <span className="text-sm font-semibold flex flex-col">
-                    Lead Status
-                  </span>{" "}
-                  {log.leadStatus}
-                </p>
-
-             
-                {log.scheduleFollowUp && (
-                  <p className="border p-2 rounded">
-                    <span className="text-sm font-semibold flex flex-col">
-                      Follow-up Date
-                    </span>{" "}
-                    {new Date(log.scheduleFollowUp).toLocaleString()}
-                  </p>
-                )}
-
-                {(log.callStatus === "trial scheduled" ||
-                  log.callStatus === "tour scheduled") &&
-                  log.trialDateTime && (
-                    <p className="border p-2 rounded">
-                      <span className="text-sm font-semibold flex flex-col">
-                        Follow-up Date
-                      </span>{" "}
-                      {new Date(log.trialDateTime).toLocaleString()}
-                    </p>
-                  )}
-
-             
-                {log.callStatus === "not interested" &&
-                  log.notInterestedReason && (
-                    <p className="border p-2 rounded">
-                      <span className="text-sm font-semibold flex flex-col">
-                        Reason
-                      </span>{" "}
-                      {log.notInterestedReason}
-                    </p>
-                  )}
-
-               
-                {log.callStatus === "irregular call" &&
-                  log.irregularCallType && (
-                    <p className="border p-2 rounded">
-                      <span className="text-sm font-semibold flex flex-col">
-                        Irregular Call
-                      </span>{" "}
-                      {log.irregularCallType}
-                    </p>
-                  )}
-
-         
-                {(log.callStatus === "trial scheduled" ||
-                  log.callStatus === "tour scheduled") &&
-                  log.trainerAvailability && (
-                    <p className="border p-2 rounded">
-                      <span className="text-sm font-semibold flex flex-col">
-                        Trainer Date & Time
-                      </span>{" "}
-                      {new Date(log.trainerAvailability).toLocaleString()}
-                    </p>
-                  )}
-
-              
-                {(log.callStatus === "trial scheduled" ||
-                  log.callStatus === "tour scheduled") &&
-                  log.staff_name && (
-                    <p className="border p-2 rounded">
-                      <span className="text-sm font-semibold flex flex-col">
-                        Assigned Staff
-                      </span>{" "}
-                      {log.staff_name}
-                    </p>
-                  )}
-              </div>
-
-              <div className="bg-gray-50 p-3 rounded">
-                <h3 className="text-sm font-semibold">Remarks:</h3>
-                <p>{log.remarks}</p>
-              </div>
-            </div>
-          ))} */}
           {filteredData.length > 0 ? (
             filteredData.map((filteredLogs, index) => (
               <ContactHistory key={index} filteredData={filteredLogs} />

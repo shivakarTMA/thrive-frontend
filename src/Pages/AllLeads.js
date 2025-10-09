@@ -9,7 +9,7 @@ import { MdCall } from "react-icons/md";
 import Select from "react-select";
 import { customStyles, dasboardStyles, formatAutoDate } from "../Helper/helper";
 import CreateLeadForm from "./CreateLeadForm";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import MailIcon from "../assets/images/icons/mail.png";
@@ -72,7 +72,8 @@ const AllLeads = () => {
   const [selectedServiceName, setSelectedServiceName] = useState(null);
   const [selectedGender, setSelectedGender] = useState(null);
 
-  const [dateFilter, setDateFilter] = useState(dateFilterOptions[0]);
+  const [searchParams] = useSearchParams();
+  const [dateFilter, setDateFilter] = useState(dateFilterOptions[1]);
   const [customFrom, setCustomFrom] = useState(null);
   const [customTo, setCustomTo] = useState(null);
 
@@ -82,10 +83,6 @@ const AllLeads = () => {
   const [rowsPerPage] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
-
-  const query = useQuery();
-  const selectedStatus = query.get("leadStatus");
-  const selectedView = query.get("view");
 
   const handleCheckboxChange = (id) => {
     setSelectedIds((prev) =>
@@ -160,6 +157,29 @@ const AllLeads = () => {
     }
   };
 
+  useEffect(() => {
+    const dateParam = searchParams.get("date");
+    const customFromParam = searchParams.get("customFrom");
+    const customToParam = searchParams.get("customTo");
+
+    if (dateParam) {
+      // Find the matching option from your dropdown
+      const foundOption =
+        dateFilterOptions.find((opt) => opt.value === dateParam) ||
+        dateFilterOptions[0];
+      setDateFilter(foundOption);
+
+      if (dateParam === "custom" && customFromParam && customToParam) {
+        // Decode and convert to JS Date
+        const fromDate = new Date(decodeURIComponent(customFromParam));
+        const toDate = new Date(decodeURIComponent(customToParam));
+
+        setCustomFrom(fromDate);
+        setCustomTo(toDate);
+      }
+    }
+  }, []);
+
   const fetchLeadList = async (
     search = searchTerm,
     currentPage = page,
@@ -171,12 +191,22 @@ const AllLeads = () => {
         limit: rowsPerPage,
       };
 
+      const urlLeadStatus = searchParams.get("leadStatus");
+      const urlDate = searchParams.get("date");
+      const urlCustomFrom = searchParams.get("customFrom");
+      const urlCustomTo = searchParams.get("customTo");
+
+      // ✅ Use overrideSelected first, then selected state, then URL, otherwise null
       const selLeadSource = overrideSelected.hasOwnProperty("leadSource")
         ? overrideSelected.leadSource
         : selectedLeadSource;
       const selLeadStatus = overrideSelected.hasOwnProperty("leadStatus")
         ? overrideSelected.leadStatus
-        : selectedLeadStatus;
+        : selectedLeadStatus
+        ? selectedLeadStatus
+        : urlLeadStatus
+        ? { label: urlLeadStatus, value: urlLeadStatus }
+        : null;
       const selLastCallType = overrideSelected.hasOwnProperty("lastCallType")
         ? overrideSelected.lastCallType
         : selectedLastCallType;
@@ -189,20 +219,35 @@ const AllLeads = () => {
       const selGender = overrideSelected.hasOwnProperty("gender")
         ? overrideSelected.gender
         : selectedGender;
-      const selDateFilter = overrideSelected.hasOwnProperty("dateFilter")
-        ? overrideSelected.dateFilter
-        : dateFilter;
-      const selCustomFrom = overrideSelected.hasOwnProperty("customFrom")
-        ? overrideSelected.customFrom
-        : customFrom;
-      const selCustomTo = overrideSelected.hasOwnProperty("customTo")
-        ? overrideSelected.customTo
-        : customTo;
 
-      // Search param
+      let selDateFilter =
+        overrideSelected.dateFilter?.value || dateFilter?.value || urlDate;
+
+      let selCustomFrom =
+        overrideSelected.customFrom ||
+        customFrom ||
+        (urlCustomFrom ? new Date(decodeURIComponent(urlCustomFrom)) : null);
+      let selCustomTo =
+        overrideSelected.customTo ||
+        customTo ||
+        (urlCustomTo ? new Date(decodeURIComponent(urlCustomTo)) : null);
+
+      // 🚫 Only use URL custom range if no manual override
+      if (
+        !overrideSelected.dateFilter &&
+        !customFrom &&
+        !customTo &&
+        urlDate === "custom" &&
+        urlCustomFrom &&
+        urlCustomTo
+      ) {
+        selDateFilter = "custom";
+        selCustomFrom = new Date(decodeURIComponent(urlCustomFrom));
+        selCustomTo = new Date(decodeURIComponent(urlCustomTo));
+      }
+
+      // ✅ Build query params (only if value exists)
       if (search) params.search = search;
-
-      // Add filters only if the selected value exists (prevents sending removed keys)
       if (selLeadSource?.value) params.lead_source = selLeadSource.value;
       if (selLeadStatus?.value) params.lead_status = selLeadStatus.value;
       if (selLastCallType?.value)
@@ -211,16 +256,14 @@ const AllLeads = () => {
       if (selServiceName?.value) params.interested_in = selServiceName.value;
       if (selGender?.value) params.gender = selGender.value;
 
-      // Date filter handling (use merged values)
-      if (selDateFilter?.value && selDateFilter.value !== "custom") {
-        params.dateFilter = selDateFilter.value;
-      } else if (
-        selDateFilter?.value === "custom" &&
-        selCustomFrom &&
-        selCustomTo
-      ) {
-        params.startDate = selCustomFrom.toISOString().split("T")[0];
-        params.endDate = selCustomTo.toISOString().split("T")[0];
+      // ✅ Date filter
+      if (selDateFilter && selDateFilter !== "custom") {
+        params.dateFilter = selDateFilter;
+      } else if (selDateFilter === "custom" && selCustomFrom && selCustomTo) {
+        const formatDate = (date) =>
+          date ? date.toISOString().split("T")[0] : null;
+        params.startDate = formatDate(selCustomFrom);
+        params.endDate = formatDate(selCustomTo);
       }
 
       const res = await apiAxios().get("/lead/list", { params });
@@ -260,7 +303,11 @@ const AllLeads = () => {
       serviceName: setSelectedServiceName,
       gender: setSelectedGender,
     };
+
+    // Clear state
     setterMap[filterKey]?.(null);
+
+    // Pass explicit null in overrideSelected so fetchLeadList knows to skip it
     const overrideSelected = { [filterKey]: null };
     fetchLeadList("", 1, overrideSelected);
   };
@@ -272,9 +319,15 @@ const AllLeads = () => {
   useEffect(() => {
     fetchLeadList("", 1);
   }, []);
+
+  // // Trigger only for custom range once both dates selected
   useEffect(() => {
-    fetchLeadList(searchTerm, 1);
+    if (dateFilter?.value === "custom" && customFrom && customTo) {
+      fetchLeadList("", 1, { dateFilter, customFrom, customTo });
+    }
   }, [dateFilter, customFrom, customTo]);
+
+  console.log(selectedLeadStatus, "selectedLeadStatus");
 
   return (
     <>
@@ -299,6 +352,7 @@ const AllLeads = () => {
                   if (selected?.value !== "custom") {
                     setCustomFrom(null);
                     setCustomTo(null);
+                    fetchLeadList("", 1, { dateFilter: selected });
                   }
                 }}
                 // isClearable
@@ -345,28 +399,7 @@ const AllLeads = () => {
                 </div>
               </>
             )}
-
-            {(selectedStatus || selectedView) && (
-              <button
-                onClick={() => navigate("/all-leads")}
-                className="px-4 py-2 bg-white text-black rounded flex items-center gap-2"
-              >
-                <RiResetLeftFill className="mt-[1px]" />
-                <span>Reset Filters</span>
-              </button>
-            )}
           </div>
-
-          {/* <div className="flex items-center gap-2 border rounded-[50px] px-2 bg-white">
-            <IoIosSearch className="text-xl" />
-            <input
-              type="text"
-              placeholder="Search"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full max-w-xs px-3 py-2 border-none rounded-[50px] focus:outline-none"
-            />
-          </div> */}
         </div>
         <div className="grid grid-cols-2 gap-5 mb-5 p-3 border bg-white shodow--box rounded-[10px]">
           <div className="border rounded-[5px] overflow-hidden w-full">
@@ -544,7 +577,7 @@ const AllLeads = () => {
                       </td>
                       <td className="px-2 py-4">{row?.id}</td>
 
-                      <td className="px-2 py-4">{row?.gender}</td>
+                      <td className="px-2 py-4">{row?.full_name}</td>
                       <td className="px-2 py-4">
                         {row?.interested_in ? row?.interested_in : "--"}
                       </td>
@@ -685,7 +718,18 @@ const AllLeads = () => {
               currentDataLength={allLeads.length}
               onPageChange={(newPage) => {
                 setPage(newPage);
-                fetchLeadList(searchTerm, newPage);
+
+                // Prepare overrideSelected for removed filters
+                const overrideSelected = {
+                  leadStatus: selectedLeadStatus || null,
+                  leadSource: selectedLeadSource || null,
+                  lastCallType: selectedLastCallType || null,
+                  callTag: selectedCallTag || null,
+                  serviceName: selectedServiceName || null,
+                  gender: selectedGender || null,
+                };
+
+                fetchLeadList(searchTerm, newPage, overrideSelected);
               }}
             />
           </div>

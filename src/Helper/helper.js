@@ -186,7 +186,7 @@ export function formatAutoDate(dateString) {
   const month = String(date.getMonth() + 1).padStart(2, "0"); // Months are 0-based
   const year = date.getFullYear();
 
-  return `${day}-${month}-${year}`;
+  return `${day}/${month}/${year}`;
 }
 
 export const sanitizePayload = (obj) => {
