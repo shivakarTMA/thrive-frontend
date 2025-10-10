@@ -48,7 +48,7 @@ const CoinsList = ({ details }) => {
   // Fetch coins whenever the component mounts or filters change
   useEffect(() => {
     fetchMemberCoins(coinsTypeFilter.value, dateFrom, dateTo);
-  }, [coinsTypeFilter, dateFrom, dateTo]);
+  }, [coinsTypeFilter, dateFrom, dateTo,]);
 
 const handleUpdateCoins = () => {
   fetchMemberCoins(coinsTypeFilter.value, dateFrom, dateTo);  // Refreshes the coins list

@@ -30,9 +30,9 @@ const AddCoins = ({ setCoinsModal, details, handleUpdateCoins }) => {
       coins: Yup.number().required("Coins is required"),
       source: Yup.string().required("Product Type is required"),
     }),
-    onSubmit: (values, { resetForm }) => {
+    onSubmit: async (values, { resetForm }) => {
       try {
-        const response = phoneAxios.post("/coin/transaction/create", values);
+        await phoneAxios.post("/coin/transaction/create", values);
         toast.success("Coins added successfully!");
 
         // Reset form and close modal

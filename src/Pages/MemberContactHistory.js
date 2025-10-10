@@ -1,8 +1,8 @@
 import React, { useState } from "react"; // Import React and useState hook
 
 // Component to render individual call card details
-export default function ContactHistory({ filteredLogs, handleEditLog }) {
-  console.log(filteredLogs,'filteredLogs')
+export default function MemberContactHistory({ filteredLogs, handleEditLog, filteredData }) {
+  console.log(filteredData,'filteredData')
   const [isExpanded, setIsExpanded] = useState(false); // State to manage remarks expand/collapse
 
   // Function to toggle remarks between view more and view less

@@ -14,7 +14,7 @@ import { LuCalendar } from "react-icons/lu";
 import { FiClock } from "react-icons/fi";
 import { toast } from "react-toastify";
 import { apiAxios } from "../config/config";
-import ContactHistory from "./ContactHistory";
+import MemberContactHistory from "./MemberContactHistory";
 import { FaCalendarDays } from "react-icons/fa6";
 import { format } from "date-fns";
 import { BsExclamationCircle } from "react-icons/bs";
@@ -560,7 +560,7 @@ const MemberCallLogs = () => {
           {filteredData.length > 0 ? (
             filteredData.map((filteredLogs, index) => (
               <>
-                <ContactHistory
+                <MemberContactHistory
                   key={index}
                   filteredLogs={filteredLogs}
                   handleEditLog={handleEditLog}
