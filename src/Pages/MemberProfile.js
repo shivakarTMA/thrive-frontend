@@ -119,7 +119,7 @@ const MemberProfile = () => {
           {activeTab === "Service Card" && <ServiceCard details={member} />}
           {activeTab === "Order History" && <OrderHistory details={member} />}
           {activeTab === "Payment History" && (
-            <PaymentHistory member={member} />
+            <PaymentHistory details={member} />
           )}
           {activeTab === "Call Logs" && <MemberCallLogs details={member} />}
           {activeTab === "Appointments" && <Appointments details={member} />}

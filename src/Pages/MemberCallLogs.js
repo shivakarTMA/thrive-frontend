@@ -19,51 +19,54 @@ import { FaCalendarDays } from "react-icons/fa6";
 import { format } from "date-fns";
 import { BsExclamationCircle } from "react-icons/bs";
 
-const callDataList = [
-  {
-    callType: "Renewal Call",
-    createdOn: "16 Aug, 2025",
-    scheduledBy: "Auto",
-    scheduledFor: "Swati Singh",
-    scheduledOn: "23 Aug, 2025; 10:00am",
-    callStatus: "Upcoming",
-    updatedBy: "Swati Singh",
-    updatedOn: "24 Aug, 2025; 09:00am",
-    remarks:
-      "not responding to the calls, msg sent for renew, follow up on monday not responding to the calls, msg sent for renew, follow up on monday",
-  },
-  {
-    callType: "Renewal Call",
-    createdOn: "17 Aug, 2025",
-    scheduledBy: "Auto",
-    scheduledFor: "Swati Singh",
-    scheduledOn: "25 Aug, 2025; 02:00pm",
-    callStatus: "Upcoming",
-    updatedBy: "Swati Singh",
-    updatedOn: "25 Aug, 2025; 01:30pm",
-    remarks: "client confirmed availability, call at scheduled time",
-  },
-];
-
 // Validation schema with conditional required fields
 const validationSchema = Yup.object().shape({
-  calledBy: Yup.string().required("Call by is required"),
-  callType: Yup.string().required("Call Type is required"),
-  callStatus: Yup.string().required("Lead Status is required"),
-  discussion: Yup.string().required("Discussion is required"),
-  notInterested: Yup.string()
+  // calledBy: Yup.string().required("Call by is required"),
+  call_type: Yup.string().required("Call Type is required"),
+  call_status: Yup.string().required("Lead Status is required"),
+  remark: Yup.string().required("Discussion is required"),
+  not_interested_reason: Yup.string()
     .nullable()
-    .when(["callType", "callStatus"], {
-      is: (callType, callStatus) =>
-        callType === "Cross-sell Call" && callStatus === "Not Interested",
+    .when(["call_type", "call_status"], {
+      is: (call_type, call_status) =>
+        (call_type === "Cross-sell Call" || call_type === "Renewal Call") &&
+        call_status === "Not Interested",
       then: (schema) => schema.required("Not Interested Reason is required"),
       otherwise: (schema) => schema.nullable(),
     }),
-  schedule_date_time: Yup.string().required("Date & Time is required"),
+  follow_up_datetime: Yup.string()
+    .nullable()
+    .when(["call_type", "call_status"], {
+      is: (call_type, call_status) =>
+        ([
+          "Welcome Call",
+          "Induction Call",
+          "Upgrade Call",
+          "Courtesy Call",
+          "Renewal Call",
+          "Birthday Call",
+          "Payment Call",
+          "Cross-sell Call",
+          "Feedback call",
+          "Assessment Call",
+          "Anniversary Call",
+          "Irregular Member",
+        ].includes(call_type) ||
+          call_type === "Cross-sell Call") &&
+        [
+          "Callback",
+          "No Answer",
+          "Switched-off/Out of Reach",
+          "Busy Tone",
+          "Future Prospect",
+        ].includes(call_status),
+      then: (schema) => schema.required("Date & Time is required"),
+      otherwise: (schema) => schema.nullable(),
+    }),
 });
 
 const MemberCallLogs = () => {
-  // const { id } = useParams();
+  const { id } = useParams();
   // const location = useLocation();
   // const queryParams = new URLSearchParams(location.search);
   // const action = queryParams.get("action");
@@ -75,7 +78,9 @@ const MemberCallLogs = () => {
   const [endDate, setEndDate] = useState(null);
   const [filteredCallStatus, setFilteredCallStatus] = useState([]);
   const [activeTab, setActiveTab] = useState("Member Logs");
+  const [memberDetails, setMemberDetails] = useState(null);
   const [staffList, setStaffList] = useState([]);
+  const [callDataList, setCallDataList] = useState([]);
   const [editData, setEditData] = useState(null);
 
   const now = new Date();
@@ -122,34 +127,88 @@ const MemberCallLogs = () => {
   const callStatusOption = lists["MEMBER_CALL_STATUS"] || [];
   const notInterestedOption = lists["NOT_INTERESTED_REASON"] || [];
 
+  const fetchMemberCallLogs = async (memberId, filters = {}) => {
+    try {
+      const params = {};
+
+      if (filters.call_type) params.call_type = filters.call_type;
+      if (filters.startDate)
+        params.startDate = format(filters.startDate, "yyyy-MM-dd");
+      if (filters.endDate)
+        params.endDate = format(filters.endDate, "yyyy-MM-dd");
+
+      console.log(params, "params");
+
+      // ✅ Correct way to send params — DO NOT add them inside the URL string
+      const res = await apiAxios().get(
+        `/member/call/log/list/${memberId}`,
+        { params } // Axios will automatically append ?call_type=...&startDate=... etc.
+      );
+
+      // console.log(res.request.responseURL, "Final Request URL"); // 🔍 This will show full correct URL
+
+      const data = res.data?.data || res.data || [];
+      setCallDataList(data);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to fetch member call logs");
+    }
+  };
+
+  const fetchMemberById = async (memberId) => {
+    try {
+      const res = await apiAxios().get(`/member/${memberId}`);
+      const data = res.data?.data || res.data || null;
+      console.log(data, "data");
+      setMemberDetails(data);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to fetch member details");
+    }
+  };
+
+  useEffect(() => {
+    if (!id) return;
+
+    fetchMemberById(id);
+
+    const filters = {
+      call_type: filterStatus?.value || "",
+      startDate,
+      endDate,
+    };
+
+    fetchMemberCallLogs(id, filters);
+  }, [id, filterStatus, startDate, endDate]);
+
+  const initialValues = {
+    member_id: memberDetails?.id,
+    schedule_for: 1,
+    call_type: "",
+    call_status: "",
+    not_interested_reason: "",
+    follow_up_datetime: "",
+    remark: "",
+  };
+
   const formik = useFormik({
-    initialValues: {
-      calledBy: "Nitin",
-      callType: "",
-      callStatus: "",
-      notInterested: "",
-      schedule_date_time: null,
-      discussion: "",
-    },
+    initialValues,
+    enableReinitialize: true,
     validationSchema,
-    onSubmit: (values, { resetForm }) => {
-      // const newEntry = {
-      //   ...values,
-      //   createdAt: new Date(),
-      //   updatedBy: "Rajat Sharma",
-      //   leadSource: "Passing By",
-      // };
-      resetForm({
-        values: {
-          calledBy: "Nitin",
-          callType: "",
-          callStatus: "",
-          notInterested: "",
-          schedule_date_time: null,
-          discussion: "",
-        },
-      });
-      setEditData(null);
+    onSubmit: async (values, { resetForm }) => {
+      console.log("Form validation errors:", formik.errors);
+      console.log(values, "values after submit");
+
+      try {
+        await apiAxios().post("/member/call/log/create", values);
+        toast.success("Call created successfully!");
+
+        resetForm();
+        fetchMemberCallLogs(id);
+      } catch (error) {
+        toast.error("Something went wrong. Please try again.");
+        console.error("Error submitting form:", error);
+      }
     },
   });
 
@@ -158,51 +217,38 @@ const MemberCallLogs = () => {
     setActiveTab("Member Logs"); // Switch tab to Member Logs
     setEditData(log); // Store selected log
     formik.setValues({
-      calledBy: "Nitin", // Example value, could be dynamic
-      callType: log.callType,
-      callStatus: log.callStatus,
-      notInterested: log.notInterested || "",
-      schedule_date_time: log.schedule_date_time || null,
-      discussion: log.remarks || "",
+      schedule_for: 1, // Example value, could be dynamic
+      call_type: log.call_type,
+      call_status: log.call_status,
+      not_interested_reason: log.not_interested_reason || "",
+      follow_up_datetime: log.follow_up_datetime || "",
+      remark: log.remarks || "",
     });
   };
-
-  const filteredData = callDataList.filter((item) => {
-    const matchesType =
-      !filterStatus || filterStatus?.value === ""
-        ? true
-        : item.callType === filterStatus?.value;
-
-    const createdDate = new Date(item.createdOn);
-    const matchesStartDate = startDate ? createdDate >= startDate : true;
-    const matchesEndDate = endDate ? createdDate <= endDate : true;
-
-    return matchesType && matchesStartDate && matchesEndDate;
-  });
 
   useEffect(() => {
     let filtered = [];
 
-    if (!formik.values?.callType) {
+    if (!formik.values?.call_type) {
       // No call type selected → show nothing
       filtered = [];
-      formik.setFieldValue("callStatus", "");
-    } else if (formik.values?.callType === "Cross-sell Call") {
+      formik.setFieldValue("call_status", "");
+    } else if (formik.values?.call_type === "Cross-sell Call") {
       // ✅ Show ALL statuses including cross-sell-specific ones
       filtered = callStatusOption.filter(
         (status) => status.name !== "Successful"
       );
     } else if (
-      formik.values?.callType === "Welcome Call" ||
-      formik.values?.callType === "Induction Call" ||
-      formik.values?.callType === "Upgrade Call" ||
-      formik.values?.callType === "Courtesy Call" ||
-      formik.values?.callType === "Birthday Call" ||
-      formik.values?.callType === "Payment Call" ||
-      formik.values?.callType === "Feedback call" ||
-      formik.values?.callType === "Assessment Call" ||
-      formik.values?.callType === "Anniversary Call" ||
-      formik.values?.callType === "Irregular Member"
+      formik.values?.call_type === "Welcome Call" ||
+      formik.values?.call_type === "Induction Call" ||
+      formik.values?.call_type === "Upgrade Call" ||
+      formik.values?.call_type === "Courtesy Call" ||
+      formik.values?.call_type === "Birthday Call" ||
+      formik.values?.call_type === "Payment Call" ||
+      formik.values?.call_type === "Feedback call" ||
+      formik.values?.call_type === "Assessment Call" ||
+      formik.values?.call_type === "Anniversary Call" ||
+      formik.values?.call_type === "Irregular Member"
     ) {
       // ✅ Hide Not Interested + Future Prospect
       filtered = callStatusOption.filter(
@@ -220,11 +266,11 @@ const MemberCallLogs = () => {
 
     setFilteredCallStatus(filtered);
 
-    // ✅ Reset callStatus if current value no longer valid
-    if (!filtered.some((opt) => opt.name === formik.values?.callStatus)) {
-      formik.setFieldValue("callStatus", "");
+    // ✅ Reset call_status if current value no longer valid
+    if (!filtered.some((opt) => opt.name === formik.values?.call_status)) {
+      formik.setFieldValue("call_status", "");
     }
-  }, [formik.values?.callType]);
+  }, [formik.values?.call_type]);
 
   const statusesNeedingSchedule = [
     "Callback",
@@ -234,7 +280,7 @@ const MemberCallLogs = () => {
     "Future Prospect",
   ];
 
-  // Show schedule fields only if both callType and callStatus match
+  // Show schedule fields only if both call_type and call_status match
   const scheduleCallTypes = [
     "Welcome Call",
     "Induction Call",
@@ -251,19 +297,19 @@ const MemberCallLogs = () => {
   ];
 
   const showScheduleFields =
-    (formik.values?.callType === "Cross-sell Call" &&
-      formik.values?.callStatus === "Cross-sales trial scheduled") ||
-    (scheduleCallTypes.includes(formik.values?.callType) &&
-      statusesNeedingSchedule.includes(formik.values?.callStatus));
+    (formik.values?.call_type === "Cross-sell Call" &&
+      formik.values?.call_status === "Cross-sales trial scheduled") ||
+    (scheduleCallTypes.includes(formik.values?.call_type) &&
+      statusesNeedingSchedule.includes(formik.values?.call_status));
 
   const showNotInterestedTypes = ["Cross-sell Call", "Renewal Call"];
   const showNotInterestedField =
-    showNotInterestedTypes.includes(formik.values?.callType) &&
-    formik.values?.callStatus === "Not Interested";
+    showNotInterestedTypes.includes(formik.values?.call_type) &&
+    formik.values?.call_status === "Not Interested";
 
   // Function to handle setting formatted date
   const handleDateChange = (date) => {
-    formik.setFieldValue("schedule_date_time", date); // Store Date object in Formik
+    formik.setFieldValue("follow_up_datetime", date); // Store Date object in Formik
   };
 
   return (
@@ -316,23 +362,25 @@ const MemberCallLogs = () => {
                         Call Type<span className="text-red-500">*</span>
                       </label>
                       <Select
-                        name="callType"
-                        value={callTypeOption.find(
-                          (opt) => opt.value === formik.values?.callType
-                        )}
+                        name="call_type"
+                        value={
+                          callTypeOption.find(
+                            (opt) => opt.value === formik.values?.call_type
+                          ) || ""
+                        }
                         onChange={(option) => {
-                          formik.setFieldValue("callType", option.value);
-                          formik.setFieldValue("callStatus", ""); // Reset callStatus when callType changes
+                          formik.setFieldValue("call_type", option.value);
+                          formik.setFieldValue("call_status", ""); // Reset call_status when call_type changes
                         }}
                         options={callTypeOption}
                         styles={customStyles}
-                        // isDisabled={isDisabled}
                       />
-                      {formik.errors?.callType && formik.touched?.callType && (
-                        <div className="text-red-500 text-sm">
-                          {formik.errors?.callType}
-                        </div>
-                      )}
+                      {formik.errors?.call_type &&
+                        formik.touched?.call_type && (
+                          <div className="text-red-500 text-sm">
+                            {formik.errors?.call_type}
+                          </div>
+                        )}
                     </div>
 
                     {/* Call Status */}
@@ -341,16 +389,16 @@ const MemberCallLogs = () => {
                         Call Status<span className="text-red-500">*</span>
                       </label>
                       <Select
-                        name="callStatus"
+                        name="call_status"
                         value={
-                          formik.values?.callStatus
+                          formik.values?.call_status
                             ? filteredCallStatus.find(
-                                (opt) => opt.name === formik.values?.callStatus
+                                (opt) => opt.name === formik.values?.call_status
                               )
                             : null
-                        } // Only show a value if callStatus is not empty
+                        } // Only show a value if call_status is not empty
                         onChange={(option) =>
-                          formik.setFieldValue("callStatus", option.name)
+                          formik.setFieldValue("call_status", option.name)
                         }
                         options={filteredCallStatus.map((opt) => ({
                           label: opt.name,
@@ -360,10 +408,10 @@ const MemberCallLogs = () => {
                         styles={customStyles}
                         // isDisabled={isDisabled}
                       />
-                      {formik.errors?.callStatus &&
-                        formik.touched?.callStatus && (
+                      {formik.errors?.call_status &&
+                        formik.touched?.call_status && (
                           <div className="text-red-500 text-sm">
-                            {formik.errors?.callStatus}
+                            {formik.errors?.call_status}
                           </div>
                         )}
                     </div>
@@ -375,12 +423,16 @@ const MemberCallLogs = () => {
                           <span className="text-red-500">*</span>
                         </label>
                         <Select
-                          name="notInterested"
+                          name="not_interested_reason"
                           value={notInterestedOption.find(
-                            (opt) => opt.name === formik.values?.notInterested
+                            (opt) =>
+                              opt.name === formik.values?.not_interested_reason
                           )}
                           onChange={(option) =>
-                            formik.setFieldValue("notInterested", option.name)
+                            formik.setFieldValue(
+                              "not_interested_reason",
+                              option.name
+                            )
                           }
                           options={notInterestedOption.map((opt) => ({
                             label: opt.name,
@@ -390,10 +442,10 @@ const MemberCallLogs = () => {
                           styles={customStyles}
                           // isDisabled={isDisabled}
                         />
-                        {formik.errors?.notInterested &&
-                          formik.touched?.notInterested && (
+                        {formik.errors?.not_interested_reason &&
+                          formik.touched?.not_interested_reason && (
                             <div className="text-red-500 text-sm">
-                              {formik.errors?.notInterested}
+                              {formik.errors?.not_interested_reason}
                             </div>
                           )}
                       </div>
@@ -410,7 +462,11 @@ const MemberCallLogs = () => {
                             <FaCalendarDays />
                           </span>
                           <DatePicker
-                            selected={formik.values.schedule_date_time}
+                            selected={
+                              formik.values.follow_up_datetime
+                                ? new Date(formik.values.follow_up_datetime)
+                                : null
+                            }
                             onChange={handleDateChange}
                             showTimeSelect
                             timeFormat="hh:mm aa"
@@ -424,17 +480,17 @@ const MemberCallLogs = () => {
                           />
                         </div>
 
-                        {formik.errors?.schedule_date_time &&
-                          formik.touched?.schedule_date_time && (
+                        {formik.errors?.follow_up_datetime &&
+                          formik.touched?.follow_up_datetime && (
                             <div className="text-red-500 text-sm">
-                              {formik.errors?.schedule_date_time}
+                              {formik.errors?.follow_up_datetime}
                             </div>
                           )}
                       </div>
                     )}
 
                     {/* Staff Name */}
-                    <div>
+                    {/* <div>
                       <label className="mb-2 block">
                         Assign to<span className="text-red-500">*</span>
                       </label>
@@ -459,7 +515,7 @@ const MemberCallLogs = () => {
                           {formik.errors?.calledBy}
                         </div>
                       )}
-                    </div>
+                    </div> */}
                   </div>
 
                   {/* Discussion */}
@@ -468,21 +524,20 @@ const MemberCallLogs = () => {
                       Discussion Details<span className="text-red-500">*</span>
                     </label>
                     <textarea
-                      name="discussion"
+                      name="remark"
                       placeholder="Discussion (max 1800 characters)"
                       maxLength={1800}
-                      value={formik.values?.discussion}
+                      value={formik.values?.remark}
                       onChange={formik.handleChange}
                       className="custom--input w-full"
                       rows={4}
                       // disabled={isDisabled ? true : false}
                     />
-                    {formik.errors?.discussion &&
-                      formik.touched?.discussion && (
-                        <div className="text-red-500 text-sm">
-                          {formik.errors?.discussion}
-                        </div>
-                      )}
+                    {formik.errors?.remark && formik.touched?.remark && (
+                      <div className="text-red-500 text-sm">
+                        {formik.errors?.remark}
+                      </div>
+                    )}
                   </div>
 
                   {/* Submit Button */}
@@ -509,7 +564,9 @@ const MemberCallLogs = () => {
             <div>
               <PhoneInput
                 name="text"
-                value="+918700704309"
+                value={
+                  "+" + memberDetails?.country_code + memberDetails?.mobile
+                }
                 international
                 defaultCountry="IN"
                 countryCallingCodeEditable={false}
@@ -557,15 +614,13 @@ const MemberCallLogs = () => {
             </div>
           </div>
 
-          {filteredData.length > 0 ? (
-            filteredData.map((filteredLogs, index) => (
-              <>
-                <MemberContactHistory
-                  key={index}
-                  filteredLogs={filteredLogs}
-                  handleEditLog={handleEditLog}
-                />
-              </>
+          {callDataList.length > 0 ? (
+            callDataList.map((filteredLogs, index) => (
+              <MemberContactHistory
+                key={index}
+                filteredData={filteredLogs}
+                handleEditLog={handleEditLog}
+              />
             ))
           ) : (
             <p className="text-center text-gray-500">No records found</p>

@@ -20,6 +20,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchOptionList } from "../Redux/Reducers/optionListSlice";
 import { FaCalendarDays } from "react-icons/fa6";
 import { LuIndianRupee } from "react-icons/lu";
+import { format } from "date-fns";
 
 // Trainer assignment options
 const assignTrainers = [
@@ -34,7 +35,7 @@ const trainerIdMap = Object.fromEntries(
 );
 
 const validationSchema = Yup.object().shape({
-   call_status: Yup.string().required("Call status is required"),
+  call_status: Yup.string().required("Call status is required"),
 
   // Follow-up Date & Time
   follow_up_datetime: Yup.string().when("call_status", {
@@ -57,8 +58,7 @@ const validationSchema = Yup.object().shape({
   // Not Interested Reason
   not_interested_reason: Yup.string().when("call_status", {
     is: "Not Interested",
-    then: (schema) =>
-      schema.required("Not Interested Reason is required"),
+    then: (schema) => schema.required("Not Interested Reason is required"),
     otherwise: (schema) => schema.notRequired(),
   }),
 
@@ -141,14 +141,29 @@ const LeadCallLogs = () => {
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
 
-  const fetchLeadCallLogs = async (leadId) => {
+  const fetchLeadCallLogs = async (leadId, filters = {}) => {
     try {
-      const res = await apiAxios().get(`/lead/call/log/list/${leadId}`);
+      const params = {};
+
+      if (filters.call_status) params.call_status = filters.call_status;
+      if (filters.startDate)
+        params.startDate = format(filters.startDate, "yyyy-MM-dd");
+      if (filters.endDate)
+        params.endDate = format(filters.endDate, "yyyy-MM-dd");
+
+      // ✅ Correct way to send params — DO NOT add them inside the URL string
+      const res = await apiAxios().get(
+        `/lead/call/log/list/${leadId}`,
+        { params } // Axios will automatically append ?call_type=...&startDate=... etc.
+      );
+
+      // console.log(res.request.responseURL, "Final Request URL"); // 🔍 This will show full correct URL
+
       const data = res.data?.data || res.data || null;
       setCallLogs(data);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch member details");
+      toast.error("Failed to fetch lead details");
     }
   };
 
@@ -159,16 +174,23 @@ const LeadCallLogs = () => {
       setLeadDetails(data);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch member details");
+      toast.error("Failed to fetch lead details");
     }
   };
 
   useEffect(() => {
-    if (id) {
-      fetchLeadById(id);
-      fetchLeadCallLogs(id);
-    }
-  }, [id]);
+    if (!id) return;
+
+    fetchLeadById(id);
+
+    const filters = {
+      call_status: filterStatus?.value || "",
+      startDate,
+      endDate,
+    };
+
+    fetchLeadCallLogs(id, filters);
+  }, [id, filterStatus, startDate, endDate]);
 
   const initialValues = {
     member_id: leadDetails?.id,
@@ -207,24 +229,6 @@ const LeadCallLogs = () => {
   };
 
   console.log(callLogs, "callLogs");
-
-  const filteredData = callLogs.filter((log) => {
-    const matchesStatus =
-      !filterStatus || filterStatus.value === ""
-        ? true
-        : log.call_status === filterStatus.value;
-
-    const logDate = log.createdAt ? new Date(log.createdAt) : null;
-
-    const endOfDay = endDate
-      ? new Date(endDate.setHours(23, 59, 59, 999))
-      : null;
-
-    const matchesStart = startDate ? logDate >= startDate : true;
-    const matchesEnd = endOfDay ? logDate <= endOfDay : true;
-
-    return matchesStatus && matchesStart && matchesEnd;
-  });
 
   const handleCallStatusChange = (option) => {
     formik.resetForm({
@@ -687,8 +691,8 @@ const LeadCallLogs = () => {
             </div>
           </div>
 
-          {filteredData.length > 0 ? (
-            filteredData.map((filteredLogs, index) => (
+          {callLogs.length > 0 ? (
+            callLogs.map((filteredLogs, index) => (
               <LeadContactHistory key={index} filteredData={filteredLogs} />
             ))
           ) : (
