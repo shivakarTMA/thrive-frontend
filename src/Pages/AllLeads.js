@@ -9,7 +9,7 @@ import { MdCall } from "react-icons/md";
 import Select from "react-select";
 import { customStyles, dasboardStyles, formatAutoDate } from "../Helper/helper";
 import CreateLeadForm from "./CreateLeadForm";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import MailIcon from "../assets/images/icons/mail.png";
@@ -50,6 +50,10 @@ const dateFilterOptions = [
 
 const AllLeads = () => {
   const navigate = useNavigate();
+  const { id } = useParams();
+  const location = useLocation();
+
+  console.log(id, "id check lead");
   const [searchTerm, setSearchTerm] = useState("");
   const [leadModal, setLeadModal] = useState(false);
   const [selectedLead, setSelectedLead] = useState(null);
@@ -166,7 +170,7 @@ const AllLeads = () => {
       // Find the matching option from your dropdown
       const foundOption =
         dateFilterOptions.find((opt) => opt.value === dateParam) ||
-        dateFilterOptions[0];
+        dateFilterOptions[1];
       setDateFilter(foundOption);
 
       if (dateParam === "custom" && customFromParam && customToParam) {
@@ -191,79 +195,89 @@ const AllLeads = () => {
         limit: rowsPerPage,
       };
 
-      const urlLeadStatus = searchParams.get("leadStatus");
-      const urlDate = searchParams.get("date");
-      const urlCustomFrom = searchParams.get("customFrom");
-      const urlCustomTo = searchParams.get("customTo");
+      if (id) {
+        params.id = id;
+        setDateFilter("");
+      } else {
+        const urlLeadStatus = searchParams.get("leadStatus");
+        const urlDate = searchParams.get("date");
+        const urlCustomFrom = searchParams.get("customFrom");
+        const urlCustomTo = searchParams.get("customTo");
 
-      // ✅ Use overrideSelected first, then selected state, then URL, otherwise null
-      const selLeadSource = overrideSelected.hasOwnProperty("leadSource")
-        ? overrideSelected.leadSource
-        : selectedLeadSource;
-      const selLeadStatus = overrideSelected.hasOwnProperty("leadStatus")
-        ? overrideSelected.leadStatus
-        : selectedLeadStatus
-        ? selectedLeadStatus
-        : urlLeadStatus
-        ? { label: urlLeadStatus, value: urlLeadStatus }
-        : null;
-      const selLastCallType = overrideSelected.hasOwnProperty("lastCallType")
-        ? overrideSelected.lastCallType
-        : selectedLastCallType;
-      const selCallTag = overrideSelected.hasOwnProperty("callTag")
-        ? overrideSelected.callTag
-        : selectedCallTag;
-      const selServiceName = overrideSelected.hasOwnProperty("serviceName")
-        ? overrideSelected.serviceName
-        : selectedServiceName;
-      const selGender = overrideSelected.hasOwnProperty("gender")
-        ? overrideSelected.gender
-        : selectedGender;
+        // ✅ Use overrideSelected first, then selected state, then URL, otherwise null
+        const selLeadSource = overrideSelected.hasOwnProperty("leadSource")
+          ? overrideSelected.leadSource
+          : selectedLeadSource;
+        const selLeadStatus = overrideSelected.hasOwnProperty("leadStatus")
+          ? overrideSelected.leadStatus
+          : selectedLeadStatus
+          ? selectedLeadStatus
+          : urlLeadStatus
+          ? { label: urlLeadStatus, value: urlLeadStatus }
+          : null;
+        const selLastCallType = overrideSelected.hasOwnProperty("lastCallType")
+          ? overrideSelected.lastCallType
+          : selectedLastCallType;
+        const selCallTag = overrideSelected.hasOwnProperty("callTag")
+          ? overrideSelected.callTag
+          : selectedCallTag;
+        const selServiceName = overrideSelected.hasOwnProperty("serviceName")
+          ? overrideSelected.serviceName
+          : selectedServiceName;
+        const selGender = overrideSelected.hasOwnProperty("gender")
+          ? overrideSelected.gender
+          : selectedGender;
 
-      let selDateFilter =
-        overrideSelected.dateFilter?.value || dateFilter?.value || urlDate;
+        let selDateFilter =
+          overrideSelected.dateFilter?.value || dateFilter?.value || urlDate;
 
-      let selCustomFrom =
-        overrideSelected.customFrom ||
-        customFrom ||
-        (urlCustomFrom ? new Date(decodeURIComponent(urlCustomFrom)) : null);
-      let selCustomTo =
-        overrideSelected.customTo ||
-        customTo ||
-        (urlCustomTo ? new Date(decodeURIComponent(urlCustomTo)) : null);
+        let selCustomFrom =
+          overrideSelected.customFrom ||
+          customFrom ||
+          (urlCustomFrom ? new Date(decodeURIComponent(urlCustomFrom)) : null);
+        let selCustomTo =
+          overrideSelected.customTo ||
+          customTo ||
+          (urlCustomTo ? new Date(decodeURIComponent(urlCustomTo)) : null);
 
-      // 🚫 Only use URL custom range if no manual override
-      if (
-        !overrideSelected.dateFilter &&
-        !customFrom &&
-        !customTo &&
-        urlDate === "custom" &&
-        urlCustomFrom &&
-        urlCustomTo
-      ) {
-        selDateFilter = "custom";
-        selCustomFrom = new Date(decodeURIComponent(urlCustomFrom));
-        selCustomTo = new Date(decodeURIComponent(urlCustomTo));
-      }
+        // 🚫 Only use URL custom range if no manual override
+        if (
+          !overrideSelected.dateFilter &&
+          !customFrom &&
+          !customTo &&
+          urlDate === "custom" &&
+          urlCustomFrom &&
+          urlCustomTo
+        ) {
+          selDateFilter = "custom";
+          selCustomFrom = new Date(decodeURIComponent(urlCustomFrom));
+          selCustomTo = new Date(decodeURIComponent(urlCustomTo));
+        }
 
-      // ✅ Build query params (only if value exists)
-      if (search) params.search = search;
-      if (selLeadSource?.value) params.lead_source = selLeadSource.value;
-      if (selLeadStatus?.value) params.lead_status = selLeadStatus.value;
-      if (selLastCallType?.value)
-        params.last_call_status = selLastCallType.value;
-      if (selCallTag?.value) params.created_by = selCallTag.value;
-      if (selServiceName?.value) params.interested_in = selServiceName.value;
-      if (selGender?.value) params.gender = selGender.value;
+        // ✅ Build query params (only if value exists)
+        if (search) params.search = search;
+        if (selLeadSource?.value) params.lead_source = selLeadSource.value;
+        if (selLeadStatus?.value) params.lead_status = selLeadStatus.value;
+        if (selLastCallType?.value)
+          params.last_call_status = selLastCallType.value;
+        if (selCallTag?.value) params.created_by = selCallTag.value;
+        if (selServiceName?.value) params.interested_in = selServiceName.value;
+        if (selGender?.value) params.gender = selGender.value;
 
-      // ✅ Date filter
-      if (selDateFilter && selDateFilter !== "custom") {
-        params.dateFilter = selDateFilter;
-      } else if (selDateFilter === "custom" && selCustomFrom && selCustomTo) {
-        const formatDate = (date) =>
-          date ? date.toISOString().split("T")[0] : null;
-        params.startDate = formatDate(selCustomFrom);
-        params.endDate = formatDate(selCustomTo);
+        // ✅ Date filter
+        if (selDateFilter && selDateFilter !== "custom") {
+          params.dateFilter = selDateFilter;
+        } else if (selDateFilter === "custom" && selCustomFrom && selCustomTo) {
+          const formatDate = (date) => {
+            const d = new Date(date);
+            const month = String(d.getMonth() + 1).padStart(2, "0");
+            const day = String(d.getDate()).padStart(2, "0");
+            return `${d.getFullYear()}-${month}-${day}`;
+          };
+
+          params.startDate = formatDate(selCustomFrom);
+          params.endDate = formatDate(selCustomTo);
+        }
       }
 
       const res = await apiAxios().get("/lead/list", { params });
@@ -281,8 +295,39 @@ const AllLeads = () => {
     }
   };
 
-  const handleLeadUpdate = () => {
-    fetchLeadList();
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const urlDateFilter = searchParams.get("date");
+
+    if (urlDateFilter) {
+      // Find the matching date filter option from dateFilterOptions
+      const foundOption = dateFilterOptions.find(
+        (option) => option.value === urlDateFilter
+      );
+
+      // Set the dateFilter if a valid match is found
+      if (foundOption) {
+        setDateFilter(foundOption);
+      }
+    }
+  }, [location.search]);
+
+  const handleDateFilterChange = (selected) => {
+    setDateFilter(selected);
+
+    // If custom date filter is selected, handle the logic for custom dates
+    if (selected?.value !== "custom") {
+      setCustomFrom(null);
+      setCustomTo(null);
+      // Navigate to /all-leads, setting the new date filter in the URL
+      navigate(`/all-leads?date=${selected.value}`, { replace: true });
+
+      // Re-fetch the lead list based on the selected filter
+      fetchLeadList("", 1, { dateFilter: selected });
+    } else {
+      // Handle custom date filter logic here (e.g., open a date picker)
+      // You may need to update the URL with a custom date range
+    }
   };
 
   useEffect(() => {
@@ -293,6 +338,31 @@ const AllLeads = () => {
 
     return () => clearTimeout(delayDebounce);
   }, [searchTerm]);
+
+  useEffect(() => {
+    // When 'id' changes, fetch data based on the new 'id'
+    if (id) {
+      fetchLeadList("", 1, { id });
+    } else {
+      fetchLeadList(); // Fetch without the id if it's removed
+    }
+  }, [id]);
+
+  // // Trigger only for custom range once both dates selected
+  useEffect(() => {
+    if (dateFilter?.value === "custom" && customFrom && customTo) {
+      fetchLeadList("", 1, { dateFilter, customFrom, customTo });
+    }
+  }, [dateFilter, customFrom, customTo]);
+
+  const handleLeadUpdate = () => {
+    fetchLeadList();
+  };
+
+  console.log(allLeads, "allLeads");
+  console.log(dateFilter, "dateFilter");
+  console.log(customFrom, "customFrom");
+  console.log(customTo, "customTo");
 
   const handleRemoveFilter = (filterKey) => {
     const setterMap = {
@@ -316,18 +386,11 @@ const AllLeads = () => {
     fetchLeadList("", 1);
   };
 
-  useEffect(() => {
-    fetchLeadList("", 1);
-  }, []);
+  // useEffect(() => {
+  //   fetchLeadList("", 1);
+  // }, []);
 
-  // // Trigger only for custom range once both dates selected
-  useEffect(() => {
-    if (dateFilter?.value === "custom" && customFrom && customTo) {
-      fetchLeadList("", 1, { dateFilter, customFrom, customTo });
-    }
-  }, [dateFilter, customFrom, customTo]);
-
-  console.log(selectedLeadStatus, "selectedLeadStatus");
+  console.log(dateFilter, "dateFilter");
 
   return (
     <>
@@ -335,7 +398,9 @@ const AllLeads = () => {
         <div className="flex items-end justify-between gap-2 mb-2">
           <div className="title--breadcrumbs">
             <p className="text-sm">{`Home > My Leads > All Leads`}</p>
-            <h1 className="text-3xl font-semibold">All Leads</h1>
+            <h1 className="text-3xl font-semibold" onClick={handleLeadUpdate}>
+              All Leads
+            </h1>
           </div>
         </div>
 
@@ -344,17 +409,10 @@ const AllLeads = () => {
           <div className="flex gap-2 w-full">
             <div className="max-w-[180px] w-full">
               <Select
-                placeholder="Date Filter"
+                placeholder="Select Date"
                 options={dateFilterOptions}
                 value={dateFilter}
-                onChange={(selected) => {
-                  setDateFilter(selected);
-                  if (selected?.value !== "custom") {
-                    setCustomFrom(null);
-                    setCustomTo(null);
-                    fetchLeadList("", 1, { dateFilter: selected });
-                  }
-                }}
+                onChange={handleDateFilterChange}
                 // isClearable
                 styles={customStyles}
                 className="w-full"
@@ -550,7 +608,7 @@ const AllLeads = () => {
                     <th className="px-2 py-4">#</th>
                     <th className="px-2 py-4">S.No</th>
                     <th className="px-2 py-4">Name</th>
-                    <th className="px-2 py-4">Service Name</th>
+                    <th className="px-2 py-4">Interested In</th>
                     <th className="px-2 py-4">Created on</th>
                     <th className="px-2 py-4">Lead Source</th>
                     <th className="px-2 py-4">Lead Status</th>
@@ -740,7 +798,7 @@ const AllLeads = () => {
         <CreateLeadForm
           setLeadModal={setLeadModal}
           selectedLead={selectedLead}
-          onLeadUpdate={handleLeadUpdate}
+          handleLeadUpdate={handleLeadUpdate}
         />
       )}
 

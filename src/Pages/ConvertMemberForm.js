@@ -270,6 +270,8 @@ const ConvertMemberForm = ({
       } else {
         setStep(step + 1);
       }
+      setStep(step + 1);
+      console.log(values,'values')
     },
   });
 
@@ -347,19 +349,31 @@ const ConvertMemberForm = ({
     }
   };
   // Fetch companies
+// ✅ Fetch companies (only ACTIVE ones)
   const fetchCompanies = async (search = "") => {
     try {
       const res = await apiAxios().get("/company/list", {
         params: search ? { search } : {},
       });
+
+      // ✅ Extract company data safely
       const data = res.data?.data || [];
-      const options = data.map((company) => ({
+
+      // ✅ Filter only active companies
+      const activeCompanies = data.filter(
+        (company) => company.status === "ACTIVE"
+      );
+
+      // ✅ Convert to dropdown-friendly format
+      const options = activeCompanies.map((company) => ({
         value: company.id,
         label: company.name,
       }));
+
+      // ✅ Update state
       setCompanyOptions(options);
     } catch (err) {
-      console.error(err);
+      console.error("❌ Failed to fetch companies:", err);
       toast.error("Failed to fetch companies");
     }
   };
@@ -1026,7 +1040,7 @@ const ConvertMemberForm = ({
                               <FaBriefcase />
                             </span>
                             <input
-                              type="email"
+                              type="text"
                               name="professionalInformation.designation"
                               value={
                                 formik.values?.professionalInformation

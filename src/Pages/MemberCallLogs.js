@@ -18,6 +18,7 @@ import MemberContactHistory from "./MemberContactHistory";
 import { FaCalendarDays } from "react-icons/fa6";
 import { format } from "date-fns";
 import { BsExclamationCircle } from "react-icons/bs";
+import LeadContactHistory from "./LeadContactHistory";
 
 // Validation schema with conditional required fields
 const validationSchema = Yup.object().shape({
@@ -74,6 +75,7 @@ const MemberCallLogs = () => {
   // const dataSource = action === "add-follow-up" ? assignedLeadsData : mockData;
 
   const [filterStatus, setFilterStatus] = useState("");
+  const [enquiryfilterStatus, setEnquiryFilterStatus] = useState("");
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
   const [filteredCallStatus, setFilteredCallStatus] = useState([]);
@@ -82,6 +84,7 @@ const MemberCallLogs = () => {
   const [staffList, setStaffList] = useState([]);
   const [callDataList, setCallDataList] = useState([]);
   const [editData, setEditData] = useState(null);
+  const [memberEnquiry, setMemberEnquiry] = useState([]);
 
   const now = new Date();
   const minTime = new Date();
@@ -103,6 +106,37 @@ const MemberCallLogs = () => {
       toast.error("Failed to fetch club");
     }
   };
+
+  const fetchMemberEnquiery = async (memberId, filters = {}) => {
+    try {
+
+      const params = {};
+
+      if (filters.call_status) params.call_status = filters.call_status;
+      if (filters.startDate)
+        params.startDate = format(filters.startDate, "yyyy-MM-dd");
+      if (filters.endDate)
+        params.endDate = format(filters.endDate, "yyyy-MM-dd");
+
+      console.log(params, "params");
+
+      // ✅ Correct way to send params — DO NOT add them inside the URL string
+      const res = await apiAxios().get(
+        `/member/call/log/enquiry/list/${memberId}`,
+        { params } // Axios will automatically append ?call_status=...&startDate=... etc.
+      );
+
+      // console.log(res.request.responseURL, "Final Request URL"); // 🔍 This will show full correct URL
+
+      const data = res.data?.data || res.data || [];
+      setMemberEnquiry(data);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to fetch club");
+    }
+  };
+
+  console.log(memberEnquiry, "memberEnquiry");
 
   useEffect(() => {
     fetchStaff();
@@ -178,8 +212,15 @@ const MemberCallLogs = () => {
       endDate,
     };
 
+    const filtersLead = {
+      call_status: enquiryfilterStatus?.value || "",
+      startDate,
+      endDate,
+    };
+
     fetchMemberCallLogs(id, filters);
-  }, [id, filterStatus, startDate, endDate]);
+    fetchMemberEnquiery(id, filtersLead);
+  }, [id, filterStatus, startDate, endDate, enquiryfilterStatus]);
 
   const initialValues = {
     member_id: memberDetails?.id,
@@ -577,53 +618,104 @@ const MemberCallLogs = () => {
             </div>
           </div>
 
-          <div className="flex gap-2 mb-3">
-            <div className="grid grid-cols-3 gap-2">
-              <Select
-                options={[{ value: "", label: "All" }, ...callTypeOption]}
-                value={filterStatus}
-                onChange={setFilterStatus}
-                placeholder="Call Type"
-                styles={customStyles}
-                className="w-full"
-              />
-              <div className="custom--date flex-1">
-                <span className="absolute z-[1] mt-[15px] ml-[15px]">
-                  <FaCalendarDays />
-                </span>
-                <DatePicker
-                  selected={startDate}
-                  onChange={setStartDate}
-                  placeholderText="Start Date"
-                  className="border px-3 py-2 w-full input--icon"
-                  isClearable
-                />
+          {activeTab === "Member Logs" ? (
+            <>
+              <div className="flex gap-2 mb-3">
+                <div className="grid grid-cols-3 gap-2">
+                  <Select
+                    options={[{ value: "", label: "All" }, ...callTypeOption]}
+                    value={filterStatus}
+                    onChange={setFilterStatus}
+                    placeholder="Call Type"
+                    styles={customStyles}
+                    className="w-full"
+                  />
+                  <div className="custom--date flex-1">
+                    <span className="absolute z-[1] mt-[15px] ml-[15px]">
+                      <FaCalendarDays />
+                    </span>
+                    <DatePicker
+                      selected={startDate}
+                      onChange={setStartDate}
+                      placeholderText="Start Date"
+                      className="border px-3 py-2 w-full input--icon"
+                      isClearable
+                    />
+                  </div>
+                  <div className="custom--date flex-1">
+                    <span className="absolute z-[1] mt-[15px] ml-[15px]">
+                      <FaCalendarDays />
+                    </span>
+                    <DatePicker
+                      selected={endDate}
+                      onChange={setEndDate}
+                      placeholderText="End Date"
+                      className="border px-3 py-2 w-full input--icon"
+                      isClearable
+                    />
+                  </div>
+                </div>
               </div>
-              <div className="custom--date flex-1">
-                <span className="absolute z-[1] mt-[15px] ml-[15px]">
-                  <FaCalendarDays />
-                </span>
-                <DatePicker
-                  selected={endDate}
-                  onChange={setEndDate}
-                  placeholderText="End Date"
-                  className="border px-3 py-2 w-full input--icon"
-                  isClearable
-                />
-              </div>
-            </div>
-          </div>
 
-          {callDataList.length > 0 ? (
-            callDataList.map((filteredLogs, index) => (
-              <MemberContactHistory
-                key={index}
-                filteredData={filteredLogs}
-                handleEditLog={handleEditLog}
-              />
-            ))
+              {callDataList.length > 0 ? (
+                callDataList.map((filteredLogs, index) => (
+                  <MemberContactHistory
+                    key={index}
+                    filteredData={filteredLogs}
+                    handleEditLog={handleEditLog}
+                  />
+                ))
+              ) : (
+                <p className="text-center text-gray-500">No records found</p>
+              )}
+            </>
           ) : (
-            <p className="text-center text-gray-500">No records found</p>
+            <>
+              <div className="flex gap-2 mb-3">
+                <div className="grid grid-cols-3 gap-2">
+                  <Select
+                    options={[{ value: "", label: "All" }, ...callStatusOption]}
+                    value={enquiryfilterStatus}
+                    onChange={setEnquiryFilterStatus}
+                    placeholder="Call Status"
+                    styles={customStyles}
+                    className="w-full"
+                  />
+                  <div className="custom--date flex-1">
+                    <span className="absolute z-[1] mt-[15px] ml-[15px]">
+                      <FaCalendarDays />
+                    </span>
+                    <DatePicker
+                      selected={startDate}
+                      onChange={setStartDate}
+                      placeholderText="Start Date"
+                      className="border px-3 py-2 w-full input--icon"
+                      isClearable
+                    />
+                  </div>
+                  <div className="custom--date flex-1">
+                    <span className="absolute z-[1] mt-[15px] ml-[15px]">
+                      <FaCalendarDays />
+                    </span>
+                    <DatePicker
+                      selected={endDate}
+                      onChange={setEndDate}
+                      placeholderText="End Date"
+                      className="border px-3 py-2 w-full input--icon"
+                      isClearable
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {memberEnquiry.length > 0 ? (
+                memberEnquiry.map((filteredLogs, index) => (
+                  <LeadContactHistory key={index} filteredData={filteredLogs} />
+                ))
+              ) : (
+                <p className="text-center text-gray-500">No records found</p>
+              )}
+            </>
           )}
         </div>
       </div>

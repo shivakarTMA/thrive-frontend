@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Papa from "papaparse";
 import { IoIosArrowDown, IoIosList, IoIosSearch } from "react-icons/io";
 import { LiaFileInvoiceSolid } from "react-icons/lia";
@@ -8,7 +8,7 @@ import {
   IoLogOutOutline,
   IoSettingsOutline,
 } from "react-icons/io5";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { FiPlus, FiUser, FiUsers } from "react-icons/fi";
 import { useDispatch, useSelector } from "react-redux";
 import { logout } from "../../Redux/Reducers/authSlice";
@@ -21,15 +21,20 @@ import quickLinksImg from "../../assets/images/quicklinks.svg";
 import notificationBell from "../../assets/images/bellnotification.svg";
 import CreateMemberForm from "../../Pages/CreateMemberForm";
 import { useDropzone } from "react-dropzone";
+import { apiAxios } from "../../config/config";
 
 const Topbar = ({ setToggleMenuBar, toggleMenuBar }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const [apiUsers, setApiUsers] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [searchItem, setSearchItem] = useState("");
-  const [filteredUsers, setFilteredUsers] = useState([]);
+  const [filteredUsers, setFilteredUsers] = useState({
+    leads: [],
+    members: [],
+  });
+  const searchRef = useRef(null);
+  const dropdownRef = useRef(null);
+  const location = useLocation();
+  const [hasSearched, setHasSearched] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState(null);
   const [leadModal, setLeadModal] = useState(false);
   const [memberModal, setMemberModal] = useState(false);
@@ -51,36 +56,70 @@ const Topbar = ({ setToggleMenuBar, toggleMenuBar }) => {
     navigate("/login");
   };
 
-  useEffect(() => {
-    fetch("https://dummyjson.com/users")
-      .then((response) => response.json())
-      .then((data) => {
-        setApiUsers(data.users);
-        setFilteredUsers(data.users);
-      })
-      .catch((err) => {
-        console.error(err);
-        setError(err);
-      })
-      .finally(() => {
-        setLoading(false);
-      });
-  }, []);
-
   const handleToggleMenu = () => {
     setToggleMenuBar(!toggleMenuBar);
   };
 
-  const handleInputChange = (e) => {
-    const searchTerm = e.target.value;
-    setSearchItem(searchTerm);
+  const fetchSearchResults = async (searchTerm) => {
+    try {
+      const res = await apiAxios().get(
+        `/member/lead/list?search=${searchTerm}`
+      );
+      const response = res.data;
 
-    const filteredItems = apiUsers.filter((user) =>
-      user.firstName.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-
-    setFilteredUsers(filteredItems);
+      if (response.status) {
+        const leads = response.data.rows.filter(
+          (item) => item.entity_type === "LEAD"
+        );
+        const members = response.data.rows.filter(
+          (item) => item.entity_type === "MEMBER"
+        );
+        setFilteredUsers({ leads, members });
+      } else {
+        setFilteredUsers({ leads: [], members: [] });
+      }
+    } catch (err) {
+      console.error(err);
+    }
   };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (searchItem.trim()) {
+      fetchSearchResults(searchItem);
+      setHasSearched(true);
+    } else {
+      setFilteredUsers({ leads: [], members: [] });
+      setHasSearched(false);
+    }
+  };
+
+  // Outside click detection
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      // Check if the click is outside both the search input and the dropdown
+      if (
+        searchRef.current &&
+        !searchRef.current.contains(event.target) &&
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target)
+      ) {
+        // Close dropdown and reset filtered data when clicked outside
+        setFilteredUsers({ leads: [], members: [] });
+        setHasSearched(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    // 🔄 Reset dropdown on route change
+    setFilteredUsers({ leads: [], members: [] });
+    setHasSearched(false);
+    setSearchItem("");
+  }, [location.pathname]);
 
   const handleBulkUpload = (acceptedFiles) => {
     const file = acceptedFiles[0];
@@ -151,45 +190,85 @@ const Topbar = ({ setToggleMenuBar, toggleMenuBar }) => {
       <section className="top--bar p-3 border-b border-b-[#000]">
         <div className="inner--container flex justify-between gap-3">
           {/* Left Section */}
-          <div className="topbar--left flex items-center gap-3 w-full">
+          <div className="topbar--left flex items-center gap-3 w-full flex-1">
             <div className="toggle--bar" onClick={handleToggleMenu}>
               {/* <RiBarChartHorizontalLine className="text-2xl cursor-pointer" /> */}
               <img src={ToggleMenu} className="cursor-pointer w-8" />
             </div>
 
-            <div className="search--topbar relative w-full">
-              <div className="flex items-center gap-2 border rounded px-2 bg-white rounded-[10px]">
-                <IoIosSearch className="text-xl" />
-                <input
-                  type="text"
-                  value={searchItem}
-                  onChange={handleInputChange}
-                  placeholder="Search"
-                  className="outline-none py-1 min-h-[45px]"
-                />
-              </div>
+            <div ref={searchRef} className="search--topbar relative w-fit">
+              <form onSubmit={handleSubmit} className="flex items-center gap-2">
+                <div className="w-[350px]">
+                  <input
+                    type="text"
+                    value={searchItem}
+                    onChange={(e) => setSearchItem(e.target.value)}
+                    placeholder="Search"
+                    className="outline-none py-1 min-h-[45px] w-full bg-white rounded-[10px] px-3"
+                  />
+                </div>
 
-              <div className="absolute bg-white mt-1 w-full max-h-60 overflow-y-auto z-10 shadow-lg rounded">
-                {loading && (
-                  <p className="p-2 text-sm text-gray-500">Loading...</p>
-                )}
-                {error && (
-                  <p className="p-2 text-sm text-red-500">
-                    Error loading users
-                  </p>
-                )}
-                {!loading && !error && searchItem.trim() !== "" && (
-                  <div className="p-3">
-                    {filteredUsers.length > 0 ? (
-                      <ItemsList items={filteredUsers} />
-                    ) : (
-                      <p className="p-2 text-sm text-gray-500">
-                        No matching users found
-                      </p>
-                    )}
+                <button
+                  type="submit"
+                  className="text-white bg-black rounded-[10px] w-10 h-10 flex items-center justify-center cursor-pointer"
+                >
+                  <IoIosSearch className="text-xl" />
+                </button>
+              </form>
+
+              {(filteredUsers?.leads?.length > 0 ||
+                filteredUsers?.members?.length > 0) && (
+                <div
+                  ref={dropdownRef}
+                  className="absolute bg-white mt-1 w-full max-h-60 overflow-y-auto z-10 shadow-lg rounded min-w-[500px]"
+                >
+                  {filteredUsers?.members?.length > 0 && (
+                    <div className="members-list">
+                      <h3 className="font-bold border-b border-t px-3 py-2">
+                        By Member
+                      </h3>
+                      {filteredUsers.members.map((member) => (
+                        <Link
+                          key={member.id}
+                          to={`/all-members/${member.id}`}
+                          className="block w-full py-2 px-3  text-sm [&:not(:last-child)]:border-b hover:bg-black hover:text-white cursor-pointer"
+                        >
+                          <p>
+                            {member.full_name} - {member.email} -{" "}
+                            {member.mobile}
+                          </p>
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                  {filteredUsers?.leads?.length > 0 && (
+                    <div className="leads-list">
+                      <h3 className="font-bold border-b border-t px-3 py-2">
+                        By Lead
+                      </h3>
+                      {filteredUsers.leads.map((lead) => (
+                        <Link
+                          key={lead.id}
+                          to={`/all-leads/${lead.id}`}
+                          className="block w-full py-2 px-3 [&:not(:last-child)]:border-b text-sm hover:bg-black hover:text-white cursor-pointer"
+                        >
+                          <p>
+                            {lead.full_name} - {lead.email} - {lead.mobile}
+                          </p>
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {hasSearched &&
+                filteredUsers.leads.length === 0 &&
+                filteredUsers.members.length === 0 && (
+                  <div className="absolute bg-white mt-1 w-full max-h-60 overflow-y-auto z-10 shadow-lg rounded p-3">
+                    <p className="text-sm text-gray-500">No results found.</p>
                   </div>
                 )}
-              </div>
             </div>
           </div>
 
@@ -198,55 +277,55 @@ const Topbar = ({ setToggleMenuBar, toggleMenuBar }) => {
             <div className="relative">
               <img
                 src={quickLinksImg}
-                className="cursor-pointer w-8"
+                className="cursor-pointer w-6"
                 onClick={() => toggleDropdown("quicklinks")}
               />
-              {user?.userType == "PT" ? null : (
-                <DropdownMenu
-                  isOpen={activeDropdown === "quicklinks"}
-                  onClose={() => setActiveDropdown(null)}
+
+              <DropdownMenu
+                isOpen={activeDropdown === "quicklinks"}
+                onClose={() => setActiveDropdown(null)}
+              >
+                <div
+                  onClick={() => setLeadModal(true)}
+                  className="nav-link flex items-center gap-2 px-3 py-2 hover:bg-black hover:text-white transition border-b cursor-pointer"
                 >
-                  <div
-                    onClick={() => setLeadModal(true)}
-                    className="nav-link flex items-center gap-2 px-3 py-2 hover:bg-black hover:text-white transition border-b cursor-pointer"
-                  >
-                    <IoBarChartOutline className="menu--icon" />
-                    <span className="nav-text">Add Lead</span>
-                  </div>
-                  <div
-                    onClick={() => setMemberModal(true)}
-                    className="nav-link flex items-center gap-2 px-3 py-2 hover:bg-black hover:text-white transition border-b cursor-pointer"
-                  >
-                    <FiUsers className="menu--icon" />
-                    <span className="nav-text">Create Member</span>
-                  </div>
-                  <div
-                    onClick={() => setInvoiceModal(true)}
-                    className="nav-link flex items-center gap-2 px-3 py-2 hover:bg-black hover:text-white transition border-b cursor-pointer"
-                  >
-                    <LiaFileInvoiceSolid className="menu--icon" />
-                    <span className="nav-text">Create Invoice</span>
-                  </div>
-                  <div
-                    {...getRootProps()}
-                    className="nav-link flex items-center gap-2 px-3 py-2 hover:bg-black hover:text-white transition border-b cursor-pointer"
-                  >
-                    <input {...getInputProps()} />
-                    <IoIosList className="menu--icon" />
-                    <span className="nav-text">Bulk Lead Upload</span>
-                  </div>
-                </DropdownMenu>
-              )}
+                  <IoBarChartOutline className="menu--icon" />
+                  <span className="nav-text">Add Lead</span>
+                </div>
+                <div
+                  onClick={() => setMemberModal(true)}
+                  className="nav-link flex items-center gap-2 px-3 py-2 hover:bg-black hover:text-white transition border-b cursor-pointer"
+                >
+                  <FiUsers className="menu--icon" />
+                  <span className="nav-text">Create Member</span>
+                </div>
+                <div
+                  onClick={() => setInvoiceModal(true)}
+                  className="nav-link flex items-center gap-2 px-3 py-2 hover:bg-black hover:text-white transition border-b cursor-pointer"
+                >
+                  <LiaFileInvoiceSolid className="menu--icon" />
+                  <span className="nav-text">Create Invoice</span>
+                </div>
+                <div
+                  {...getRootProps()}
+                  className="nav-link flex items-center gap-2 px-3 py-2 hover:bg-black hover:text-white transition border-b cursor-pointer"
+                >
+                  <input {...getInputProps()} />
+                  <IoIosList className="menu--icon" />
+                  <span className="nav-text">Bulk Lead Upload</span>
+                </div>
+              </DropdownMenu>
             </div>
 
-            <img src={notificationBell} className="cursor-pointer w-8" />
+            <img src={notificationBell} className="cursor-pointer w-6" />
 
             <div className="relative">
-
-              <div className="flex items-center gap-1 cursor-pointer" onClick={() => toggleDropdown("profile")}>
+              <div
+                className="flex items-center gap-1 cursor-pointer"
+                onClick={() => toggleDropdown("profile")}
+              >
                 <div
                   className="profileview w-9 h-9 text-sm rounded-full flex items-center justify-center text-white"
-                  
                   style={{
                     background:
                       "linear-gradient(161.54deg, #527DDD 0.51%, #001136 119.51%)",

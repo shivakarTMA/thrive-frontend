@@ -4,7 +4,7 @@ const ConfirmPopup = ({ message, onConfirm, onCancel }) => {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
       <div className="bg-white p-6 rounded shadow-lg text-center max-w-sm w-full">
-        <p className="mb-4 text-lg font-semibold">{message}</p>
+        <p className="mb-4 text-lg font-semibold" dangerouslySetInnerHTML={{ __html: message }} />
         <div className="flex justify-center gap-4">
           <button
             onClick={onConfirm}

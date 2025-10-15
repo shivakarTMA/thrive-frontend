@@ -74,15 +74,7 @@ export const workoutTemplateWithExercises = {
               duration: "",
               rest: "90",
               notes: "",
-            },
-            {
-              weight: "65",
-              reps: "10",
-              distance: "",
-              duration: "",
-              rest: "120",
-              notes: "",
-            },
+            }
           ],
         },
         {
@@ -424,8 +416,6 @@ export const TrainingList = [
             notes: "Focus on controlled reps, full ROM.",
             sets: [
               { weight: "70", reps: "12", rest: "90", notes: "" },
-              { weight: "75", reps: "10", rest: "120", notes: "" },
-              { weight: "80", reps: "8", rest: "150", notes: "" },
             ],
           },
           {
@@ -446,7 +436,6 @@ export const TrainingList = [
             notes: "Keep core tight, avoid arching back.",
             sets: [
               { weight: "40", reps: "12", rest: "90", notes: "" },
-              { weight: "45", reps: "10", rest: "120", notes: "" },
             ],
           },
           {
@@ -466,7 +455,6 @@ export const TrainingList = [
             notes: "Keep elbows close to body.",
             sets: [
               { reps: "12", rest: "60", notes: "" },
-              { reps: "10", rest: "60", notes: "" },
             ],
           },
         ],

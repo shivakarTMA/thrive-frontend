@@ -4,7 +4,10 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import "react-phone-number-input/style.css";
 import PhoneInput, { isValidPhoneNumber } from "react-phone-number-input";
-import { parsePhoneNumberFromString, isPossiblePhoneNumber } from "libphonenumber-js";
+import {
+  parsePhoneNumberFromString,
+  isPossiblePhoneNumber,
+} from "libphonenumber-js";
 import {
   FaMale,
   FaFemale,
@@ -26,6 +29,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchOptionList } from "../Redux/Reducers/optionListSlice";
 import { apiAxios, authAxios, phoneAxios } from "../config/config";
 import { PiGenderIntersexBold } from "react-icons/pi";
+import CreatableSelect from "react-select/creatable";
 
 // Trainer assignment options
 const assignTrainers = [
@@ -83,7 +87,9 @@ const validationSchema = Yup.object({
   }),
 });
 
-const CreateLeadForm = ({ setLeadModal, selectedLead, onLeadUpdate }) => {
+const CreateLeadForm = ({ setLeadModal, selectedLead, handleLeadUpdate }) => {
+
+  console.log(typeof handleLeadUpdate,'type check handleLeadUpdate')
   console.log(selectedLead, "selectedLead");
   const [allLeads, setAllLeads] = useState([]);
   const leadBoxRef = useRef(null);
@@ -100,19 +106,31 @@ const CreateLeadForm = ({ setLeadModal, selectedLead, onLeadUpdate }) => {
   const [companyOptions, setCompanyOptions] = useState([]);
 
   // Fetch companies
+  // ✅ Fetch companies (only ACTIVE ones)
   const fetchCompanies = async (search = "") => {
     try {
       const res = await apiAxios().get("/company/list", {
         params: search ? { search } : {},
       });
+
+      // ✅ Extract company data safely
       const data = res.data?.data || [];
-      const options = data.map((company) => ({
+
+      // ✅ Filter only active companies
+      const activeCompanies = data.filter(
+        (company) => company.status === "ACTIVE"
+      );
+
+      // ✅ Convert to dropdown-friendly format
+      const options = activeCompanies.map((company) => ({
         value: company.id,
         label: company.name,
       }));
+
+      // ✅ Update state
       setCompanyOptions(options);
     } catch (err) {
-      console.error(err);
+      console.error("❌ Failed to fetch companies:", err);
       toast.error("Failed to fetch companies");
     }
   };
@@ -186,30 +204,48 @@ const CreateLeadForm = ({ setLeadModal, selectedLead, onLeadUpdate }) => {
         return;
       }
 
-      let payload = {};
       try {
         // ✅ Handle company name or ID properly
         let companyName = "";
-        if (values.company_name === "OTHER" && values.otherCompanyName) {
+        let companyId = null;
+
+        // ✅ Find existing company by ID or name
+        const existingCompany = companyOptions.find(
+          (opt) =>
+            opt.value === values.company_name ||
+            opt.label === values.company_name
+        );
+
+        // ✅ Create company only if not found
+        if (!existingCompany && values.company_name) {
           const formData = new FormData();
-          formData.append("name", values.otherCompanyName);
+          formData.append("name", values.company_name);
+
           const res = await apiAxios().post("/company/create", formData, {
             headers: { "Content-Type": "multipart/form-data" },
           });
-          companyName = res.data?.name || values.otherCompanyName;
-          const { otherCompanyName, ...rest } = values;
-          payload = { ...rest, company_name: companyName };
-        } else {
-          companyName = getCompanyNameById(
-            companyOptions,
-            values.company_name,
-            values.otherCompanyName
-          );
-          const { otherCompanyName, ...rest } = values;
-          payload = { ...rest, company_name: companyName };
+
+          companyName = res.data?.name || values.company_name;
+          companyId = res.data?.id;
+
+          // ✅ Add newly created company to dropdown
+          setCompanyOptions((prev) => [
+            ...prev,
+            { value: companyId, label: companyName },
+          ]);
+        } else if (existingCompany) {
+          companyName = existingCompany.label;
+          companyId = existingCompany.value;
         }
 
-        // ✅ Normalize dates (null if not set)
+        // ✅ Build payload
+        const payload = {
+          ...values,
+          company_name: companyName,
+          company_id: companyId,
+        };
+
+        // ✅ Normalize dates
         payload.date_of_birth = values.date_of_birth
           ? new Date(values.date_of_birth).toISOString().split("T")[0]
           : null;
@@ -230,18 +266,12 @@ const CreateLeadForm = ({ setLeadModal, selectedLead, onLeadUpdate }) => {
           payload.mobile = null;
         }
 
-        // ✅ Replace empty strings with null
-        // Object.keys(payload).forEach((key) => {
-        //   if (payload[key] === "") {
-        //     payload[key] = null;
-        //   }
-        // });
-
-        // ✅ Update or create
+        // ✅ Update or Create Lead
         if (selectedLead) {
           console.log(selectedLead, "selectedLead");
           await apiAxios().put(`/lead/${selectedLead}`, payload);
           toast.success("Lead updated successfully!");
+
           setAllLeads((prev) =>
             prev.map((lead) =>
               lead.id === selectedLead
@@ -253,14 +283,13 @@ const CreateLeadForm = ({ setLeadModal, selectedLead, onLeadUpdate }) => {
           console.log("create working");
           const res = await authAxios().post("/lead/create", payload);
           toast.success("Lead created successfully!");
-          setAllLeads((prev) => [
-            ...prev,
-            { ...payload, id: res.data.id }, // use new ID from backend
-          ]);
+          setAllLeads((prev) => [...prev, { ...payload, id: res.data.id }]);
         }
+
         setLeadModal(false);
-        // ✅ Trigger parent refresh
-        onLeadUpdate();
+        if (typeof handleLeadUpdate === "function") {
+          handleLeadUpdate();
+        }
       } catch (err) {
         console.error("❌ API Error:", err.response?.data || err.message);
         toast.error(err.response?.data?.message || err.message);
@@ -368,7 +397,7 @@ const CreateLeadForm = ({ setLeadModal, selectedLead, onLeadUpdate }) => {
   const handleDobChange = (date) => {
     if (!date) return;
     const today = new Date();
-    const birthDate = new Date(date); 
+    const birthDate = new Date(date);
     const age =
       today.getFullYear() -
       date.getFullYear() -
@@ -708,64 +737,43 @@ const CreateLeadForm = ({ setLeadModal, selectedLead, onLeadUpdate }) => {
                           <FaBuilding />
                         </span>
 
-                        <Select
+                        <CreatableSelect
                           name="company_name"
+                          isClearable
+                          isLoading={loading}
+                          placeholder="Select or create a company"
                           value={
-                            companyOptions.find(
-                              (opt) => opt.value === formik.values.company_name
-                            ) ||
-                            (formik.values.company_name === "OTHER" && {
-                              value: "OTHER",
-                              label: "Other",
-                            }) ||
-                            (formik.values.company_name && {
-                              value: formik.values.company_name,
-                              label: formik.values.company_name,
-                            }) // ✅ fallback for raw string
+                            formik.values.company_name
+                              ? companyOptions.find(
+                                  (opt) =>
+                                    opt.value === formik.values.company_name
+                                ) || {
+                                  label: formik.values.company_name,
+                                  value: formik.values.company_name,
+                                }
+                              : null
                           }
                           onChange={(option) => {
-                            if (option.value === "OTHER") {
-                              // Keep OTHER so Select shows it
-                              formik.setFieldValue("company_name", "OTHER");
-                            } else {
-                              formik.setFieldValue(
-                                "company_name",
-                                option.value
-                              );
+                            formik.setFieldValue(
+                              "company_name",
+                              option ? option.value : ""
+                            );
+                          }}
+                          onCreateOption={(newValue) => {
+                            // ✅ Add new value to form and let backend handle creation on submit
+                            formik.setFieldValue("company_name", newValue);
+                          }}
+                          onInputChange={(inputValue) => {
+                            // ✅ Fetch companies dynamically on search
+                            if (inputValue.length >= 2) {
+                              fetchCompanies(inputValue);
                             }
                           }}
-                          options={[
-                            ...companyOptions,
-                            { value: "OTHER", label: "Other" },
-                          ]}
-                          isLoading={loading}
+                          options={companyOptions}
                           styles={selectIcon}
                         />
                       </div>
                     </div>
-
-                    {/* Show input only when OTHER is chosen */}
-                    {formik.values.company_name === "OTHER" && (
-                      <div>
-                        <label className="mb-2 block">Add Company Name</label>
-                        <div className="relative">
-                          <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
-                            <FaBuilding />
-                          </span>
-                          <input
-                            type="text"
-                            className="custom--input w-full input--icon"
-                            value={formik.values.otherCompanyName || ""}
-                            onChange={(e) =>
-                              formik.setFieldValue(
-                                "otherCompanyName",
-                                e.target.value
-                              )
-                            }
-                          />
-                        </div>
-                      </div>
-                    )}
 
                     <div>
                       <label className="mb-2 block">Location</label>
@@ -782,7 +790,7 @@ const CreateLeadForm = ({ setLeadModal, selectedLead, onLeadUpdate }) => {
                       </div>
                     </div>
 
-                    <div className="col-span-3">
+                    <div className="col-span-2">
                       <label className="mb-2 block">Address</label>
                       <div className="relative">
                         <input
@@ -977,11 +985,17 @@ const CreateLeadForm = ({ setLeadModal, selectedLead, onLeadUpdate }) => {
                                   name="schedule"
                                   value="NoTrial"
                                   checked={formik.values.schedule === "NoTrial"}
-                                   onChange={(e) => {
-                                    formik.setFieldValue("schedule", e.target.value);
+                                  onChange={(e) => {
+                                    formik.setFieldValue(
+                                      "schedule",
+                                      e.target.value
+                                    );
                                     // Reset staff_name and schedule_date_time when NoTrial is selected
                                     formik.setFieldValue("staff_name", "");
-                                    formik.setFieldValue("schedule_date_time", "");
+                                    formik.setFieldValue(
+                                      "schedule_date_time",
+                                      ""
+                                    );
                                   }}
                                   className="w-4 h-4 mr-1"
                                 />
@@ -1020,7 +1034,10 @@ const CreateLeadForm = ({ setLeadModal, selectedLead, onLeadUpdate }) => {
                                 minDate={now}
                                 minTime={minTime}
                                 maxTime={maxTime}
-                                disabled={!formik.values.schedule || formik.values.schedule === 'NoTrial'}
+                                disabled={
+                                  !formik.values.schedule ||
+                                  formik.values.schedule === "NoTrial"
+                                }
                               />
                             </div>
                             {formik.touched.schedule_date_time &&
@@ -1060,7 +1077,10 @@ const CreateLeadForm = ({ setLeadModal, selectedLead, onLeadUpdate }) => {
                                 options={getAvailableTrainers()}
                                 placeholder="Select available trainer"
                                 styles={selectIcon}
-                                isDisabled={!formik.values.schedule || formik.values.schedule === 'NoTrial'}
+                                isDisabled={
+                                  !formik.values.schedule ||
+                                  formik.values.schedule === "NoTrial"
+                                }
                               />
                             </div>
 

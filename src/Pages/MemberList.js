@@ -1,45 +1,28 @@
 import React, { useEffect, useState } from "react";
-import { FaAngleLeft, FaAngleRight, FaCircle } from "react-icons/fa";
+import { FaCircle } from "react-icons/fa";
 import Select from "react-select";
-import { customStyles, dasboardStyles, formatAutoDate } from "../Helper/helper";
-import { memberMockData } from "../DummyData/DummyData";
-import { Link } from "react-router-dom";
-import { IoIosAddCircleOutline, IoIosSearch } from "react-icons/io";
-import {
-  format,
-  isWithinInterval,
-  parseISO,
-  startOfToday,
-  subDays,
-  startOfMonth,
-  subYears,
-  addYears,
-} from "date-fns";
-import { MdCall, MdModeEdit } from "react-icons/md";
-import DatePicker from "react-datepicker";
+import { dasboardStyles, formatAutoDate } from "../Helper/helper";
+import { Link, useParams, useLocation } from "react-router-dom";
+import { IoIosAddCircleOutline } from "react-icons/io";
+import { MdCall } from "react-icons/md";
 import "react-datepicker/dist/react-datepicker.css";
 import { LiaEdit } from "react-icons/lia";
 import Tooltip from "../components/common/Tooltip";
 import { apiAxios } from "../config/config";
 import { toast } from "react-toastify";
 import Pagination from "../components/common/Pagination";
-import { FiPlus } from "react-icons/fi";
 import CreateMemberForm from "./CreateMemberForm";
 import MailIcon from "../assets/images/icons/mail.png";
 import SmsIcon from "../assets/images/icons/sms.png";
 import AssignIcon from "../assets/images/icons/assign.png";
 import MemberFilterPanel from "../components/FilterPanel/MemberFilterPanel";
 
-const communicateOptions = [
-  { value: "sms", label: "Send SMS" },
-  { value: "email", label: "Send Email" },
-];
-
 const MemberList = () => {
+  const { id } = useParams();
+  const location = useLocation();
   const [search, setSearch] = useState("");
   const [memberList, setMemberList] = useState([]);
   const [memberModal, setMemberModal] = useState(false);
-  const [sendCommunicate, setSendCommunicate] = useState(null);
   const [stats, setStats] = useState({
     total_members: 0,
     active_members: 0,
@@ -69,14 +52,57 @@ const MemberList = () => {
 
   const [searchTerm, setSearchTerm] = useState("");
 
-  const fetchMemberList = async (search = searchTerm, currentPage = page) => {
+  const fetchMemberList = async (
+    search = searchTerm,
+    currentPage = page,
+    overrideSelected = {}
+  ) => {
     try {
       const params = {
         page: currentPage,
         limit: rowsPerPage,
       };
       // Search param
-      if (search) params.search = search;
+      if (id) {
+        params.id = id;
+      } else {
+        if (search) params.search = search;
+        const filters = {
+          status: overrideSelected.hasOwnProperty("status")
+            ? overrideSelected.status
+            : filterStatus,
+          serviceName: overrideSelected.hasOwnProperty("serviceName")
+            ? overrideSelected.serviceName
+            : filterService,
+          service_variation: overrideSelected.hasOwnProperty(
+            "service_variation"
+          )
+            ? overrideSelected.service_variation
+            : filterServiceVariation,
+          ageGroup: overrideSelected.hasOwnProperty("ageGroup")
+            ? overrideSelected.ageGroup
+            : filterAgeGroup,
+          leadSource: overrideSelected.hasOwnProperty("leadSource")
+            ? overrideSelected.leadSource
+            : filterLeadSource,
+          created_by: overrideSelected.hasOwnProperty("created_by")
+            ? overrideSelected.created_by
+            : filterLeadOwner,
+          staff: overrideSelected.hasOwnProperty("staff")
+            ? overrideSelected.staff
+            : filterTrainer,
+          fitness: overrideSelected.hasOwnProperty("fitness")
+            ? overrideSelected.fitness
+            : filterFitness,
+          gender: overrideSelected.hasOwnProperty("gender")
+            ? overrideSelected.gender
+            : filterGender,
+        };
+
+        Object.entries(filters).forEach(([key, val]) => {
+          if (val?.value) params[key] = val.value;
+        });
+      }
 
       const res = await apiAxios().get("/member/list", { params });
 
@@ -95,7 +121,7 @@ const MemberList = () => {
 
   const fetchMemberStats = async () => {
     try {
-      const response = await apiAxios().get('/member/stats/count'); // Update with your actual endpoint
+      const response = await apiAxios().get("/member/stats/count"); // Update with your actual endpoint
       if (response.data.status) {
         setStats(response.data.data);
       } else {
@@ -106,11 +132,18 @@ const MemberList = () => {
     }
   };
 
-
   useEffect(() => {
-    fetchMemberList();
     fetchMemberStats();
   }, []);
+
+  useEffect(() => {
+    // When 'id' changes, fetch data based on the new 'id'
+    if (id) {
+      fetchMemberList("", 1, { id });
+    } else {
+      fetchMemberList();
+    }
+  }, [id]);
 
   const handleMemberUpdate = () => {
     fetchMemberList();
@@ -199,6 +232,31 @@ const MemberList = () => {
     }
   };
 
+  const handleRemoveFilter = (filterKey) => {
+    const setterMap = {
+      status: setFilterStatus,
+      serviceName: setFilterService,
+      service_variation: setFilterServiceVariation,
+      ageGroup: setFilterAgeGroup,
+      leadSource: setFilterLeadSource,
+      created_by: setFilterLeadOwner,
+      staff: setFilterTrainer,
+      fitness: setFilterFitness,
+      gender: setFilterGender,
+    };
+
+    // Clear that specific filter state
+    setterMap[filterKey]?.(null);
+
+    // Pass null to force API refresh excluding that filter
+    const overrideSelected = { [filterKey]: null };
+    fetchMemberList("", 1, overrideSelected);
+  };
+
+  const handleApplyFiltersFromChild = () => {
+    fetchMemberList("", 1);
+  };
+
   return (
     <>
       <div className="page--content">
@@ -216,7 +274,9 @@ const MemberList = () => {
                   Members
                 </div>
                 <div className="flex flex-wrap items-center justify-between">
-                  <span className="text-md font-semibold">{stats?.total_members}</span>
+                  <span className="text-md font-semibold">
+                    {stats?.total_members}
+                  </span>
                 </div>
               </div>
               <div className="flex items-center gap-5 border-r">
@@ -225,7 +285,9 @@ const MemberList = () => {
                   Active Members
                 </div>
                 <div className="flex flex-wrap items-center justify-between">
-                  <span className="text-md font-semibold">{stats?.active_members}</span>
+                  <span className="text-md font-semibold">
+                    {stats?.active_members}
+                  </span>
                 </div>
               </div>
               <div className="flex items-center gap-5">
@@ -234,7 +296,9 @@ const MemberList = () => {
                   Inactive Members
                 </div>
                 <div className="flex flex-wrap items-center justify-between">
-                  <span className="text-md font-semibold">{stats?.inactive_members}</span>
+                  <span className="text-md font-semibold">
+                    {stats?.inactive_members}
+                  </span>
                 </div>
               </div>
             </div>
@@ -291,6 +355,8 @@ const MemberList = () => {
                 setFilterFitness={setFilterFitness}
                 filterGender={filterGender}
                 setFilterGender={setFilterGender}
+                onApplyFilters={handleApplyFiltersFromChild} // child "Apply" -> parent fetch
+                onRemoveFilter={handleRemoveFilter}
               />
             </div>
             <div>

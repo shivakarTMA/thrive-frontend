@@ -73,7 +73,7 @@ const WorkoutApp = () => {
   };
 
   return (
-    <div className="w-full">
+    <div className="p-4 bg-white rounded shadow relative">
       {workoutTable && (
         <div className="flex justify-end items-end gap-2 mb-3 w-full">
           <button

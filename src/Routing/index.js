@@ -65,7 +65,6 @@ import TrialAppointments from "../Pages/Reports/Appointments/TrialAppointments";
 import MemberCheckIn from "../Pages/Reports/MemberManagement/MemberCheckIn";
 import ProductsSold from "../Pages/Reports/ProductsSold";
 
-
 export default function Routing() {
   const { accessToken } = useSelector((state) => state.auth);
   const userType = useSelector((state) => state.auth?.user?.userType);
@@ -75,8 +74,8 @@ export default function Routing() {
       <Router>
         <Routes>
           <Route path="/login" element={<Login />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} /> 
-          <Route path="/set-password" element={<SetPassword />} /> 
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/set-password" element={<SetPassword />} />
           <Route path="*" element={<Navigate to="/login" />} />
         </Routes>
       </Router>
@@ -88,8 +87,8 @@ export default function Routing() {
       <Routes>
         {/* Common Login Route */}
         <Route path="/login" element={<Login />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} /> 
-        <Route path="/set-password" element={<SetPassword />} /> 
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/set-password" element={<SetPassword />} />
 
         {/* FOH Routes */}
         {/* {userType === "FOH" && (
@@ -331,334 +330,350 @@ export default function Routing() {
         )} */}
 
         <Route
-              path="/"
-              element={
-                <PrivateRoute>
-                  <Home />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/all-leads"
-              element={
-                <PrivateRoute>
-                  <AllLeads />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/edit-lead-details/:id"
-              element={
-                <PrivateRoute>
-                  <EditLeadDetails />
-                </PrivateRoute>
-              }
-            />
+          path="/"
+          element={
+            <PrivateRoute>
+              <Home />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/all-leads"
+          element={
+            <PrivateRoute>
+              <AllLeads />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/all-leads/:id"
+          element={
+            <PrivateRoute>
+              <AllLeads />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/edit-lead-details/:id"
+          element={
+            <PrivateRoute>
+              <EditLeadDetails />
+            </PrivateRoute>
+          }
+        />
 
-            <Route
-              path="/all-members"
-              element={
-                <PrivateRoute>
-                  <MemberList />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/member/:id"
-              element={
-                <PrivateRoute>
-                  <MemberProfile />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/lost-found"
-              element={
-                <PrivateRoute>
-                  <AllLostFound />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/lead-follow-up/:id"
-              element={
-                <PrivateRoute>
-                  <LeadCallLogs />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/member-follow-up/:id"
-              element={
-                <PrivateRoute>
-                  <MemberCallLogs />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/services-list/"
-              element={
-                <PrivateRoute>
-                  <ServicesLIst />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/book-service/:id"
-              element={
-                <PrivateRoute>
-                  <BookingService />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/products"
-              element={
-                <PrivateRoute>
-                  <ProductsList />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/companies"
-              element={
-                <PrivateRoute>
-                  <CompanyList />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/club"
-              element={
-                <PrivateRoute>
-                  <ClubList />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/option-list"
-              element={
-                <PrivateRoute>
-                  <OptionList />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/role-list"
-              element={
-                <PrivateRoute>
-                  <RoleList />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/module-list"
-              element={
-                <PrivateRoute>
-                  <ModuleList />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/challenge-list"
-              element={
-                <PrivateRoute>
-                  <ChallengeList />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/on-boarding-list"
-              element={
-                <PrivateRoute>
-                  <OnBoardingScreen />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/splash-screen"
-              element={
-                <PrivateRoute>
-                  <SplashScreen />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/studio"
-              element={
-                <PrivateRoute>
-                  <Studio />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/services"
-              element={
-                <PrivateRoute>
-                  <Services />
-                </PrivateRoute>
-              }
-            />
-              <Route
-                path="/package-category"
-                element={
-                  <PrivateRoute>
-                    <PackageCategoryList />
-                  </PrivateRoute>
-                }
-              />
-            <Route
-              path="/packages"
-              element={
-                <PrivateRoute>
-                  <PackagesList />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/subscription-plan"
-              element={
-                <PrivateRoute>
-                  <SubscriptionPlan />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/services-addons"
-              element={
-                <PrivateRoute>
-                  <ServicesAddons />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/staff"
-              element={
-                <PrivateRoute>
-                  <StaffList />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/exercises"
-              element={
-                <PrivateRoute>
-                  <ExercisesList />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/workout-plans"
-              element={
-                <PrivateRoute>
-                  <WorkoutPlanList />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/create-workout-plan"
-              element={
-                <PrivateRoute>
-                  <CreateWorkoutplan />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/create-workout-plan/:id"
-              element={
-                <PrivateRoute>
-                  <CreateWorkoutplan />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/diet-plan/"
-              element={
-                <PrivateRoute>
-                  <DietPlanList />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/group-classes/"
-              element={
-                <PrivateRoute>
-                  <AllGroupClasses />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/memssmail/"
-              element={
-                <PrivateRoute>
-                  <EmailModule />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/memsssms/"
-              element={
-                <PrivateRoute>
-                  <SmsModule />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/memsswhatsapp/"
-              element={
-                <PrivateRoute>
-                  <WhatsappModule />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/club-manager/"
-              element={
-                <PrivateRoute>
-                  <ClubManagerDashboard />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/reports/finance/sales-report/"
-              element={
-                <PrivateRoute>
-                  <SalesReportPage />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/reports/appointments/trial-appointments/"
-              element={
-                <PrivateRoute>
-                  <TrialAppointments />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/reports/member-management/member-check-ins/"
-              element={
-                <PrivateRoute>
-                  <MemberCheckIn />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/reports/products-sold/"
-              element={
-                <PrivateRoute>
-                  <ProductsSold />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/trainer-dashboard/"
-              element={
-                <PrivateRoute>
-                  <TrainerDashboard />
-                </PrivateRoute>
-              }
-            />
+        <Route
+          path="/all-members"
+          element={
+            <PrivateRoute>
+              <MemberList />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/all-members/:id"
+          element={
+            <PrivateRoute>
+              <MemberList />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/member/:id"
+          element={
+            <PrivateRoute>
+              <MemberProfile />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/lost-found"
+          element={
+            <PrivateRoute>
+              <AllLostFound />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/lead-follow-up/:id"
+          element={
+            <PrivateRoute>
+              <LeadCallLogs />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/member-follow-up/:id"
+          element={
+            <PrivateRoute>
+              <MemberCallLogs />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/services-list/"
+          element={
+            <PrivateRoute>
+              <ServicesLIst />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/book-service/:id"
+          element={
+            <PrivateRoute>
+              <BookingService />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/products"
+          element={
+            <PrivateRoute>
+              <ProductsList />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/companies"
+          element={
+            <PrivateRoute>
+              <CompanyList />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/club"
+          element={
+            <PrivateRoute>
+              <ClubList />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/option-list"
+          element={
+            <PrivateRoute>
+              <OptionList />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/role-list"
+          element={
+            <PrivateRoute>
+              <RoleList />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/module-list"
+          element={
+            <PrivateRoute>
+              <ModuleList />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/challenge-list"
+          element={
+            <PrivateRoute>
+              <ChallengeList />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/on-boarding-list"
+          element={
+            <PrivateRoute>
+              <OnBoardingScreen />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/splash-screen"
+          element={
+            <PrivateRoute>
+              <SplashScreen />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/studio"
+          element={
+            <PrivateRoute>
+              <Studio />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/services"
+          element={
+            <PrivateRoute>
+              <Services />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/package-category"
+          element={
+            <PrivateRoute>
+              <PackageCategoryList />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/packages"
+          element={
+            <PrivateRoute>
+              <PackagesList />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/subscription-plan"
+          element={
+            <PrivateRoute>
+              <SubscriptionPlan />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/services-addons"
+          element={
+            <PrivateRoute>
+              <ServicesAddons />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/staff"
+          element={
+            <PrivateRoute>
+              <StaffList />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/exercises"
+          element={
+            <PrivateRoute>
+              <ExercisesList />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/workout-plans"
+          element={
+            <PrivateRoute>
+              <WorkoutPlanList />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/create-workout-plan"
+          element={
+            <PrivateRoute>
+              <CreateWorkoutplan />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/create-workout-plan/:id"
+          element={
+            <PrivateRoute>
+              <CreateWorkoutplan />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/diet-plan/"
+          element={
+            <PrivateRoute>
+              <DietPlanList />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/group-classes/"
+          element={
+            <PrivateRoute>
+              <AllGroupClasses />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/memssmail/"
+          element={
+            <PrivateRoute>
+              <EmailModule />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/memsssms/"
+          element={
+            <PrivateRoute>
+              <SmsModule />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/memsswhatsapp/"
+          element={
+            <PrivateRoute>
+              <WhatsappModule />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/club-manager/"
+          element={
+            <PrivateRoute>
+              <ClubManagerDashboard />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/reports/finance/sales-report/"
+          element={
+            <PrivateRoute>
+              <SalesReportPage />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/reports/appointments/trial-appointments/"
+          element={
+            <PrivateRoute>
+              <TrialAppointments />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/reports/member-management/member-check-ins/"
+          element={
+            <PrivateRoute>
+              <MemberCheckIn />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/reports/products-sold/"
+          element={
+            <PrivateRoute>
+              <ProductsSold />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/trainer-dashboard/"
+          element={
+            <PrivateRoute>
+              <TrainerDashboard />
+            </PrivateRoute>
+          }
+        />
 
         {/* PT Routes */}
         {userType === "PT" && (

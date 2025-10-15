@@ -1,16 +1,32 @@
 // Import React and useState hook for managing state
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { apiAxios } from "../../config/config";
+import { toast } from "react-toastify";
+import { formatAutoDate } from "../../Helper/helper";
 
 // Functional component HealthProfile
-const HealthProfile = () => {
+const HealthProfile = ({ details }) => {
   // State to manage active tab selection
   const [activeTab, setActiveTab] = useState("steps");
+  const [memberSteps, setMemberSteps] = useState([]);
 
-  // Dummy data for Steps tab
-  const stepsData = [
-    { date: "10/4/25", steps: 8000, distance: "5 km", calories: 320 },
-    { date: "11/4/25", steps: 10500, distance: "6.5 km", calories: 420 },
-  ];
+  const fetchMemberSteps = async () => {
+    try {
+      // Make the API call with query parameters
+      const res = await apiAxios().get(`/member/health/profile/${details?.id}`);
+      const data = res.data?.data || [];
+      setMemberSteps(data);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to fetch coins");
+    }
+  };
+
+  useEffect(() => {
+    fetchMemberSteps();
+  }, []);
+
+  console.log(memberSteps,'memberSteps')
 
   // Dummy data for Weight tab
   const weightData = [
@@ -45,12 +61,12 @@ const HealthProfile = () => {
               </tr>
             </thead>
             <tbody>
-              {stepsData.map((row, idx) => (
+              {memberSteps.map((row, idx) => (
                 <tr key={idx} className="hover:bg-gray-50">
-                  <td className="border px-3 py-2">{row.date}</td>
-                  <td className="border px-3 py-2">{row.steps}</td>
-                  <td className="border px-3 py-2">{row.distance}</td>
-                  <td className="border px-3 py-2">{row.calories}</td>
+                  <td className="border px-3 py-2">{formatAutoDate(row?.created_at)}</td>
+                  <td className="border px-3 py-2">{row?.steps !== null ? row?.steps : '--'}</td>
+                  <td className="border px-3 py-2">{row?.distance}</td>
+                  <td className="border px-3 py-2">{row?.calories_burned}</td>
                 </tr>
               ))}
             </tbody>

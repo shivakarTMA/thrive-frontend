@@ -667,7 +667,7 @@ const WorkoutPlan = ({ handleCancelWorkout, editingId }) => {
   };
 
   return (
-    <div className="p-6">
+    <div className="p-0">
       <div className="flex justify-end items-end gap-2 mb-3 w-full">
         {!workoutForm ? (
           <button
@@ -880,7 +880,7 @@ const WorkoutPlan = ({ handleCancelWorkout, editingId }) => {
                 </div>
               </div>
 
-              <div className="border rounded p-4 mb-6">
+              <div className="rounded p-0 mb-6">
                 <div className="flex items-center justify-between gap-3 mb-3">
                   {/* <h2 className="text-xl font-semibold mb-2">
                     {days[activeDayIndex].name}

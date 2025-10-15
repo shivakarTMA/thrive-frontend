@@ -6,12 +6,6 @@ import { useParams } from "react-router-dom";
 import { workoutPlansList } from "../../DummyData/DummyData";
 import { toast } from "react-toastify";
 
-const workoutTagOptions = [
-  { value: "warmup", label: "Warm-up" },
-  { value: "workout", label: "Workout" },
-  { value: "cooldown", label: "Cool Down" },
-];
-
 const workoutTypeOptions = [
   { value: "multiple", label: "Workout Plan (Multiple Days)" },
   { value: "single", label: "Workout (One Day)" },
@@ -89,17 +83,12 @@ const CreateWorkoutPlan = ({ handleCancelWorkout }) => {
               setExercise: "",
               groupType: null,
               groupId: null,
+              reps: "",
+              duration: "",
+              distance: "",
+              weight: "",
               notes: "",
-              sets: [
-                {
-                  weight: "",
-                  reps: "",
-                  distance: "",
-                  duration: "",
-                  rest: "",
-                  notes: "",
-                },
-              ],
+              rest: "",
             },
           ],
         };
@@ -294,7 +283,6 @@ const CreateWorkoutPlan = ({ handleCancelWorkout }) => {
       return;
     }
 
-    // Generate days inside `data.days` instead of separate `days` state
     const generatedDays = Array.from({ length: data.numDays }, (_, i) => ({
       name: `Day ${i + 1}`,
       exercises: [],
@@ -308,7 +296,7 @@ const CreateWorkoutPlan = ({ handleCancelWorkout }) => {
 
     setActiveDayIndex(0);
     setErrors({});
-    setStep(2); // move to next step
+    setStep(2);
   };
 
   const renderGroupedExercises = (groupId, groupType, groupExercises) => {
@@ -326,7 +314,7 @@ const CreateWorkoutPlan = ({ handleCancelWorkout }) => {
                   : 1
               }
               onChange={(e) => {
-                const newValue = Number(e.target.value) || 1; // default to 1 if empty
+                const newValue = Number(e.target.value) || 1;
                 groupExercises.forEach((exercise) =>
                   handleExerciseFieldChange(
                     activeDayIndex,
@@ -382,118 +370,126 @@ const CreateWorkoutPlan = ({ handleCancelWorkout }) => {
       <div className="flex items-centerd gap-3">
         <div className="flex-1">
           <div className="grid grid-cols-1 gap-3 items-baseline">
-            {exercise.sets.map((set, setIdx) => (
-              <div key={setIdx} className="grid grid-cols-4 gap-3 mb-0">
-                {!isGrouped && (
-                  <div className="w-full">
-                    <input
-                      type="number"
-                      placeholder="No. of set"
-                      value={exercise.setExercise || ""}
-                      onChange={(e) =>
-                        handleExerciseFieldChange(
-                          activeDayIndex,
-                          exIdx,
-                          "setExercise",
-                          e.target.value
-                        )
-                      }
-                      className="custom--input number--appearance-none w-full"
-                    />
-                  </div>
-                )}
-                {exercise.resps && (
+            <div className="grid grid-cols-4 gap-3 mb-0">
+              {!isGrouped && (
+                <div className="w-full">
+                  <input
+                    type="number"
+                    placeholder="No. of set"
+                    value={exercise.setExercise || ""}
+                    onChange={(e) =>
+                      handleExerciseFieldChange(
+                        activeDayIndex,
+                        exIdx,
+                        "setExercise",
+                        e.target.value
+                      )
+                    }
+                    className="custom--input number--appearance-none w-full"
+                  />
+                </div>
+              )}
+
+              {exercise.has_reps && (
+                <div className="w-full">
                   <input
                     type="number"
                     placeholder="Reps"
-                    value={set.reps}
+                    value={exercise.reps || ""}
                     onChange={(e) =>
-                      handleSetChange(
+                      handleExerciseFieldChange(
                         activeDayIndex,
                         exIdx,
-                        setIdx,
                         "reps",
                         e.target.value
                       )
                     }
                     className="custom--input number--appearance-none w-full"
                   />
-                )}
-                {exercise.duration && (
+                </div>
+              )}
+
+              {exercise.has_duration && (
+                <div className="w-full">
                   <input
                     type="number"
                     placeholder="Duration (sec)"
-                    value={set.duration}
+                    value={exercise.duration || ""}
                     onChange={(e) =>
-                      handleSetChange(
+                      handleExerciseFieldChange(
                         activeDayIndex,
                         exIdx,
-                        setIdx,
                         "duration",
                         e.target.value
                       )
                     }
                     className="custom--input number--appearance-none w-full"
                   />
-                )}
-                {exercise.distance && (
+                </div>
+              )}
+
+              {exercise.has_distance && (
+                <div className="w-full">
                   <input
                     type="number"
                     placeholder="Distance (m)"
-                    value={set.distance}
+                    value={exercise.distance || ""}
                     onChange={(e) =>
-                      handleSetChange(
+                      handleExerciseFieldChange(
                         activeDayIndex,
                         exIdx,
-                        setIdx,
                         "distance",
                         e.target.value
                       )
                     }
                     className="custom--input number--appearance-none w-full"
                   />
-                )}
-                {exercise.weight && (
+                </div>
+              )}
+
+              {exercise.has_weight && (
+                <div className="w-full">
                   <input
                     type="number"
                     placeholder="Weight (Kg)"
-                    value={set.weight}
+                    value={exercise.weight || ""}
                     onChange={(e) =>
-                      handleSetChange(
+                      handleExerciseFieldChange(
                         activeDayIndex,
                         exIdx,
-                        setIdx,
                         "weight",
                         e.target.value
                       )
                     }
                     className="custom--input number--appearance-none w-full"
                   />
-                )}
-                {!isGrouped && (
+                </div>
+              )}
+
+              {!isGrouped && (
+                <div className="w-full">
                   <input
                     type="number"
                     placeholder="Rest(Secs)"
-                    value={set.rest}
+                    value={exercise.rest || ""}
                     onChange={(e) =>
-                      handleSetChange(
+                      handleExerciseFieldChange(
                         activeDayIndex,
                         exIdx,
-                        setIdx,
                         "rest",
                         e.target.value
                       )
                     }
                     className="custom--input number--appearance-none w-full"
                   />
-                )}
-              </div>
-            ))}
+                </div>
+              )}
+            </div>
             <div className="flex flex-col gap-3 mb-0">
               <div className="w-full">
                 <input
                   placeholder="Notes"
-                  value={exercise.notes}
+                  value={exercise.notes || ""}
                   onChange={(e) =>
                     handleExerciseFieldChange(
                       activeDayIndex,
@@ -612,13 +608,11 @@ const CreateWorkoutPlan = ({ handleCancelWorkout }) => {
               onChange={(e) => {
                 const val = e.target.value;
 
-                // If the input is cleared, reset to empty string
                 if (val === "") {
                   setData((prev) => ({ ...prev, numDays: "" }));
                   return;
                 }
 
-                // Parse and normalize the number (remove leading 0s)
                 const parsed = parseInt(val, 10);
                 setData((prev) => ({
                   ...prev,
@@ -638,13 +632,6 @@ const CreateWorkoutPlan = ({ handleCancelWorkout }) => {
             >
               Configure Workout
             </button>
-            {/* <button
-              type="button"
-              onClick={handleCancelWorkout}
-              className="px-4 py-2 bg-white text-black rounded flex items-center gap-2 border border-black"
-            >
-              Cancel
-            </button> */}
           </div>
         </form>
       )}
@@ -672,9 +659,6 @@ const CreateWorkoutPlan = ({ handleCancelWorkout }) => {
 
               <div className="border rounded p-4 mb-6">
                 <div className="flex items-center justify-between gap-3 mb-3">
-                  {/* <h2 className="text-xl font-semibold mb-2">
-                    {days[activeDayIndex].name}
-                  </h2> */}
                   {activeDayIndex !== null && (
                     <div className="flex items-center gap-1">
                       <button
@@ -741,7 +725,6 @@ const CreateWorkoutPlan = ({ handleCancelWorkout }) => {
                 {(() => {
                   const currentDay = data.days[activeDayIndex];
 
-                  // 🛑 If the day is marked as a rest day, just show a message and "Remove" button
                   if (currentDay?.isRestDay) {
                     return (
                       <div className="p-4 border rounded bg-yellow-50 text-center">
@@ -760,7 +743,6 @@ const CreateWorkoutPlan = ({ handleCancelWorkout }) => {
                     );
                   }
 
-                  // 🧪 Check if there are no exercises
                   const grouped = {};
                   const ungrouped = [];
                   const restBlocks = [];
@@ -786,7 +768,6 @@ const CreateWorkoutPlan = ({ handleCancelWorkout }) => {
 
                   return (
                     <>
-                      {/* Show "Mark as Rest Day" button if nothing exists */}
                       {isDayEmpty && (
                         <div className="text-center py-4 bg-gray-100 rounded">
                           <button

@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { FiPlus } from "react-icons/fi";
-import { FaAngleLeft, FaAngleRight } from "react-icons/fa";
 import { toast } from "react-toastify";
 import CreateExercise from "./CreateExercise";
 import { LiaEdit } from "react-icons/lia";
@@ -9,6 +8,8 @@ import Tooltip from "../common/Tooltip";
 import ConfirmPopup from "../common/ConfirmPopup";
 import Select from "react-select";
 import { customStyles } from "../../Helper/helper";
+import { apiAxios } from "../../config/config";
+import Pagination from "../common/Pagination";
 
 const exerciseTypeOptions = [
   { value: "shoulders", label: "Shoulders" },
@@ -23,9 +24,17 @@ const exerciseTypeOptions = [
   { value: "others", label: "Others" },
 ];
 
+const columns = [
+  "S.NO",
+  "Category Name",
+  "Exercise Name",
+  "Created By",
+  "Action",
+];
+
 const ExercisesList = () => {
   const [showModal, setShowModal] = useState(false);
-  const [submittedExercises, setSubmittedExercises] = useState([]);
+  const [exerciseList, setExercisesList] = useState([]);
   const [editingExercise, setEditingExercise] = useState(null);
   const [exerciseToDelete, setExerciseToDelete] = useState(null);
   const [showConfirmPopup, setShowConfirmPopup] = useState(false);
@@ -34,68 +43,61 @@ const ExercisesList = () => {
   const [selectedCategory, setSelectedCategory] = useState(null);
 
   const [page, setPage] = useState(1);
-  const rowsPerPage = 5;
+  const [rowsPerPage] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
 
-  // Reset page on filter or search
-  useEffect(() => {
-    setPage(1);
-  }, [searchTerm, selectedCategory]);
+  const fetchExercisesList = async () => {
+    try {
+      // Build query parameters dynamically
+      const params = new URLSearchParams();
 
-  // Filtered data
-  const filteredData = submittedExercises.filter((ex) => {
-    const matchesSearch = ex.exerciseName
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase());
-    const matchesCategory = selectedCategory
-      ? ex.exerciseCategory === selectedCategory.value
-      : true;
-    return matchesSearch && matchesCategory;
-  });
+      if (searchTerm) params.append("search", searchTerm);
+      if (selectedCategory?.value)
+        params.append("category", selectedCategory.value);
 
-  const totalPages = Math.ceil(filteredData.length / rowsPerPage);
-  const paginatedData = filteredData.slice(
-    (page - 1) * rowsPerPage,
-    page * rowsPerPage
-  );
+      // Example: /exercise/list?search=press&category=Shoulders
+      const res = await apiAxios().get(`/exercise/list?${params.toString()}`);
 
-  useEffect(() => {
-    setPage(1);
-  }, [submittedExercises]);
-
-  const handleExerciseCreated = (exerciseData) => {
-    if (editingExercise) {
-      setSubmittedExercises((prev) =>
-        prev.map((ex) =>
-          ex.id === exerciseData.id ? { ...ex, ...exerciseData } : ex
-        )
-      );
-      toast.success("Exercise updated successfully!");
-    } else {
-      const newExercise = { id: Date.now(), ...exerciseData };
-      setSubmittedExercises((prev) => [...prev, newExercise]);
-      toast.success("Exercise added successfully!");
+      const data = res.data?.data || [];
+      setExercisesList(data);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to fetch exercises");
     }
-    setShowModal(false);
-    setEditingExercise(null);
   };
+
+  useEffect(() => {
+    fetchExercisesList();
+  }, [searchTerm, selectedCategory]);
 
   const handleDeleteClick = (exercise) => {
     setExerciseToDelete(exercise);
     setShowConfirmPopup(true);
   };
 
-  const handleConfirmDelete = () => {
+  console.log(exerciseToDelete,'exerciseToDelete')
+
+  // Confirm deletion
+  const handleConfirmDelete = async () => {
     if (exerciseToDelete) {
-      const updatedExercises = submittedExercises.filter(
-        (ex) => ex.id !== exerciseToDelete.id
-      );
-      setSubmittedExercises(updatedExercises);
-      toast.success("Exercise deleted successfully");
+      try {
+        await apiAxios().delete(`/exercise/${exerciseToDelete.id}`);
+        const updatedExercises = exerciseList.filter(
+          (ex) => ex.id !== exerciseToDelete.id
+        );
+        setExercisesList(updatedExercises);
+        toast.success("Exercise deleted successfully");
+      } catch (error) {
+        toast.error("Failed to delete exercise.");
+        console.error("Error deleting exercise:", error);
+      }
     }
     setExerciseToDelete(null);
     setShowConfirmPopup(false);
   };
 
+  // Cancel deletion
   const handleCancelDelete = () => {
     setExerciseToDelete(null);
     setShowConfirmPopup(false);
@@ -123,14 +125,14 @@ const ExercisesList = () => {
       {/* Filters */}
       <div className="flex items-center gap-2 mb-4">
         {/* Search Input */}
-          <label className="block text-sm font-medium mb-1">Search</label>
+        <label className="block text-sm font-medium mb-1">Search</label>
         <div>
           <input
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Search by exercise name"
-             className="custom--input w-full"
+            className="custom--input w-full"
           />
         </div>
 
@@ -153,131 +155,98 @@ const ExercisesList = () => {
           <table className="w-full text-sm text-left text-gray-500">
             <thead className="text-xs text-gray-700 uppercase bg-gray-50">
               <tr>
-                <th className="px-2 py-4">S.NO</th>
-                <th className="px-2 py-4">Category Name</th>
-                <th className="px-2 py-4">Exercise Image</th>
-                <th className="px-2 py-4">Exercise Name</th>
-                <th className="px-2 py-4">Created By</th>
-                <th className="px-2 py-4">Action</th>
+                {columns.map((col, idx) => (
+                  <th key={idx} className="px-2 py-4">
+                    {col}
+                  </th>
+                ))}
               </tr>
             </thead>
             <tbody>
-              {paginatedData.map((row, idx) => (
-                <tr
-                  key={row.id}
-                  className="group bg-white border-b hover:bg-gray-50 transition duration-700 relative"
-                >
-                  <td className="px-2 py-4">
-                    {(page - 1) * rowsPerPage + idx + 1}
-                  </td>
-                  <td className="px-2 py-4">{row.exerciseCategory}</td>
-                  <td className="px-2 py-4">
-                    {row.exerciseImage ? (
-                      <img
-                        src={
-                          typeof row.exerciseImage === "string"
-                            ? row.exerciseImage
-                            : URL.createObjectURL(row.exerciseImage)
-                        }
-                        alt="Exercise"
-                        className="w-[40px] h-[40px] object-cover rounded"
-                      />
-                    ) : (
-                      "N/A"
-                    )}
-                  </td>
-                  <td className="px-2 py-4">{row.exerciseName}</td>
-                  <td className="px-2 py-4">Admin</td>
-                  <td className="px-2 py-4">
-                    <div className="flex">
-                      <Tooltip
-                        id={`edit-exercise-${row.id}`}
-                        content="Edit Exercise"
-                        place="top"
-                      >
-                        <div
-                          onClick={() => {
-                            setEditingExercise(row);
-                            setShowModal(true);
-                          }}
-                          className="p-1 cursor-pointer"
+              {exerciseList.length > 0 ? (
+                exerciseList.map((row, idx) => (
+                  <tr
+                    key={row.id}
+                    className="group bg-white border-b hover:bg-gray-50 transition duration-700 relative"
+                  >
+                    <td className="px-2 py-4">{idx + 1}</td>
+                    <td className="px-2 py-4">{row?.category}</td>
+                    <td className="px-2 py-4">{row?.name}</td>
+                    <td className="px-2 py-4">Admin</td>
+                    <td className="px-2 py-4">
+                      <div className="flex">
+                        <Tooltip
+                          id={`edit-exercise-${row.id}`}
+                          content="Edit Exercise"
+                          place="top"
                         >
-                          <LiaEdit className="text-[25px] text-black" />
-                        </div>
-                      </Tooltip>
-                      <Tooltip
-                        id={`delete-exercise-${row.id}`}
-                        content="Delete Exercise"
-                        place="top"
-                      >
-                        <div
-                          onClick={() => handleDeleteClick(row)}
-                          className="p-1 cursor-pointer"
+                          <div
+                            onClick={() => {
+                              setEditingExercise(row);
+                              setShowModal(true);
+                            }}
+                            className="p-1 cursor-pointer"
+                          >
+                            <LiaEdit className="text-[25px] text-black" />
+                          </div>
+                        </Tooltip>
+                        <Tooltip
+                          id={`delete-exercise-${row.id}`}
+                          content="Delete Exercise"
+                          place="top"
                         >
-                          <RiDeleteBin6Fill className="text-[25px] text-black" />
-                        </div>
-                      </Tooltip>
-                    </div>
+                          <div
+                            onClick={() => handleDeleteClick(row)}
+                            className="p-1 cursor-pointer"
+                          >
+                            <RiDeleteBin6Fill className="text-[25px] text-black" />
+                          </div>
+                        </Tooltip>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td
+                    colSpan={columns.length}
+                    className="text-center py-4 text-gray-500"
+                  >
+                    No data found.
                   </td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
         </div>
       </div>
 
       {/* Pagination */}
-      <div className="flex justify-between items-center mt-4 gap-2">
-        <p className="text-gray-700">
-          Showing{" "}
-          {filteredData.length === 0 ? 0 : (page - 1) * rowsPerPage + 1} to{" "}
-          {Math.min(page * rowsPerPage, filteredData.length)} of{" "}
-          {filteredData.length} entries
-        </p>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
-            disabled={page === 1}
-            className="px-3 py-2 border rounded disabled:opacity-50"
-          >
-            <FaAngleLeft />
-          </button>
-          <div className="flex gap-2">
-            {Array.from({ length: totalPages }).map((_, i) => (
-              <button
-                key={i}
-                onClick={() => setPage(i + 1)}
-                className={`px-3 py-1 border rounded ${
-                  page === i + 1 ? "bg-gray-200" : ""
-                }`}
-              >
-                {i + 1}
-              </button>
-            ))}
-          </div>
-          <button
-            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-            disabled={page === totalPages}
-            className="px-3 py-2 border rounded disabled:opacity-50"
-          >
-            <FaAngleRight />
-          </button>
-        </div>
-      </div>
+      <Pagination
+        page={page}
+        totalPages={totalPages}
+        rowsPerPage={rowsPerPage}
+        totalCount={totalCount}
+        currentDataLength={exerciseList.length}
+        onPageChange={(newPage) => {
+          setPage(newPage);
+          fetchExercisesList(searchTerm, newPage);
+        }}
+      />
 
       {/* Modal */}
       {showModal && (
         <CreateExercise
           setShowModal={setShowModal}
-          onExerciseCreated={handleExerciseCreated}
-          initialData={editingExercise}
+          editingExercise={editingExercise}
+          onExerciseCreated={fetchExercisesList}
         />
       )}
 
       {/* Confirm Delete */}
       {showConfirmPopup && exerciseToDelete && (
         <ConfirmPopup
-          message={`Are you sure you want to delete "${exerciseToDelete.exerciseName}"?`}
+          message={`Are you sure you want to delete <br /> "${exerciseToDelete?.name}"?`}
           onConfirm={handleConfirmDelete}
           onCancel={handleCancelDelete}
         />

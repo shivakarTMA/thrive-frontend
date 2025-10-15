@@ -9,6 +9,7 @@ import { customStyles } from "../../Helper/helper";
 import { HiOutlineAdjustmentsHorizontal } from "react-icons/hi2";
 import { apiAxios } from "../../config/config";
 import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
 
 const memberStatus = [
   { value: "ACTIVE", label: "Active" },
@@ -34,22 +35,15 @@ export default function MemberFilterPanel({
   setFilterFitness,
   filterGender,
   setFilterGender,
+  onApplyFilters,
+  onRemoveFilter,
 }) {
   const [showFilters, setShowFilters] = useState(false);
   const panelRef = useRef(null);
   const [staffList, setStaffList] = useState([]);
+  const navigate = useNavigate();
 
-  const [appliedFilters, setAppliedFilters] = useState({
-    status: filterStatus,
-    serviceName: filterService,
-    service_variation: filterServiceVariation,
-    ageGroup: filterAgeGroup,
-    leadSource: filterLeadSource,
-    created_by: filterLeadOwner,
-    staff: filterTrainer,
-    fitness: filterFitness,
-    gender: filterGender,
-  });
+  const [appliedFilters, setAppliedFilters] = useState({});
 
   const fetchStaff = async (search = "") => {
     try {
@@ -121,16 +115,6 @@ export default function MemberFilterPanel({
     { value: "future prospect", label: "Future Prospect" },
   ];
 
-  const lastCallStatusOptions = [
-    { value: "new", label: "New" },
-    { value: "lead", label: "Lead" },
-    { value: "opportunity", label: "Opportunity" },
-    { value: "won", label: "Won" },
-    { value: "closed", label: "Closed" },
-    { value: "lost", label: "Lost" },
-    { value: "future prospect", label: "Future Prospect" },
-  ];
-
   // Handle Submit (apply filters)
   const handleSubmitFilters = () => {
     setAppliedFilters({
@@ -145,49 +129,37 @@ export default function MemberFilterPanel({
       gender: filterGender,
     });
     setShowFilters(false);
+
+    setShowFilters(false);
+    if (onApplyFilters) onApplyFilters();
+    navigate(`/all-members/`);
   };
 
-  const removeFilter = (filter) => {
-    if (filter === "status") {
-      setFilterStatus(null); // Reset setFilterStatus state
-      setAppliedFilters((prev) => ({ ...prev, status: null })); // Update appliedFilters
-    } else if (filter === "serviceName") {
-      setFilterService(null); // Reset filterService state
-      setAppliedFilters((prev) => ({ ...prev, serviceName: null })); // Update appliedFilters
-    } else if (filter === "service_variation") {
-      setFilterServiceVariation(null); // Reset filterServiceVariation state
-      setAppliedFilters((prev) => ({ ...prev, service_variation: null })); // Update appliedFilters
-    } else if (filter === "filterAgeGroup") {
-      setFilterAgeGroup(null); // Reset filterAgeGroup state
-      setAppliedFilters((prev) => ({ ...prev, ageGroup: null })); // Update appliedFilters
-    } else if (filter === "filterLeadSource") {
-      setFilterLeadSource(null); // Reset filterLeadSource state
-      setAppliedFilters((prev) => ({ ...prev, leadSource: null })); // Update appliedFilters
-    } else if (filter === "filterLeadOwner") {
-      setFilterLeadOwner(null); // Reset filterLeadOwner state
-      setAppliedFilters((prev) => ({ ...prev, created_by: null })); // Update appliedFilters
-    } else if (filter === "filterTrainer") {
-      setFilterTrainer(null); // Reset selectedServiceName state
-      setAppliedFilters((prev) => ({ ...prev, staff: null })); // Update appliedFilters
-    } else if (filter === "filterFitness") {
-      setFilterFitness(null); // Reset filterFitness state
-      setAppliedFilters((prev) => ({ ...prev, fitness: null })); // Update appliedFilters
-    } else if (filter === "filterGender") {
-      setFilterGender(null); // Reset filterGender state
-      setAppliedFilters((prev) => ({ ...prev, gender: null })); // Update appliedFilters
-    }
+
+  // Handle remove filter chip
+ const removeFilter = (filterKey) => {
+  const setterMap = {
+    status: setFilterStatus,
+    serviceName: setFilterService,
+    service_variation: setFilterServiceVariation,
+    ageGroup: setFilterAgeGroup,
+    leadSource: setFilterLeadSource,
+    created_by: setFilterLeadOwner,
+    staff: setFilterTrainer,
+    fitness: setFilterFitness,
+    gender: setFilterGender,
   };
 
-  const resetFilters = () => {
-    setFilterService(null);
-    setFilterServiceVariation(null);
-    setFilterAgeGroup(null);
-    setFilterLeadSource(null);
-    setFilterLeadOwner(null);
-    setFilterTrainer(null);
-    setFilterFitness(null);
-    setFilterGender(null);
-  };
+  // Clear UI state
+  setterMap[filterKey]?.(null);
+
+  // Remove from appliedFilters
+  setAppliedFilters((prev) => ({ ...prev, [filterKey]: null }));
+
+  // Trigger parent to refetch API
+  if (onRemoveFilter) onRemoveFilter(filterKey);
+};
+
 
   return (
     <div className="relative max-w-fit w-full" ref={panelRef}>
@@ -345,41 +317,28 @@ export default function MemberFilterPanel({
               >
                 Apply
               </button>
-              {/* <button
-                onClick={resetFilters}
-                className="text-[12px] flex items-center gap-1 justify-end ml-auto bg-black text-white p-1 rounded-[5px]"
-              >
-                <RiResetLeftFill className="mt-[1px]" />
-                <span>Reset Filters</span>
-              </button> */}
             </div>
           </div>
         </div>
       )}
 
-      {Object.keys(appliedFilters).length > 0 && (
-        <div
-          className={`gap-2 mt-4 ${
-            Object.keys(appliedFilters).some((key) => appliedFilters[key])
-              ? "flex"
-              : "hidden"
-          }`}
-        >
-          {Object.entries(appliedFilters).map(
-            ([key, value]) =>
-              value && (
-                <div
-                  key={key}
-                  className="flex items-center justify-between gap-1 border rounded-full bg-[#EEEEEE] min-h-[30px] px-3 text-sm"
-                >
-                  <span>{value.label || value}</span>
-                  <IoClose
-                    onClick={() => removeFilter(key)}
-                    className="cursor-pointer text-xl"
-                  />
-                </div>
-              )
-          )}
+      {Object.values(appliedFilters).some((value) => value) && (
+        <div className="flex gap-2 mt-4">
+          {Object.entries(appliedFilters).map(([key, value]) => {
+            if (!value) return null;
+            return (
+              <div
+                key={key}
+                className="flex items-center justify-between gap-1 border rounded-full bg-[#EEEEEE] min-h-[30px] px-3 text-sm"
+              >
+                <span>{value.label || value}</span>
+                <IoClose
+                  onClick={() => removeFilter(key)}
+                  className="cursor-pointer text-xl"
+                />
+              </div>
+            );
+          })}
         </div>
       )}
     </div>
