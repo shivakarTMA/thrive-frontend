@@ -912,7 +912,7 @@ const ConvertMemberForm = ({
                       </h3>
                       <div className="grid grid-cols-3 gap-4">
                         <div>
-                          <label className="mb-2 block">Service Name</label>
+                          <label className="mb-2 block">Interested In</label>
                           <div className="relative">
                             <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
                               <FaListCheck />

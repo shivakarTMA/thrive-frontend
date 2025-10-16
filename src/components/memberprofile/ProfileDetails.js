@@ -60,16 +60,30 @@ const ProfileDetails = ({ member }) => {
   const [showUnderageModal, setShowUnderageModal] = useState(false);
   const [companyOptions, setCompanyOptions] = useState([]);
   const webcamRef = useRef(null);
+  const memberId = member?.id;
+  const [profileImage, setProfileImage] = useState("");
 
-  console.log(member, "member");
-  console.log(companyOptions, "companyOptions");
+  const [initialValues, setInitialValues] = useState({
+    profile_pic: DummyProfile,
+    country_code: "",
+    mobile: "",
+    phoneFull: "",
+    full_name: "",
+    date_of_birth: "",
+    gender: "NOTDISCLOSE",
+    email: "",
+    location: "",
+    address: "",
+    created_by: "",
+    leadType: null,
+    leadSource: "",
+    company_name: "",
+    designation: "",
+    officialEmail: "",
+  });
 
-  const [showAddForm, setShowAddForm] = useState(false);
   const [emergencyContacts, setEmergencyContacts] = useState([]);
   const [newEmergencies, setNewEmergencies] = useState([]);
-  const [errors, setErrors] = useState({});
-
-  console.log(emergencyContacts, "emergencyContacts");
 
   // Fetch emergency contact list by member ID
   const fetchEmergencyContacts = async () => {
@@ -127,8 +141,6 @@ const ProfileDetails = ({ member }) => {
     dispatch(fetchOptionList("RELATIONSHIP"));
   }, [dispatch]);
 
-  console.log(member,'shivakar')
-
   // Extract Redux lists
   const leadsSources = lists["LEAD_SOURCE"] || [];
   const leadTypes = lists["LEAD_TYPE"] || [];
@@ -136,33 +148,68 @@ const ProfileDetails = ({ member }) => {
   const genralTrainer = lists["GENRAL_TRAINER"] || [];
   const relationList = lists["RELATIONSHIP"] || [];
 
+  // Utility: Convert base64 to File
+  const base64ToFile = (base64String, fileName) => {
+    const arr = base64String.split(",");
+    const mime = arr[0].match(/:(.*?);/)[1];
+    const bstr = atob(arr[1]);
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
+    while (n--) {
+      u8arr[n] = bstr.charCodeAt(n);
+    }
+    return new File([u8arr], fileName, { type: mime });
+  };
+
+  useEffect(() => {
+    const fetchMemberData = async () => {
+      if (!memberId) return;
+
+      try {
+        const response = await apiAxios().get(`/member/${memberId}`);
+        const data = response?.data?.data;
+        const image = data.profile_pic ? data.profile_pic : DummyProfile;
+
+        setInitialValues({
+          profile_pic: image,
+          country_code: data.country_code || "",
+          mobile: data.mobile || "",
+          phoneFull:
+            data.country_code && data.mobile
+              ? `+${data.country_code}${data.mobile}`
+              : "",
+          full_name: data.full_name || "",
+          date_of_birth: data.date_of_birth || "",
+          gender: data.gender || "NOTDISCLOSE",
+          email: data.email || "",
+          location: data.location || "",
+          address: data.address || "",
+          created_by: data.created_by || "",
+          leadType: leadTypes.find((g) => g.value === data.lead_type) || null,
+          leadSource: data.lead_source || "",
+          company_name: data.company_name || "",
+          designation: data.designation || "",
+          officialEmail: data.official_email || "",
+        });
+      } catch (error) {
+        console.error("Error fetching member data:", error);
+        toast.error("Failed to load member data.");
+      }
+    };
+
+    fetchMemberData();
+  }, [memberId, leadTypes]);
+
   const formik = useFormik({
-    initialValues: {
-      profileImage: member?.profile_pic || DummyProfile,
-      country_code: member?.country_code || "",
-      mobile: member?.mobile || "",
-      phoneFull:
-        member?.country_code && member?.mobile
-          ? `+${member?.country_code}${member?.mobile}`
-          : "",
-      full_name: member?.full_name || "",
-      date_of_birth: member?.date_of_birth || "",
-      gender: member?.gender || "NOTDISCLOSE",
-      email: member?.email || "",
-      location: member?.location || "",
-      address: member?.address || "",
-      created_by: member?.created_by || "",
-      leadType:
-        leadTypes.find((g) => g.value === member?.lead_type) || null || "",
-      leadSource: member?.lead_source || "",
-      company_name: member?.company_name || "",
-      designation: member?.designation || "",
-      officialEmail: member?.official_email || "",
-    },
+    enableReinitialize: true, // Important to update form when initialValues change
+    initialValues: initialValues,
     validationSchema,
     onSubmit: async (values) => {
-      console.log(values, "values");
       let profilePayload = new FormData();
+
+      if (values.profile_pic instanceof File) {
+        profilePayload.append("profile_pic", values.profile_pic);
+      }
 
       // ✅ Normalize phone
       if (values.phoneFull) {
@@ -176,15 +223,37 @@ const ProfileDetails = ({ member }) => {
         profilePayload.mobile = null;
       }
 
+      let companyId = null;
+      if (values.company_name !== null && !isNaN(values.company_name)) {
+  companyId = Number(values.company_name); // Only numeric
+}
+
+      // Append other fields
       Object.entries(values).forEach(([key, value]) => {
-        if (key !== "phoneFull") profilePayload.append(key, value || "");
+        if (
+          key !== "phoneFull" &&
+          key !== "company_name" &&
+          key !== "profile_pic"
+        ) {
+          profilePayload.append(key, value || "");
+        }
       });
+
+      if (companyId !== null) {
+  profilePayload.append("company_id", companyId);
+}
 
       const profileResponse = await apiAxios().put(
         `/member/update/${member.id}`,
-        profilePayload
+        profilePayload,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
       );
-      console.log("Profile updated successfully:", profileResponse.data);
+      toast.success("Profile updated successfully.");
+      console.log("Profile updated successfully.", profileResponse?.data?.data);
 
       const allContacts = [...emergencyContacts, ...newEmergencies];
 
@@ -200,8 +269,6 @@ const ProfileDetails = ({ member }) => {
           address: contact.address || "",
         };
 
-        console.log(contact, "contact checking");
-
         // If contact has ID, update; else create
         if (contact.id) {
           await apiAxios().put(
@@ -209,14 +276,19 @@ const ProfileDetails = ({ member }) => {
             contactPayload
           );
         } else {
-          await apiAxios().post(`/member-emergency-contact/create`, contactPayload);
+          await apiAxios().post(
+            `/member-emergency-contact/create`,
+            contactPayload
+          );
         }
       }
-
-      toast.success("Profile updated successfully.");
-      // ✅ Submit logic here (API call to save profile)
     },
   });
+
+  const displayImage =
+    formik.values.profile_pic instanceof File
+      ? URL.createObjectURL(formik.values.profile_pic)
+      : profileImage || DummyProfile;
 
   const updateEmergencyContactField = (index, field, value) => {
     const updatedContacts = [...emergencyContacts];
@@ -270,20 +342,24 @@ const ProfileDetails = ({ member }) => {
   };
 
   const capturePhoto = () => {
-    const imageSrc = webcamRef.current?.getScreenshot();
-    if (!imageSrc) return;
-    formik.setFieldValue("profileImage", imageSrc); // ✅ Now safe to call
-    setShowModal(false);
+    const imageSource = webcamRef.current.getScreenshot();
+    if (imageSource) {
+      const file = base64ToFile(imageSource, "profile_pic.jpg");
+      setProfileImage(URL.createObjectURL(file));
+      formik.setFieldValue("profile_pic", file);
+      setShowModal(false);
+    }
   };
 
-  const handleImageUpload = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const imageUrl = URL.createObjectURL(file);
-    formik.setFieldValue("profileImage", imageUrl); // ✅ Safe
-    setShowModal(false);
+  const handleImageUpload = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      const imageUrl = URL.createObjectURL(file);
+      setProfileImage(imageUrl);
+      formik.setFieldValue("profile_pic", file);
+      setShowModal(false);
+    }
   };
-
 
   const handlePhoneChange = (value) => {
     formik.setFieldValue("phoneFull", value);
@@ -319,8 +395,6 @@ const ProfileDetails = ({ member }) => {
       mobile: phoneNumber.nationalNumber,
     };
 
-    console.log(payload.mobile);
-
     try {
       // ✅ Use POST method
       const endpoint = member?.id
@@ -328,8 +402,6 @@ const ProfileDetails = ({ member }) => {
         : "/lead/check/unique";
 
       const response = await phoneAxios.post(endpoint, payload);
-
-      console.log(response?.data?.status, "response");
 
       if (response?.data?.status === true) {
         setDuplicateError(response?.data?.message);
@@ -371,8 +443,6 @@ const ProfileDetails = ({ member }) => {
         : "/lead/check/unique";
 
       const response = await phoneAxios.post(endpoint, payload);
-
-      console.log(response?.data?.status, "response");
 
       if (response?.data?.status === true) {
         setDuplicateEmailError(response?.data?.message);
@@ -429,7 +499,7 @@ const ProfileDetails = ({ member }) => {
     setPendingDob(null);
   };
 
-  console.log(formik?.values,'SHIVAKAR')
+  console.log(formik?.values, "SHIVAKAR");
 
   return (
     <div className="min-h-screen">
@@ -441,7 +511,7 @@ const ProfileDetails = ({ member }) => {
             <div className="text-center mb-6">
               <div className="w-full bg-gray-100 rounded-lg mx-auto mb-4 overflow-hidden relative group">
                 <img
-                  src={formik.values.profileImage}
+                  src={profileImage || formik?.values?.profile_pic}
                   alt="Profile"
                   className="w-full h-[300px] object-cover"
                 />
@@ -694,7 +764,7 @@ const ProfileDetails = ({ member }) => {
                     Location<span className="text-red-500">*</span>
                   </label>
                   <input
-                  type="text"
+                    type="text"
                     name="location"
                     value={formik.values.location}
                     onChange={formik.handleChange}
@@ -813,26 +883,16 @@ const ProfileDetails = ({ member }) => {
                   </label>
                   <Select
                     name="company_name"
-                    // value={
-                    //   companyOptions.find(
-                    //     (opt) => opt.value === formik.values.company_name
-                    //   ) ||
-                    //   (formik.values.company_name && {
-                    //     value: formik.values.company_name,
-                    //     label: formik.values.company_name,
-                    //   })
-                    // }
-                    value={
-                            formik.values.company_name
-                              ? companyOptions.find(
-                                  (opt) =>
-                                    opt.value === formik.values.company_name
-                                ) || {
-                                  label: formik.values.company_name,
-                                  value: formik.values.company_name,
-                                }
-                              : null
+                   value={
+                      formik.values.company_name
+                        ? companyOptions.find(
+                            (opt) => opt.value === formik.values.company_name
+                          ) || {
+                            label: formik.values.company_name,
+                            value: formik.values.company_name,
                           }
+                        : null
+                    }
                     onChange={(option) =>
                       formik.setFieldValue("company_name", option.value)
                     }
