@@ -64,6 +64,7 @@ import SalesReportPage from "../Pages/Reports/Finance/SalesReportPage";
 import TrialAppointments from "../Pages/Reports/Appointments/TrialAppointments";
 import MemberCheckIn from "../Pages/Reports/MemberManagement/MemberCheckIn";
 import ProductsSold from "../Pages/Reports/ProductsSold";
+import GalleryList from "../components/Gallery/GalleryList";
 
 export default function Routing() {
   const { accessToken } = useSelector((state) => state.auth);
@@ -671,6 +672,14 @@ export default function Routing() {
           element={
             <PrivateRoute>
               <TrainerDashboard />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/gallery/"
+          element={
+            <PrivateRoute>
+              <GalleryList />
             </PrivateRoute>
           }
         />

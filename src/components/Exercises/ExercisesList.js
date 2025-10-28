@@ -61,6 +61,9 @@ const ExercisesList = () => {
 
       const data = res.data?.data || [];
       setExercisesList(data);
+      setPage(res.data?.currentPage || 1);
+      setTotalPages(res.data?.totalPage || 1);
+      setTotalCount(res.data?.totalCount || data.length);
     } catch (err) {
       console.error(err);
       toast.error("Failed to fetch exercises");

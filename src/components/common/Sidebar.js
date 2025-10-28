@@ -12,6 +12,7 @@ import { CgGym } from "react-icons/cg";
 import { useSelector } from "react-redux";
 import { TbGymnastics } from "react-icons/tb";
 import { FaLayerGroup } from "react-icons/fa";
+import TopLogo from "../../assets/images/DLF-Thrive-New-Logo-1-White.png";
 
 const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
   const location = useLocation();
@@ -48,7 +49,7 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
       <div className="sidebar-logo d-flex align-items-center">
         <Link to="/">
           <img
-            src="https://themarcomavenue.com/thrive/assets/images/DLF-Thrive-New-Logo-1-White.png"
+            src={TopLogo}
             alt="logo"
             width="180px"
             height="50px"
@@ -467,6 +468,13 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
             >
               <FaCircle className="menu--icon !text-[10px]" />
               <span className="nav-text">Subscription Plan</span>
+            </Link>
+            <Link
+              to="/gallery"
+              className="text-white flex items-center gap-[5px] mb-2 text-sm"
+            >
+              <FaCircle className="menu--icon !text-[10px]" />
+              <span className="nav-text">Gallery</span>
             </Link>
           </div>
         )}

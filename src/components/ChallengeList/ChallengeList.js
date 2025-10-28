@@ -1,98 +1,40 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { FiPlus } from "react-icons/fi";
-import { useFormik } from "formik";
-import * as Yup from "yup";
-import { toast } from "react-toastify";
 import Tooltip from "../common/Tooltip";
 import { LiaEdit } from "react-icons/lia";
 import ChallengeForm from "./ChallengeForm";
-import { formatDate } from "../../Helper/helper";
+import { formatAutoDate } from "../../Helper/helper";
+import { apiAxios } from "../../config/config";
+import { toast } from "react-toastify";
+import Pagination from "../common/Pagination";
 
 const ChallengeList = () => {
   const [showModal, setShowModal] = useState(false);
   const [challenges, setChallenges] = useState([]);
   const [editingOption, setEditingOption] = useState(null);
-  const leadBoxRef = useRef(null);
 
-  const handleOverlayClick = (e) => {
-    if (leadBoxRef.current && !leadBoxRef.current.contains(e.target)) {
-      setShowModal(false);
+  const [page, setPage] = useState(1);
+  const [rowsPerPage] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+
+  const fetchChallengeList = async () => {
+    try {
+      const res = await apiAxios().get(`/challenge/list`);
+      const data = res.data?.data || [];
+      setChallenges(data);
+      setPage(res.data?.currentPage || 1);
+      setTotalPages(res.data?.totalPage || 1);
+      setTotalCount(res.data?.totalCount || data.length);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to fetch exercises");
     }
   };
 
-  const formik = useFormik({
-    initialValues: {
-      image: "",
-      name: "",
-      shortDescription: "",
-      description: "",
-      goalTitle: "",
-      goalDescription: "",
-      totalParticipants: "",
-      durationStart: "",
-      durationEnd: "",
-      challengeCondition: "",
-      rewards: [
-        { place: "First Prize", coins: "" },
-        { place: "Second Prize", coins: "" },
-        { place: "Third Prize", coins: "" },
-      ],
-      aboutChallenge: "",
-    },
-    validationSchema: Yup.object({
-      image: Yup.mixed().required("Image is required"),
-      name: Yup.string().required("Challenge name is required"),
-      shortDescription: Yup.string().required("Short description is required"),
-      description: Yup.string().required("Description is required"),
-      goalTitle: Yup.string().required("Goal title is required"),
-      goalDescription: Yup.string().required("Goal description is required"),
-      totalParticipants: Yup.number()
-        .typeError("Must be a number")
-        .positive("Must be positive")
-        .required("Total participants is required"),
-      durationStart: Yup.date().required("Start date is required"),
-      durationEnd: Yup.date()
-        .min(Yup.ref("durationStart"), "End date can't be before start date")
-        .required("End date is required"),
-      challengeCondition: Yup.string().required(
-        "Challenge condition is required"
-      ),
-      rewards: Yup.array().of(
-        Yup.object({
-          coins: Yup.number()
-            .typeError("Must be a number")
-            .positive("Must be positive")
-            .required("Coin amount is required"),
-        })
-      ),
-      aboutChallenge: Yup.string().required("About challenge is required"),
-    }),
-    onSubmit: (values, { resetForm }) => {
-      const now = new Date().toISOString();
-
-      if (editingOption) {
-        setChallenges((prev) =>
-          prev.map((c) =>
-            c.id === editingOption.id ? { ...c, ...values, updated_at: now } : c
-          )
-        );
-        toast.success("Updated Successfully");
-      } else {
-        const newChallenge = {
-          id: Date.now(),
-          ...values,
-          created_at: now,
-          updated_at: now,
-        };
-        setChallenges((prev) => [...prev, newChallenge]);
-        toast.success("Created Successfully");
-      }
-
-      resetForm();
-      setEditingOption(null);
-      setShowModal(false);
-    },
-  });
+  useEffect(() => {
+    fetchChallengeList();
+  }, []);
 
   return (
     <div className="page--content">
@@ -106,7 +48,6 @@ const ChallengeList = () => {
           className="px-4 py-2 bg-black text-white rounded flex items-center gap-2"
           onClick={() => {
             setEditingOption(null);
-            formik.resetForm();
             setShowModal(true);
           }}
         >
@@ -119,9 +60,9 @@ const ChallengeList = () => {
             <thead className="text-xs text-gray-700 uppercase bg-gray-50">
               <tr>
                 <th className="px-2 py-4">ID</th>
+                <th className="px-2 py-4">Image</th>
                 <th className="px-2 py-4">Name</th>
                 <th className="px-2 py-4">Goal</th>
-                <th className="px-2 py-4">Participants</th>
                 <th className="px-2 py-4">Start Dates</th>
                 <th className="px-2 py-4">End Dates</th>
                 <th className="px-2 py-4">Action</th>
@@ -135,35 +76,34 @@ const ChallengeList = () => {
                   </td>
                 </tr>
               ) : (
-                challenges.map((ch, index) => (
+                challenges.map((item, index) => (
                   <tr
-                    key={ch.id || index}
+                    key={item.id || index}
                     className="bg-white border-b hover:bg-gray-50"
                   >
-                    <td className="px-2 py-4">{ch.id}</td>
-                    <td className="px-2 py-4">{ch.name}</td>
-                    <td className="px-2 py-4">{ch.goalTitle}</td>
-                    <td className="px-2 py-4">{ch.totalParticipants}</td>
+                    <td className="px-2 py-4">{index + 1}</td>
                     <td className="px-2 py-4">
-                      {formatDate(ch.durationStart)}
+                      <div className="bg-black rounded-lg w-14 h-14 overflow-hidden">
+                        <img
+                          src={item?.image}
+                          className="w-full h-full object-contain"
+                        />
+                      </div>
                     </td>
-                    <td className="px-2 py-4">{formatDate(ch.durationEnd)}</td>
+                    <td className="px-2 py-4">{item?.title}</td>
+                    <td className="px-2 py-4">{item?.goal}</td>
+                    <td className="px-2 py-4">{formatAutoDate(item.start_date)}</td>
+                    <td className="px-2 py-4">{formatAutoDate(item.end_date)}</td>
                     <td className="px-2 py-4">
                       <Tooltip
-                        id={`tooltip-edit-${ch.id}`}
+                        id={`tooltip-edit-${item.id}`}
                         content="Edit Challenge"
                         place="left"
                       >
                         <div
                           className="p-1 cursor-pointer"
                           onClick={() => {
-                            setEditingOption(ch);
-                            formik.setValues({
-                              ...formik.initialValues, // keep default structure
-                              ...ch, // overwrite with challenge data
-                              rewards:
-                                ch.rewards ?? formik.initialValues.rewards, // keep rewards if missing
-                            });
+                            setEditingOption(item.id);
                             setShowModal(true);
                           }}
                         >
@@ -177,15 +117,25 @@ const ChallengeList = () => {
             </tbody>
           </table>
         </div>
+        {/* Pagination */}
+        <Pagination
+          page={page}
+          totalPages={totalPages}
+          rowsPerPage={rowsPerPage}
+          totalCount={totalCount}
+          currentDataLength={challenges.length}
+          onPageChange={(newPage) => {
+            setPage(newPage);
+            fetchChallengeList(newPage);
+          }}
+        />
       </div>
 
       {showModal && (
         <ChallengeForm
           setShowModal={setShowModal}
           editingOption={editingOption}
-          formik={formik}
-          handleOverlayClick={handleOverlayClick}
-          leadBoxRef={leadBoxRef}
+          onChallengeCreated={fetchChallengeList}
         />
       )}
     </div>

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { IoCloseCircle } from "react-icons/io5";
@@ -10,32 +10,51 @@ import { customStyles } from "../../Helper/helper";
 import Select from "react-select";
 import { FaCalendarDays } from "react-icons/fa6";
 import { toast } from "react-toastify";
+import { authAxios } from "../../config/config";
 
-const AddNewItemModal = ({ onClose }) => {
+const AddNewItemModal = ({ onClose, onSuccess }) => {
   const { user } = useSelector((state) => state.auth);
   console.log(user, "user");
   const leadBoxRef = useRef(null);
   const formik = useFormik({
     initialValues: {
-      item: "",
+      item_name: "",
       category: null,
       description: "",
-      foundAt: null,
-      date_time: new Date(),
+      found_at_location: null,
+      found_date_time: new Date(),
       loggedBy: "Nitin",
       notes: "",
+      status:"AVAILABLE",
     },
     validationSchema: Yup.object({
-      item: Yup.string().required("Item Name is required"),
+      item_name: Yup.string().required("Item Name is required"),
       category: Yup.string().required("Category Name is required"),
+      found_at_location: Yup.string().required("Location is required"),
+      found_date_time: Yup.date().required("Date & Time is required"),
       description: Yup.string().required("Description is required"),
-      foundAt: Yup.string().required("Location is required"),
-      date_time: Yup.date().required("Date & Time is required"),
     }),
-    onSubmit: (values) => {
-      console.log(values, "Lost & found");
-      toast.success('Item Successfully Added')
-      onClose();
+    onSubmit: async (values, { resetForm }) => {
+
+      try {
+        await authAxios().post("/lost/found/create", values);
+        toast.success("Item Successfully Added");
+
+        // Reset form and close modal
+        resetForm();
+        // Trigger parent to refresh data BEFORE closing
+        if (onSuccess) {
+          onSuccess();
+        }
+        // Close modal after refresh
+        onClose();
+
+        // Trigger the parent component to fetch updated item list
+        // handleUpdateCoins();
+      } catch (error) {
+        toast.error("Something went wrong. Please try again.");
+        console.error("Error submitting form:", error);
+      }
     },
   });
 
@@ -54,7 +73,7 @@ const AddNewItemModal = ({ onClose }) => {
   const lostCategory = lists["LOST_CATEGORY"] || [];
 
   const handleDateTime = (date) => {
-    formik.setFieldValue("date_time", date); // Store Date object in Formik
+    formik.setFieldValue("found_date_time", date); // Store Date object in Formik
   };
 
   const handleOverlayClick = (e) => {
@@ -92,16 +111,16 @@ const AddNewItemModal = ({ onClose }) => {
                   </label>
                   <input
                     type="text"
-                    name="item"
-                    value={formik.values.item}
+                    name="item_name"
+                    value={formik.values.item_name}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
                     placeholder="Item Name"
                     className="custom--input w-full"
                   />
-                  {formik.touched.item && formik.errors.item && (
+                  {formik.touched.item_name && formik.errors.item_name && (
                     <div className="text-red-500 text-sm">
-                      {formik.errors.item}
+                      {formik.errors.item_name}
                     </div>
                   )}
                 </div>
@@ -132,20 +151,20 @@ const AddNewItemModal = ({ onClose }) => {
                     Found At (Location)<span className="text-red-500">*</span>
                   </label>
                   <Select
-                    name="foundAt"
+                    name="found_at_location"
                     value={
                       foundLocation.find(
-                        (option) => option.value === formik.values.foundAt
+                        (option) => option.value === formik.values.found_at_location
                       ) || null
                     }
-                    onChange={(option) => formik.setFieldValue("foundAt", option ? option.value : "")} 
+                    onChange={(option) => formik.setFieldValue("found_at_location", option ? option.value : "")} 
                     options={foundLocation}
                     placeholder="Select Location"
                     styles={customStyles}
                   />
-                  {formik.touched.foundAt && formik.errors.foundAt && (
+                  {formik.touched.found_at_location && formik.errors.found_at_location && (
                     <div className="text-red-500 text-sm">
-                      {formik.errors.foundAt}
+                      {formik.errors.found_at_location}
                     </div>
                   )}
                 </div>
@@ -159,8 +178,8 @@ const AddNewItemModal = ({ onClose }) => {
                     </span>
                     <DatePicker
                       selected={
-                        formik.values.date_time
-                          ? new Date(formik.values.date_time)
+                        formik.values.found_date_time
+                          ? new Date(formik.values.found_date_time)
                           : null
                       }
                       onChange={handleDateTime}
@@ -172,9 +191,9 @@ const AddNewItemModal = ({ onClose }) => {
                       maxDate={new Date()}
                     />
                   </div>
-                  {formik.touched.date_time && formik.errors.date_time && (
+                  {formik.touched.found_date_time && formik.errors.found_date_time && (
                     <p className="text-sm text-red-500 mt-1">
-                      {formik.errors.date_time}
+                      {formik.errors.found_date_time}
                     </p>
                   )}
                 </div>

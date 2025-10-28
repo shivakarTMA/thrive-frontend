@@ -10,9 +10,8 @@ import { HiOutlineAdjustmentsHorizontal } from "react-icons/hi2";
 import { format } from "date-fns";
 
 const StatusOptions = [
-  { value: "Available", label: "Available" },
-  { value: "Returned", label: "Returned" },
-  { value: "Claimed Pending", label: "Claimed Pending" },
+  { value: "AVAILABLE", label: "Available" },
+  { value: "RETURNED", label: "Returned" },
 ];
 
 export default function LostFoundPanel({
@@ -32,6 +31,8 @@ export default function LostFoundPanel({
   setItemReturnedFrom,
   itemReturnedTo,
   setItemReturnedTo,
+  onApplyFilters,
+  onRemoveFilter,
 }) {
   const [showFilters, setShowFilters] = useState(false);
   const panelRef = useRef(null);
@@ -39,15 +40,13 @@ export default function LostFoundPanel({
   const [appliedFilters, setAppliedFilters] = useState({
     status: itemStatus,
     category: itemCategory,
-    location: itemLocation,
+    found_at_location: itemLocation,
     floor: itemFloor,
     found_from: itemFoundFrom,
     found_to: itemFoundTo,
     returned_from: itemReturnedFrom,
     returned_to: itemReturnedTo,
   });
-
-  console.log(appliedFilters, "appliedFilters");
 
   // Redux state
   const dispatch = useDispatch();
@@ -88,55 +87,56 @@ export default function LostFoundPanel({
   ];
 
   const handleSubmitFilters = () => {
-    const filters = {
+    const applied = {
       status: itemStatus?.value,
       category: itemCategory?.value,
-      location: itemLocation?.value,
+      found_at_location: itemLocation?.value,
       floor: itemFloor?.value,
-      found_from: itemFoundFrom ? format(itemFoundFrom, "dd/MM/yyyy") : null,
-      found_to: itemFoundTo ? format(itemFoundTo, "dd/MM/yyyy") : null,
-      returned_from: itemReturnedFrom
-        ? format(itemReturnedFrom, "dd/MM/yyyy")
-        : null,
-      returned_to: itemReturnedTo ? format(itemReturnedTo, "dd/MM/yyyy") : null,
+      found_from: itemFoundFrom ? format(itemFoundFrom, "yyyy-MM-dd") : null,
+      found_to: itemFoundTo ? format(itemFoundTo, "yyyy-MM-dd") : null,
+      returned_from: itemReturnedFrom ? format(itemReturnedFrom, "yyyy-MM-dd") : null,
+      returned_to: itemReturnedTo ? format(itemReturnedTo, "yyyy-MM-dd") : null,
     };
 
-    setAppliedFilters(filters); // ✅ Only update on click
-    console.log(filters, "✅ Submitted Filters");
+    setAppliedFilters(applied);
     setShowFilters(false);
+
+    if (onApplyFilters) {
+      onApplyFilters(applied);
+    }
   };
 
-  const removeFilter = (filter) => {
-    if (filter === "status") {
-      setItemStatus(null);
-      setAppliedFilters((prev) => ({ ...prev, status: null }));
-    } else if (filter === "category") {
-      setItemCategory(null);
-      setAppliedFilters((prev) => ({ ...prev, category: null }));
-    } else if (filter === "location") {
-      setItemLocation(null);
-      setAppliedFilters((prev) => ({ ...prev, location: null }));
-    } else if (filter === "floor") {
-      setItemFloor(null);
-      setAppliedFilters((prev) => ({ ...prev, floor: null }));
-    } else if (filter === "found_from") {
-      setItemFoundFrom(null);
-      setAppliedFilters((prev) => ({ ...prev, found_from: null }));
-    } else if (filter === "found_to") {
-      setItemFoundTo(null);
-      setAppliedFilters((prev) => ({ ...prev, found_to: null }));
-    } else if (filter === "returned_from") {
-      setItemReturnedFrom(null);
-      setAppliedFilters((prev) => ({ ...prev, returned_from: null }));
-    } else if (filter === "returned_to") {
-      setItemReturnedTo(null);
-      setAppliedFilters((prev) => ({ ...prev, returned_to: null }));
+  const removeFilter = (filterKey) => {
+    // ✅ Fixed: Correct setter map without .value
+    const setterMap = {
+      status: setItemStatus,
+      category: setItemCategory,
+      found_at_location: setItemLocation,
+      floor: setItemFloor,
+      found_from: setItemFoundFrom,
+      found_to: setItemFoundTo,
+      returned_from: setItemReturnedFrom,
+      returned_to: setItemReturnedTo,
+    };
+
+    // ✅ Clear value in child state
+    setterMap[filterKey]?.(null);
+
+    // ✅ Update applied filters state
+    const updatedFilters = { ...appliedFilters, [filterKey]: null };
+    setAppliedFilters(updatedFilters);
+
+    // ✅ Tell parent to refetch without this filter
+    if (onRemoveFilter) {
+      const remaining = Object.fromEntries(
+        Object.entries(updatedFilters).filter(([_, v]) => v !== null && v !== undefined)
+      );
+      onRemoveFilter(remaining);
     }
   };
 
   // Reset dates whenever the itemStatus changes
   useEffect(() => {
-    // Reset all dates when the status changes
     setItemFoundFrom(null);
     setItemFoundTo(null);
     setItemReturnedFrom(null);
@@ -216,8 +216,7 @@ export default function LostFoundPanel({
                 />
               </div>
 
-              {itemStatus?.value === "Available" ||
-              itemStatus?.value === "Claimed Pending" ? (
+              {itemStatus?.value === "AVAILABLE" && (
                 <>
                   {/* Found From Date */}
                   <div>
@@ -253,10 +252,9 @@ export default function LostFoundPanel({
                     </div>
                   </div>
                 </>
-              ) : null}
+              )}
 
-              {itemStatus?.value === "Returned" ||
-              itemStatus?.value === "Claimed Pending" ? (
+              {itemStatus?.value === "RETURNED" && (
                 <>
                   {/* Returned From Date */}
                   <div>
@@ -292,10 +290,10 @@ export default function LostFoundPanel({
                     </div>
                   </div>
                 </>
-              ) : null}
+              )}
             </div>
 
-            {/* Reset */}
+            {/* Apply Button */}
             <div className="flex justify-between pt-3">
               <button
                 onClick={handleSubmitFilters}
@@ -307,29 +305,41 @@ export default function LostFoundPanel({
           </div>
         </div>
       )}
-      {Object.keys(appliedFilters).length > 0 && (
-        <div
-          className={`gap-2 mt-4 ${
-            Object.keys(appliedFilters).some((key) => appliedFilters[key])
-              ? "flex"
-              : "hidden"
-          }`}
-        >
-          {Object.entries(appliedFilters).map(
-            ([key, value]) =>
-              value && (
-                <div
-                  key={key}
-                  className="flex items-center justify-between gap-1 border rounded-full bg-[#EEEEEE] min-h-[30px] px-3 text-sm"
-                >
-                  <span>{value.label || value}</span>
-                  <IoClose
-                    onClick={() => removeFilter(key)}
-                    className="cursor-pointer text-xl"
-                  />
-                </div>
-              )
-          )}
+      
+      {/* Applied Filters Display */}
+      {Object.values(appliedFilters).some((value) => value) && (
+        <div className="flex gap-2 mt-4 flex-wrap">
+          {Object.entries(appliedFilters).map(([key, value]) => {
+            if (!value) return null;
+            
+            // Format display label
+            let displayLabel = value;
+            if (key === 'status' || key === 'category' || key === 'found_at_location' || key === 'floor') {
+              const stateMap = {
+                status: itemStatus,
+                category: itemCategory,
+                found_at_location: itemLocation,
+                floor: itemFloor,
+              };
+              displayLabel = stateMap[key]?.label || value;
+            } else if (key.includes('from') || key.includes('to')) {
+              // Display dates in readable format
+              displayLabel = value;
+            }
+            
+            return (
+              <div
+                key={key}
+                className="flex items-center justify-between gap-1 border rounded-full bg-[#EEEEEE] min-h-[30px] px-3 text-sm"
+              >
+                <span>{displayLabel}</span>
+                <IoClose
+                  onClick={() => removeFilter(key)}
+                  className="cursor-pointer text-xl"
+                />
+              </div>
+            );
+          })}
         </div>
       )}
     </div>

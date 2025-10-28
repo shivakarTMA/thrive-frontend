@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+// Import required libraries and components
+import React, { useEffect, useRef, useState } from "react";
 import { IoCloseCircle } from "react-icons/io5";
 import { FaListUl, FaHashtag } from "react-icons/fa";
 import { LuCalendar } from "react-icons/lu";
@@ -6,33 +7,167 @@ import { FiImage } from "react-icons/fi";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { RiMedalLine } from "react-icons/ri";
+import { useFormik } from "formik";
+import * as Yup from "yup";
+import { toast } from "react-toastify";
+import { apiAxios } from "../../config/config";
+import { FaListCheck } from "react-icons/fa6";
+import Select from "react-select";
+import { customStyles } from "../../Helper/helper";
 
+// Define the ChallengeForm component
+const ChallengeForm = ({ setShowModal, editingOption, onChallengeCreated }) => {
+  const leadBoxRef = useRef();
+  const formik = useFormik({
+    initialValues: {
+      title: "",
+      caption: "",
+      description: "",
+      image: "",
+      goal: "",
+      start_date: "",
+      end_date: "",
+      condition: "",
+      reward_first: "",
+      reward_second: "",
+      reward_third: "",
+      about_challenge: "",
+      position: "",
+      status: "UPCOMING",
+      join_in_between: null,
+    },
 
-const ChallengeForm = ({
-  setShowModal,
-  editingOption,
-  formik,
-  handleOverlayClick,
-  leadBoxRef,
-}) => {
-  const [rewards, setRewards] = useState([
-    { place: "First Prize", coins: "" },
-    { place: "Second Prize", coins: "" },
-    { place: "Third Prize", coins: "" },
-  ]);
+    // Define validation schema using Yup
+    validationSchema: Yup.object({
+      // image: Yup.mixed().required("Image is required"),
+      title: Yup.string().required("Challenge title is required"),
+      caption: Yup.string().required("Caption is required"),
+      description: Yup.string().required("Description is required"),
+      goal: Yup.string().required("Goal is required"),
+      start_date: Yup.date().required("Start date is required"),
+      end_date: Yup.date()
+        .min(Yup.ref("start_date"), "End date cannot be before start date")
+        .required("End date is required"),
+      condition: Yup.string().required("Condition is required"),
+      reward_first: Yup.number()
+        .typeError("Must be a number")
+        .positive("Must be positive")
+        .required("First reward is required"),
+      reward_second: Yup.number()
+        .typeError("Must be a number")
+        .positive("Must be positive")
+        .required("Second reward is required"),
+      reward_third: Yup.number()
+        .typeError("Must be a number")
+        .positive("Must be positive")
+        .required("Third reward is required"),
+      about_challenge: Yup.string().required("About challenge is required"),
+      position: Yup.string().required("Position is required"),
+    }),
 
-  const handleRewardChange = (index, value) => {
-    const updated = [...rewards];
-    updated[index].coins = value;
-    setRewards(updated);
-    formik.setFieldValue("rewards", updated); // keep in Formik values
-  };
+    // Handle form submission
+    onSubmit: async (values, { resetForm }) => {
+      try {
+        const formData = new FormData();
 
+        // ✅ Convert dates to YYYY-MM-DD format
+        const startDate = values.start_date
+          ? new Date(values.start_date).toISOString().split("T")[0]
+          : "";
+        const endDate = values.end_date
+          ? new Date(values.end_date).toISOString().split("T")[0]
+          : "";
+
+        // ✅ Append all fields safely
+        Object.keys(values).forEach((key) => {
+          if (key === "image") {
+            // append only if it's a File object
+            if (values.image instanceof File) {
+              formData.append("image", values.image);
+            }
+          } else if (key === "join_in_between") {
+            // boolean -> string for backend
+            formData.append(
+              "join_in_between",
+              values.join_in_between ? "true" : "false"
+            );
+          } else if (key === "start_date") {
+            formData.append("start_date", startDate);
+          } else if (key === "end_date") {
+            formData.append("end_date", endDate);
+          } else {
+            formData.append(key, values[key]);
+          }
+        });
+
+        // ✅ Send to API
+        if (editingOption) {
+          await apiAxios().put(`/challenge/${editingOption}`, formData, {
+            headers: { "Content-Type": "multipart/form-data" },
+          });
+          toast.success("Challenge updated successfully!");
+        } else {
+          await apiAxios().post("/challenge/create", formData, {
+            headers: { "Content-Type": "multipart/form-data" },
+          });
+          toast.success("Challenge created successfully!");
+        }
+
+        resetForm();
+        if (onChallengeCreated) {
+          await onChallengeCreated();
+        }
+        setShowModal(false);
+      } catch (error) {
+        toast.error("Something went wrong. Please try again.");
+        console.error("Error submitting form:", error.response || error);
+      }
+    },
+  });
+
+    // Fetch exercise by ID when editingExercise changes
   useEffect(() => {
-    if (formik.values.rewards && formik.values.rewards.length > 0) {
-      setRewards(formik.values.rewards);
+    const fetchChallengeById = async () => {
+      if (editingOption) {
+        try {
+          const response = await apiAxios().get(`/challenge/${editingOption}`);
+          const exerciseData = response.data?.data || response.data || null;;
+
+          // Set form values from fetched data
+          formik.setValues({
+            title: exerciseData?.title,
+            caption: exerciseData?.caption,
+            description: exerciseData?.description,
+            image: exerciseData?.image,
+            goal: exerciseData?.goal,
+            start_date: exerciseData?.start_date,
+            end_date: exerciseData?.end_date,
+            condition: exerciseData?.condition,
+            reward_first: exerciseData?.reward_first,
+            reward_second: exerciseData?.reward_second,
+            reward_third: exerciseData?.reward_third,
+            about_challenge: exerciseData?.about_challenge,
+            position: exerciseData?.position,
+            status: exerciseData?.status || "UPCOMING",
+            join_in_between: exerciseData?.join_in_between || null,
+
+
+          });
+        } catch (error) {
+          toast.error("Failed to fetch exercise data.");
+          console.error("Error fetching exercise:", error);
+        }
+      }
+    };
+
+    fetchChallengeById();
+  }, [editingOption]);
+
+  const handleOverlayClick = (e) => {
+    if (leadBoxRef.current && !leadBoxRef.current.contains(e.target)) {
+      setShowModal(false);
     }
-  }, [formik.values.rewards]);
+  };
 
   return (
     <div
@@ -44,6 +179,7 @@ const ChallengeForm = ({
         ref={leadBoxRef}
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Header Section */}
         <div className="bg-white rounded-t-[10px] flex gap-3 items-center justify-between py-4 px-4 border-b">
           <h2 className="text-xl font-semibold">
             {editingOption ? "Edit Challenge" : "Create Challenge"}
@@ -57,12 +193,13 @@ const ChallengeForm = ({
           />
         </div>
 
+        {/* Form Section */}
         <div className="flex-1">
           <form onSubmit={formik.handleSubmit} className="p-0 space-y-0">
             <div className="flex bg-white rounded-b-[10px]">
               <div className="p-6 flex-1">
                 <div className="grid grid-cols-3 gap-4">
-                  {/* Image */}
+                  {/* Image Upload Field */}
                   <div>
                     <label className="mb-2 block">
                       Image<span className="text-red-500">*</span>
@@ -74,6 +211,7 @@ const ChallengeForm = ({
                       <input
                         type="file"
                         name="image"
+                        accept="image/*"
                         onChange={(e) =>
                           formik.setFieldValue(
                             "image",
@@ -90,80 +228,70 @@ const ChallengeForm = ({
                     )}
                   </div>
 
-                  {/* Name */}
+                  {/* Title Field */}
                   <div>
                     <label className="mb-2 block">
-                      Challenge Name<span className="text-red-500">*</span>
+                      Title<span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
-                      <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
-                        <FaListUl />
-                      </span>
+                      <FaListUl className="absolute top-[50%] translate-y-[-50%] left-[15px]" />
                       <input
-                        type="text"
-                        name="name"
-                        value={formik.values.name}
+                        name="title"
+                        value={formik.values.title}
                         onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
                         className="custom--input w-full input--icon"
                       />
                     </div>
-                    {formik.touched.name && formik.errors.name && (
+                    {formik.touched.title && formik.errors.title && (
                       <p className="text-red-500 text-sm">
-                        {formik.errors.name}
+                        {formik.errors.title}
                       </p>
                     )}
                   </div>
 
-                  {/* Goal */}
+                  {/* Caption Field */}
                   <div>
                     <label className="mb-2 block">
-                      Goal Title<span className="text-red-500">*</span>
+                      Caption<span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
-                      <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
-                        <FaListUl />
-                      </span>
+                      <FaListUl className="absolute top-[50%] translate-y-[-50%] left-[15px]" />
                       <input
-                        type="text"
-                        name="goalTitle"
-                        value={formik.values.goalTitle}
+                        name="caption"
+                        value={formik.values.caption}
                         onChange={formik.handleChange}
                         className="custom--input w-full input--icon"
                       />
                     </div>
-                    {formik.touched.goalTitle && formik.errors.goalTitle && (
+                    {formik.touched.caption && formik.errors.caption && (
                       <p className="text-red-500 text-sm">
-                        {formik.errors.goalTitle}
+                        {formik.errors.caption}
                       </p>
                     )}
                   </div>
 
+                  {/* Goal Field */}
                   <div>
                     <label className="mb-2 block">
-                      Goal Description<span className="text-red-500">*</span>
+                      Goal<span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
-                      <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
-                        <FaListUl />
-                      </span>
+                      <FaListUl className="absolute top-[50%] translate-y-[-50%] left-[15px]" />
                       <input
-                        name="goalDescription"
-                        value={formik.values.goalDescription}
+                        name="goal"
+                        value={formik.values.goal}
                         onChange={formik.handleChange}
                         className="custom--input w-full input--icon"
                       />
                     </div>
-                    {formik.touched.goalDescription &&
-                      formik.errors.goalDescription && (
-                        <p className="text-red-500 text-sm">
-                          {formik.errors.goalDescription}
-                        </p>
-                      )}
+                    {formik.touched.goal && formik.errors.goal && (
+                      <p className="text-red-500 text-sm">
+                        {formik.errors.goal}
+                      </p>
+                    )}
                   </div>
 
-                  {/* Duration */}
-
+                  {/* Start Date Field */}
                   <div>
                     <label className="mb-2 block">
                       Start Date<span className="text-red-500">*</span>
@@ -174,33 +302,29 @@ const ChallengeForm = ({
                       </span>
                       <DatePicker
                         selected={
-                          formik.values.durationStart
-                            ? new Date(formik.values.durationStart)
+                          formik.values.start_date
+                            ? new Date(formik.values.start_date)
                             : null
                         }
                         onChange={(date) =>
                           formik.setFieldValue(
-                            "durationStart",
+                            "start_date",
                             date ? date.toISOString() : ""
                           )
                         }
-                        onBlur={() =>
-                          formik.setFieldTouched("durationStart", true)
-                        }
-                        className="input--icon"
                         dateFormat="yyyy-MM-dd"
                         minDate={new Date()}
+                        className="input--icon"
                       />
                     </div>
-                    {formik.touched.durationStart &&
-                      formik.errors.durationStart && (
-                        <p className="text-red-500 text-sm">
-                          {formik.errors.durationStart}
-                        </p>
-                      )}
+                    {formik.touched.start_date && formik.errors.start_date && (
+                      <p className="text-red-500 text-sm">
+                        {formik.errors.start_date}
+                      </p>
+                    )}
                   </div>
 
-                  {/* End Date */}
+                  {/* End Date Field */}
                   <div>
                     <label className="mb-2 block">
                       End Date<span className="text-red-500">*</span>
@@ -211,174 +335,182 @@ const ChallengeForm = ({
                       </span>
                       <DatePicker
                         selected={
-                          formik.values.durationEnd
-                            ? new Date(formik.values.durationEnd)
+                          formik.values.end_date
+                            ? new Date(formik.values.end_date)
                             : null
                         }
                         onChange={(date) =>
                           formik.setFieldValue(
-                            "durationEnd",
+                            "end_date",
                             date ? date.toISOString() : ""
                           )
                         }
-                        onBlur={() =>
-                          formik.setFieldTouched("durationEnd", true)
-                        }
-                        className="input--icon"
                         dateFormat="yyyy-MM-dd"
                         minDate={
-                          formik.values.durationStart
-                            ? new Date(formik.values.durationStart)
+                          formik.values.start_date
+                            ? new Date(formik.values.start_date)
                             : new Date()
                         }
+                        className="input--icon"
                       />
                     </div>
-                    {formik.touched.durationEnd &&
-                      formik.errors.durationEnd && (
-                        <p className="text-red-500 text-sm">
-                          {formik.errors.durationEnd}
-                        </p>
-                      )}
+                    {formik.touched.end_date && formik.errors.end_date && (
+                      <p className="text-red-500 text-sm">
+                        {formik.errors.end_date}
+                      </p>
+                    )}
                   </div>
 
-                  {/* Rewards */}
+                  {/* Rewards Fields */}
                   <div className="col-span-3">
-                    <label className="block mb-2">
-                      Rewards<span className="text-red-500">*</span>
-                    </label>
                     <div className="grid grid-cols-3 gap-4">
-                      {rewards.map((reward, index) => (
-                        <div key={index}>
-                          <div>
-                          <div className="relative">
-                            <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
-                              <RiMedalLine />
-                            </span>
-                            <input
-                              type="number"
-                              value={reward.coins}
-                              onChange={(e) =>
-                                handleRewardChange(index, e.target.value)
-                              }
-                              onBlur={() =>
-                                formik.setFieldTouched(
-                                  `rewards.${index}.coins`,
-                                  true
-                                )
-                              }
-                              // placeholder={`${reward.place} Coins`}
-                              className="custom--input w-full input--icon"
-                            />
-                          </div>
-                            <span className="text-sm text-gray-500">
-                              {reward.place}
-                            </span>
-                          </div>
-                          {formik.touched.rewards &&
-                            formik.touched.rewards[index] &&
-                            formik.touched.rewards[index].coins &&
-                            formik.errors.rewards &&
-                            formik.errors.rewards[index] &&
-                            formik.errors.rewards[index].coins && (
-                              <p className="text-red-500 text-sm">
-                                {formik.errors.rewards[index].coins}
-                              </p>
-                            )}
+                      <div>
+                        <label>First Prize Coins *</label>
+                        <div className="relative">
+                          <RiMedalLine className="absolute top-[50%] translate-y-[-50%] left-[15px]" />
+                          <input
+                            type="number"
+                            name="reward_first"
+                            value={formik.values.reward_first}
+                            onChange={formik.handleChange}
+                            onBlur={formik.handleBlur}
+                            className="custom--input w-full input--icon"
+                          />
                         </div>
-                      ))}
+                        {formik.touched.reward_first &&
+                          formik.errors.reward_first && (
+                            <p className="text-red-500 text-sm">
+                              {formik.errors.reward_first}
+                            </p>
+                          )}
+                      </div>
+
+                      <div>
+                        <label>
+                          Second Prize Coins
+                          <span className="text-red-500">*</span>
+                        </label>
+                        <div className="relative">
+                          <RiMedalLine className="absolute top-[50%] translate-y-[-50%] left-[15px]" />
+                          <input
+                            type="number"
+                            name="reward_second"
+                            value={formik.values.reward_second}
+                            onChange={formik.handleChange}
+                            onBlur={formik.handleBlur}
+                            className="custom--input w-full input--icon"
+                          />
+                        </div>
+                        {formik.touched.reward_second &&
+                          formik.errors.reward_second && (
+                            <p className="text-red-500 text-sm">
+                              {formik.errors.reward_second}
+                            </p>
+                          )}
+                      </div>
+
+                      <div>
+                        <label>
+                          Third Prize Coins
+                          <span className="text-red-500">*</span>
+                        </label>
+                        <div className="relative">
+                          <RiMedalLine className="absolute top-[50%] translate-y-[-50%] left-[15px]" />
+                          <input
+                            type="number"
+                            name="reward_third"
+                            value={formik.values.reward_third}
+                            onChange={formik.handleChange}
+                            onBlur={formik.handleBlur}
+                            className="custom--input w-full input--icon"
+                          />
+                        </div>
+                        {formik.touched.reward_third &&
+                          formik.errors.reward_third && (
+                            <p className="text-red-500 text-sm">
+                              {formik.errors.reward_third}
+                            </p>
+                          )}
+                      </div>
                     </div>
                   </div>
 
-                  {/* Participants */}
+                  {/* Condition Field */}
                   <div>
                     <label className="mb-2 block">
-                      Total Participants <span className="text-red-500">*</span>
+                      Condition<span className="text-red-500">*</span>
                     </label>
-                     <div className="relative">
-                            <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
-                              <FaHashtag />
-                            </span>
-                    <input
-                      type="number"
-                      name="totalParticipants"
-                      value={formik.values.totalParticipants}
-                      onChange={formik.handleChange}
-                      className="custom--input w-full input--icon"
-                    />
+                    <div className="relative">
+                      <FaListUl className="absolute top-[50%] translate-y-[-50%] left-[15px]" />
+                      <input
+                        name="condition"
+                        value={formik.values.condition}
+                        onChange={formik.handleChange}
+                        className="custom--input w-full input--icon"
+                      />
                     </div>
-                    {formik.touched.totalParticipants &&
-                      formik.errors.totalParticipants && (
-                        <p className="text-red-500 text-sm">
-                          {formik.errors.totalParticipants}
-                        </p>
-                      )}
+                    {formik.touched.condition && formik.errors.condition && (
+                      <p className="text-red-500 text-sm">
+                        {formik.errors.condition}
+                      </p>
+                    )}
                   </div>
 
-                  {/* Challenge Condition */}
+                  {/* Position */}
+                  <div>
+                    <label className="mb-2 block">Position</label>
+                    <div className="relative">
+                      <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
+                        <FaListCheck />
+                      </span>
+
+                      <input
+                        type="number"
+                        name="position"
+                        className="custom--input w-full input--icon"
+                        value={formik.values.position}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                      />
+                    </div>
+                  </div>
+
                   <div>
                     <label className="mb-2 block">
-                      Challenge Condition<span className="text-red-500">*</span>
+                      Join In Between<span className="text-red-500">*</span>
                     </label>
-                     <div className="relative">
-                            <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
-                              <FaListUl />
-                            </span>
-                    <input
-                      name="challengeCondition"
-                      value={formik.values.challengeCondition}
-                      onChange={formik.handleChange}
-                      className="custom--input w-full input--icon"
+                    <Select
+                      name="join_in_between"
+                      value={
+                        formik.values.join_in_between
+                          ? { value: true, label: "Yes" }
+                          : { value: false, label: "No" }
+                      }
+                      onChange={(option) =>
+                        formik.setFieldValue("join_in_between", option.value)
+                      }
+                      options={[
+                        { value: true, label: "Yes" },
+                        { value: false, label: "No" },
+                      ]}
+                      classNamePrefix="custom--select"
+                      styles={customStyles}
                     />
-                    </div>
-                    {formik.touched.challengeCondition &&
-                      formik.errors.challengeCondition && (
-                        <p className="text-red-500 text-sm">
-                          {formik.errors.challengeCondition}
-                        </p>
-                      )}
                   </div>
 
-                  {/* Short Description */}
-                  <div>
-                    <label className="mb-2 block">
-                      Short Description<span className="text-red-500">*</span>
-                    </label>
-                      <div className="relative">
-                            <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
-                              <FaListUl />
-                            </span>
-                    <input
-                      name="shortDescription"
-                      value={formik.values.shortDescription}
-                      onChange={formik.handleChange}
-                      onBlur={formik.handleBlur}
-                      className="custom--input w-full input--icon"
-                    />
-                    </div>
-                    {formik.touched.shortDescription &&
-                      formik.errors.shortDescription && (
-                        <p className="text-red-500 text-sm">
-                          {formik.errors.shortDescription}
-                        </p>
-                      )}
-                  </div>
-
-                  {/* Description */}
-                  <div>
+                  {/* description Field */}
+                  <div className="col-span-3">
                     <label className="mb-2 block">
                       Description<span className="text-red-500">*</span>
                     </label>
-                        <div className="relative">
-                            <span className="absolute top-[15px] left-[15px] z-[1]">
-                              <FaListUl />
-                            </span>
-                    <textarea
-                      name="description"
-                      value={formik.values.description}
-                      onChange={formik.handleChange}
-                      onBlur={formik.handleBlur}
-                      className="custom--input w-full input--icon"
-                    />
+                    <div className="relative">
+                      <FaListUl className="absolute top-[15px] left-[15px]" />
+                      <textarea
+                        name="description"
+                        value={formik.values.description}
+                        onChange={formik.handleChange}
+                        className="custom--input w-full input--icon"
+                      />
                     </div>
                     {formik.touched.description &&
                       formik.errors.description && (
@@ -387,27 +519,24 @@ const ChallengeForm = ({
                         </p>
                       )}
                   </div>
-
-                  {/* About Challenge */}
-                  <div className="col-span-2">
+                  {/* About Challenge Field */}
+                  <div className="col-span-3">
                     <label className="mb-2 block">
-                      About the Challenge<span className="text-red-500">*</span>
+                      About Challenge<span className="text-red-500">*</span>
                     </label>
-                      <div className="relative">
-                            <span className="absolute top-[15px] left-[15px] z-[1]">
-                              <FaListUl />
-                            </span>
-                    <textarea
-                      name="aboutChallenge"
-                      value={formik.values.aboutChallenge}
-                      onChange={formik.handleChange}
-                      className="custom--input w-full input--icon"
-                    />
+                    <div className="relative">
+                      <FaListUl className="absolute top-[15px] left-[15px]" />
+                      <textarea
+                        name="about_challenge"
+                        value={formik.values.about_challenge}
+                        onChange={formik.handleChange}
+                        className="custom--input w-full input--icon"
+                      />
                     </div>
-                    {formik.touched.aboutChallenge &&
-                      formik.errors.aboutChallenge && (
+                    {formik.touched.about_challenge &&
+                      formik.errors.about_challenge && (
                         <p className="text-red-500 text-sm">
-                          {formik.errors.aboutChallenge}
+                          {formik.errors.about_challenge}
                         </p>
                       )}
                   </div>
@@ -415,7 +544,7 @@ const ChallengeForm = ({
               </div>
             </div>
 
-            {/* Buttons */}
+            {/* Action Buttons */}
             <div className="flex gap-4 py-5 justify-end">
               <button
                 type="button"
@@ -441,4 +570,5 @@ const ChallengeForm = ({
   );
 };
 
+// Export the ChallengeForm component
 export default ChallengeForm;

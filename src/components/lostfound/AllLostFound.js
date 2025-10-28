@@ -9,12 +9,14 @@ import MarkReturnedModal from "./MarkReturnedModal";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { addYears, format, subYears } from "date-fns";
-import { customStyles } from "../../Helper/helper";
+import { customStyles, formatAutoDate } from "../../Helper/helper";
 import viewIcon from "../../assets/images/icons/eye.svg";
 import returnIcon from "../../assets/images/icons/return.svg";
 import { FaCalendarDays } from "react-icons/fa6";
 import LostFoundPanel from "../FilterPanel/LostFoundPanel";
-
+import { authAxios } from "../../config/config";
+import { toast } from "react-toastify";
+import Pagination from "../common/Pagination";
 
 const dateFilterOptions = [
   { value: "today", label: "Today" },
@@ -24,7 +26,7 @@ const dateFilterOptions = [
 ];
 
 const AllLostFound = () => {
-  const [data, setData] = useState(initialData);
+  const [data, setData] = useState([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [returnedModalOpen, setReturnedModalOpen] = useState(false);
   const [markReturnedData, setMarkReturnedData] = useState([]);
@@ -32,6 +34,11 @@ const AllLostFound = () => {
   const [dateFilter, setDateFilter] = useState(dateFilterOptions[1]);
   const [customFrom, setCustomFrom] = useState(null);
   const [customTo, setCustomTo] = useState(null);
+
+  const [page, setPage] = useState(1);
+  const [rowsPerPage] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
 
   const [itemStatus, setItemStatus] = useState(null);
   const [itemCategory, setItemCategory] = useState(null);
@@ -42,6 +49,103 @@ const AllLostFound = () => {
   const [itemReturnedFrom, setItemReturnedFrom] = useState(null);
   const [itemReturnedTo, setItemReturnedTo] = useState(null);
 
+  // ✅ Build complete filter params including date filter
+  const buildFinalFilters = (filters = {}) => {
+    const finalFilters = { ...filters };
+
+    // Add date filter logic (from top dropdown)
+    if (dateFilter?.value && dateFilter.value !== "custom") {
+      finalFilters.dateFilter = dateFilter.value;
+    } else if (dateFilter?.value === "custom" && customFrom && customTo) {
+      finalFilters.startDate = customFrom.toISOString().split("T")[0];
+      finalFilters.endDate = customTo.toISOString().split("T")[0];
+    }
+
+    return finalFilters;
+  };
+
+  const fetchLostFoundList = async (currentPage = page, filters = {}) => {
+    try {
+      // ✅ Always include date filter in params
+      const params = {
+        page: currentPage,
+        limit: rowsPerPage,
+        ...buildFinalFilters(filters),
+      };
+
+      const res = await authAxios().get("/lost/found/list", { params });
+
+      const responseData = res.data;
+      const data = responseData?.data || [];
+
+      setData(data);
+      setPage(responseData?.currentPage || 1);
+      setTotalPages(responseData?.totalPage || 1);
+      setTotalCount(responseData?.totalCount || data.length);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to fetch Data");
+    }
+  };
+
+  // ✅ Helper function to get current filters
+  const getCurrentFilters = () => {
+    const currentFilters = {
+      status: itemStatus?.value,
+      category: itemCategory?.value,
+      found_at_location: itemLocation?.value,
+      floor: itemFloor?.value,
+      found_from: itemFoundFrom ? format(itemFoundFrom, "yyyy-MM-dd") : null,
+      found_to: itemFoundTo ? format(itemFoundTo, "yyyy-MM-dd") : null,
+      returned_from: itemReturnedFrom
+        ? format(itemReturnedFrom, "yyyy-MM-dd")
+        : null,
+      returned_to: itemReturnedTo ? format(itemReturnedTo, "yyyy-MM-dd") : null,
+    };
+
+    // Filter out null/undefined values
+    return Object.fromEntries(
+      Object.entries(currentFilters).filter(
+        ([_, v]) => v !== null && v !== undefined
+      )
+    );
+  };
+
+  // ✅ Fetch data when date filter or page changes
+  useEffect(() => {
+    const cleanFilters = getCurrentFilters();
+    fetchLostFoundList(page, cleanFilters);
+  }, [dateFilter, customFrom, customTo, page]);
+
+  // ✅ Function to refresh data with current filters
+  const refreshData = () => {
+    const cleanFilters = getCurrentFilters();
+    fetchLostFoundList(page, cleanFilters);
+  };
+
+  // ✅ Apply filters from LostFoundPanel
+  const handleApplyFilters = (filters) => {
+    setPage(1); // Reset to first page
+    fetchLostFoundList(1, filters);
+  };
+
+  // ✅ Remove filter from LostFoundPanel
+  const handleRemoveFilter = (remainingFilters) => {
+    // Reset local state for removed filters
+    if (!remainingFilters.status) setItemStatus(null);
+    if (!remainingFilters.category) setItemCategory(null);
+    if (!remainingFilters.found_at_location) setItemLocation(null);
+    if (!remainingFilters.floor) setItemFloor(null);
+    if (!remainingFilters.found_from) setItemFoundFrom(null);
+    if (!remainingFilters.found_to) setItemFoundTo(null);
+    if (!remainingFilters.returned_from) setItemReturnedFrom(null);
+    if (!remainingFilters.returned_to) setItemReturnedTo(null);
+
+    // ✅ Reset to first page and fetch with remaining filters
+    setPage(1);
+    fetchLostFoundList(1, remainingFilters);
+  };
+
   return (
     <div className="page--content">
       <div className="flex items-end justify-between gap-2 mb-5">
@@ -50,6 +154,8 @@ const AllLostFound = () => {
           <h1 className="text-3xl font-semibold">Lost &amp; Found</h1>
         </div>
       </div>
+
+      {/* Date Filter Dropdown */}
       <div className="flex gap-2 w-full mb-4">
         <div className="max-w-[180px] w-full">
           <Select
@@ -62,8 +168,8 @@ const AllLostFound = () => {
                 setCustomFrom(null);
                 setCustomTo(null);
               }
+              setPage(1); // Reset to first page
             }}
-            // isClearable
             styles={customStyles}
             className="w-full"
           />
@@ -77,7 +183,10 @@ const AllLostFound = () => {
               </span>
               <DatePicker
                 selected={customFrom}
-                onChange={(date) => setCustomFrom(date)}
+                onChange={(date) => {
+                  setCustomFrom(date);
+                  setPage(1);
+                }}
                 placeholderText="From Date"
                 className="custom--input w-full input--icon"
                 minDate={subYears(new Date(), 20)}
@@ -94,7 +203,10 @@ const AllLostFound = () => {
               </span>
               <DatePicker
                 selected={customTo}
-                onChange={(date) => setCustomTo(date)}
+                onChange={(date) => {
+                  setCustomTo(date);
+                  setPage(1);
+                }}
                 placeholderText="To Date"
                 className="custom--input w-full input--icon"
                 minDate={subYears(new Date(), 20)}
@@ -129,6 +241,8 @@ const AllLostFound = () => {
               setItemReturnedFrom={setItemReturnedFrom}
               itemReturnedTo={itemReturnedTo}
               setItemReturnedTo={setItemReturnedTo}
+              onApplyFilters={handleApplyFilters}
+              onRemoveFilter={handleRemoveFilter}
             />
           </div>
           <div>
@@ -162,19 +276,18 @@ const AllLostFound = () => {
                     key={row.id}
                     className="bg-white border-b hover:bg-gray-50 border-gray-200"
                   >
-                    <td className="px-2 py-4">{row?.itemName}</td>
+                    <td className="px-2 py-4">{row?.item_name}</td>
                     <td className="px-2 py-4">{row?.category}</td>
-                    <td className="px-2 py-4">{row?.foundAt}</td>
+                    <td className="px-2 py-4">{row?.found_at_location}</td>
                     <td className="px-2 py-4">
-                      {/* {row?.dateTime} */}
-                      {format(new Date(row?.dateTime), 'dd/MM/yyyy hh:mm a')}
-                      </td>
+                      {formatAutoDate(row?.found_date_time)}
+                    </td>
                     <td className="px-2 py-4">
                       <span
                         className={`
                             flex items-center justify-between gap-1 rounded-full min-h-[30px] px-3 text-sm w-fit
                           ${
-                            row?.status === "Available"
+                            row?.status === "AVAILABLE"
                               ? "bg-[#FFE7E7] text-[#C80000]"
                               : "bg-[#E8FFE6] text-[#138808]"
                           }
@@ -184,7 +297,9 @@ const AllLostFound = () => {
                         {row?.status == null ? "--" : row?.status}
                       </span>
                     </td>
-                    <td className="px-2 py-4">{row.loggedBy}</td>
+                    <td className="px-2 py-4">
+                      {row?.returned_by == null ? "--" : row?.returned_by}
+                    </td>
                     <td className="px-2 py-4">
                       <div className="flex">
                         <div className="bg-[#F1F1F1] border border-[#D4D4D4] rounded-l-[5px] w-[32px] h-[32px] flex items-center justify-center cursor-pointer">
@@ -192,7 +307,7 @@ const AllLostFound = () => {
                         </div>
                         <div
                           className={`bg-[#F1F1F1] border border-[#D4D4D4] rounded-r-[5px] w-[32px] h-[32px] flex items-center justify-center ${
-                            row.status !== "Available"
+                            row.status !== "AVAILABLE"
                               ? "cursor-not-allowed pointer-events-none opacity-[0.5]"
                               : "cursor-pointer"
                           } `}
@@ -210,16 +325,33 @@ const AllLostFound = () => {
               </tbody>
             </table>
           </div>
+
+          <Pagination
+            page={page}
+            totalPages={totalPages}
+            rowsPerPage={rowsPerPage}
+            totalCount={totalCount}
+            currentDataLength={data.length}
+            onPageChange={(newPage) => {
+              setPage(newPage);
+            }}
+          />
         </div>
       </div>
 
       {/* Modals */}
-      {modalOpen && <AddNewItemModal onClose={() => setModalOpen(false)} />}
+      {modalOpen && (
+        <AddNewItemModal
+        onSuccess={refreshData}
+        onClose={() => setModalOpen(false)}
+        />
+      )}
 
       {returnedModalOpen && (
         <MarkReturnedModal
-          data={markReturnedData}
+          lostID={markReturnedData}
           onClose={() => setReturnedModalOpen(false)}
+          onSuccess={refreshData}
         />
       )}
     </div>

@@ -115,7 +115,7 @@ const MemberProfile = () => {
           {activeTab === "Profile Details" && (
             <ProfileDetails member={member} />
           )}
-          {activeTab === "Kyc Submission" && <KYCSubmission member={member} />}
+          {activeTab === "Kyc Submission" && <KYCSubmission details={member} />}
           {activeTab === "Service Card" && <ServiceCard details={member} />}
           {activeTab === "Order History" && <OrderHistory details={member} />}
           {activeTab === "Payment History" && (

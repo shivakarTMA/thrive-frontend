@@ -1,35 +1,94 @@
-// Importing React and required hooks from React
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
+import { apiAxios } from "../../config/config";
+import { IoEyeOutline } from "react-icons/io5";
+import { RxUpdate } from "react-icons/rx";
+import { toast } from "react-toastify";
 
-const KYCSubmission = () => {
-  // State to store uploaded document details
+const KYCSubmission = ({ details }) => {
+  const memberId = details?.id;
+  const [errors, setErrors] = useState({});
+
   const [documents, setDocuments] = useState({
-    aadharFront: null, // Stores Aadhar Front details
-    aadharBack: null, // Stores Aadhar Back details
-    corporateId: null, // Stores Corporate ID details
+    aadharFront: null,
+    aadharBack: null,
+    corporateId: null,
   });
-
-  // State to handle document preview modal
   const [previewing, setPreviewing] = useState(null);
-
-  // State to handle drag-over effect for drop area
   const [dragOver, setDragOver] = useState("");
 
-  // Refs for each file input field
   const fileInputRefs = {
     aadharFront: useRef(null),
     aadharBack: useRef(null),
     corporateId: useRef(null),
   };
 
-  // Document type configuration with labels and accepted file types
   const documentTypes = {
     aadharFront: { label: "Aadhar Card (Front)", accept: "image/*" },
     aadharBack: { label: "Aadhar Card (Back)", accept: "image/*" },
     corporateId: { label: "Corporate ID", accept: "image/*" },
   };
 
-  // Function to handle file selection and preview generation
+  // Format file size
+  const formatFileSize = (bytes) => {
+    if (!bytes) return "";
+    const k = 1024;
+    const sizes = ["Bytes", "KB", "MB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+  };
+
+  // Fetch existing KYC data
+  useEffect(() => {
+    const fetchKycDocuments = async () => {
+      try {
+        const response = await apiAxios().get(`/kyc/document/list/${memberId}`);
+        if (response.data.status && response.data.data) {
+          const data = response.data.data;
+          const aadhar = data.find((d) => d.document_type === "ID_PROOF");
+          const corp = data.find((d) => d.document_type === "PHOTO");
+
+          setDocuments({
+            aadharFront: aadhar
+              ? {
+                  preview: aadhar.document_front_file,
+                  name: "Aadhar Front (Uploaded)",
+                  id: aadhar.id,
+                  uploaded: true,
+                  status: aadhar.status,
+                  type: "ID_PROOF",
+                }
+              : null,
+            aadharBack: aadhar
+              ? {
+                  preview: aadhar.document_back_file,
+                  name: "Aadhar Back (Uploaded)",
+                  id: aadhar.id,
+                  uploaded: true,
+                  status: aadhar.status,
+                  type: "ID_PROOF",
+                }
+              : null,
+            corporateId: corp
+              ? {
+                  preview: corp.document_front_file,
+                  name: "Corporate ID (Uploaded)",
+                  id: corp.id,
+                  uploaded: true,
+                  status: corp.status,
+                  type: "PHOTO",
+                }
+              : null,
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching KYC documents:", error);
+      }
+    };
+
+    fetchKycDocuments();
+  }, [memberId]);
+
+  // Handle file selection (just preview change)
   const handleFileSelect = (documentType, file) => {
     if (file && file.type.startsWith("image/")) {
       const reader = new FileReader();
@@ -37,10 +96,12 @@ const KYCSubmission = () => {
         setDocuments((previous) => ({
           ...previous,
           [documentType]: {
-            file: file,
-            preview: e.target.result, // Base64 preview
+            ...previous[documentType],
+            file,
+            preview: e.target.result,
             name: file.name,
             size: file.size,
+            uploaded: false, // mark as modified
           },
         }));
       };
@@ -48,7 +109,97 @@ const KYCSubmission = () => {
     }
   };
 
-  // Function to handle file drop event
+  // Handle submit for all documents
+  const handleSubmit = async () => {
+    let hasError = false;
+    const newErrors = {};
+
+    // Validate Aadhar Front
+    if (
+      !documents.aadharFront?.file &&
+      !documents.aadharFront?.document_front_file
+    ) {
+      newErrors.aadharFront = "Please upload your Aadhar Front image.";
+      hasError = true;
+    }
+
+    // Validate Aadhar Back
+    if (
+      !documents.aadharBack?.file &&
+      !documents.aadharBack?.document_back_file
+    ) {
+      newErrors.aadharBack = "Please upload your Aadhar Back image.";
+      hasError = true;
+    }
+
+    // Validate Corporate ID
+    if (
+      !documents.corporateId?.file &&
+      !documents.corporateId?.document_front_file
+    ) {
+      newErrors.corporateId = "Please upload your Corporate ID image.";
+      hasError = true;
+    }
+
+    if (hasError) {
+      setErrors(newErrors);
+      return;
+    }
+
+    // Clear previous errors before upload
+    setErrors({});
+
+    try {
+      // --- Aadhar (ID_PROOF) ---
+      if (documents.aadharFront || documents.aadharBack) {
+        const formData = new FormData();
+        formData.append("member_id", memberId);
+        formData.append("document_type", "ID_PROOF");
+        if (documents.aadharFront?.file)
+          formData.append("document_front_file", documents.aadharFront.file);
+        if (documents.aadharBack?.file)
+          formData.append("document_back_file", documents.aadharBack.file);
+
+        const id = documents.aadharFront?.id || documents.aadharBack?.id;
+        if (id) {
+          await apiAxios().put(`/kyc/document/${id}`, formData, {
+            headers: { "Content-Type": "multipart/form-data" },
+          });
+        } else {
+          await apiAxios().post(`/kyc/document/create`, formData, {
+            headers: { "Content-Type": "multipart/form-data" },
+          });
+        }
+      }
+
+      // --- Corporate ID (PHOTO) ---
+      if (documents.corporateId) {
+        const formData = new FormData();
+        formData.append("member_id", memberId);
+        formData.append("document_type", "PHOTO");
+        if (documents.corporateId?.file)
+          formData.append("document_front_file", documents.corporateId.file);
+
+        if (documents.corporateId?.id) {
+          await apiAxios().put(
+            `/kyc/document/${documents.corporateId.id}`,
+            formData,
+            { headers: { "Content-Type": "multipart/form-data" } }
+          );
+        } else {
+          await apiAxios().post(`/kyc/document/create`, formData, {
+            headers: { "Content-Type": "multipart/form-data" },
+          });
+        }
+      }
+
+      toast.success("Documents submitted successfully!");
+    } catch (error) {
+      console.error("Error uploading documents:", error);
+      toast.error("Upload failed. Check console for details.");
+    }
+  };
+
   const handleDrop = (event, documentType) => {
     event.preventDefault();
     setDragOver("");
@@ -56,68 +207,33 @@ const KYCSubmission = () => {
     handleFileSelect(documentType, file);
   };
 
-  // Function to handle drag-over effect
   const handleDragOver = (event, documentType) => {
     event.preventDefault();
     setDragOver(documentType);
   };
 
-  // Function to reset drag-over effect
-  const handleDragLeave = () => {
-    setDragOver("");
-  };
+  const handleDragLeave = () => setDragOver("");
 
-  // Function to remove a selected document
-  const removeDocument = (documentType) => {
-    setDocuments((previous) => ({
-      ...previous,
-      [documentType]: null,
-    }));
-  };
-
-  // Function to format file size into readable format
-  const formatFileSize = (bytes) => {
-    if (bytes === 0) return "0 Bytes";
-    const k = 1024;
-    const sizes = ["Bytes", "KB", "MB"];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
-  };
-
-  // Function to handle document submission
-  const handleSubmit = () => {
-    console.log("Documents to upload:", documents);
-    alert("Documents uploaded successfully! (Check console for details)");
-  };
-
-  // Check if all required documents are uploaded before enabling submit button
-  const isFormValid =
-    documents.aadharFront || documents.aadharBack || documents.corporateId;
-
-  // Function to open file dialog programmatically
   const openFileDialog = (ref) => {
-    if (ref.current) {
-      ref.current.click();
-    }
+    if (ref.current) ref.current.click();
   };
 
   return (
     <div className="bg-white p-4 rounded-[10px] w-full box--shadow">
-      {/* Document Upload Section */}
       <div className="space-y-6">
-        <div className="flex gap-3">
+        {/* Document Cards */}
+        <div className="grid grid-cols-3 gap-3">
           {Object.entries(documentTypes).map(([type, config]) => {
             const document = documents[type];
             const isDragOver = dragOver === type;
 
             return (
-              <div key={type} className="bg-gray-50 rounded-lg p-6">
-                {/* Label */}
+              <div key={type} className="bg-gray-50 rounded-lg p-6 w-full">
                 <label className="block text-lg font-semibold text-gray-700 mb-4">
                   {config.label} *
                 </label>
 
-                {/* Drop Zone or Preview */}
+                {/* Upload Box or Preview */}
                 {!document ? (
                   <div
                     className={`border-2 border-dashed rounded-lg p-2 text-center transition-colors ${
@@ -154,71 +270,96 @@ const KYCSubmission = () => {
                   </div>
                 ) : (
                   <div className="border rounded-lg p-4 bg-white">
-                    {/* Document Preview */}
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-start space-x-4">
-                        <div className="relative">
-                          <img
-                            src={document.preview}
-                            alt={config.label}
-                            className="w-20 h-20 object-cover rounded border"
-                          />
-                          <div className="absolute -top-1 -right-1 bg-green-500 rounded-full w-6 h-6 flex items-center justify-center">
-                            <span className="text-white text-xs">✓</span>
-                          </div>
+                    <div className="flex items-start space-x-4">
+                      <div className="relative w-[100px] h-[80px]">
+                        <img
+                          src={document.preview}
+                          alt={config.label}
+                          className="w-full h-full object-cover rounded border"
+                        />
+                        <div
+                          className={`absolute -top-1 -right-1 rounded-full w-6 h-6 flex items-center justify-center ${
+                            document.status === "APPROVED"
+                              ? "bg-green-500"
+                              : "bg-yellow-500"
+                          }`}
+                        >
+                          <span className="text-white text-xs">✓</span>
                         </div>
-                        <div className="flex-1">
-                          <h4 className="font-medium text-gray-900">
-                            {document.name}
-                          </h4>
+                      </div>
+                      <div className="">
+                        <h4 className="font-medium text-gray-900">
+                          {document.file
+                            ? document.file.name // show newly selected file name
+                            : document.name || "Uploaded File"}
+                        </h4>
+                        {document.size && (
                           <p className="text-sm text-gray-500">
                             {formatFileSize(document.size)}
                           </p>
-                          <div className="flex space-x-2 mt-2">
-                            <button
-                              type="button"
-                              onClick={() => setPreviewing(document)}
-                              className="inline-flex items-center px-3 py-1 text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors"
-                            >
-                              <span className="mr-1">👁️</span>
-                              View
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => removeDocument(type)}
-                              className="inline-flex items-center px-3 py-1 text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-md transition-colors"
-                            >
-                              <span className="mr-1">✕</span>
-                              Remove
-                            </button>
-                          </div>
+                        )}
+                        {/* {document.status && (
+                          <p
+                            className={`text-sm font-medium mt-1 ${
+                              document.status === "APPROVED"
+                                ? "text-green-600"
+                                : "text-yellow-600"
+                            }`}
+                          >
+                            Status: {document.status}
+                          </p>
+                        )} */}
+
+                        {/* Action Buttons */}
+                        <div className="flex space-x-2 mt-2">
+                          <button
+                            type="button"
+                            onClick={() => setPreviewing(document)}
+                            className="inline-flex items-center px-3 py-2 text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors"
+                          >
+                            <IoEyeOutline />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => fileInputRefs[type].current.click()}
+                            className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
+                          >
+                            <RxUpdate />
+                          </button>
+                          <input
+                            ref={fileInputRefs[type]}
+                            type="file"
+                            accept={config.accept}
+                            className="hidden"
+                            onChange={(e) =>
+                              handleFileSelect(type, e.target.files[0])
+                            }
+                          />
                         </div>
                       </div>
                     </div>
                   </div>
+                )}
+                {errors[type] && (
+                  <p className="text-sm text-red-500 mt-2">{errors[type]}</p>
                 )}
               </div>
             );
           })}
         </div>
 
-        {/* Submit Button */}
-        <div className="flex justify-start pt-0">
+        {/* Submit Button (Always Visible) */}
+        <div className="flex justify-start pt-4">
           <button
             onClick={handleSubmit}
-            disabled={!isFormValid}
-            className={`px-4 py-2 text-white rounded flex items-center gap-2 ${
-              isFormValid
-                ? "bg-black"
-                : "bg-gray-300 cursor-not-allowed"
-            }`}
+            className="px-4 py-2 text-white bg-black hover:bg-gray-800 rounded flex items-center gap-2"
           >
-            Upload Documents
+            Upload / Update Documents
           </button>
         </div>
       </div>
 
-      {/* Document Preview Modal */}
+      {/* Preview Modal */}
       {previewing && (
         <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg max-w-4xl max-h-[90vh] overflow-hidden">
@@ -243,7 +384,6 @@ const KYCSubmission = () => {
           </div>
         </div>
       )}
-
     </div>
   );
 };

@@ -285,13 +285,13 @@ const CreateService = ({
                   formik.resetForm();
                   setShowModal(false);
                 }}
-                className="px-4 py-2 bg-transparent border border-gray-400 text-gray-700 font-semibold rounded max-w-[150px] w-full"
+                className="px-4 py-2 bg-transparent border border-gray-400 text-white  rounded max-w-[150px] w-full"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="px-4 py-2 bg-black text-white font-semibold rounded max-w-[150px] w-full"
+                className="px-4 py-2 bg-black text-white  rounded max-w-[150px] w-full"
               >
                 {editingOption ? "Update" : "Submit"}
               </button>
