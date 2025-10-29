@@ -1,5 +1,5 @@
 // Import React
-import React from "react";
+import React, { useEffect } from "react";
 // Import close icon
 import { IoCloseCircle } from "react-icons/io5";
 // Import icons for input fields
@@ -9,6 +9,8 @@ import { LuPlug } from "react-icons/lu";
 import Select from "react-select";
 // Import custom styles for select input
 import { selectIcon } from "../../Helper/helper";
+import { toast } from "react-toastify";
+import { apiAxios } from "../../config/config";
 
 // CreateGallery component
 const CreateGallery = ({
@@ -20,11 +22,41 @@ const CreateGallery = ({
   clubOptions,
 }) => {
 
+  console.log(editingOption,'editingOption')
+
   const displayPosition = [
     { label: "Top", value: "TOP" },
     { label: "Bottom", value: "BOTTOM" },
     { label: "Both", value: "BOTH" },
   ];
+
+    useEffect(() => {
+    if (!editingOption) return;
+
+    const fetchGalleryById = async (id) => {
+      try {
+        const res = await apiAxios().get(`/club/gallery/${id}`);
+        const data = res.data?.data || res.data || null;
+
+        if (data) {
+          // ✅ Prefill formik fields with fetched data
+          formik.setValues({
+            id: data.id || "",
+            club_id: data.club_id || "",
+            title: data.title || "",
+            image: data.image || "",
+            display_position: data.display_position || "",
+            position: data.position || "",
+          });
+        }
+      } catch (err) {
+        console.error(err);
+        toast.error("Failed to fetch module details");
+      }
+    };
+
+    fetchGalleryById(editingOption);
+  }, [editingOption]);
 
   return (
     // Modal overlay

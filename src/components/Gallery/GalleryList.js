@@ -1,124 +1,131 @@
-// Import React and necessary hooks
+// Import React and hooks
 import React, { useEffect, useRef, useState } from "react";
-// Import icons and utilities
+// Import icons and external libraries
 import { FiPlus } from "react-icons/fi";
+import { LiaEdit } from "react-icons/lia";
+import { IoSearchOutline } from "react-icons/io5";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { toast } from "react-toastify";
-import Tooltip from "../common/Tooltip";
-import { LiaEdit } from "react-icons/lia";
-import { apiAxios } from "../../config/config";
-import { IoSearchOutline } from "react-icons/io5";
-import CreateGallery from "./CreateGallery";
 import Select from "react-select";
-import { customStyles } from "../../Helper/helper";
+// Import internal components and utilities
+import Tooltip from "../common/Tooltip";
 import Pagination from "../common/Pagination";
+import CreateGallery from "./CreateGallery";
+import { apiAxios } from "../../config/config";
+import { customStyles } from "../../Helper/helper";
 
+// Define display position options
 const displayPosition = [
   { label: "Top", value: "TOP" },
   { label: "Bottom", value: "BOTTOM" },
   { label: "Both", value: "BOTH" },
 ];
 
-// Main Services component
+// Define the main GalleryList component
 const GalleryList = () => {
+  // Component state management
   const [showModal, setShowModal] = useState(false);
   const [galleryList, setGalleryList] = useState([]);
   const [club, setClub] = useState([]);
   const [editingOption, setEditingOption] = useState(null);
-  const leadBoxRef = useRef(null);
   const [clubFilter, setClubFilter] = useState(null);
   const [positionFilter, setPositionFilter] = useState(null);
-
   const [page, setPage] = useState(1);
   const [rowsPerPage] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
+  const leadBoxRef = useRef(null);
 
-  // Function to fetch clubs
+  // Function to fetch club list
   const fetchClub = async (search = "") => {
     try {
-      const res = await apiAxios().get("/club/list", {
+      const response = await apiAxios().get("/club/list", {
         params: search ? { search } : {},
       });
-      let data = res.data?.data || res.data || [];
+      const data = response.data?.data || response.data || [];
       setClub(data);
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to fetch companies");
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to fetch clubs");
     }
   };
 
-  // Function to fetch services
-  const fetchGallery = async (pageNumber = 1) => {
+  // Function to fetch gallery list with filters applied
+  const fetchGallery = async (currentPage = page) => {
     try {
       const params = {
-        page: pageNumber,
+        page: currentPage,
         limit: rowsPerPage,
       };
 
-      if (clubFilter?.value) params.club_id = clubFilter.value;
-      if (positionFilter?.value) params.display_position = positionFilter.value;
+      // Add filter parameters if they exist
+      if (positionFilter?.value) {
+        params.display_position = positionFilter.value;
+      }
+      if (clubFilter?.value) {
+        params.club_id = clubFilter.value;
+      }
 
-      const res = await apiAxios().get("/club/gallery/list", { params });
+      // API request to get filtered gallery data
+      const response = await apiAxios().get("/club/gallery/list", { params });
 
-      const data = res.data?.data || res.data || [];
+      const data = response.data?.data || [];
       setGalleryList(data);
-      setTotalCount(res.data?.totalCount || data.length);
-      setTotalPages(res.data?.totalPages || 1);
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to fetch gallery");
+      setPage(response.data?.currentPage || 1);
+      setTotalPages(response.data?.totalPage || 1);
+      setTotalCount(response.data?.totalCount || data.length);
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to fetch gallery list");
     }
   };
 
-  // Handle edit service action
-  const handleEdit = (id) => {
-    const data = galleryList.find((item) => item.id === id);
+  // Function to handle edit functionality
+  // const handleEdit = (id) => {
+  //   const data = galleryList.find((item) => item.id === id);
+  //   if (data) {
+  //     setEditingOption(data);
+  //     formik.setValues({
+  //       id: data.id || "",
+  //       title: data.title || "",
+  //       image: data.image || null,
+  //       club_id: data.club_id || "",
+  //       display_position: data.display_position || "",
+  //       position: data.position || "",
+  //     });
+  //     setShowModal(true);
+  //   } else {
+  //     toast.error("Gallery not found");
+  //   }
+  // };
 
-    if (data) {
-      setEditingOption(data);
-
-      formik.setValues({
-        id: data.id || "",
-        title: data.title || "",
-        image: data.image || null,
-        club_id: data.club_id || "",
-        display_position: data.display_position || "",
-        position: data.position || "",
-      });
-
-      setShowModal(true);
-    } else {
-      toast.error("Service not found in list");
-    }
-  };
-
-  // Load initial data
+  // Fetch clubs and gallery list on component mount
   useEffect(() => {
-    fetchGallery();
     fetchClub();
+    fetchGallery();
   }, []);
 
-  // Prepare dropdown options for clubs
+  // Fetch gallery list when filters change
+  useEffect(() => {
+    fetchGallery();
+  }, [positionFilter, clubFilter]);
+
+  // Club dropdown options
   const clubOptions =
     club?.map((item) => ({
       label: item.name,
       value: item.id,
     })) || [];
 
-  useEffect(() => {
-    fetchGallery();
-  }, [positionFilter, clubFilter]);
-
-  // Handle overlay click to close modal
-  const handleOverlayClick = (e) => {
-    if (leadBoxRef.current && !leadBoxRef.current.contains(e.target)) {
+  // Overlay click handler to close modal
+  const handleOverlayClick = (event) => {
+    if (leadBoxRef.current && !leadBoxRef.current.contains(event.target)) {
       setShowModal(false);
     }
   };
 
-  // Formik initialization
+  // Formik setup for form validation and submission
   const formik = useFormik({
     initialValues: {
       image: null,
@@ -145,11 +152,8 @@ const GalleryList = () => {
     }),
     onSubmit: async (values, { resetForm }) => {
       try {
-        // Create form data for API request
         const formData = new FormData();
-
         Object.keys(values).forEach((key) => {
-          // Only append image if it's a new file
           if (key === "image") {
             if (values.image && typeof values.image !== "string") {
               formData.append("image", values.image);
@@ -158,16 +162,15 @@ const GalleryList = () => {
             formData.append(key, values[key]);
           }
         });
-        if (editingOption && editingOption.id) {
-          await apiAxios().put(
-            `/club/gallery/create/${editingOption.id}`,
-            formData,
-            {
-              headers: { "Content-Type": "multipart/form-data" },
-            }
-          );
+
+        if (editingOption && editingOption) {
+          // Update
+          await apiAxios().put(`/club/gallery/${editingOption}`, formData, {
+            headers: { "Content-Type": "multipart/form-data" },
+          });
           toast.success("Updated Successfully");
         } else {
+          // Create
           await apiAxios().post("/club/gallery/create", formData, {
             headers: { "Content-Type": "multipart/form-data" },
           });
@@ -175,9 +178,9 @@ const GalleryList = () => {
         }
 
         fetchGallery();
-      } catch (err) {
-        console.error("API Error:", err.response?.data || err.message);
-        toast.error("Failed to save onboarding");
+      } catch (error) {
+        console.error("API Error:", error.response?.data || error.message);
+        toast.error("Failed to save gallery item");
       }
 
       resetForm();
@@ -186,9 +189,10 @@ const GalleryList = () => {
     },
   });
 
+  // Component render
   return (
     <div className="page--content">
-      {/* Header Section */}
+      {/* Header section */}
       <div className="flex items-end justify-between gap-2 mb-5">
         <div className="title--breadcrumbs">
           <p className="text-sm">{`Home > Gallery`}</p>
@@ -209,7 +213,7 @@ const GalleryList = () => {
         </div>
       </div>
 
-      {/* Search and Filter Section */}
+      {/* Filter section */}
       <div className="flex gap-3 mb-4">
         <div className="w-full max-w-[200px]">
           <Select
@@ -233,7 +237,7 @@ const GalleryList = () => {
         </div>
       </div>
 
-      {/* Table Section */}
+      {/* Table section */}
       <div className="box--shadow bg-white rounded-[15px] p-4">
         <div className="relative overflow-x-auto">
           <table className="w-full text-sm text-left text-gray-500">
@@ -250,14 +254,14 @@ const GalleryList = () => {
               {galleryList.length === 0 ? (
                 <tr>
                   <td colSpan="8" className="text-center py-4">
-                    No Services added yet.
+                    No Gallery items found.
                   </td>
                 </tr>
               ) : (
                 galleryList.map((item, index) => (
                   <tr
                     key={item.id || index}
-                    className="group bg-white border-b hover:bg-gray-50 relative transition duration-700"
+                    className="group bg-white border-b hover:bg-gray-50 transition duration-700"
                   >
                     <td>
                       {item.image ? (
@@ -276,12 +280,15 @@ const GalleryList = () => {
                       <div className="w-fit">
                         <Tooltip
                           id={`tooltip-edit-${item.id}`}
-                          content="Edit Club"
+                          content="Edit Gallery"
                           place="left"
                         >
                           <div
                             className="p-1 cursor-pointer"
-                            onClick={() => handleEdit(item.id)}
+                            onClick={() => {
+                            setEditingOption(item?.id);
+                            setShowModal(true);
+                          }}
                           >
                             <LiaEdit className="text-[25px] text-black" />
                           </div>
@@ -295,6 +302,7 @@ const GalleryList = () => {
           </table>
         </div>
 
+        {/* Pagination Component */}
         <Pagination
           page={page}
           totalPages={totalPages}
@@ -308,7 +316,7 @@ const GalleryList = () => {
         />
       </div>
 
-      {/* Modal for Create/Update Service */}
+      {/* Modal Component */}
       {showModal && (
         <CreateGallery
           setShowModal={setShowModal}
