@@ -140,6 +140,20 @@ const SubscriptionPlan = () => {
     },
   });
 
+  useEffect(() => {
+    const { amount, discount, gst } = formik.values;
+
+    if (amount !== "" && discount !== "" && gst !== "") {
+      const total = parseFloat(amount) - parseFloat(discount);
+      const gstAmt = (total * parseFloat(gst)) / 100;
+      const final = total + gstAmt;
+
+      formik.setFieldValue("total_amount", total.toFixed(2));
+      formik.setFieldValue("gst_amount", gstAmt.toFixed(2));
+      formik.setFieldValue("final_amount", final.toFixed(2));
+    }
+  }, [formik.values.amount, formik.values.discount, formik.values.gst]);
+
   console.log(module,'module')
 
   return (
