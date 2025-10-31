@@ -19,7 +19,7 @@ const CreateSubscriptionPlan = ({
       onClick={handleOverlayClick}
     >
       <div
-        className="min-h-[70vh] w-[95%] max-w-4xl mx-auto mt-[100px] mb-[100px] container--leadbox rounded-[10px] flex flex-col"
+        className="min-h-[70vh] w-[95%] max-w-4xl mx-auto mt-[50px] mb-[50px] container--leadbox rounded-[10px] flex flex-col"
         ref={leadBoxRef}
         onClick={(e) => e.stopPropagation()}
       >
@@ -221,6 +221,66 @@ const CreateSubscriptionPlan = ({
                       )}
                   </div>
 
+                  <div>
+                    <label className="mb-2 block">
+                      Plan Type<span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[10]">
+                        <FaListUl />
+                      </span>
+                      <Select
+                        name="plan_type"
+                        value={{
+                          label: formik.values.plan_type,
+                          value: formik.values.plan_type,
+                        }}
+                        options={[
+                          { label: "DLF", value: "DLF" },
+                          { label: "NONDLF", value: "NONDLF" },
+                        ]}
+                        onChange={(option) =>
+                          formik.setFieldValue("plan_type", option.value)
+                        }
+                        onBlur={() =>
+                          formik.setFieldTouched("plan_type", true)
+                        }
+                        styles={selectIcon}
+                        className="!capitalize"
+                      />
+                    </div>
+                    {formik.touched.plan_type &&
+                      formik.errors.plan_type && (
+                        <p className="text-red-500 text-sm mt-1">
+                          {formik.errors.plan_type}
+                        </p>
+                      )}
+                  </div>
+
+                  <div className="">
+                    <label className="mb-2 block">
+                      HSC SAC Code
+                    </label>
+                    <div className="relative">
+                      <span className="absolute top-[50%] translate-y-[-50%] left-[15px]">
+                        <FaListUl />
+                      </span>
+                      <input
+                        type="text"
+                        name="hsn_sac_code"
+                        value={formik.values.hsn_sac_code}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        className="custom--input w-full input--icon"
+                      />
+                    </div>
+                    {formik.touched.hsn_sac_code && formik.errors.hsn_sac_code && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {formik.errors.hsn_sac_code}
+                      </p>
+                    )}
+                  </div>
+
                   <div className="">
                     <label className="mb-2 block">
                       Amount<span className="text-red-500">*</span>
@@ -270,7 +330,7 @@ const CreateSubscriptionPlan = ({
 
                   <div className="">
                     <label className="mb-2 block">
-                      GST<span className="text-red-500">*</span>
+                      GST (%)<span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
                       <span className="absolute top-[50%] translate-y-[-50%] left-[15px]">

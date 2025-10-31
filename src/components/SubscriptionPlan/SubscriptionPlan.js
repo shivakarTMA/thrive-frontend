@@ -87,6 +87,8 @@ const SubscriptionPlan = () => {
       duration_type: "",
       duration_value: "",
       booking_type: "",
+      plan_type: "",
+      hsn_sac_code: "",
       amount: "",
       discount: "",
       total_amount: "",
@@ -99,9 +101,17 @@ const SubscriptionPlan = () => {
     },
     validationSchema: Yup.object({
       title: Yup.string().required("Title is required"),
+      description: Yup.string().required("Description is required"),
       club_id: Yup.string().required("Club is required"),
-      position: Yup.number().required("Position is required"),
+      duration_type: Yup.string().required("Duration Type is required"),
+      duration_value: Yup.string().required("Duration Value is required"),
+      booking_type: Yup.string().required("Booking Type is required"),
+      plan_type: Yup.string().required("Plan Type is required"),
+      amount: Yup.string().required("Amount is required"),
+      discount: Yup.string().required("Discount is required"),
+      gst: Yup.string().required("GST is required"),
       status: Yup.string().required("Status is required"),
+      position: Yup.number().required("Position is required"),
     }),
     onSubmit: async (values, { resetForm }) => {
       try {
@@ -203,7 +213,6 @@ const SubscriptionPlan = () => {
                 <th className="px-2 py-4 min-w-[100px]">Plan Type</th>
                 <th className="px-2 py-4 min-w-[100px]">Status</th>
                 <th className="px-2 py-4 min-w-[80px] text-center">Position</th>
-                <th className="px-2 py-4 min-w-[100px] text-center">HSN SAC Code</th>
                 <th className="px-2 py-4 min-w-[80px]">Action</th>
               </tr>
             </thead>
@@ -249,7 +258,6 @@ const SubscriptionPlan = () => {
                       </div>
                     </td>
                     <td className="px-2 py-4 text-center">{item?.position}</td>
-                    <td className="px-2 py-4 text-center">{item?.hsn_sac_code ? item?.hsn_sac_code : '--'}</td>
                     <td className="px-2 py-4">
                       <div className="w-fit">
                         <Tooltip
