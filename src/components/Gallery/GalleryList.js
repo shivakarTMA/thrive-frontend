@@ -81,24 +81,6 @@ const GalleryList = () => {
     }
   };
 
-  // Function to handle edit functionality
-  // const handleEdit = (id) => {
-  //   const data = galleryList.find((item) => item.id === id);
-  //   if (data) {
-  //     setEditingOption(data);
-  //     formik.setValues({
-  //       id: data.id || "",
-  //       title: data.title || "",
-  //       image: data.image || null,
-  //       club_id: data.club_id || "",
-  //       display_position: data.display_position || "",
-  //       position: data.position || "",
-  //     });
-  //     setShowModal(true);
-  //   } else {
-  //     toast.error("Gallery not found");
-  //   }
-  // };
 
   // Fetch clubs and gallery list on component mount
   useEffect(() => {

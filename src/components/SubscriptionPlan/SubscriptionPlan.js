@@ -65,8 +65,6 @@ const SubscriptionPlan = () => {
       value: item.id, // Store club_id as ID
     })) || [];
 
-  console.log(clubOptions, "clubOptions");
-
   useEffect(() => {
     const delayDebounce = setTimeout(() => {
       fetchSubscription(searchTerm);
@@ -80,8 +78,6 @@ const SubscriptionPlan = () => {
       setShowModal(false);
     }
   };
-
-  console.log(searchTerm, "searchTerm");
 
   const formik = useFormik({
     initialValues: {
@@ -134,6 +130,8 @@ const SubscriptionPlan = () => {
     },
   });
 
+  console.log(module,'module')
+
   return (
     <div className="page--content">
       <div className="flex items-end justify-between gap-2 mb-5">
@@ -165,7 +163,7 @@ const SubscriptionPlan = () => {
             </span>
             <input
               type="text"
-              placeholder="Search Studio..."
+              placeholder="Search"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="custom--input w-full input--icon"
@@ -191,16 +189,22 @@ const SubscriptionPlan = () => {
           <table className="w-full text-sm text-left text-gray-500">
             <thead className="text-xs text-gray-700 uppercase bg-gray-50">
               <tr>
-                {/* <th className="px-2 py-4">Module ID</th> */}
-                <th className="px-2 py-4">Title</th>
-                <th className="px-2 py-4">Club Name</th>
-                <th className="px-2 py-4">Duration Type</th>
-                <th className="px-2 py-4">Duration Value</th>
-                <th className="px-2 py-4">Booking Type</th>
-                <th className="px-2 py-4">Final Amount</th>
-                {/* <th className="px-2 py-4">Position</th> */}
-                <th className="px-2 py-4">Status</th>
-                <th className="px-2 py-4">Action</th>
+                <th className="px-2 py-4 min-w-[130px]">Title</th>
+                <th className="px-2 py-4 min-w-[150px]">Description</th>
+                <th className="px-2 py-4 min-w-[150px]">Club Name</th>
+                <th className="px-2 py-4 min-w-[100px]">Duration</th>
+                <th className="px-2 py-4 min-w-[110px]">Booking Type</th>
+                <th className="px-2 py-4 min-w-[100px]">Amount</th>
+                <th className="px-2 py-4 min-w-[100px]">Discount</th>
+                <th className="px-2 py-4 min-w-[110px]">Total Amount</th>
+                <th className="px-2 py-4 min-w-[90px]">GST</th>
+                <th className="px-2 py-4 min-w-[100px]">GST Amount</th>
+                <th className="px-2 py-4 min-w-[110px]">Final Amount</th>
+                <th className="px-2 py-4 min-w-[100px]">Plan Type</th>
+                <th className="px-2 py-4 min-w-[100px]">Status</th>
+                <th className="px-2 py-4 min-w-[80px] text-center">Position</th>
+                <th className="px-2 py-4 min-w-[100px] text-center">HSN SAC Code</th>
+                <th className="px-2 py-4 min-w-[80px]">Action</th>
               </tr>
             </thead>
             <tbody>
@@ -218,12 +222,17 @@ const SubscriptionPlan = () => {
                   >
                     {/* <td className="px-2 py-4">{item?.id || "—"}</td> */}
                     <td className="px-2 py-4">{item?.title}</td>
+                    <td className="px-2 py-4">{item?.description ? item?.description : "--"}</td>
                     <td className="px-2 py-4">{item?.club_name}</td>
-                    <td className="px-2 py-4">{item?.duration_type}</td>
-                    <td className="px-2 py-4">{item?.duration_value}</td>
+                    <td className="px-2 py-4">{item?.duration_value} {item?.duration_type}</td>
                     <td className="px-2 py-4">{item?.booking_type}</td>
+                    <td className="px-2 py-4">₹{item?.amount}</td>
+                    <td className="px-2 py-4">₹{item?.discount}</td>
+                    <td className="px-2 py-4">₹{item?.total_amount}</td>
+                    <td className="px-2 py-4">{item?.gst}%</td>
+                    <td className="px-2 py-4">₹{item?.gst_amount}</td>
                     <td className="px-2 py-4">₹{item?.final_amount}</td>
-                    {/* <td>{item.position}</td> */}
+                    <td className="px-2 py-4">{item?.plan_type}</td>
                     <td className="px-2 py-4">
                       <div
                         className={`flex gap-1 items-center ${
@@ -239,6 +248,8 @@ const SubscriptionPlan = () => {
                           : ""}
                       </div>
                     </td>
+                    <td className="px-2 py-4 text-center">{item?.position}</td>
+                    <td className="px-2 py-4 text-center">{item?.hsn_sac_code ? item?.hsn_sac_code : '--'}</td>
                     <td className="px-2 py-4">
                       <div className="w-fit">
                         <Tooltip
