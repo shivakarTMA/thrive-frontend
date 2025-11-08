@@ -21,13 +21,20 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
 
   const [dropdownToggles, setDropdownToggles] = useState({});
 
-  const toggleMenu = (menuKey) => {
-    setDropdownToggles((prev) => ({
-      ...prev,
-      [menuKey]: !prev[menuKey],
-    }));
-    setToggleMenuBar(false);
-  };
+const toggleMenu = (menuKey) => {
+  setDropdownToggles((prev) => {
+    const newState = {};
+
+    // If the same menu is clicked, toggle it; otherwise, open the new one only
+    if (!prev[menuKey]) {
+      newState[menuKey] = true;
+    }
+
+    return newState;
+  });
+
+  setToggleMenuBar(false);
+};
 
   useEffect(() => {
     if (toggleMenuBar) {
@@ -35,10 +42,10 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
     }
   }, [toggleMenuBar]);
 
-  useEffect(() => {
-    setToggleMenuBar(false);
-    setDropdownToggles({});
-  }, [location.pathname]);
+  // useEffect(() => {
+  //   setToggleMenuBar(false);
+  //   setDropdownToggles({});
+  // }, [location.pathname]);
 
   // const handleLeadModal = () => {
   //   setLeadModal(true);
