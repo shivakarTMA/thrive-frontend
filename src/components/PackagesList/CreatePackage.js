@@ -178,7 +178,9 @@ const CreatePackage = ({
       }
     };
 
-    fetchPackageById(editingOption);
+    if (editingOption) {
+      fetchPackageById(editingOption);
+    }
   }, [editingOption]);
 
   const service_type_check = getServiceType(

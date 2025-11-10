@@ -1,93 +1,89 @@
-import React, { useRef } from "react";
+import React, { useEffect, useRef } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import Select from "react-select";
-import { selectIcon } from "../../Helper/helper";
+import { customStyles, selectIcon } from "../../Helper/helper";
 import { IoCloseCircle } from "react-icons/io5";
 import { toast } from "react-toastify";
 import { FaImage, FaListCheck } from "react-icons/fa6";
 import { MdCurrencyRupee } from "react-icons/md";
 import { PiCoinsFill } from "react-icons/pi";
+import { authAxios } from "../../config/config";
+import { CKEditor } from "@ckeditor/ckeditor5-react";
+import ClassicEditor from "@ckeditor/ckeditor5-build-classic";
 
 // Options
 const productTypeOptions = [
-  { value: "physical", label: "Physical" },
-  { value: "digital", label: "Digital" },
-  { value: "service", label: "Service" },
+  { value: "BEVERAGE", label: "Beverage" },
+  { value: "SUPPLEMENT", label: "Supplement" },
+  { value: "MERCHANDISE", label: "Merchandise" },
+  { value: "EQUIPMENT", label: "Equipment" },
+  { value: "OTHER", label: "Other" },
+  { value: "SNACKS", label: "Snacks" },
 ];
 
-const listingStatusOptions = [
-  { value: "active", label: "Active" },
-  { value: "inactive", label: "Inactive" },
+// status type options for dropdown
+const statusType = [
+  { label: "Active", value: "ACTIVE" },
+  { label: "Inactive", value: "INACTIVE" },
 ];
 
-// Validation Schema
-const validationSchema = Yup.object({
-  centreName: Yup.string().required("Centre Name is required"),
-  productType: Yup.string().required("Product Type is required"),
-  productName: Yup.string().required("Product Name is required"),
-  productImage: Yup.mixed()
-    .required("Product Image is required")
-    .test("fileType", "Unsupported File Format", (value) => {
-      return (
-        value && ["image/jpeg", "image/png", "image/webp"].includes(value.type)
-      );
-    }),
-  shortDescription: Yup.string().required("Short description is required"),
-  longDescription: Yup.string().required("Long description is required"),
-  quantity: Yup.number()
-    .typeError("Quantity must be a number")
-    .required("Quantity is required")
-    .min(0, "Quantity cannot be negative"),
-  mrp: Yup.number()
-    .typeError("MRP must be a number")
-    .required("MRP is required"),
-  sellingPrice: Yup.number()
-    .typeError("Selling Price must be a number")
-    .required("Selling Price is required")
-    .max(Yup.ref("mrp"), "Selling Price cannot be greater than MRP"),
-  taxType: Yup.string().required("Tax Type is required"),
-  thriveCoins: Yup.number()
-    .typeError("Thrive Coins must be a number")
-    .required("Thrive Coins is required")
-    .min(0, "Thrive Coins cannot be negative"),
-  listingStatus: Yup.string().required("Listing Status is required"),
-});
-
-const CreateProduct = ({ setShowModal, onProductCreated, initialData }) => {
-  console.log(initialData, "initialData");
+const CreateProduct = ({
+  setShowModal,
+  formik,
+  editingOption,
+  serviceOptions,
+  productCategoryOptions,
+}) => {
   const leadBoxRef = useRef(null);
 
-  const formik = useFormik({
-    initialValues: {
-      centreName: initialData?.centreName || "",
-      productType: initialData?.productType || "",
-      productName: initialData?.productName || "",
-      productImage: initialData?.productImage || "",
-      shortDescription: initialData?.shortDescription || "",
-      longDescription: initialData?.longDescription || "",
-      quantity: initialData?.quantity || "",
-      mrp: initialData?.mrp || "",
-      sellingPrice: initialData?.sellingPrice || "",
-      taxType: initialData?.taxType || "",
-      thriveCoins: initialData?.thriveCoins || "",
-      listingStatus: initialData?.listingStatus || "",
-    },
-    validationSchema,
-    onSubmit: (values) => {
-      // console.log("Form Submitted:", values);
-      // console.log("Formik Errors (if any):", formik.errors);
-      // setShowModal(false);
-      // toast.success("Created Successfully");
+  useEffect(() => {
+    const fetchProductById = async (id) => {
+      try {
+        const res = await authAxios().get(`/product/${id}`);
+        const data = res.data?.data || res.data || null;
 
-      const dataToSend = {
-        ...values,
-        id: initialData?.id || Date.now(), // Preserve ID for edit mode
-      };
-      onProductCreated(dataToSend);
-      setShowModal(false);
-    },
-  });
+        if (data) {
+          formik.setValues({
+            image: data?.image || "",
+            service_id: data?.service_id || "",
+            product_category_id: data?.product_category_id || "",
+            product_category_id: data?.product_category_id || "",
+            name: data?.name || "",
+            caption: data?.caption || "",
+            sku: data?.sku || "",
+            product_type: data?.product_type || "",
+            short_description: data?.short_description || "",
+            description: data?.description || "",
+            allergens: data?.allergens || "",
+            hsn_sac_code: data?.hsn_sac_code || "",
+            amount: data?.amount || "",
+            discount: data?.discount || "",
+            gst: data?.gst || "",
+            stock_quantity: data?.stock_quantity || "",
+            thrive_coins: data?.thrive_coins || "",
+            position: data?.position || "",
+            status: data?.status || "",
+          });
+        }
+      } catch (err) {
+        console.error(err);
+        toast.error("Failed to fetch package details");
+      }
+    };
+
+    if (editingOption) {
+      fetchProductById(editingOption);
+    }
+  }, [editingOption]);
+
+  // Handle image file change and set preview
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      formik.setFieldValue("image", file); // ✅ store file in Formik state
+    }
+  };
 
   const handleOverlayClick = (e) => {
     if (leadBoxRef.current && !leadBoxRef.current.contains(e.target)) {
@@ -119,222 +115,312 @@ const CreateProduct = ({ setShowModal, onProductCreated, initialData }) => {
           <form onSubmit={formik.handleSubmit}>
             <div className="flex bg-white rounded-b-[10px]">
               <div className="p-6 flex-1">
-                <div className="grid lg:grid-cols-3 md:grid-cols-2 gap-4">
-                  {/* Centre Name */}
+                <div className="grid lg:grid-cols-4 md:grid-cols-2 grid-cols-1 gap-4">
+                  {/* Image Upload */}
                   <div>
                     <label className="mb-2 block">
-                      Centre Name<span className="text-red-500">*</span>
+                      Image<span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
-                      <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
-                        <FaListCheck />
-                      </span>
                       <input
-                        type="text"
-                        name="centreName"
-                        className="custom--input w-full input--icon"
-                        value={formik.values.centreName}
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
+                        type="file"
+                        name="image"
+                        onChange={handleFileChange} // ✅ no value prop here
+                        onBlur={() => formik.setFieldTouched("image", true)}
+                        className="custom--input w-full"
                       />
                     </div>
-                    {formik.touched.centreName && formik.errors.centreName && (
-                      <p className="text-red-500 text-sm mt-1">
-                        {formik.errors.centreName}
-                      </p>
+
+                    {formik.touched.image && formik.errors.image && (
+                      <div className="text-red-500 text-sm">
+                        {formik.errors.image}
+                      </div>
                     )}
                   </div>
-
-                  {/* Product Type (React Select) */}
-                  <div>
-                    <label className="mb-2 block">
-                      Product Type<span className="text-red-500">*</span>
-                    </label>
-                    <div className="relative">
-                      <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
-                        <FaListCheck />
-                      </span>
-                      <Select
-                        options={productTypeOptions}
-                        value={productTypeOptions.find(
-                          (option) => option.value === formik.values.productType
-                        )}
-                        onChange={(option) =>
-                          formik.setFieldValue("productType", option?.value)
-                        }
-                        onBlur={() =>
-                          formik.setFieldTouched("productType", true)
-                        }
-                        styles={selectIcon}
-                      />
-                    </div>
-                    {formik.touched.productType &&
-                      formik.errors.productType && (
-                        <p className="text-red-500 text-sm mt-1">
-                          {formik.errors.productType}
-                        </p>
-                      )}
-                  </div>
-
                   {/* Product Name */}
                   <div>
                     <label className="mb-2 block">
                       Product Name<span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
-                      <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
-                        <FaListCheck />
-                      </span>
                       <input
                         type="text"
-                        name="productName"
-                        className="custom--input w-full input--icon"
-                        value={formik.values.productName}
+                        name="name"
+                        className="custom--input w-full"
+                        value={formik.values.name}
                         onChange={formik.handleChange}
                         onBlur={formik.handleBlur}
                       />
                     </div>
-                    {formik.touched.productName &&
-                      formik.errors.productName && (
-                        <p className="text-red-500 text-sm mt-1">
-                          {formik.errors.productName}
-                        </p>
-                      )}
-                  </div>
-
-                  {/* Product Image */}
-                  <div>
-                    <label className="mb-2 block">
-                      Product Image<span className="text-red-500">*</span>
-                    </label>
-                    <div className="relative">
-                      <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
-                        <FaImage />
-                      </span>
-                      <input
-                        type="file"
-                        name="productImage"
-                        accept="image/*"
-                        onChange={(event) => {
-                          const file = event.currentTarget.files[0];
-                          formik.setFieldValue("productImage", file);
-                        }}
-                        className="custom--input w-full input--icon"
-                      />
-                    </div>
-                    {formik.touched.productImage &&
-                      formik.errors.productImage && (
-                        <p className="text-red-500 text-sm mt-1">
-                          {formik.errors.productImage}
-                        </p>
-                      )}
-                    {formik.values.productImage &&
-                      typeof formik.values.productImage === "object" && (
-                        <p className="text-sm text-gray-600 mt-1">
-                          Selected: {formik.values.productImage.name}
-                        </p>
-                      )}
-                  </div>
-
-                  {/* Quantity */}
-                  <div>
-                    <label className="mb-2 block">
-                      Quantity<span className="text-red-500">*</span>
-                    </label>
-                    <div className="relative">
-                      <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
-                        <FaListCheck />
-                      </span>
-                      <input
-                        type="number"
-                        name="quantity"
-                        className="custom--input w-full input--icon"
-                        value={formik.values.quantity}
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
-                      />
-                    </div>
-                    {formik.touched.quantity && formik.errors.quantity && (
+                    {formik.touched.name && formik.errors.name && (
                       <p className="text-red-500 text-sm mt-1">
-                        {formik.errors.quantity}
+                        {formik.errors.name}
                       </p>
                     )}
                   </div>
 
-                  {/* MRP */}
+                  {/* Caption */}
                   <div>
                     <label className="mb-2 block">
-                      MRP<span className="text-red-500">*</span>
+                      Caption<span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
-                      <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
-                        <MdCurrencyRupee />
-                      </span>
-                      <input
-                        type="number"
-                        name="mrp"
-                        className="custom--input w-full input--icon"
-                        value={formik.values.mrp}
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
-                      />
-                    </div>
-                    {formik.touched.mrp && formik.errors.mrp && (
-                      <p className="text-red-500 text-sm mt-1">
-                        {formik.errors.mrp}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Selling Price */}
-                  <div>
-                    <label className="mb-2 block">
-                      Selling Price<span className="text-red-500">*</span>
-                    </label>
-                    <div className="relative">
-                      <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
-                        <MdCurrencyRupee />
-                      </span>
-                      <input
-                        type="number"
-                        name="sellingPrice"
-                        className="custom--input w-full input--icon"
-                        value={formik.values.sellingPrice}
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
-                      />
-                    </div>
-                    {formik.touched.sellingPrice &&
-                      formik.errors.sellingPrice && (
-                        <p className="text-red-500 text-sm mt-1">
-                          {formik.errors.sellingPrice}
-                        </p>
-                      )}
-                  </div>
-
-                  {/* Tax Type */}
-                  <div>
-                    <label className="mb-2 block">
-                      Tax Type<span className="text-red-500">*</span>
-                    </label>
-                    <div className="relative">
-                      <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
-                        <FaListCheck />
-                      </span>
                       <input
                         type="text"
-                        name="taxType"
-                        className="custom--input w-full input--icon"
-                        value={formik.values.taxType}
+                        name="caption"
+                        className="custom--input w-full"
+                        value={formik.values.caption}
                         onChange={formik.handleChange}
                         onBlur={formik.handleBlur}
                       />
                     </div>
-                    {formik.touched.taxType && formik.errors.taxType && (
+                    {formik.touched.caption && formik.errors.caption && (
                       <p className="text-red-500 text-sm mt-1">
-                        {formik.errors.taxType}
+                        {formik.errors.caption}
                       </p>
                     )}
+                  </div>
+
+                  {/* Service */}
+                  <div>
+                    <label className="mb-2 block">
+                      Service<span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <Select
+                        options={serviceOptions}
+                        value={serviceOptions.find(
+                          (option) => option.value === formik.values.service_id
+                        )}
+                        onChange={(option) =>
+                          formik.setFieldValue("service_id", option?.value)
+                        }
+                        onBlur={() =>
+                          formik.setFieldTouched("service_id", true)
+                        }
+                        styles={customStyles}
+                      />
+                    </div>
+                    {formik.touched.service_id && formik.errors.service_id && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {formik.errors.service_id}
+                      </p>
+                    )}
+                  </div>
+                  {/* Product Category */}
+                  <div>
+                    <label className="mb-2 block">
+                      Product Category<span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <Select
+                        options={productCategoryOptions}
+                        value={productCategoryOptions.find(
+                          (option) =>
+                            option.value === formik.values.product_category_id
+                        )}
+                        onChange={(option) =>
+                          formik.setFieldValue(
+                            "product_category_id",
+                            option?.value
+                          )
+                        }
+                        onBlur={() =>
+                          formik.setFieldTouched("product_category_id", true)
+                        }
+                        styles={customStyles}
+                      />
+                    </div>
+                    {formik.touched.product_category_id &&
+                      formik.errors.product_category_id && (
+                        <p className="text-red-500 text-sm mt-1">
+                          {formik.errors.product_category_id}
+                        </p>
+                      )}
+                  </div>
+
+                  {/*  Product Type */}
+                  <div>
+                    <label className="mb-2 block">
+                      Product Type<span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <Select
+                        options={productTypeOptions}
+                        value={productTypeOptions.find(
+                          (option) =>
+                            option.value === formik.values.product_type
+                        )}
+                        onChange={(option) =>
+                          formik.setFieldValue("product_type", option?.value)
+                        }
+                        onBlur={() =>
+                          formik.setFieldTouched("product_type", true)
+                        }
+                        styles={customStyles}
+                      />
+                    </div>
+                    {formik.touched.product_type &&
+                      formik.errors.product_type && (
+                        <p className="text-red-500 text-sm mt-1">
+                          {formik.errors.product_type}
+                        </p>
+                      )}
+                  </div>
+
+                  {/* SKU */}
+                  <div>
+                    <label className="mb-2 block">
+                      SKU<span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        name="sku"
+                        className="custom--input w-full"
+                        value={formik.values.sku}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                      />
+                    </div>
+                    {formik.touched.sku && formik.errors.sku && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {formik.errors.sku}
+                      </p>
+                    )}
+                  </div>
+                  {/* Allergens */}
+                  <div>
+                    <label className="mb-2 block">
+                      Allergens<span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        name="allergens"
+                        className="custom--input w-full"
+                        value={formik.values.allergens}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                      />
+                    </div>
+                    {formik.touched.allergens && formik.errors.allergens && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {formik.errors.allergens}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* HSC SAC Code */}
+                  <div>
+                    <label className="mb-2 block">
+                      HSC SAC Code<span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        name="hsn_sac_code"
+                        value={formik.values.hsn_sac_code}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        className="custom--input w-full"
+                      />
+                    </div>
+                    {formik.touched.hsn_sac_code &&
+                      formik.errors.hsn_sac_code && (
+                        <div className="text-red-500 text-sm">
+                          {formik.errors.hsn_sac_code}
+                        </div>
+                      )}
+                  </div>
+
+                  {/* Amount (₹) */}
+                  <div>
+                    <label className="mb-2 block">
+                      Amount (₹)<span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        name="amount"
+                        className="custom--input w-full"
+                        value={formik.values.amount}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                      />
+                    </div>
+                    {formik.touched.amount && formik.errors.amount && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {formik.errors.amount}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Discount (₹) */}
+                  <div>
+                    <label className="mb-2 block">
+                      Discount (₹)<span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        name="discount"
+                        className="custom--input w-full"
+                        value={formik.values.discount}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                      />
+                    </div>
+                    {formik.touched.discount && formik.errors.discount && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {formik.errors.discount}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* GST (%) */}
+                  <div>
+                    <label className="mb-2 block">
+                      GST (%)<span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        name="gst"
+                        className="custom--input w-full"
+                        value={formik.values.gst}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                      />
+                    </div>
+                    {formik.touched.gst && formik.errors.gst && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {formik.errors.gst}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Stock Quantity */}
+                  <div>
+                    <label className="mb-2 block">
+                      Stock Quantity<span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        name="stock_quantity"
+                        className="custom--input w-full"
+                        value={formik.values.stock_quantity}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                      />
+                    </div>
+                    {formik.touched.stock_quantity &&
+                      formik.errors.stock_quantity && (
+                        <p className="text-red-500 text-sm mt-1">
+                          {formik.errors.stock_quantity}
+                        </p>
+                      )}
                   </div>
 
                   {/* Thrive Coins */}
@@ -343,94 +429,120 @@ const CreateProduct = ({ setShowModal, onProductCreated, initialData }) => {
                       Thrive Coins<span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
-                      <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
-                        <PiCoinsFill />
-                      </span>
                       <input
                         type="number"
-                        name="thriveCoins"
-                        className="custom--input w-full input--icon"
-                        value={formik.values.thriveCoins}
+                        name="thrive_coins"
+                        className="custom--input w-full"
+                        value={formik.values.thrive_coins}
                         onChange={formik.handleChange}
                         onBlur={formik.handleBlur}
                       />
                     </div>
-                    {formik.touched.thriveCoins &&
-                      formik.errors.thriveCoins && (
+                    {formik.touched.thrive_coins &&
+                      formik.errors.thrive_coins && (
                         <p className="text-red-500 text-sm mt-1">
-                          {formik.errors.thriveCoins}
+                          {formik.errors.thrive_coins}
                         </p>
                       )}
                   </div>
 
-                  {/* Listing Status (React Select) */}
+                  {/* Position */}
                   <div>
                     <label className="mb-2 block">
-                      Listing Status<span className="text-red-500">*</span>
+                      Position<span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
-                      <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
-                        <FaListCheck />
-                      </span>
-
-                      <Select
-                        options={listingStatusOptions}
-                        value={listingStatusOptions.find(
-                          (option) =>
-                            option.value === formik.values.listingStatus
-                        )}
-                        onChange={(option) =>
-                          formik.setFieldValue("listingStatus", option?.value)
-                        }
-                        onBlur={() =>
-                          formik.setFieldTouched("listingStatus", true)
-                        }
-                        styles={selectIcon}
+                      <input
+                        type="number"
+                        name="position"
+                        value={formik.values.position}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        className="custom--input w-full"
                       />
                     </div>
-                    {formik.touched.listingStatus &&
-                      formik.errors.listingStatus && (
-                        <p className="text-red-500 text-sm mt-1">
-                          {formik.errors.listingStatus}
-                        </p>
-                      )}
+                    {formik.touched.position && formik.errors.position && (
+                      <div className="text-red-500 text-sm">
+                        {formik.errors.position}
+                      </div>
+                    )}
                   </div>
+                  {/* Status */}
+                  {editingOption && editingOption && (
+                    <div>
+                      <label className="mb-2 block">
+                        Status<span className="text-red-500">*</span>
+                      </label>
+                      <div className="relative">
+                        <Select
+                          name="status"
+                          value={
+                            statusType.find(
+                              (opt) => opt.value === formik.values.status
+                            ) || null
+                          }
+                          options={statusType}
+                          onChange={(option) =>
+                            formik.setFieldValue(
+                              "status",
+                              option ? option.value : ""
+                            )
+                          }
+                          onBlur={() => formik.setFieldTouched("status", true)}
+                          styles={customStyles}
+                          placeholder="Select Status"
+                        />
+                      </div>
+                      {formik.touched.status && formik.errors.status && (
+                        <div className="text-red-500 text-sm">
+                          {formik.errors.status}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
                   {/* Short Description */}
-                  <div>
+                  <div className="md:col-span-2">
                     <label className="mb-2 block">
                       Short Description<span className="text-red-500">*</span>
                     </label>
-                    <textarea
-                      name="shortDescription"
-                      className="custom--input w-full"
-                      value={formik.values.shortDescription}
-                      onChange={formik.handleChange}
-                      onBlur={formik.handleBlur}
+                    <CKEditor
+                      editor={ClassicEditor}
+                      data={formik.values.short_description || ""}
+                      onChange={(event, editor) => {
+                        const data = editor.getData(); // ✅ Get HTML string from editor
+                        formik.setFieldValue("short_description", data);
+                      }}
+                      onBlur={() =>
+                        formik.setFieldTouched("short_description", true)
+                      }
                     />
-                    {formik.touched.shortDescription &&
-                      formik.errors.shortDescription && (
+                    {formik.touched.short_description &&
+                      formik.errors.short_description && (
                         <p className="text-red-500 text-sm mt-1">
-                          {formik.errors.shortDescription}
+                          {formik.errors.short_description}
                         </p>
                       )}
                   </div>
 
-                  {/* Long Description */}
-                  <div>
+                  {/* Description */}
+                  <div className="md:col-span-2">
                     <label className="mb-2 block">
-                      Long Description<span className="text-red-500">*</span>
+                      Description<span className="text-red-500">*</span>
                     </label>
-                    <textarea
-                      name="longDescription"
-                      className="custom--input w-full"
-                      value={formik.values.longDescription}
-                      onChange={formik.handleChange}
-                      onBlur={formik.handleBlur}
+                    <CKEditor
+                      editor={ClassicEditor}
+                      data={formik.values.description || ""}
+                      onChange={(event, editor) => {
+                        const data = editor.getData(); // ✅ Get HTML string from editor
+                        formik.setFieldValue("description", data);
+                      }}
+                      onBlur={() => formik.setFieldTouched("description", true)}
                     />
-                    {formik.touched.longDescription &&
-                      formik.errors.longDescription && (
+                    {formik.touched.description &&
+                      formik.errors.description && (
                         <p className="text-red-500 text-sm mt-1">
-                          {formik.errors.longDescription}
+                          {formik.errors.description}
                         </p>
                       )}
                   </div>

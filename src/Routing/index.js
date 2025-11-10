@@ -66,6 +66,7 @@ import MemberCheckIn from "../Pages/Reports/MemberManagement/MemberCheckIn";
 import ProductsSold from "../Pages/Reports/ProductsSold";
 import GalleryList from "../components/Gallery/GalleryList";
 import CouponsList from "../components/Coupons/CouponsList";
+import ProductCategoryList from "../components/ProductCategory/ProductCategoryList";
 
 export default function Routing() {
   const { accessToken } = useSelector((state) => state.auth);
@@ -526,6 +527,22 @@ export default function Routing() {
         />
         <Route
           path="/packages"
+          element={
+            <PrivateRoute>
+              <PackagesList />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/product-category"
+          element={
+            <PrivateRoute>
+              <ProductCategoryList />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/products"
           element={
             <PrivateRoute>
               <PackagesList />

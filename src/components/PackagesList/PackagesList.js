@@ -109,10 +109,6 @@ const PackagesList = () => {
             return ["image/jpeg", "image/png", "image/webp"].includes(
               value.type
             );
-          })
-          .test("fileSize", "Max file size is 2 MB", (value) => {
-            if (!value || typeof value === "string") return true;
-            return value.size <= 2 * 1024 * 1024;
           }),
         service_id: Yup.number().required("Service is required"),
         name: Yup.string().required("Name is required"),
@@ -267,7 +263,6 @@ const PackagesList = () => {
             className="px-4 py-2 bg-black text-white rounded flex items-center gap-2"
             onClick={() => {
               setEditingOption(null);
-              formik.resetForm();
               setShowModal(true);
             }}
           >

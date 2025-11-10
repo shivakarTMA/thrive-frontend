@@ -469,6 +469,21 @@ const toggleMenu = (menuKey) => {
               <span className="nav-text">Packages</span>
             </Link>
 
+                        <Link
+              to="/product-category"
+              className="text-white flex items-center gap-[5px] mb-2 text-sm"
+            >
+              <FaCircle className="menu--icon !text-[10px]" />
+              <span className="nav-text">Product Category</span>
+            </Link>
+            <Link
+              to="/products"
+              className="text-white flex items-center gap-[5px] mb-2 text-sm"
+            >
+              <FaCircle className="menu--icon !text-[10px]" />
+              <span className="nav-text">Products</span>
+            </Link>
+
             <Link
               to="/subscription-plan"
               className="text-white flex items-center gap-[5px] mb-2 text-sm"
