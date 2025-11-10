@@ -1,16 +1,9 @@
 import React, { useEffect, useRef } from "react";
-import { useFormik } from "formik";
-import * as Yup from "yup";
 import Select from "react-select";
-import { customStyles, selectIcon } from "../../Helper/helper";
+import { customStyles } from "../../Helper/helper";
 import { IoCloseCircle } from "react-icons/io5";
 import { toast } from "react-toastify";
-import { FaImage, FaListCheck } from "react-icons/fa6";
-import { MdCurrencyRupee } from "react-icons/md";
-import { PiCoinsFill } from "react-icons/pi";
 import { authAxios } from "../../config/config";
-import { CKEditor } from "@ckeditor/ckeditor5-react";
-import ClassicEditor from "@ckeditor/ckeditor5-build-classic";
 
 // Options
 const productTypeOptions = [
@@ -506,16 +499,13 @@ const CreateProduct = ({
                     <label className="mb-2 block">
                       Short Description<span className="text-red-500">*</span>
                     </label>
-                    <CKEditor
-                      editor={ClassicEditor}
-                      data={formik.values.short_description || ""}
-                      onChange={(event, editor) => {
-                        const data = editor.getData(); // ✅ Get HTML string from editor
-                        formik.setFieldValue("short_description", data);
-                      }}
-                      onBlur={() =>
-                        formik.setFieldTouched("short_description", true)
-                      }
+                    <textarea
+                      rows={3}
+                      name="short_description"
+                      value={formik.values.short_description}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      className="custom--input w-full"
                     />
                     {formik.touched.short_description &&
                       formik.errors.short_description && (
@@ -530,14 +520,13 @@ const CreateProduct = ({
                     <label className="mb-2 block">
                       Description<span className="text-red-500">*</span>
                     </label>
-                    <CKEditor
-                      editor={ClassicEditor}
-                      data={formik.values.description || ""}
-                      onChange={(event, editor) => {
-                        const data = editor.getData(); // ✅ Get HTML string from editor
-                        formik.setFieldValue("description", data);
-                      }}
-                      onBlur={() => formik.setFieldTouched("description", true)}
+                    <textarea
+                      rows={3}
+                      name="description"
+                      value={formik.values.description}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      className="custom--input w-full"
                     />
                     {formik.touched.description &&
                       formik.errors.description && (

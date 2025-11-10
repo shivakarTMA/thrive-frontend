@@ -1,16 +1,11 @@
 import React, { useEffect, useRef, useState } from "react";
-import { useFormik } from "formik";
-import * as Yup from "yup";
-import { CKEditor } from "@ckeditor/ckeditor5-react";
-import ClassicEditor from "@ckeditor/ckeditor5-build-classic";
-import { FiClock, FiPlus, FiTrash2 } from "react-icons/fi";
+import { FiClock} from "react-icons/fi";
 import { IoCloseCircle } from "react-icons/io5";
 import Select from "react-select";
 import { customStyles } from "../../Helper/helper";
 import DatePicker from "react-datepicker"; // Date picker component
 import "react-datepicker/dist/react-datepicker.css"; // Date picker styles
 import { FaCalendarDays } from "react-icons/fa6";
-import CreatableSelect from "react-select/creatable";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchOptionList } from "../../Redux/Reducers/optionListSlice";
 import { apiAxios, authAxios } from "../../config/config";
@@ -1121,15 +1116,16 @@ const CreatePackage = ({
                   <label className="mb-2 block">
                     Description<span className="text-red-500">*</span>
                   </label>
-                  <CKEditor
-                    editor={ClassicEditor}
-                    data={formik.values.description || ""}
-                    onChange={(event, editor) => {
-                      const data = editor.getData(); // ✅ Get HTML string from editor
-                      formik.setFieldValue("description", data);
-                    }}
-                    onBlur={() => formik.setFieldTouched("description", true)}
-                  />
+                  <div className="relative">
+                    <textarea
+                      rows={3}
+                      name="description"
+                      value={formik.values.description}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      className="custom--input w-full"
+                    />
+                  </div>
 
                   {formik.touched.description && formik.errors.description && (
                     <div className="text-red-500 text-sm">

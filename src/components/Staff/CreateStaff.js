@@ -14,8 +14,6 @@ import {
   FaUser,
 } from "react-icons/fa6";
 import { MdInsertPhoto } from "react-icons/md";
-import { CKEditor } from "@ckeditor/ckeditor5-react";
-import ClassicEditor from "@ckeditor/ckeditor5-build-classic";
 import { LuPlug } from "react-icons/lu";
 
 const roleOptions = [
@@ -419,14 +417,13 @@ const CreateStaff = ({ setShowModal, onExerciseCreated, initialData }) => {
                           <span className="text-red-500">*</span>
                         </label>
 
-                        <CKEditor
-                          editor={ClassicEditor}
-                          data={formik.values.description || ""}
-                          onChange={(event, editor) => {
-                            const data = editor.getData(); // ✅ Get HTML string from editor
-                            formik.setFieldValue("description", data);
-                          }}
-                          onBlur={() => formik.setFieldTouched("description", true)}
+                        <textarea
+                          rows={3}
+                          name="description"
+                          value={formik.values.description}
+                          onChange={formik.handleChange}
+                          onBlur={formik.handleBlur}
+                          className="custom--input w-full"
                         />
                         {formik.touched.description &&
                           formik.errors.description && (
