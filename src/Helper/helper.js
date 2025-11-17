@@ -6,7 +6,7 @@ export const customStyles = {
     "&:hover": {
       borderColor: "black",
     },
-    minHeight: "45px",
+    minHeight: "40px",
     borderRadius: "5px",
     paddingLeft: "3px",
   }),

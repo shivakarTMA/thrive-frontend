@@ -5,9 +5,14 @@ import "react-datepicker/dist/react-datepicker.css";
 import { IoClose, IoTriangle } from "react-icons/io5";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchOptionList } from "../../Redux/Reducers/optionListSlice";
-import { customStyles } from "../../Helper/helper";
+import { customStyles, formatAutoDate } from "../../Helper/helper";
 import { HiOutlineAdjustmentsHorizontal } from "react-icons/hi2";
 import { format } from "date-fns";
+
+function isValidDate(value) {
+  const date = new Date(value);
+  return !isNaN(date.getTime());
+}
 
 const StatusOptions = [
   { value: "AVAILABLE", label: "Available" },
@@ -94,7 +99,9 @@ export default function LostFoundPanel({
       floor: itemFloor?.value,
       found_from: itemFoundFrom ? format(itemFoundFrom, "yyyy-MM-dd") : null,
       found_to: itemFoundTo ? format(itemFoundTo, "yyyy-MM-dd") : null,
-      returned_from: itemReturnedFrom ? format(itemReturnedFrom, "yyyy-MM-dd") : null,
+      returned_from: itemReturnedFrom
+        ? format(itemReturnedFrom, "yyyy-MM-dd")
+        : null,
       returned_to: itemReturnedTo ? format(itemReturnedTo, "yyyy-MM-dd") : null,
     };
 
@@ -129,7 +136,9 @@ export default function LostFoundPanel({
     // ✅ Tell parent to refetch without this filter
     if (onRemoveFilter) {
       const remaining = Object.fromEntries(
-        Object.entries(updatedFilters).filter(([_, v]) => v !== null && v !== undefined)
+        Object.entries(updatedFilters).filter(
+          ([_, v]) => v !== null && v !== undefined
+        )
       );
       onRemoveFilter(remaining);
     }
@@ -226,7 +235,13 @@ export default function LostFoundPanel({
                     <div className="custom--date flex-1">
                       <DatePicker
                         selected={itemFoundFrom}
-                        onChange={(date) => setItemFoundFrom(date)}
+                        onChange={(date) => {
+                          setItemFoundFrom(date);
+                          // If end date is before new start date, clear or adjust it
+                          if (itemFoundTo && date && itemFoundTo < date) {
+                            setItemFoundTo(null);
+                          }
+                        }}
                         placeholderText="Select start date"
                         className="w-full"
                         dateFormat="dd/MM/yyyy"
@@ -248,6 +263,8 @@ export default function LostFoundPanel({
                         className="w-full"
                         dateFormat="dd/MM/yyyy"
                         maxDate={new Date()}
+                        minDate={itemFoundFrom || null}
+                        disabled={!itemFoundFrom}
                       />
                     </div>
                   </div>
@@ -264,7 +281,13 @@ export default function LostFoundPanel({
                     <div className="custom--date flex-1">
                       <DatePicker
                         selected={itemReturnedFrom}
-                        onChange={(date) => setItemReturnedFrom(date)}
+                        onChange={(date) => {
+                          setItemReturnedFrom(date);
+                          // If end date is before new start date, clear or adjust it
+                          if (itemReturnedTo && date && itemReturnedTo < date) {
+                            setItemReturnedTo(null);
+                          }
+                        }}
                         placeholderText="Select start date"
                         className="w-full"
                         dateFormat="dd/MM/yyyy"
@@ -286,6 +309,8 @@ export default function LostFoundPanel({
                         className="w-full"
                         dateFormat="dd/MM/yyyy"
                         maxDate={new Date()}
+                        minDate={itemReturnedFrom || null}
+                        disabled={!itemReturnedFrom}
                       />
                     </div>
                   </div>
@@ -305,16 +330,21 @@ export default function LostFoundPanel({
           </div>
         </div>
       )}
-      
+
       {/* Applied Filters Display */}
       {Object.values(appliedFilters).some((value) => value) && (
         <div className="flex gap-2 mt-4 flex-wrap">
           {Object.entries(appliedFilters).map(([key, value]) => {
             if (!value) return null;
-            
+
             // Format display label
             let displayLabel = value;
-            if (key === 'status' || key === 'category' || key === 'found_at_location' || key === 'floor') {
+            if (
+              key === "status" ||
+              key === "category" ||
+              key === "found_at_location" ||
+              key === "floor"
+            ) {
               const stateMap = {
                 status: itemStatus,
                 category: itemCategory,
@@ -322,11 +352,15 @@ export default function LostFoundPanel({
                 floor: itemFloor,
               };
               displayLabel = stateMap[key]?.label || value;
-            } else if (key.includes('from') || key.includes('to')) {
+            } else if (key.includes("from") || key.includes("to")) {
               // Display dates in readable format
-              displayLabel = value;
+              // displayLabel = value;
+                if (isValidDate(value)) {
+                  const parsedDate = new Date(value);
+                  displayLabel = formatAutoDate(parsedDate);
+                }
             }
-            
+
             return (
               <div
                 key={key}

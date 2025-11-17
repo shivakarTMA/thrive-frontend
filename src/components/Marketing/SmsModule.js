@@ -3,8 +3,8 @@ import { Formik, Form, Field } from "formik";
 import Select from "react-select";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { CKEditor } from "@ckeditor/ckeditor5-react";
-import ClassicEditor from "@ckeditor/ckeditor5-build-classic";
+// import { CKEditor } from "@ckeditor/ckeditor5-react";
+// import ClassicEditor from "@ckeditor/ckeditor5-build-classic";
 import { customStyles } from "../../Helper/helper";
 
 const clubOptions = [
@@ -479,13 +479,13 @@ const SmsModule = () => {
           {/* Message */}
           <div>
             <label className="block mb-2">Message</label>
-            <CKEditor
+            {/* <CKEditor
               editor={ClassicEditor}
               data={values.message}
               onChange={(event, editor) =>
                 setFieldValue("message", editor.getData())
               }
-            />
+            /> */}
           </div>
 
           {/* Send Copy */}

@@ -16,6 +16,15 @@ const memberStatus = [
   { value: "INACTIVE", label: "Inactive" },
 ];
 
+const ageGroupOptions = [
+  { value: "15-20", label: "15-20" },
+  { value: "21-30", label: "21-30" },
+  { value: "31-40", label: "31-40" },
+  { value: "41-50", label: "41-50" },
+  { value: "51+", label: "51+" },
+  { value: "Not Mentioned", label: "Not Mentioned" },
+];
+
 export default function MemberFilterPanel({
   filterStatus,
   setFilterStatus,
@@ -230,7 +239,7 @@ export default function MemberFilterPanel({
                 <Select
                   value={filterAgeGroup}
                   onChange={setFilterAgeGroup}
-                  options={leadStatusOptions}
+                  options={ageGroupOptions}
                   // isClearable
                   placeholder="Select Age Group"
                   styles={customStyles}

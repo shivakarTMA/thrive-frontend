@@ -11,6 +11,8 @@ import { apiAxios, authAxios } from "../../config/config";
 import { IoIosSearch } from "react-icons/io";
 import Pagination from "../common/Pagination";
 import { IoSearchOutline } from "react-icons/io5";
+import Select from "react-select";
+import { customStyles } from "../../Helper/helper";
 
 const ProductsList = () => {
   const [showModal, setShowModal] = useState(false);
@@ -18,6 +20,7 @@ const ProductsList = () => {
   const [editingOption, setEditingOption] = useState(null);
   const [service, setService] = useState([]);
   const [productCategory, setProductCategory] = useState([]);
+  const [productFilter, setProductFilter] = useState(null);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [page, setPage] = useState(1);
@@ -60,12 +63,19 @@ const ProductsList = () => {
   };
 
   const productCategoryOptions =
-    productCategory?.map((item) => ({
-      label: item.title,
-      value: item.id,
-    })) || [];
+    productCategory
+      ?.sort((a, b) => a.position - b.position)
+      .map((item) => ({
+        label: item.title,
+        value: item.id,
+        position: item.position,
+      })) || [];
 
-  const fetchProductList = async (search = searchTerm, currentPage = page) => {
+  const fetchProductList = async (
+    search = searchTerm,
+    currentPage = page,
+    category = productFilter
+  ) => {
     try {
       const params = {
         page: currentPage,
@@ -73,6 +83,8 @@ const ProductsList = () => {
       };
       // Search param
       if (search) params.search = search;
+
+      if (category?.value) params.product_category_id = category.value;
 
       const res = await apiAxios().get("/product/list", { params });
       const responseData = res.data;
@@ -92,12 +104,12 @@ const ProductsList = () => {
   // Fetch packages again when search or service filter changes
   useEffect(() => {
     const delayDebounce = setTimeout(() => {
-      fetchProductList(searchTerm, 1);
+      fetchProductList(searchTerm, 1, productFilter);
       setPage(1);
     }, 300);
 
     return () => clearTimeout(delayDebounce);
-  }, [searchTerm]);
+  }, [searchTerm, productFilter]);
 
   // Initial fetch
   useEffect(() => {
@@ -246,6 +258,16 @@ const ProductsList = () => {
               className="custom--input w-full input--icon"
             />
           </div>
+        </div>
+        <div className="w-full max-w-[200px]">
+          <Select
+            placeholder="Filter by Category"
+            options={productCategoryOptions}
+            value={productFilter}
+            onChange={(option) => setProductFilter(option)}
+            isClearable
+            styles={customStyles}
+          />
         </div>
       </div>
       <div className="box--shadow bg-white rounded-[15px] p-4">
