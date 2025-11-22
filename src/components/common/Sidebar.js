@@ -13,6 +13,7 @@ import { useSelector } from "react-redux";
 import { TbGymnastics } from "react-icons/tb";
 import { FaLayerGroup } from "react-icons/fa";
 import TopLogo from "../../assets/images/DLF-Thrive-New-Logo-1-White.png";
+import { HiTemplate } from "react-icons/hi";
 
 const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
   const location = useLocation();
@@ -21,20 +22,20 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
 
   const [dropdownToggles, setDropdownToggles] = useState({});
 
-const toggleMenu = (menuKey) => {
-  setDropdownToggles((prev) => {
-    const newState = {};
+  const toggleMenu = (menuKey) => {
+    setDropdownToggles((prev) => {
+      const newState = {};
 
-    // If the same menu is clicked, toggle it; otherwise, open the new one only
-    if (!prev[menuKey]) {
-      newState[menuKey] = true;
-    }
+      // If the same menu is clicked, toggle it; otherwise, open the new one only
+      if (!prev[menuKey]) {
+        newState[menuKey] = true;
+      }
 
-    return newState;
-  });
+      return newState;
+    });
 
-  setToggleMenuBar(false);
-};
+    setToggleMenuBar(false);
+  };
 
   useEffect(() => {
     if (toggleMenuBar) {
@@ -55,12 +56,7 @@ const toggleMenu = (menuKey) => {
     <div className={`sidebar ${toggleMenuBar ? "activetoggle" : ""}`}>
       <div className="sidebar-logo d-flex align-items-center">
         <Link to="/">
-          <img
-            src={TopLogo}
-            alt="logo"
-            width="180px"
-            height="50px"
-          />
+          <img src={TopLogo} alt="logo" width="180px" height="50px" />
         </Link>
       </div>
 
@@ -73,7 +69,6 @@ const toggleMenu = (menuKey) => {
           <AiOutlineHome className="menu--icon" />
           <span className="nav-text">Dashboard</span>
         </Link>
-
 
         <p className="text-white mt-5 text-uppercase menu--head mb-5">
           General settings
@@ -128,7 +123,9 @@ const toggleMenu = (menuKey) => {
         <Link
           to="/reports/finance/sales-report"
           className={`nav-link mb-2 ${
-            location.pathname === "/reports/finance/sales-report" ? "active" : ""
+            location.pathname === "/reports/finance/sales-report"
+              ? "active"
+              : ""
           }`}
         >
           <AiOutlineHome className="menu--icon" />
@@ -137,7 +134,9 @@ const toggleMenu = (menuKey) => {
         <Link
           to="/reports/appointments/trial-appointments"
           className={`nav-link mb-2 ${
-            location.pathname === "/reports/appointments/trial-appointments" ? "active" : ""
+            location.pathname === "/reports/appointments/trial-appointments"
+              ? "active"
+              : ""
           }`}
         >
           <AiOutlineHome className="menu--icon" />
@@ -146,7 +145,9 @@ const toggleMenu = (menuKey) => {
         <Link
           to="/reports/member-management/member-check-ins"
           className={`nav-link mb-2 ${
-            location.pathname === "/reports/member-management/member-check-ins" ? "active" : ""
+            location.pathname === "/reports/member-management/member-check-ins"
+              ? "active"
+              : ""
           }`}
         >
           <AiOutlineHome className="menu--icon" />
@@ -244,10 +245,6 @@ const toggleMenu = (menuKey) => {
                 </Link>
               </div>
             )} */}
-        <Link to="/products" className="nav-link mb-2">
-          <AiOutlineProduct className="menu--icon" />
-          <span className="nav-text">Products</span>
-        </Link>
         {/* <Link to="/services-addons" className="nav-link mb-2">
               <LuList className="menu--icon" />
               <span className="nav-text">Services</span>
@@ -299,14 +296,6 @@ const toggleMenu = (menuKey) => {
             </Link>
           </div>
         )}
-        <Link to="/diet-plan" className="nav-link mb-2">
-          <PiBowlFood className="menu--icon" />
-          <span className="nav-text">Diet Plan</span>
-        </Link>
-        <Link to="/group-classes" className="nav-link mb-2">
-          <FaLayerGroup className="menu--icon" />
-          <span className="nav-text">Group Classes</span>
-        </Link>
 
         <div
           className="nav-link d-flex justify-between align-items-center mb-2"
@@ -328,21 +317,21 @@ const toggleMenu = (menuKey) => {
           <div className="mt-2 pl-5 relative">
             <div className="absolute h-[calc(100%-15px)] w-[2px] bg-white left-[23px] top-[8px]"></div>
             <Link
-              to="/memssmail"
+              to="/send-mail-list"
               className="text-white flex items-center gap-[5px] mb-2 text-sm"
             >
               <FaCircle className="menu--icon !text-[10px]" />
               <span className="nav-text">Email</span>
             </Link>
             <Link
-              to="/memsssms"
+              to="/send-sms-list"
               className="text-white flex items-center gap-[5px] mb-2 text-sm"
             >
               <FaCircle className="menu--icon !text-[10px]" />
               <span className="nav-text">SMS</span>
             </Link>
             <Link
-              to="/memsswhatsapp"
+              to="/send-whatsapp-list"
               className="text-white flex items-center gap-[5px] mb-2 text-sm"
             >
               <FaCircle className="menu--icon !text-[10px]" />
@@ -361,6 +350,35 @@ const toggleMenu = (menuKey) => {
             >
               <FaCircle className="menu--icon !text-[10px]" />
               <span className="nav-text">Discount Code</span>
+            </Link>
+          </div>
+        )}
+
+        <div
+          className="nav-link d-flex justify-between align-items-center mb-2"
+          onClick={() => toggleMenu("templatelist")}
+          style={{ cursor: "pointer" }}
+        >
+          <div className="flex items-center">
+            <HiTemplate className="menu--icon" />
+            <span className="nav-text">Templates</span>
+          </div>
+          <FaAngleDown
+            className={`downmenu transition ${
+              dropdownToggles["templatelist"] ? "rotate-[180deg]" : ""
+            }`}
+          />
+        </div>
+
+        {dropdownToggles["templatelist"] && (
+          <div className="mt-2 pl-5 relative">
+            <div className="absolute h-[calc(100%-15px)] w-[2px] bg-white left-[23px] top-[8px]"></div>
+            <Link
+              to="/email-template-list"
+              className="text-white flex items-center gap-[5px] mb-2 text-sm"
+            >
+              <FaCircle className="menu--icon !text-[10px]" />
+              <span className="nav-text">Email Template</span>
             </Link>
           </div>
         )}
@@ -397,6 +415,13 @@ const toggleMenu = (menuKey) => {
             >
               <FaCircle className="menu--icon !text-[10px]" />
               <span className="nav-text">Club</span>
+            </Link>
+            <Link
+              to="/club-gallery"
+              className="text-white flex items-center gap-[5px] mb-2 text-sm"
+            >
+              <FaCircle className="menu--icon !text-[10px]" />
+              <span className="nav-text">Club Gallery</span>
             </Link>
             <Link
               to="/option-list"
@@ -469,7 +494,7 @@ const toggleMenu = (menuKey) => {
               <span className="nav-text">Packages</span>
             </Link>
 
-                        <Link
+            <Link
               to="/product-category"
               className="text-white flex items-center gap-[5px] mb-2 text-sm"
             >
@@ -490,13 +515,6 @@ const toggleMenu = (menuKey) => {
             >
               <FaCircle className="menu--icon !text-[10px]" />
               <span className="nav-text">Subscription Plan</span>
-            </Link>
-            <Link
-              to="/gallery"
-              className="text-white flex items-center gap-[5px] mb-2 text-sm"
-            >
-              <FaCircle className="menu--icon !text-[10px]" />
-              <span className="nav-text">Gallery</span>
             </Link>
             <Link
               to="/coupons"

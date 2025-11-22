@@ -1,3 +1,27 @@
+export const multiRowStyles = {
+  valueContainer: (base) => ({
+    ...base,
+    display: "flex",
+    flexWrap: "wrap",       // allow multiple rows
+    maxHeight: "40px",      // fixed height for scroll
+    overflowY: "auto",      // vertical scroll
+    overflowX: "hidden",
+  }),
+
+  multiValue: (base) => ({
+    ...base,
+    whiteSpace: "nowrap",
+    margin: "2px",
+  }),
+
+  multiValueLabel: (base) => ({
+    ...base,
+    whiteSpace: "nowrap",
+  }),
+};
+
+
+
 export const customStyles = {
   control: (base, state) => ({
     ...base,

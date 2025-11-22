@@ -39,8 +39,6 @@ import StaffList from "../components/Staff/StaffList";
 import ExercisesList from "../components/Exercises/ExercisesList";
 import WorkoutPlanList from "../components/WorkoutPlan/WorkoutPlanList";
 import CreateWorkoutplan from "../components/WorkoutPlan/CreateWorkoutplan";
-import DietPlanList from "../components/DietPlan/DietPlanList";
-import AllGroupClasses from "../components/groupclass/AllGroupClasses";
 import AllLostFound from "../components/lostfound/AllLostFound";
 import MemberCallLogs from "../Pages/MemberCallLogs";
 import ClubList from "../components/Club/ClubList";
@@ -67,6 +65,10 @@ import ProductsSold from "../Pages/Reports/ProductsSold";
 import GalleryList from "../components/Gallery/GalleryList";
 import CouponsList from "../components/Coupons/CouponsList";
 import ProductCategoryList from "../components/ProductCategory/ProductCategoryList";
+import CreateEmailTemplate from "../components/EmailTemplate/CreateEmailTemplate";
+import EmailTemplateList from "../components/EmailTemplate/EmailTemplateList";
+import BulkEmailCriteriaForm from "../components/Marketing/BulkEmailCriteriaForm";
+import BulkSmsCriteriaForm from "../components/Marketing/BulkSmsCriteriaForm";
 
 export default function Routing() {
   const { accessToken } = useSelector((state) => state.auth);
@@ -174,14 +176,6 @@ export default function Routing() {
               element={
                 <PrivateRoute>
                   <BookingService />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/products"
-              element={
-                <PrivateRoute>
-                  <ProductsList />
                 </PrivateRoute>
               }
             />
@@ -310,22 +304,6 @@ export default function Routing() {
               element={
                 <PrivateRoute>
                   <CreateWorkoutplan />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/diet-plan/"
-              element={
-                <PrivateRoute>
-                  <DietPlanList />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/group-classes/"
-              element={
-                <PrivateRoute>
-                  <AllGroupClasses />
                 </PrivateRoute>
               }
             />
@@ -542,14 +520,6 @@ export default function Routing() {
           }
         />
         <Route
-          path="/products"
-          element={
-            <PrivateRoute>
-              <PackagesList />
-            </PrivateRoute>
-          }
-        />
-        <Route
           path="/subscription-plan"
           element={
             <PrivateRoute>
@@ -606,23 +576,15 @@ export default function Routing() {
           }
         />
         <Route
-          path="/diet-plan/"
+          path="/send-mail/"
           element={
             <PrivateRoute>
-              <DietPlanList />
+              <BulkEmailCriteriaForm />
             </PrivateRoute>
           }
         />
         <Route
-          path="/group-classes/"
-          element={
-            <PrivateRoute>
-              <AllGroupClasses />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/memssmail/"
+          path="/send-mail-list/"
           element={
             <PrivateRoute>
               <EmailModule />
@@ -630,7 +592,39 @@ export default function Routing() {
           }
         />
         <Route
-          path="/memsssms/"
+          path="/email-template-list/"
+          element={
+            <PrivateRoute>
+              <EmailTemplateList />
+            </PrivateRoute>
+          }
+        />
+         <Route
+          path="/email-template/"
+          element={
+            <PrivateRoute>
+              <CreateEmailTemplate />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/email-template/:id"
+          element={
+            <PrivateRoute>
+              <CreateEmailTemplate />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/send-sms/"
+          element={
+            <PrivateRoute>
+              <BulkSmsCriteriaForm />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/send-sms-list/"
           element={
             <PrivateRoute>
               <SmsModule />
@@ -638,7 +632,7 @@ export default function Routing() {
           }
         />
         <Route
-          path="/memsswhatsapp/"
+          path="/send-whatsapp-list/"
           element={
             <PrivateRoute>
               <WhatsappModule />
@@ -694,7 +688,7 @@ export default function Routing() {
           }
         />
         <Route
-          path="/gallery/"
+          path="/club-gallery"
           element={
             <PrivateRoute>
               <GalleryList />

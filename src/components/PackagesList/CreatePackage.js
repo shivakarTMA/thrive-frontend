@@ -124,6 +124,7 @@ const CreatePackage = ({
       try {
         const res = await authAxios().get(`/package/${id}`);
         const data = res.data?.data || res.data || null;
+        console.log(data,'SHIVAKAR')
 
         if (data) {
           formik.setValues({
@@ -135,20 +136,20 @@ const CreatePackage = ({
             description: data?.description || "",
             image: data?.image || null,
             session_level: data?.session_level || null,
-            no_of_sessions: data?.no_of_sessions || "",
-            session_duration: data?.session_duration || "",
-            session_validity: data?.session_validity || "",
+            no_of_sessions: data?.no_of_sessions !== undefined ? data.no_of_sessions : "",
+            session_duration: data?.session_duration !== undefined ? data.session_duration : "",
+            session_validity: data?.session_validity !== undefined ? data.session_validity : "",
             start_date: data?.start_date || "",
             start_time: data?.start_time || "",
             end_time: data?.end_time || "",
-            max_capacity: data?.max_capacity || "",
-            waitlist_capacity: data?.waitlist_capacity || "",
+            max_capacity: data?.max_capacity !== undefined ? data.max_capacity : "",
+            waitlist_capacity: data?.waitlist_capacity !== undefined ? data.waitlist_capacity : "",
             tags: data?.tags || "",
-            amount: data?.amount || "",
-            discount: data?.discount || "",
+            amount: data?.amount !== undefined ? data.amount : "",
+            discount: data?.discount !== undefined ? data.discount : "",
             booking_type: data?.booking_type || "",
-            gst: data?.gst || "",
-            position: data?.position || "",
+            gst: data?.gst !== undefined ? data.gst : "",
+            position: data?.position !== undefined ? data.position : "",
             hsn_sac_code: data?.hsn_sac_code || "",
             is_featured: data?.is_featured || "",
             trainer_id: data?.trainer_id || null,
@@ -262,7 +263,7 @@ const CreatePackage = ({
                   {/* Service ID */}
                   <div>
                     <label className="mb-2 block">
-                      Service<span className="text-red-500">*</span>
+                      Service
                     </label>
                     <Select
                       name="service_id"
@@ -347,7 +348,7 @@ const CreatePackage = ({
                   {/* Caption */}
                   <div>
                     <label className="mb-2 block">
-                      Caption<span className="text-red-500">*</span>
+                      Caption{formik.values.service_id === 1 ? "": <span className="text-red-500">*</span>}
                     </label>
                     <div className="relative">
                       <input
@@ -425,7 +426,7 @@ const CreatePackage = ({
                           <input
                             type="number"
                             name="no_of_sessions"
-                            value={formik.values.no_of_sessions}
+                            value={formik.values.no_of_sessions !== null ? formik.values.no_of_sessions : ""}
                             onChange={formik.handleChange}
                             onBlur={formik.handleBlur}
                             className="custom--input w-full"
@@ -448,7 +449,7 @@ const CreatePackage = ({
                           <input
                             type="number"
                             name="session_duration"
-                            value={formik.values.session_duration}
+                            value={formik.values.session_duration !== null ? formik.values.session_duration : ""}
                             onChange={formik.handleChange}
                             onBlur={formik.handleBlur}
                             className="custom--input w-full"
@@ -470,7 +471,7 @@ const CreatePackage = ({
                           <input
                             type="number"
                             name="session_validity"
-                            value={formik.values.session_validity}
+                            value={formik.values.session_validity !== null ? formik.values.session_validity : ""}
                             onChange={formik.handleChange}
                             onBlur={formik.handleBlur}
                             className="custom--input w-full"
@@ -677,7 +678,7 @@ const CreatePackage = ({
                           <input
                             type="number"
                             name="max_capacity"
-                            value={formik.values.max_capacity}
+                            value={formik.values.max_capacity !== null ? formik.values.max_capacity : ""}
                             onChange={formik.handleChange}
                             onBlur={formik.handleBlur}
                             className="custom--input w-full"
@@ -700,7 +701,7 @@ const CreatePackage = ({
                           <input
                             type="number"
                             name="waitlist_capacity"
-                            value={formik.values.waitlist_capacity}
+                            value={formik.values.waitlist_capacity !== null ? formik.values.waitlist_capacity : ""}
                             onChange={formik.handleChange}
                             onBlur={formik.handleBlur}
                             className="custom--input w-full"
@@ -756,7 +757,7 @@ const CreatePackage = ({
                         <input
                           type="number"
                           name="amount"
-                          value={formik.values.amount}
+                          value={formik.values.amount !== null ? formik.values.amount : ""}
                           onChange={formik.handleChange}
                           onBlur={formik.handleBlur}
                           className="custom--input w-full"
@@ -780,7 +781,7 @@ const CreatePackage = ({
                         <input
                           type="number"
                           name="discount"
-                          value={formik.values.discount}
+                          value={formik.values.discount !== null ? formik.values.discount : ""}
                           onChange={formik.handleChange}
                           onBlur={formik.handleBlur}
                           className="custom--input w-full"
@@ -806,7 +807,7 @@ const CreatePackage = ({
                         <input
                           type="number"
                           name="gst"
-                          value={formik.values.gst}
+                          value={formik.values.gst !== null ? formik.values.gst : ""}
                           onChange={formik.handleChange}
                           onBlur={formik.handleBlur}
                           className="custom--input w-full"
@@ -908,7 +909,7 @@ const CreatePackage = ({
                       <input
                         type="number"
                         name="position"
-                        value={formik.values.position}
+                        value={formik.values.position !== null ? formik.values.position : ""}
                         onChange={formik.handleChange}
                         onBlur={formik.handleBlur}
                         className="custom--input w-full"

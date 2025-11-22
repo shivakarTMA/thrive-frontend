@@ -146,7 +146,7 @@ const MemberEmailFilterPanel = ({
             <div className="grid grid-cols-2 gap-4 min-w-[500px]">
               {/* Club */}
               <div>
-                <label className="block mb-1 text-sm font-medium">Club</label>
+                <label className="block mb-1 text-sm font-medium">Club<span className="text-red-500">*</span></label>
                 <Select
                   value={
                     clubOptions.find((opt) => opt.value === filterClub) || null
@@ -163,7 +163,7 @@ const MemberEmailFilterPanel = ({
               {/* Validity */}
               <div>
                 <label className="block mb-1 text-sm font-medium">
-                  Validity
+                  Validity<span className="text-red-500">*</span>
                 </label>
                 <Select
                   value={
@@ -186,7 +186,7 @@ const MemberEmailFilterPanel = ({
               {/* Age Group */}
               <div>
                 <label className="block mb-1 text-sm font-medium">
-                  Age Group
+                  Age Group<span className="text-red-500">*</span>
                 </label>
                 <Select
                   value={
@@ -208,7 +208,7 @@ const MemberEmailFilterPanel = ({
 
               {/* Gender */}
               <div>
-                <label className="block mb-1 text-sm font-medium">Gender</label>
+                <label className="block mb-1 text-sm font-medium">Gender<span className="text-red-500">*</span></label>
                 <Select
                   value={
                     genderOptions.find((opt) => opt.value === filterGender) ||
@@ -226,7 +226,7 @@ const MemberEmailFilterPanel = ({
               {/* Service */}
               <div>
                 <label className="block mb-1 text-sm font-medium">
-                  Service
+                  Service<span className="text-red-500">*</span>
                 </label>
                 <Select
                   value={
@@ -245,10 +245,52 @@ const MemberEmailFilterPanel = ({
                 />
               </div>
 
+              {/* Service Category */}
+              <div>
+                <label className="block mb-1 text-sm font-medium">
+                  Service Category<span className="text-red-500">*</span>
+                </label>
+                <Select
+                  value={
+                    serviceOptions.find((opt) => opt.value === filterServiceCategory) ||
+                    null
+                  }
+                  onChange={(option) =>
+                    setFilterValue(
+                      "filterServiceCategory",
+                      option ? option.value : null
+                    )
+                  }
+                  options={serviceOptions}
+                  placeholder="Select Category"
+                  styles={customStyles}
+                />
+              </div>
+              <div>
+                <label className="block mb-1 text-sm font-medium">
+                  Service Variation<span className="text-red-500">*</span>
+                </label>
+                <Select
+                  value={
+                    serviceOptions.find((opt) => opt.value === filterServiceVariation) ||
+                    null
+                  }
+                  onChange={(option) =>
+                    setFilterValue(
+                      "filterServiceVariation",
+                      option ? option.value : null
+                    )
+                  }
+                  options={serviceOptions}
+                  placeholder="Select Variation"
+                  styles={customStyles}
+                />
+              </div>
+
               {/* Lead Source */}
               <div>
                 <label className="block mb-1 text-sm font-medium">
-                  Lead Source
+                  Lead Source<span className="text-red-500">*</span>
                 </label>
                 <Select
                   value={
@@ -271,7 +313,7 @@ const MemberEmailFilterPanel = ({
               {/* Membership Expiry */}
               <div>
                 <label className="block mb-1 text-sm font-medium">
-                  Membership Expiry
+                  Membership Expiry<span className="text-red-500">*</span>
                 </label>
                 <div className="custom--date relative">
                   <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
@@ -295,7 +337,7 @@ const MemberEmailFilterPanel = ({
               {/* Expiry To */}
               <div>
                 <label className="block mb-1 text-sm font-medium opacity-0">
-                  Membership Expiry
+                  Membership Expiry<span className="text-red-500">*</span>
                 </label>
                 <div className="custom--date relative">
                   <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">

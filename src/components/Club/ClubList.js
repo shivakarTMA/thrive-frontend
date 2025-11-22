@@ -131,6 +131,12 @@ const ClubList = () => {
       country: "India",
       zipcode: "",
       status: "",
+      club_available_service: [],
+      description: "",
+      map_url: "",
+      open_time: null,
+      close_time: null,
+      trial_duration: "",
     },
     validationSchema: Yup.object({
       name: Yup.string().required("Club name is required"),
@@ -153,6 +159,38 @@ const ClubList = () => {
       country: Yup.string().required("Country is required"),
       zipcode: Yup.string().required("ZIP or Postal is required"),
       status: Yup.string().required("Status is required"),
+      address: Yup.string().required("Address is required"),
+      description: Yup.string().required("Description is required"),
+
+      map_url: Yup.string()
+        .url("Invalid URL format")
+        .required("Map URL is required"),
+
+      // open_time is a time (Date object)
+      open_time: Yup.date().nullable().required("Open time is required"),
+
+      close_time: Yup.date()
+        .nullable()
+        .required("Close time is required")
+        .test(
+          "is-after-open",
+          "Close time must be after open time",
+          function (value) {
+            const { open_time } = this.parent;
+            if (!open_time || !value) return true;
+            return value > open_time;
+          }
+        ),
+
+      // Number (minutes)
+      trial_duration: Yup.number()
+        .typeError("Trial duration is required")
+        .required("Trial duration is required"),
+
+      // Club services array
+      club_available_service: Yup.array()
+        .of(Yup.string())
+        .min(1, "At least one service is required"), // If you want optional, remove .min()
     }),
     onSubmit: async (values, { resetForm }) => {
       try {
@@ -169,6 +207,32 @@ const ClubList = () => {
         formData.append("country", values.country);
         formData.append("zipcode", values.zipcode);
         formData.append("status", values.status);
+        formData.append(
+          "club_available_service",
+          JSON.stringify(values.club_available_service)
+        );
+
+        formData.append(
+          "open_time",
+          values.open_time
+            ? values.open_time.toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+              })
+            : ""
+        );
+
+        formData.append(
+          "close_time",
+          values.close_time
+            ? values.close_time.toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+              })
+            : ""
+        );
+
+        formData.append("trial_duration", values.trial_duration);
 
         // ✅ Append logo only if it's a file
         if (values.logo instanceof File) {
@@ -193,14 +257,12 @@ const ClubList = () => {
 
         // 🔄 Re-fetch after save
         fetchClubs();
+        resetForm();
+        setEditingClub(null);
       } catch (err) {
         console.error("API Error:", err.response?.data || err.message);
         toast.error("Failed to save club");
       }
-
-      resetForm();
-      setEditingClub(null);
-      // setShowModal(false);
     },
   });
 

@@ -4,14 +4,13 @@ import * as Yup from "yup";
 import Select from "react-select";
 import MemberEmailFilterPanel from "../FilterPanel/MemberEmailFilterPanel";
 import { customStyles } from "../../Helper/helper";
-import RichTextEditor from "../common/RichTextEditor";
-import { emailTemplates } from "../../DummyData/DummyData";
+import { smsTemplates } from "../../DummyData/DummyData";
 import { toast } from "react-toastify";
 
 // ✅ Define validation schema using Yup
 const validationSchema = Yup.object({
   selectedTemplate: Yup.object().nullable().required("Template is required"),
-  subject: Yup.string().required("Subject is required"),
+  selectedGateway: Yup.object().nullable().required("Gateway is required"),
   message: Yup.string().required("Message is required"),
   filterClub: Yup.string().nullable().required("Club is required"),
   filterValidity: Yup.string().nullable().required("Validity is required"),
@@ -42,14 +41,24 @@ const filterFields = [
   "filterExpiryTo",
 ];
 
-const EmailCriteriaForm = ({activeTab}) => {
+const smsGateways = [
+  { value: "twilio", label: "Twilio" },
+  { value: "nexmo", label: "Nexmo / Vonage" },
+  { value: "plivo", label: "Plivo" },
+  { value: "msg91", label: "MSG91" },
+  { value: "textmagic", label: "TextMagic" },
+  { value: "clicksend", label: "ClickSend" },
+  { value: "telesign", label: "Telesign" },
+];
+
+const SmsCriteriaForm = ({ activeTab }) => {
   // ✅ Initialize Formik using the hook pattern
   const formik = useFormik({
     enableReinitialize: true,
     initialValues: {
       module: activeTab,
       selectedTemplate: null,
-      subject: "",
+      selectedGateway: null,
       message: "",
       filterClub: null,
       filterValidity: null,
@@ -72,8 +81,8 @@ const EmailCriteriaForm = ({activeTab}) => {
   const handleTemplateSelect = (option) => {
     formik.setFieldValue("selectedTemplate", option);
 
-    if (option?.value && emailTemplates[option.value]) {
-      const templateHtml = emailTemplates[option.value];
+    if (option?.value && smsTemplates[option.value]) {
+      const templateHtml = smsTemplates[option.value];
 
       // Insert template into the editor
       formik.setFieldValue("message", templateHtml);
@@ -130,23 +139,47 @@ const EmailCriteriaForm = ({activeTab}) => {
           </p>
 
           <div className="grid grid-cols-2 gap-2">
-            {/* Select Template */}
+            {/* Gateway */}
             <div>
               <label className="mb-2 block">
-                Select Email Template<span className="text-red-500">*</span>
+                Gateway<span className="text-red-500">*</span>
+              </label>
+              <Select
+                value={formik.values.selectedGateway}
+                onChange={(option) =>
+                  formik.setFieldValue("selectedGateway", option)
+                }
+                options={smsGateways}
+                placeholder="Select SMS Type"
+                styles={customStyles}
+              />
+              {formik.touched.selectedGateway &&
+                formik.errors.selectedGateway && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {formik.errors.selectedGateway}
+                  </p>
+                )}
+            </div>
+
+            {/* SMS Template */}
+            <div>
+              <label className="mb-2 block">
+                SMS Template<span className="text-red-500">*</span>
               </label>
               <Select
                 value={formik.values.selectedTemplate}
-                // onChange={(option) =>
-                //   formik.setFieldValue("selectedTemplate", option)
-                // }
                 onChange={handleTemplateSelect}
                 options={[
-                  { value: "welcome", label: "Welcome Template" },
                   { value: "renewal", label: "Renewal Template" },
                   { value: "promotion", label: "Promotion Template" },
+                  { value: "welcome", label: "Welcome Template" },
+                  { value: "passwordReset", label: "Password Reset Template" },
+                  {
+                    value: "appointmentReminder",
+                    label: "Appointment Reminder Template",
+                  },
                 ]}
-                placeholder="Select template"
+                placeholder="Select Template"
                 styles={customStyles}
               />
               {formik.touched.selectedTemplate &&
@@ -156,36 +189,18 @@ const EmailCriteriaForm = ({activeTab}) => {
                   </p>
                 )}
             </div>
-
-            {/* Subject Input */}
-            <div>
-              <label className="mb-2 block">
-                Subject<span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                name="subject"
-                className="custom--input w-full"
-                value={formik.values.subject}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                placeholder="Enter subject"
-              />
-              {formik.touched.subject && formik.errors.subject && (
-                <p className="text-red-500 text-sm mt-1">
-                  {formik.errors.subject}
-                </p>
-              )}
-            </div>
           </div>
 
           {/* --- MESSAGE SECTION --- */}
           <div className="mt-4">
-            <RichTextEditor
+            <label className="block mb-2">
+              Message
+              <span className="text-red-500">*</span>
+            </label>
+            <textarea
+              className="custom--input w-full h-40"
               value={formik.values.message}
-              label="Message"
-              onChange={(content) => formik.setFieldValue("message", content)}
-              placeholder="Enter your email message..."
+              onChange={(e) => formik.setFieldValue("message", e.target.value)}
             />
 
             {formik.touched.message && formik.errors.message && (
@@ -208,4 +223,4 @@ const EmailCriteriaForm = ({activeTab}) => {
   );
 };
 
-export default EmailCriteriaForm;
+export default SmsCriteriaForm;

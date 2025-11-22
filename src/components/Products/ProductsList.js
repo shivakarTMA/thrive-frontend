@@ -125,7 +125,7 @@ const ProductsList = () => {
         if (!value || typeof value === "string") return true;
         return ["image/jpeg", "image/png", "image/webp"].includes(value.type);
       }),
-    service_id: Yup.string().required("Service is required"),
+    // service_id: Yup.string().required("Service is required"),
     product_category_id: Yup.string().required("Product category is required"),
     name: Yup.string().required("Name is required"),
     caption: Yup.string().required("Caption is required"),
@@ -152,7 +152,7 @@ const ProductsList = () => {
 
   const initialValues = {
     image: "",
-    service_id: "",
+    // service_id: "",
     product_category_id: "",
     product_category_id: "",
     name: "",
@@ -278,7 +278,7 @@ const ProductsList = () => {
                 {/* <th className="px-2 py-4">Module ID</th> */}
                 <th className="px-2 py-4">Image</th>
                 <th className="px-2 py-4">Title</th>
-                <th className="px-2 py-4">Position</th>
+                <th className="px-2 py-4 text-center">Position</th>
                 <th className="px-2 py-4">Status</th>
                 <th className="px-2 py-4">Action</th>
               </tr>
@@ -306,7 +306,7 @@ const ProductsList = () => {
                       </div>
                     </td>
                     <td className="px-2 py-4">{item?.name}</td>
-                    <td>{item.position}</td>
+                    <td className="px-2 py-4 text-center">{item.position}</td>
                     <td className="px-2 py-4">
                       <div
                         className={`flex gap-1 items-center ${

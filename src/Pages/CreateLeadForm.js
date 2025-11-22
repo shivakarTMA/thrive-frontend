@@ -45,13 +45,6 @@ const genderOptions = [
   { value: "NOTDISCLOSE", label: "Not to Disclose" },
 ];
 
-// Lead source types
-const leadSourceTypes = [
-  { value: "Facebook", label: "Facebook" },
-  { value: "Instagram", label: "Instagram" },
-  { value: "Others", label: "Others" },
-];
-
 const validationSchema = Yup.object({
   full_name: Yup.string().required("Full Name is required"),
   mobile: Yup.string()
@@ -88,21 +81,13 @@ const validationSchema = Yup.object({
 });
 
 const CreateLeadForm = ({ setLeadModal, selectedLead, handleLeadUpdate }) => {
-
-  console.log(typeof handleLeadUpdate,'type check handleLeadUpdate')
-  console.log(selectedLead, "selectedLead");
-  const [allLeads, setAllLeads] = useState([]);
   const leadBoxRef = useRef(null);
-  const [matchingUsers, setMatchingUsers] = useState([]);
   const now = new Date();
   const [showUnderageModal, setShowUnderageModal] = useState(false);
   const [pendingDob, setPendingDob] = useState(null);
   const [duplicateError, setDuplicateError] = useState("");
-  const [showDuplicateModal, setShowDuplicateModal] = useState(false);
   const [duplicateEmailError, setDuplicateEmailError] = useState("");
   const [showDuplicateEmailModal, setShowDuplicateEmailModal] = useState(false);
-  const [hasDismissedDuplicateModal, setHasDismissedDuplicateModal] =
-    useState(false);
   const [companyOptions, setCompanyOptions] = useState([]);
 
   // Fetch companies
@@ -135,22 +120,9 @@ const CreateLeadForm = ({ setLeadModal, selectedLead, handleLeadUpdate }) => {
     }
   };
 
-  // Fetch leads
-  const fetchLeadList = async () => {
-    try {
-      const res = await apiAxios().get("/lead/list");
-      let data = res.data?.data || res.data || [];
-      setAllLeads(data);
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to fetch lead");
-    }
-  };
-
   // Initial load effect
   useEffect(() => {
     fetchCompanies();
-    fetchLeadList();
   }, []);
 
   // Redux state
@@ -162,12 +134,14 @@ const CreateLeadForm = ({ setLeadModal, selectedLead, handleLeadUpdate }) => {
     dispatch(fetchOptionList("LEAD_SOURCE"));
     dispatch(fetchOptionList("LEAD_TYPE"));
     dispatch(fetchOptionList("INTERESTED_IN"));
+    dispatch(fetchOptionList("SOCIAL_MEDIA"));
   }, [dispatch]);
 
   // Extract Redux lists
   const leadsSources = lists["LEAD_SOURCE"] || [];
   const leadTypes = lists["LEAD_TYPE"] || [];
   const servicesName = lists["INTERESTED_IN"] || [];
+  const socialList = lists["SOCIAL_MEDIA"] || [];
 
   // ✅ Initial form values
   const initialValues = {
@@ -199,7 +173,6 @@ const CreateLeadForm = ({ setLeadModal, selectedLead, handleLeadUpdate }) => {
     enableReinitialize: true, // 👈 ensures selectedLead values re-populate
     onSubmit: async (values) => {
       if (duplicateError || duplicateEmailError) {
-        setShowDuplicateModal(!!duplicateError);
         setShowDuplicateEmailModal(!!duplicateEmailError);
         return;
       }
@@ -271,19 +244,10 @@ const CreateLeadForm = ({ setLeadModal, selectedLead, handleLeadUpdate }) => {
           console.log(selectedLead, "selectedLead");
           await apiAxios().put(`/lead/${selectedLead}`, payload);
           toast.success("Lead updated successfully!");
-
-          setAllLeads((prev) =>
-            prev.map((lead) =>
-              lead.id === selectedLead
-                ? { ...lead, ...payload, id: selectedLead }
-                : lead
-            )
-          );
         } else {
           console.log("create working");
           const res = await authAxios().post("/lead/create", payload);
           toast.success("Lead created successfully!");
-          setAllLeads((prev) => [...prev, { ...payload, id: res.data.id }]);
         }
 
         setLeadModal(false);
@@ -496,10 +460,8 @@ const CreateLeadForm = ({ setLeadModal, selectedLead, handleLeadUpdate }) => {
 
       if (response?.data?.status === true) {
         setDuplicateError(response?.data?.message);
-        setShowDuplicateModal(true);
       } else {
         setDuplicateError("");
-        setShowDuplicateModal(false);
       }
     } catch (error) {
       console.error(
@@ -754,13 +716,26 @@ const CreateLeadForm = ({ setLeadModal, selectedLead, handleLeadUpdate }) => {
                               : null
                           }
                           onChange={(option) => {
-                            formik.setFieldValue(
-                              "company_name",
-                              option ? option.value : ""
-                            );
+                            if (!option) {
+                              formik.setFieldValue("company_name", "");
+
+                              // When user clears, refresh API companies
+                              fetchCompanies();
+                              return;
+                            }
+
+                            formik.setFieldValue("company_name", option.value);
                           }}
                           onCreateOption={(newValue) => {
-                            // ✅ Add new value to form and let backend handle creation on submit
+                            const newOption = {
+                              label: newValue,
+                              value: newValue,
+                            };
+
+                            // Add into react-select list
+                            setCompanyOptions((prev) => [...prev, newOption]);
+
+                            // Set into formik
                             formik.setFieldValue("company_name", newValue);
                           }}
                           onInputChange={(inputValue) => {
@@ -897,13 +872,13 @@ const CreateLeadForm = ({ setLeadModal, selectedLead, handleLeadUpdate }) => {
                           </span>
                           <Select
                             name="platform"
-                            value={leadSourceTypes.find(
+                            value={socialList.find(
                               (opt) => opt.value === formik.values.platform
                             )}
                             onChange={(option) =>
                               formik.setFieldValue("platform", option.value)
                             }
-                            options={leadSourceTypes}
+                            options={socialList}
                             styles={selectIcon}
                           />
                         </div>

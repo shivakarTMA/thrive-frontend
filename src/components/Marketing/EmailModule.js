@@ -41,7 +41,7 @@ const EmailModule = () => {
         {/* Main Content */}
 
         <div className="mt-4 ">
-          <EmailCriteriaForm />
+          <EmailCriteriaForm activeTab={activeTab} />
         </div>
       </div>
     </div>

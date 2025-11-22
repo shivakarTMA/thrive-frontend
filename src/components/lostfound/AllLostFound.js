@@ -17,6 +17,7 @@ import LostFoundPanel from "../FilterPanel/LostFoundPanel";
 import { authAxios } from "../../config/config";
 import { toast } from "react-toastify";
 import Pagination from "../common/Pagination";
+import Tooltip from "../common/Tooltip";
 
 const dateFilterOptions = [
   { value: "today", label: "Today" },
@@ -302,9 +303,20 @@ const AllLostFound = () => {
                     </td>
                     <td className="px-2 py-4">
                       <div className="flex">
+                        <Tooltip
+                          id={`tooltip-edit-${row.id}`}
+                          content="View Details"
+                          place="left"
+                        >
                         <div className="bg-[#F1F1F1] border border-[#D4D4D4] rounded-l-[5px] w-[32px] h-[32px] flex items-center justify-center cursor-pointer">
                           <img src={viewIcon} />
                         </div>
+                        </Tooltip>
+                        <Tooltip
+                          id={`tooltip-return-${row.id}`}
+                          content="Return Item"
+                          place="left"
+                        >
                         <div
                           className={`bg-[#F1F1F1] border border-[#D4D4D4] rounded-r-[5px] w-[32px] h-[32px] flex items-center justify-center ${
                             row.status !== "AVAILABLE"
@@ -318,6 +330,7 @@ const AllLostFound = () => {
                         >
                           <img src={returnIcon} />
                         </div>
+                        </Tooltip>
                       </div>
                     </td>
                   </tr>

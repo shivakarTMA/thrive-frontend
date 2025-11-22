@@ -1,13 +1,17 @@
 import React, { useEffect } from "react";
 import { IoCloseCircle, IoLocationOutline } from "react-icons/io5";
-import { FaEnvelope, FaRegBuilding } from "react-icons/fa6";
+import { FaEnvelope, FaListCheck, FaRegBuilding } from "react-icons/fa6";
 import { GrDocument } from "react-icons/gr";
 import { LuPlug } from "react-icons/lu";
 import Select from "react-select";
-import { selectIcon } from "../../Helper/helper";
+import { multiRowStyles, selectIcon } from "../../Helper/helper";
 import PhoneInput from "react-phone-number-input";
 import { apiAxios } from "../../config/config";
 import { toast } from "react-toastify";
+import CreatableSelect from "react-select/creatable";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import { GoClock } from "react-icons/go";
 
 const CreateClub = ({
   setShowModal,
@@ -18,9 +22,85 @@ const CreateClub = ({
   handlePhoneChange,
   indianStates,
 }) => {
-  console.log(editingClub,'editingClub')
-
   // ✅ Fetch club details when selectedId changes
+  const MIN_TIME = new Date();
+  MIN_TIME.setHours(6, 0, 0);
+
+  const MAX_TIME = new Date();
+  MAX_TIME.setHours(22, 0, 0);
+
+  // Remove leading/trailing double quotes, single quotes and whitespace
+  const sanitizeServiceString = (s) => {
+    if (typeof s !== "string") return s;
+    let str = s.trim();
+
+    // If string looks like a JSON array (with double quotes), try parse
+    try {
+      const parsed = JSON.parse(str);
+      if (typeof parsed === "string") return parsed.trim();
+    } catch (e) {
+      // ignore
+    }
+
+    // If it's like "['a','b']" or "['a', 'b']" (single quotes), strip outer [ ] then split
+    // But this function only handles single values, so remove any surrounding quotes
+    str = str.replace(/^"+|"+$/g, ""); // remove double quotes on ends
+    str = str.replace(/^'+|'+$/g, ""); // remove single quotes on ends
+
+    return str;
+  };
+
+  // Normalize input which might be:
+  // - actual array: ["a","b"]
+  // - single string containing single-quoted array: "['a','b']"
+  // - single string containing double-quoted JSON array: '["a","b"]'
+  // - single raw string "a"
+  const normalizeServicesArray = (arrOrString) => {
+    if (!arrOrString && arrOrString !== "") return [];
+
+    // If it's already an array, sanitize each element
+    if (Array.isArray(arrOrString)) {
+      return arrOrString.map((it) => sanitizeServiceString(it));
+    }
+
+    // If it's a string...
+    if (typeof arrOrString === "string") {
+      const trimmed = arrOrString.trim();
+
+      // Try JSON parse (works for '["a","b"]')
+      try {
+        const parsed = JSON.parse(trimmed);
+        if (Array.isArray(parsed)) {
+          return parsed.map((it) => sanitizeServiceString(it));
+        }
+      } catch (e) {
+        // not valid JSON
+      }
+
+      // If looks like single-quoted array: "['a','b']" or "['a', 'b']"
+      const singleQuoteArrayMatch = trimmed.match(/^\[.*\]$/);
+      if (singleQuoteArrayMatch) {
+        // remove outer [ ]
+        const inside = trimmed.slice(1, -1).trim();
+        if (inside.length === 0) return [];
+        // split by comma that may have spaces
+        const parts = inside.split(",").map((p) => p.trim());
+        return parts.map((p) => {
+          // strip surrounding single/double quotes
+          let cleaned = p.replace(/^'+|'+$/g, "");
+          cleaned = cleaned.replace(/^"+|"+$/g, "");
+          return cleaned.trim();
+        });
+      }
+
+      // Fallback: treat as single item
+      return [sanitizeServiceString(trimmed)];
+    }
+
+    // otherwise, can't parse -> empty
+    return [];
+  };
+
   useEffect(() => {
     if (!editingClub) return;
 
@@ -29,23 +109,37 @@ const CreateClub = ({
         const res = await apiAxios().get(`/club/${id}`);
         const data = res.data?.data || res.data || null;
 
-        console.log(data,'SHIVAKAR')
+        console.log(data, "SHIVAKAR");
 
         if (data) {
+          const normalizedServices = normalizeServicesArray(
+            data.club_available_service
+          );
           // ✅ Prefill formik fields with fetched data
           formik.setValues({
-            logo: data.name || "",
-            name: data.name || "",
-            email: data.email || "",
-            phone: "+" + data.phone || "",
-            address: data.address || "",
-            city: data.city || "",
-            state: typeof data.state === "string" 
-           ? { label: data.state, value: data.state } 
-           : data.state || "",
-            country: data.country || "",
-            zipcode: data.zipcode || "",
-            status: data.status || "",
+            logo: data?.logo || "",
+            name: data?.name || "",
+            email: data?.email || "",
+            phone: "+" + data?.phone || "",
+            address: data?.address || "",
+            city: data?.city || "",
+            state:
+              typeof data?.state === "string"
+                ? { label: data?.state, value: data?.state }
+                : data?.state || "",
+            country: data?.country || "",
+            zipcode: data?.zipcode || "",
+            status: data?.status || "",
+            club_available_service: normalizedServices,
+            description: data?.description || "",
+            map_url: data?.map_url || "",
+            open_time: data.open_time
+              ? new Date(`2024-01-01 ${data.open_time}`)
+              : null,
+            close_time: data.close_time
+              ? new Date(`2024-01-01 ${data.close_time}`)
+              : null,
+            trial_duration: data?.trial_duration || "",
           });
         }
       } catch (err) {
@@ -56,6 +150,39 @@ const CreateClub = ({
 
     fetchCompanyById(editingClub);
   }, [editingClub]);
+
+  const generateTimes = () => {
+    let times = [];
+    let start = new Date();
+    start.setHours(6, 0, 0, 0); // 6:00 AM
+
+    let end = new Date();
+    end.setHours(22, 0, 0, 0); // 10:00 PM
+
+    while (start <= end) {
+      times.push(new Date(start));
+      start = new Date(start.getTime() + 15 * 60000); // 15-minute step
+    }
+
+    return times;
+  };
+
+  const allowedTimes = generateTimes();
+
+  const handleCreateService = (inputValue) => {
+    if (!inputValue) return;
+    const clean = sanitizeServiceString(inputValue);
+    const current = Array.isArray(formik.values.club_available_service)
+      ? formik.values.club_available_service
+      : [];
+    formik.setFieldValue("club_available_service", [...current, clean]);
+  };
+
+  /* -------------------------
+     Helper to convert formik.values to options for Select components
+     ------------------------- */
+  const servicesToOptions = (arr) =>
+    (Array.isArray(arr) ? arr : []).map((s) => ({ label: s, value: s }));
 
   return (
     <div
@@ -86,29 +213,20 @@ const CreateClub = ({
           <form onSubmit={formik.handleSubmit} className="p-0 space-y-0">
             <div className="flex bg-white rounded-b-[10px]">
               <div className="p-6 flex-1">
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid lg:grid-cols-3 grid-cols-1 lg:gap-4 gap-2">
                   <div>
-                    <label className="mb-2 block">
-                      Club Logo
-                    </label>
-                     <input
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) => {
-                          const file = e.target.files[0];
-                          if (file) {
-                            formik.setFieldValue("logo", file);
-                          }
-                        }}
-                        className="custom--input w-full"
-                      />
-                    {/* {formik.values.logo && (
-                      <img
-                        src={URL.createObjectURL(formik.values.logo)}
-                        alt="Logo Preview"
-                        className="mt-2 h-16 w-16 object-cover rounded"
-                      />
-                    )} */}
+                    <label className="mb-2 block">Club Logo</label>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files[0];
+                        if (file) {
+                          formik.setFieldValue("logo", file);
+                        }
+                      }}
+                      className="custom--input w-full"
+                    />
                   </div>
                   {/* Company Name */}
                   <div>
@@ -167,9 +285,11 @@ const CreateClub = ({
                     </label>
                     <PhoneInput
                       name="phone"
-                       value={
+                      value={
                         formik.values.phone
-                          ? (formik.values.phone.startsWith("+") ? formik.values.phone : `+${formik.values.phone}`)
+                          ? formik.values.phone.startsWith("+")
+                            ? formik.values.phone
+                            : `+${formik.values.phone}`
                           : ""
                       }
                       onChange={handlePhoneChange}
@@ -287,6 +407,161 @@ const CreateClub = ({
                       </p>
                     )}
                   </div>
+                  <div>
+                    <label className="mb-2 block">
+                      Map Url<span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <span className="absolute top-[50%] translate-y-[-50%] left-[15px]">
+                        <IoLocationOutline />
+                      </span>
+                      <input
+                        type="text"
+                        name="map_url"
+                        value={formik.values.map_url}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        className="custom--input w-full input--icon"
+                      />
+                    </div>
+                    {formik.touched.map_url && formik.errors.map_url && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {formik.errors.map_url}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Creatable multiselect (single-row) */}
+                  <div>
+                    <label className="mb-2 block">
+                      Available Services<span className="text-red-500">*</span>
+                    </label>
+                    <CreatableSelect
+                      isMulti
+                      name="club_available_service"
+                      value={servicesToOptions(
+                        formik.values.club_available_service
+                      )}
+                      onChange={(selected) =>
+                        formik.setFieldValue(
+                          "club_available_service",
+                          selected ? selected.map((i) => i.value) : []
+                        )
+                      }
+                      onCreateOption={handleCreateService}
+                      styles={multiRowStyles}
+                      placeholder="Create or select services"
+                    />
+                    {formik.touched.club_available_service &&
+                      formik.errors.club_available_service && (
+                        <p className="text-red-500 text-sm mt-1">
+                          {formik.errors.club_available_service}
+                        </p>
+                      )}
+                  </div>
+
+                  {/* Open Time */}
+                  <div>
+                    <label className="mb-2 block">
+                      Open Time<span className="text-red-500">*</span>
+                    </label>
+                    <div className="custom--date relative">
+                      <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[10]">
+                        <GoClock />
+                      </span>
+                      <DatePicker
+                        selected={formik.values.open_time}
+                        onChange={(date) =>
+                          formik.setFieldValue("open_time", date)
+                        }
+                        showTimeSelect
+                        showTimeSelectOnly
+                        dateFormat="h:mm aa"
+                        timeIntervals={15}
+                        injectTimes={allowedTimes}
+                        className="custom--input w-full input--icon"
+                        placeholderText="Select Open Time"
+                      />
+                    </div>
+                    {formik.touched.open_time && formik.errors.open_time && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {formik.errors.open_time}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Close Time */}
+                  <div>
+                    <label className="mb-2 block">
+                      Close Time<span className="text-red-500">*</span>
+                    </label>
+                    <div className="custom--date relative">
+                      <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[10]">
+                        <GoClock />
+                      </span>
+                      <DatePicker
+                        selected={formik.values.close_time}
+                        onChange={(date) =>
+                          formik.setFieldValue("close_time", date)
+                        }
+                        showTimeSelect
+                        showTimeSelectOnly
+                        dateFormat="h:mm aa"
+                        timeIntervals={15}
+                        injectTimes={allowedTimes}
+                        className="custom--input w-full input--icon"
+                        placeholderText="Select Close Time"
+                      />
+                    </div>
+                    {formik.touched.close_time && formik.errors.close_time && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {formik.errors.close_time}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Trial Duration */}
+                  <div>
+                    <label className="mb-2 block">
+                      Trial Duration (Minutes)
+                      <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[10]">
+                        <GoClock />
+                      </span>
+                      <Select
+                        name="trial_duration"
+                        value={
+                          formik.values.trial_duration
+                            ? {
+                                label: formik.values.trial_duration,
+                                value: formik.values.trial_duration,
+                              }
+                            : null
+                        }
+                        options={[
+                          { label: "15", value: 15 },
+                          { label: "30", value: 30 },
+                          { label: "45", value: 45 },
+                          { label: "60", value: 60 },
+                          { label: "90", value: 90 },
+                          { label: "120", value: 120 },
+                        ]}
+                        onChange={(opt) =>
+                          formik.setFieldValue("trial_duration", opt.value)
+                        }
+                        styles={selectIcon}
+                        placeholder="Select Duration"
+                      />
+                    </div>
+                    {formik.touched.trial_duration &&
+                      formik.errors.trial_duration && (
+                        <p className="text-red-500 text-sm mt-1">
+                          {formik.errors.trial_duration}
+                        </p>
+                      )}
+                  </div>
 
                   {/* Status */}
                   <div>
@@ -323,19 +598,53 @@ const CreateClub = ({
                   </div>
 
                   {/* Address */}
-                  <div className="col-span-3">
-                    <label className="mb-2 block">Physical Address</label>
-                    <div className="relative">
-                      <span className="absolute top-[15px] left-[15px]">
-                        <IoLocationOutline />
-                      </span>
-                      <textarea
-                        name="address"
-                        value={formik.values.address}
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
-                        className="custom--input w-full input--icon"
-                      />
+                  <div className="lg:col-span-3 grid lg:grid-cols-2 grid-cols-1 lg:gap-4 gap-2">
+                    <div>
+                      <label className="mb-2 block">
+                        Physical Address<span className="text-red-500">*</span>
+                      </label>
+                      <div className="relative">
+                        <span className="absolute top-[15px] left-[15px]">
+                          <IoLocationOutline />
+                        </span>
+                        <textarea
+                          rows={3}
+                          name="address"
+                          value={formik.values.address}
+                          onChange={formik.handleChange}
+                          onBlur={formik.handleBlur}
+                          className="custom--input w-full input--icon"
+                        />
+                        {formik.touched.address && formik.errors.address && (
+                          <p className="text-red-500 text-sm mt-1">
+                            {formik.errors.address}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="mb-2 block">
+                        Description<span className="text-red-500">*</span>
+                      </label>
+                      <div className="relative">
+                        <span className="absolute top-[15px] left-[15px]">
+                          <FaListCheck />
+                        </span>
+                        <textarea
+                          rows={3}
+                          name="description"
+                          value={formik.values.description}
+                          onChange={formik.handleChange}
+                          onBlur={formik.handleBlur}
+                          className="custom--input w-full input--icon"
+                        />
+                        {formik.touched.description &&
+                          formik.errors.description && (
+                            <p className="text-red-500 text-sm mt-1">
+                              {formik.errors.description}
+                            </p>
+                          )}
+                      </div>
                     </div>
                   </div>
                 </div>

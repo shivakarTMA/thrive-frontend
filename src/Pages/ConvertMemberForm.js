@@ -109,12 +109,6 @@ const stepValidationSchemas = [
   }),
 ];
 
-const leadSourceTypes = [
-  { value: "Facebook", label: "Facebook" },
-  { value: "Instagram", label: "Instagram" },
-  { value: "Others", label: "Others" },
-];
-
 const ConvertMemberForm = ({
   setMemberModal,
   selectedLeadMember,
@@ -151,6 +145,7 @@ const ConvertMemberForm = ({
     dispatch(fetchOptionList("LEAD_TYPE"));
     dispatch(fetchOptionList("INTERESTED_IN"));
     dispatch(fetchOptionList("RELATIONSHIP"));
+    dispatch(fetchOptionList("SOCIAL_MEDIA"));
   }, [dispatch]);
 
   // Extract Redux lists
@@ -158,6 +153,7 @@ const ConvertMemberForm = ({
   const leadTypes = lists["LEAD_TYPE"] || [];
   const servicesName = lists["INTERESTED_IN"] || [];
   const relationList = lists["RELATIONSHIP"] || [];
+  const socialList = lists["SOCIAL_MEDIA"] || [];
 
   const initialValues = {
     id: "",
@@ -1005,13 +1001,13 @@ const ConvertMemberForm = ({
                               </span>
                               <Select
                                 name="platform"
-                                value={leadSourceTypes.find(
+                                value={socialList.find(
                                   (opt) => opt.value === formik.values.platform
                                 )}
                                 onChange={(option) =>
                                   formik.setFieldValue("platform", option.value)
                                 }
-                                options={leadSourceTypes}
+                                options={socialList}
                                 styles={selectIcon}
                               />
                             </div>

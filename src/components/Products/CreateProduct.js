@@ -39,7 +39,7 @@ const CreateProduct = ({
         if (data) {
           formik.setValues({
             image: data?.image || "",
-            service_id: data?.service_id || "",
+            // service_id: data?.service_id || "",
             product_category_id: data?.product_category_id || "",
             product_category_id: data?.product_category_id || "",
             name: data?.name || "",
@@ -175,7 +175,7 @@ const CreateProduct = ({
                   </div>
 
                   {/* Service */}
-                  <div>
+                  {/* <div>
                     <label className="mb-2 block">
                       Service<span className="text-red-500">*</span>
                     </label>
@@ -199,7 +199,7 @@ const CreateProduct = ({
                         {formik.errors.service_id}
                       </p>
                     )}
-                  </div>
+                  </div> */}
                   {/* Product Category */}
                   <div>
                     <label className="mb-2 block">

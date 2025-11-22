@@ -42,11 +42,13 @@ const PackagesList = () => {
   };
 
   const serviceOptions =
-    service?.map((item) => ({
-      label: item.name,
-      value: item.id,
-      service_type: item.service_type,
-    })) || [];
+    service
+      ?.map((item) => ({
+        label: item.name,
+        value: item.id,
+        service_type: item.service_type,
+      }))
+      .filter((item) => item.service_type !== "PRODUCT") || [];
 
   const fetchPackagesList = async (search = searchTerm, currentPage = page) => {
     try {
@@ -112,7 +114,10 @@ const PackagesList = () => {
           }),
         service_id: Yup.number().required("Service is required"),
         name: Yup.string().required("Name is required"),
-        caption: Yup.string().required("Caption is required"),
+        caption:
+          formik.values.service_id === 1
+            ? Yup.string() // not required if editing
+            : Yup.string().required("Caption is required"),
         tags: Yup.string().required("Tags is required"),
         studio_id: Yup.string().required("Studio is required"),
         start_date: Yup.string().required("Start Date is required"),
@@ -249,7 +254,6 @@ const PackagesList = () => {
     formik.validateForm();
   }, [formik.values.service_id]);
 
-
   return (
     <div className="page--content">
       <div className="flex items-end justify-between gap-2 mb-5">
@@ -306,7 +310,9 @@ const PackagesList = () => {
                 {/* <th className="px-2 py-4">Module ID</th> */}
                 <th className="px-2 py-4">Image</th>
                 <th className="px-2 py-4">Title</th>
-                <th className="px-2 py-4">Position</th>
+                <th className="px-2 py-4">Booking Type</th>
+                <th className="px-2 py-4">Service</th>
+                <th className="px-2 py-4 text-center">Position</th>
                 <th className="px-2 py-4">Status</th>
                 <th className="px-2 py-4">Action</th>
               </tr>
@@ -334,7 +340,9 @@ const PackagesList = () => {
                       </div>
                     </td>
                     <td className="px-2 py-4">{item?.name}</td>
-                    <td>{item.position}</td>
+                    <td className="px-2 py-4">{item?.booking_type}</td>
+                    <td className="px-2 py-4">{item?.service_name}</td>
+                    <td className="px-2 py-4 text-center">{item.position}</td>
                     <td className="px-2 py-4">
                       <div
                         className={`flex gap-1 items-center ${

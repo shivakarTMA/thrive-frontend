@@ -1,0 +1,268 @@
+import React, { useEffect } from "react";
+import { useFormik } from "formik";
+import * as Yup from "yup";
+import Select from "react-select";
+import { customStyles } from "../../Helper/helper";
+import { smsTemplates } from "../../DummyData/DummyData";
+import { toast } from "react-toastify";
+import { IoClose } from "react-icons/io5";
+import { apiAxios } from "../../config/config";
+import { useLocation, useNavigate } from "react-router-dom";
+
+// ✅ Define validation schema using Yup
+const validationSchema = Yup.object({
+  send_to: Yup.array().min(1, "Please select at least one member"),
+  selectedTemplate: Yup.object().nullable().required("Template is required"),
+  selectedGateway: Yup.object().nullable().required("Gateway is required"),
+  message: Yup.string().required("Message is required"),
+});
+
+const smsGateways = [
+  { value: "twilio", label: "Twilio" },
+  { value: "nexmo", label: "Nexmo / Vonage" },
+  { value: "plivo", label: "Plivo" },
+  { value: "msg91", label: "MSG91" },
+  { value: "textmagic", label: "TextMagic" },
+  { value: "clicksend", label: "ClickSend" },
+  { value: "telesign", label: "Telesign" },
+];
+
+const BulkSmsCriteriaForm = () => {
+
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // ✅ Parse URL to get type (member/lead) and ids
+  // Parse URL query params correctly
+  const parseUrlParams = () => {
+    const params = new URLSearchParams(location.search);
+
+    return {
+      type: params.get("type") || "member",
+      idsArray: params.get("ids")
+        ? params.get("ids").split(",").map(Number)
+        : [],
+    };
+  };
+
+  const { type: currentType, idsArray } = parseUrlParams();
+
+  // ✅ Initialize Formik using the hook pattern
+  const formik = useFormik({
+    initialValues: {
+      send_to: [],
+      selectedTemplate: null,
+      selectedGateway: null,
+      message: "",
+    },
+    validationSchema,
+    onSubmit: (values, { resetForm }) => {
+      if (values.send_to.length === 0) {
+        toast.error("Please select at least one recipient");
+        return;
+      }
+
+      const ids = values.send_to.map((m) => m.id);
+      const emails = values.send_to.map((m) => m.email);
+
+      const payload = {
+        ids,
+        emails,
+        message: values.message,
+        template: values.selectedTemplate?.value,
+        gateway: values.selectedGateway?.value,
+        type: currentType, // 'member' or 'lead'
+      };
+
+      console.log("API Payload:", payload);
+
+      toast.success("SMS sent successfully!");
+      resetForm();
+      // ⭐ Reset send-mail URL
+      navigate("/send-sms", {
+        replace: true,
+      });
+    },
+  });
+
+  console.log(formik.values?.send_to, "SHIVAKAR");
+
+  const handleTemplateSelect = (option) => {
+    formik.setFieldValue("selectedTemplate", option);
+
+    if (option?.value && smsTemplates[option.value]) {
+      const templateHtml = smsTemplates[option.value];
+
+      // Insert template into the editor
+      formik.setFieldValue("message", templateHtml);
+    }
+  };
+
+  const handleRemoveFilter = (id) => {
+    const updated = formik.values.send_to.filter((item) => item.id !== id);
+    formik.setFieldValue("send_to", updated);
+  };
+
+  const fetchMemberList = async () => {
+    try {
+      let list = [];
+      if (currentType === "member") {
+        const res = await apiAxios().get("/member/list");
+        list = res.data?.data || [];
+      } else if (currentType === "lead") {
+        const res = await apiAxios().get("/lead/list");
+        list = res.data?.data || [];
+      }
+
+      // Filter based on URL ids
+      if (idsArray.length > 0) {
+        const filtered = list.filter((item) => idsArray.includes(item.id));
+        formik.setFieldValue("send_to", filtered);
+
+        if (filtered.length === 0) {
+          toast.error(`No ${currentType} found for the given IDs.`);
+        }
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to fetch data");
+    }
+  };
+
+  // Initial fetch
+  useEffect(() => {
+    fetchMemberList();
+  }, [currentType]);
+
+  return (
+    <div className="page--content">
+      <div className=" flex items-end justify-between gap-2 mb-6">
+        <div className="title--breadcrumbs">
+          <p className="text-sm">{`Home > ${
+            currentType === "member" ? "Members" : "Leads"
+          } > All ${
+            currentType === "member" ? "Members" : "Leads"
+          } > Send Mail`}</p>
+          <h1 className="text-3xl font-semibold">Send Mail</h1>
+        </div>
+      </div>
+      <div className="w-full p-3 border bg-white shadow-box rounded-[10px]">
+        {/* ✅ Regular form tag using formik.handleSubmit */}
+        <form onSubmit={formik.handleSubmit}>
+          <p className="text-lg font-[600] text-black mb-3">Send Mail To</p>
+
+          <div className="flex items-start flex-wrap gap-2 border-[#c5c5c5] border-[0.5px] p-[10px] rounded-[10px] mb-3 min-h-[50px] max-h-[120px] overflow-auto">
+            {formik.values.send_to.map((item) => (
+              <div
+                key={item.id}
+                className="flex items-center justify-between gap-1 border rounded-full bg-[#EEEEEE] min-h-[30px] px-3 text-sm"
+              >
+                <span>{item.full_name}</span>
+                <IoClose
+                  onClick={() => handleRemoveFilter(item.id)}
+                  className="cursor-pointer text-xl"
+                />
+              </div>
+            ))}
+          </div>
+
+          {/* Validation for send_to */}
+          {formik.errors.send_to && (
+            <p className="text-red-500 text-sm -mt-2 mb-2">
+              {formik.errors.send_to}
+            </p>
+          )}
+
+          {/* --- EMAIL TEMPLATE SECTION --- */}
+          <div>
+            <p className="text-lg font-[600] text-black mb-3">
+              Customise your template
+            </p>
+
+            <div className="grid grid-cols-2 gap-2">
+              {/* Gateway */}
+            <div>
+              <label className="mb-2 block">
+                Gateway<span className="text-red-500">*</span>
+              </label>
+              <Select
+                value={formik.values.selectedGateway}
+                onChange={(option) =>
+                  formik.setFieldValue("selectedGateway", option)
+                }
+                options={smsGateways}
+                placeholder="Select SMS Type"
+                styles={customStyles}
+              />
+              {formik.touched.selectedGateway &&
+                formik.errors.selectedGateway && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {formik.errors.selectedGateway}
+                  </p>
+                )}
+            </div>
+
+            {/* SMS Template */}
+            <div>
+              <label className="mb-2 block">
+                SMS Template<span className="text-red-500">*</span>
+              </label>
+              <Select
+                value={formik.values.selectedTemplate}
+                onChange={handleTemplateSelect}
+                options={[
+                  { value: "renewal", label: "Renewal Template" },
+                  { value: "promotion", label: "Promotion Template" },
+                  { value: "welcome", label: "Welcome Template" },
+                  { value: "passwordReset", label: "Password Reset Template" },
+                  {
+                    value: "appointmentReminder",
+                    label: "Appointment Reminder Template",
+                  },
+                ]}
+                placeholder="Select Template"
+                styles={customStyles}
+              />
+              {formik.touched.selectedTemplate &&
+                formik.errors.selectedTemplate && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {formik.errors.selectedTemplate}
+                  </p>
+                )}
+            </div>
+            </div>
+
+            {/* --- MESSAGE SECTION --- */}
+            <div className="mt-4">
+            <label className="block mb-2">
+              Message
+              <span className="text-red-500">*</span>
+            </label>
+            <textarea
+              className="custom--input w-full h-40"
+              value={formik.values.message}
+              onChange={(e) => formik.setFieldValue("message", e.target.value)}
+            />
+
+            {formik.touched.message && formik.errors.message && (
+              <p className="text-red-500 text-sm mt-1">
+                {formik.errors.message}
+              </p>
+            )}
+          </div>
+
+            {/* --- SUBMIT BUTTON --- */}
+            <button
+              type="submit"
+              className="px-4 py-2 bg-black text-white rounded flex items-center gap-2 mt-4"
+            >
+              Send Mail
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+export default BulkSmsCriteriaForm;

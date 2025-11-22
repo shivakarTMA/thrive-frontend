@@ -208,29 +208,28 @@ const MemberList = () => {
   };
 
   const handleCommunicate = (type) => {
-    if (selectedIds.length === 0) {
-      // If no leads are selected, show an alert
-      toast.error(`Please select the Member to ${type} owners.`);
-    } else {
-      let url;
-      const dummyData = {
-        id: selectedIds[0], // assuming you're sending the first selected id as an example
-      };
+  if (selectedIds.length === 0) {
+    toast.error(`Please select the Member to ${type} owners.`);
+    return;
+  }
 
-      const queryParams = new URLSearchParams(dummyData).toString();
+  const queryParams = new URLSearchParams({
+    type: "member",
+    ids: selectedIds.join(","),
+  }).toString();
 
-      if (type === "sms") {
-        url = `/memsssms?${queryParams}`; // URL for sending SMS
-      } else if (type === "email") {
-        url = `/memssmail?${queryParams}`; // URL for sending Email
-      }
+  let url = "";
 
-      // Redirect to the respective URL
-      if (url) {
-        window.location.href = url;
-      }
-    }
-  };
+  if (type === "sms") {
+    url = `/send-sms?${queryParams}`;
+  } else if (type === "email") {
+    url = `/send-mail?${queryParams}`;
+  }
+
+  if (url) {
+    window.location.href = url;
+  }
+};
 
   const handleRemoveFilter = (filterKey) => {
     const setterMap = {
