@@ -134,7 +134,6 @@ const ProductsList = () => {
     short_description: Yup.string().required("Short Description is required"),
     description: Yup.string().required("Description is required"),
     allergens: Yup.string().required("Allergens is required"),
-    hsn_sac_code: Yup.string().required("HSC SAC Code is required"),
     amount: Yup.string().required("Amount is required"),
     discount: Yup.string().required("Discount is required"),
     gst: Yup.string().required("GST is required"),

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { FiClock} from "react-icons/fi";
+import { FiClock, FiPlus, FiTrash2 } from "react-icons/fi";
 import { IoCloseCircle } from "react-icons/io5";
 import Select from "react-select";
 import { customStyles } from "../../Helper/helper";
@@ -34,14 +34,15 @@ const CreatePackage = ({
   formik,
   serviceOptions,
 }) => {
-  const [sessionRows, setSessionRows] = useState([{ id: 1 }]);
+  const [sessionRows, setSessionRows] = useState([]);
   const leadBoxRef = useRef(null);
   const [studio, setStudio] = useState([]);
+  const [club, setClub] = useState([]);
   const [packageCategory, setPackageCategory] = useState([]);
   const [staffList, setStaffList] = useState([]);
   const getServiceType = (service_id, serviceOptions) => {
     const found = serviceOptions.find((s) => s.value === service_id);
-    return found?.service_type || null;
+    return found?.type || null;
   };
 
   const dispatch = useDispatch();
@@ -67,7 +68,7 @@ const CreatePackage = ({
       toast.error("Failed to fetch club");
     }
   };
-  const fetchClub = async (search = "") => {
+  const fetchStudio = async (search = "") => {
     try {
       const res = await apiAxios().get("/studio/list", {
         params: search ? { search } : {},
@@ -92,15 +93,35 @@ const CreatePackage = ({
       setPackageCategory(activeCategories);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch package category");
+      toast.error("Failed to fetch Classes category");
+    }
+  };
+
+  const fetchClub = async (search = "") => {
+    try {
+      const res = await apiAxios().get("/club/list", {
+        params: search ? { search } : {},
+      });
+      let data = res.data?.data || res.data || [];
+      setClub(data);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to fetch companies");
     }
   };
 
   useEffect(() => {
+    fetchStudio();
     fetchClub();
     fetchStaff();
     fetchPackageCategory();
   }, []);
+
+  const clubOptions =
+    club?.map((item) => ({
+      label: item.name,
+      value: item.id,
+    })) || [];
 
   const staffListOptions =
     staffList?.map((item) => ({
@@ -124,7 +145,7 @@ const CreatePackage = ({
       try {
         const res = await authAxios().get(`/package/${id}`);
         const data = res.data?.data || res.data || null;
-        console.log(data,'SHIVAKAR')
+        console.log(data, "SHIVAKAR");
 
         if (data) {
           formik.setValues({
@@ -136,14 +157,21 @@ const CreatePackage = ({
             description: data?.description || "",
             image: data?.image || null,
             session_level: data?.session_level || null,
-            no_of_sessions: data?.no_of_sessions !== undefined ? data.no_of_sessions : "",
-            session_duration: data?.session_duration !== undefined ? data.session_duration : "",
-            session_validity: data?.session_validity !== undefined ? data.session_validity : "",
+            no_of_sessions:
+              data?.no_of_sessions !== undefined ? data.no_of_sessions : "",
+            session_duration:
+              data?.session_duration !== undefined ? data.session_duration : "",
+            session_validity:
+              data?.session_validity !== undefined ? data.session_validity : "",
             start_date: data?.start_date || "",
             start_time: data?.start_time || "",
             end_time: data?.end_time || "",
-            max_capacity: data?.max_capacity !== undefined ? data.max_capacity : "",
-            waitlist_capacity: data?.waitlist_capacity !== undefined ? data.waitlist_capacity : "",
+            max_capacity:
+              data?.max_capacity !== undefined ? data.max_capacity : "",
+            waitlist_capacity:
+              data?.waitlist_capacity !== undefined
+                ? data.waitlist_capacity
+                : "",
             tags: data?.tags || "",
             amount: data?.amount !== undefined ? data.amount : "",
             discount: data?.discount !== undefined ? data.discount : "",
@@ -152,20 +180,8 @@ const CreatePackage = ({
             position: data?.position !== undefined ? data.position : "",
             hsn_sac_code: data?.hsn_sac_code || "",
             is_featured: data?.is_featured || "",
-            trainer_id: data?.trainer_id || null,
+            // trainer_id: data?.trainer_id || null,
             status: data?.status || "",
-
-            // staff_id: null,
-            // number_of_session: "",
-            // session_list: [
-            //   {
-            //     no_of_sessions: "",
-            //     session_duration: "",
-            //     thrive_coins: "",
-            //     amount: "",
-            //     gst: "",
-            //   },
-            // ],
           });
         }
       } catch (err) {
@@ -184,13 +200,52 @@ const CreatePackage = ({
     serviceOptions
   );
 
-  // ✅ Session row handlers
+  // Add new row
   const handleAddSessionRow = () => {
-    setSessionRows([...sessionRows, { id: Date.now() }]);
+    formik.setFieldValue("variation", [
+      ...formik.values.variation,
+      {
+        name: "",
+        image: "",
+        recovery_goals: "",
+        caption: "",
+        description: "",
+        no_of_sessions: "",
+        session_duration: "",
+        amount: "",
+        discount: "",
+        gst: "",
+        position: "",
+      },
+    ]);
   };
 
+  useEffect(() => {
+    if (!formik.values.variation || formik.values.variation.length === 0) {
+      formik.setFieldValue("variation", [
+        {
+          name: "",
+          image: "",
+          recovery_goals: "",
+          caption: "",
+          description: "",
+          no_of_sessions: "",
+          session_duration: "",
+          amount: "",
+          discount: "",
+          gst: "",
+          position: "",
+        },
+      ]);
+    }
+  }, [formik.values.variation]);
+
+  // Delete a row
   const handleDeleteSessionRow = (index) => {
-    setSessionRows((prev) => prev.filter((_, i) => i !== index));
+    if (formik.values.variation.length === 1) return; // prevent empty array
+
+    const updated = formik.values.variation.filter((_, i) => i !== index);
+    formik.setFieldValue("variation", updated);
   };
 
   // Handle image file change and set preview
@@ -238,7 +293,7 @@ const CreatePackage = ({
           <form onSubmit={formik.handleSubmit} className="space-y-6">
             <div className="flex bg-white rounded-b-[10px]">
               <div className="p-6 flex-1">
-                <div className="grid grid-cols-4 gap-4">
+                <div className="grid md:grid-cols-4 grid-cols-1 gap-4">
                   {/* Image Upload */}
                   <div>
                     <label className="mb-2 block">
@@ -262,9 +317,7 @@ const CreatePackage = ({
                   </div>
                   {/* Service ID */}
                   <div>
-                    <label className="mb-2 block">
-                      Service
-                    </label>
+                    <label className="mb-2 block">Service</label>
                     <Select
                       name="service_id"
                       value={
@@ -286,41 +339,42 @@ const CreatePackage = ({
                     )}
                   </div>
 
-                  {service_type_check && service_type_check === "CLASS" && (
-                    <div>
-                      <label className="mb-2 block">
-                        Category<span className="text-red-500">*</span>
-                      </label>
+                  {service_type_check &&
+                    service_type_check === "GROUP_CLASS" && (
+                      <div>
+                        <label className="mb-2 block">
+                          Category<span className="text-red-500">*</span>
+                        </label>
 
-                      <Select
-                        name="package_category_id"
-                        value={
-                          packageCategoryOptions.find(
-                            (opt) =>
-                              opt.value === formik.values.package_category_id
-                          ) || null
-                        }
-                        options={packageCategoryOptions}
-                        onChange={(option) =>
-                          formik.setFieldValue(
-                            "package_category_id",
-                            option.value
-                          )
-                        }
-                        onBlur={() =>
-                          formik.setFieldTouched("package_category_id", true)
-                        }
-                        styles={customStyles}
-                      />
+                        <Select
+                          name="package_category_id"
+                          value={
+                            packageCategoryOptions.find(
+                              (opt) =>
+                                opt.value === formik.values.package_category_id
+                            ) || null
+                          }
+                          options={packageCategoryOptions}
+                          onChange={(option) =>
+                            formik.setFieldValue(
+                              "package_category_id",
+                              option.value
+                            )
+                          }
+                          onBlur={() =>
+                            formik.setFieldTouched("package_category_id", true)
+                          }
+                          styles={customStyles}
+                        />
 
-                      {formik.touched.package_category_id &&
-                        formik.errors.package_category_id && (
-                          <div className="text-red-500 text-sm">
-                            {formik.errors.package_category_id}
-                          </div>
-                        )}
-                    </div>
-                  )}
+                        {formik.touched.package_category_id &&
+                          formik.errors.package_category_id && (
+                            <div className="text-red-500 text-sm">
+                              {formik.errors.package_category_id}
+                            </div>
+                          )}
+                      </div>
+                    )}
 
                   {/* Name */}
                   <div>
@@ -348,7 +402,12 @@ const CreatePackage = ({
                   {/* Caption */}
                   <div>
                     <label className="mb-2 block">
-                      Caption{formik.values.service_id === 1 ? "": <span className="text-red-500">*</span>}
+                      Caption
+                      {formik.values.service_id === 1 ? (
+                        ""
+                      ) : (
+                        <span className="text-red-500">*</span>
+                      )}
                     </label>
                     <div className="relative">
                       <input
@@ -389,34 +448,69 @@ const CreatePackage = ({
                     )}
                   </div>
 
-                  {/* Studio Dropdown */}
+                  {/* Club Dropdown */}
                   <div>
                     <label className="mb-2 block">
-                      Studio<span className="text-red-500">*</span>
+                      Club<span className="text-red-500">*</span>
                     </label>
-                    <Select
-                      name="studio_id"
-                      value={
-                        studioOptions.find(
-                          (opt) => opt.value === formik.values.studio_id
-                        ) || null
-                      }
-                      options={studioOptions}
-                      onChange={(option) =>
-                        formik.setFieldValue("studio_id", option.value)
-                      }
-                      onBlur={() => formik.setFieldTouched("studio_id", true)}
-                      styles={customStyles}
-                    />
-                    {formik.touched.studio_id && formik.errors.studio_id && (
-                      <div className="text-red-500 text-sm">
-                        {formik.errors.studio_id}
-                      </div>
+                    <div className="relative">
+                      <Select
+                        name="club_id"
+                        value={
+                          clubOptions.find(
+                            (option) =>
+                              option.value.toString() ===
+                              formik.values.club_id?.toString()
+                          ) || null
+                        }
+                        options={clubOptions}
+                        onChange={(option) =>
+                          formik.setFieldValue("club_id", option.value)
+                        }
+                        onBlur={() => formik.setFieldTouched("club_id", true)}
+                        styles={customStyles}
+                        className="!capitalize"
+                      />
+                    </div>
+                    {formik.touched.club_id && formik.errors.club_id && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {formik.errors.club_id}
+                      </p>
                     )}
                   </div>
 
+                  {/* Studio */}
+                  {service_type_check === "RECOVERY" ||
+                  service_type_check === "GROUP_CLASS" ? (
+                    <div>
+                      <label className="mb-2 block">
+                        Studio <span className="text-red-500">*</span>
+                      </label>
+                      <Select
+                        name="studio_id"
+                        value={
+                          studioOptions.find(
+                            (opt) => opt.value === formik.values.studio_id
+                          ) || null
+                        }
+                        options={studioOptions}
+                        onChange={(option) =>
+                          formik.setFieldValue("studio_id", option.value)
+                        }
+                        onBlur={() => formik.setFieldTouched("studio_id", true)}
+                        styles={customStyles}
+                      />
+                      {formik.touched.studio_id && formik.errors.studio_id && (
+                        <div className="text-red-500 text-sm">
+                          {formik.errors.studio_id}
+                        </div>
+                      )}
+                    </div>
+                  ) : null}
+
                   {/* Session Duration */}
-                  {service_type_check && service_type_check !== "CLASS" ? (
+                  {service_type_check &&
+                  service_type_check !== "GROUP_CLASS" ? (
                     <>
                       <div>
                         <label className="mb-2 block">
@@ -426,7 +520,11 @@ const CreatePackage = ({
                           <input
                             type="number"
                             name="no_of_sessions"
-                            value={formik.values.no_of_sessions !== null ? formik.values.no_of_sessions : ""}
+                            value={
+                              formik.values.no_of_sessions !== null
+                                ? formik.values.no_of_sessions
+                                : ""
+                            }
                             onChange={formik.handleChange}
                             onBlur={formik.handleBlur}
                             className="custom--input w-full"
@@ -449,7 +547,11 @@ const CreatePackage = ({
                           <input
                             type="number"
                             name="session_duration"
-                            value={formik.values.session_duration !== null ? formik.values.session_duration : ""}
+                            value={
+                              formik.values.session_duration !== null
+                                ? formik.values.session_duration
+                                : ""
+                            }
                             onChange={formik.handleChange}
                             onBlur={formik.handleBlur}
                             className="custom--input w-full"
@@ -471,7 +573,11 @@ const CreatePackage = ({
                           <input
                             type="number"
                             name="session_validity"
-                            value={formik.values.session_validity !== null ? formik.values.session_validity : ""}
+                            value={
+                              formik.values.session_validity !== null
+                                ? formik.values.session_validity
+                                : ""
+                            }
                             onChange={formik.handleChange}
                             onBlur={formik.handleBlur}
                             className="custom--input w-full"
@@ -485,9 +591,7 @@ const CreatePackage = ({
                           )}
                       </div>
                       <div>
-                        <label className="mb-2 block">
-                          Level<span className="text-red-500">*</span>
-                        </label>
+                        <label className="mb-2 block">Level</label>
                         <div className="relative">
                           <Select
                             name="session_level"
@@ -520,100 +624,106 @@ const CreatePackage = ({
                     </>
                   ) : null}
 
-                  {/* Start Date Field */}
-                  <div>
-                    <label className="mb-2 block">
-                      Start Date<span className="text-red-500">*</span>
-                    </label>
-                    <div className="custom--date relative">
-                      {/* Calendar Icon */}
-                      <span className="absolute z-[1] mt-[15px] ml-[15px]">
-                        <FaCalendarDays />
-                      </span>
-                      <DatePicker
-                        selected={
-                          formik.values.start_date
-                            ? new Date(formik.values.start_date) // ✅ Ensure valid Date object
-                            : null
-                        }
-                        onChange={
-                          (date) =>
-                            formik.setFieldValue(
-                              "start_date",
-                              date.toISOString().split("T")[0]
-                            ) // ✅ Save as YYYY-MM-DD
-                        }
-                        onBlur={() =>
-                          formik.setFieldTouched("start_date", true)
-                        }
-                        dateFormat="yyyy-MM-dd"
-                        minDate={new Date()} // ✅ Prevent selecting past dates
-                        className="custom--input w-full input--icon"
-                      />
-                    </div>
-                    {/* Display validation error if any */}
-                    {formik.touched.start_date && formik.errors.start_date && (
-                      <div className="text-red-500 text-sm">
-                        {formik.errors.start_date}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Start Time Field */}
-                  <div>
-                    <label className="mb-2 block">
-                      Start Time<span className="text-red-500">*</span>
-                    </label>
-                    <div className="custom--date relative">
-                      {/* Clock Icon */}
-                      <span className="absolute z-[1] mt-[15px] ml-[15px]">
-                        <FiClock />
-                      </span>
-                      <DatePicker
-                        selected={
-                          formik.values.start_time
-                            ? new Date(`1970-01-01T${formik.values.start_time}`) // ✅ Convert string to Date
-                            : null
-                        }
-                        onChange={(date) =>
-                          formik.setFieldValue(
-                            "start_time",
-                            date.toLocaleTimeString([], {
-                              hour12: false, // ✅ Ensure 24-hour format
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })
-                          )
-                        }
-                        onBlur={() =>
-                          formik.setFieldTouched("start_time", true)
-                        }
-                        showTimeSelect
-                        showTimeSelectOnly
-                        timeIntervals={15}
-                        timeCaption="Time"
-                        dateFormat="HH:mm"
-                        className="custom--input w-full input--icon"
-                        minTime={
-                          formik.values.start_date &&
-                          new Date(formik.values.start_date).toDateString() ===
-                            new Date().toDateString()
-                            ? new Date() // ✅ Block past times if selected date is today
-                            : new Date(0, 0, 0, 0, 0)
-                        }
-                        maxTime={new Date(0, 0, 0, 23, 59)}
-                      />
-                    </div>
-                    {/* Display validation error if any */}
-                    {formik.touched.start_time && formik.errors.start_time && (
-                      <div className="text-red-500 text-sm">
-                        {formik.errors.start_time}
-                      </div>
-                    )}
-                  </div>
-
-                  {service_type_check && service_type_check === "CLASS" ? (
+                  {service_type_check &&
+                  service_type_check === "GROUP_CLASS" ? (
                     <>
+                      {/* Start Date Field */}
+                      <div>
+                        <label className="mb-2 block">
+                          Start Date<span className="text-red-500">*</span>
+                        </label>
+                        <div className="custom--date relative">
+                          {/* Calendar Icon */}
+                          <span className="absolute z-[1] mt-[15px] ml-[15px]">
+                            <FaCalendarDays />
+                          </span>
+                          <DatePicker
+                            selected={
+                              formik.values.start_date
+                                ? new Date(formik.values.start_date) // ✅ Ensure valid Date object
+                                : null
+                            }
+                            onChange={
+                              (date) =>
+                                formik.setFieldValue(
+                                  "start_date",
+                                  date.toISOString().split("T")[0]
+                                ) // ✅ Save as YYYY-MM-DD
+                            }
+                            onBlur={() =>
+                              formik.setFieldTouched("start_date", true)
+                            }
+                            dateFormat="yyyy-MM-dd"
+                            minDate={new Date()} // ✅ Prevent selecting past dates
+                            className="custom--input w-full input--icon"
+                          />
+                        </div>
+                        {/* Display validation error if any */}
+                        {formik.touched.start_date &&
+                          formik.errors.start_date && (
+                            <div className="text-red-500 text-sm">
+                              {formik.errors.start_date}
+                            </div>
+                          )}
+                      </div>
+
+                      {/* Start Time Field */}
+                      <div>
+                        <label className="mb-2 block">
+                          Start Time<span className="text-red-500">*</span>
+                        </label>
+                        <div className="custom--date relative">
+                          {/* Clock Icon */}
+                          <span className="absolute z-[1] mt-[15px] ml-[15px]">
+                            <FiClock />
+                          </span>
+                          <DatePicker
+                            selected={
+                              formik.values.start_time
+                                ? new Date(
+                                    `1970-01-01T${formik.values.start_time}`
+                                  ) // ✅ Convert string to Date
+                                : null
+                            }
+                            onChange={(date) =>
+                              formik.setFieldValue(
+                                "start_time",
+                                date.toLocaleTimeString([], {
+                                  hour12: false, // ✅ Ensure 24-hour format
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                })
+                              )
+                            }
+                            onBlur={() =>
+                              formik.setFieldTouched("start_time", true)
+                            }
+                            showTimeSelect
+                            showTimeSelectOnly
+                            timeIntervals={15}
+                            timeCaption="Time"
+                            dateFormat="HH:mm"
+                            className="custom--input w-full input--icon"
+                            minTime={
+                              formik.values.start_date &&
+                              new Date(
+                                formik.values.start_date
+                              ).toDateString() === new Date().toDateString()
+                                ? new Date() // ✅ Block past times if selected date is today
+                                : new Date(0, 0, 0, 0, 0)
+                            }
+                            maxTime={new Date(0, 0, 0, 23, 59)}
+                          />
+                        </div>
+                        {/* Display validation error if any */}
+                        {formik.touched.start_time &&
+                          formik.errors.start_time && (
+                            <div className="text-red-500 text-sm">
+                              {formik.errors.start_time}
+                            </div>
+                          )}
+                      </div>
+
                       {/* End Time Field */}
                       <div>
                         <label className="mb-2 block">
@@ -678,7 +788,11 @@ const CreatePackage = ({
                           <input
                             type="number"
                             name="max_capacity"
-                            value={formik.values.max_capacity !== null ? formik.values.max_capacity : ""}
+                            value={
+                              formik.values.max_capacity !== null
+                                ? formik.values.max_capacity
+                                : ""
+                            }
                             onChange={formik.handleChange}
                             onBlur={formik.handleBlur}
                             className="custom--input w-full"
@@ -701,7 +815,11 @@ const CreatePackage = ({
                           <input
                             type="number"
                             name="waitlist_capacity"
-                            value={formik.values.waitlist_capacity !== null ? formik.values.waitlist_capacity : ""}
+                            value={
+                              formik.values.waitlist_capacity !== null
+                                ? formik.values.waitlist_capacity
+                                : ""
+                            }
                             onChange={formik.handleChange}
                             onBlur={formik.handleBlur}
                             className="custom--input w-full"
@@ -718,142 +836,161 @@ const CreatePackage = ({
                   ) : null}
 
                   {/* Booking Type */}
-                  <div>
-                    <label className="mb-2 block">
-                      Booking Type<span className="text-red-500">*</span>
-                    </label>
-                    <div className="relative">
-                      <Select
-                        name="booking_type"
-                        value={
-                          bookingType.find(
-                            (opt) => opt.value === formik.values?.booking_type
-                          ) || null
-                        }
-                        options={bookingType}
-                        onChange={(option) =>
-                          formik.setFieldValue("booking_type", option.value)
-                        }
-                        onBlur={() =>
-                          formik.setFieldTouched("booking_type", true)
-                        }
-                        styles={customStyles}
-                      />
-                    </div>
-                    {formik.touched.booking_type &&
-                      formik.errors.booking_type && (
-                        <div className="text-red-500 text-sm">
-                          {formik.errors.booking_type}
-                        </div>
-                      )}
-                  </div>
-
-                  {formik.values?.booking_type === "PAID" && (
+                  {service_type_check !== "RECOVERY" && (
                     <div>
                       <label className="mb-2 block">
-                        Amount (₹)<span className="text-red-500">*</span>
-                      </label>
-                      <div className="relative">
-                        <input
-                          type="number"
-                          name="amount"
-                          value={formik.values.amount !== null ? formik.values.amount : ""}
-                          onChange={formik.handleChange}
-                          onBlur={formik.handleBlur}
-                          className="custom--input w-full"
-                        />
-                      </div>
-
-                      {formik.touched.amount && formik.errors.amount && (
-                        <div className="text-red-500 text-sm">
-                          {formik.errors.amount}
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {formik.values?.booking_type === "PAID" && (
-                    <div>
-                      <label className="mb-2 block">
-                        Discount (₹)<span className="text-red-500">*</span>
-                      </label>
-                      <div className="relative">
-                        <input
-                          type="number"
-                          name="discount"
-                          value={formik.values.discount !== null ? formik.values.discount : ""}
-                          onChange={formik.handleChange}
-                          onBlur={formik.handleBlur}
-                          className="custom--input w-full"
-                        />
-                      </div>
-                      {formik.touched.discount && formik.errors.discount && (
-                        <div className="text-red-500 text-sm">
-                          {formik.errors.discount}
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {formik.values?.booking_type === "PAID" && (
-                    <div>
-                      <label className="mb-2 block">
-                        GST{" "}
-                        <span>
-                          (%)<span className="text-red-500">*</span>
-                        </span>
-                      </label>
-                      <div className="relative">
-                        <input
-                          type="number"
-                          name="gst"
-                          value={formik.values.gst !== null ? formik.values.gst : ""}
-                          onChange={formik.handleChange}
-                          onBlur={formik.handleBlur}
-                          className="custom--input w-full"
-                        />
-                      </div>
-                      {formik.touched.gst && formik.errors.gst && (
-                        <div className="text-red-500 text-sm">
-                          {formik.errors.gst}
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {service_type_check && service_type_check === "CLASS" && (
-                    <div>
-                      <label className="mb-2 block">
-                        Featured Event<span className="text-red-500">*</span>
+                        Booking Type<span className="text-red-500">*</span>
                       </label>
                       <div className="relative">
                         <Select
-                          name="is_featured"
+                          name="booking_type"
                           value={
-                            featureType.find(
-                              (opt) => opt.value === formik.values?.is_featured
+                            bookingType.find(
+                              (opt) => opt.value === formik.values?.booking_type
                             ) || null
                           }
-                          options={featureType}
+                          options={bookingType}
                           onChange={(option) =>
-                            formik.setFieldValue("is_featured", option.value)
+                            formik.setFieldValue("booking_type", option.value)
                           }
                           onBlur={() =>
-                            formik.setFieldTouched("is_featured", true)
+                            formik.setFieldTouched("booking_type", true)
                           }
                           styles={customStyles}
                         />
                       </div>
-                      {formik.touched.is_featured &&
-                        formik.errors.is_featured && (
+                      {formik.touched.booking_type &&
+                        formik.errors.booking_type && (
                           <div className="text-red-500 text-sm">
-                            {formik.errors.is_featured}
+                            {formik.errors.booking_type}
                           </div>
                         )}
                     </div>
                   )}
+
+                  {formik.values?.booking_type === "PAID" &&
+                    service_type_check !== "RECOVERY" && (
+                      <div>
+                        <label className="mb-2 block">
+                          Amount (₹)<span className="text-red-500">*</span>
+                        </label>
+                        <div className="relative">
+                          <input
+                            type="number"
+                            name="amount"
+                            value={
+                              formik.values.amount !== null
+                                ? formik.values.amount
+                                : ""
+                            }
+                            onChange={formik.handleChange}
+                            onBlur={formik.handleBlur}
+                            className="custom--input w-full"
+                          />
+                        </div>
+
+                        {formik.touched.amount && formik.errors.amount && (
+                          <div className="text-red-500 text-sm">
+                            {formik.errors.amount}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                  {formik.values?.booking_type === "PAID" &&
+                    service_type_check !== "RECOVERY" && (
+                      <div>
+                        <label className="mb-2 block">
+                          Discount (₹)<span className="text-red-500">*</span>
+                        </label>
+                        <div className="relative">
+                          <input
+                            type="number"
+                            name="discount"
+                            value={
+                              formik.values.discount !== null
+                                ? formik.values.discount
+                                : ""
+                            }
+                            onChange={formik.handleChange}
+                            onBlur={formik.handleBlur}
+                            className="custom--input w-full"
+                          />
+                        </div>
+                        {formik.touched.discount && formik.errors.discount && (
+                          <div className="text-red-500 text-sm">
+                            {formik.errors.discount}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                  {formik.values?.booking_type === "PAID" &&
+                    service_type_check !== "RECOVERY" && (
+                      <div>
+                        <label className="mb-2 block">
+                          GST{" "}
+                          <span>
+                            (%)<span className="text-red-500">*</span>
+                          </span>
+                        </label>
+                        <div className="relative">
+                          <input
+                            type="number"
+                            name="gst"
+                            value={
+                              formik.values.gst !== null
+                                ? formik.values.gst
+                                : ""
+                            }
+                            onChange={formik.handleChange}
+                            onBlur={formik.handleBlur}
+                            className="custom--input w-full"
+                          />
+                        </div>
+                        {formik.touched.gst && formik.errors.gst && (
+                          <div className="text-red-500 text-sm">
+                            {formik.errors.gst}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                  {service_type_check &&
+                    service_type_check === "GROUP_CLASS" && (
+                      <div>
+                        <label className="mb-2 block">
+                          Featured Event<span className="text-red-500">*</span>
+                        </label>
+                        <div className="relative">
+                          <Select
+                            name="is_featured"
+                            value={
+                              featureType.find(
+                                (opt) =>
+                                  opt.value === formik.values?.is_featured
+                              ) || null
+                            }
+                            options={featureType}
+                            onChange={(option) =>
+                              formik.setFieldValue("is_featured", option.value)
+                            }
+                            onBlur={() =>
+                              formik.setFieldTouched("is_featured", true)
+                            }
+                            styles={customStyles}
+                          />
+                        </div>
+                        {formik.touched.is_featured &&
+                          formik.errors.is_featured && (
+                            <div className="text-red-500 text-sm">
+                              {formik.errors.is_featured}
+                            </div>
+                          )}
+                      </div>
+                    )}
                   {/* Staff Dropdown */}
-                  <div>
+                  {/* <div>
                     <label className="mb-2 block">
                       Staff<span className="text-red-500">*</span>
                     </label>
@@ -876,12 +1013,10 @@ const CreatePackage = ({
                         {formik.errors.trainer_id}
                       </div>
                     )}
-                  </div>
+                  </div> */}
                   {/* HSC SAC Code */}
                   <div>
-                    <label className="mb-2 block">
-                      HSC SAC Code<span className="text-red-500">*</span>
-                    </label>
+                    <label className="mb-2 block">HSC SAC Code</label>
                     <div className="relative">
                       <input
                         type="text"
@@ -909,7 +1044,11 @@ const CreatePackage = ({
                       <input
                         type="number"
                         name="position"
-                        value={formik.values.position !== null ? formik.values.position : ""}
+                        value={
+                          formik.values.position !== null
+                            ? formik.values.position
+                            : ""
+                        }
                         onChange={formik.handleChange}
                         onBlur={formik.handleBlur}
                         className="custom--input w-full"
@@ -925,7 +1064,7 @@ const CreatePackage = ({
                   {editingOption && editingOption && (
                     <div>
                       <label className="mb-2 block">
-                        Status<span className="text-red-500">*</span>
+                        Status
                       </label>
                       <div className="relative">
                         <Select
@@ -955,165 +1094,335 @@ const CreatePackage = ({
                     </div>
                   )}
                 </div>
-
-                {/* <div className="col-span-4 space-y-3 hidden">
-                  {sessionRows.map((row, index) => (
-                    <React.Fragment key={index}>
-                      <div className="flex items-end gap-4 border-2 border-dashed border-gray-300 bg-gray-100 rounded-lg p-6 mt-5">
-                        <div className="grid grid-cols-5 gap-5">
+                {service_type_check === "RECOVERY" && (
+                  <div className="space-y-3">
+                    {(formik.values.variation || []).map((row, index) => (
+                      <div
+                        key={index}
+                        className="relative flex items-end gap-4 border-2 border-dashed border-gray-300 bg-gray-100 rounded-lg p-4 mt-5"
+                      >
+                        <div className="grid grid-cols-4 gap-4">
+                          {/* Image */}
                           <div>
                             <label className="mb-2 block">
-                              No. of Sessions
+                              Image <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                              type="file"
+                              onChange={(e) =>
+                                formik.setFieldValue(
+                                  `variation[${index}].image`,
+                                  e.target.files[0]
+                                )
+                              }
+                              onBlur={() =>
+                                formik.setFieldTouched(
+                                  `variation[${index}].image`,
+                                  true
+                                )
+                              }
+                              className="custom--input w-full"
+                            />
+                            {formik.touched.variation?.[index]?.image &&
+                              formik.errors.variation?.[index]?.image && (
+                                <div className="text-red-500 text-sm">
+                                  {formik.errors.variation[index].image}
+                                </div>
+                              )}
+                          </div>
+
+                          {/* Name */}
+                          <div>
+                            <label className="mb-2 block">
+                              Name <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                              type="text"
+                              name={`variation[${index}].name`}
+                              value={formik.values.variation[index]?.name || ""}
+                              onChange={formik.handleChange}
+                              onBlur={formik.handleBlur}
+                              className="custom--input w-full"
+                            />
+                            {formik.touched.variation?.[index]?.name &&
+                              formik.errors.variation?.[index]?.name && (
+                                <div className="text-red-500 text-sm">
+                                  {formik.errors.variation[index].name}
+                                </div>
+                              )}
+                          </div>
+
+                          {/* Recovery Goals */}
+                          <div>
+                            <label className="mb-2 block">
+                              Recovery Goals{" "}
+                              <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                              type="text"
+                              name={`variation[${index}].recovery_goals`}
+                              value={
+                                formik.values.variation[index]
+                                  ?.recovery_goals || ""
+                              }
+                              onChange={formik.handleChange}
+                              onBlur={formik.handleBlur}
+                              className="custom--input w-full"
+                            />
+                            {formik.touched.variation?.[index]
+                              ?.recovery_goals &&
+                              formik.errors.variation?.[index]
+                                ?.recovery_goals && (
+                                <div className="text-red-500 text-sm">
+                                  {
+                                    formik.errors.variation[index]
+                                      .recovery_goals
+                                  }
+                                </div>
+                              )}
+                          </div>
+
+                          {/* Caption */}
+                          <div>
+                            <label className="mb-2 block">
+                              Caption <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                              type="text"
+                              name={`variation[${index}].caption`}
+                              value={
+                                formik.values.variation[index]?.caption || ""
+                              }
+                              onChange={formik.handleChange}
+                              onBlur={formik.handleBlur}
+                              className="custom--input w-full"
+                            />
+                            {formik.touched.variation?.[index]?.caption &&
+                              formik.errors.variation?.[index]?.caption && (
+                                <div className="text-red-500 text-sm">
+                                  {formik.errors.variation[index].caption}
+                                </div>
+                              )}
+                          </div>
+
+                          {/* Description */}
+                          <div>
+                            <label className="mb-2 block">
+                              Description{" "}
+                              <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                              type="text"
+                              name={`variation[${index}].description`}
+                              value={
+                                formik.values.variation[index]?.description ||
+                                ""
+                              }
+                              onChange={formik.handleChange}
+                              onBlur={formik.handleBlur}
+                              className="custom--input w-full"
+                            />
+                            {formik.touched.variation?.[index]?.description &&
+                              formik.errors.variation?.[index]?.description && (
+                                <div className="text-red-500 text-sm">
+                                  {formik.errors.variation[index].description}
+                                </div>
+                              )}
+                          </div>
+
+                          {/* No. of Sessions */}
+                          <div>
+                            <label className="mb-2 block">
+                              No. of Sessions{" "}
+                              <span className="text-red-500">*</span>
                             </label>
                             <input
                               type="number"
-                              name={`session_list[${index}].no_of_sessions`}
+                              name={`variation[${index}].no_of_sessions`}
                               value={
-                                formik.values.session_list[index]
+                                formik.values.variation[index]
                                   ?.no_of_sessions || ""
                               }
                               onChange={formik.handleChange}
                               onBlur={formik.handleBlur}
                               className="custom--input w-full"
                             />
-                            {formik.touched.session_list?.[index]
+                            {formik.touched.variation?.[index]
                               ?.no_of_sessions &&
-                              formik.errors.session_list?.[index]
+                              formik.errors.variation?.[index]
                                 ?.no_of_sessions && (
-                                <p className="text-red-500 text-sm">
+                                <div className="text-red-500 text-sm">
                                   {
-                                    formik.errors.session_list[index]
+                                    formik.errors.variation[index]
                                       .no_of_sessions
                                   }
-                                </p>
+                                </div>
                               )}
                           </div>
+
+                          {/* Session Duration */}
                           <div>
                             <label className="mb-2 block">
-                              Session Duration
+                              Session Duration (Mins){" "}
+                              <span className="text-red-500">*</span>
                             </label>
                             <input
                               type="number"
-                              name={`session_list[${index}].session_duration`}
+                              name={`variation[${index}].session_duration`}
                               value={
-                                formik.values.session_list[index]
+                                formik.values.variation[index]
                                   ?.session_duration || ""
                               }
                               onChange={formik.handleChange}
                               onBlur={formik.handleBlur}
                               className="custom--input w-full"
                             />
-                            {formik.touched.session_list?.[index]
+                            {formik.touched.variation?.[index]
                               ?.session_duration &&
-                              formik.errors.session_list?.[index]
+                              formik.errors.variation?.[index]
                                 ?.session_duration && (
-                                <p className="text-red-500 text-sm">
+                                <div className="text-red-500 text-sm">
                                   {
-                                    formik.errors.session_list[index]
+                                    formik.errors.variation[index]
                                       .session_duration
                                   }
-                                </p>
+                                </div>
                               )}
                           </div>
+
+                          {/* Amount */}
                           <div>
                             <label className="mb-2 block">
-                              Amount <span>(₹)</span>
+                              Amount (₹) <span className="text-red-500">*</span>
                             </label>
-                            <div className="relative">
-                              <input
-                                type="number"
-                                name={`session_list[${index}].amount`}
-                                value={
-                                  formik.values.session_list[index]?.amount ||
-                                  ""
-                                }
-                                onChange={formik.handleChange}
-                                onBlur={formik.handleBlur}
-                                className="custom--input w-full"
-                              />
-                            </div>
-                            {formik.touched.session_list?.[index]?.amount &&
-                              formik.errors.session_list?.[index]?.amount && (
-                                <p className="text-red-500 text-sm">
-                                  {formik.errors.session_list[index].amount}
-                                </p>
-                              )}
-                          </div>
-                          <div>
-                            <label className="mb-2 block">Thrive Coins</label>
                             <input
                               type="number"
-                              name={`session_list[${index}].thrive_coins`}
+                              name={`variation[${index}].amount`}
                               value={
-                                formik.values.session_list[index]
-                                  ?.thrive_coins || ""
+                                formik.values.variation[index]?.amount || ""
                               }
                               onChange={formik.handleChange}
                               onBlur={formik.handleBlur}
                               className="custom--input w-full"
                             />
-                            {formik.touched.session_list?.[index]
-                              ?.thrive_coins &&
-                              formik.errors.session_list?.[index]
-                                ?.thrive_coins && (
-                                <p className="text-red-500 text-sm">
-                                  {
-                                    formik.errors.session_list[index]
-                                      .thrive_coins
-                                  }
-                                </p>
+                            {formik.touched.variation?.[index]?.amount &&
+                              formik.errors.variation?.[index]?.amount && (
+                                <div className="text-red-500 text-sm">
+                                  {formik.errors.variation[index].amount}
+                                </div>
                               )}
                           </div>
+
+                          {/* Discount */}
                           <div>
                             <label className="mb-2 block">
-                              GST <span>(%)</span>
+                              Discount (₹){" "}
+                              <span className="text-red-500">*</span>
                             </label>
-                            <div className="relative">
-                              <input
-                                type="number"
-                                name={`session_list[${index}].gst`}
-                                value={
-                                  formik.values.session_list[index]?.gst || ""
-                                }
-                                onChange={formik.handleChange}
-                                onBlur={formik.handleBlur}
-                                className="custom--input w-full"
-                              />
-                            </div>
-                            {formik.touched.session_list?.[index]?.gst &&
-                              formik.errors.session_list?.[index]?.gst && (
-                                <p className="text-red-500 text-sm">
-                                  {formik.errors.session_list[index].gst}
-                                </p>
+                            <input
+                              type="number"
+                              name={`variation[${index}].discount`}
+                              value={
+                                formik.values.variation[index]?.discount || ""
+                              }
+                              onChange={formik.handleChange}
+                              onBlur={formik.handleBlur}
+                              className="custom--input w-full"
+                            />
+                            {formik.touched.variation?.[index]?.discount &&
+                              formik.errors.variation?.[index]?.discount && (
+                                <div className="text-red-500 text-sm">
+                                  {formik.errors.variation[index].discount}
+                                </div>
+                              )}
+                          </div>
+
+                          {/* GST */}
+                          <div>
+                            <label className="mb-2 block">
+                              GST (%) <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                              type="number"
+                              name={`variation[${index}].gst`}
+                              value={formik.values.variation[index]?.gst || ""}
+                              onChange={formik.handleChange}
+                              onBlur={formik.handleBlur}
+                              className="custom--input w-full"
+                            />
+                            {formik.touched.variation?.[index]?.gst &&
+                              formik.errors.variation?.[index]?.gst && (
+                                <div className="text-red-500 text-sm">
+                                  {formik.errors.variation[index].gst}
+                                </div>
+                              )}
+                          </div>
+
+                          {/* Position */}
+                          <div>
+                            <label className="mb-2 block">
+                              Position <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                              type="number"
+                              name={`variation[${index}].position`}
+                              value={
+                                formik.values.variation[index]?.position || ""
+                              }
+                              onChange={formik.handleChange}
+                              onBlur={formik.handleBlur}
+                              className="custom--input w-full"
+                            />
+                            {formik.touched.variation?.[index]?.position &&
+                              formik.errors.variation?.[index]?.position && (
+                                <div className="text-red-500 text-sm">
+                                  {formik.errors.variation[index].position}
+                                </div>
                               )}
                           </div>
                         </div>
 
-                        <div>
+                        {/* Delete Button */}
+                        {index !== 0 && (
                           <button
                             type="button"
-                            onClick={handleAddSessionRow}
-                            className="flex items-center justify-center px-1 py-1 bg-black text-white rounded gap-2 mb-1 w-10 h-10"
+                            onClick={() => handleDeleteSessionRow(index)}
+                            className="absolute flex items-center justify-center px-1 py-1 bg-red-600 text-white rounded-full w-9 h-9 top-[-5px] right-[-5px]"
                           >
-                            <FiPlus />
+                            <FiTrash2 />
                           </button>
-                          {index !== 0 && (
-                            <button
-                              type="button"
-                              onClick={() => handleDeleteSessionRow(index)}
-                              className="flex items-center justify-center px-1 py-1 bg-red-600 text-white rounded gap-2 mb-1 w-10 h-10"
-                            >
-                              <FiTrash2 />
-                            </button>
-                          )}
-                        </div>
+                        )}
                       </div>
-                    </React.Fragment>
-                  ))}
-                </div> */}
+                    ))}
 
-                {/* CKEditor for Description */}
-                <div className="mt-5">
+                    {/* Add Variation */}
+                    <button
+                      type="button"
+                      onClick={handleAddSessionRow}
+                      className="flex items-center justify-center px-2 py-1 bg-black text-white rounded text-sm"
+                    >
+                      <FiPlus /> Add Variation
+                    </button>
+                  </div>
+                )}
+
+                {/* Equipment */}
+                <div className="my-3">
+                  <label className="mb-2 block">Equipment</label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      name="equipment"
+                      value={formik.values.equipment}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      className="custom--input w-full"
+                    />
+                  </div>
+                </div>
+
+                {/* Description */}
+                <div>
                   <label className="mb-2 block">
                     Description<span className="text-red-500">*</span>
                   </label>

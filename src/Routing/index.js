@@ -30,11 +30,8 @@ import SetPassword from "../components/common/SetPassword";
 import LeadCallLogs from "../Pages/LeadCallLogs";
 import ServicesLIst from "../Pages/ServicesLIst";
 import BookingService from "../Pages/BookingService";
-import CreateProduct from "../components/Products/CreateProduct";
-import CreateService from "../components/Services/CreateService";
 import CompanyList from "../components/Companies/CompanyList";
 import ProductsList from "../components/Products/ProductsList";
-import ServicesAddons from "../components/Services/ServicesAddons";
 import StaffList from "../components/Staff/StaffList";
 import ExercisesList from "../components/Exercises/ExercisesList";
 import WorkoutPlanList from "../components/WorkoutPlan/WorkoutPlanList";
@@ -256,14 +253,6 @@ export default function Routing() {
               element={
                 <PrivateRoute>
                   <Services />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/services-addons"
-              element={
-                <PrivateRoute>
-                  <ServicesAddons />
                 </PrivateRoute>
               }
             />
@@ -524,14 +513,6 @@ export default function Routing() {
           element={
             <PrivateRoute>
               <SubscriptionPlan />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/services-addons"
-          element={
-            <PrivateRoute>
-              <ServicesAddons />
             </PrivateRoute>
           }
         />

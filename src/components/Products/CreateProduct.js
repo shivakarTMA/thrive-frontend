@@ -307,7 +307,7 @@ const CreateProduct = ({
                   {/* HSC SAC Code */}
                   <div>
                     <label className="mb-2 block">
-                      HSC SAC Code<span className="text-red-500">*</span>
+                      HSC SAC Code
                     </label>
                     <div className="relative">
                       <input

@@ -91,8 +91,8 @@ const PackageCategoryList = () => {
     <div className="page--content">
       <div className="flex items-end justify-between gap-2 mb-5">
         <div className="title--breadcrumbs">
-          <p className="text-sm">{`Home > Package Category`}</p>
-          <h1 className="text-3xl font-semibold">Package Category</h1>
+          <p className="text-sm">{`Home > Classes Category`}</p>
+          <h1 className="text-3xl font-semibold">Classes Category</h1>
         </div>
         <div className="flex items-end gap-2">
           <button

@@ -11,7 +11,8 @@ import CreateService from "./CreateService";
 import { apiAxios } from "../../config/config";
 import { IoSearchOutline } from "react-icons/io5";
 import Select from "react-select";
-import { customStyles } from "../../Helper/helper";
+import { customStyles, formatText } from "../../Helper/helper";
+import { FaCircle } from "react-icons/fa6";
 
 // Main Services component
 const Services = () => {
@@ -96,7 +97,7 @@ const Services = () => {
         // Keep existing image if already present
         image: data.image || null,
         club_id: data.club_id || "",
-        studio_id: data.studio_id || "",
+        // studio_id: data.studio_id || "",
         type: data.type || "",
         position: data.position || "",
         status: data.status || "ACTIVE",
@@ -150,7 +151,7 @@ const Services = () => {
       image: null,
       name: "",
       club_id: "",
-      studio_id: "",
+      // studio_id: "",
       type: "",
       position: "",
       status: "ACTIVE",
@@ -168,7 +169,7 @@ const Services = () => {
       ),
       name: Yup.string().required("Title is required"),
       club_id: Yup.string().required("Club is required"),
-      studio_id: Yup.string().required("Studio is required"),
+      // studio_id: Yup.string().required("Studio is required"),
       type: Yup.string().required("Type is required"),
       position: Yup.string().required("Position is required"),
       status: Yup.string().required("Status is required"),
@@ -275,7 +276,9 @@ const Services = () => {
               <th className="px-2 py-4">Image</th>
               <th className="px-2 py-4">Name</th>
               <th className="px-2 py-4">Club Name</th>
-              <th className="px-2 py-4">Studio Name</th>
+              <th className="px-2 py-4">Type</th>
+              <th className="px-2 py-4">Position</th>
+              <th className="px-2 py-4">Status</th>
               <th className="px-2 py-4">Action</th>
             </tr>
           </thead>
@@ -304,7 +307,23 @@ const Services = () => {
                   </td>
                   <td className="px-2 py-4">{item?.name}</td>
                   <td className="px-2 py-4">{item?.club_name}</td>
-                  <td className="px-2 py-4">{item?.studio_name}</td>
+                  <td className="px-2 py-4">{formatText(item?.type)}</td>
+                  <td className="px-2 py-4">{item?.position}</td>
+                  <td className="px-2 py-4">
+                    <div
+                        className={`flex gap-1 items-center ${
+                          item?.status === "ACTIVE"
+                            ? "text-green-500"
+                            : "text-red-500"
+                        }`}
+                      >
+                        <FaCircle />
+                        {item?.status
+                          ? item.status.charAt(0) +
+                            item.status.slice(1).toLowerCase()
+                          : ""}
+                      </div>
+                  </td>
                   <td className="px-2 py-4">
                     <div className="w-fit">
                       <Tooltip

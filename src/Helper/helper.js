@@ -255,3 +255,21 @@ export const getCompanyIdByName = (companies, companyName) => {
   }
   return companies.find((c) => c.label === companyName)?.value || "";
 };
+
+export function formatText(status) {
+  if (!status) return '';
+
+  // Replace underscores with spaces, split into words
+  return status
+    .split('_')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ');
+}
+
+export const handleTextOnlyChange = (e, formik, fieldName) => {
+  const regex = /^[A-Za-z\s]*$/; // only alphabets + spaces
+
+  if (regex.test(e.target.value)) {
+    formik.setFieldValue(fieldName, e.target.value);
+  }
+};

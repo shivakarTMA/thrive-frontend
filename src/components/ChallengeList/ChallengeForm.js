@@ -7,8 +7,6 @@ import { FiImage } from "react-icons/fi";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { RiMedalLine } from "react-icons/ri";
-import { useFormik } from "formik";
-import * as Yup from "yup";
 import { toast } from "react-toastify";
 import { apiAxios } from "../../config/config";
 import { FaListCheck } from "react-icons/fa6";
@@ -16,122 +14,18 @@ import Select from "react-select";
 import { customStyles } from "../../Helper/helper";
 
 // Define the ChallengeForm component
-const ChallengeForm = ({ setShowModal, editingOption, onChallengeCreated }) => {
+const ChallengeForm = ({ setShowModal, editingOption, formik }) => {
   const leadBoxRef = useRef();
-  const formik = useFormik({
-    initialValues: {
-      title: "",
-      caption: "",
-      description: "",
-      image: "",
-      goal: "",
-      start_date: "",
-      end_date: "",
-      condition: "",
-      reward_first: "",
-      reward_second: "",
-      reward_third: "",
-      about_challenge: "",
-      position: "",
-      status: "UPCOMING",
-      join_in_between: null,
-    },
 
-    // Define validation schema using Yup
-    validationSchema: Yup.object({
-      // image: Yup.mixed().required("Image is required"),
-      title: Yup.string().required("Challenge title is required"),
-      caption: Yup.string().required("Caption is required"),
-      description: Yup.string().required("Description is required"),
-      goal: Yup.string().required("Goal is required"),
-      start_date: Yup.date().required("Start date is required"),
-      end_date: Yup.date()
-        .min(Yup.ref("start_date"), "End date cannot be before start date")
-        .required("End date is required"),
-      condition: Yup.string().required("Condition is required"),
-      reward_first: Yup.number()
-        .typeError("Must be a number")
-        .positive("Must be positive")
-        .required("First reward is required"),
-      reward_second: Yup.number()
-        .typeError("Must be a number")
-        .positive("Must be positive")
-        .required("Second reward is required"),
-      reward_third: Yup.number()
-        .typeError("Must be a number")
-        .positive("Must be positive")
-        .required("Third reward is required"),
-      about_challenge: Yup.string().required("About challenge is required"),
-      position: Yup.string().required("Position is required"),
-    }),
-
-    // Handle form submission
-    onSubmit: async (values, { resetForm }) => {
-      try {
-        const formData = new FormData();
-
-        // ✅ Convert dates to YYYY-MM-DD format
-        const startDate = values.start_date
-          ? new Date(values.start_date).toISOString().split("T")[0]
-          : "";
-        const endDate = values.end_date
-          ? new Date(values.end_date).toISOString().split("T")[0]
-          : "";
-
-        // ✅ Append all fields safely
-        Object.keys(values).forEach((key) => {
-          if (key === "image") {
-            // append only if it's a File object
-            if (values.image instanceof File) {
-              formData.append("image", values.image);
-            }
-          } else if (key === "join_in_between") {
-            // boolean -> string for backend
-            formData.append(
-              "join_in_between",
-              values.join_in_between ? "true" : "false"
-            );
-          } else if (key === "start_date") {
-            formData.append("start_date", startDate);
-          } else if (key === "end_date") {
-            formData.append("end_date", endDate);
-          } else {
-            formData.append(key, values[key]);
-          }
-        });
-
-        // ✅ Send to API
-        if (editingOption) {
-          await apiAxios().put(`/challenge/${editingOption}`, formData, {
-            headers: { "Content-Type": "multipart/form-data" },
-          });
-          toast.success("Challenge updated successfully!");
-        } else {
-          await apiAxios().post("/challenge/create", formData, {
-            headers: { "Content-Type": "multipart/form-data" },
-          });
-          toast.success("Challenge created successfully!");
-        }
-
-        resetForm();
-        if (onChallengeCreated) {
-          await onChallengeCreated();
-        }
-        setShowModal(false);
-      } catch (error) {
-        toast.error("Something went wrong. Please try again.");
-        console.error("Error submitting form:", error.response || error);
-      }
-    },
-  });
-
-    // Fetch exercise by ID when editingExercise changes
+  // Fetch exercise by ID when editingExercise changes
   useEffect(() => {
     const fetchChallengeById = async () => {
       if (editingOption) {
         try {
           const response = await apiAxios().get(`/challenge/${editingOption}`);
-          const exerciseData = response.data?.data || response.data || null;;
+          const exerciseData = response.data?.data || response.data || null;
+
+          console.log(exerciseData,'exerciseData')
 
           // Set form values from fetched data
           formik.setValues({
@@ -150,8 +44,6 @@ const ChallengeForm = ({ setShowModal, editingOption, onChallengeCreated }) => {
             position: exerciseData?.position,
             status: exerciseData?.status || "UPCOMING",
             join_in_between: exerciseData?.join_in_between || null,
-
-
           });
         } catch (error) {
           toast.error("Failed to fetch exercise data.");

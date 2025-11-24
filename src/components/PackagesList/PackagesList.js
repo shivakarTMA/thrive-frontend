@@ -34,6 +34,7 @@ const PackagesList = () => {
       });
       let data = res.data?.data || res.data || [];
       const activeService = data.filter((item) => item.status === "ACTIVE");
+      console.log(activeService, "activeService");
       setService(activeService);
     } catch (err) {
       console.error(err);
@@ -46,9 +47,9 @@ const PackagesList = () => {
       ?.map((item) => ({
         label: item.name,
         value: item.id,
-        service_type: item.service_type,
+        type: item.type,
       }))
-      .filter((item) => item.service_type !== "PRODUCT") || [];
+      .filter((item) => item.type !== "PRODUCT") || [];
 
   const fetchPackagesList = async (search = searchTerm, currentPage = page) => {
     try {
@@ -96,7 +97,7 @@ const PackagesList = () => {
 
   const getServiceType = (service_id, serviceOptions) => {
     const service = serviceOptions.find((s) => s.value === service_id);
-    return service?.service_type || null;
+    return service?.type || null;
   };
 
   const getValidationSchema = (serviceOptions) =>
@@ -113,64 +114,133 @@ const PackagesList = () => {
             );
           }),
         service_id: Yup.number().required("Service is required"),
+        club_id: Yup.number().required("Club is required"),
         name: Yup.string().required("Name is required"),
         caption:
           formik.values.service_id === 1
             ? Yup.string() // not required if editing
             : Yup.string().required("Caption is required"),
         tags: Yup.string().required("Tags is required"),
-        studio_id: Yup.string().required("Studio is required"),
-        start_date: Yup.string().required("Start Date is required"),
-        start_time: Yup.string().required("Start Time is required"),
-        booking_type: Yup.string().required("Booking Type is required"),
-        trainer_id: Yup.string().required("Staff is required"),
-        hsn_sac_code: Yup.string().required("HSC SAC Code is required"),
+
+        // trainer_id: Yup.string().required("Staff is required"),
         position: Yup.string().required("Position is required"),
-        status: editingOption
-          ? Yup.string() // not required if editing
-          : Yup.string().required("Status is required"),
+        // status: editingOption
+        //   ? Yup.string() // not required if editing
+        //   : Yup.string().required("Status is required"),
         description: Yup.string().required("Description is required"),
       };
 
-      if (service_type === "CLASS") {
+      if (service_type === "GROUP_CLASS") {
         schema = {
           ...schema,
           package_category_id: Yup.number().required("Category is required"),
+          start_date: Yup.string().required("Start Date is required"),
+          start_time: Yup.string().required("Start Time is required"),
+          end_time: Yup.string().required("End Time is required"),
+          max_capacity: Yup.string().required("Max Capacity is required"),
+          waitlist_capacity: Yup.string().required(
+            "Waitlist Capacity is required"
+          ),
+          is_featured: Yup.string().required("Featured Event is required"),
         };
-
-        if (values.booking_type === "Yes") {
-          schema.amount = Yup.number().required("Amount is required");
-          schema.gst = Yup.number().required("GST is required");
-          schema.thrive_coins = Yup.number().required("Thrive coins required");
-        }
       }
 
-      // if (service_type === "SESSION") {
-      //   schema = {
-      //     ...schema,
-      //     number_of_session: Yup.string().required(
-      //       "Number of session is required"
-      //     ),
-      //     session_duration: Yup.number().required(
-      //       "Session duration is required"
-      //     ),
-      //     session_level: Yup.string().required("Session level is required"),
-      //     session_validity: Yup.number().required("Validity is required"),
-      //     session_list: Yup.array().of(
-      //       Yup.object().shape({
-      //         no_of_sessions: Yup.number().required("No of sessions").min(1),
-      //         session_duration: Yup.number()
-      //           .required("Duration required")
-      //           .min(1),
-      //         amount: Yup.number().required("Amount required").min(0),
-      //         thrive_coins: Yup.number()
-      //           .required("Thrive coins required")
-      //           .min(0),
-      //         gst: Yup.number().required("GST required").min(0),
-      //       })
-      //     ),
-      //   };
-      // }
+      if (service_type !== "RECOVERY") {
+        schema = {
+          ...schema,
+
+          booking_type: Yup.string()
+            .oneOf(["PAID", "FREE"])
+            .required("Booking Type is required"),
+
+          amount: Yup.number()
+            .typeError("Amount must be a number")
+            .when("booking_type", {
+              is: "PAID",
+              then: (schema) => schema.required("Amount is required"),
+              otherwise: (schema) => schema.nullable(),
+            }),
+
+          discount: Yup.number()
+            .typeError("Discount must be a number")
+            .when("booking_type", {
+              is: "PAID",
+              then: (schema) => schema.required("Discount is required"),
+              otherwise: (schema) => schema.nullable(),
+            }),
+
+          gst: Yup.number()
+            .typeError("GST must be a number")
+            .when("booking_type", {
+              is: "PAID",
+              then: (schema) => schema.required("GST is required"),
+              otherwise: (schema) => schema.nullable(),
+            }),
+        };
+      }
+
+      if (
+        service_type === "RECREATION" ||
+        service_type === "RECOVERY" ||
+        service_type === "PERSONAL_TRAINER"
+      ) {
+        schema = {
+          ...schema,
+          session_duration: Yup.number().required(
+            "Session duration is required"
+          ),
+          session_validity: Yup.number().required("Validity is required"),
+          no_of_sessions: Yup.number().required("No. of Sessions is required"),
+        };
+      }
+      if (service_type === "RECOVERY" || service_type === "GROUP_CLASS") {
+        schema = {
+          ...schema,
+          studio_id: Yup.string().required("Studio is required"),
+        };
+      }
+
+      if (service_type === "RECOVERY") {
+        schema = {
+          ...schema,
+          variation: Yup.array().of(
+            Yup.object({
+              name: Yup.string().required("Name is required"),
+              image: Yup.mixed()
+                .required("Image is required")
+                .test("fileType", "Only JPG, PNG, or WEBP allowed", (value) => {
+                  if (!value || typeof value === "string") return true;
+                  return ["image/jpeg", "image/png", "image/webp"].includes(
+                    value.type
+                  );
+                }),
+              recovery_goals: Yup.string().required(
+                "Recovery Goals are required"
+              ),
+              caption: Yup.string().required("Caption is required"),
+              description: Yup.string().required("Description is required"),
+              no_of_sessions: Yup.number()
+                .typeError("No. of Sessions must be a number")
+                .required("No. of Sessions is required"),
+              session_duration: Yup.number()
+                .typeError("Session Duration must be a number")
+                .required("Session Duration is required"),
+              amount: Yup.number()
+                .typeError("Amount must be a number")
+                .required("Amount is required"),
+              discount: Yup.number()
+                .typeError("Discount must be a number")
+                .required("Discount is required"),
+              gst: Yup.number()
+                .typeError("GST must be a number")
+                .required("GST is required"),
+              position: Yup.number()
+                .typeError("Position must be a number")
+                .required("Position is required"),
+            })
+          ),
+        };
+      }
 
       return Yup.object(schema);
     });
@@ -178,6 +248,7 @@ const PackagesList = () => {
   const initialValues = {
     name: "",
     service_id: "",
+    club_id: null,
     studio_id: null,
     package_category_id: "",
     caption: "",
@@ -200,8 +271,24 @@ const PackagesList = () => {
     position: "",
     hsn_sac_code: "",
     is_featured: "",
-    trainer_id: null,
+    // trainer_id: null,
+    equipment: "",
     status: "",
+    variation: [
+      {
+        name: "",
+        image: "",
+        recovery_goals: "",
+        caption: "",
+        description: "",
+        no_of_sessions: "",
+        session_duration: "",
+        amount: "",
+        discount: "",
+        gst: "",
+        position: "",
+      },
+    ],
   };
 
   const formik = useFormik({
@@ -210,6 +297,7 @@ const PackagesList = () => {
     validateOnChange: true,
     validateOnBlur: true,
     onSubmit: async (values, { resetForm }) => {
+      console.log(values, "values");
       try {
         const formData = new FormData();
         Object.keys(values).forEach((key) => {
@@ -222,6 +310,24 @@ const PackagesList = () => {
         // if file exists, append it (instead of just file name)
         if (values.image instanceof File) {
           formData.append("file", values.image);
+        }
+
+        if (getServiceType(values.service_id, serviceOptions) === "RECOVERY") {
+          values.booking_type = "PAID";
+
+          // values.variation.forEach((item, index) => {
+          //   Object.keys(item).forEach((field) => {
+          //     // Handle variation image separately
+          //     if (field === "image" && item.image instanceof File) {
+          //       formData.append(`variation[${index}].image`, item.image);
+          //     } else {
+          //       formData.append(
+          //         `variation[${index}].${field}`,
+          //         item[field] ?? ""
+          //       );
+          //     }
+          //   });
+          // });
         }
 
         if (editingOption && editingOption) {
@@ -253,6 +359,9 @@ const PackagesList = () => {
   useEffect(() => {
     formik.validateForm();
   }, [formik.values.service_id]);
+
+  console.log(formik.errors, "SHIVAKAR ERRORS");
+  // console.log(formik.values, "SHIVAKAR values");
 
   return (
     <div className="page--content">

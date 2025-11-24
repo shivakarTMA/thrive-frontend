@@ -180,11 +180,6 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
           <IoBarChartOutline className="menu--icon" />
           <span className="nav-text">My Leads</span>
         </Link>
-        <Link to="#" className="nav-link mb-2">
-          <SlCalender className="menu--icon" />
-          <span className="nav-text">Bookings</span>
-        </Link>
-
         <Link
           to="/all-members"
           className={`nav-link mb-2 ${
@@ -245,10 +240,6 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                 </Link>
               </div>
             )} */}
-        {/* <Link to="/services-addons" className="nav-link mb-2">
-              <LuList className="menu--icon" />
-              <span className="nav-text">Services</span>
-            </Link> */}
         {/* <Link to="/companies" className="nav-link mb-2">
               <FaRegBuilding className="menu--icon" />
               <span className="nav-text">Companies</span>
@@ -484,7 +475,7 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
               className="text-white flex items-center gap-[5px] mb-2 text-sm"
             >
               <FaCircle className="menu--icon !text-[10px]" />
-              <span className="nav-text">Package Category</span>
+              <span className="nav-text">Classes Category</span>
             </Link>
             <Link
               to="/packages"

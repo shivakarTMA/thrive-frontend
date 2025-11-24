@@ -7,6 +7,8 @@ import { formatAutoDate } from "../../Helper/helper";
 import { apiAxios } from "../../config/config";
 import { toast } from "react-toastify";
 import Pagination from "../common/Pagination";
+import { useFormik } from "formik";
+import * as Yup from "yup";
 
 const ChallengeList = () => {
   const [showModal, setShowModal] = useState(false);
@@ -18,9 +20,13 @@ const ChallengeList = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
 
-  const fetchChallengeList = async () => {
+  const fetchChallengeList = async (currentPage = page) => {
     try {
-      const res = await apiAxios().get(`/challenge/list`);
+      const params = {
+        page: currentPage,
+        limit: rowsPerPage,
+      };
+      const res = await apiAxios().get(`/challenge/list`, { params });
       const data = res.data?.data || [];
       setChallenges(data);
       setPage(res.data?.currentPage || 1);
@@ -35,6 +41,111 @@ const ChallengeList = () => {
   useEffect(() => {
     fetchChallengeList();
   }, []);
+
+    const formik = useFormik({
+    initialValues: {
+      title: "",
+      caption: "",
+      description: "",
+      image: "",
+      goal: "",
+      start_date: "",
+      end_date: "",
+      condition: "",
+      reward_first: "",
+      reward_second: "",
+      reward_third: "",
+      about_challenge: "",
+      position: "",
+      status: "UPCOMING",
+      join_in_between: null,
+    },
+
+    // Define validation schema using Yup
+    validationSchema: Yup.object({
+      // image: Yup.mixed().required("Image is required"),
+      title: Yup.string().required("Challenge title is required"),
+      caption: Yup.string().required("Caption is required"),
+      description: Yup.string().required("Description is required"),
+      goal: Yup.string().required("Goal is required"),
+      start_date: Yup.date().required("Start date is required"),
+      end_date: Yup.date()
+        .min(Yup.ref("start_date"), "End date cannot be before start date")
+        .required("End date is required"),
+      condition: Yup.string().required("Condition is required"),
+      reward_first: Yup.number()
+        .typeError("Must be a number")
+        .positive("Must be positive")
+        .required("First reward is required"),
+      reward_second: Yup.number()
+        .typeError("Must be a number")
+        .positive("Must be positive")
+        .required("Second reward is required"),
+      reward_third: Yup.number()
+        .typeError("Must be a number")
+        .positive("Must be positive")
+        .required("Third reward is required"),
+      about_challenge: Yup.string().required("About challenge is required"),
+      position: Yup.string().required("Position is required"),
+    }),
+
+    // Handle form submission
+    onSubmit: async (values, { resetForm }) => {
+      try {
+        const formData = new FormData();
+
+        // ✅ Convert dates to YYYY-MM-DD format
+        const startDate = values.start_date
+          ? new Date(values.start_date).toISOString().split("T")[0]
+          : "";
+        const endDate = values.end_date
+          ? new Date(values.end_date).toISOString().split("T")[0]
+          : "";
+
+        // ✅ Append all fields safely
+        Object.keys(values).forEach((key) => {
+          if (key === "image") {
+            // append only if it's a File object
+            if (values.image instanceof File) {
+              formData.append("image", values.image);
+            }
+          } else if (key === "join_in_between") {
+            // boolean -> string for backend
+            formData.append(
+              "join_in_between",
+              values.join_in_between ? "true" : "false"
+            );
+          } else if (key === "start_date") {
+            formData.append("start_date", startDate);
+          } else if (key === "end_date") {
+            formData.append("end_date", endDate);
+          } else {
+            formData.append(key, values[key]);
+          }
+        });
+
+        // ✅ Send to API
+        if (editingOption) {
+          await apiAxios().put(`/challenge/${editingOption}`, formData, {
+            headers: { "Content-Type": "multipart/form-data" },
+          });
+          toast.success("Challenge updated successfully!");
+        } else {
+          await apiAxios().post("/challenge/create", formData, {
+            headers: { "Content-Type": "multipart/form-data" },
+          });
+          toast.success("Challenge created successfully!");
+        }
+
+        resetForm();
+        setShowModal(false);
+        fetchChallengeList();
+      } catch (error) {
+        toast.error("Something went wrong. Please try again.");
+        console.error("Error submitting form:", error.response || error);
+      }
+    },
+  });
 
   return (
     <div className="page--content">
@@ -62,7 +173,7 @@ const ChallengeList = () => {
                 <th className="px-2 py-4">ID</th>
                 <th className="px-2 py-4">Image</th>
                 <th className="px-2 py-4">Name</th>
-                <th className="px-2 py-4">Goal</th>
+                <th className="px-2 py-4">Challenge Type</th>
                 <th className="px-2 py-4">Start Dates</th>
                 <th className="px-2 py-4">End Dates</th>
                 <th className="px-2 py-4">Action</th>
@@ -90,10 +201,14 @@ const ChallengeList = () => {
                         />
                       </div>
                     </td>
-                    <td className="px-2 py-4">{item?.title}</td>
-                    <td className="px-2 py-4">{item?.goal}</td>
-                    <td className="px-2 py-4">{formatAutoDate(item.start_date)}</td>
-                    <td className="px-2 py-4">{formatAutoDate(item.end_date)}</td>
+                    <td className="px-2 py-4">{item?.name}</td>
+                    <td className="px-2 py-4">{item?.challenge_type}</td>
+                    <td className="px-2 py-4">
+                      {formatAutoDate(item.start_date_time)}
+                    </td>
+                    <td className="px-2 py-4">
+                      {formatAutoDate(item.end_date_time)}
+                    </td>
                     <td className="px-2 py-4">
                       <Tooltip
                         id={`tooltip-edit-${item.id}`}
@@ -135,7 +250,7 @@ const ChallengeList = () => {
         <ChallengeForm
           setShowModal={setShowModal}
           editingOption={editingOption}
-          onChallengeCreated={fetchChallengeList}
+          formik={formik}
         />
       )}
     </div>

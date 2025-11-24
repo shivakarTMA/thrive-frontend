@@ -8,7 +8,7 @@ import { LuPlug } from "react-icons/lu";
 // Import select component
 import Select from "react-select";
 // Import custom styles for select input
-import { selectIcon } from "../../Helper/helper";
+import { handleTextOnlyChange, selectIcon } from "../../Helper/helper";
 
 // CreateService component
 const CreateService = ({
@@ -23,9 +23,10 @@ const CreateService = ({
   // Predefined services type options
   const servicesType = [
     { label: "Group Classes", value: "GROUP_CLASS" },
-    { label: "Training", value: "PERSONAL_TRAINER" },
+    { label: "Personal Trainer", value: "PERSONAL_TRAINER" },
     { label: "Recovery", value: "RECOVERY" },
     { label: "Recreation", value: "RECREATION" },
+    { label: "Product", value: "PRODUCT" },
   ];
 
   return (
@@ -62,6 +63,59 @@ const CreateService = ({
             <div className="flex bg-white rounded-b-[10px]">
               <div className="p-6 flex-1">
                 <div className="grid grid-cols-2 gap-4">
+                  {/* Image Upload */}
+                  <div>
+                    <label className="mb-2 block">
+                      Image<span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="file"
+                        name="image"
+                        accept="image/*"
+                        onChange={(event) =>
+                          formik.setFieldValue(
+                            "image",
+                            event.currentTarget.files[0]
+                          )
+                        }
+                        className="custom--input w-full"
+                      />
+                    </div>
+                    {formik.touched.image && formik.errors.image && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {formik.errors.image}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Title Input */}
+                  <div>
+                    <label className="mb-2 block">
+                      Title<span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[10]">
+                        <FaListUl />
+                      </span>
+                      <input
+                        type="text"
+                        name="name"
+                        value={formik.values.name}
+                        onChange={(e) =>
+                          handleTextOnlyChange(e, formik, "name")
+                        }
+                        onBlur={formik.handleBlur}
+                        className="custom--input w-full input--icon"
+                      />
+                    </div>
+                    {formik.touched.name && formik.errors.name && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {formik.errors.name}
+                      </p>
+                    )}
+                  </div>
+
                   {/* Club Dropdown */}
                   <div>
                     <label className="mb-2 block">
@@ -97,7 +151,7 @@ const CreateService = ({
                   </div>
 
                   {/* Studio Dropdown */}
-                  <div>
+                  {/* <div>
                     <label className="mb-2 block">
                       Studio<span className="text-red-500">*</span>
                     </label>
@@ -130,7 +184,7 @@ const CreateService = ({
                         {formik.errors.studio_id}
                       </p>
                     )}
-                  </div>
+                  </div> */}
 
                   {/* Type Dropdown */}
                   <div>
@@ -160,31 +214,6 @@ const CreateService = ({
                     )}
                   </div>
 
-                  {/* Title Input */}
-                  <div>
-                    <label className="mb-2 block">
-                      Title<span className="text-red-500">*</span>
-                    </label>
-                    <div className="relative">
-                      <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[10]">
-                        <FaListUl />
-                      </span>
-                      <input
-                        type="text"
-                        name="name"
-                        value={formik.values.name}
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
-                        className="custom--input w-full input--icon"
-                      />
-                    </div>
-                    {formik.touched.name && formik.errors.name && (
-                      <p className="text-red-500 text-sm mt-1">
-                        {formik.errors.name}
-                      </p>
-                    )}
-                  </div>
-
                   {/* Position Input */}
                   <div>
                     <label className="mb-2 block">
@@ -195,7 +224,7 @@ const CreateService = ({
                         <FaListUl />
                       </span>
                       <input
-                        type="text"
+                        type="number"
                         name="position"
                         value={formik.values.position}
                         onChange={formik.handleChange}
@@ -244,32 +273,6 @@ const CreateService = ({
                     {formik.touched.status && formik.errors.status && (
                       <p className="text-red-500 text-sm mt-1">
                         {formik.errors.status}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Image Upload */}
-                  <div>
-                    <label className="mb-2 block">
-                      Image<span className="text-red-500">*</span>
-                    </label>
-                    <div className="relative">
-                      <input
-                        type="file"
-                        name="image"
-                        accept="image/*"
-                        onChange={(event) =>
-                          formik.setFieldValue(
-                            "image",
-                            event.currentTarget.files[0]
-                          )
-                        }
-                        className="custom--input w-full"
-                      />
-                    </div>
-                    {formik.touched.image && formik.errors.image && (
-                      <p className="text-red-500 text-sm mt-1">
-                        {formik.errors.image}
                       </p>
                     )}
                   </div>

@@ -431,13 +431,14 @@ const CreateClub = ({
                     )}
                   </div>
 
-                  {/* Creatable multiselect (single-row) */}
+                  {/* Tags */}
                   <div>
                     <label className="mb-2 block">
-                      Available Services<span className="text-red-500">*</span>
+                      Tags<span className="text-red-500">*</span>
                     </label>
                     <CreatableSelect
                       isMulti
+                      isClearable={false}
                       name="club_available_service"
                       value={servicesToOptions(
                         formik.values.club_available_service
