@@ -879,7 +879,7 @@ const CreatePackage = ({
                                   date.toLocaleTimeString([], {
                                     hour: "2-digit",
                                     minute: "2-digit",
-                                    hour12: true,
+                                    hour12: false,
                                   })
                                 )
                               }
@@ -934,7 +934,7 @@ const CreatePackage = ({
                                   date.toLocaleTimeString([], {
                                     hour: "2-digit",
                                     minute: "2-digit",
-                                    hour12: true,
+                                    hour12: false,
                                   })
                                 )
                               }

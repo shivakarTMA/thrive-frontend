@@ -8,6 +8,7 @@ import { selectIcon } from "../../Helper/helper";
 import PhoneInput from "react-phone-number-input";
 import { toast } from "react-toastify";
 import { authAxios } from "../../config/config";
+import { PiImageFill } from "react-icons/pi";
 
 const CreateCompany = ({
   setShowModal,
@@ -18,18 +19,6 @@ const CreateCompany = ({
   handlePhoneChange,
   indianStates,
 }) => {
-
-  const handleLogoChange = (event) => {
-    const file = event.currentTarget.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        formik.setFieldValue("logo", reader.result); // base64 string
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
   // ✅ Fetch company details when selectedId changes
   useEffect(() => {
     if (!editingCompany) return;
@@ -42,15 +31,16 @@ const CreateCompany = ({
         if (data) {
           // ✅ Prefill formik fields with fetched data
           formik.setValues({
-            logo: data.name || "",
+            logo: data.logo || "",
             name: data.name || "",
             email: data.email || "",
             phone: data.phone || "",
             address: data.address || "",
             city: data.city || "",
-            state: typeof data.state === "string" 
-           ? { label: data.state, value: data.state } 
-           : data.state || "",
+            state:
+              typeof data.state === "string"
+                ? { label: data.state, value: data.state }
+                : data.state || "",
             country: data.country || "",
             zipcode: data.zipcode || "",
             gstno: data.gstno || "",
@@ -65,6 +55,16 @@ const CreateCompany = ({
 
     fetchCompanyById(editingCompany);
   }, [editingCompany]);
+
+  const handleLogoChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const previewURL = URL.createObjectURL(file);
+
+      formik.setFieldValue("logo", previewURL); // for preview
+      formik.setFieldValue("logoFile", file); // actual file to upload
+    }
+  };
 
   return (
     <div
@@ -95,18 +95,32 @@ const CreateCompany = ({
           <form onSubmit={formik.handleSubmit} className="p-0 space-y-0">
             <div className="flex bg-white rounded-b-[10px]">
               <div className="p-6 flex-1">
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid md:grid-cols-4 grid-cols-1 gap-4 gap-y-2">
+                  {/* Image Preview */}
+                  <div className="row-span-2">
+                    <div className="bg-gray-100 rounded-lg w-full h-[160px] overflow-hidden p-4">
+                      {formik.values?.logo ? (
+                        <img
+                          src={formik.values?.logo}
+                          className="w-full h-full object-contain"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex flex-col items-center justify-center">
+                          <PiImageFill className="text-gray-300 text-7xl" />
+                          <span className="text-gray-500 text-sm">
+                            Upload Image
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                   <div>
                     <label className="mb-2 block">Company Logo</label>
                     <input
                       type="file"
                       accept="image/*"
-                      onChange={(e) => {
-                        const file = e.target.files[0];
-                        if (file) {
-                          formik.setFieldValue("logo", file);
-                        }
-                      }}
+                      onChange={handleLogoChange}
+                      onBlur={() => formik.setFieldTouched("logo", true)}
                       className="custom--input w-full"
                     />
                     {/* {formik.values.logo && (
@@ -337,7 +351,7 @@ const CreateCompany = ({
                   </div>
 
                   {/* Address */}
-                  <div className="col-span-2">
+                  <div className="md:col-span-4">
                     <label className="mb-2 block">Physical Address</label>
                     <div className="relative">
                       <span className="absolute top-[15px] left-[15px]">

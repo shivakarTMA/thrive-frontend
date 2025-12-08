@@ -3,12 +3,21 @@ import { FiPlus } from "react-icons/fi";
 import Tooltip from "../common/Tooltip";
 import { LiaEdit } from "react-icons/lia";
 import ChallengeForm from "./ChallengeForm";
-import { formatAutoDate } from "../../Helper/helper";
+import { formatDateTimeLead, formatText } from "../../Helper/helper";
 import { authAxios } from "../../config/config";
 import { toast } from "react-toastify";
 import Pagination from "../common/Pagination";
 import { useFormik } from "formik";
 import * as Yup from "yup";
+import { FaCircle } from "react-icons/fa";
+
+const statusColors = {
+  ACTIVE: "bg-[#D1FADF] text-[#027A48]", // green
+  COMPLETED: "bg-[#E8FFE6] text-[#138808]", // darker green
+  INACTIVE: "bg-[#FFE4E4] text-[#880808]", // red
+  ONGOING: "bg-[#FFF2CC] text-[#AD7B00]", // yellow
+  UPCOMING: "bg-[#e7edfc] text-[#156ec1]", // blue
+};
 
 const ChallengeList = () => {
   const [showModal, setShowModal] = useState(false);
@@ -42,89 +51,76 @@ const ChallengeList = () => {
     fetchChallengeList();
   }, []);
 
-    const formik = useFormik({
+  const formik = useFormik({
     initialValues: {
-      title: "",
+      club_id: "",
+      name: "",
       caption: "",
-      description: "",
       image: "",
-      goal: "",
-      start_date: "",
-      end_date: "",
       condition: "",
+      description: "",
+      challenge_type: "",
+      start_date_time: "",
+      duration_days: "",
+      end_date_time: "",
+      frequency: "",
+      target_value: "",
+      target_unit: "",
       reward_first: "",
       reward_second: "",
       reward_third: "",
       about_challenge: "",
+      join_in_between: null,
       position: "",
       status: "UPCOMING",
-      join_in_between: null,
     },
 
-    // Define validation schema using Yup
     validationSchema: Yup.object({
-      // image: Yup.mixed().required("Image is required"),
-      title: Yup.string().required("Challenge title is required"),
+      club_id: Yup.string().required("Club is required"),
+      image: Yup.string().required("Image is required"),
+      name: Yup.string().required("Challenge Name is required"),
       caption: Yup.string().required("Caption is required"),
-      description: Yup.string().required("Description is required"),
-      goal: Yup.string().required("Goal is required"),
-      start_date: Yup.date().required("Start date is required"),
-      end_date: Yup.date()
-        .min(Yup.ref("start_date"), "End date cannot be before start date")
-        .required("End date is required"),
       condition: Yup.string().required("Condition is required"),
+      description: Yup.string().required("Description is required"),
+      challenge_type: Yup.string().required("Challenge Type is required"),
+      start_date_time: Yup.date().required("Start date & time is required"),
+      end_date_time: Yup.date()
+        .min(Yup.ref("start_date_time"), "End date cannot be before start date")
+        .required("End date & time is required"),
+      frequency: Yup.string().required("Frequency is required"),
+      target_value: Yup.string().required("Target value is required"),
+      target_unit: Yup.string().required("Target unit is required"),
       reward_first: Yup.number()
-        .typeError("Must be a number")
-        .positive("Must be positive")
+        .positive()
         .required("First reward is required"),
       reward_second: Yup.number()
-        .typeError("Must be a number")
-        .positive("Must be positive")
+        .positive()
         .required("Second reward is required"),
       reward_third: Yup.number()
-        .typeError("Must be a number")
-        .positive("Must be positive")
+        .positive()
         .required("Third reward is required"),
       about_challenge: Yup.string().required("About challenge is required"),
       position: Yup.string().required("Position is required"),
     }),
 
-    // Handle form submission
     onSubmit: async (values, { resetForm }) => {
       try {
         const formData = new FormData();
 
-        // ✅ Convert dates to YYYY-MM-DD format
-        const startDate = values.start_date
-          ? new Date(values.start_date).toISOString().split("T")[0]
-          : "";
-        const endDate = values.end_date
-          ? new Date(values.end_date).toISOString().split("T")[0]
-          : "";
-
-        // ✅ Append all fields safely
+        // Append every field correctly
         Object.keys(values).forEach((key) => {
-          if (key === "image") {
-            // append only if it's a File object
-            if (values.image instanceof File) {
-              formData.append("image", values.image);
+          if (key === "imageFile") {
+            // file upload
+            if (values.imageFile instanceof File) {
+              formData.append("image", values.imageFile);
             }
-          } else if (key === "join_in_between") {
-            // boolean -> string for backend
-            formData.append(
-              "join_in_between",
-              values.join_in_between ? "true" : "false"
-            );
-          } else if (key === "start_date") {
-            formData.append("start_date", startDate);
-          } else if (key === "end_date") {
-            formData.append("end_date", endDate);
+          } else if (typeof values[key] === "boolean") {
+            formData.append(key, values[key] ? "true" : "false");
           } else {
             formData.append(key, values[key]);
           }
         });
 
-        // ✅ Send to API
         if (editingOption) {
           await authAxios().put(`/challenge/${editingOption}`, formData, {
             headers: { "Content-Type": "multipart/form-data" },
@@ -146,6 +142,23 @@ const ChallengeList = () => {
       }
     },
   });
+
+  useEffect(() => {
+    const { start_date_time, end_date_time } = formik.values;
+
+    if (start_date_time && end_date_time) {
+      const start = new Date(start_date_time);
+      const end = new Date(end_date_time);
+
+      const diffMs = end - start;
+      const days = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+
+      // Auto-set duration_days
+      if (!isNaN(days)) {
+        formik.setFieldValue("duration_days", days);
+      }
+    }
+  }, [formik.values.start_date_time, formik.values.end_date_time]);
 
   return (
     <div className="page--content">
@@ -170,12 +183,13 @@ const ChallengeList = () => {
           <table className="w-full text-sm text-left text-gray-500">
             <thead className="text-xs text-gray-700 uppercase bg-gray-50">
               <tr>
-                <th className="px-2 py-4">ID</th>
+                {/* <th className="px-2 py-4">ID</th> */}
                 <th className="px-2 py-4">Image</th>
                 <th className="px-2 py-4">Name</th>
                 <th className="px-2 py-4">Challenge Type</th>
                 <th className="px-2 py-4">Start Dates</th>
                 <th className="px-2 py-4">End Dates</th>
+                <th className="px-2 py-4">Status</th>
                 <th className="px-2 py-4">Action</th>
               </tr>
             </thead>
@@ -192,7 +206,7 @@ const ChallengeList = () => {
                     key={item.id || index}
                     className="bg-white border-b hover:bg-gray-50"
                   >
-                    <td className="px-2 py-4">{index + 1}</td>
+                    {/* <td className="px-2 py-4">{index + 1}</td> */}
                     <td className="px-2 py-4">
                       <div className="bg-black rounded-lg w-14 h-14 overflow-hidden">
                         <img
@@ -202,12 +216,26 @@ const ChallengeList = () => {
                       </div>
                     </td>
                     <td className="px-2 py-4">{item?.name}</td>
-                    <td className="px-2 py-4">{item?.challenge_type}</td>
                     <td className="px-2 py-4">
-                      {formatAutoDate(item.start_date_time)}
+                      {formatText(item?.challenge_type)}
                     </td>
                     <td className="px-2 py-4">
-                      {formatAutoDate(item.end_date_time)}
+                      {formatDateTimeLead(item.start_date_time)}
+                    </td>
+                    <td className="px-2 py-4">
+                      {formatDateTimeLead(item.end_date_time)}
+                    </td>
+                    <td className="px-2 py-4">
+                      <span
+                        className={`flex items-center gap-1 rounded-full min-h-[30px] px-3 text-sm w-fit 
+                          ${
+                            statusColors[item?.status] ||
+                            "bg-[#EEEEEE]"
+                          }`}
+                      >
+                        <FaCircle className="text-[10px]" />
+                        {formatText(item?.status) ?? "--"}
+                      </span>
                     </td>
                     <td className="px-2 py-4">
                       <Tooltip

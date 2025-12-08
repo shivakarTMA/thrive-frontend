@@ -11,6 +11,8 @@ import Select from "react-select";
 import { selectIcon } from "../../Helper/helper";
 import { toast } from "react-toastify";
 import { authAxios } from "../../config/config";
+import { PiImageFill } from "react-icons/pi";
+import { CiCamera } from "react-icons/ci";
 
 // CreateGallery component
 const CreateGallery = ({
@@ -21,8 +23,7 @@ const CreateGallery = ({
   leadBoxRef,
   clubOptions,
 }) => {
-
-  console.log(editingOption,'editingOption')
+  console.log(editingOption, "editingOption");
 
   const displayPosition = [
     { label: "Top", value: "TOP" },
@@ -30,7 +31,7 @@ const CreateGallery = ({
     { label: "Both", value: "BOTH" },
   ];
 
-    useEffect(() => {
+  useEffect(() => {
     if (!editingOption) return;
 
     const fetchGalleryById = async (id) => {
@@ -57,6 +58,16 @@ const CreateGallery = ({
 
     fetchGalleryById(editingOption);
   }, [editingOption]);
+
+  const handleLogoChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const previewURL = URL.createObjectURL(file);
+
+      formik.setFieldValue("image", previewURL); // for preview
+      formik.setFieldValue("imageFile", file); // actual file to upload
+    }
+  };
 
   return (
     // Modal overlay
@@ -92,31 +103,47 @@ const CreateGallery = ({
             <div className="flex bg-white rounded-b-[10px]">
               <div className="p-6 flex-1">
                 <div className="grid grid-cols-2 gap-4">
-                  {/* Image Upload */}
-                  <div>
-                    <label className="mb-2 block">
-                      Image<span className="text-red-500">*</span>
-                    </label>
-                    <div className="relative">
-                      <input
-                        type="file"
-                        name="image"
-                        accept="image/*"
-                        onChange={(event) =>
-                          formik.setFieldValue(
-                            "image",
-                            event.currentTarget.files[0]
-                          )
-                        }
-                        className="custom--input w-full"
-                      />
+                  {/* Image Preview */}
+                  <div className="col-span-2">
+                    <div className="w-full bg-gray-100 rounded-lg mx-auto overflow-hidden relative group">
+                      {formik.values?.image ? (
+                        <img
+                          src={formik.values?.image}
+                          alt="Preview"
+                          className="w-full h-[200px] object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-[200px] flex flex-col items-center justify-center">
+                          <PiImageFill className="text-gray-300 text-7xl" />
+                          <span className="text-gray-500 text-sm mt-2">
+                            Upload Image
+                          </span>
+                        </div>
+                      )}
+
+                      {/* Hover overlay for file input */}
+                      <label className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-25 opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity duration-300">
+                        <input
+                          type="file"
+                          name="image"
+                          accept="image/*"
+                          onChange={handleLogoChange}
+                          onBlur={() => formik.setFieldTouched("image", true)}
+                          className="absolute w-full h-full opacity-0 cursor-pointer"
+                        />
+                        <div className="bg-white bg-opacity-25 w-[60px] h-[60px] flex items-center justify-center rounded-full">
+                          <CiCamera className="text-white text-4xl" />
+                        </div>
+                      </label>
                     </div>
+                    {/* Validation error */}
                     {formik.touched.image && formik.errors.image && (
                       <p className="text-red-500 text-sm mt-1">
                         {formik.errors.image}
                       </p>
                     )}
                   </div>
+
                   {/* Title Input */}
                   <div>
                     <label className="mb-2 block">
@@ -197,11 +224,12 @@ const CreateGallery = ({
                         styles={selectIcon}
                       />
                     </div>
-                    {formik.touched.display_position && formik.errors.display_position && (
-                      <p className="text-red-500 text-sm mt-1">
-                        {formik.errors.display_position}
-                      </p>
-                    )}
+                    {formik.touched.display_position &&
+                      formik.errors.display_position && (
+                        <p className="text-red-500 text-sm mt-1">
+                          {formik.errors.display_position}
+                        </p>
+                      )}
                   </div>
 
                   {/* Position Input */}
@@ -228,7 +256,6 @@ const CreateGallery = ({
                       </p>
                     )}
                   </div>
-
                 </div>
               </div>
             </div>

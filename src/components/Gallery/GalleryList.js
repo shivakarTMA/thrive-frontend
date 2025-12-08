@@ -109,23 +109,14 @@ const GalleryList = () => {
   // Formik setup for form validation and submission
   const formik = useFormik({
     initialValues: {
-      image: null,
+      image: "",
       title: "",
       club_id: "",
       display_position: "",
       position: "",
     },
     validationSchema: Yup.object({
-      image: Yup.mixed().test(
-        "required-image",
-        "Image is required",
-        function (value) {
-          if (!editingOption) {
-            return value !== null;
-          }
-          return true;
-        }
-      ),
+      image: Yup.string().required("Image is required"),
       title: Yup.string().required("Title is required"),
       club_id: Yup.string().required("Club is required"),
       position: Yup.string().required("Position is required"),
@@ -135,9 +126,9 @@ const GalleryList = () => {
       try {
         const formData = new FormData();
         Object.keys(values).forEach((key) => {
-          if (key === "image") {
-            if (values.image && typeof values.image !== "string") {
-              formData.append("image", values.image);
+          if (key === "imageFile") {
+            if (values.imageFile && typeof values.imageFile !== "string") {
+              formData.append("image", values.imageFile);
             }
           } else {
             formData.append(key, values[key]);

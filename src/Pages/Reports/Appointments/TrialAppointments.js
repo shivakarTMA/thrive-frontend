@@ -4,7 +4,11 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { addYears, subYears } from "date-fns";
 import { FaCalendarDays, FaCircle } from "react-icons/fa6";
-import { customStyles, formatAutoDate } from "../../../Helper/helper";
+import {
+  customStyles,
+  formatAutoDate,
+  formatText,
+} from "../../../Helper/helper";
 import Select from "react-select";
 import TrialAppointmentPanel from "../../../components/FilterPanel/TrialAppointmentPanel";
 import viewIcon from "../../../assets/images/icons/eye.svg";
@@ -35,6 +39,11 @@ const TrialAppointments = () => {
   const [rowsPerPage] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
+  const [stats, setStats] = useState({
+    scheduled: 0,
+    completed: 0,
+    noShow: 0,
+  });
 
   const location = useLocation();
 
@@ -111,38 +120,42 @@ const TrialAppointments = () => {
     }
   };
 
+  const fetchAppointmentStats = async () => {
+    try {
+      const params = { dateFilter: dateFilter?.value || "last_7_days" };
+      const res = await authAxios().get("/appointment/trial/count", { params });
+      const data = res.data?.data || {};
+
+      setStats({
+        scheduled: Number(data.scheduled_count) || 0,
+        completed: Number(data.completed_count) || 0,
+        noShow: Number(data.no_show_count) || 0,
+      });
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to fetch appointment stats");
+    }
+  };
+
+  useEffect(() => {
+    fetchAppointmentStats();
+  }, [dateFilter]);
+
   // Re-fetch when filters change
   useEffect(() => {
     fetchAppointments(1);
     setPage(1);
   }, [dateFilter, customFrom, customTo, itemStatus]);
 
-  // ---------------------------
-  // DYNAMIC STATS
-  // ---------------------------
-  const calculateStats = () => {
-    const scheduled = appointmentList.filter(
-      (item) => item.status === "Scheduled"
-    ).length;
-    const completed = appointmentList.filter(
-      (item) => item.status === "Completed"
-    ).length;
-    const noShow = appointmentList.filter(
-      (item) => item.status === "No-Show"
-    ).length;
-
-    return { scheduled, completed, noShow };
-  };
-
-  const { scheduled, completed, noShow } = calculateStats();
+  const { scheduled, completed, noShow } = stats;
 
   // Status colors
   const statusColors = {
     Opportunity: "bg-[#EEEEEE]",
     New: "bg-[#E4FCFF]",
     ACTIVE: "bg-[#D1FADF]",
-    COMPLETED: "bg-[#E5E7EB]",
-    CANCELLED: "bg-[#FFE4E4]",
+    COMPLETED: "bg-[#E8FFE6] text-[#138808]",
+    CANCELLED: "bg-[#FFE4E4] text-[#880808]",
     RESCHEDULED: "bg-[#FFF2CC]",
     NO_SHOW: "bg-[#FCE7F3]",
   };
@@ -300,7 +313,7 @@ const TrialAppointments = () => {
                           }`}
                         >
                           <FaCircle className="text-[10px]" />
-                          {row?.booking_status ?? "--"}
+                          {formatText(row?.booking_status) ?? "--"}
                         </span>
                       </td>
 

@@ -151,8 +151,8 @@ const CompanyList = () => {
         formData.append("status", values.status);
 
         // ✅ Append logo file if uploaded
-        if (values.logo instanceof File) {
-          formData.append("logo", values.logo);
+        if (values.logoFile instanceof File) {
+          formData.append("logo", values.logoFile);
         }
 
         if (editingCompany && editingCompany) {

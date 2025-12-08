@@ -1,6 +1,11 @@
 import React, { useEffect } from "react";
 import { IoCloseCircle, IoLocationOutline } from "react-icons/io5";
-import { FaEnvelope, FaListCheck, FaListUl, FaRegBuilding } from "react-icons/fa6";
+import {
+  FaEnvelope,
+  FaListCheck,
+  FaListUl,
+  FaRegBuilding,
+} from "react-icons/fa6";
 import { GrDocument } from "react-icons/gr";
 import { LuPlug } from "react-icons/lu";
 import Select from "react-select";
@@ -12,6 +17,7 @@ import CreatableSelect from "react-select/creatable";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { GoClock } from "react-icons/go";
+import { PiImageFill } from "react-icons/pi";
 
 const CreateClub = ({
   setShowModal,
@@ -94,16 +100,26 @@ const CreateClub = ({
     return [];
   };
 
-  const parseTimeStringToDate = (timeStr) => {
-  if (!timeStr) return null;
-  const [hours, minutes] = timeStr.split(":");
-  const date = new Date();
-  date.setHours(Number(hours));
-  date.setMinutes(Number(minutes));
-  date.setSeconds(0);
-  date.setMilliseconds(0);
-  return date;
-};
+  const parseTime = (timeString) => {
+    if (!timeString) return null;
+
+    let d = new Date();
+    let [time, modifier] = timeString.split(" ");
+
+    let [hours, minutes] = time.split(":");
+
+    hours = parseInt(hours);
+    minutes = parseInt(minutes);
+
+    // Handle AM/PM
+    if (modifier) {
+      if (modifier === "PM" && hours !== 12) hours += 12;
+      if (modifier === "AM" && hours === 12) hours = 0;
+    }
+
+    d.setHours(hours, minutes, 0, 0);
+    return d;
+  };
 
   useEffect(() => {
     if (!editingClub) return;
@@ -138,8 +154,8 @@ const CreateClub = ({
             club_available_service: normalizedServices,
             description: data?.description || "",
             map_url: data?.map_url || "",
-            open_time: parseTimeStringToDate(data?.open_time),
-            close_time: parseTimeStringToDate(data?.close_time),
+            open_time: data?.open_time || "",
+            close_time: data?.close_time || "",
             trial_duration: data?.trial_duration || "",
           });
         }
@@ -185,6 +201,16 @@ const CreateClub = ({
   const servicesToOptions = (arr) =>
     (Array.isArray(arr) ? arr : []).map((s) => ({ label: s, value: s }));
 
+  const handleLogoChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const previewURL = URL.createObjectURL(file);
+
+      formik.setFieldValue("logo", previewURL); // for preview
+      formik.setFieldValue("logoFile", file); // actual file to upload
+    }
+  };
+
   return (
     <div
       className="bg--blur create--lead--container overflow-auto hide--overflow fixed top-0 left-0 z-[999] w-full bg-black bg-opacity-60 h-full"
@@ -215,17 +241,31 @@ const CreateClub = ({
             <div className="flex bg-white rounded-b-[10px]">
               <div className="p-6 flex-1">
                 <div className="grid lg:grid-cols-3 grid-cols-1 lg:gap-4 gap-2">
+                  {/* Image Preview */}
+                  <div className="row-span-2">
+                    <div className="bg-gray-100 rounded-lg w-full h-[160px] overflow-hidden p-4">
+                      {formik.values?.logo ? (
+                        <img
+                          src={formik.values?.logo}
+                          className="w-full h-full object-contain"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex flex-col items-center justify-center">
+                          <PiImageFill className="text-gray-300 text-7xl" />
+                          <span className="text-gray-500 text-sm">
+                            Upload Image
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                   <div>
                     <label className="mb-2 block">Club Logo</label>
                     <input
                       type="file"
                       accept="image/*"
-                      onChange={(e) => {
-                        const file = e.target.files[0];
-                        if (file) {
-                          formik.setFieldValue("logo", file);
-                        }
-                      }}
+                      onChange={handleLogoChange}
+                      onBlur={() => formik.setFieldTouched("logo", true)}
                       className="custom--input w-full"
                     />
                   </div>
@@ -472,9 +512,20 @@ const CreateClub = ({
                         <GoClock />
                       </span>
                       <DatePicker
-                        selected={formik.values.open_time}
+                        selected={
+                          formik.values.open_time
+                            ? parseTime(formik.values.open_time)
+                            : null
+                        }
                         onChange={(date) =>
-                          formik.setFieldValue("open_time", date)
+                          formik.setFieldValue(
+                            "open_time",
+                            date.toLocaleTimeString([], {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                              hour12: false,
+                            })
+                          )
                         }
                         showTimeSelect
                         showTimeSelectOnly
@@ -502,9 +553,20 @@ const CreateClub = ({
                         <GoClock />
                       </span>
                       <DatePicker
-                        selected={formik.values.close_time}
+                        selected={
+                          formik.values.close_time
+                            ? parseTime(formik.values.close_time)
+                            : null
+                        }
                         onChange={(date) =>
-                          formik.setFieldValue("close_time", date)
+                          formik.setFieldValue(
+                            "close_time",
+                            date.toLocaleTimeString([], {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                              hour12: false,
+                            })
+                          )
                         }
                         showTimeSelect
                         showTimeSelectOnly
@@ -565,6 +627,31 @@ const CreateClub = ({
                       )}
                   </div>
 
+                  {/* Position */}
+                  <div>
+                    <label className="mb-2 block">
+                      Position<span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <span className="absolute top-[50%] translate-y-[-50%] left-[15px]">
+                        <FaListUl />
+                      </span>
+                      <input
+                        type="text"
+                        name="position"
+                        value={formik.values.position}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        className="custom--input w-full input--icon"
+                      />
+                    </div>
+                    {formik.touched.position && formik.errors.position && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {formik.errors.position}
+                      </p>
+                    )}
+                  </div>
+
                   {/* Status */}
                   <div>
                     <label className="mb-2 block">
@@ -595,30 +682,6 @@ const CreateClub = ({
                     {formik.touched.status && formik.errors.status && (
                       <p className="text-red-500 text-sm mt-1">
                         {formik.errors.status}
-                      </p>
-                    )}
-                  </div>
-                  {/* Position */}
-                  <div>
-                    <label className="mb-2 block">
-                      Position<span className="text-red-500">*</span>
-                    </label>
-                    <div className="relative">
-                      <span className="absolute top-[50%] translate-y-[-50%] left-[15px]">
-                        <FaListUl />
-                      </span>
-                      <input
-                        type="text"
-                        name="position"
-                        value={formik.values.position}
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
-                        className="custom--input w-full input--icon"
-                      />
-                    </div>
-                    {formik.touched.position && formik.errors.position && (
-                      <p className="text-red-500 text-sm mt-1">
-                        {formik.errors.position}
                       </p>
                     )}
                   </div>

@@ -73,6 +73,17 @@ const ClubList = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
 
+  const formatTime = (timeString) => {
+    if (!timeString) return "--";
+
+    const [hours, minutes] = timeString.split(":");
+    const date = new Date();
+    date.setHours(Number(hours));
+    date.setMinutes(Number(minutes));
+
+    return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  };
+
   const fetchClubs = async (search = "", currentPage = page) => {
     try {
       const res = await authAxios().get("/club/list", {
@@ -134,10 +145,10 @@ const ClubList = () => {
       club_available_service: [],
       description: "",
       map_url: "",
-      open_time: null,
-      close_time: null,
+      open_time: "",
+      close_time: "",
       trial_duration: "",
-      position:"",
+      position: "",
     },
     validationSchema: Yup.object({
       name: Yup.string().required("Club name is required"),
@@ -169,20 +180,8 @@ const ClubList = () => {
         .required("Map URL is required"),
 
       // open_time is a time (Date object)
-      open_time: Yup.date().nullable().required("Open time is required"),
-
-      close_time: Yup.date()
-        .nullable()
-        .required("Close time is required")
-        .test(
-          "is-after-open",
-          "Close time must be after open time",
-          function (value) {
-            const { open_time } = this.parent;
-            if (!open_time || !value) return true;
-            return value > open_time;
-          }
-        ),
+      open_time: Yup.string().required("Open time is required"),
+      close_time: Yup.string().required("Close time is required"),
 
       // Number (minutes)
       trial_duration: Yup.number()
@@ -211,36 +210,18 @@ const ClubList = () => {
         formData.append("status", values.status);
         formData.append("map_url", values.map_url);
         formData.append("position", values.position);
+        formData.append("open_time", values.open_time);
+        formData.append("close_time", values.close_time);
         formData.append(
           "club_available_service",
           JSON.stringify(values.club_available_service)
         );
 
-        formData.append(
-          "open_time",
-          values.open_time
-            ? values.open_time.toLocaleTimeString([], {
-                hour: "2-digit",
-                minute: "2-digit",
-              })
-            : ""
-        );
-
-        formData.append(
-          "close_time",
-          values.close_time
-            ? values.close_time.toLocaleTimeString([], {
-                hour: "2-digit",
-                minute: "2-digit",
-              })
-            : ""
-        );
-
         formData.append("trial_duration", values.trial_duration);
 
         // ✅ Append logo only if it's a file
-        if (values.logo instanceof File) {
-          formData.append("logo", values.logo);
+        if (values.logoFile instanceof File) {
+          formData.append("logo", values.logoFile);
         }
 
         if (editingClub && editingClub) {
@@ -364,10 +345,14 @@ const ClubList = () => {
                     <td className="px-2 py-4">{club?.email}</td>
                     <td className="px-2 py-4">{club?.city}</td>
                     <td className="px-2 py-4">
-                      {club?.open_time ? club?.open_time : "--"}
+                      {club?.open_time ? formatTime(club?.open_time) : "--"}
                     </td>
-                    <td className="px-2 py-4">{club?.close_time ? club?.close_time : "--"}</td>
-                    <td className="px-2 py-4">{club?.trial_duration ? club?.trial_duration : "--"}</td>
+                    <td className="px-2 py-4">
+                      {club?.close_time ? formatTime(club?.close_time) : "--"}
+                    </td>
+                    <td className="px-2 py-4">
+                      {club?.trial_duration ? club?.trial_duration + " Minutes" : "--"}
+                    </td>
                     <td className="px-2 py-4 text-center">{club?.position}</td>
                     <td className="px-2 py-4">
                       <div

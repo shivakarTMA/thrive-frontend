@@ -12,10 +12,53 @@ import { authAxios } from "../../config/config";
 import { FaListCheck } from "react-icons/fa6";
 import Select from "react-select";
 import { customStyles } from "../../Helper/helper";
+import { PiImageFill } from "react-icons/pi";
+
+const challengeType = [
+  { label: "Steps", value: "STEPS" },
+  { label: "Distance Travelled", value: "DISTANCE_TRAVELLED" },
+  { label: "Calories Burnt", value: "CALORIES_BURNT" },
+  { label: "Active Minutes", value: "ACTIVE_MINUTES" },
+];
+const frequencyType = [
+  { label: "Daily", value: "DAILY" },
+  { label: "Cumulative", value: "CUMULATIVE" },
+];
+const statusType = [
+  { label: "Active", value: "ACTIVE" },
+  { label: "Inactive", value: "INACTIVE" },
+  { label: "Completed", value: "COMPLETED" },
+  { label: "Ongoing", value: "ONGOING" },
+  { label: "Upcoming", value: "UPCOMING" },
+];
 
 // Define the ChallengeForm component
 const ChallengeForm = ({ setShowModal, editingOption, formik }) => {
   const leadBoxRef = useRef();
+  const [club, setClub] = useState([]);
+
+  const fetchClub = async (search = "") => {
+    try {
+      const res = await authAxios().get("/club/list", {
+        params: search ? { search } : {},
+      });
+      let data = res.data?.data || res.data || [];
+      setClub(data);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to fetch companies");
+    }
+  };
+
+  useEffect(() => {
+    fetchClub();
+  }, []);
+
+  const clubOptions =
+    club?.map((item) => ({
+      label: item.name,
+      value: item.id,
+    })) || [];
 
   // Fetch exercise by ID when editingExercise changes
   useEffect(() => {
@@ -25,23 +68,28 @@ const ChallengeForm = ({ setShowModal, editingOption, formik }) => {
           const response = await authAxios().get(`/challenge/${editingOption}`);
           const exerciseData = response.data?.data || response.data || null;
 
-          console.log(exerciseData,'exerciseData')
+          console.log(exerciseData, "exerciseData");
 
           // Set form values from fetched data
           formik.setValues({
-            title: exerciseData?.title,
-            caption: exerciseData?.caption,
-            description: exerciseData?.description,
-            image: exerciseData?.image,
-            goal: exerciseData?.goal,
-            start_date: exerciseData?.start_date,
-            end_date: exerciseData?.end_date,
-            condition: exerciseData?.condition,
-            reward_first: exerciseData?.reward_first,
-            reward_second: exerciseData?.reward_second,
-            reward_third: exerciseData?.reward_third,
-            about_challenge: exerciseData?.about_challenge,
-            position: exerciseData?.position,
+            club_id: exerciseData?.club_id || "",
+            name: exerciseData?.name || "",
+            caption: exerciseData?.caption || "",
+            description: exerciseData?.description || "",
+            challenge_type: exerciseData?.challenge_type || "",
+            image: exerciseData?.image || "",
+            goal: exerciseData?.goal || "",
+            start_date_time: exerciseData?.start_date_time || "",
+            end_date_time: exerciseData?.end_date_time || "",
+            frequency: exerciseData?.frequency || "",
+            target_value: exerciseData?.target_value || "",
+            target_unit: exerciseData?.target_unit || "",
+            condition: exerciseData?.condition || "",
+            reward_first: exerciseData?.reward_first || "",
+            reward_second: exerciseData?.reward_second || "",
+            reward_third: exerciseData?.reward_third || "",
+            about_challenge: exerciseData?.about_challenge || "",
+            position: exerciseData?.position || "",
             status: exerciseData?.status || "UPCOMING",
             join_in_between: exerciseData?.join_in_between || null,
           });
@@ -58,6 +106,16 @@ const ChallengeForm = ({ setShowModal, editingOption, formik }) => {
   const handleOverlayClick = (e) => {
     if (leadBoxRef.current && !leadBoxRef.current.contains(e.target)) {
       setShowModal(false);
+    }
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const previewURL = URL.createObjectURL(file);
+
+      formik.setFieldValue("image", previewURL); // for preview
+      formik.setFieldValue("imageFile", file); // actual file to upload
     }
   };
 
@@ -90,7 +148,26 @@ const ChallengeForm = ({ setShowModal, editingOption, formik }) => {
           <form onSubmit={formik.handleSubmit} className="p-0 space-y-0">
             <div className="flex bg-white rounded-b-[10px]">
               <div className="p-6 flex-1">
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid md:grid-cols-4 grid-cols-1 gap-4 gap-y-2">
+                  {/* Image Preview */}
+                  <div className="row-span-2">
+                    <div className="bg-gray-100 rounded-lg w-full h-[160px] overflow-hidden">
+                      {formik.values?.image ? (
+                        <img
+                          src={formik.values?.image}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex flex-col items-center justify-center">
+                          <PiImageFill className="text-gray-300 text-7xl" />
+                          <span className="text-gray-500 text-sm">
+                            Upload Image
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
                   {/* Image Upload Field */}
                   <div>
                     <label className="mb-2 block">
@@ -104,12 +181,8 @@ const ChallengeForm = ({ setShowModal, editingOption, formik }) => {
                         type="file"
                         name="image"
                         accept="image/*"
-                        onChange={(e) =>
-                          formik.setFieldValue(
-                            "image",
-                            e.currentTarget.files[0]
-                          )
-                        }
+                        onChange={handleFileChange} // ✅ no value prop here
+                        onBlur={() => formik.setFieldTouched("image", true)}
                         className="custom--input w-full input--icon"
                       />
                     </div>
@@ -120,23 +193,54 @@ const ChallengeForm = ({ setShowModal, editingOption, formik }) => {
                     )}
                   </div>
 
-                  {/* Title Field */}
+                  {/* Club Field */}
                   <div>
                     <label className="mb-2 block">
-                      Title<span className="text-red-500">*</span>
+                      Club<span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <Select
+                        name="club_id"
+                        value={
+                          clubOptions.find(
+                            (option) =>
+                              option.value.toString() ===
+                              formik.values.club_id?.toString()
+                          ) || null
+                        }
+                        options={clubOptions}
+                        onChange={(option) =>
+                          formik.setFieldValue("club_id", option.value)
+                        }
+                        onBlur={() => formik.setFieldTouched("club_id", true)}
+                        styles={customStyles}
+                        className="!capitalize"
+                      />
+                    </div>
+                    {formik.touched.club_id && formik.errors.club_id && (
+                      <p className="text-red-500 text-sm">
+                        {formik.errors.club_id}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Name Field */}
+                  <div>
+                    <label className="mb-2 block">
+                      Challenge Name<span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
                       <FaListUl className="absolute top-[50%] translate-y-[-50%] left-[15px]" />
                       <input
-                        name="title"
-                        value={formik.values.title}
+                        name="name"
+                        value={formik.values.name}
                         onChange={formik.handleChange}
                         className="custom--input w-full input--icon"
                       />
                     </div>
-                    {formik.touched.title && formik.errors.title && (
+                    {formik.touched.name && formik.errors.name && (
                       <p className="text-red-500 text-sm">
-                        {formik.errors.title}
+                        {formik.errors.name}
                       </p>
                     )}
                   </div>
@@ -162,169 +266,36 @@ const ChallengeForm = ({ setShowModal, editingOption, formik }) => {
                     )}
                   </div>
 
-                  {/* Goal Field */}
+                  {/* Challenge Type Field */}
                   <div>
                     <label className="mb-2 block">
-                      Goal<span className="text-red-500">*</span>
+                      Challenge Type<span className="text-red-500">*</span>
                     </label>
+
                     <div className="relative">
-                      <FaListUl className="absolute top-[50%] translate-y-[-50%] left-[15px]" />
-                      <input
-                        name="goal"
-                        value={formik.values.goal}
-                        onChange={formik.handleChange}
-                        className="custom--input w-full input--icon"
+                      <Select
+                        name="challenge_type"
+                        value={
+                          challengeType.find(
+                            (opt) => opt.value === formik.values?.challenge_type
+                          ) || null
+                        }
+                        options={challengeType}
+                        onChange={(option) =>
+                          formik.setFieldValue("challenge_type", option.value)
+                        }
+                        onBlur={() =>
+                          formik.setFieldTouched("challenge_type", true)
+                        }
+                        styles={customStyles}
                       />
                     </div>
-                    {formik.touched.goal && formik.errors.goal && (
-                      <p className="text-red-500 text-sm">
-                        {formik.errors.goal}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Start Date Field */}
-                  <div>
-                    <label className="mb-2 block">
-                      Start Date<span className="text-red-500">*</span>
-                    </label>
-                    <div className="custom--date relative">
-                      <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
-                        <LuCalendar />
-                      </span>
-                      <DatePicker
-                        selected={
-                          formik.values.start_date
-                            ? new Date(formik.values.start_date)
-                            : null
-                        }
-                        onChange={(date) =>
-                          formik.setFieldValue(
-                            "start_date",
-                            date ? date.toISOString() : ""
-                          )
-                        }
-                        dateFormat="yyyy-MM-dd"
-                        minDate={new Date()}
-                        className="input--icon"
-                      />
-                    </div>
-                    {formik.touched.start_date && formik.errors.start_date && (
-                      <p className="text-red-500 text-sm">
-                        {formik.errors.start_date}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* End Date Field */}
-                  <div>
-                    <label className="mb-2 block">
-                      End Date<span className="text-red-500">*</span>
-                    </label>
-                    <div className="custom--date relative">
-                      <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
-                        <LuCalendar />
-                      </span>
-                      <DatePicker
-                        selected={
-                          formik.values.end_date
-                            ? new Date(formik.values.end_date)
-                            : null
-                        }
-                        onChange={(date) =>
-                          formik.setFieldValue(
-                            "end_date",
-                            date ? date.toISOString() : ""
-                          )
-                        }
-                        dateFormat="yyyy-MM-dd"
-                        minDate={
-                          formik.values.start_date
-                            ? new Date(formik.values.start_date)
-                            : new Date()
-                        }
-                        className="input--icon"
-                      />
-                    </div>
-                    {formik.touched.end_date && formik.errors.end_date && (
-                      <p className="text-red-500 text-sm">
-                        {formik.errors.end_date}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Rewards Fields */}
-                  <div className="col-span-3">
-                    <div className="grid grid-cols-3 gap-4">
-                      <div>
-                        <label>First Prize Coins *</label>
-                        <div className="relative">
-                          <RiMedalLine className="absolute top-[50%] translate-y-[-50%] left-[15px]" />
-                          <input
-                            type="number"
-                            name="reward_first"
-                            value={formik.values.reward_first}
-                            onChange={formik.handleChange}
-                            onBlur={formik.handleBlur}
-                            className="custom--input w-full input--icon"
-                          />
-                        </div>
-                        {formik.touched.reward_first &&
-                          formik.errors.reward_first && (
-                            <p className="text-red-500 text-sm">
-                              {formik.errors.reward_first}
-                            </p>
-                          )}
-                      </div>
-
-                      <div>
-                        <label>
-                          Second Prize Coins
-                          <span className="text-red-500">*</span>
-                        </label>
-                        <div className="relative">
-                          <RiMedalLine className="absolute top-[50%] translate-y-[-50%] left-[15px]" />
-                          <input
-                            type="number"
-                            name="reward_second"
-                            value={formik.values.reward_second}
-                            onChange={formik.handleChange}
-                            onBlur={formik.handleBlur}
-                            className="custom--input w-full input--icon"
-                          />
-                        </div>
-                        {formik.touched.reward_second &&
-                          formik.errors.reward_second && (
-                            <p className="text-red-500 text-sm">
-                              {formik.errors.reward_second}
-                            </p>
-                          )}
-                      </div>
-
-                      <div>
-                        <label>
-                          Third Prize Coins
-                          <span className="text-red-500">*</span>
-                        </label>
-                        <div className="relative">
-                          <RiMedalLine className="absolute top-[50%] translate-y-[-50%] left-[15px]" />
-                          <input
-                            type="number"
-                            name="reward_third"
-                            value={formik.values.reward_third}
-                            onChange={formik.handleChange}
-                            onBlur={formik.handleBlur}
-                            className="custom--input w-full input--icon"
-                          />
-                        </div>
-                        {formik.touched.reward_third &&
-                          formik.errors.reward_third && (
-                            <p className="text-red-500 text-sm">
-                              {formik.errors.reward_third}
-                            </p>
-                          )}
-                      </div>
-                    </div>
+                    {formik.touched.challenge_type &&
+                      formik.errors.challenge_type && (
+                        <p className="text-red-500 text-sm">
+                          {formik.errors.challenge_type}
+                        </p>
+                      )}
                   </div>
 
                   {/* Condition Field */}
@@ -348,25 +319,152 @@ const ChallengeForm = ({ setShowModal, editingOption, formik }) => {
                     )}
                   </div>
 
-                  {/* Position */}
+                  {/* Start Date Field */}
+                  {/* Start Date Field */}
                   <div>
-                    <label className="mb-2 block">Position</label>
-                    <div className="relative">
-                      <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
-                        <FaListCheck />
+                    <label className="mb-2 block">
+                      Start Date & Time<span className="text-red-500">*</span>
+                    </label>
+                    <div className="custom--date">
+                      <span className="absolute mt-[12px] ml-[15px] z-[1]">
+                        <LuCalendar />
                       </span>
 
-                      <input
-                        type="number"
-                        name="position"
-                        className="custom--input w-full input--icon"
-                        value={formik.values.position}
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
+                      <DatePicker
+                        selected={
+                          formik.values.start_date_time
+                            ? new Date(formik.values.start_date_time)
+                            : null
+                        }
+                        onChange={(date) =>
+                          formik.setFieldValue(
+                            "start_date_time",
+                            date ? date.toISOString() : ""
+                          )
+                        }
+                        showTimeSelect
+                        timeFormat="hh:mm aa"
+                        dateFormat="dd/MM/yyyy hh:mm aa"
+                        minDate={new Date()}
+                        className="input--icon"
                       />
                     </div>
+
+                    {formik.touched.start_date_time &&
+                      formik.errors.start_date_time && (
+                        <p className="text-red-500 text-sm">
+                          {formik.errors.start_date_time}
+                        </p>
+                      )}
                   </div>
 
+                  {/* End Date Field */}
+                  <div>
+                    <label className="mb-2 block">
+                      End Date & Time<span className="text-red-500">*</span>
+                    </label>
+                    <div className="custom--date ">
+                      <span className="absolute mt-[12px] ml-[15px] z-[1]">
+                        <LuCalendar />
+                      </span>
+                      <DatePicker
+                        selected={
+                          formik.values.end_date_time
+                            ? new Date(formik.values.end_date_time)
+                            : null
+                        }
+                        onChange={(date) =>
+                          formik.setFieldValue(
+                            "end_date_time",
+                            date ? date.toISOString() : ""
+                          )
+                        }
+                        showTimeSelect
+                        timeFormat="hh:mm aa"
+                        dateFormat="dd/MM/yyyy hh:mm aa"
+                        minDate={
+                          formik.values.start_date_time
+                            ? new Date(formik.values.start_date_time)
+                            : new Date()
+                        }
+                        className="input--icon"
+                      />
+                    </div>
+
+                    {formik.touched.end_date_time &&
+                      formik.errors.end_date_time && (
+                        <p className="text-red-500 text-sm">
+                          {formik.errors.end_date_time}
+                        </p>
+                      )}
+                  </div>
+
+                  {/* Frequency Field */}
+                  <div>
+                    <label className="mb-2 block">
+                      Frequency<span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <Select
+                        name="frequency"
+                        value={
+                          frequencyType.find(
+                            (opt) => opt.value === formik.values?.frequency
+                          ) || null
+                        }
+                        options={frequencyType}
+                        onChange={(option) =>
+                          formik.setFieldValue("frequency", option.value)
+                        }
+                        onBlur={() => formik.setFieldTouched("frequency", true)}
+                        styles={customStyles}
+                      />
+                    </div>
+                    {formik.touched.frequency && formik.errors.frequency && (
+                      <p className="text-red-500 text-sm">
+                        {formik.errors.frequency}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Target Value & Unit */}
+                  <div>
+                    <label className="mb-2 block">
+                      Target Value<span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      name="target_value"
+                      value={formik.values.target_value}
+                      onChange={formik.handleChange}
+                      className="custom--input w-full"
+                    />
+                    {formik.touched.target_value &&
+                      formik.errors.target_value && (
+                        <p className="text-red-500 text-sm">
+                          {formik.errors.target_value}
+                        </p>
+                      )}
+                  </div>
+
+                  <div>
+                    <label className="mb-2 block">
+                      Target Unit<span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      name="target_unit"
+                      value={formik.values.target_unit}
+                      onChange={formik.handleChange}
+                      className="custom--input w-full"
+                    />
+                    {formik.touched.target_unit &&
+                      formik.errors.target_unit && (
+                        <p className="text-red-500 text-sm">
+                          {formik.errors.target_unit}
+                        </p>
+                      )}
+                  </div>
+                  {/* Join In Between Field */}
                   <div>
                     <label className="mb-2 block">
                       Join In Between<span className="text-red-500">*</span>
@@ -390,47 +488,153 @@ const ChallengeForm = ({ setShowModal, editingOption, formik }) => {
                     />
                   </div>
 
-                  {/* description Field */}
-                  <div className="col-span-3">
+                  {/* Status Field */}
+                  <div>
                     <label className="mb-2 block">
-                      Description<span className="text-red-500">*</span>
+                      Status<span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
-                      <FaListUl className="absolute top-[15px] left-[15px]" />
+                      <Select
+                        name="status"
+                        value={
+                          statusType.find(
+                            (opt) => opt.value === formik.values?.status
+                          ) || null
+                        }
+                        options={statusType}
+                        onChange={(option) =>
+                          formik.setFieldValue("status", option.value)
+                        }
+                        onBlur={() => formik.setFieldTouched("status", true)}
+                        styles={customStyles}
+                      />
+                    </div>
+                    {formik.touched.status && formik.errors.status && (
+                      <p className="text-red-500 text-sm">
+                        {formik.errors.status}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Position Field */}
+                  <div>
+                    <label className="mb-2 block">Position</label>
+                    <input
+                      type="number"
+                      name="position"
+                      value={formik.values.position}
+                      onChange={formik.handleChange}
+                      className="custom--input w-full"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="mb-2 block">
+                      First Prize Coins<span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <RiMedalLine className="absolute top-[50%] translate-y-[-50%] left-[15px]" />
+                      <input
+                        type="number"
+                        name="reward_first"
+                        value={formik.values.reward_first}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        className="custom--input w-full input--icon"
+                      />
+                    </div>
+                    {formik.touched.reward_first &&
+                      formik.errors.reward_first && (
+                        <p className="text-red-500 text-sm">
+                          {formik.errors.reward_first}
+                        </p>
+                      )}
+                  </div>
+
+                  <div>
+                    <label className="mb-2 block">
+                      Second Prize Coins<span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <RiMedalLine className="absolute top-[50%] translate-y-[-50%] left-[15px]" />
+                      <input
+                        type="number"
+                        name="reward_second"
+                        value={formik.values.reward_second}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        className="custom--input w-full input--icon"
+                      />
+                    </div>
+                    {formik.touched.reward_second &&
+                      formik.errors.reward_second && (
+                        <p className="text-red-500 text-sm">
+                          {formik.errors.reward_second}
+                        </p>
+                      )}
+                  </div>
+
+                  <div>
+                    <label className="mb-2 block">
+                      Third Prize Coins<span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <RiMedalLine className="absolute top-[50%] translate-y-[-50%] left-[15px]" />
+                      <input
+                        type="number"
+                        name="reward_third"
+                        value={formik.values.reward_third}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        className="custom--input w-full input--icon"
+                      />
+                    </div>
+                    {formik.touched.reward_third &&
+                      formik.errors.reward_third && (
+                        <p className="text-red-500 text-sm">
+                          {formik.errors.reward_third}
+                        </p>
+                      )}
+                  </div>
+
+                  <div className="md:col-span-4 grid md:grid-cols-2 grid-cols-1 gap-4 gap-y-2">
+                    {/* Description Field */}
+                    <div>
+                      <label className="mb-2 block">
+                        Description<span className="text-red-500">*</span>
+                      </label>
                       <textarea
                         name="description"
                         value={formik.values.description}
                         onChange={formik.handleChange}
-                        className="custom--input w-full input--icon"
+                        className="custom--input w-full"
                       />
+                      {formik.touched.description &&
+                        formik.errors.description && (
+                          <p className="text-red-500 text-sm">
+                            {formik.errors.description}
+                          </p>
+                        )}
                     </div>
-                    {formik.touched.description &&
-                      formik.errors.description && (
-                        <p className="text-red-500 text-sm">
-                          {formik.errors.description}
-                        </p>
-                      )}
-                  </div>
-                  {/* About Challenge Field */}
-                  <div className="col-span-3">
-                    <label className="mb-2 block">
-                      About Challenge<span className="text-red-500">*</span>
-                    </label>
-                    <div className="relative">
-                      <FaListUl className="absolute top-[15px] left-[15px]" />
+
+                    {/* About Challenge Field */}
+                    <div>
+                      <label className="mb-2 block">
+                        About Challenge<span className="text-red-500">*</span>
+                      </label>
                       <textarea
                         name="about_challenge"
                         value={formik.values.about_challenge}
                         onChange={formik.handleChange}
-                        className="custom--input w-full input--icon"
+                        className="custom--input w-full"
                       />
+                      {formik.touched.about_challenge &&
+                        formik.errors.about_challenge && (
+                          <p className="text-red-500 text-sm">
+                            {formik.errors.about_challenge}
+                          </p>
+                        )}
                     </div>
-                    {formik.touched.about_challenge &&
-                      formik.errors.about_challenge && (
-                        <p className="text-red-500 text-sm">
-                          {formik.errors.about_challenge}
-                        </p>
-                      )}
                   </div>
                 </div>
               </div>
