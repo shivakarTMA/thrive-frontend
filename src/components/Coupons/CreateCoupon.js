@@ -1,5 +1,5 @@
 // Import React
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 // Import close icon
 import { IoCloseCircle } from "react-icons/io5";
 // Import icons for input fields
@@ -9,9 +9,18 @@ import Select from "react-select";
 import { selectIcon } from "../../Helper/helper";
 import { toast } from "react-toastify";
 import { authAxios } from "../../config/config";
-import { LuCalendar } from "react-icons/lu";
+import { LuCalendar, LuPlug } from "react-icons/lu";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+
+const discountType = [
+  { label: "Percentage", value: "PERCENTAGE" },
+  { label: "Fixed", value: "FIXED" },
+];
+const statusOptions = [
+  { label: "Active", value: "ACTIVE" },
+  { label: "Inactive", value: "INACTIVE" },
+];
 
 // CreateCoupon component
 const CreateCoupon = ({
@@ -21,11 +30,30 @@ const CreateCoupon = ({
   handleOverlayClick,
   leadBoxRef,
 }) => {
+  const [club, setClub] = useState([]);
 
-  const discountType = [
-    { label: "Percentage", value: "PERCENTAGE" },
-    { label: "Fixed", value: "FIXED" },
-  ];
+  // Function to fetch club list
+  const fetchClub = async () => {
+    try {
+      const response = await authAxios().get("/club/list");
+      const data = response.data?.data || response.data || [];
+      setClub(data);
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to fetch clubs");
+    }
+  };
+
+  // Fetch clubs and gallery list on component mount
+  useEffect(() => {
+    fetchClub();
+  }, []);
+
+  const clubOptions =
+    club?.map((item) => ({
+      label: item.name,
+      value: item.id,
+    })) || [];
 
   useEffect(() => {
     if (!editingOption) return;
@@ -36,18 +64,21 @@ const CreateCoupon = ({
         const data = res.data?.data || res.data || null;
 
         if (data) {
-          // ✅ Prefill formik fields with fetched data
           formik.setValues({
-            id: data.id || "",
-            code: data.code || "",
-            description: data.description || "",
-            discount_type: data.discount_type || "",
-            discount_value: data.discount_value || null,
-            min_order_amt: data.min_order_amt || null,
-            max_user_limit: data.max_user_limit || null,
-            start_date: data?.start_date,
-            end_date: data?.end_date,
-            position: data.position || null,
+            coupon: {
+              id: data.id || "",
+              club_id: data.club_id || "",
+              code: data.code || "",
+              description: data.description || "",
+              discount_type: data.discount_type || "",
+              discount_value: data.discount_value || "",
+              max_usage: data.max_usage || "",
+              per_user_limit: data.per_user_limit || "",
+              start_date: data.start_date || "",
+              end_date: data.end_date || "",
+              position: data.position || "",
+              status: data.status || "",
+            },
           });
         }
       } catch (err) {
@@ -93,6 +124,42 @@ const CreateCoupon = ({
             <div className="flex bg-white rounded-b-[10px]">
               <div className="p-6 flex-1">
                 <div className="grid grid-cols-3 gap-4">
+                  {/* Club Name */}
+                  <div>
+                    <label className="mb-2 block">
+                      Club Name<span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[10]">
+                        <FaListUl />
+                      </span>
+                      <Select
+                        name="club_id"
+                        value={
+                          clubOptions.find(
+                            (option) =>
+                              option.value.toString() ===
+                              formik.values.coupon.club_id?.toString()
+                          ) || null
+                        }
+                        options={clubOptions}
+                        onChange={(option) =>
+                          formik.setFieldValue("coupon.club_id", option.value)
+                        }
+                        onBlur={() =>
+                          formik.setFieldTouched("coupon.club_id", true)
+                        }
+                        styles={selectIcon}
+                        className="!capitalize"
+                      />
+                    </div>
+                    {formik.touched.coupon?.club_id &&
+                      formik.errors.coupon?.club_id && (
+                        <p className="text-red-500 text-sm mt-1">
+                          {formik.errors.coupon?.club_id}
+                        </p>
+                      )}
+                  </div>
                   {/* Code Input */}
                   <div>
                     <label className="mb-2 block">
@@ -104,18 +171,19 @@ const CreateCoupon = ({
                       </span>
                       <input
                         type="text"
-                        name="code"
-                        value={formik.values.code}
+                        name="coupon.code"
+                        value={formik.values.coupon?.code}
                         onChange={formik.handleChange}
                         onBlur={formik.handleBlur}
                         className="custom--input w-full input--icon"
                       />
                     </div>
-                    {formik.touched.code && formik.errors.code && (
-                      <p className="text-red-500 text-sm mt-1">
-                        {formik.errors.code}
-                      </p>
-                    )}
+                    {formik.touched.coupon?.code &&
+                      formik.errors.coupon?.code && (
+                        <p className="text-red-500 text-sm mt-1">
+                          {formik.errors.coupon?.code}
+                        </p>
+                      )}
                   </div>
 
                   {/* Type */}
@@ -128,29 +196,32 @@ const CreateCoupon = ({
                         <FaListUl />
                       </span>
                       <Select
-                        name="discount_type"
+                        name="coupon.discount_type"
                         value={
                           discountType.find(
                             (option) =>
                               option.value.toString() ===
-                              formik.values.discount_type?.toString()
+                              formik.values.coupon?.discount_type?.toString()
                           ) || null
                         }
                         options={discountType}
                         onChange={(option) =>
-                          formik.setFieldValue("discount_type", option.value)
+                          formik.setFieldValue(
+                            "coupon.discount_type",
+                            option.value
+                          )
                         }
                         onBlur={() =>
-                          formik.setFieldTouched("discount_type", true)
+                          formik.setFieldTouched("coupon.discount_type", true)
                         }
                         styles={selectIcon}
                         className="!capitalize"
                       />
                     </div>
-                    {formik.touched.discount_type &&
-                      formik.errors.discount_type && (
+                    {formik.touched.coupon?.discount_type &&
+                      formik.errors.coupon?.discount_type && (
                         <p className="text-red-500 text-sm mt-1">
-                          {formik.errors.discount_type}
+                          {formik.errors.coupon?.discount_type}
                         </p>
                       )}
                   </div>
@@ -166,23 +237,25 @@ const CreateCoupon = ({
                       </span>
                       <input
                         type="number"
-                        name="discount_value"
-                        value={formik.values.discount_value}
+                        name="coupon.discount_value"
+                        value={formik.values.coupon?.discount_value}
                         onChange={formik.handleChange}
                         onBlur={formik.handleBlur}
                         className="custom--input w-full input--icon"
                       />
                     </div>
-                    {formik.touched.discount_value && formik.errors.discount_value && (
-                      <p className="text-red-500 text-sm mt-1">
-                        {formik.errors.discount_value}
-                      </p>
-                    )}
+                    {formik.touched.coupon?.discount_value &&
+                      formik.errors.coupon?.discount_value && (
+                        <p className="text-red-500 text-sm mt-1">
+                          {formik.errors.coupon?.discount_value}
+                        </p>
+                      )}
                   </div>
-                  {/* Min Order Amount Input */}
+
+                  {/* Max Usage */}
                   <div>
                     <label className="mb-2 block">
-                      Min Order Amount
+                      Max Usage<span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
                       <span className="absolute top-[50%] translate-y-[-50%] left-[15px]">
@@ -190,24 +263,24 @@ const CreateCoupon = ({
                       </span>
                       <input
                         type="number"
-                        name="min_order_amt"
-                        value={formik.values.min_order_amt}
+                        name="coupon.max_usage"
+                        value={formik.values.coupon.max_usage}
                         onChange={formik.handleChange}
                         onBlur={formik.handleBlur}
                         className="custom--input w-full input--icon"
                       />
                     </div>
-                    {formik.touched.min_order_amt && formik.errors.min_order_amt && (
-                      <p className="text-red-500 text-sm mt-1">
-                        {formik.errors.min_order_amt}
-                      </p>
-                    )}
+                    {formik.touched.coupon?.max_usage &&
+                      formik.errors.coupon?.max_usage && (
+                        <p className="text-red-500 text-sm mt-1">
+                          {formik.errors.coupon?.max_usage}
+                        </p>
+                      )}
                   </div>
-
-                  {/* Max User Limit Input */}
+                  {/* Per User Limit */}
                   <div>
                     <label className="mb-2 block">
-                      Max User Limit
+                      Per User Limit<span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
                       <span className="absolute top-[50%] translate-y-[-50%] left-[15px]">
@@ -215,20 +288,20 @@ const CreateCoupon = ({
                       </span>
                       <input
                         type="number"
-                        name="max_user_limit"
-                        value={formik.values.max_user_limit}
+                        name="coupon.per_user_limit"
+                        value={formik.values.coupon?.per_user_limit}
                         onChange={formik.handleChange}
                         onBlur={formik.handleBlur}
                         className="custom--input w-full input--icon"
                       />
                     </div>
-                    {formik.touched.max_user_limit && formik.errors.max_user_limit && (
-                      <p className="text-red-500 text-sm mt-1">
-                        {formik.errors.max_user_limit}
-                      </p>
-                    )}
+                    {formik.touched.coupon?.per_user_limit &&
+                      formik.errors.coupon?.per_user_limit && (
+                        <p className="text-red-500 text-sm mt-1">
+                          {formik.errors.coupon?.per_user_limit}
+                        </p>
+                      )}
                   </div>
-
                   {/* Position Input */}
                   <div>
                     <label className="mb-2 block">
@@ -240,18 +313,19 @@ const CreateCoupon = ({
                       </span>
                       <input
                         type="number"
-                        name="position"
-                        value={formik.values.position}
+                        name="coupon.position"
+                        value={formik.values.coupon?.position}
                         onChange={formik.handleChange}
                         onBlur={formik.handleBlur}
                         className="custom--input w-full input--icon"
                       />
                     </div>
-                    {formik.touched.position && formik.errors.position && (
-                      <p className="text-red-500 text-sm mt-1">
-                        {formik.errors.position}
-                      </p>
-                    )}
+                    {formik.touched.coupon?.position &&
+                      formik.errors.coupon?.position && (
+                        <p className="text-red-500 text-sm mt-1">
+                          {formik.errors.coupon?.position}
+                        </p>
+                      )}
                   </div>
 
                   {/* Start Date Field */}
@@ -265,26 +339,27 @@ const CreateCoupon = ({
                       </span>
                       <DatePicker
                         selected={
-                          formik.values.start_date
-                            ? new Date(formik.values.start_date)
+                          formik.values.coupon?.start_date
+                            ? new Date(formik.values.coupon?.start_date)
                             : null
                         }
                         onChange={(date) =>
                           formik.setFieldValue(
-                            "start_date",
+                            "coupon.start_date",
                             date ? date.toISOString() : ""
                           )
                         }
-                        dateFormat="yyyy-MM-dd"
+                        dateFormat="dd-MM-yyyy"
                         minDate={new Date()}
                         className="input--icon"
                       />
                     </div>
-                    {formik.touched.start_date && formik.errors.start_date && (
-                      <p className="text-red-500 text-sm">
-                        {formik.errors.start_date}
-                      </p>
-                    )}
+                    {formik.touched.coupon?.start_date &&
+                      formik.errors.coupon?.start_date && (
+                        <p className="text-red-500 text-sm">
+                          {formik.errors.coupon?.start_date}
+                        </p>
+                      )}
                   </div>
 
                   {/* End Date Field */}
@@ -298,31 +373,62 @@ const CreateCoupon = ({
                       </span>
                       <DatePicker
                         selected={
-                          formik.values.end_date
-                            ? new Date(formik.values.end_date)
+                          formik.values.coupon?.end_date
+                            ? new Date(formik.values.coupon?.end_date)
                             : null
                         }
                         onChange={(date) =>
                           formik.setFieldValue(
-                            "end_date",
+                            "coupon.end_date",
                             date ? date.toISOString() : ""
                           )
                         }
-                        dateFormat="yyyy-MM-dd"
+                        dateFormat="dd-MM-yyyy"
                         minDate={
-                          formik.values.start_date
-                            ? new Date(formik.values.start_date)
+                          formik.values.coupon?.start_date
+                            ? new Date(formik.values.coupon?.start_date)
                             : new Date()
                         }
                         className="input--icon"
                       />
                     </div>
-                    {formik.touched.end_date && formik.errors.end_date && (
-                      <p className="text-red-500 text-sm">
-                        {formik.errors.end_date}
-                      </p>
-                    )}
+                    {formik.touched.coupon?.end_date &&
+                      formik.errors.coupon?.end_date && (
+                        <p className="text-red-500 text-sm">
+                          {formik.errors.coupon?.end_date}
+                        </p>
+                      )}
                   </div>
+
+                  {/* Status Dropdown */}
+                  {editingOption && editingOption && (
+                    <div>
+                      <label className="mb-2 block">Status</label>
+                      <div className="relative">
+                        <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[10]">
+                          <LuPlug />
+                        </span>
+                        <Select
+                          name="coupon.status"
+                          value={
+                            statusOptions.find(
+                              (opt) =>
+                                opt.value === formik.values.coupon?.status
+                            ) || null
+                          }
+                          options={statusOptions}
+                          onChange={(option) =>
+                            formik.setFieldValue("coupon.status", option.value)
+                          }
+                          onBlur={() =>
+                            formik.setFieldTouched("coupon.status", true)
+                          }
+                          styles={selectIcon}
+                          className="!capitalize"
+                        />
+                      </div>
+                    </div>
+                  )}
 
                   {/* Description Input */}
                   <div className="col-span-3">
@@ -332,16 +438,16 @@ const CreateCoupon = ({
                     <div className="relative">
                       <FaListUl className="absolute top-[15px] left-[15px]" />
                       <textarea
-                        name="description"
-                        value={formik.values.description}
+                        name="coupon.description"
+                        value={formik.values.coupon?.description}
                         onChange={formik.handleChange}
                         className="custom--input w-full input--icon"
                       />
                     </div>
-                    {formik.touched.description &&
-                      formik.errors.description && (
+                    {formik.touched.coupon?.description &&
+                      formik.errors.coupon?.description && (
                         <p className="text-red-500 text-sm">
-                          {formik.errors.description}
+                          {formik.errors.coupon?.description}
                         </p>
                       )}
                   </div>

@@ -11,6 +11,8 @@ import CreateCoupon from "./CreateCoupon";
 import { authAxios } from "../../config/config";
 import { RiDeleteBin6Line } from "react-icons/ri";
 import ConfirmPopup from "../common/ConfirmPopup";
+import { formatAutoDate, formatText } from "../../Helper/helper";
+import { FaCircle } from "react-icons/fa6";
 
 // Define the main GalleryList component
 const CouponsList = () => {
@@ -63,27 +65,49 @@ const CouponsList = () => {
   // Formik setup for form validation and submission
   const formik = useFormik({
     initialValues: {
-      code: "",
-      description: "",
-      discount_type: "",
-      discount_value: null,
-      min_order_amt: null,
-      max_user_limit: null,
-      start_date: "",
-      end_date: "",
-      position: null,
+      coupon: {
+        club_id: null,
+        code: "",
+        description: "",
+        discount_type: "",
+        discount_value: "",
+        max_usage: "",
+        per_user_limit: "",
+        start_date: "",
+        end_date: "",
+        position: "",
+        status: "",
+      },
     },
     validationSchema: Yup.object({
-      code: Yup.string().required("Code is required"),
-      description: Yup.string().required("Description is required"),
-      discount_type: Yup.string().required("Discount type is required"),
-      discount_value: Yup.number().required("Discount value is required"),
-      start_date: Yup.date().required("Start date is required"),
-      end_date: Yup.date()
-        .min(Yup.ref("start_date"), "End date cannot be before start date")
-        .required("End date is required"),
-      // min_order_amt: Yup.number().required("Min order amount is required"),
-      // max_user_limit: Yup.number().required("Max user limit is required"),
+      coupon: Yup.object({
+        club_id: Yup.number()
+          .typeError("Club Name must be a number")
+          .required("Club Name is required"),
+
+        code: Yup.string().required("Code is required"),
+
+        description: Yup.string().required("Description is required"),
+
+        discount_type: Yup.string().required("Discount type is required"),
+
+        discount_value: Yup.string().required("Discount value is required"),
+
+        max_usage: Yup.string().required("Max Usage is required"),
+
+        per_user_limit: Yup.string().required("Per User Limit is required"),
+
+        start_date: Yup.date()
+          .typeError("Start date is invalid")
+          .required("Start date is required"),
+
+        end_date: Yup.date()
+          .typeError("End date is invalid")
+          .min(Yup.ref("start_date"), "End date cannot be before start date")
+          .required("End date is required"),
+
+        position: Yup.string().required("Position is required"),
+      }),
     }),
     onSubmit: async (values, { resetForm }) => {
       try {
@@ -91,7 +115,7 @@ const CouponsList = () => {
 
         if (editingOption && editingOption) {
           // Update
-          await authAxios().put(`/coupon/${editingOption}`, payload);
+          await authAxios().put(`/coupon/update/${editingOption}`, payload);
           toast.success("Updated Successfully");
         } else {
           // Create
@@ -137,7 +161,7 @@ const CouponsList = () => {
     setShowConfirmPopup(false);
   };
 
-    // Cancel deletion
+  // Cancel deletion
   const handleCancelDelete = () => {
     setCouponToDelete(null);
     setShowConfirmPopup(false);
@@ -173,11 +197,15 @@ const CouponsList = () => {
           <table className="w-full text-sm text-left text-gray-500">
             <thead className="text-xs text-gray-700 uppercase bg-gray-50">
               <tr>
+                <th className="px-2 py-4">Club</th>
                 <th className="px-2 py-4">Code</th>
                 <th className="px-2 py-4">Description</th>
                 <th className="px-2 py-4">Type</th>
                 <th className="px-2 py-4">Value</th>
-                <th className="px-2 py-4">Position</th>
+                <th className="px-2 py-4">Status</th>
+                <th className="px-2 py-4 text-center">Position</th>
+                <th className="px-2 py-4 text-center">Start Date</th>
+                <th className="px-2 py-4 text-center">End Date</th>
                 <th className="px-2 py-4">Action</th>
               </tr>
             </thead>
@@ -194,16 +222,40 @@ const CouponsList = () => {
                     key={item.id || index}
                     className="group bg-white border-b hover:bg-gray-50 transition duration-700"
                   >
-                    <td>{item.code}</td>
+                    <td className="px-2 py-4">{item?.club_name ? item?.club_name : "--"}</td>
+                    <td className="px-2 py-4">{item?.code}</td>
                     <td className="px-2 py-4">{item?.description}</td>
-                    <td className="px-2 py-4">{item?.discount_type}</td>
+                    <td className="px-2 py-4">
+                      {formatText(item?.discount_type)}
+                    </td>
                     <td className="px-2 py-4">{item?.discount_value}</td>
-                    <td className="px-2 py-4">{item?.position}</td>
+                    <td className="px-2 py-4">
+                      <span
+                        className={`
+                          flex items-center justify-between gap-1 rounded-full min-h-[30px] px-3 text-sm w-fit
+                        ${
+                          item?.status !== "ACTIVE"
+                            ? "bg-[#EEEEEE]"
+                            : "bg-[#E8FFE6] text-[#138808]"
+                        }
+                        `}
+                      >
+                        <FaCircle className="text-[10px]" />{" "}
+                        {formatText(item?.status)}
+                      </span>
+                    </td>
+                    <td className="px-2 py-4 text-center">{item?.position}</td>
+                    <td className="px-2 py-4 text-center">
+                      {formatAutoDate(item?.start_date)}
+                    </td>
+                    <td className="px-2 py-4 text-center">
+                      {formatAutoDate(item?.end_date)}
+                    </td>
                     <td className="px-2 py-4">
                       <div className="flex items-center">
                         <div className="w-fit">
                           <Tooltip
-                            id={`tooltip-edit-${item.id}`}
+                            id={`tooltip-edit-${item?.id}`}
                             content="Edit Coupon"
                             place="left"
                           >
@@ -266,7 +318,7 @@ const CouponsList = () => {
         />
       )}
 
-            {/* Confirm Delete */}
+      {/* Confirm Delete */}
       {showConfirmPopup && couponToDelete && (
         <ConfirmPopup
           message={`Are you sure you want to delete <br /> "${couponToDelete?.code}"?`}

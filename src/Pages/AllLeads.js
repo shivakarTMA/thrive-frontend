@@ -493,7 +493,7 @@ const AllLeads = () => {
             )}
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-5 mb-5 p-3 border bg-white shodow--box rounded-[10px]">
+        {/* <div className="grid grid-cols-2 gap-5 mb-5 p-3 border bg-white shodow--box rounded-[10px]">
           <div className="border rounded-[5px] overflow-hidden w-full">
             <div className="flex gap-1 justify-between bg-[#F1F1F1] p-4 py-3">
               <div className="text-xl font-bold">Total Enquiries</div>
@@ -550,7 +550,7 @@ const AllLeads = () => {
               </div>
             </div>
           </div>
-        </div>
+        </div> */}
 
         <div className="w-full p-3 border bg-white shodow--box rounded-[10px]">
           <div className="flex items-start gap-3 justify-between w-full mb-3 border-b border-b-[#D4D4D4] pb-3">
