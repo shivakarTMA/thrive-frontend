@@ -271,7 +271,7 @@ const PackagesList = () => {
     caption: "",
     description: "",
     image: null,
-    session_level: null,
+    session_level: "",
     no_of_sessions: "",
     session_duration: "",
     session_validity: "",
@@ -522,7 +522,6 @@ const PackagesList = () => {
         ...formik.values,
         buddy_pt: "",
         session_duration: "",
-        session_level: "",
         session_validity: "",
         variation:
           type === "GROUP_CLASS"
