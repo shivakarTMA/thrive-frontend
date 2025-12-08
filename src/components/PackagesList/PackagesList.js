@@ -121,7 +121,6 @@ const PackagesList = () => {
             ? Yup.string() // not required if editing
             : Yup.string().required("Caption is required"),
         tags: Yup.string().required("Tags is required"),
-        
 
         // trainer_id: Yup.string().required("Staff is required"),
         position: Yup.string().required("Position is required"),
@@ -140,8 +139,8 @@ const PackagesList = () => {
           end_time: Yup.string().required("End Time is required"),
           max_capacity: Yup.string().required("Max Capacity is required"),
           earn_coin: Yup.number()
-          .typeError("Earn Coins must be a number")
-          .required("Earn Coins is required"),
+            .typeError("Earn Coins must be a number")
+            .required("Earn Coins is required"),
           waitlist_capacity: Yup.string().required(
             "Waitlist Capacity is required"
           ),
@@ -207,8 +206,8 @@ const PackagesList = () => {
           ...schema,
           buddy_pt: Yup.string().required("PT Type is required"),
           earn_coin: Yup.number()
-          .typeError("Earn Coins must be a number")
-          .required("Earn Coins is required"),
+            .typeError("Earn Coins must be a number")
+            .required("Earn Coins is required"),
         };
       }
 
@@ -403,8 +402,8 @@ const PackagesList = () => {
     fd.append("position", variation.position || "");
     fd.append("earn_coin", variation.earn_coin || "");
 
-    if (variation.image instanceof File) {
-      fd.append("image", variation.image);
+    if (variation.imageFile instanceof File) {
+      fd.append("image", variation.imageFile);
     }
 
     return authAxios().post("/package/variation/create", fd, {
@@ -429,8 +428,8 @@ const PackagesList = () => {
     fd.append("position", variation.position || "");
     fd.append("earn_coin", variation.earn_coin || "");
 
-    if (variation.image instanceof File) {
-      fd.append("image", variation.image);
+    if (variation.imageFile instanceof File) {
+      fd.append("image", variation.imageFile);
     }
 
     return authAxios().put(`/package/variation/${variation.id}`, fd, {

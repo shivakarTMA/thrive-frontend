@@ -81,7 +81,6 @@ const GalleryList = () => {
     }
   };
 
-
   // Fetch clubs and gallery list on component mount
   useEffect(() => {
     fetchClub();
@@ -245,15 +244,17 @@ const GalleryList = () => {
                     key={item.id || index}
                     className="group bg-white border-b hover:bg-gray-50 transition duration-700"
                   >
-                    <td>
-                      {item.image ? (
-                        <img
-                          src={item.image}
-                          className="w-14 h-14 object-cover"
-                        />
-                      ) : (
-                        "--"
-                      )}
+                    <td className="px-2 py-4">
+                      <div className="bg-black rounded-lg w-14 h-14 overflow-hidden">
+                        {item.image ? (
+                          <img
+                            src={item.image}
+                            className="w-full h-full object-contain"
+                          />
+                        ) : (
+                          "--"
+                        )}
+                      </div>
                     </td>
                     <td className="px-2 py-4">{item?.title}</td>
                     <td className="px-2 py-4">{item?.club_id}</td>
@@ -268,9 +269,9 @@ const GalleryList = () => {
                           <div
                             className="p-1 cursor-pointer"
                             onClick={() => {
-                            setEditingOption(item?.id);
-                            setShowModal(true);
-                          }}
+                              setEditingOption(item?.id);
+                              setShowModal(true);
+                            }}
                           >
                             <LiaEdit className="text-[25px] text-black" />
                           </div>
