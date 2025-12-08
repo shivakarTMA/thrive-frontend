@@ -4,6 +4,7 @@ import { customStyles } from "../../Helper/helper";
 import { IoCloseCircle } from "react-icons/io5";
 import { toast } from "react-toastify";
 import { authAxios } from "../../config/config";
+import { PiImageFill } from "react-icons/pi";
 
 // Options
 const productTypeOptions = [
@@ -45,7 +46,7 @@ const CreateProduct = ({
         if (data) {
           formik.setValues({
             image: data?.image || "",
-            // service_id: data?.service_id || "",
+            service_id: data?.service_id || "",
             product_category_id: data?.product_category_id || "",
             product_category_id: data?.product_category_id || "",
             name: data?.name || "",
@@ -82,10 +83,14 @@ const CreateProduct = ({
   }, [editingOption]);
 
   // Handle image file change and set preview
+
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      formik.setFieldValue("image", file); // ✅ store file in Formik state
+      const previewURL = URL.createObjectURL(file);
+
+      formik.setFieldValue("image", previewURL); // for preview
+      formik.setFieldValue("imageFile", file); // actual file to upload
     }
   };
 
@@ -98,6 +103,12 @@ const CreateProduct = ({
   const handleLeadModal = () => {
     setShowModal(false);
   };
+
+  useEffect(() => {
+    if (serviceOptions.length === 1) {
+      formik.setFieldValue("service_id", serviceOptions[0].value);
+    }
+  }, []);
 
   return (
     <div
@@ -119,7 +130,25 @@ const CreateProduct = ({
           <form onSubmit={formik.handleSubmit}>
             <div className="flex bg-white rounded-b-[10px]">
               <div className="p-6 flex-1">
-                <div className="grid lg:grid-cols-4 md:grid-cols-2 grid-cols-1 gap-4">
+                <div className="grid md:grid-cols-4 grid-cols-1 gap-4 gap-y-2">
+                  {/* Image Preview */}
+                  <div className="row-span-2">
+                    <div className="bg-gray-100 rounded-lg w-full h-[160px] overflow-hidden">
+                      {formik.values?.image ? (
+                        <img
+                          src={formik.values?.image}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex flex-col items-center justify-center">
+                          <PiImageFill className="text-gray-300 text-7xl" />
+                          <span className="text-gray-500 text-sm">
+                            Upload Image
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                   {/* Image Upload */}
                   <div>
                     <label className="mb-2 block">
@@ -186,7 +215,7 @@ const CreateProduct = ({
                   </div>
 
                   {/* Service */}
-                  {/* <div>
+                  <div>
                     <label className="mb-2 block">
                       Service<span className="text-red-500">*</span>
                     </label>
@@ -210,7 +239,7 @@ const CreateProduct = ({
                         {formik.errors.service_id}
                       </p>
                     )}
-                  </div> */}
+                  </div>
                   {/* Product Category */}
                   <div>
                     <label className="mb-2 block">
@@ -298,9 +327,7 @@ const CreateProduct = ({
 
                   {/* SKU */}
                   <div>
-                    <label className="mb-2 block">
-                      SKU<span className="text-red-500">*</span>
-                    </label>
+                    <label className="mb-2 block">SKU</label>
                     <div className="relative">
                       <input
                         type="text"
@@ -311,11 +338,11 @@ const CreateProduct = ({
                         onBlur={formik.handleBlur}
                       />
                     </div>
-                    {formik.touched.sku && formik.errors.sku && (
+                    {/* {formik.touched.sku && formik.errors.sku && (
                       <p className="text-red-500 text-sm mt-1">
                         {formik.errors.sku}
                       </p>
-                    )}
+                    )} */}
                   </div>
                   {/* Allergens */}
                   <div>
@@ -426,6 +453,29 @@ const CreateProduct = ({
                     )}
                   </div>
 
+                  {/* Stock Quantity */}
+                  <div>
+                    <label className="mb-2 block">
+                      Stock Quantity<span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        name="stock_quantity"
+                        className="custom--input w-full"
+                        value={formik.values.stock_quantity}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                      />
+                    </div>
+                    {formik.touched.stock_quantity &&
+                      formik.errors.stock_quantity && (
+                        <p className="text-red-500 text-sm mt-1">
+                          {formik.errors.stock_quantity}
+                        </p>
+                      )}
+                  </div>
+
                   {/* Calorie */}
                   <div>
                     <label className="mb-2 block">
@@ -512,28 +562,7 @@ const CreateProduct = ({
                     )}
                   </div>
 
-                  {/* Stock Quantity */}
-                  <div>
-                    <label className="mb-2 block">
-                      Stock Quantity<span className="text-red-500">*</span>
-                    </label>
-                    <div className="relative">
-                      <input
-                        type="number"
-                        name="stock_quantity"
-                        className="custom--input w-full"
-                        value={formik.values.stock_quantity}
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
-                      />
-                    </div>
-                    {formik.touched.stock_quantity &&
-                      formik.errors.stock_quantity && (
-                        <p className="text-red-500 text-sm mt-1">
-                          {formik.errors.stock_quantity}
-                        </p>
-                      )}
-                  </div>
+                  
 
                   {/* Earn Coins */}
                   <div>
@@ -581,6 +610,24 @@ const CreateProduct = ({
 
                   
 
+                  {/* Short Description */}
+                  <div className="md:col-span-2">
+                    <label className="mb-2 block">Short Description</label>
+                    <input
+                      type="text"
+                      name="short_description"
+                      value={formik.values.short_description}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      className="custom--input w-full"
+                    />
+                    {formik.touched.short_description &&
+                      formik.errors.short_description && (
+                        <p className="text-red-500 text-sm mt-1">
+                          {formik.errors.short_description}
+                        </p>
+                      )}
+                  </div>
                   {/* Status */}
                   {editingOption && editingOption && (
                     <div>
@@ -615,29 +662,8 @@ const CreateProduct = ({
                     </div>
                   )}
 
-                  {/* Short Description */}
-                  <div className="md:col-span-2">
-                    <label className="mb-2 block">
-                      Short Description
-                    </label>
-                    <textarea
-                      rows={3}
-                      name="short_description"
-                      value={formik.values.short_description}
-                      onChange={formik.handleChange}
-                      onBlur={formik.handleBlur}
-                      className="custom--input w-full"
-                    />
-                    {formik.touched.short_description &&
-                      formik.errors.short_description && (
-                        <p className="text-red-500 text-sm mt-1">
-                          {formik.errors.short_description}
-                        </p>
-                      )}
-                  </div>
-
                   {/* Description */}
-                  <div className="md:col-span-2">
+                  <div className="md:col-span-4">
                     <label className="mb-2 block">
                       Description<span className="text-red-500">*</span>
                     </label>

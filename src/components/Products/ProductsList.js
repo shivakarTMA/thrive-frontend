@@ -42,11 +42,14 @@ const ProductsList = () => {
     }
   };
 
+  const productServices = service?.filter((item) => item.type === "PRODUCT");
+
   const serviceOptions =
-    service?.map((item) => ({
+    productServices?.map((item) => ({
       label: item.name,
       value: item.id,
     })) || [];
+  console.log(service, "service service");
 
   const fetchProductCategory = async (search = "") => {
     try {
@@ -129,7 +132,7 @@ const ProductsList = () => {
     product_category_id: Yup.string().required("Product category is required"),
     name: Yup.string().required("Name is required"),
     caption: Yup.string().required("Caption is required"),
-    sku: Yup.string().required("sku is required"),
+    // sku: Yup.string().required("sku is required"),
     product_type: Yup.string().required("Product type is required"),
     food_type: Yup.string().required("Food type is required"),
     // short_description: Yup.string().required("Short Description is required"),

@@ -92,9 +92,6 @@ const CreatePackage = ({
     }
   };
 
-  console.log(studio, "studio list");
-  console.log(club, "club list");
-
   const fetchPackageCategory = async (search = "") => {
     try {
       const res = await authAxios().get("/package-category/list", {
@@ -1441,32 +1438,6 @@ const CreatePackage = ({
                                 )}
                             </div>
 
-                            {/* Description */}
-                            <div>
-                              <label className="mb-2 block">
-                                Description{" "}
-                                <span className="text-red-500">*</span>
-                              </label>
-                              <input
-                                type="text"
-                                name={`variation[${index}].description`}
-                                value={
-                                  formik.values.variation[index]?.description ||
-                                  ""
-                                }
-                                onChange={formik.handleChange}
-                                onBlur={formik.handleBlur}
-                                className="custom--input w-full"
-                              />
-                              {formik.touched.variation?.[index]?.description &&
-                                formik.errors.variation?.[index]
-                                  ?.description && (
-                                  <div className="text-red-500 text-sm">
-                                    {formik.errors.variation[index].description}
-                                  </div>
-                                )}
-                            </div>
-
                             {/* No. of Sessions */}
                             <div>
                               <label className="mb-2 block">
@@ -1477,8 +1448,7 @@ const CreatePackage = ({
                                 type="number"
                                 name={`variation[${index}].no_of_sessions`}
                                 value={
-                                  formik.values.variation[index]
-                                    ?.no_of_sessions || ""
+                                  formik.values.variation[index]?.no_of_sessions ?? ""
                                 }
                                 onChange={formik.handleChange}
                                 onBlur={formik.handleBlur}
@@ -1507,8 +1477,7 @@ const CreatePackage = ({
                                 type="number"
                                 name={`variation[${index}].session_duration`}
                                 value={
-                                  formik.values.variation[index]
-                                    ?.session_duration || ""
+                                  formik.values.variation[index]?.session_duration ?? ""
                                 }
                                 onChange={formik.handleChange}
                                 onBlur={formik.handleBlur}
@@ -1536,8 +1505,7 @@ const CreatePackage = ({
                                 type="number"
                                 name={`variation[${index}].session_validity`}
                                 value={
-                                  formik.values.variation[index]
-                                    ?.session_validity || ""
+                                  formik.values.variation[index]?.session_validity ?? ""
                                 }
                                 onChange={formik.handleChange}
                                 onBlur={formik.handleBlur}
@@ -1566,7 +1534,7 @@ const CreatePackage = ({
                                 type="number"
                                 name={`variation[${index}].amount`}
                                 value={
-                                  formik.values.variation[index]?.amount || ""
+                                  formik.values.variation[index]?.amount ?? ""
                                 }
                                 onChange={formik.handleChange}
                                 onBlur={formik.handleBlur}
@@ -1590,7 +1558,7 @@ const CreatePackage = ({
                                 type="number"
                                 name={`variation[${index}].discount`}
                                 value={
-                                  formik.values.variation[index]?.discount || ""
+                                  formik.values.variation[index]?.discount ?? ""
                                 }
                                 onChange={formik.handleChange}
                                 onBlur={formik.handleBlur}
@@ -1613,7 +1581,7 @@ const CreatePackage = ({
                                 type="number"
                                 name={`variation[${index}].gst`}
                                 value={
-                                  formik.values.variation[index]?.gst || ""
+                                  formik.values.variation[index]?.gst ?? ""
                                 }
                                 onChange={formik.handleChange}
                                 onBlur={formik.handleBlur}
@@ -1636,8 +1604,7 @@ const CreatePackage = ({
                                 type="number"
                                 name={`variation[${index}].earn_coin`}
                                 value={
-                                  formik.values.variation[index]?.earn_coin ||
-                                  ""
+                                  formik.values.variation[index]?.earn_coin ?? ""
                                 }
                                 onChange={formik.handleChange}
                                 onBlur={formik.handleBlur}
@@ -1660,7 +1627,7 @@ const CreatePackage = ({
                                 type="number"
                                 name={`variation[${index}].position`}
                                 value={
-                                  formik.values.variation[index]?.position || ""
+                                  formik.values.variation[index]?.position ?? ""
                                 }
                                 onChange={formik.handleChange}
                                 onBlur={formik.handleBlur}
@@ -1670,6 +1637,32 @@ const CreatePackage = ({
                                 formik.errors.variation?.[index]?.position && (
                                   <div className="text-red-500 text-sm">
                                     {formik.errors.variation[index].position}
+                                  </div>
+                                )}
+                            </div>
+
+                            {/* Description */}
+                            <div className="md:col-span-2">
+                              <label className="mb-2 block">
+                                Description{" "}
+                                <span className="text-red-500">*</span>
+                              </label>
+                              <input
+                                type="text"
+                                name={`variation[${index}].description`}
+                                value={
+                                  formik.values.variation[index]?.description ||
+                                  ""
+                                }
+                                onChange={formik.handleChange}
+                                onBlur={formik.handleBlur}
+                                className="custom--input w-full"
+                              />
+                              {formik.touched.variation?.[index]?.description &&
+                                formik.errors.variation?.[index]
+                                  ?.description && (
+                                  <div className="text-red-500 text-sm">
+                                    {formik.errors.variation[index].description}
                                   </div>
                                 )}
                             </div>
