@@ -12,7 +12,7 @@ import { IoIosSearch } from "react-icons/io";
 import Pagination from "../common/Pagination";
 import { IoSearchOutline } from "react-icons/io5";
 import Select from "react-select";
-import { customStyles } from "../../Helper/helper";
+import { customStyles, formatText } from "../../Helper/helper";
 
 const PackagesList = () => {
   const [showModal, setShowModal] = useState(false);
@@ -115,6 +115,7 @@ const PackagesList = () => {
           }),
         service_id: Yup.number().required("Service is required"),
         club_id: Yup.number().required("Club is required"),
+        session_level: Yup.string().required("Level is required"),
         name: Yup.string().required("Name is required"),
         caption:
           formik.values.service_id === 1
@@ -652,8 +653,8 @@ const PackagesList = () => {
                       </div>
                     </td>
                     <td className="px-2 py-4">{item?.name}</td>
-                    <td className="px-2 py-4">{item?.booking_type}</td>
-                    <td className="px-2 py-4">{item?.service_name}</td>
+                    <td className="px-2 py-4">{formatText(item?.booking_type)}</td>
+                    <td className="px-2 py-4">{formatText(item?.service_name)}</td>
                     <td className="px-2 py-4 text-center">{item.position}</td>
                     <td className="px-2 py-4">
                       <div

@@ -313,13 +313,26 @@ const CreatePackage = ({
     }
   }, [formik.values.variation]);
 
-  // Handle image file change and set preview
-  // const handleFileChange = (e) => {
-  //   const file = e.target.files[0];
-  //   if (file) {
-  //     formik.setFieldValue("image", file); // ✅ store file in Formik state
-  //   }
-  // };
+const parseTime = (timeString) => {
+  if (!timeString) return null;
+
+  let d = new Date();
+  let [time, modifier] = timeString.split(" ");
+
+  let [hours, minutes] = time.split(":");
+
+  hours = parseInt(hours);
+  minutes = parseInt(minutes);
+
+  // Handle AM/PM
+  if (modifier) {
+    if (modifier === "PM" && hours !== 12) hours += 12;
+    if (modifier === "AM" && hours === 12) hours = 0;
+  }
+
+  d.setHours(hours, minutes, 0, 0);
+  return d;
+};
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
@@ -736,8 +749,39 @@ const CreatePackage = ({
                       </>
                     ) : null}
 
-                    {/* Session Duration */}
-                    {service_type_check &&
+                    {/* Session Level */}
+                    <div>
+                          <label className="mb-2 block">Level<span className="text-red-500">*</span></label>
+                          <div className="relative">
+                            <Select
+                              name="session_level"
+                              value={
+                                sessionLevel.find(
+                                  (opt) =>
+                                    opt.value === formik.values.session_level
+                                ) || null
+                              }
+                              options={sessionLevel}
+                              onChange={(option) =>
+                                formik.setFieldValue(
+                                  "session_level",
+                                  option.value
+                                )
+                              }
+                              onBlur={() =>
+                                formik.setFieldTouched("session_level", true)
+                              }
+                              styles={customStyles}
+                            />
+                          </div>
+                          {formik.touched.session_level &&
+                            formik.errors.session_level && (
+                              <div className="text-red-500 text-sm">
+                                {formik.errors.session_level}
+                              </div>
+                            )}
+                        </div>
+                    {/* {service_type_check &&
                     service_type_check !== "GROUP_CLASS" ? (
                       <>
                         <div>
@@ -772,7 +816,7 @@ const CreatePackage = ({
                             )}
                         </div>
                       </>
-                    ) : null}
+                    ) : null} */}
 
                     {service_type_check &&
                     service_type_check === "GROUP_CLASS" ? (
@@ -797,13 +841,14 @@ const CreatePackage = ({
                                 (date) =>
                                   formik.setFieldValue(
                                     "start_date",
-                                    date.toISOString().split("T")[0]
+                                    // date.toISOString().split("T")[0]
+                                    date.toLocaleDateString("en-CA")
                                   ) // ✅ Save as YYYY-MM-DD
                               }
                               onBlur={() =>
                                 formik.setFieldTouched("start_date", true)
                               }
-                              dateFormat="yyyy-MM-dd"
+                              dateFormat="dd-MM-yyyy"
                               minDate={new Date()} // ✅ Prevent selecting past dates
                               className="custom--input w-full input--icon"
                             />
@@ -828,42 +873,37 @@ const CreatePackage = ({
                               <FiClock />
                             </span>
                             <DatePicker
-                              selected={
-                                formik.values.start_time
-                                  ? new Date(
-                                      `1970-01-01T${formik.values.start_time}`
-                                    ) // ✅ Convert string to Date
-                                  : null
-                              }
-                              onChange={(date) =>
-                                formik.setFieldValue(
-                                  "start_time",
-                                  date.toLocaleTimeString([], {
-                                    hour12: false, // ✅ Ensure 24-hour format
-                                    hour: "2-digit",
-                                    minute: "2-digit",
-                                  })
-                                )
-                              }
-                              onBlur={() =>
-                                formik.setFieldTouched("start_time", true)
-                              }
-                              showTimeSelect
-                              showTimeSelectOnly
-                              timeIntervals={30}
-                              timeCaption="Time"
-                              dateFormat="HH:mm"
-                              className="custom--input w-full input--icon"
-                              minTime={
-                                formik.values.start_date &&
-                                new Date(
-                                  formik.values.start_date
-                                ).toDateString() === new Date().toDateString()
-                                  ? new Date() // ✅ Block past times if selected date is today
-                                  : new Date(0, 0, 0, 0, 0)
-                              }
-                              maxTime={new Date(0, 0, 0, 23, 59)}
-                            />
+  selected={
+    formik.values.start_time
+      ? parseTime(formik.values.start_time)
+      : null
+  }
+  onChange={(date) =>
+    formik.setFieldValue(
+      "start_time",
+      date.toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+      })
+    )
+  }
+  onBlur={() => formik.setFieldTouched("start_time", true)}
+  showTimeSelect
+  showTimeSelectOnly
+  timeIntervals={30}
+  timeCaption="Time"
+  dateFormat="hh:mm aa"
+  className="custom--input w-full input--icon"
+  minTime={
+    formik.values.start_date &&
+    new Date(formik.values.start_date).toDateString() ===
+      new Date().toDateString()
+      ? new Date()
+      : new Date(0, 0, 0, 0, 0)
+  }
+  maxTime={new Date(0, 0, 0, 23, 59)}
+/>
                           </div>
                           {/* Display validation error if any */}
                           {formik.touched.start_time &&
@@ -885,42 +925,37 @@ const CreatePackage = ({
                               <FiClock />
                             </span>
                             <DatePicker
-                              selected={
-                                formik.values.end_time
-                                  ? new Date(
-                                      `1970-01-01T${formik.values.end_time}`
-                                    ) // ✅ Convert string to Date
-                                  : null
-                              }
-                              onChange={(date) =>
-                                formik.setFieldValue(
-                                  "end_time",
-                                  date.toLocaleTimeString([], {
-                                    hour12: false, // ✅ Ensure 24-hour format
-                                    hour: "2-digit",
-                                    minute: "2-digit",
-                                  })
-                                )
-                              }
-                              onBlur={() =>
-                                formik.setFieldTouched("end_time", true)
-                              }
-                              showTimeSelect
-                              showTimeSelectOnly
-                              timeIntervals={30}
-                              timeCaption="Time"
-                              dateFormat="HH:mm"
-                              className="custom--input w-full input--icon"
-                              minTime={
-                                formik.values.start_date &&
-                                new Date(
-                                  formik.values.start_date
-                                ).toDateString() === new Date().toDateString()
-                                  ? new Date() // ✅ Block past times if selected date is today
-                                  : new Date(0, 0, 0, 0, 0)
-                              }
-                              maxTime={new Date(0, 0, 0, 23, 59)}
-                            />
+  selected={
+    formik.values.end_time
+      ? parseTime(formik.values.end_time)
+      : null
+  }
+  onChange={(date) =>
+    formik.setFieldValue(
+      "end_time",
+      date.toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+      })
+    )
+  }
+  onBlur={() => formik.setFieldTouched("end_time", true)}
+  showTimeSelect
+  showTimeSelectOnly
+  timeIntervals={30}
+  timeCaption="Time"
+  dateFormat="hh:mm aa"
+  className="custom--input w-full input--icon"
+  minTime={
+    formik.values.start_date &&
+    new Date(formik.values.start_date).toDateString() ===
+      new Date().toDateString()
+      ? new Date()
+      : new Date(0, 0, 0, 0, 0)
+  }
+  maxTime={new Date(0, 0, 0, 23, 59)}
+/>
                           </div>
                           {/* Display validation error if any */}
                           {formik.touched.end_time &&
