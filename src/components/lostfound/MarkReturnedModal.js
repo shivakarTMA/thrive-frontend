@@ -9,7 +9,7 @@ import {
   parsePhoneNumberFromString,
   isPossiblePhoneNumber,
 } from "libphonenumber-js";
-import { apiAxios, authAxios } from "../../config/config";
+import { authAxios } from "../../config/config";
 import { toast } from "react-toastify";
 import { FaCalendarDays } from "react-icons/fa6";
 import { useSelector } from "react-redux";
@@ -171,7 +171,7 @@ const MarkReturnedModal = ({ lostID, onClose, onSuccess }) => {
     try {
       if (!formik.values.mobile || !formik.values.country_code) return;
 
-      const response = await apiAxios().get("/member/list");
+      const response = await authAxios().get("/member/list");
       const apiData = response.data;
 
       if (apiData.status === true && Array.isArray(apiData.data)) {
@@ -254,7 +254,7 @@ const MarkReturnedModal = ({ lostID, onClose, onSuccess }) => {
                   <div>
                     <label className="mb-2 block">Found Date</label>
                     <div className="custom--date relative">
-                      <span className="absolute z-[1] mt-[15px] ml-[15px]">
+                      <span className="absolute z-[1] mt-[11px] ml-[15px]">
                         <FaCalendarDays />
                       </span>
                       <DatePicker
@@ -331,7 +331,7 @@ const MarkReturnedModal = ({ lostID, onClose, onSuccess }) => {
                       Return Date & Time<span className="text-red-500">*</span>
                     </label>
                     <div className="custom--date relative">
-                      <span className="absolute z-[1] mt-[15px] ml-[15px]">
+                      <span className="absolute z-[1] mt-[11px] ml-[15px]">
                         <FaCalendarDays />
                       </span>
                       <DatePicker

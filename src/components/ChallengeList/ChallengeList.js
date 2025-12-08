@@ -4,7 +4,7 @@ import Tooltip from "../common/Tooltip";
 import { LiaEdit } from "react-icons/lia";
 import ChallengeForm from "./ChallengeForm";
 import { formatAutoDate } from "../../Helper/helper";
-import { apiAxios } from "../../config/config";
+import { authAxios } from "../../config/config";
 import { toast } from "react-toastify";
 import Pagination from "../common/Pagination";
 import { useFormik } from "formik";
@@ -26,7 +26,7 @@ const ChallengeList = () => {
         page: currentPage,
         limit: rowsPerPage,
       };
-      const res = await apiAxios().get(`/challenge/list`, { params });
+      const res = await authAxios().get(`/challenge/list`, { params });
       const data = res.data?.data || [];
       setChallenges(data);
       setPage(res.data?.currentPage || 1);
@@ -126,12 +126,12 @@ const ChallengeList = () => {
 
         // ✅ Send to API
         if (editingOption) {
-          await apiAxios().put(`/challenge/${editingOption}`, formData, {
+          await authAxios().put(`/challenge/${editingOption}`, formData, {
             headers: { "Content-Type": "multipart/form-data" },
           });
           toast.success("Challenge updated successfully!");
         } else {
-          await apiAxios().post("/challenge/create", formData, {
+          await authAxios().post("/challenge/create", formData, {
             headers: { "Content-Type": "multipart/form-data" },
           });
           toast.success("Challenge created successfully!");

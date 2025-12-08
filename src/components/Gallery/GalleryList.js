@@ -12,7 +12,7 @@ import Select from "react-select";
 import Tooltip from "../common/Tooltip";
 import Pagination from "../common/Pagination";
 import CreateGallery from "./CreateGallery";
-import { apiAxios } from "../../config/config";
+import { authAxios } from "../../config/config";
 import { customStyles } from "../../Helper/helper";
 
 // Define display position options
@@ -40,7 +40,7 @@ const GalleryList = () => {
   // Function to fetch club list
   const fetchClub = async (search = "") => {
     try {
-      const response = await apiAxios().get("/club/list", {
+      const response = await authAxios().get("/club/list", {
         params: search ? { search } : {},
       });
       const data = response.data?.data || response.data || [];
@@ -68,7 +68,7 @@ const GalleryList = () => {
       }
 
       // API request to get filtered gallery data
-      const response = await apiAxios().get("/club/gallery/list", { params });
+      const response = await authAxios().get("/club/gallery/list", { params });
 
       const data = response.data?.data || [];
       setGalleryList(data);
@@ -147,13 +147,13 @@ const GalleryList = () => {
 
         if (editingOption && editingOption) {
           // Update
-          await apiAxios().put(`/club/gallery/${editingOption}`, formData, {
+          await authAxios().put(`/club/gallery/${editingOption}`, formData, {
             headers: { "Content-Type": "multipart/form-data" },
           });
           toast.success("Updated Successfully");
         } else {
           // Create
-          await apiAxios().post("/club/gallery/create", formData, {
+          await authAxios().post("/club/gallery/create", formData, {
             headers: { "Content-Type": "multipart/form-data" },
           });
           toast.success("Created Successfully");

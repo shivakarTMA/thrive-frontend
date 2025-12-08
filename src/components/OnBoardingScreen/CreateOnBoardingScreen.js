@@ -11,7 +11,6 @@ const CreateOnBoardingScreen = ({
   formik,
   handleOverlayClick,
   leadBoxRef,
-  setFile,
 }) => {
   return (
     <div

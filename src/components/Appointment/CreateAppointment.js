@@ -7,7 +7,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import { customStyles } from "../../Helper/helper";
 import { IoCloseCircle } from "react-icons/io5";
 import { toast } from "react-toastify";
-import { apiAxios } from "../../config/config";
+import { authAxios } from "../../config/config";
 
 function toCapitalizedCase(inputString) {
   return inputString
@@ -28,6 +28,7 @@ const CreateAppointment = ({
   const [packageList, setPackageList] = useState([]);
   const [memberPurchasedServices, setMemberPurchasedServices] = useState([]);
   const [staffList, setStaffList] = useState([]);
+  const [serviceList, setServiceList] = useState([]);
 
   const now = new Date();
   const minTime = new Date();
@@ -39,10 +40,11 @@ const CreateAppointment = ({
   const fetchPackageAvailable = async () => {
     try {
       // Make the API call with query parameters
-      const res = await apiAxios().get(
-        `/package/available/session/${memberID?.id}`
+      const res = await authAxios().get(
+        `/package/available/session/${memberID}`
       );
       const data = res.data?.data || [];
+      console.log(data, "shivakar");
       setPackageList(data);
       // Convert to react-select format
       const formattedOptions = data.map((item) => ({
@@ -60,7 +62,7 @@ const CreateAppointment = ({
 
   const fetchStaff = async (search = "") => {
     try {
-      const res = await apiAxios().get("/staff/list", {
+      const res = await authAxios().get("/staff/list?role=TRAINER", {
         params: search ? { search } : {},
       });
       let data = res.data?.data || res?.data || [];
@@ -72,9 +74,24 @@ const CreateAppointment = ({
     }
   };
 
+  const fetchService = async (search = "") => {
+    try {
+      const res = await authAxios().get("/service/list", {
+        params: search ? { search } : {},
+      });
+      let data = res.data?.data || res?.data || [];
+      const activeService = data?.filter((item) => item?.status === "ACTIVE");
+      setServiceList(activeService);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to fetch club");
+    }
+  };
+
   useEffect(() => {
     fetchPackageAvailable();
     fetchStaff();
+    fetchService();
   }, []);
 
   console.log(packageList, "packageList");
@@ -85,26 +102,42 @@ const CreateAppointment = ({
       value: item.id,
     })) || [];
 
-  const complementaryTypes = [
-    { value: "pt", label: "Personal Training" },
-    { value: "group-class", label: "Group Class" },
-    { value: "assessment", label: "Assessment" },
-    { value: "tour", label: "Tour" },
-  ];
+  const appointmentTypes = (
+    serviceList?.map((item) => ({
+      label: item.name,
+      value: item.id,
+    })) || []
+  ).concat([
+    { label: "Assessment", value: "ASSESSMENT" },
+    { label: "Tour", value: "TOUR" },
+  ]);
 
   const appointmentCategories = [
     { value: "service", label: "Service Appointment" },
     { value: "complementary", label: "Complimentary Appointment" },
   ];
 
+  const formatDateTime = (date) => {
+    const pad = (n) => (n < 10 ? "0" + n : n);
+
+    const year = date.getFullYear();
+    const month = pad(date.getMonth() + 1); // Months are 0-indexed
+    const day = pad(date.getDate());
+    const hours = pad(date.getHours());
+    const minutes = pad(date.getMinutes());
+    const seconds = pad(date.getSeconds());
+
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+  };
+
   // Formik setup
   const formik = useFormik({
     initialValues: {
-      member_id: memberID?.id,
-      appointmentCategory: "service",
-      package_booking_id: null,
+      member_id: memberID,
+      appointment_category: "service",
+      package_id: null,
       // serviceVariation: null,
-      complementaryType: null,
+      appointment_type: "",
       date: "2025-10-21",
       time: "11:20",
       appointment_date: "",
@@ -112,20 +145,20 @@ const CreateAppointment = ({
       remarks: "",
     },
     validationSchema: Yup.object({
-      appointmentCategory: Yup.string().required(
+      appointment_category: Yup.string().required(
         "Appointment category is required"
       ),
-      package_booking_id: Yup.string().when("appointmentCategory", {
+      package_id: Yup.string().when("appointment_category", {
         is: "service",
         then: (schema) => schema.required("Please select a service"),
         otherwise: (schema) => schema.nullable(),
       }),
-      // serviceVariation: Yup.object().when("appointmentCategory", {
+      // serviceVariation: Yup.object().when("appointment_category", {
       //   is: "service",
       //   then: (schema) => schema.required("Please select a service variation"),
       //   otherwise: (schema) => schema.nullable(),
       // }),
-      complementaryType: Yup.object().when("appointmentCategory", {
+      appointment_type: Yup.string().when("appointment_category", {
         is: "complementary",
         then: (schema) => schema.required("Please select appointment type"),
         otherwise: (schema) => schema.nullable(),
@@ -134,16 +167,26 @@ const CreateAppointment = ({
       staff_id: Yup.string().required("Trainer selection is required"),
     }),
     onSubmit: async (values, { resetForm }) => {
+      const payload = {
+        member_id: memberID, // ✔ Include explicitly
+        appointment_category: values.appointment_category,
+        package_id: values.package_id,
+        appointment_type: values.appointment_type,
+        appointment_date: formatDateTime(values.appointment_date),
+        staff_id: values.staff_id,
+        remarks: values.remarks,
+      };
+      console.log(payload, "payload");
       try {
-        await apiAxios().post("/package/slot/booking", values);
+        await authAxios().post("/package/slot/booking", payload);
         toast.success("Appointment booked successfully!");
-        console.log("Submitting package ID:", values.package_booking_id);
-        console.log("Submitting staff_id ID:", values.staff_id);
-        console.log("Submitting remarks ID:", values.remarks);
+        console.log("Submitting package ID:", payload.package_id);
+        console.log("Submitting staff_id ID:", payload.staff_id);
+        console.log("Submitting remarks ID:", payload.remarks);
 
         // Reset form and close modal
         resetForm();
-        handleReset(values.appointmentCategory);
+        handleReset(payload.appointment_category);
         handleAppointmentModal();
       } catch (error) {
         toast.error("Something went wrong. Please try again.");
@@ -152,24 +195,26 @@ const CreateAppointment = ({
     },
   });
 
-  // Reset logic based on appointmentCategory
+  // Reset logic based on appointment_category
   const handleReset = (category) => {
     if (category === "service") {
       formik.setValues({
-        appointmentCategory: "service",
-        package_booking_id: null,
+        ...formik.values,
+        appointment_category: "service",
+        package_id: null,
         // serviceVariation: null,
-        complementaryType: null,
+        appointment_type: "",
         appointment_date: "",
         staff_id: null,
         remarks: "",
       });
     } else if (category === "complementary") {
       formik.setValues({
-        appointmentCategory: "complementary",
-        package_booking_id: null,
+        ...formik.values,
+        appointment_category: "complementary",
+        package_id: null,
         // serviceVariation: null,
-        complementaryType: null,
+        appointment_type: "",
         appointment_date: "",
         staff_id: null,
         remarks: "",
@@ -191,7 +236,7 @@ const CreateAppointment = ({
 
   useEffect(() => {
     if (defaultCategory) {
-      formik.setFieldValue("appointmentCategory", defaultCategory);
+      formik.setFieldValue("appointment_category", defaultCategory);
     }
   }, [defaultCategory]);
 
@@ -238,15 +283,15 @@ const CreateAppointment = ({
                     >
                       <input
                         type="radio"
-                        name="appointmentCategory"
+                        name="appointment_category"
                         value={cat.value}
                         checked={
-                          formik.values.appointmentCategory === cat.value
+                          formik.values.appointment_category === cat.value
                         }
                         onChange={() => {
                           if (!isServiceDisabled) {
                             formik.setFieldValue(
-                              "appointmentCategory",
+                              "appointment_category",
                               cat.value
                             );
                             handleReset(cat.value);
@@ -263,7 +308,7 @@ const CreateAppointment = ({
             </div>
 
             {/* Service Appointment Inputs */}
-            {formik.values.appointmentCategory === "service" && (
+            {formik.values.appointment_category === "service" && (
               <>
                 {/* Service Select */}
                 <div className="mb-4">
@@ -272,25 +317,20 @@ const CreateAppointment = ({
                   </label>
                   <Select
                     value={memberPurchasedServices.find(
-                      (option) =>
-                        option.value === formik.values.package_booking_id
+                      (option) => option.value === formik.values.package_id
                     )}
                     onChange={(selectedOption) =>
-                      formik.setFieldValue(
-                        "package_booking_id",
-                        selectedOption?.value
-                      )
+                      formik.setFieldValue("package_id", selectedOption?.value)
                     }
                     options={memberPurchasedServices}
                     styles={customStyles}
                     placeholder="Select purchased service..."
                   />
-                  {formik.errors.package_booking_id &&
-                    formik.touched.package_booking_id && (
-                      <div className="text-red-500 text-sm">
-                        {formik.errors.package_booking_id}
-                      </div>
-                    )}
+                  {formik.errors.package_id && formik.touched.package_id && (
+                    <div className="text-red-500 text-sm">
+                      {formik.errors.package_id}
+                    </div>
+                  )}
                 </div>
 
                 {/* Service Variation */}
@@ -318,24 +358,29 @@ const CreateAppointment = ({
             )}
 
             {/* Complimentary Appointment Inputs */}
-            {formik.values.appointmentCategory === "complementary" && (
+            {formik.values.appointment_category === "complementary" && (
               <div className="mb-4">
                 <label className="block text-sm font-medium text-black mb-2">
                   Appointment Type<span className="text-red-500">*</span>
                 </label>
                 <Select
-                  value={formik.values.complementaryType}
-                  onChange={(value) =>
-                    formik.setFieldValue("complementaryType", value)
+                  value={appointmentTypes.find(
+                    (option) => option.value === formik.values.appointment_type
+                  )}
+                  onChange={(selectedOption) =>
+                    formik.setFieldValue(
+                      "appointment_type",
+                      selectedOption?.value
+                    )
                   }
-                  options={complementaryTypes}
+                  options={appointmentTypes}
                   styles={customStyles}
                   placeholder="Select complementary appointment type..."
                 />
-                {formik.errors.complementaryType &&
-                  formik.touched.complementaryType && (
+                {formik.errors.appointment_type &&
+                  formik.touched.appointment_type && (
                     <div className="text-red-500 text-sm">
-                      {formik.errors.complementaryType}
+                      {formik.errors.appointment_type}
                     </div>
                   )}
               </div>
@@ -373,15 +418,22 @@ const CreateAppointment = ({
             {/* Trainer Select */}
             <div className="mb-4">
               <label className="block text-sm font-medium text-black mb-2">
-                Staff<span className="text-red-500">*</span>
+                Trainer<span className="text-red-500">*</span>
               </label>
 
               <Select
-                value={staffListOptions.find(
-                  (option) => option.value === formik.values.staff_id
-                )}
+                value={
+                  formik.values.staff_id
+                    ? staffListOptions.find(
+                        (option) => option.value === formik.values.staff_id
+                      )
+                    : null
+                }
                 onChange={(selectedOption) =>
-                  formik.setFieldValue("staff_id", selectedOption?.value)
+                  formik.setFieldValue(
+                    "staff_id",
+                    selectedOption?.value || null
+                  )
                 }
                 options={staffListOptions}
                 styles={customStyles}

@@ -27,9 +27,10 @@ import ConfirmUnderAge from "../components/modal/ConfirmUnderAge";
 import { FaCalendarDays, FaListCheck, FaLocationDot } from "react-icons/fa6";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchOptionList } from "../Redux/Reducers/optionListSlice";
-import { apiAxios, authAxios, phoneAxios } from "../config/config";
+import { authAxios, phoneAxios } from "../config/config";
 import { PiGenderIntersexBold } from "react-icons/pi";
 import CreatableSelect from "react-select/creatable";
+import MultiSelect from "react-multi-select-component";
 
 // Trainer assignment options
 const assignTrainers = [
@@ -42,10 +43,11 @@ const assignTrainers = [
 const genderOptions = [
   { value: "MALE", label: "Male" },
   { value: "FEMALE", label: "Female" },
-  { value: "NOTDISCLOSE", label: "Not to Disclose" },
+  { value: "NOTDISCLOSE", label: "Prefer Not To Say" },
 ];
 
 const validationSchema = Yup.object({
+  club_id: Yup.string().required("Club Name is required"),
   full_name: Yup.string().required("Full Name is required"),
   mobile: Yup.string()
     .required("Contact number is required")
@@ -71,12 +73,12 @@ const validationSchema = Yup.object({
   }),
   schedule: Yup.string().nullable(),
   schedule_date_time: Yup.date().when("schedule", {
-    is: (val) => val === "Tour" || val === "Trial",
+    is: (val) => val === "TOUR" || val === "TRIAL",
     then: (schema) => schema.required("Date & Time is required"),
   }),
-  staff_name: Yup.string().when("schedule", {
-    is: (val) => val === "Tour" || val === "Trial",
-    then: (schema) => schema.required("Staff Name is required"),
+  assigned_staff_id: Yup.string().when("schedule", {
+    is: (val) => val === "TOUR" || val === "TRIAL",
+    then: (schema) => schema.required("Trainer is required"),
   }),
 });
 
@@ -89,41 +91,19 @@ const CreateLeadForm = ({ setLeadModal, selectedLead, handleLeadUpdate }) => {
   const [duplicateEmailError, setDuplicateEmailError] = useState("");
   const [showDuplicateEmailModal, setShowDuplicateEmailModal] = useState(false);
   const [companyOptions, setCompanyOptions] = useState([]);
+  const { user } = useSelector((state) => state.auth);
 
-  // Fetch companies
-  // ✅ Fetch companies (only ACTIVE ones)
-  const fetchCompanies = async (search = "") => {
-    try {
-      const res = await apiAxios().get("/company/list", {
-        params: search ? { search } : {},
-      });
+  const clubList = user?.staff_club || [];
 
-      // ✅ Extract company data safely
-      const data = res.data?.data || [];
+  let defaultClubId = "";
+  if (clubList.length === 1) {
+    defaultClubId = clubList[0].club_id; // Default to the only club available
+  }
 
-      // ✅ Filter only active companies
-      const activeCompanies = data.filter(
-        (company) => company.status === "ACTIVE"
-      );
+  const [club, setClub] = useState([]);
+  const [staffList, setStaffList] = useState([]);
 
-      // ✅ Convert to dropdown-friendly format
-      const options = activeCompanies.map((company) => ({
-        value: company.id,
-        label: company.name,
-      }));
-
-      // ✅ Update state
-      setCompanyOptions(options);
-    } catch (err) {
-      console.error("❌ Failed to fetch companies:", err);
-      toast.error("Failed to fetch companies");
-    }
-  };
-
-  // Initial load effect
-  useEffect(() => {
-    fetchCompanies();
-  }, []);
+  const [selected, setSelected] = useState([]);
 
   // Redux state
   const dispatch = useDispatch();
@@ -143,9 +123,23 @@ const CreateLeadForm = ({ setLeadModal, selectedLead, handleLeadUpdate }) => {
   const servicesName = lists["INTERESTED_IN"] || [];
   const socialList = lists["SOCIAL_MEDIA"] || [];
 
+  console.log(servicesName, "servicesName");
+
+  const filteredLeadSources =
+    selectedLead === "APP"
+      ? leadsSources
+      : leadsSources.filter((item) => item.value !== "App");
+
+  useEffect(() => {
+    if (selectedLead) {
+      formik.setFieldValue("lead_source", selectedLead);
+    }
+  }, [selectedLead]);
+
   // ✅ Initial form values
   const initialValues = {
     id: "",
+    club_id: defaultClubId,
     full_name: "",
     mobile: "",
     country_code: "",
@@ -157,13 +151,13 @@ const CreateLeadForm = ({ setLeadModal, selectedLead, handleLeadUpdate }) => {
     location: "",
     company_name: "",
     otherCompanyName: "",
-    interested_in: "",
+    interested_in: [],
     lead_source: "",
     lead_type: "",
     platform: "",
     schedule: "",
     schedule_date_time: "",
-    staff_name: "",
+    assigned_staff_id: "",
   };
 
   // ✅ Formik hook
@@ -172,6 +166,7 @@ const CreateLeadForm = ({ setLeadModal, selectedLead, handleLeadUpdate }) => {
     validationSchema,
     enableReinitialize: true, // 👈 ensures selectedLead values re-populate
     onSubmit: async (values) => {
+      console.log(values, "values");
       if (duplicateError || duplicateEmailError) {
         setShowDuplicateEmailModal(!!duplicateEmailError);
         return;
@@ -194,7 +189,7 @@ const CreateLeadForm = ({ setLeadModal, selectedLead, handleLeadUpdate }) => {
           const formData = new FormData();
           formData.append("name", values.company_name);
 
-          const res = await apiAxios().post("/company/create", formData, {
+          const res = await authAxios().post("/company/create", formData, {
             headers: { "Content-Type": "multipart/form-data" },
           });
 
@@ -242,7 +237,7 @@ const CreateLeadForm = ({ setLeadModal, selectedLead, handleLeadUpdate }) => {
         // ✅ Update or Create Lead
         if (selectedLead) {
           console.log(selectedLead, "selectedLead");
-          await apiAxios().put(`/lead/${selectedLead}`, payload);
+          await authAxios().put(`/lead/${selectedLead}`, payload);
           toast.success("Lead updated successfully!");
         } else {
           console.log("create working");
@@ -266,17 +261,21 @@ const CreateLeadForm = ({ setLeadModal, selectedLead, handleLeadUpdate }) => {
     console.log(selectedLead, "SHIVAKAR");
     if (!selectedLead) return;
 
-    const fetchRoleById = async (id) => {
+    const fetchLeadById = async (id) => {
       try {
-        const res = await apiAxios().get(`/lead/${id}`);
+        const res = await authAxios().get(`/lead/${id}`);
         const data = res.data?.data || res.data || null;
 
         console.log(data, "SHIVAKAR");
 
         if (data) {
+          const interestedList = Array.isArray(data.interested_in)
+            ? data.interested_in.map((v) => ({ label: v, value: v }))
+            : [];
           // ✅ Prefill formik fields with fetched data
           formik.setValues({
             // id: data.id || "",
+            club_id: data.club_id || "",
             full_name: data.full_name || "",
             mobile: data.mobile || "",
             country_code: data.country_code || "",
@@ -291,16 +290,21 @@ const CreateLeadForm = ({ setLeadModal, selectedLead, handleLeadUpdate }) => {
             address: data.address || "",
             location: data.location || "",
             company_name: data.company_name || "",
-            interested_in: data.interested_in || "",
-            lead_source: data.lead_source || "",
+            interested_in: interestedList.map((i) => i.value),
+            lead_source: data.lead_source
+              ? data.lead_source.charAt(0).toUpperCase() +
+                data.lead_source.slice(1).toLowerCase()
+              : "",
             lead_type: data.lead_type || "",
             platform: data.platform || "",
             schedule: data.schedule || "",
             schedule_date_time: data.schedule_date_time
               ? new Date(data.schedule_date_time).toISOString()
               : "",
-            staff_name: data.staff_name || "",
+            assigned_staff_id: data.assigned_staff_id || "",
           });
+
+          setSelected(interestedList);
         }
       } catch (err) {
         console.error(err);
@@ -308,54 +312,129 @@ const CreateLeadForm = ({ setLeadModal, selectedLead, handleLeadUpdate }) => {
       }
     };
 
-    fetchRoleById(selectedLead);
+    fetchLeadById(selectedLead);
   }, [selectedLead]);
 
-  const calculateAge = (dob) => {
-    const today = new Date();
-    const birthDate = new Date(dob);
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const m = today.getMonth() - birthDate.getMonth();
-    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-      age--;
+  // Fetch companies
+  // ✅ Fetch companies (only ACTIVE ones)
+  const fetchCompanies = async (search = "") => {
+    try {
+      const res = await authAxios().get("/company/list", {
+        params: search ? { search } : {},
+      });
+
+      // ✅ Extract company data safely
+      const data = res.data?.data || [];
+
+      // ✅ Filter only active companies
+      const activeCompanies = data.filter(
+        (company) => company.status === "ACTIVE"
+      );
+
+      // ✅ Convert to dropdown-friendly format
+      const options = activeCompanies.map((company) => ({
+        value: company.id,
+        label: company.name,
+      }));
+
+      // ✅ Update state
+      setCompanyOptions(options);
+    } catch (err) {
+      console.error("❌ Failed to fetch companies:", err);
+      toast.error("Failed to fetch companies");
     }
-    return age;
   };
+
+  // 🚀 Fetch staff list from API
+  const fetchStaff = async () => {
+    try {
+      const schedule = formik.values?.schedule;
+      console.log(schedule, "schedule");
+
+      let url = "/staff/list?role=TRAINER";
+
+      if (schedule === "TOUR") {
+        url = "/staff/list?role=TRAINER&role=FOH";
+      } else if (schedule === "TRIAL") {
+        url = "/staff/list?role=TRAINER";
+      }
+
+      const res = await authAxios().get(url);
+      const staff = res.data?.data || [];
+
+      console.log(staff, "updatedStaff");
+
+      // --- GROUPING STAFF BY ROLE ---
+      const foh = staff
+        .filter((item) => item.role === "FOH")
+        .map((item) => ({
+          value: item.id,
+          label: item.name,
+        }));
+
+      const trainer = staff
+        .filter((item) => item.role === "TRAINER")
+        .map((item) => ({
+          value: item.id,
+          label: item.name,
+        }));
+
+      // Final grouped structure for react-select
+      const groupedOptions = [
+        {
+          label: "FOH",
+          options: foh,
+        },
+        {
+          label: "TRAINER",
+          options: trainer,
+        },
+      ];
+
+      setStaffList(groupedOptions);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to fetch staff");
+    }
+  };
+
+  console.log(formik.values?.schedule, "TOUR");
+
+  // Function to fetch club list
+  const fetchClub = async () => {
+    try {
+      const response = await authAxios().get("/club/list");
+      const data = response.data?.data || [];
+      setClub(data);
+    } catch (error) {
+      toast.error("Failed to fetch clubs");
+    }
+  };
+  // Function to fetch role list
+
+  // Initial load effect
+  useEffect(() => {
+    fetchCompanies();
+    fetchStaff();
+    fetchClub();
+  }, [formik.values.schedule]);
+
+  // Club dropdown options
+  const clubOptions =
+    clubList?.map((item) => ({
+      label: item.club_name,
+      value: item.club_id,
+    })) || [];
+
+  // Staff dropdown options
+  const trainerOptions =
+    staffList?.map((item) => ({
+      label: item.name,
+      value: item.id,
+    })) || [];
 
   const fifteenYearsAgo = new Date();
   fifteenYearsAgo.setFullYear(fifteenYearsAgo.getFullYear() - 15);
-
-  // useEffect for selectedLead
-  useEffect(() => {
-    if (selectedLead) {
-      formik.setValues({
-        id: selectedLead || "",
-        full_name: selectedLead.full_name || "",
-        mobile: selectedLead.mobile || "",
-        country_code: selectedLead.country_code || "",
-        phoneFull: selectedLead.country_code
-          ? `+${selectedLead.country_code}${selectedLead.mobile}`
-          : "",
-        email: selectedLead.email || "",
-        gender: selectedLead.gender || "NOTDISCLOSE",
-        date_of_birth: selectedLead.date_of_birth
-          ? new Date(selectedLead.date_of_birth).toISOString()
-          : null,
-        address: selectedLead.address || "",
-        location: selectedLead.location || "",
-        company_name: selectedLead.company_name || "",
-        interested_in: selectedLead.interested_in || "",
-        lead_source: selectedLead.lead_source || "",
-        lead_type: selectedLead.lead_type || "",
-        platform: selectedLead.platform || "",
-        schedule: selectedLead.schedule || "",
-        schedule_date_time: selectedLead.schedule_date_time
-          ? new Date(selectedLead.schedule_date_time).toISOString()
-          : "",
-        staff_name: selectedLead.staff_name || "",
-      });
-    }
-  }, [selectedLead]);
 
   // Handle manual date selection
   const handleDobChange = (date) => {
@@ -403,7 +482,7 @@ const CreateLeadForm = ({ setLeadModal, selectedLead, handleLeadUpdate }) => {
   };
   // Staff select -> just the value/id
   const handleSelectSchedule = (_, selectedOption) => {
-    formik.setFieldValue("staff_name", selectedOption?.value ?? "");
+    formik.setFieldValue("assigned_staff_id", selectedOption?.value ?? "");
   };
 
   const minTime = new Date();
@@ -411,6 +490,29 @@ const CreateLeadForm = ({ setLeadModal, selectedLead, handleLeadUpdate }) => {
 
   const maxTime = new Date();
   maxTime.setHours(22, 0, 0, 0);
+
+  const baseMinTime = new Date();
+  baseMinTime.setHours(6, 0, 0, 0); // 6:00 AM
+
+  const baseMaxTime = new Date();
+  baseMaxTime.setHours(22, 0, 0, 0); // 10:00 PM
+
+  const getMinTime = (selectedDate) => {
+    if (!selectedDate) return baseMinTime;
+
+    const isToday = selectedDate.toDateString() === now.toDateString();
+
+    // If today → disable past times but still enforce 6 AM
+    if (isToday) {
+      const current = new Date();
+      const dynamicTime = current.getHours() < 6 ? baseMinTime : current;
+
+      return dynamicTime;
+    }
+
+    // For future dates → use normal 6 AM
+    return baseMinTime;
+  };
 
   const handlePhoneChange = (value) => {
     formik.setFieldValue("phoneFull", value);
@@ -545,6 +647,8 @@ const CreateLeadForm = ({ setLeadModal, selectedLead, handleLeadUpdate }) => {
     setLeadModal(false);
   };
 
+  console.log(formik.errors,'SHIVAKAR')
+
   return (
     <>
       <div
@@ -576,6 +680,33 @@ const CreateLeadForm = ({ setLeadModal, selectedLead, handleLeadUpdate }) => {
                     Personal Details
                   </h3>
                   <div className="grid grid-cols-3 gap-4">
+                    <div>
+                      <label className="mb-2 block">
+                        Club Name
+                        <span className="text-red-500">*</span>
+                      </label>
+                      <div className="relative">
+                        <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
+                          <FaListCheck />
+                        </span>
+                        <Select
+                          name="club_id"
+                          value={clubOptions.find(
+                            (opt) => opt.value === formik.values.club_id
+                          )}
+                          onChange={(option) =>
+                            formik.setFieldValue("club_id", option.value)
+                          }
+                          options={clubOptions}
+                          styles={selectIcon}
+                        />
+                      </div>
+                      {formik.errors?.club_id && formik.touched?.club_id && (
+                        <div className="text-red-500 text-sm">
+                          {formik.errors.club_id}
+                        </div>
+                      )}
+                    </div>
                     <div className="relative">
                       <label className="mb-2 block">
                         Contact Number
@@ -790,17 +921,28 @@ const CreateLeadForm = ({ setLeadModal, selectedLead, handleLeadUpdate }) => {
                         <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
                           <FaListCheck />
                         </span>
-                        <Select
-                          name="interested_in"
-                          value={servicesName.find(
-                            (opt) => opt.value === formik.values.interested_in
-                          )}
-                          onChange={(option) =>
-                            formik.setFieldValue("interested_in", option.value)
-                          }
+                        <MultiSelect
                           options={servicesName}
-                          styles={selectIcon}
-                          className="pl-[]"
+                          value={selected} // selected objects
+                          onChange={(serviceList) => {
+                            setSelected(serviceList); // UI needs objects
+                            const values = serviceList.map((opt) => opt.value);
+                            formik.setFieldValue("interested_in", values); // Formik stores strings
+                          }}
+                          labelledBy="Select..."
+                          hasSelectAll={false}
+                          disableSearch={true}
+                          overrideStrings={{
+                            selectSomeItems: "Select Interested...",
+                            allItemsAreSelected: "All Interested Selected",
+                            // search: "Search",
+                          }}
+                          className={`custom--input w-full input--icon multi--select--new ${
+                            selectedLead
+                              ? "cursor-not-allowed pointer-events-none !bg-gray-100"
+                              : ""
+                          }`}
+                          disabled={!!selectedLead}
                         />
                       </div>
                     </div>
@@ -836,22 +978,50 @@ const CreateLeadForm = ({ setLeadModal, selectedLead, handleLeadUpdate }) => {
                       <label className="mb-2 block">
                         Lead Source<span className="text-red-500">*</span>
                       </label>
-                      <div className="relative">
-                        <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
-                          <FaListCheck />
-                        </span>
-                        <Select
-                          name="lead_source"
-                          value={leadsSources.find(
-                            (opt) => opt.value === formik.values.lead_source
-                          )}
-                          onChange={(option) =>
-                            formik.setFieldValue("lead_source", option.value)
-                          }
-                          options={leadsSources}
-                          styles={selectIcon}
-                        />
-                      </div>
+                      {selectedLead && selectedLead ? (
+                        <div className="relative">
+                          <span className="absolute top-[50%] translate-y-[-50%] left-[15px]">
+                            <FaListCheck />
+                          </span>
+                          <input
+                            name="lead_source"
+                            value={formik.values.lead_source}
+                            // onChange={formik.handleChange}
+                            readOnly={true}
+                            isDisabled={true}
+                            className="custom--input w-full input--icon  cursor-not-allowed pointer-events-none !bg-gray-100"
+                          />
+                        </div>
+                      ) : (
+                        <div className="relative">
+                          <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
+                            <FaListCheck />
+                          </span>
+                          <Select
+                            name="lead_source"
+                            value={
+                              filteredLeadSources.find(
+                                (opt) =>
+                                  opt.value.toLowerCase() ===
+                                  String(
+                                    formik.values.lead_source || ""
+                                  ).toLowerCase()
+                              ) || null
+                            }
+                            onChange={(option) =>
+                              formik.setFieldValue("lead_source", option.value)
+                            }
+                            options={filteredLeadSources}
+                            styles={selectIcon}
+                            isDisabled={
+                              String(
+                                formik.values.lead_source || ""
+                              ).toLowerCase() === "app"
+                            }
+                          />
+                        </div>
+                      )}
+
                       {formik.errors?.lead_source &&
                         formik.touched?.lead_source && (
                           <div className="text-red-500 text-sm">
@@ -934,8 +1104,8 @@ const CreateLeadForm = ({ setLeadModal, selectedLead, handleLeadUpdate }) => {
                                 <input
                                   type="radio"
                                   name="schedule"
-                                  value="Tour"
-                                  checked={formik.values.schedule === "Tour"}
+                                  value="TOUR"
+                                  checked={formik.values.schedule === "TOUR"}
                                   onChange={handleInput}
                                   className="w-4 h-4 mr-1"
                                 />
@@ -946,8 +1116,8 @@ const CreateLeadForm = ({ setLeadModal, selectedLead, handleLeadUpdate }) => {
                                 <input
                                   type="radio"
                                   name="schedule"
-                                  value="Trial"
-                                  checked={formik.values.schedule === "Trial"}
+                                  value="TRIAL"
+                                  checked={formik.values.schedule === "TRIAL"}
                                   onChange={handleInput}
                                   className="w-4 h-4 mr-1"
                                 />
@@ -958,15 +1128,15 @@ const CreateLeadForm = ({ setLeadModal, selectedLead, handleLeadUpdate }) => {
                                 <input
                                   type="radio"
                                   name="schedule"
-                                  value="NoTrial"
-                                  checked={formik.values.schedule === "NoTrial"}
+                                  value="NOTRIAL"
+                                  checked={formik.values.schedule === "NOTRIAL"}
                                   onChange={(e) => {
                                     formik.setFieldValue(
                                       "schedule",
                                       e.target.value
                                     );
-                                    // Reset staff_name and schedule_date_time when NoTrial is selected
-                                    formik.setFieldValue("staff_name", "");
+                                    // Reset assigned_staff_id and schedule_date_time when NOTRIAL is selected
+                                    formik.setFieldValue("assigned_staff_id", "");
                                     formik.setFieldValue(
                                       "schedule_date_time",
                                       ""
@@ -983,15 +1153,15 @@ const CreateLeadForm = ({ setLeadModal, selectedLead, handleLeadUpdate }) => {
                           <div>
                             <label className="mb-2 block">
                               Date & Time
-                              {formik.values.schedule === "Trial" ||
-                              formik.values.schedule === "Tour" ? (
+                              {formik.values.schedule === "TRIAL" ||
+                              formik.values.schedule === "TOUR" ? (
                                 <span className="text-red-500">*</span>
                               ) : (
                                 ""
                               )}
                             </label>
                             <div className="custom--date flex-1">
-                              <span className="absolute z-[1] mt-[15px] ml-[15px]">
+                              <span className="absolute z-[1] mt-[11px] ml-[15px]">
                                 <FaCalendarDays />
                               </span>
                               <DatePicker
@@ -1006,12 +1176,12 @@ const CreateLeadForm = ({ setLeadModal, selectedLead, handleLeadUpdate }) => {
                                 dateFormat="dd/MM/yyyy hh:mm aa"
                                 placeholderText="Select date & time"
                                 className="border px-3 py-2 w-full input--icon"
-                                minDate={now}
-                                minTime={minTime}
-                                maxTime={maxTime}
+                                minDate={now} // Disable past dates
+                                minTime={getMinTime(new Date())} // Calculate minTime for selected date dynamically
+                                maxTime={baseMaxTime} // 10:00 PM limit
                                 disabled={
                                   !formik.values.schedule ||
-                                  formik.values.schedule === "NoTrial"
+                                  formik.values.schedule === "NOTRIAL"
                                 }
                               />
                             </div>
@@ -1023,12 +1193,17 @@ const CreateLeadForm = ({ setLeadModal, selectedLead, handleLeadUpdate }) => {
                               )}
                           </div>
 
-                          {/* Staff Name */}
+                          {/* Trainer */}
                           <div className="mb-4">
                             <label className="mb-2 block">
-                              Staff Name
-                              {formik.values.schedule === "Trial" ||
-                              formik.values.schedule === "Tour" ? (
+                              {formik.values.schedule === "TOUR" ? (
+                                <span>Trainer & FOH</span>
+                              ) : (
+                                <span>Trainer</span>
+                              )}
+
+                              {formik.values.schedule === "TRIAL" ||
+                              formik.values.schedule === "TOUR" ? (
                                 <span className="text-red-500">*</span>
                               ) : (
                                 ""
@@ -1039,40 +1214,41 @@ const CreateLeadForm = ({ setLeadModal, selectedLead, handleLeadUpdate }) => {
                                 <FaListCheck />
                               </span>
                               <Select
-                                name="staff_name"
+                                name="assigned_staff_id"
                                 value={
-                                  assignTrainers.find(
-                                    (opt) =>
-                                      opt.value === formik.values.staff_name
-                                  ) || null
+                                  staffList
+                                    .flatMap((group) => group.options)
+                                    .find(
+                                      (opt) =>
+                                        opt.value === formik.values.assigned_staff_id
+                                    ) || null
                                 }
-                                onChange={(option) =>
-                                  handleSelectSchedule("staff_name", option)
+                                options={staffList} // grouped options
+                                onChange={(value) =>
+                                  formik.setFieldValue("assigned_staff_id", value?.value)
                                 }
-                                options={getAvailableTrainers()}
-                                placeholder="Select available trainer"
+                                placeholder="Select staff"
                                 styles={selectIcon}
                                 isDisabled={
                                   !formik.values.schedule ||
-                                  formik.values.schedule === "NoTrial"
+                                  formik.values.schedule === "NOTRIAL"
                                 }
                               />
                             </div>
 
-                            {formik.values.schedule &&
+                            {formik.touched.assigned_staff_id &&
+                              formik.errors.assigned_staff_id && (
+                                <p className="text-sm text-red-500 mt-1">
+                                  {formik.errors.assigned_staff_id}
+                                </p>
+                              )}
+                            {/* {formik.values.schedule &&
                               formik.values.schedule_date_time &&
                               !getAvailableTrainers().length && (
                                 <p className="text-sm text-red-500 mt-1">
                                   No trainers available at this date and time.
                                 </p>
-                              )}
-
-                            {formik.touched.staff_name &&
-                              formik.errors.staff_name && (
-                                <p className="text-sm text-red-500 mt-1">
-                                  {formik.errors.staff_name}
-                                </p>
-                              )}
+                              )} */}
                           </div>
                         </div>
                       </div>

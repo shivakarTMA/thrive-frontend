@@ -7,7 +7,7 @@ import Tooltip from "../common/Tooltip";
 import { LiaEdit } from "react-icons/lia";
 import { FaCircle } from "react-icons/fa6";
 import CreateRole from "./CreateRole";
-import { apiAxios } from "../../config/config";
+import { authAxios } from "../../config/config";
 import { IoSearchOutline } from "react-icons/io5";
 import Select from "react-select";
 import { customStyles } from "../../Helper/helper";
@@ -28,7 +28,7 @@ const RoleList = () => {
 
   const fetchRole = async (search = "", currentPage = page) => {
     try {
-      const res = await apiAxios().get("/role/list", {
+      const res = await authAxios().get("/role/list", {
         params: {
           page: currentPage,
           limit: rowsPerPage,
@@ -88,11 +88,11 @@ const RoleList = () => {
 
         if (editingOption && editingOption) {
           // Update
-          await apiAxios().put(`/role/${editingOption}`, payload);
+          await authAxios().put(`/role/${editingOption}`, payload);
           toast.success("Updated Successfully");
         } else {
           // Create
-          await apiAxios().post("/role/create", payload);
+          await authAxios().post("/role/create", payload);
           toast.success("Created Successfully");
         }
 
@@ -139,7 +139,7 @@ const RoleList = () => {
             </span>
             <input
               type="text"
-              placeholder="Search companies..."
+              placeholder="Search role..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="custom--input w-full input--icon"

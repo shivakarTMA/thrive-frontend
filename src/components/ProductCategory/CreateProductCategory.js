@@ -5,7 +5,7 @@ import { LuPlug } from "react-icons/lu";
 import Select from "react-select";
 import { selectIcon } from "../../Helper/helper";
 import { toast } from "react-toastify";
-import { apiAxios } from "../../config/config";
+import { authAxios } from "../../config/config";
 
 const CreatePackageCategory = ({
   setShowModal,
@@ -21,7 +21,7 @@ const CreatePackageCategory = ({
 
     const fetchPackageById = async (id) => {
       try {
-        const res = await apiAxios().get(`/product/category/${id}`);
+        const res = await authAxios().get(`/product/category/${id}`);
         const data = res.data?.data || res.data || null;
 
         if (data) {

@@ -12,7 +12,7 @@ import {
 import { FaPhoneAlt } from "react-icons/fa";
 import { RiLockPasswordFill } from "react-icons/ri";
 import Logo from "../../assets/images/DLF-Thrive-New-Logo-1-White.png";
-import { apiAxios } from "../../config/config";
+import { authAxios } from "../../config/config";
 
 // Login component
 const Login = (props) => {
@@ -49,7 +49,7 @@ const Login = (props) => {
       try {
         setLoading(true);
         // Send request to /staff/login with mobile
-        const response = await apiAxios().post("staff/login", {
+        const response = await authAxios().post("staff/login", {
           mobile: data.identifier,
         });
 
@@ -71,7 +71,7 @@ const Login = (props) => {
       try {
         setLoading(true);
         // Send request to /staff/verify-otp with mobile and OTP
-        const response = await apiAxios().post("staff/verify-otp", {
+        const response = await authAxios().post("staff/verify-otp", {
           mobile: currentUser.mobile,
           otp: data.otp,
         });

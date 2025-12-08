@@ -1,13 +1,13 @@
-import React, { useRef, useState } from "react";
-import { useFormik } from "formik";
-import * as Yup from "yup";
+import React, { useEffect, useRef, useState } from "react";
 import Select from "react-select";
 import { IoAppsSharp, IoCloseCircle, IoPricetagSharp } from "react-icons/io5";
 import { selectIcon } from "../../Helper/helper";
-import CreatableSelect from "react-select/creatable";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 import { toast } from "react-toastify";
-import PhoneInput, { isValidPhoneNumber } from "react-phone-number-input";
+import PhoneInput from "react-phone-number-input";
 import {
+  FaBusinessTime,
   FaEnvelope,
   FaListCheck,
   FaRegBuilding,
@@ -15,107 +15,134 @@ import {
 } from "react-icons/fa6";
 import { MdInsertPhoto } from "react-icons/md";
 import { LuPlug } from "react-icons/lu";
-
-const roleOptions = [
-  { value: "admin", label: "Admin" },
-  { value: "manager", label: "Manager" },
-  { value: "foh", label: "FOH" },
-  { value: "pt", label: "PT" },
-  { value: "gt", label: "GT" },
-  { value: "nutritionist", label: "Nutritionist" },
-  { value: "spa", label: "Spa" },
-  { value: "salon", label: "Salon" },
-  { value: "housekeeping", label: "Housekeeping" },
-  { value: "others", label: "Others" },
-];
-
-const centerOptions = [
-  { value: "center1", label: "Center 1" },
-  { value: "center2", label: "Center 2" },
-  { value: "center3", label: "Center 3" },
-];
+import { authAxios } from "../../config/config";
+import parsePhoneNumberFromString from "libphonenumber-js";
+import { FaBirthdayCake } from "react-icons/fa";
+import { PiGenderIntersexBold } from "react-icons/pi";
+import { FiPlus, FiTrash2 } from "react-icons/fi";
+import MultiSelect from "react-multi-select-component";
+import { useSelector } from "react-redux";
 
 
-const tagOptions = [
-  { value: "weight Loss", label: "Weight Loss" },
-  { value: "hiit", label: "HIIT" },
-  { value: "strength", label: "Strength" },
-  { value: "wellness", label: "Wellness" },
-  { value: "cardio", label: "Cardio" },
-];
 
 const yesNoOptions = [
-  { value: "active", label: "Active" },
-  { value: "inactive", label: "Inactive" },
+  { value: true, label: "Active" },
+  { value: false, label: "Inactive" },
 ];
 
-const validationSchema = Yup.object({
-  fullName: Yup.string().required("Full Name is required"),
-  email: Yup.string().email("Invalid email").required("Email is required"),
-  phoneNumber: Yup.string()
-    .required("Contact number is required")
-    .test("is-valid-phone", "Invalid phone number", function (value) {
-      return isValidPhoneNumber(value || "");
-    }),
-  role: Yup.string().required("Role is required"),
-  assignedCenters: Yup.array().min(1, "At least one center must be selected"),
-  profilePicture: Yup.mixed().when("showOnApp", {
-    is: "active",
-    then: () =>
-      Yup.mixed()
-        .required("Profile Picture is required")
-        .test("fileType", "Unsupported format", (value) => {
-          if (!value) return false;
-          return ["image/jpeg", "image/png", "image/webp"].includes(value.type);
-        }),
-    otherwise: () => Yup.mixed().notRequired(),
-  }),
-  description: Yup.string().when("showOnApp", {
-    is: "active",
-    then: () => Yup.string().required("Long Description is required"),
-  }),
-  tags: Yup.array().when("showOnApp", {
-    is: "active",
-    then: () => Yup.array().of(Yup.string()).min(1, "Tags are required"),
-  }),
-});
+const today = new Date();
+const adultLimitDate = new Date(
+  today.getFullYear() - 18,
+  today.getMonth(),
+  today.getDate()
+);
 
-const CreateStaff = ({ setShowModal, onExerciseCreated, initialData }) => {
-  console.log(initialData, "initialData");
+const oldestYearLimit = new Date(
+  today.getFullYear() - 50,
+  today.getMonth(),
+  today.getDate()
+);
+
+const genderOptions = [
+  { value: "MALE", label: "Male" },
+  { value: "FEMALE", label: "Female" },
+];
+
+const CreateStaff = ({ setShowModal, formik, editingOption, roleOptionsByUser }) => {
   const leadBoxRef = useRef(null);
+  const [club, setClub] = useState([]);
+  const [selected, setSelected] = useState([]);
+  const { user } = useSelector((state) => state.auth);
+  const currentUserRole = user.role; // Example, dynamically from user info
+  const roleOptions = roleOptionsByUser[currentUserRole] || [];
 
-  const initialValues = {
-    fullName: initialData?.fullName || "",
-    email: initialData?.email || "",
-    phoneNumber: initialData?.phoneNumber || "",
-    role: initialData?.role || "",
-    assignedCenters: initialData?.assignedCenters || [],
-    status: initialData?.status || "ACTIVE",
-    showOnApp: initialData?.showOnApp || "inactive",
-    profilePicture: initialData?.serviceImage || "",
-    description: initialData?.description || "",
-    status: initialData?.status || "",
-    tags: initialData?.tags || [],
+  // Function to fetch club list
+  const fetchClub = async () => {
+    try {
+      const response = await authAxios().get("/club/list");
+      const data = response.data?.data || response.data || [];
+      setClub(data);
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to fetch clubs");
+    }
   };
 
-  const formik = useFormik({
-    initialValues,
-    validationSchema,
-    onSubmit: (values) => {
-      // console.log("Submitted Staff Data:", values);
-      // setShowModal(false);
-      // toast.success("Created Successfully");
-      console.log("Formik Errors (if any):", formik.errors);
-      const dataToSend = {
-        ...values,
-        id: initialData?.id || Date.now(), // Preserve ID for edit mode
-      };
-      onExerciseCreated(dataToSend);
-      setShowModal(false);
-    },
-  });
+  // Fetch clubs and gallery list on component mount
+  useEffect(() => {
+    fetchClub();
+  }, []);
 
-  console.log(initialValues,'initialValues')
+  const clubOptions =
+    club?.map((item) => ({
+      label: item.name,
+      value: item.id,
+    })) || [];
+
+  useEffect(() => {
+    if (!editingOption) return;
+    if (!formik || !formik.setValues) return;
+    if (!club || club.length === 0) return; // wait until clubs are loaded
+
+    const fetchStaffById = async (id) => {
+      try {
+        const res = await authAxios().get(`/staff/${id}`);
+        const data = res.data?.data || res.data || null;
+
+        console.log("SHIVAKAR", data);
+
+        if (data) {
+          const clubIds = Array.isArray(data.staff_clubs)
+            ? data.staff_clubs.map((c) => c.club_id)
+            : [];
+
+          // set Formik values
+          formik.setValues({
+            profile_image: data?.profile_image || "",
+            logo: data?.logo || "",
+            name: data?.name || "",
+            email: data?.email || "",
+            experience: data?.experience || "",
+            mobile: data.mobile || "",
+            country_code: data.country_code || "",
+            show_on_app: data.show_on_app || false,
+            phoneFull: data.country_code
+              ? `+${data.country_code}${data.mobile}` // add the "+"
+              : "",
+            date_of_birth: data?.date_of_birth || null,
+            gender: data?.gender || "",
+            tags: data?.tags || "",
+            role: data?.role || "",
+            club_id: clubIds,
+            status: data?.status || "",
+            position: data?.position || "",
+            description: data?.description || "",
+            content:
+              Array.isArray(data?.content) && data.content.length > 0
+                ? data.content
+                : [{ title: "", description: "" }],
+          });
+
+          // Now set selected options for MultiSelect
+          const selectedOptions = club
+            .map((item) =>
+              clubIds.includes(item.id)
+                ? { label: item.name, value: item.id }
+                : null
+            )
+            .filter(Boolean);
+
+          setSelected(selectedOptions);
+        }
+      } catch (err) {
+        console.error(err);
+        toast.error("Failed to fetch staff details");
+      }
+    };
+
+    fetchStaffById(editingOption);
+  }, [editingOption, club]);
+
 
   const handleOverlayClick = (e) => {
     if (leadBoxRef.current && !leadBoxRef.current.contains(e.target)) {
@@ -128,7 +155,18 @@ const CreateStaff = ({ setShowModal, onExerciseCreated, initialData }) => {
   };
 
   const handlePhoneChange = (value) => {
-    formik.setFieldValue("phoneNumber", value);
+    formik.setFieldValue("phoneFull", value);
+    if (!value) {
+      formik.setFieldValue("mobile", "");
+      formik.setFieldValue("country_code", "");
+      return;
+    }
+    const phoneNumber = parsePhoneNumberFromString(value);
+    if (phoneNumber) {
+      formik.setFieldValue("mobile", phoneNumber.nationalNumber);
+      formik.setFieldValue("country_code", phoneNumber.countryCallingCode);
+    }
+    formik.setFieldError("mobile", "");
   };
 
   return (
@@ -163,16 +201,16 @@ const CreateStaff = ({ setShowModal, onExerciseCreated, initialData }) => {
                       </span>
                       <input
                         type="text"
-                        name="fullName"
+                        name="name"
                         className="custom--input w-full input--icon"
-                        value={formik.values.fullName}
+                        value={formik.values.name}
                         onChange={formik.handleChange}
                         onBlur={formik.handleBlur}
                       />
                     </div>
-                    {formik.touched.fullName && formik.errors.fullName && (
+                    {formik.touched.name && formik.errors.name && (
                       <p className="text-red-500 text-sm">
-                        {formik.errors.fullName}
+                        {formik.errors.name}
                       </p>
                     )}
                   </div>
@@ -208,20 +246,79 @@ const CreateStaff = ({ setShowModal, onExerciseCreated, initialData }) => {
                       Phone Number<span className="text-red-500">*</span>
                     </label>
                     <PhoneInput
-                      name="phoneNumber"
-                      value={formik.values.phoneNumber}
+                      name="phoneFull"
+                      value={formik.values.phoneFull}
                       onChange={handlePhoneChange}
                       international
                       defaultCountry="IN"
-                      className="custom--input w-full custom--phone"
                       countryCallingCodeEditable={false}
+                      className="custom--input w-full custom--phone"
                     />
-                    {formik.touched.phoneNumber &&
-                      formik.errors.phoneNumber && (
-                        <p className="text-red-500 text-sm">
-                          {formik.errors.phoneNumber}
-                        </p>
-                      )}
+
+                    {formik.touched.mobile && formik.errors.mobile && (
+                      <p className="text-red-500 text-sm">
+                        {formik.errors.mobile}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="mb-2 block">DOB</label>
+
+                    <div className="custom--date dob-format relative">
+                      <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
+                        <FaBirthdayCake />
+                      </span>
+                      <DatePicker
+                        selected={
+                          formik.values.date_of_birth
+                            ? new Date(formik.values.date_of_birth)
+                            : null
+                        }
+                        onChange={(date) =>
+                          formik.setFieldValue("date_of_birth", date)
+                        }
+                        dateFormat="dd MMM yyyy"
+                        showMonthDropdown
+                        showYearDropdown
+                        scrollableYearDropdown
+                        dropdownMode="select"
+                        placeholderText="Select date of birth"
+                        className="input--icon"
+                        // Adult-only limits
+                        maxDate={adultLimitDate} // cannot select a date younger than 18
+                        minDate={oldestYearLimit} // limit oldest possible age to 100 years
+                        yearDropdownItemNumber={100}
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="mb-2 block font-medium text-gray-700">
+                      Gender<span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
+                        <PiGenderIntersexBold />
+                      </span>
+                      <Select
+                        name="gender"
+                        value={genderOptions.find(
+                          (opt) => opt.value === formik.values.gender
+                        )}
+                        options={genderOptions}
+                        onChange={(option) =>
+                          formik.setFieldValue("gender", option.value)
+                        }
+                        styles={selectIcon}
+                        className="!capitalize"
+                      />
+                    </div>
+                    {formik.touched.gender && formik.errors.gender && (
+                      <p className="text-red-500 text-sm">
+                        {formik.errors.gender}
+                      </p>
+                    )}
                   </div>
 
                   {/* Role */}
@@ -234,15 +331,21 @@ const CreateStaff = ({ setShowModal, onExerciseCreated, initialData }) => {
                         <FaUser />
                       </span>
                       <Select
+                        name="role"
+                        value={
+                          roleOptions.find(
+                            (option) =>
+                              option.value.toString() ===
+                              formik.values.role?.toString()
+                          ) || null
+                        }
                         options={roleOptions}
-                        value={roleOptions.find(
-                          (option) => option.value === formik.values.role
-                        )}
                         onChange={(option) =>
-                          formik.setFieldValue("role", option?.value)
+                          formik.setFieldValue("role", option.value)
                         }
                         onBlur={() => formik.setFieldTouched("role", true)}
                         styles={selectIcon}
+                        className="!capitalize"
                       />
                     </div>
                     {formik.touched.role && formik.errors.role && (
@@ -252,135 +355,76 @@ const CreateStaff = ({ setShowModal, onExerciseCreated, initialData }) => {
                     )}
                   </div>
 
-                  {/* Assigned Centers */}
-                  <div>
-                    <label className="mb-2 block">
-                      Assigned Center(s)<span className="text-red-500">*</span>
-                    </label>
-                    <div className="relative">
-                      <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
-                        <FaRegBuilding />
-                      </span>
-                      <Select
-                        isMulti
-                        options={centerOptions}
-                        value={centerOptions.filter((option) =>
-                          formik.values.assignedCenters.includes(option.value)
-                        )}
-                        onChange={(selected) =>
-                          formik.setFieldValue(
-                            "assignedCenters",
-                            selected.map((s) => s.value)
-                          )
-                        }
-                        onBlur={() =>
-                          formik.setFieldTouched("assignedCenters", true)
-                        }
-                        styles={selectIcon}
-                      />
-                    </div>
-                    {formik.touched.assignedCenters &&
-                      formik.errors.assignedCenters && (
-                        <p className="text-red-500 text-sm">
-                          {formik.errors.assignedCenters}
-                        </p>
-                      )}
-                  </div>
-
-                  {/* Show on App */}
-
-                  <div>
-                    <label className="mb-2 block">
-                      Show on App<span className="text-red-500">*</span>
-                    </label>
-                    <div className="relative">
-                      <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
-                        <IoAppsSharp />
-                      </span>
-                      <Select
-                        options={yesNoOptions}
-                        value={yesNoOptions.find(
-                          (option) => option.value === formik.values.showOnApp
-                        )}
-                        onChange={(option) =>
-                          formik.setFieldValue("showOnApp", option?.value)
-                        }
-                        onBlur={() => formik.setFieldTouched("showOnApp", true)}
-                        styles={selectIcon}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Conditionally rendered fields */}
-                 {formik.values?.showOnApp === "active" && (
-                    <>
-                      {/* Profile Picture */}
-                      <div>
-                        <label className="mb-2 block">
-                          Profile Picture<span className="text-red-500">*</span>
-                        </label>
-                        <div className="relative">
-                          <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
-                            <MdInsertPhoto />
-                          </span>
-
-                          <input
-                            type="file"
-                            name="profilePicture"
-                            accept="image/*"
-                            onChange={(event) => {
-                              const file = event.currentTarget.files[0];
-                              formik.setFieldValue("profilePicture", file);
-                            }}
-                            className="custom--input w-full input--icon"
-                          />
-                        </div>
-                        {formik.touched.profilePicture &&
-                          formik.errors.profilePicture && (
-                            <p className="text-red-500 text-sm">
-                              {formik.errors.profilePicture}
-                            </p>
-                          )}
+                  <div
+                    className={`col-span-3 ${
+                      editingOption ? "grid-cols-4" : "grid-cols-3"
+                    }  grid  gap-4 "`}
+                  >
+                    {/* Experience */}
+                    <div>
+                      <label className="mb-2 block">
+                        Experience<span className="text-red-500">*</span>
+                      </label>
+                      <div className="relative">
+                        <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
+                          <FaBusinessTime />
+                        </span>
+                        <input
+                          type="number"
+                          name="experience"
+                          className="custom--input w-full input--icon"
+                          value={formik.values.experience}
+                          onChange={formik.handleChange}
+                          onBlur={formik.handleBlur}
+                        />
                       </div>
-
-                      {/* Tags */}
-                      <div>
-                        <label className="mb-2 block">
-                          Tags<span className="text-red-500">*</span>
-                        </label>
-                        <div className="relative">
-                          <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
-                            <IoPricetagSharp />
-                          </span>
-                          <CreatableSelect
-                            isMulti
-                            options={tagOptions}
-                            value={formik.values.tags.map((tag) => ({
-                              value: tag,
-                              label: tag,
-                            }))}
-                            onChange={(selected) =>
-                              formik.setFieldValue(
-                                "tags",
-                                selected.map((item) => item.value)
-                              )
-                            }
-                            onBlur={() => formik.setFieldTouched("tags", true)}
-                            styles={selectIcon}
-                          />
-                        </div>
-                        {formik.touched.tags && formik.errors.tags && (
+                      {formik.touched.experience &&
+                        formik.errors.experience && (
                           <p className="text-red-500 text-sm">
-                            {formik.errors.tags}
+                            {formik.errors.experience}
                           </p>
                         )}
-                      </div>
+                    </div>
 
-                      {/* Status */}
+                    {/* Club */}
+                    <div>
+                      <label className="mb-2 block">
+                        Club<span className="text-red-500">*</span>
+                      </label>
+                      <div className="relative">
+                        <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
+                          <FaRegBuilding />
+                        </span>
+                        <MultiSelect
+                          options={clubOptions}
+                          value={selected} // selected objects
+                          onChange={(selectedOptions) => {
+                            setSelected(selectedOptions); // set objects
+                            const values = selectedOptions.map(
+                              (opt) => opt.value
+                            ); // only IDs
+                            formik.setFieldValue("club_id", values);
+                          }}
+                          labelledBy="Select Clubs"
+                          hasSelectAll={false}
+                          overrideStrings={{
+                            selectSomeItems: "Select Clubs...",
+                            allItemsAreSelected: "All Clubs Selected",
+                            search: "Search",
+                          }}
+                          className="custom--input w-full input--icon multi--select--new"
+                        />
+                      </div>
+                      {formik.touched.club_id && formik.errors.club_id && (
+                        <p className="text-red-500 text-sm">
+                          {formik.errors.club_id}
+                        </p>
+                      )}
+                    </div>
+                    {/* Status */}
+                    {editingOption && (
                       <div>
-                        <label className="mb-2 block">
-                          Staff Status<span className="text-red-500">*</span>
-                        </label>
+                        <label className="mb-2 block">Staff Status</label>
                         <div className="relative">
                           <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[10]">
                             <LuPlug />
@@ -398,7 +442,9 @@ const CreateStaff = ({ setShowModal, onExerciseCreated, initialData }) => {
                             onChange={(option) =>
                               formik.setFieldValue("status", option.value)
                             }
-                            onBlur={() => formik.setFieldTouched("status", true)}
+                            onBlur={() =>
+                              formik.setFieldTouched("status", true)
+                            }
                             styles={selectIcon}
                             className="!capitalize"
                           />
@@ -406,6 +452,180 @@ const CreateStaff = ({ setShowModal, onExerciseCreated, initialData }) => {
                         {formik.touched.status && formik.errors.status && (
                           <p className="text-red-500 text-sm mt-1">
                             {formik.errors.status}
+                          </p>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Show on App */}
+                    <div>
+                      <label className="mb-2 block">Show on App</label>
+                      <div className="relative">
+                        <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
+                          <IoAppsSharp />
+                        </span>
+
+                        <Select
+                          name="show_on_app"
+                          value={
+                            yesNoOptions.find(
+                              (opt) => opt.value === formik.values?.show_on_app
+                            ) || null
+                          }
+                          options={yesNoOptions}
+                          onChange={(option) =>
+                            formik.setFieldValue("show_on_app", option.value)
+                          }
+                          onBlur={() =>
+                            formik.setFieldTouched("show_on_app", true)
+                          }
+                          styles={selectIcon}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="col-span-3 space-y-4">
+                    <label className="mb-0 block">
+                      Profile Info.<span className="text-red-500">*</span>
+                    </label>
+                    {formik.values.content.map((item, index) => {
+                      return (
+                        <div
+                          key={index}
+                          className="grid grid-cols-3 gap-4 border p-4 rounded-md bg-gray-50 relative"
+                        >
+                          {/* Title */}
+                          <div className="mb-3">
+                            <label className="block mb-1">Title</label>
+                            <input
+                              type="text"
+                              className="custom--input w-full"
+                              value={item.title}
+                              onChange={(e) =>
+                                formik.setFieldValue(
+                                  `content[${index}].title`,
+                                  e.target.value
+                                )
+                              }
+                            />
+                            {formik.touched.content?.[index]?.title &&
+                              formik.errors.content?.[index]?.title && (
+                                <p className="text-red-500 text-sm">
+                                  {formik.errors.content[index].title}
+                                </p>
+                              )}
+                          </div>
+
+                          {/* Description */}
+                          <div className="col-span-2 mb-3">
+                            <label className="block mb-1">Description</label>
+                            <input
+                              type="text"
+                              className="custom--input w-full"
+                              value={item.description}
+                              onChange={(e) =>
+                                formik.setFieldValue(
+                                  `content[${index}].description`,
+                                  e.target.value
+                                )
+                              }
+                            />
+                            {formik.touched.content?.[index]?.description &&
+                              formik.errors.content?.[index]?.description && (
+                                <p className="text-red-500 text-sm">
+                                  {formik.errors.content[index].description}
+                                </p>
+                              )}
+                          </div>
+
+                          {/* Remove Button */}
+                          {formik.values.content.length > 1 && (
+                            <button
+                              type="button"
+                              className="absolute flex items-center justify-center px-1 py-1 bg-red-600 text-white rounded-full w-9 h-9 top-[-5px] right-[-5px]"
+                              onClick={() => {
+                                const updated = [...formik.values.content];
+                                updated.splice(index, 1);
+                                formik.setFieldValue("content", updated);
+                              }}
+                            >
+                              <FiTrash2 />
+                            </button>
+                          )}
+                        </div>
+                      );
+                    })}
+
+                    {/* Add New Item */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        formik.setFieldValue("content", [
+                          ...formik.values.content,
+                          { title: "", description: "" },
+                        ]);
+                      }}
+                      className="flex items-center justify-center px-2 py-1 bg-black text-white rounded text-sm"
+                    >
+                      <FiPlus /> Add Content
+                    </button>
+                  </div>
+
+                  {/* Conditionally rendered fields */}
+                  {formik.values?.show_on_app === true && (
+                    <>
+                      {/* Profile Picture */}
+                      <div>
+                        <label className="mb-2 block">
+                          Profile Picture<span className="text-red-500">*</span>
+                        </label>
+                        <div className="relative">
+                          <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
+                            <MdInsertPhoto />
+                          </span>
+
+                          <input
+                            type="file"
+                            name="profile_image"
+                            accept="image/*"
+                            onChange={(event) => {
+                              const file = event.currentTarget.files[0];
+                              formik.setFieldValue("profile_image", file);
+                            }}
+                            className="custom--input w-full input--icon"
+                          />
+                        </div>
+                        {formik.touched.profile_image &&
+                          formik.errors.profile_image && (
+                            <p className="text-red-500 text-sm">
+                              {formik.errors.profile_image}
+                            </p>
+                          )}
+                      </div>
+
+                      {/* Tags */}
+                      <div>
+                        <label className="mb-2 block">
+                          Tags<span className="text-red-500">*</span>
+                        </label>
+
+                        <div className="relative">
+                          <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
+                            <IoPricetagSharp />
+                          </span>
+                          <input
+                            type="text"
+                            name="tags"
+                            className="custom--input w-full input--icon"
+                            value={formik.values.tags}
+                            onChange={formik.handleChange}
+                            onBlur={formik.handleBlur}
+                          />
+                        </div>
+                        {formik.touched.tags && formik.errors.tags && (
+                          <p className="text-red-500 text-sm">
+                            {formik.errors.tags}
                           </p>
                         )}
                       </div>

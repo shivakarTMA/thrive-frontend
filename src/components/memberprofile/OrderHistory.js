@@ -3,7 +3,7 @@ import Select from "react-select";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { customStyles, formatAutoDate } from "../../Helper/helper";
-import { apiAxios } from "../../config/config";
+import { authAxios } from "../../config/config";
 import { toast } from "react-toastify";
 
 const OrderHistory = ({details}) => {
@@ -30,7 +30,7 @@ const OrderHistory = ({details}) => {
   const fetchMemberOrders = async () => {
     try {
       // Make the API call with query parameters
-      const res = await apiAxios().get(`/member/order/${details?.id}`);
+      const res = await authAxios().get(`/member/order/${details?.id}`);
       const data = res.data?.data || [];
       setOrdersList(data);
     } catch (err) {

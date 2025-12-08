@@ -121,7 +121,9 @@ const PackagesList = () => {
             ? Yup.string() // not required if editing
             : Yup.string().required("Caption is required"),
         tags: Yup.string().required("Tags is required"),
-        
+        earn_coin: Yup.number()
+          .typeError("Earn Coins must be a number")
+          .required("Earn Coins is required"),
 
         // trainer_id: Yup.string().required("Staff is required"),
         position: Yup.string().required("Position is required"),
@@ -139,9 +141,6 @@ const PackagesList = () => {
           start_time: Yup.string().required("Start Time is required"),
           end_time: Yup.string().required("End Time is required"),
           max_capacity: Yup.string().required("Max Capacity is required"),
-          earn_coin: Yup.number()
-          .typeError("Earn Coins must be a number")
-          .required("Earn Coins is required"),
           waitlist_capacity: Yup.string().required(
             "Waitlist Capacity is required"
           ),
@@ -185,6 +184,7 @@ const PackagesList = () => {
 
       if (
         service_type === "RECREATION" ||
+        service_type === "RECOVERY" ||
         service_type === "PERSONAL_TRAINER"
       ) {
         schema = {
@@ -206,9 +206,6 @@ const PackagesList = () => {
         schema = {
           ...schema,
           buddy_pt: Yup.string().required("PT Type is required"),
-          earn_coin: Yup.number()
-          .typeError("Earn Coins must be a number")
-          .required("Earn Coins is required"),
         };
       }
 
@@ -312,131 +309,54 @@ const PackagesList = () => {
 
   const formik = useFormik({
     initialValues,
-    validationSchema: getValidationSchema(serviceOptions),
-    validateOnChange: true,
-    validateOnBlur: true,
+    // validationSchema: getValidationSchema(serviceOptions),
+    // validateOnChange: true,
+    // validateOnBlur: true,
     onSubmit: async (values, { resetForm }) => {
       console.log(values, "values");
       try {
         const formData = new FormData();
-
         Object.keys(values).forEach((key) => {
+          // ✅ Skip image key if it is just a string (URL from DB)
           if (key === "image" && typeof values.image === "string") return;
-          if (key === "variation") return; // IMPORTANT → variation handled separately
+
           formData.append(key, values[key]);
         });
 
+        // if file exists, append it (instead of just file name)
         if (values.image instanceof File) {
           formData.append("file", values.image);
         }
 
-        // Auto set booking type
         if (getServiceType(values.service_id, serviceOptions) === "RECOVERY") {
-          formik.setFieldValue("booking_type", "PAID");
+          values.booking_type = "PAID";
         }
 
-        let packageId = editingOption;
-
-        // -------------------------------------
-        // ✅ CREATE PACKAGE
-        // -------------------------------------
-        if (!editingOption) {
-          const res = await authAxios().post("/package/create", formData, {
-            headers: { "Content-Type": "multipart/form-data" },
-          });
-
-          packageId = res.data?.data?.id;
-
-          // CREATE ALL VARIATIONS
-          for (const v of values.variation) {
-            await createPackageVariation(packageId, v);
-          }
-
-          toast.success("Package Created Successfully");
-        }
-
-        // -------------------------------------
-        // ✅ UPDATE PACKAGE
-        // -------------------------------------
-        else {
+        if (editingOption && editingOption) {
+          // Update
           await authAxios().put(`/package/${editingOption}`, formData, {
             headers: { "Content-Type": "multipart/form-data" },
           });
-
-          // UPDATE ALL VARIATIONS
-          for (const v of values.variation) {
-            if (v.id) {
-              await updatePackageFeature(editingOption, v);
-            } else {
-              await createPackageVariation(editingOption, v);
-            }
-          }
-
-          toast.success("Package Updated Successfully");
+          toast.success("Updated Successfully");
+        } else {
+          // Create
+          await authAxios().post("/package/create", formData, {
+            headers: { "Content-Type": "multipart/form-data" },
+          });
+          toast.success("Created Successfully");
         }
 
         fetchPackagesList();
-        resetForm();
-        setEditingOption(null);
-        setShowModal(false);
       } catch (err) {
         console.error("API Error:", err.response?.data || err.message);
-        toast.error(err.response?.data.message);
+        toast.error("Failed to save package");
       }
+
+      resetForm();
+      setEditingOption(null);
+      setShowModal(false);
     },
   });
-
-  const createPackageVariation = async (packageId, variation) => {
-    const fd = new FormData();
-
-    fd.append("package_id", packageId);
-    fd.append("name", variation.name || "");
-    fd.append("recovery_goals", variation.recovery_goals || "");
-    fd.append("caption", variation.caption || "");
-    fd.append("description", variation.description || "");
-    fd.append("no_of_sessions", variation.no_of_sessions || "");
-    fd.append("session_duration", variation.session_duration || "");
-    fd.append("session_validity", variation.session_validity || "");
-    fd.append("amount", variation.amount || "");
-    fd.append("discount", variation.discount || "");
-    fd.append("gst", variation.gst || "");
-    fd.append("position", variation.position || "");
-    fd.append("earn_coin", variation.earn_coin || "");
-
-    if (variation.image instanceof File) {
-      fd.append("image", variation.image);
-    }
-
-    return authAxios().post("/package/variation/create", fd, {
-      headers: { "Content-Type": "multipart/form-data" },
-    });
-  };
-
-  const updatePackageFeature = async (packageId, variation) => {
-    const fd = new FormData();
-
-    fd.append("package_id", packageId);
-    fd.append("name", variation.name || "");
-    fd.append("recovery_goals", variation.recovery_goals || "");
-    fd.append("caption", variation.caption || "");
-    fd.append("description", variation.description || "");
-    fd.append("no_of_sessions", variation.no_of_sessions || "");
-    fd.append("session_duration", variation.session_duration || "");
-    fd.append("session_validity", variation.session_validity || "");
-    fd.append("amount", variation.amount || "");
-    fd.append("discount", variation.discount || "");
-    fd.append("gst", variation.gst || "");
-    fd.append("position", variation.position || "");
-    fd.append("earn_coin", variation.earn_coin || "");
-
-    if (variation.image instanceof File) {
-      fd.append("image", variation.image);
-    }
-
-    return authAxios().put(`/package/variation/${variation.id}`, fd, {
-      headers: { "Content-Type": "multipart/form-data" },
-    });
-  };
 
   useEffect(() => {
     const type = getServiceType(formik.values.service_id, serviceOptions);
@@ -563,8 +483,8 @@ const PackagesList = () => {
     formik.validateForm();
   }, [formik.values.service_id]);
 
-  // console.log(formik.values, "SHIVAKAR values");
-  console.log(formik.errors, "SHIVAKAR ERRORS");
+  console.log(formik.values, "SHIVAKAR values");
+  // console.log(formik.errors, "SHIVAKAR ERRORS");
   // console.log(formik.values, "SHIVAKAR values");
 
   return (

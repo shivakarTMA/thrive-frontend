@@ -6,7 +6,7 @@ import Select from "react-select";
 import { selectIcon } from "../../Helper/helper";
 import CreatableSelect from "react-select/creatable";
 import { toast } from "react-toastify";
-import { apiAxios } from "../../config/config";
+import { authAxios } from "../../config/config";
 
 const tagOptions = [
   { value: "admin", label: "Admin" },
@@ -29,7 +29,7 @@ const CreateRole = ({
 
     const fetchRoleById = async (id) => {
       try {
-        const res = await apiAxios().get(`/role/${id}`);
+        const res = await authAxios().get(`/role/${id}`);
         const data = res.data?.data || res.data || null;
 
         console.log(data,'SHIVAKAR')

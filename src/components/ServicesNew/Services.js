@@ -8,7 +8,7 @@ import { toast } from "react-toastify";
 import Tooltip from "../common/Tooltip";
 import { LiaEdit } from "react-icons/lia";
 import CreateService from "./CreateService";
-import { apiAxios } from "../../config/config";
+import { authAxios } from "../../config/config";
 import { IoSearchOutline } from "react-icons/io5";
 import Select from "react-select";
 import { customStyles, formatText } from "../../Helper/helper";
@@ -36,7 +36,7 @@ const Services = () => {
   // Function to fetch clubs
   const fetchClub = async (search = "") => {
     try {
-      const res = await apiAxios().get("/club/list", {
+      const res = await authAxios().get("/club/list", {
         params: search ? { search } : {},
       });
       let data = res.data?.data || res.data || [];
@@ -53,7 +53,7 @@ const Services = () => {
   // Function to fetch studios
   const fetchStudio = async (search = "") => {
     try {
-      const res = await apiAxios().get("/studio/list", {
+      const res = await authAxios().get("/studio/list", {
         params: search ? { search } : {},
       });
       let data = res.data?.data || res.data || [];
@@ -70,7 +70,7 @@ const Services = () => {
   // Function to fetch services
   const fetchServices = async (search = "") => {
     try {
-      const res = await apiAxios().get("/service/list", {
+      const res = await authAxios().get("/service/list", {
         params: search ? { search } : {},
       });
       let data = res.data?.data || res.data || [];
@@ -190,12 +190,12 @@ const Services = () => {
           }
         });
         if (editingOption && editingOption.id) {
-          await apiAxios().put(`/service/${editingOption.id}`, formData, {
+          await authAxios().put(`/service/${editingOption.id}`, formData, {
             headers: { "Content-Type": "multipart/form-data" },
           });
           toast.success("Updated Successfully");
         } else {
-          await apiAxios().post("/service/create", formData, {
+          await authAxios().post("/service/create", formData, {
             headers: { "Content-Type": "multipart/form-data" },
           });
           toast.success("Created Successfully");

@@ -7,7 +7,7 @@ import Tooltip from "../common/Tooltip";
 import { LiaEdit } from "react-icons/lia";
 import { FaCircle } from "react-icons/fa6";
 import CreateProduct from "./CreateProduct";
-import { apiAxios, authAxios } from "../../config/config";
+import { authAxios } from "../../config/config";
 import { IoIosSearch } from "react-icons/io";
 import Pagination from "../common/Pagination";
 import { IoSearchOutline } from "react-icons/io5";
@@ -30,7 +30,7 @@ const ProductsList = () => {
 
   const fetchService = async (search = "") => {
     try {
-      const res = await apiAxios().get("/service/list", {
+      const res = await authAxios().get("/service/list", {
         params: search ? { search } : {},
       });
       let data = res.data?.data || res.data || [];
@@ -50,7 +50,7 @@ const ProductsList = () => {
 
   const fetchProductCategory = async (search = "") => {
     try {
-      const res = await apiAxios().get("/product/category/list", {
+      const res = await authAxios().get("/product/category/list", {
         params: search ? { search } : {},
       });
       let data = res.data?.data || res.data || [];
@@ -86,7 +86,7 @@ const ProductsList = () => {
 
       if (category?.value) params.product_category_id = category.value;
 
-      const res = await apiAxios().get("/product/list", { params });
+      const res = await authAxios().get("/product/list", { params });
       const responseData = res.data;
       const data = responseData?.data || [];
 
@@ -131,14 +131,19 @@ const ProductsList = () => {
     caption: Yup.string().required("Caption is required"),
     sku: Yup.string().required("sku is required"),
     product_type: Yup.string().required("Product type is required"),
-    short_description: Yup.string().required("Short Description is required"),
+    food_type: Yup.string().required("Food type is required"),
+    // short_description: Yup.string().required("Short Description is required"),
+    calorie: Yup.string().required("Calorie is required"),
+    protein: Yup.string().required("Protein is required"),
+    carbohydrate: Yup.string().required("Carbohydrate is required"),
+    fat: Yup.string().required("Fat is required"),
     description: Yup.string().required("Description is required"),
     allergens: Yup.string().required("Allergens is required"),
     amount: Yup.string().required("Amount is required"),
     discount: Yup.string().required("Discount is required"),
     gst: Yup.string().required("GST is required"),
     stock_quantity: Yup.string().required("Stock Quantity is required"),
-    thrive_coins: Yup.string().required("Thrive Coins is required"),
+    earn_coin: Yup.string().required("Thrive Coins is required"),
     position: Yup.string().required("Position is required"),
 
     status: Yup.string().when("editingOption", {
@@ -158,7 +163,12 @@ const ProductsList = () => {
     caption: "",
     sku: "",
     product_type: "",
+    food_type: "",
     short_description: "",
+    calorie: "",
+    protein: "",
+    carbohydrate: "",
+    fat: "",
     description: "",
     allergens: "",
     hsn_sac_code: "",
@@ -166,7 +176,7 @@ const ProductsList = () => {
     discount: "",
     gst: "",
     stock_quantity: "",
-    thrive_coins: "",
+    earn_coin: "",
     position: "",
     status: "",
     editingOption: null,
@@ -251,7 +261,7 @@ const ProductsList = () => {
             </span>
             <input
               type="text"
-              placeholder="Search Package..."
+              placeholder="Search product..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="custom--input w-full input--icon"
@@ -275,10 +285,18 @@ const ProductsList = () => {
             <thead className="text-xs text-gray-700 uppercase bg-gray-50">
               <tr>
                 {/* <th className="px-2 py-4">Module ID</th> */}
-                <th className="px-2 py-4">Image</th>
-                <th className="px-2 py-4">Title</th>
-                <th className="px-2 py-4 text-center">Position</th>
-                <th className="px-2 py-4">Status</th>
+                <th className="px-2 py-4 min-w-[70px]">Image</th>
+                <th className="px-2 py-4 min-w-[200px]">Title</th>
+                <th className="px-2 py-4 min-w-[100px]">Category</th>
+                <th className="px-2 py-4 min-w-[120px]">Product Type</th>
+                <th className="px-2 py-4 min-w-[100px]">Amount</th>
+                <th className="px-2 py-4 min-w-[100px]">Discount</th>
+                <th className="px-2 py-4 min-w-[110px]">Total Amount</th>
+                <th className="px-2 py-4 min-w-[90px]">GST</th>
+                <th className="px-2 py-4 min-w-[100px]">GST Amount</th>
+                <th className="px-2 py-4 min-w-[110px]">Final Amount</th>
+                <th className="px-2 py-4 text-center min-w-[80px]">Position</th>
+                <th className="px-2 py-4 min-w-[100px]">Status</th>
                 <th className="px-2 py-4">Action</th>
               </tr>
             </thead>
@@ -305,6 +323,14 @@ const ProductsList = () => {
                       </div>
                     </td>
                     <td className="px-2 py-4">{item?.name}</td>
+                    <td className="px-2 py-4">{item?.product_category_name}</td>
+                    <td className="px-2 py-4">{item?.product_type}</td>
+                    <td className="px-2 py-4">₹{item?.amount}</td>
+                    <td className="px-2 py-4">₹{item?.discount}</td>
+                    <td className="px-2 py-4">₹{item?.total_amount}</td>
+                    <td className="px-2 py-4">{item?.gst}%</td>
+                    <td className="px-2 py-4">₹{item?.gst_amount}</td>
+                    <td className="px-2 py-4">₹{item?.booking_amount}</td>
                     <td className="px-2 py-4 text-center">{item.position}</td>
                     <td className="px-2 py-4">
                       <div

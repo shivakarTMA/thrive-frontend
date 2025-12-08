@@ -5,7 +5,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import { customStyles, formatAutoDate } from "../../Helper/helper";
 import Tooltip from "../common/Tooltip";
 import { FaEye, FaPrint, FaShareSquare } from "react-icons/fa";
-import { apiAxios } from "../../config/config";
+import { authAxios } from "../../config/config";
 import { toast } from "react-toastify";
 
 function toCapitalizedCase(inputString) {
@@ -39,7 +39,7 @@ const PaymentHistory = ({ details }) => {
   const fetchMemberPayment = async () => {
     try {
       // Make the API call with query parameters
-      const res = await apiAxios().get(`/member/payment/${details?.id}`);
+      const res = await authAxios().get(`/member/payment/${details?.id}`);
       const data = res.data?.data || [];
       setPaymentHistory(data);
     } catch (err) {

@@ -10,7 +10,7 @@ import AttendanceData from "../components/memberprofile/AttendanceData";
 import WorkoutApp from "../components/memberprofile/WorkoutApp";
 import PaymentHistory from "../components/memberprofile/PaymentHistory";
 import KYCSubmission from "../components/memberprofile/KYCSubmission";
-import { apiAxios } from "../config/config";
+import { authAxios } from "../config/config";
 import { toast } from "react-toastify";
 import HealthProfile from "../components/memberprofile/HealthProfile";
 import { FiPlus } from "react-icons/fi";
@@ -43,7 +43,7 @@ const MemberProfile = () => {
 
   const fetchMemberById = async (memberId) => {
     try {
-      const res = await apiAxios().get(`/member/${memberId}`);
+      const res = await authAxios().get(`/member/${memberId}`);
       const data = res.data?.data || res.data || null;
       setMember(data);
     } catch (err) {

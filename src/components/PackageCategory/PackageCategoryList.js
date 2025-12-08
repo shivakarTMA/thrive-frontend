@@ -7,7 +7,7 @@ import Tooltip from "../common/Tooltip";
 import { LiaEdit } from "react-icons/lia";
 import { FaCircle } from "react-icons/fa6";
 import CreatePackageCategory from "./CreatePackageCategory";
-import { apiAxios } from "../../config/config";
+import { authAxios } from "../../config/config";
 
 const PackageCategoryList = () => {
   const [showModal, setShowModal] = useState(false);
@@ -17,7 +17,7 @@ const PackageCategoryList = () => {
 
   const fetchPackageCategoryList = async () => {
     try {
-      const res = await apiAxios().get("/package-category/list");
+      const res = await authAxios().get("/package-category/list");
       let data = res.data?.data || res.data || [];
       setPackages(data);
     } catch (err) {
@@ -63,13 +63,13 @@ const PackageCategoryList = () => {
 
         if (editingOption && editingOption) {
           // Update
-          await apiAxios().put(`/package-category/${editingOption}`, formData, {
+          await authAxios().put(`/package-category/${editingOption}`, formData, {
             headers: { "Content-Type": "multipart/form-data" },
           });
           toast.success("Updated Successfully");
         } else {
           // Create
-          await apiAxios().post("/package-category/create", formData, {
+          await authAxios().post("/package-category/create", formData, {
             headers: { "Content-Type": "multipart/form-data" },
           });
           toast.success("Created Successfully");

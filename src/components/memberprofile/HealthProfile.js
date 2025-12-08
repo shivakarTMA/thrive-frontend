@@ -1,6 +1,6 @@
 // Import React and useState hook for managing state
 import React, { useEffect, useState } from "react";
-import { apiAxios } from "../../config/config";
+import { authAxios } from "../../config/config";
 import { toast } from "react-toastify";
 import { formatAutoDate } from "../../Helper/helper";
 
@@ -13,7 +13,7 @@ const HealthProfile = ({ details }) => {
   const fetchMemberSteps = async () => {
     try {
       // Make the API call with query parameters
-      const res = await apiAxios().get(`/member/health/profile/${details?.id}`);
+      const res = await authAxios().get(`/member/health/profile/${details?.id}`);
       const data = res.data?.data || [];
       setMemberSteps(data);
     } catch (err) {

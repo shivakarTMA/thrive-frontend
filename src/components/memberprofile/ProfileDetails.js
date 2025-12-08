@@ -12,7 +12,7 @@ import { CiCamera } from "react-icons/ci";
 import Webcam from "react-webcam";
 import { IoCheckmark, IoClose } from "react-icons/io5";
 import { FaLink, FaRegImage } from "react-icons/fa";
-import { apiAxios, phoneAxios } from "../../config/config";
+import { authAxios, phoneAxios } from "../../config/config";
 import {
   parsePhoneNumberFromString,
   isPossiblePhoneNumber,
@@ -25,7 +25,7 @@ import { IoIosAddCircle, IoIosCloseCircle } from "react-icons/io";
 const genderOptions = [
   { value: "MALE", label: "Male" },
   { value: "FEMALE", label: "Female" },
-  { value: "NOTDISCLOSE", label: "Not to Disclose" },
+  { value: "NOTDISCLOSE", label: "Prefer Not To Say" },
 ];
 
 const validationSchema = Yup.object({
@@ -88,7 +88,7 @@ const ProfileDetails = ({ member }) => {
   // Fetch emergency contact list by member ID
   const fetchEmergencyContacts = async () => {
     try {
-      const response = await apiAxios().get(
+      const response = await authAxios().get(
         `/member-emergency-contact/list?member_id=${member?.id}`
       );
       const res = response?.data?.data;
@@ -101,7 +101,7 @@ const ProfileDetails = ({ member }) => {
   // Fetch companies
   const fetchCompanies = async (search = "") => {
     try {
-      const res = await apiAxios().get("/company/list", {
+      const res = await authAxios().get("/company/list", {
         params: search ? { search } : {},
       });
       // ✅ Extract company data safely
@@ -166,7 +166,7 @@ const ProfileDetails = ({ member }) => {
       if (!memberId) return;
 
       try {
-        const response = await apiAxios().get(`/member/${memberId}`);
+        const response = await authAxios().get(`/member/${memberId}`);
         const data = response?.data?.data;
         const image = data.profile_pic ? data.profile_pic : DummyProfile;
 
@@ -243,7 +243,7 @@ const ProfileDetails = ({ member }) => {
   profilePayload.append("company_id", companyId);
 }
 
-      const profileResponse = await apiAxios().put(
+      const profileResponse = await authAxios().put(
         `/member/update/${member.id}`,
         profilePayload,
         {
@@ -271,12 +271,12 @@ const ProfileDetails = ({ member }) => {
 
         // If contact has ID, update; else create
         if (contact.id) {
-          await apiAxios().put(
+          await authAxios().put(
             `/member-emergency-contact/${contact.id}`,
             contactPayload
           );
         } else {
-          await apiAxios().post(
+          await authAxios().post(
             `/member-emergency-contact/create`,
             contactPayload
           );
@@ -324,7 +324,7 @@ const ProfileDetails = ({ member }) => {
     if (!contact) return;
     try {
       if (contact.id) {
-        await apiAxios().delete(`/member-emergency-contact/${contact.id}`);
+        await authAxios().delete(`/member-emergency-contact/${contact.id}`);
         toast.success("Emergency contact removed successfully.");
       }
       const updated = emergencyContacts.filter((_, i) => i !== index);

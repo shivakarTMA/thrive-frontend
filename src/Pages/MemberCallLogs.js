@@ -13,7 +13,7 @@ import { fetchOptionList } from "../Redux/Reducers/optionListSlice";
 import { LuCalendar } from "react-icons/lu";
 import { FiClock } from "react-icons/fi";
 import { toast } from "react-toastify";
-import { apiAxios } from "../config/config";
+import { authAxios } from "../config/config";
 import MemberContactHistory from "./MemberContactHistory";
 import { FaCalendarDays } from "react-icons/fa6";
 import { format } from "date-fns";
@@ -85,6 +85,7 @@ const MemberCallLogs = () => {
   const [callDataList, setCallDataList] = useState([]);
   const [editData, setEditData] = useState(null);
   const [memberEnquiry, setMemberEnquiry] = useState([]);
+  const [editLog, setEditLog] = useState(null);
 
   const now = new Date();
   const minTime = new Date();
@@ -95,7 +96,7 @@ const MemberCallLogs = () => {
 
   const fetchStaff = async (search = "") => {
     try {
-      const res = await apiAxios().get("/staff/list", {
+      const res = await authAxios().get("/staff/list", {
         params: search ? { search } : {},
       });
       let data = res.data?.data || res?.data || [];
@@ -109,7 +110,6 @@ const MemberCallLogs = () => {
 
   const fetchMemberEnquiery = async (memberId, filters = {}) => {
     try {
-
       const params = {};
 
       if (filters.call_status) params.call_status = filters.call_status;
@@ -121,7 +121,7 @@ const MemberCallLogs = () => {
       console.log(params, "params");
 
       // ✅ Correct way to send params — DO NOT add them inside the URL string
-      const res = await apiAxios().get(
+      const res = await authAxios().get(
         `/member/call/log/enquiry/list/${memberId}`,
         { params } // Axios will automatically append ?call_status=...&startDate=... etc.
       );
@@ -135,8 +135,6 @@ const MemberCallLogs = () => {
       toast.error("Failed to fetch club");
     }
   };
-
-  console.log(memberEnquiry, "memberEnquiry");
 
   useEffect(() => {
     fetchStaff();
@@ -174,7 +172,7 @@ const MemberCallLogs = () => {
       console.log(params, "params");
 
       // ✅ Correct way to send params — DO NOT add them inside the URL string
-      const res = await apiAxios().get(
+      const res = await authAxios().get(
         `/member/call/log/list/${memberId}`,
         { params } // Axios will automatically append ?call_type=...&startDate=... etc.
       );
@@ -191,7 +189,7 @@ const MemberCallLogs = () => {
 
   const fetchMemberById = async (memberId) => {
     try {
-      const res = await apiAxios().get(`/member/${memberId}`);
+      const res = await authAxios().get(`/member/${memberId}`);
       const data = res.data?.data || res.data || null;
       console.log(data, "data");
       setMemberDetails(data);
@@ -237,14 +235,22 @@ const MemberCallLogs = () => {
     enableReinitialize: true,
     validationSchema,
     onSubmit: async (values, { resetForm }) => {
-      console.log("Form validation errors:", formik.errors);
-      console.log(values, "values after submit");
+      console.log(values, " values");
+      console.log(values.id, " values.id");
 
       try {
-        await apiAxios().post("/member/call/log/create", values);
-        toast.success("Call created successfully!");
+        if (values.id) {
+          // UPDATE MODE
+          await authAxios().put(`/member/call/log/${values.id}`, values);
+          toast.success("Call log updated successfully!");
+        } else {
+          // CREATE MODE
+          await authAxios().post("/member/call/log/create", values);
+          toast.success("Call created successfully!");
+        }
 
         resetForm();
+        setEditLog(null); // Exit edit mode
         fetchMemberCallLogs(id);
       } catch (error) {
         toast.error("Something went wrong. Please try again.");
@@ -252,20 +258,6 @@ const MemberCallLogs = () => {
       }
     },
   });
-
-  // Function to handle edit and set data inside form
-  const handleEditLog = (log) => {
-    setActiveTab("Member Logs"); // Switch tab to Member Logs
-    setEditData(log); // Store selected log
-    formik.setValues({
-      schedule_for: 1, // Example value, could be dynamic
-      call_type: log.call_type,
-      call_status: log.call_status,
-      not_interested_reason: log.not_interested_reason || "",
-      follow_up_datetime: log.follow_up_datetime || "",
-      remark: log.remarks || "",
-    });
-  };
 
   useEffect(() => {
     let filtered = [];
@@ -353,6 +345,22 @@ const MemberCallLogs = () => {
     formik.setFieldValue("follow_up_datetime", date); // Store Date object in Formik
   };
 
+  useEffect(() => {
+    if (editLog) {
+      formik.setValues({
+        call_status: editLog.call_status,
+        member_id: memberDetails?.id,
+        schedule_for: editLog.schedule_for,
+        call_type: editLog.call_type || "",
+        call_status: editLog.call_status || "",
+        not_interested_reason: editLog.not_interested_reason || "",
+        follow_up_datetime: editLog.follow_up_datetime || "",
+        remark: editLog.remark || "",
+        id: editLog.id, // <-- VERY IMPORTANT for update mode
+      });
+    }
+  }, [editLog]);
+
   return (
     <div className="">
       <div className="mt-5 flex gap-5">
@@ -415,6 +423,7 @@ const MemberCallLogs = () => {
                         }}
                         options={callTypeOption}
                         styles={customStyles}
+                        isDisabled={editLog ? true : false}
                       />
                       {formik.errors?.call_type &&
                         formik.touched?.call_type && (
@@ -447,7 +456,7 @@ const MemberCallLogs = () => {
                           name: opt.name,
                         }))}
                         styles={customStyles}
-                        // isDisabled={isDisabled}
+                        isDisabled={editLog ? true : false}
                       />
                       {formik.errors?.call_status &&
                         formik.touched?.call_status && (
@@ -481,7 +490,7 @@ const MemberCallLogs = () => {
                             name: opt.name,
                           }))}
                           styles={customStyles}
-                          // isDisabled={isDisabled}
+                          isDisabled={editLog ? true : false}
                         />
                         {formik.errors?.not_interested_reason &&
                           formik.touched?.not_interested_reason && (
@@ -499,7 +508,7 @@ const MemberCallLogs = () => {
                           Date & Time<span className="text-red-500">*</span>
                         </label>
                         <div className="custom--date flex-1">
-                          <span className="absolute z-[1] mt-[15px] ml-[15px]">
+                          <span className="absolute z-[1] mt-[11px] ml-[15px]">
                             <FaCalendarDays />
                           </span>
                           <DatePicker
@@ -517,7 +526,7 @@ const MemberCallLogs = () => {
                             minDate={now}
                             minTime={minTime}
                             maxTime={maxTime}
-                            // disabled={isDisabled}
+                            disabled={editLog ? true : false}
                           />
                         </div>
 
@@ -582,7 +591,18 @@ const MemberCallLogs = () => {
                   </div>
 
                   {/* Submit Button */}
-                  <div className="flex justify-end gap-2 mt-3">
+                  <div className="flex items-center justify-end gap-2 mt-3">
+                    {editLog && (
+                      <p
+                        className="cursor-pointer text-[#009eb2] underline"
+                        onClick={() => {
+                          formik.resetForm();
+                          setEditLog(null);
+                        }}
+                      >
+                        Clear
+                      </p>
+                    )}
                     <button
                       type="submit"
                       // disabled={isDisabled ? true : false}
@@ -631,7 +651,7 @@ const MemberCallLogs = () => {
                     className="w-full"
                   />
                   <div className="custom--date flex-1">
-                    <span className="absolute z-[1] mt-[15px] ml-[15px]">
+                    <span className="absolute z-[1] mt-[11px] ml-[15px]">
                       <FaCalendarDays />
                     </span>
                     <DatePicker
@@ -643,7 +663,7 @@ const MemberCallLogs = () => {
                     />
                   </div>
                   <div className="custom--date flex-1">
-                    <span className="absolute z-[1] mt-[15px] ml-[15px]">
+                    <span className="absolute z-[1] mt-[11px] ml-[15px]">
                       <FaCalendarDays />
                     </span>
                     <DatePicker
@@ -662,7 +682,7 @@ const MemberCallLogs = () => {
                   <MemberContactHistory
                     key={index}
                     filteredData={filteredLogs}
-                    handleEditLog={handleEditLog}
+                    handleEditLog={setEditLog}
                   />
                 ))
               ) : (
@@ -682,7 +702,7 @@ const MemberCallLogs = () => {
                     className="w-full"
                   />
                   <div className="custom--date flex-1">
-                    <span className="absolute z-[1] mt-[15px] ml-[15px]">
+                    <span className="absolute z-[1] mt-[11px] ml-[15px]">
                       <FaCalendarDays />
                     </span>
                     <DatePicker
@@ -694,7 +714,7 @@ const MemberCallLogs = () => {
                     />
                   </div>
                   <div className="custom--date flex-1">
-                    <span className="absolute z-[1] mt-[15px] ml-[15px]">
+                    <span className="absolute z-[1] mt-[11px] ml-[15px]">
                       <FaCalendarDays />
                     </span>
                     <DatePicker

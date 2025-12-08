@@ -7,7 +7,7 @@ import Tooltip from "../common/Tooltip";
 import { LiaEdit } from "react-icons/lia";
 import { FaCircle } from "react-icons/fa6";
 import CreateSplashScreen from "./CreateSplashScreen";
-import { apiAxios } from "../../config/config";
+import { authAxios } from "../../config/config";
 import { IoSearchOutline } from "react-icons/io5";
 import Select from "react-select";
 import { customStyles } from "../../Helper/helper";
@@ -25,7 +25,7 @@ const SplashScreen = () => {
 
   const fetchSplashScreen = async (search = "") => {
     try {
-      const res = await apiAxios().get("/splash-screen/list", {
+      const res = await authAxios().get("/splash-screen/list", {
         params: search ? { search } : {},
       });
       let data = res.data?.data || res.data || [];
@@ -86,13 +86,13 @@ const SplashScreen = () => {
 
         if (editingOption && editingOption.id) {
           // Update
-          await apiAxios().put(`/splash-screen/${editingOption.id}`, formData, {
+          await authAxios().put(`/splash-screen/${editingOption.id}`, formData, {
             headers: { "Content-Type": "multipart/form-data" },
           });
           toast.success("Updated Successfully");
         } else {
           // Create
-          await apiAxios().post("/splash-screen/create", formData, {
+          await authAxios().post("/splash-screen/create", formData, {
             headers: { "Content-Type": "multipart/form-data" },
           });
           toast.success("Created Successfully");

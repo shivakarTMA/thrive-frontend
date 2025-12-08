@@ -5,7 +5,7 @@ import Select from "react-select";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { customStyles, formatAutoDate } from "../../Helper/helper";
-import { apiAxios } from "../../config/config";
+import { authAxios } from "../../config/config";
 import { toast } from "react-toastify";
 
 const coinsTypeOptions = [
@@ -34,7 +34,7 @@ const CoinsList = ({ details }) => {
       };
 
       // Make the API call with query parameters
-      const res = await apiAxios().get(`/coin/transaction/list/${details?.id}`, {
+      const res = await authAxios().get(`/coin/transaction/list/${details?.id}`, {
         params: params,
       });
       const data = res.data?.data || [];

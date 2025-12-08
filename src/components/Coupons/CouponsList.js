@@ -8,7 +8,7 @@ import { toast } from "react-toastify";
 import Tooltip from "../common/Tooltip";
 import Pagination from "../common/Pagination";
 import CreateCoupon from "./CreateCoupon";
-import { apiAxios } from "../../config/config";
+import { authAxios } from "../../config/config";
 import { RiDeleteBin6Line } from "react-icons/ri";
 import ConfirmPopup from "../common/ConfirmPopup";
 
@@ -35,7 +35,7 @@ const CouponsList = () => {
       };
 
       // API request to get filtered gallery data
-      const response = await apiAxios().get("/coupon/list", { params });
+      const response = await authAxios().get("/coupon/list", { params });
 
       const data = response.data?.data || [];
       setCouponsList(data);
@@ -91,11 +91,11 @@ const CouponsList = () => {
 
         if (editingOption && editingOption) {
           // Update
-          await apiAxios().put(`/coupon/${editingOption}`, payload);
+          await authAxios().put(`/coupon/${editingOption}`, payload);
           toast.success("Updated Successfully");
         } else {
           // Create
-          await apiAxios().post("/coupon/create", payload);
+          await authAxios().post("/coupon/create", payload);
           toast.success("Created Successfully");
         }
 
@@ -122,7 +122,7 @@ const CouponsList = () => {
   const handleConfirmDelete = async () => {
     if (couponToDelete) {
       try {
-        await apiAxios().delete(`/coupon/${couponToDelete.id}`);
+        await authAxios().delete(`/coupon/${couponToDelete.id}`);
         const updatedCoupons = couponsList.filter(
           (ex) => ex.id !== couponToDelete.id
         );

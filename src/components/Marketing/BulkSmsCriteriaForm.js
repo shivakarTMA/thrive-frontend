@@ -6,7 +6,7 @@ import { customStyles } from "../../Helper/helper";
 import { smsTemplates } from "../../DummyData/DummyData";
 import { toast } from "react-toastify";
 import { IoClose } from "react-icons/io5";
-import { apiAxios } from "../../config/config";
+import { authAxios } from "../../config/config";
 import { useLocation, useNavigate } from "react-router-dom";
 
 // ✅ Define validation schema using Yup
@@ -107,10 +107,10 @@ const BulkSmsCriteriaForm = () => {
     try {
       let list = [];
       if (currentType === "member") {
-        const res = await apiAxios().get("/member/list");
+        const res = await authAxios().get("/member/list");
         list = res.data?.data || [];
       } else if (currentType === "lead") {
-        const res = await apiAxios().get("/lead/list");
+        const res = await authAxios().get("/lead/list");
         list = res.data?.data || [];
       }
 

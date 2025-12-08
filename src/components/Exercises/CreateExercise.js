@@ -9,7 +9,7 @@ import { FaListCheck } from "react-icons/fa6";
 import Switch from "react-switch";
 import { TbGymnastics } from "react-icons/tb";
 import { CgGym } from "react-icons/cg";
-import { apiAxios } from "../../config/config";
+import { authAxios } from "../../config/config";
 
 // Options for exercise categories
 const exerciseTypeOptions = [
@@ -61,7 +61,7 @@ const CreateExercise = ({ setShowModal, editingExercise, onExerciseCreated }) =>
 
         if (editingExercise?.id) {
           // Update existing exercise
-          await apiAxios().put(`/exercise/${editingExercise.id}`, formData, {
+          await authAxios().put(`/exercise/${editingExercise.id}`, formData, {
             headers: {
               "Content-Type": "multipart/form-data",
             },
@@ -69,7 +69,7 @@ const CreateExercise = ({ setShowModal, editingExercise, onExerciseCreated }) =>
           toast.success("Exercise updated successfully!");
         } else {
           // Create new exercise
-          await apiAxios().post("/exercise/create", formData, {
+          await authAxios().post("/exercise/create", formData, {
             headers: {
               "Content-Type": "multipart/form-data",
             },
@@ -94,7 +94,7 @@ const CreateExercise = ({ setShowModal, editingExercise, onExerciseCreated }) =>
     const fetchExerciseById = async () => {
       if (editingExercise?.id) {
         try {
-          const response = await apiAxios().get(`/exercise/${editingExercise.id}`);
+          const response = await authAxios().get(`/exercise/${editingExercise.id}`);
           const exerciseData = response.data?.data || response.data || null;;
 
           // Set form values from fetched data

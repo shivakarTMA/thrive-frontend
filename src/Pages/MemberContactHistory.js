@@ -16,7 +16,7 @@ export default function MemberContactHistory({
   return (
     <div className="bg-white shadow-md rounded-2xl w-full border border-[#D4D4D4] overflow-hidden mb-4">
       {/* Header with call type and created date */}
-      <div className="flex justify-between items-center border-b pb-2 mb-3 p-4 bg-[#F1F1F1]">
+      <div className="flex justify-between items-center border-b pb-2 p-4 bg-[#F1F1F1]">
         <h2 className="text-lg font-semibold">{filteredData?.call_type}</h2>
         <span className="text-gray-500 text-sm">
           Created on: {formatDateTimeLead(filteredData?.createdAt)}
@@ -24,6 +24,9 @@ export default function MemberContactHistory({
       </div>
 
       <div className="p-4">
+        <p className="text-sm flex gap-2 mb-3">
+          Created by: {filteredData?.created_by_name}
+        </p>
         <div className="grid grid-cols-2 gap-5">
           {/* Left side details */}
           <div className="space-y-2">
@@ -84,12 +87,12 @@ export default function MemberContactHistory({
 
         <div className="flex gap-2 items-center justify-between  mt-2">
           {/* Update button */}
-          {/* <button
+          <button
             className="mt-3 bg-black text-white py-1 px-4 rounded-[5px] hover:bg-gray-800"
             onClick={() => handleEditLog(filteredData)}
           >
             Update
-          </button> */}
+          </button>
 
           {filteredData?.updatedAt && (
             <p className="text-sm text-[#6F6F6F] flex gap-2 text-right w-full justify-end">

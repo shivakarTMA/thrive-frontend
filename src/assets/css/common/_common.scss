@@ -63,6 +63,7 @@ input.number--appearance-none[type="number"]::-webkit-outer-spin-button {
   padding: 8px 15px;
   border-radius: 5px;
   font-size: 15px;
+      background: #fff
 }
 
 .custom--date .react-datepicker-wrapper {
@@ -80,7 +81,7 @@ input.number--appearance-none[type="number"]::-webkit-outer-spin-button {
 .custom--date .react-datepicker-wrapper input {
   width: 100%;
   border: 1px solid #c5c5c5;
-  padding: 10px 15px;
+  padding: 7px 15px;
   border-radius: 5px;
   min-height: 40px;
 }
@@ -613,3 +614,66 @@ input:-webkit-autofill:active {
 /* Optional: make the content look nicer using a maximum width (comment out if you do not want it) */
 /* .ck-content { max-width: 72ch; margin-left: auto; margin-right: auto; } */
 
+.multi--select--new{
+  position: relative;
+}
+
+.dropdown-container {
+    position: unset !important;
+}
+
+.dropdown-content {
+left: 0;
+    margin-top: 10px;
+    z-index: 2 !important;
+}
+
+
+.dropdown-content > .panel-content {
+border-radius: 5px !important;
+    background: #fff !important;
+    padding: 10px;
+}
+
+.dropdown-content > .panel-content > .select-panel > div {
+    border: 1px solid #ccc;
+    padding: 5px 8px;
+    border-radius: 5px;
+    margin-bottom: 10px;
+}
+
+.dropdown-content > .panel-content > .select-panel > div > button > svg {
+    transform: scale(0.8);
+}
+
+.dropdown-content > .panel-content > .select-panel > ul {
+    display: flex;
+    flex-direction: column;
+    row-gap: 7px;
+}
+
+.dropdown-content > .panel-content > .select-panel > ul > li input {
+    width: 15px;
+    height: 14px;
+}
+
+.multi--select--new > div > div:nth-child(1) > svg {
+    color: #ccc;
+    transform: scale(0.9);
+}
+
+.multi--select--new .dropdown-container > .dropdown-heading > .clear-selected-button {
+    transform: scale(0.7);
+}
+.multi--select--new .dropdown-container[aria-expanded="true"] > .dropdown-heading > svg {
+    transform:scaleY(-1) scale(0.9);
+}
+
+.custom--date .react-datepicker-wrapper input:disabled {
+    background: #f3f4f6;
+    color: #999999;
+}
+
+.input--icon:disabled, .input--icon:disabled {
+    color: #999999;
+}

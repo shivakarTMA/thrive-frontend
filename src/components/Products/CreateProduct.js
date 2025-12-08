@@ -14,6 +14,12 @@ const productTypeOptions = [
   { value: "OTHER", label: "Other" },
   { value: "SNACKS", label: "Snacks" },
 ];
+// Options
+const foodTypeOptions = [
+  { value: "VEG", label: "Veg" },
+  { value: "NONVEG", label: "Non-Veg" },
+  { value: "NONE", label: "None" },
+];
 
 // status type options for dropdown
 const statusType = [
@@ -46,6 +52,11 @@ const CreateProduct = ({
             caption: data?.caption || "",
             sku: data?.sku || "",
             product_type: data?.product_type || "",
+            food_type: data?.food_type || "",
+            calorie: data?.calorie || "",
+            protein: data?.protein || "",
+            carbohydrate: data?.carbohydrate || "",
+            fat: data?.fat || "",
             short_description: data?.short_description || "",
             description: data?.description || "",
             allergens: data?.allergens || "",
@@ -54,7 +65,7 @@ const CreateProduct = ({
             discount: data?.discount || "",
             gst: data?.gst || "",
             stock_quantity: data?.stock_quantity || "",
-            thrive_coins: data?.thrive_coins || "",
+            earn_coin: data?.earn_coin || "",
             position: data?.position || "",
             status: data?.status || "",
           });
@@ -260,6 +271,30 @@ const CreateProduct = ({
                         </p>
                       )}
                   </div>
+                  {/*  Food Type */}
+                  <div>
+                    <label className="mb-2 block">
+                      Food Type<span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <Select
+                        options={foodTypeOptions}
+                        value={foodTypeOptions.find(
+                          (option) => option.value === formik.values.food_type
+                        )}
+                        onChange={(option) =>
+                          formik.setFieldValue("food_type", option?.value)
+                        }
+                        onBlur={() => formik.setFieldTouched("food_type", true)}
+                        styles={customStyles}
+                      />
+                    </div>
+                    {formik.touched.food_type && formik.errors.food_type && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {formik.errors.food_type}
+                      </p>
+                    )}
+                  </div>
 
                   {/* SKU */}
                   <div>
@@ -304,11 +339,9 @@ const CreateProduct = ({
                     )}
                   </div>
 
-                  {/* HSC SAC Code */}
+                  {/* HSN SAC Code */}
                   <div>
-                    <label className="mb-2 block">
-                      HSC SAC Code
-                    </label>
+                    <label className="mb-2 block">HSN SAC Code</label>
                     <div className="relative">
                       <input
                         type="text"
@@ -393,6 +426,92 @@ const CreateProduct = ({
                     )}
                   </div>
 
+                  {/* Calorie */}
+                  <div>
+                    <label className="mb-2 block">
+                      Calorie<span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        name="calorie"
+                        value={formik.values.calorie}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        className="custom--input w-full"
+                      />
+                    </div>
+                    {formik.touched.calorie && formik.errors.calorie && (
+                      <div className="text-red-500 text-sm">
+                        {formik.errors.calorie}
+                      </div>
+                    )}
+                  </div>
+                  {/* Protein */}
+                  <div>
+                    <label className="mb-2 block">
+                      Protein<span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        name="protein"
+                        value={formik.values.protein}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        className="custom--input w-full"
+                      />
+                    </div>
+                    {formik.touched.protein && formik.errors.protein && (
+                      <div className="text-red-500 text-sm">
+                        {formik.errors.protein}
+                      </div>
+                    )}
+                  </div>
+                  {/* Carbohydrate */}
+                  <div>
+                    <label className="mb-2 block">
+                      Carbohydrate<span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        name="carbohydrate"
+                        value={formik.values.carbohydrate}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        className="custom--input w-full"
+                      />
+                    </div>
+                    {formik.touched.carbohydrate &&
+                      formik.errors.carbohydrate && (
+                        <div className="text-red-500 text-sm">
+                          {formik.errors.carbohydrate}
+                        </div>
+                      )}
+                  </div>
+                  {/* Fat */}
+                  <div>
+                    <label className="mb-2 block">
+                      Fat<span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        name="fat"
+                        value={formik.values.fat}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        className="custom--input w-full"
+                      />
+                    </div>
+                    {formik.touched.fat && formik.errors.fat && (
+                      <div className="text-red-500 text-sm">
+                        {formik.errors.fat}
+                      </div>
+                    )}
+                  </div>
+
                   {/* Stock Quantity */}
                   <div>
                     <label className="mb-2 block">
@@ -416,27 +535,26 @@ const CreateProduct = ({
                       )}
                   </div>
 
-                  {/* Thrive Coins */}
+                  {/* Earn Coins */}
                   <div>
                     <label className="mb-2 block">
-                      Thrive Coins<span className="text-red-500">*</span>
+                      Earn Coins<span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
                       <input
                         type="number"
-                        name="thrive_coins"
+                        name="earn_coin"
                         className="custom--input w-full"
-                        value={formik.values.thrive_coins}
+                        value={formik.values.earn_coin}
                         onChange={formik.handleChange}
                         onBlur={formik.handleBlur}
                       />
                     </div>
-                    {formik.touched.thrive_coins &&
-                      formik.errors.thrive_coins && (
-                        <p className="text-red-500 text-sm mt-1">
-                          {formik.errors.thrive_coins}
-                        </p>
-                      )}
+                    {formik.touched.earn_coin && formik.errors.earn_coin && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {formik.errors.earn_coin}
+                      </p>
+                    )}
                   </div>
 
                   {/* Position */}
@@ -460,6 +578,9 @@ const CreateProduct = ({
                       </div>
                     )}
                   </div>
+
+                  
+
                   {/* Status */}
                   {editingOption && editingOption && (
                     <div>
@@ -497,7 +618,7 @@ const CreateProduct = ({
                   {/* Short Description */}
                   <div className="md:col-span-2">
                     <label className="mb-2 block">
-                      Short Description<span className="text-red-500">*</span>
+                      Short Description
                     </label>
                     <textarea
                       rows={3}

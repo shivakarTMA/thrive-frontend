@@ -7,7 +7,7 @@ import Tooltip from "../common/Tooltip";
 import { LiaEdit } from "react-icons/lia";
 import { FaCircle } from "react-icons/fa6";
 import CreateClub from "./CreateOption";
-import { apiAxios } from "../../config/config";
+import { authAxios } from "../../config/config";
 import { IoSearchOutline } from "react-icons/io5";
 import Select from "react-select";
 import { customStyles } from "../../Helper/helper";
@@ -31,7 +31,7 @@ const OptionList = () => {
 
   const fetchOptions = async (search = "", currentPage = page) => {
     try {
-      const res = await apiAxios().get("/option-list/get", {
+      const res = await authAxios().get("/option-list/get", {
         params: {
           page: currentPage,
           limit: rowsPerPage,
@@ -57,7 +57,7 @@ const OptionList = () => {
 
   const fetchOptionTypes = async () => {
     try {
-      const res = await apiAxios().get("/option-list/type");
+      const res = await authAxios().get("/option-list/type");
       const types = res.data?.data || [];
 
       setOptionTypes(
@@ -111,10 +111,10 @@ const OptionList = () => {
         const payload = { ...values };
 
         if (editingOption && editingOption.id) {
-          await apiAxios().put(`/option-list/${editingOption.id}`, payload);
+          await authAxios().put(`/option-list/${editingOption.id}`, payload);
           toast.success("Updated Successfully");
         } else {
-          await apiAxios().post("/option-list/create", payload);
+          await authAxios().post("/option-list/create", payload);
           toast.success("Created Successfully");
         }
 

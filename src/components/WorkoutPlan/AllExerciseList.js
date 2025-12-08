@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { FiX } from "react-icons/fi";
 import Select from "react-select";
 import { customStyles } from "../../Helper/helper";
-import { apiAxios } from "../../config/config";
+import { authAxios } from "../../config/config";
 import { toast } from "react-toastify";
 
 const exerciseTypeOptions = [
@@ -33,7 +33,7 @@ const AllExerciseList = ({ isOpen, onClose, onSelectExercise }) => {
         params.append("category", selectedCategory.value);
 
       // Example: /exercise/list?search=press&category=Shoulders
-      const res = await apiAxios().get(`/exercise/list?${params.toString()}`);
+      const res = await authAxios().get(`/exercise/list?${params.toString()}`);
 
       const data = res.data?.data || [];
       setExercisesList(data);

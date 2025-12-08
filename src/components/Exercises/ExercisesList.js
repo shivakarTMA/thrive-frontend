@@ -8,7 +8,7 @@ import Tooltip from "../common/Tooltip";
 import ConfirmPopup from "../common/ConfirmPopup";
 import Select from "react-select";
 import { customStyles } from "../../Helper/helper";
-import { apiAxios } from "../../config/config";
+import { authAxios } from "../../config/config";
 import Pagination from "../common/Pagination";
 
 const exerciseTypeOptions = [
@@ -57,7 +57,7 @@ const ExercisesList = () => {
         params.append("category", selectedCategory.value);
 
       // Example: /exercise/list?search=press&category=Shoulders
-      const res = await apiAxios().get(`/exercise/list?${params.toString()}`);
+      const res = await authAxios().get(`/exercise/list?${params.toString()}`);
 
       const data = res.data?.data || [];
       setExercisesList(data);
@@ -85,7 +85,7 @@ const ExercisesList = () => {
   const handleConfirmDelete = async () => {
     if (exerciseToDelete) {
       try {
-        await apiAxios().delete(`/exercise/${exerciseToDelete.id}`);
+        await authAxios().delete(`/exercise/${exerciseToDelete.id}`);
         const updatedExercises = exerciseList.filter(
           (ex) => ex.id !== exerciseToDelete.id
         );

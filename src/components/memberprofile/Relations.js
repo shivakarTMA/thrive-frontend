@@ -11,7 +11,7 @@ import { formatAutoDate, selectIcon } from "../../Helper/helper";
 import { FaEnvelope, FaUser } from "react-icons/fa";
 import { MdOutlineFamilyRestroom } from "react-icons/md";
 import { FiPlus } from "react-icons/fi";
-import { apiAxios, authAxios } from "../../config/config";
+import { authAxios } from "../../config/config";
 import { toast } from "react-toastify";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchOptionList } from "../../Redux/Reducers/optionListSlice";
@@ -43,7 +43,7 @@ const Relations = ({ details }) => {
   const fetchMemberReferrals = async () => {
     try {
       // Make the API call with query parameters
-      const res = await apiAxios().get(`/member/referral/list/${details?.id}`);
+      const res = await authAxios().get(`/member/referral/list/${details?.id}`);
       const data = res.data?.data || [];
       setReferredBy(data);
     } catch (err) {

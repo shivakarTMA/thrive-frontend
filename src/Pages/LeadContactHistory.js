@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import { formatAutoDate, formatDateTimeLead } from "../Helper/helper";
 
 export default function LeadContactHistory({ handleEditLog, filteredData }) {
-  console.log(filteredData, "filteredData");
   const [isExpanded, setIsExpanded] = useState(false);
 
   const toggleRemarks = () => {
@@ -12,7 +11,7 @@ export default function LeadContactHistory({ handleEditLog, filteredData }) {
   return (
     <div className="bg-white shadow-md rounded-2xl w-full border border-[#D4D4D4] overflow-hidden mb-4">
       {/* Header with call type and created date */}
-      <div className="flex justify-between items-center border-b pb-2 mb-3 p-4 bg-[#F1F1F1]">
+      <div className="flex justify-between items-center border-b pb-2 p-4 bg-[#F1F1F1]">
         <h2 className="text-lg font-semibold">{filteredData?.call_status}</h2>
         <span className="text-gray-500 text-sm">
           Created on: {formatDateTimeLead(filteredData?.createdAt)}
@@ -20,6 +19,9 @@ export default function LeadContactHistory({ handleEditLog, filteredData }) {
       </div>
 
       <div className="p-4">
+        <p className="text-sm flex gap-2 mb-3">
+          Created by: {filteredData?.created_by_name}
+        </p>
         <div className="grid grid-cols-2 gap-2 mb-2">
           {/* Left side details */}
 
@@ -27,9 +29,9 @@ export default function LeadContactHistory({ handleEditLog, filteredData }) {
             <span>Scheduled By:</span> {filteredData?.scheduled_by}
           </p>
 
-          {filteredData?.training_by && (
+          {filteredData?.training_by_name && (
             <p className="text-sm flex gap-2">
-              <span>Scheduled For:</span> {filteredData?.training_by}
+              <span>Scheduled For:</span> {filteredData?.training_by_name}
             </p>
           )}
           {filteredData?.trial_tour_datetime && (
@@ -40,7 +42,7 @@ export default function LeadContactHistory({ handleEditLog, filteredData }) {
           )}
 
           {filteredData?.follow_up_datetime &&
-          filteredData?.schedule_for ? null : (
+          filteredData?.schedule_for_name ? null : (
             <>
               {filteredData?.follow_up_datetime && (
                 <p className="text-sm flex gap-2">
@@ -66,14 +68,14 @@ export default function LeadContactHistory({ handleEditLog, filteredData }) {
 
           {/* Right side details */}
 
-          {filteredData?.amount && (
+          {filteredData?.call_status === "Won" && filteredData?.amount && (
             <p className="text-sm flex gap-2">
               <span>Amount:</span> ₹{filteredData?.amount}
             </p>
           )}
         </div>
 
-        {filteredData?.follow_up_datetime && filteredData?.schedule_for && (
+        {filteredData?.follow_up_datetime && filteredData?.schedule_for_name && (
           <div className="border-t p-2 border border-[#D4D4D4] rounded-[5px] bg-[#fff]">
             <div className="flex gap-3 justify-between pb-2 border-b border-b-[#D4D4D4] mb-2">
             <strong className="block ">Schedule Follow UP:</strong>
@@ -85,9 +87,9 @@ export default function LeadContactHistory({ handleEditLog, filteredData }) {
                   {formatDateTimeLead(filteredData?.follow_up_datetime)}
                 </p>
               )}
-              {filteredData?.schedule_for && (
+              {filteredData?.schedule_for_name && (
                 <p className="text-sm flex gap-2">
-                  <span>Schedule For :</span> {filteredData?.schedule_for}
+                  <span>Follow UP For :</span> {filteredData?.schedule_for_name}
                 </p>
               )}
             </div>
@@ -120,12 +122,12 @@ export default function LeadContactHistory({ handleEditLog, filteredData }) {
         </div>
         <div className="flex gap-2 items-center justify-between mt-2 w-full">
           {/* Update button */}
-          {/* <button
+          <button
             className="mt-3 bg-black text-white py-1 px-4 rounded-[5px] hover:bg-gray-800"
             onClick={() => handleEditLog(filteredData)}
           >
             Update
-          </button> */}
+          </button>
 
           {filteredData?.updatedAt && (
             <p className="text-sm text-[#6F6F6F] flex gap-2 text-right w-full justify-end">

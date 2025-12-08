@@ -26,7 +26,7 @@ import { PiGenderIntersexBold } from "react-icons/pi";
 const genderOptions = [
   { value: "MALE", label: "Male" },
   { value: "FEMALE", label: "Female" },
-  { value: "NOTDISCLOSE", label: "Not to Disclose" },
+  { value: "NOTDISCLOSE", label: "Prefer Not To Say" },
 ];
 
 const validationSchema = Yup.object({

@@ -6,7 +6,7 @@ import { customStyles, formatAutoDate } from "../../Helper/helper";
 import { FiPlus } from "react-icons/fi";
 import CreateAppointment from "../Appointment/CreateAppointment";
 import { toast } from "react-toastify";
-import { apiAxios } from "../../config/config";
+import { authAxios } from "../../config/config";
 
 const Appointments = ({ details }) => {
   const [appointmentTypeFilter, setAppointmentTypeFilter] = useState({
@@ -20,7 +20,7 @@ const Appointments = ({ details }) => {
 
   const fetchAppointmentsList = async (search = "") => {
     try {
-      const res = await apiAxios().get(`/appointment/list/${details?.id}`);
+      const res = await authAxios().get(`/appointment/list/${details?.id}`);
       let data = res.data?.data || res?.data || [];
 
       setAppointmentList(data);
@@ -168,7 +168,7 @@ const Appointments = ({ details }) => {
       {appointmentModal && (
         <CreateAppointment
           setAppointmentModal={setAppointmentModal}
-          memberID={details}
+          memberID={details?.id}
         />
       )}
     </div>

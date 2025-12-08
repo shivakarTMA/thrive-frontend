@@ -1,12 +1,12 @@
 import React, { useEffect } from "react";
 import { IoCloseCircle, IoLocationOutline } from "react-icons/io5";
-import { FaEnvelope, FaListCheck, FaRegBuilding } from "react-icons/fa6";
+import { FaEnvelope, FaListCheck, FaListUl, FaRegBuilding } from "react-icons/fa6";
 import { GrDocument } from "react-icons/gr";
 import { LuPlug } from "react-icons/lu";
 import Select from "react-select";
 import { multiRowStyles, selectIcon } from "../../Helper/helper";
 import PhoneInput from "react-phone-number-input";
-import { apiAxios } from "../../config/config";
+import { authAxios } from "../../config/config";
 import { toast } from "react-toastify";
 import CreatableSelect from "react-select/creatable";
 import DatePicker from "react-datepicker";
@@ -22,13 +22,6 @@ const CreateClub = ({
   handlePhoneChange,
   indianStates,
 }) => {
-  // ✅ Fetch club details when selectedId changes
-  const MIN_TIME = new Date();
-  MIN_TIME.setHours(6, 0, 0);
-
-  const MAX_TIME = new Date();
-  MAX_TIME.setHours(22, 0, 0);
-
   // Remove leading/trailing double quotes, single quotes and whitespace
   const sanitizeServiceString = (s) => {
     if (typeof s !== "string") return s;
@@ -101,12 +94,23 @@ const CreateClub = ({
     return [];
   };
 
+  const parseTimeStringToDate = (timeStr) => {
+  if (!timeStr) return null;
+  const [hours, minutes] = timeStr.split(":");
+  const date = new Date();
+  date.setHours(Number(hours));
+  date.setMinutes(Number(minutes));
+  date.setSeconds(0);
+  date.setMilliseconds(0);
+  return date;
+};
+
   useEffect(() => {
     if (!editingClub) return;
 
     const fetchCompanyById = async (id) => {
       try {
-        const res = await apiAxios().get(`/club/${id}`);
+        const res = await authAxios().get(`/club/${id}`);
         const data = res.data?.data || res.data || null;
 
         console.log(data, "SHIVAKAR");
@@ -130,15 +134,12 @@ const CreateClub = ({
             country: data?.country || "",
             zipcode: data?.zipcode || "",
             status: data?.status || "",
+            position: data?.position || "",
             club_available_service: normalizedServices,
             description: data?.description || "",
             map_url: data?.map_url || "",
-            open_time: data.open_time
-              ? new Date(`2024-01-01 ${data.open_time}`)
-              : null,
-            close_time: data.close_time
-              ? new Date(`2024-01-01 ${data.close_time}`)
-              : null,
+            open_time: parseTimeStringToDate(data?.open_time),
+            close_time: parseTimeStringToDate(data?.close_time),
             trial_duration: data?.trial_duration || "",
           });
         }
@@ -477,9 +478,9 @@ const CreateClub = ({
                         }
                         showTimeSelect
                         showTimeSelectOnly
-                        dateFormat="h:mm aa"
-                        timeIntervals={15}
-                        injectTimes={allowedTimes}
+                        dateFormat="hh:mm aa"
+                        timeFormat="hh:mm aa"
+                        timeIntervals={30}
                         className="custom--input w-full input--icon"
                         placeholderText="Select Open Time"
                       />
@@ -507,11 +508,11 @@ const CreateClub = ({
                         }
                         showTimeSelect
                         showTimeSelectOnly
-                        dateFormat="h:mm aa"
-                        timeIntervals={15}
-                        injectTimes={allowedTimes}
+                        dateFormat="hh:mm aa"
+                        timeFormat="hh:mm aa"
+                        timeIntervals={30}
                         className="custom--input w-full input--icon"
-                        placeholderText="Select Close Time"
+                        placeholderText="Select Open Time"
                       />
                     </div>
                     {formik.touched.close_time && formik.errors.close_time && (
@@ -594,6 +595,30 @@ const CreateClub = ({
                     {formik.touched.status && formik.errors.status && (
                       <p className="text-red-500 text-sm mt-1">
                         {formik.errors.status}
+                      </p>
+                    )}
+                  </div>
+                  {/* Position */}
+                  <div>
+                    <label className="mb-2 block">
+                      Position<span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <span className="absolute top-[50%] translate-y-[-50%] left-[15px]">
+                        <FaListUl />
+                      </span>
+                      <input
+                        type="text"
+                        name="position"
+                        value={formik.values.position}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        className="custom--input w-full input--icon"
+                      />
+                    </div>
+                    {formik.touched.position && formik.errors.position && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {formik.errors.position}
                       </p>
                     )}
                   </div>

@@ -21,7 +21,7 @@ import quickLinksImg from "../../assets/images/quicklinks.svg";
 import notificationBell from "../../assets/images/bellnotification.svg";
 import CreateMemberForm from "../../Pages/CreateMemberForm";
 import { useDropzone } from "react-dropzone";
-import { apiAxios } from "../../config/config";
+import { authAxios } from "../../config/config";
 
 const Topbar = ({ setToggleMenuBar, toggleMenuBar }) => {
   const dispatch = useDispatch();
@@ -62,7 +62,7 @@ const Topbar = ({ setToggleMenuBar, toggleMenuBar }) => {
 
   const fetchSearchResults = async (searchTerm) => {
     try {
-      const res = await apiAxios().get(
+      const res = await authAxios().get(
         `/member/lead/list?search=${searchTerm}`
       );
       const response = res.data;

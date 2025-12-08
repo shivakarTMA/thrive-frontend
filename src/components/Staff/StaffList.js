@@ -1,166 +1,300 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
 import { FiPlus } from "react-icons/fi";
-import { FaAngleLeft, FaAngleRight } from "react-icons/fa";
 import { toast } from "react-toastify";
 import { LiaEdit } from "react-icons/lia";
 import Tooltip from "../common/Tooltip";
 import Select from "react-select";
-import { customStyles } from "../../Helper/helper";
+import { customStyles, formatText } from "../../Helper/helper";
 import CreateStaff from "./CreateStaff";
-import Switch from "react-switch";
-import { apiAxios } from "../../config/config";
+import { authAxios } from "../../config/config";
+import Pagination from "../common/Pagination";
+import { useFormik } from "formik";
+import * as Yup from "yup";
+import {
+  parsePhoneNumberFromString,
+  isPossiblePhoneNumber,
+} from "libphonenumber-js";
+import { FaCircle } from "react-icons/fa6";
+import { useSelector } from "react-redux";
 
-const roleTypeOptions = [
-  { value: "admin", label: "Admin" },
-  { value: "manager", label: "Manager" },
-  { value: "foh", label: "FOH" },
-  { value: "pt", label: "PT" },
-  { value: "gt", label: "GT" },
-  { value: "nutritionist", label: "Nutritionist" },
-  { value: "spa", label: "Spa" },
-  { value: "salon", label: "Salon" },
-  { value: "housekeeping", label: "Housekeeping" },
-  { value: "others", label: "Others" },
-];
-
-const centerOptions = [
-  { value: "center1", label: "Center 1" },
-  { value: "center2", label: "Center 2" },
-  { value: "center3", label: "Center 3" },
-];
-
-const appStatusOptions = [
-  { value: "active", label: "Active" },
-  { value: "inactive", label: "Inactive" },
-];
-const listingStatusOptions = [
-  { value: "active", label: "Active" },
-  { value: "inactive", label: "Inactive" },
-];
+// Roles for ADMIN
+export const roleOptionsByUser = {
+  ADMIN: [
+    { value: "ADMIN", label: "Admin" },
+    { value: "FOH", label: "FOH (Front of House)" },
+    { value: "TRAINER", label: "Trainer" },
+    { value: "CLUB_MANAGER", label: "Club Manager" },
+    { value: "FITNESS_MANAGER", label: "Fitness Manager" },
+    { value: "FINANCE_MANAGER", label: "Finance Manager" },
+    { value: "MARKETING_MANAGER", label: "Marketing Manager" },
+    { value: "GENERAL_MANAGER", label: "General Manager" },
+  ],
+  CLUB_MANAGER: [
+    { value: "FOH", label: "FOH (Front of House)" },
+    { value: "TRAINER", label: "Trainer" },
+    { value: "FITNESS_MANAGER", label: "Fitness Manager" },
+  ],
+  GENERAL_MANAGER: [
+    { value: "FOH", label: "FOH (Front of House)" },
+    { value: "TRAINER", label: "Trainer" },
+    { value: "CLUB_MANAGER", label: "Club Manager" },
+    { value: "FITNESS_MANAGER", label: "Fitness Manager" },
+    { value: "FINANCE_MANAGER", label: "Finance Manager" },
+    { value: "MARKETING_MANAGER", label: "Marketing Manager" },
+    { value: "GENERAL_MANAGER", label: "General Manager" },
+  ],
+};
 
 const StaffList = () => {
   const [showModal, setShowModal] = useState(false);
-  const [submittedServices, setSubmittedServices] = useState([]);
-  const [editingService, setEditingService] = useState(null);
+  const [staffList, setStaffList] = useState([]);
+  const [clubList, setClubList] = useState([]);
+  const [clubFilter, setClubFilter] = useState(null);
+  const [roleFilter, setRoleFilter] = useState(null);
+  const [statusFilter, setStatusFilter] = useState(null);
+  const [editingOption, setEditingOption] = useState(null);
+  const { user } = useSelector((state) => state.auth);
+  const currentUserRole = user.role; // Example, dynamically from user info
+  const roleOptions = roleOptionsByUser[currentUserRole] || [];
 
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedServiceType, setSelectedServiceType] = useState(null);
-  const [selectedCentre, setSelectedCentre] = useState(null);
-  const [selectedStaffStatus, setSelectedStaffStatus] = useState(null);
-  const [selectedAppStatus, setSelectedAppStatus] = useState(null);
 
   const [page, setPage] = useState(1);
-  const rowsPerPage = 5;
+  const [rowsPerPage] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
 
   // 🚀 Fetch staff list from API
-  useEffect(() => {
-    const fetchStaff = async () => {
-      try {
-        const response = await apiAxios().get("/staff/list");
-        if (response.data?.status) {
-          const staffList = response.data.data.map((staff) => ({
-            id: staff.id,
-            fullName: staff.name,
-            email: staff.email,
-            role: staff.designation || "N/A",
-            assignedCenters: ["Center 1"], // dummy data until API provides
-            status: "active", // default until API provides
-            showOnApp: "inactive", // default until API provides
-          }));
-          setSubmittedServices(staffList);
-        }
-      } catch (error) {
-        console.error("Error fetching staff:", error);
-        toast.error("Failed to fetch staff");
+  const fetchStaff = async (search = "", currentPage = page) => {
+    try {
+      const res = await authAxios().get("/staff/list", {
+        params: {
+          page: currentPage,
+          limit: rowsPerPage,
+          ...(search ? { search } : {}),
+        },
+      });
+
+      let data = res.data?.data || [];
+      if (statusFilter?.value) {
+        data = data.filter((item) => item.status === statusFilter.value);
       }
-    };
+      if (clubFilter) {
+        data = data.filter((item) => item.club_id === clubFilter);
+      }
+      if (roleFilter) {
+        data = data.filter((item) => item.role === roleFilter);
+      }
+
+      setStaffList(data);
+      setPage(res.data?.currentPage || 1);
+      setTotalPages(res.data?.totalPage || 1);
+      setTotalCount(res.data?.totalCount || data.length);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to fetch staff");
+    }
+  };
+
+  // Function to fetch club list
+  const fetchClub = async (search = "") => {
+    try {
+      const response = await authAxios().get("/club/list", {
+        params: search ? { search } : {},
+      });
+      const data = response.data?.data || [];
+      setClubList(data);
+    } catch (error) {
+      toast.error("Failed to fetch clubs");
+    }
+  };
+  // Function to fetch role list
+
+  useEffect(() => {
     fetchStaff();
+    fetchClub();
   }, []);
 
-  // Reset page when filters change
+  const clubOptions = clubList.map((item) => ({
+    label: item.name,
+    value: item.id,
+  }));
+
   useEffect(() => {
-    setPage(1);
-  }, [searchTerm, selectedServiceType, submittedServices]);
+    const delayDebounce = setTimeout(() => {
+      fetchStaff(searchTerm);
+      setPage(1);
+    }, 300);
 
-  // Filtered + paginated data
-  const filteredData = submittedServices.filter((staff) => {
-    const lowerSearchTerm = searchTerm.toLowerCase();
+    return () => clearTimeout(delayDebounce);
+  }, [searchTerm, statusFilter, clubFilter, roleFilter]);
 
-    const matchesSearch =
-      staff.fullName.toLowerCase().includes(lowerSearchTerm) ||
-      staff.email?.toLowerCase().includes(lowerSearchTerm);
+  const validationSchema = Yup.object({
+    name: Yup.string().required("Full Name is required"),
+    email: Yup.string().email("Invalid email").required("Email is required"),
+    mobile: Yup.string()
+      .required("Contact number is required")
+      .test("is-valid-phone", "Invalid phone number", function (value) {
+        const { country_code } = this.parent;
+        if (!value || !country_code) return false;
 
-    const matchesType = selectedServiceType
-      ? staff.role === selectedServiceType.value
-      : true;
+        // Combine country code and number to full international format
+        const phoneNumberString = `+${country_code}${value}`;
 
-    const matchesCentre = selectedCentre
-      ? staff.assignedCenters?.includes(selectedCentre.value)
-      : true;
+        // First check if the number is even possible (not just valid)
+        if (!isPossiblePhoneNumber(phoneNumberString)) return false;
 
-    const matchesStatus = selectedStaffStatus
-      ? staff.status === selectedStaffStatus.value
-      : true;
+        // Parse and check validity strictly according to country
+        const phoneNumber = parsePhoneNumberFromString(phoneNumberString);
+        return phoneNumber?.isValid() || false;
+      }),
+    gender: Yup.string().required("Gender is required"),
+    experience: Yup.string().required("Experience is required"),
+    role: Yup.string().required("Role is required"),
+    club_id: Yup.array()
+      .min(1, "Please select at least one club")
+      .required("Club selection is required"),
+    profile_image: Yup.mixed().when("show_on_app", {
+      is: true,
+      then: () =>
+        Yup.mixed()
+          .required("Profile image is required")
+          .test("fileOrUrl", "Only image files are allowed", (value) => {
+            if (!value) return false;
 
-    const matchesShowOnApp = selectedAppStatus
-      ? staff.showOnApp === selectedAppStatus.value
-      : true;
+            // Case 1: Existing URL (editing mode)
+            if (typeof value === "string") return true;
 
-    return (
-      matchesSearch &&
-      matchesType &&
-      matchesCentre &&
-      matchesStatus &&
-      matchesShowOnApp
-    );
+            // Case 2: New uploaded file
+            return value.type && value.type.startsWith("image/");
+          }),
+      otherwise: () =>
+        Yup.mixed().test(
+          "fileOrUrl",
+          "Only image files are allowed",
+          (value) => {
+            if (!value) return true; // Not required if show_on_app = false
+
+            // Accept string URL
+            if (typeof value === "string") return true;
+
+            // Accept File image
+            return value.type && value.type.startsWith("image/");
+          }
+        ),
+    }),
+
+    description: Yup.string().when("show_on_app", {
+      is: true,
+      then: () => Yup.string().required("Long Description is required"),
+    }),
+    tags: Yup.string().when("show_on_app", {
+      is: true,
+      then: () => Yup.string().required("Tags are required"),
+    }),
+    content: Yup.array()
+      .of(
+        Yup.object({
+          title: Yup.string().required("Title is required"),
+          description: Yup.string().required("Description is required"),
+        })
+      )
+      .min(1, "At least one content item is required"),
   });
 
-  const totalPages = Math.ceil(filteredData.length / rowsPerPage);
-  const paginatedData = filteredData.slice(
-    (page - 1) * rowsPerPage,
-    page * rowsPerPage
-  );
-
-  // Add / Update staff locally (replace with POST/PUT API when available)
-  const handleStaffCreated = (item) => {
-    if (editingService) {
-      setSubmittedServices((prev) =>
-        prev.map((p) =>
-          p.id === item.id ? { ...p, ...item } : p
-        )
-      );
-      toast.success("Staff updated successfully!");
-    } else {
-      const newProduct = { id: Date.now(), ...item };
-      setSubmittedServices((prev) => [...prev, newProduct]);
-      toast.success("Staff added successfully!");
-    }
-    setShowModal(false);
-    setEditingService(null);
+  const initialValues = {
+    name: "",
+    phoneFull: "",
+    mobile: "",
+    experience: "",
+    country_code: "",
+    email: "",
+    gender: "",
+    date_of_birth: null,
+    role: "",
+    bio_pic: "",
+    description: "",
+    club_id: [],
+    status: "ACTIVE",
+    show_on_app: false,
+    tags: "",
+    profile_image: null,
+    content: [
+      {
+        title: "",
+        description: "",
+      },
+    ],
   };
 
-  // Toggle staff status / showOnApp
-  const handleStatusToggle = (productId, key) => {
-    let newStatus = "";
+  const formik = useFormik({
+    initialValues,
+    validationSchema,
+    onSubmit: async (values, { resetForm }) => {
+      try {
+        const formData = new FormData();
 
-    setSubmittedServices((prev) =>
-      prev.map((item) => {
-        if (item.id === productId) {
-          const currentStatus = item[key] || "inactive";
-          newStatus = currentStatus === "active" ? "inactive" : "active";
-          return { ...item, [key]: newStatus };
+        // --- Basic fields ---
+        formData.append("name", values.name);
+        formData.append("email", values.email);
+        formData.append("gender", values.gender);
+        formData.append("date_of_birth", values.date_of_birth);
+        formData.append("role", values.role);
+        formData.append("description", values.description);
+        // formData.append("club_id", values.club_id);
+        formData.append("status", values.status);
+        formData.append("show_on_app", values.show_on_app);
+        formData.append("experience", values.experience);
+        formData.append("tags", values.tags);
+        //   // --- Club IDs ---
+        if (values.club_id?.length > 0) {
+          formData.append("club_id", JSON.stringify(values.club_id));
         }
-        return item;
-      })
-    );
 
-    toast.success(
-      `${
-        key === "status" ? "Staff status" : "Show on App"
-      } marked as ${newStatus}`
-    );
-  };
+        // --- Content ---
+        if (values.content?.length > 0) {
+          formData.append("content", JSON.stringify(values.content));
+        }
+
+        // --- International phone parsing ---
+        if (values.phoneFull) {
+          const phoneNumber = parsePhoneNumberFromString(values.phoneFull);
+          if (phoneNumber) {
+            formData.append("country_code", phoneNumber.countryCallingCode);
+            formData.append("mobile", phoneNumber.nationalNumber);
+          }
+        }
+
+        // --- Image file ---
+        if (values.profile_image instanceof File) {
+          formData.append("profile_image", values.profile_image);
+        }
+
+        // --- API call ---
+        if (editingOption) {
+          await authAxios().put(`/staff/${editingOption}`, formData, {
+            headers: { "Content-Type": "multipart/form-data" },
+          });
+          toast.success("Updated Successfully");
+        } else {
+          await authAxios().post(`/staff/create`, formData, {
+            headers: { "Content-Type": "multipart/form-data" },
+          });
+          toast.success("Created Successfully");
+        }
+
+        setShowModal(false);
+        fetchStaff();
+        resetForm();
+        setEditingOption(null);
+      } catch (err) {
+        console.error("API Error:", err.response?.data || err.message);
+        toast.error(err.response?.data?.message);
+      }
+    },
+  });
+
+  console.log(staffList, "staffList");
 
   return (
     <div className="page--content">
@@ -173,7 +307,8 @@ const StaffList = () => {
           type="button"
           className="px-4 py-2 bg-black text-white rounded flex items-center gap-2"
           onClick={() => {
-            setEditingService(null);
+            setEditingOption(null);
+            formik.resetForm();
             setShowModal(true);
           }}
         >
@@ -187,49 +322,42 @@ const StaffList = () => {
           type="text"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          placeholder="Search by Name or Email"
+          placeholder="Search by name or mobile"
           className="custom--input w-full max-w-[210px]"
         />
-
-        <Select
-          options={roleTypeOptions}
-          value={selectedServiceType}
-          onChange={setSelectedServiceType}
-          isClearable
-          placeholder="Staff Role"
-          styles={customStyles}
-          className="min-w-[150px]"
-        />
-
-        <Select
-          options={centerOptions}
-          value={selectedCentre}
-          onChange={setSelectedCentre}
-          isClearable
-          placeholder="Assigned Center"
-          styles={customStyles}
-          className="min-w-[150px]"
-        />
-
-        <Select
-          options={appStatusOptions}
-          value={selectedAppStatus}
-          onChange={setSelectedAppStatus}
-          isClearable
-          placeholder="App Visibility"
-          styles={customStyles}
-          className="min-w-[150px]"
-        />
-
-        <Select
-          options={listingStatusOptions}
-          value={selectedStaffStatus}
-          onChange={setSelectedStaffStatus}
-          isClearable
-          placeholder="Staff Status"
-          styles={customStyles}
-          className="min-w-[150px]"
-        />
+        <div className="w-full max-w-[200px]">
+          <Select
+            placeholder="Filter by status"
+            options={[
+              { label: "Active", value: "ACTIVE" },
+              { label: "Inactive", value: "INACTIVE" },
+            ]}
+            value={statusFilter}
+            onChange={(option) => setStatusFilter(option)}
+            isClearable
+            styles={customStyles}
+          />
+        </div>
+        <div className="w-full max-w-[200px]">
+          <Select
+            placeholder="Filter by club"
+            alue={clubOptions.find((o) => o.value === clubFilter) || null}
+            options={clubOptions}
+            onChange={(option) => setClubFilter(option?.value)}
+            isClearable
+            styles={customStyles}
+          />
+        </div>
+        <div className="w-full max-w-[200px]">
+          <Select
+            placeholder="Filter by role"
+            alue={roleOptions.find((o) => o.value === roleFilter) || null}
+            options={roleOptions}
+            onChange={(option) => setRoleFilter(option?.value)}
+            isClearable
+            styles={customStyles}
+          />
+        </div>
       </div>
 
       {/* Table */}
@@ -238,122 +366,113 @@ const StaffList = () => {
           <table className="w-full text-sm text-left text-gray-500">
             <thead className="text-xs text-gray-700 uppercase bg-gray-50">
               <tr>
-                <th className="px-2 py-4">Staff ID</th>
                 <th className="px-2 py-4">Staff Name</th>
                 <th className="px-2 py-4">Role</th>
-                <th className="px-2 py-4">Assigned Center</th>
-                <th className="px-2 py-4">Staff Status</th>
+                <th className="px-2 py-4">Club</th>
+                <th className="px-2 py-4">Status</th>
                 <th className="px-2 py-4">Show on App</th>
                 <th className="px-2 py-4">Action</th>
               </tr>
             </thead>
             <tbody>
-              {paginatedData.map((row, idx) => (
-                <tr
-                  key={row.id}
-                  className="group bg-white border-b hover:bg-gray-50 transition duration-700"
-                >
-                  <td className="px-2 py-4">
-                    {(page - 1) * rowsPerPage + idx + 1}
-                  </td>
-                  <td className="px-2 py-4">{row.fullName}</td>
-                  <td className="px-2 py-4">{row.role}</td>
-                  <td className="px-2 py-4">
-                    {row.assignedCenters?.join(", ") || "N/A"}
-                  </td>
-                  <td className="px-2 py-4">
-                    <Switch
-                      onChange={() => handleStatusToggle(row.id, "status")}
-                      checked={row.status === "active"}
-                      uncheckedIcon={false}
-                      checkedIcon={false}
-                      onColor="#000"
-                      offColor="#e5e7eb"
-                      handleDiameter={22}
-                      height={25}
-                      width={50}
-                      className="custom-switch"
-                    />
-                  </td>
-                  <td className="px-2 py-4">
-                    <span
-                      className={`px-3 py-1 rounded-full text-sm font-medium ${
-                        row.showOnApp === "active"
-                          ? "bg-green-100 text-green-800"
-                          : "bg-red-100 text-red-800"
-                      }`}
-                    >
-                      {row.showOnApp === "active" ? "Active" : "Inactive"}
-                    </span>
-                  </td>
-
-                  <td className="px-2 py-4">
-                    <Tooltip
-                      id={`edit-product-${row.id}`}
-                      content="Edit Product"
-                      place="left"
-                    >
-                      <div
-                        onClick={() => {
-                          setEditingService(row);
-                          setShowModal(true);
-                        }}
-                        className="p-1 cursor-pointer"
-                      >
-                        <LiaEdit className="text-[25px] text-black" />
-                      </div>
-                    </Tooltip>
+              {staffList.length === 0 ? (
+                <tr>
+                  <td colSpan="6" className="text-center py-4">
+                    No club added yet.
                   </td>
                 </tr>
-              ))}
+              ) : (
+                staffList.map((row, idx) => (
+                  <tr
+                    key={row?.id}
+                    className="group bg-white border-b hover:bg-gray-50 transition duration-700"
+                  >
+                    <td className="px-2 py-4">{row?.name}</td>
+                    <td className="px-2 py-4">{formatText(row?.role)}</td>
+                    <td className="px-2 py-4">
+                      <div className="max-w-[200px]">
+                        {row?.staff_clubs?.length > 0 ? (
+                          <p>
+                            {row.staff_clubs
+                              .map((club) => club.club_name)
+                              .join(", ")}
+                          </p>
+                        ) : (
+                          <p>No clubs found</p>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-2 py-4">
+                      <div
+                        className={`flex gap-1 items-center ${
+                          row?.status === "ACTIVE"
+                            ? "text-green-500"
+                            : "text-red-500"
+                        }`}
+                      >
+                        <FaCircle />
+                        {row?.status
+                          ? row.status.charAt(0) +
+                            row.status.slice(1).toLowerCase()
+                          : ""}
+                      </div>
+                    </td>
+                    <td className="px-2 py-4">
+                      <span
+                        className={`px-3 py-1 rounded-full text-sm font-medium ${
+                          row?.show_on_app === true
+                            ? "bg-green-100 text-green-800"
+                            : "bg-red-100 text-red-800"
+                        }`}
+                      >
+                        {row?.show_on_app === true ? "Active" : "Inactive"}
+                      </span>
+                    </td>
+
+                    <td className="px-2 py-4">
+                      <Tooltip
+                        id={`edit-product-${row?.id}`}
+                        content="Edit Product"
+                        place="left"
+                      >
+                        <div
+                          onClick={() => {
+                            setEditingOption(row?.id);
+                            setShowModal(true);
+                          }}
+                          className="p-1 cursor-pointer"
+                        >
+                          <LiaEdit className="text-[25px] text-black" />
+                        </div>
+                      </Tooltip>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
       </div>
       {/* Pagination */}
-      <div className="flex justify-between items-center mt-4 gap-2">
-        <p className="text-gray-700">
-          Showing {filteredData.length === 0 ? 0 : (page - 1) * rowsPerPage + 1}{" "}
-          to {Math.min(page * rowsPerPage, filteredData.length)} of{" "}
-          {filteredData.length} entries
-        </p>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
-            disabled={page === 1}
-            className="px-3 py-2 border rounded disabled:opacity-50"
-          >
-            <FaAngleLeft />
-          </button>
-          <div className="flex gap-2">
-            {Array.from({ length: totalPages }).map((_, i) => (
-              <button
-                key={i}
-                onClick={() => setPage(i + 1)}
-                className={`px-3 py-1 border rounded ${
-                  page === i + 1 ? "bg-gray-200" : ""
-                }`}
-              >
-                {i + 1}
-              </button>
-            ))}
-          </div>
-          <button
-            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-            disabled={page === totalPages}
-            className="px-3 py-2 border rounded disabled:opacity-50"
-          >
-            <FaAngleRight />
-          </button>
-        </div>
-      </div>
+      <Pagination
+        page={page}
+        totalPages={totalPages}
+        rowsPerPage={rowsPerPage}
+        totalCount={totalCount}
+        currentDataLength={staffList.length}
+        onPageChange={(newPage) => {
+          setPage(newPage);
+          fetchStaff(searchTerm, newPage);
+        }}
+      />
 
       {/* Modal */}
       {showModal && (
         <CreateStaff
           setShowModal={setShowModal}
-          onExerciseCreated={handleStaffCreated}
-          initialData={editingService}
+          formik={formik}
+          editingOption={editingOption}
+          roleOptionsByUser={roleOptionsByUser}
         />
       )}
     </div>

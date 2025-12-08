@@ -1,11 +1,18 @@
 export const multiRowStyles = {
-  valueContainer: (base) => ({
+  valueContainer: (base, state) => ({
     ...base,
     display: "flex",
-    flexWrap: "wrap",       // allow multiple rows
-    maxHeight: "40px",      // fixed height for scroll
-    overflowY: "auto",      // vertical scroll
+    flexWrap: "wrap", // allow multiple rows
+    maxHeight: "44px", // fixed height for scroll
+    overflowY: "auto", // vertical scroll
     overflowX: "hidden",
+    borderRadius: "5px",
+    paddingLeft: "3px",
+    borderColor: state.isFocused ? "black" : "#ccc",
+    boxShadow: state.isFocused ? "0 0 0 1px black" : "none",
+    "&:hover": {
+      borderColor: "black",
+    },
   }),
 
   multiValue: (base) => ({
@@ -18,9 +25,10 @@ export const multiRowStyles = {
     ...base,
     whiteSpace: "nowrap",
   }),
+  indicatorSeparator: () => ({
+    display: "none",
+  }),
 };
-
-
 
 export const customStyles = {
   control: (base, state) => ({
@@ -33,6 +41,8 @@ export const customStyles = {
     minHeight: "40px",
     borderRadius: "5px",
     paddingLeft: "3px",
+    backgroundColor: state.isDisabled ? "#f3f4f6" : "#fff", // Added disabled background
+    cursor: state.isDisabled ? "not-allowed" : "default", // Optional: change cursor
   }),
   multiValue: (base) => ({
     ...base,
@@ -77,6 +87,8 @@ export const dasboardStyles = {
     minHeight: "25px",
     borderRadius: "5px",
     paddingLeft: "3px",
+    backgroundColor: state.isDisabled ? "#f3f4f6" : "#fff", // Added disabled background
+    cursor: state.isDisabled ? "not-allowed" : "default", // Optional: change cursor
   }),
   multiValue: (base) => ({
     ...base,
@@ -118,9 +130,11 @@ export const selectIcon = {
     "&:hover": {
       borderColor: "black",
     },
-    minHeight: "45px",
-    borderRadius: "10px",
+    minHeight: "40px",
+    borderRadius: "5px",
     paddingLeft: "30px",
+    backgroundColor: state.isDisabled ? "#f3f4f6" : "#fff", // Added disabled background
+    cursor: state.isDisabled ? "not-allowed" : "default", // Optional: change cursor
   }),
   multiValue: (base) => ({
     ...base,
@@ -257,13 +271,13 @@ export const getCompanyIdByName = (companies, companyName) => {
 };
 
 export function formatText(status) {
-  if (!status) return '';
+  if (!status) return "";
 
   // Replace underscores with spaces, split into words
   return status
-    .split('_')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-    .join(' ');
+    .split("_")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(" ");
 }
 
 export const handleTextOnlyChange = (e, formik, fieldName) => {
@@ -272,4 +286,35 @@ export const handleTextOnlyChange = (e, formik, fieldName) => {
   if (regex.test(e.target.value)) {
     formik.setFieldValue(fieldName, e.target.value);
   }
+};
+
+export const buildFormData = (values) => {
+  const formData = new FormData();
+
+  Object.keys(values).forEach((key) => {
+    const value = values[key];
+
+    // Skip null or undefined
+    if (value === null || value === undefined) return;
+
+    // Skip image URL strings (only send file)
+    if (key === "image" && typeof value === "string") return;
+
+    // If it's a file, append directly
+    if (value instanceof File) {
+      formData.append("file", value);
+      return;
+    }
+
+    // If it's object/array (except File) → send JSON
+    if (typeof value === "object") {
+      formData.append(key, JSON.stringify(value));
+      return;
+    }
+
+    // Primitive values
+    formData.append(key, value);
+  });
+
+  return formData;
 };

@@ -5,8 +5,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import "react-phone-number-input/style.css";
 import PhoneInput, { isValidPhoneNumber } from "react-phone-number-input";
 import { parsePhoneNumberFromString } from "libphonenumber-js";
-import { companies, centreInfo } from "../DummyData/DummyData";
-import { selectIcon } from "../Helper/helper";
+import { formatText, selectIcon } from "../Helper/helper";
 import { IoBan, IoCloseCircle } from "react-icons/io5";
 import { PiGenderIntersex, PiGenderIntersexBold } from "react-icons/pi";
 import { useFormik } from "formik";
@@ -24,6 +23,7 @@ import {
   FaUserTie,
 } from "react-icons/fa";
 import {
+  FaCalendarDays,
   FaListCheck,
   FaLocationDot,
   FaRegImage,
@@ -36,10 +36,11 @@ import { RiDiscountPercentFill } from "react-icons/ri";
 import { IoIosTime } from "react-icons/io";
 import { LuIndianRupee } from "react-icons/lu";
 import { toast } from "react-toastify";
-import { apiAxios } from "../config/config";
+import { authAxios } from "../config/config";
 import { fetchOptionList } from "../Redux/Reducers/optionListSlice";
 import Webcam from "react-webcam";
 import { IoCheckmark, IoClose } from "react-icons/io5";
+import MultiSelect from "react-multi-select-component";
 
 const voucherList = [
   { code: "FIT10", discount: 10 },
@@ -50,7 +51,7 @@ const voucherList = [
 const genderOptions = [
   { value: "MALE", label: "Male" },
   { value: "FEMALE", label: "Female" },
-  { value: "NOTDISCLOSE", label: "Not to Disclose" },
+  { value: "NOTDISCLOSE", label: "Prefer Not To Say" },
 ];
 
 const stepValidationSchemas = [
@@ -100,11 +101,9 @@ const stepValidationSchemas = [
       .min(1, "At least one emergency contact is required"),
   }),
   Yup.object({
-    invoiceDetails: Yup.object({
-      invoiceDate: Yup.string().required("Invoice Date is required"),
-    }),
+    invoiceDate: Yup.string().required("Invoice Date is required"),
     productDetails: Yup.object({
-      productName: Yup.string().required("Product is required"),
+      title: Yup.string().required("Product is required"),
     }),
   }),
 ];
@@ -126,6 +125,7 @@ const ConvertMemberForm = ({
   const [voucherInput, setVoucherInput] = useState("");
   const [voucherStatus, setVoucherStatus] = useState(null); // "success", "error", or null
   const [selectedVoucher, setSelectedVoucher] = useState(null);
+  const [selected, setSelected] = useState([]);
 
   const leadBoxRef = useRef(null);
   const [duplicateError, setDuplicateError] = useState("");
@@ -168,7 +168,7 @@ const ConvertMemberForm = ({
     address: "",
     location: "",
     company_name: "",
-    interested_in: "",
+    interested_in: [],
     lead_source: "",
     lead_type: "",
     platform: "",
@@ -187,31 +187,31 @@ const ConvertMemberForm = ({
         relationship: "",
       },
     ],
-    membershipDetails: {
-      leadOwner: "Shivakar",
-      centre: "Gurugram",
-      state: "Haryana",
-      country: "India",
+    lead_owner: "",
+    club_data: {
+      name: "",
+      state: "",
+      country: "",
     },
-    invoiceDetails: {
-      invoiceDate: "",
-      leadOwner: "Shivakar",
-    },
-    productType: "membership plan",
+    invoiceDate: "",
+    productType: "MEMBERSHIP_PLAN",
     productDetails: {
-      productName: "",
-      servicesDuration: "",
-      shortDescription: "",
-      amount: "",
-      sessions: "",
+      title: "",
+      duration_value: 0,
+      amount: 0,
+      discount: 0,
+      total_amount: 0,
+      gst: 0,
+      gst_amount: 0,
+      final_amount: 0,
     },
     voucherCode: "",
     discount: 0,
   };
   const formik = useFormik({
     initialValues,
-    validationSchema: stepValidationSchemas[step],
-    enableReinitialize: true,
+    // validationSchema: stepValidationSchemas[step],
+    // enableReinitialize: true,
     onSubmit: async (values) => {
       if (step === stepValidationSchemas.length - 1) {
         try {
@@ -221,22 +221,22 @@ const ConvertMemberForm = ({
           });
 
           // If selectedLeadMember exists, update using PUT request
-          if (selectedLeadMember && selectedLeadMember.id) {
+          if (selectedLeadMember) {
             // ✅ Update existing member
-            const memberResponse = await apiAxios().put(
-              `/member/convert/lead/${selectedLeadMember.id}`,
+            const memberResponse = await authAxios().put(
+              `/member/convert/lead/${selectedLeadMember}`,
               formData,
               { headers: { "Content-Type": "multipart/form-data" } }
             );
 
             // ✅ Get member_id from response (or use selectedLeadMember.id if API doesn't return)
             const memberId =
-              memberResponse.data?.member_id || selectedLeadMember.id;
+              memberResponse.data?.member_id || selectedLeadMember;
 
             if (values.emergencyContacts?.length > 0) {
               for (const contact of values.emergencyContacts) {
                 if (contact.name && contact.phone) {
-                  await apiAxios().post("/member-emergency-contact/create", {
+                  await authAxios().post("/member-emergency-contact/create", {
                     member_id: memberId,
                     name: contact.name,
                     relationship: contact.relationship,
@@ -267,76 +267,83 @@ const ConvertMemberForm = ({
         setStep(step + 1);
       }
       setStep(step + 1);
-      console.log(values,'values')
+      console.log(values, "values");
     },
   });
 
+  // ✅ Fetch lead details when selectedId changes
   useEffect(() => {
-    if (selectedLeadMember) {
-      const dobIso = selectedLeadMember.date_of_birth
-        ? new Date(selectedLeadMember.date_of_birth).toISOString()
-        : "";
+    if (!selectedLeadMember) return;
 
-      const emergencyContacts =
-        selectedLeadMember.emergencyContacts &&
-        selectedLeadMember.emergencyContacts.length > 0
-          ? selectedLeadMember.emergencyContacts
-          : [
-              {
-                name: "",
-                phone: "",
-                relationship: "",
-              },
-            ];
+    const fetchLeadById = async (id) => {
+      try {
+        const res = await authAxios().get(`/lead/${id}`);
+        const data = res.data?.data || res.data || null;
 
-      formik.setValues({
-        id: selectedLeadMember.id || "",
-        profile_pic: selectedLeadMember.profile_pic || "",
-        full_name: selectedLeadMember.full_name || "",
-        mobile: selectedLeadMember.country_code
-          ? selectedLeadMember.mobile
-          : "",
-        country_code: selectedLeadMember.country_code || "",
-        phoneFull: selectedLeadMember.country_code
-          ? `+${selectedLeadMember.country_code}${selectedLeadMember.mobile}`
-          : "",
-        country_code: selectedLeadMember.country_code || "",
-        email: selectedLeadMember.email || "",
-        gender: selectedLeadMember.gender || "NOTDISCLOSE",
-        date_of_birth: dobIso,
-        address: selectedLeadMember.address || "",
-        location: selectedLeadMember.location || "",
-        company_name: selectedLeadMember.company_name || "",
-        interested_in: selectedLeadMember.interested_in || "",
-        lead_source: selectedLeadMember.lead_source || "",
-        lead_type: selectedLeadMember.lead_type || "",
-        platform: selectedLeadMember.platform || "",
-        schedule: selectedLeadMember.schedule || "",
-        schedule_date_time: selectedLeadMember.schedule_date_time
-          ? new Date(selectedLeadMember.schedule_date_time).toISOString()
-          : "",
-        staff_name: selectedLeadMember.staff_name || "",
-        emergencyContacts: emergencyContacts,
-        membershipDetails: {
-          leadOwner: "Shivakar",
-          centre: "Gurugram",
-          state: "Haryana",
-          country: "India",
-        },
-        invoiceDetails: {
-          invoiceDate: "",
-          leadOwner: "Shivakar",
-        },
-        productType: "membership plan",
-      });
-    }
+        console.log(data, "SHIVAKAR");
+
+        if (data) {
+          // ✅ Prefill formik fields with fetched data
+          const dobIso = data.date_of_birth
+            ? new Date(data.date_of_birth).toISOString()
+            : "";
+
+          const emergencyContacts =
+            data.emergencyContacts && data.emergencyContacts.length > 0
+              ? data.emergencyContacts
+              : [
+                  {
+                    name: "",
+                    phone: "",
+                    relationship: "",
+                  },
+                ];
+
+          formik.setValues({
+            id: data.id || "",
+            profile_pic: data.profile_pic || "",
+            full_name: data.full_name || "",
+            mobile: data.country_code ? data.mobile : "",
+            country_code: data.country_code || "",
+            phoneFull: data.country_code
+              ? `+${data.country_code}${data.mobile}`
+              : "",
+            country_code: data.country_code || "",
+            email: data.email || "",
+            gender: data.gender || "NOTDISCLOSE",
+            date_of_birth: dobIso,
+            address: data.address || "",
+            location: data.location || "",
+            company_name: data.company_name || "",
+            interested_in: data.interested_in || [],
+            lead_source: data.lead_source || "",
+            lead_type: data.lead_type || "",
+            platform: data.platform || "",
+            schedule: data.schedule || "",
+            invoiceDate:
+              data.invoiceDate || new Date().toISOString().split("T")[0],
+            schedule_date_time: data.schedule_date_time
+              ? new Date(data.schedule_date_time).toISOString()
+              : "",
+            staff_name: data.staff_name || "",
+            emergencyContacts: emergencyContacts,
+            lead_owner: data.lead_owner || "",
+            club_data: data.club_data || { name: "", state: "", country: "" },
+            productType: "MEMBERSHIP_PLAN",
+          });
+        }
+      } catch (err) {
+        console.error(err);
+        toast.error("Failed to fetch module details");
+      }
+    };
+
+    fetchLeadById(selectedLeadMember);
   }, [selectedLeadMember]);
-
-  console.log(selectedLeadMember,'selectedLeadMember')
 
   const fetchLeadList = async () => {
     try {
-      const res = await apiAxios().get("/lead/list");
+      const res = await authAxios().get("/lead/list");
       let data = res.data?.data || res.data || [];
       setAllLeads(data);
     } catch (err) {
@@ -345,10 +352,10 @@ const ConvertMemberForm = ({
     }
   };
   // Fetch companies
-// ✅ Fetch companies (only ACTIVE ones)
+  // ✅ Fetch companies (only ACTIVE ones)
   const fetchCompanies = async (search = "") => {
     try {
-      const res = await apiAxios().get("/company/list", {
+      const res = await authAxios().get("/company/list", {
         params: search ? { search } : {},
       });
 
@@ -448,35 +455,18 @@ const ConvertMemberForm = ({
     }
   };
 
-  const regFee = 10;
-  const serviceFee = Number(formik?.values?.productDetails?.amount) || 0;
-  const cgst = serviceFee * 0.09;
-  const sgst = serviceFee * 0.09;
-  const discountPercent = selectedVoucher ? selectedVoucher.discount : 0;
-  const subtotal = regFee + serviceFee + cgst + sgst;
-  const discountAmount = (subtotal * discountPercent) / 100;
-  const total = subtotal - discountAmount;
-
-  useEffect(() => {
-    formik.setFieldValue(
-      "invoiceDetails.invoiceDate",
-      new Date().toISOString().split("T")[0]
-    );
-  }, []);
-
-
   const handleProductSubmit = (product) => {
-    formik.setFieldValue("productDetails.productName", product.productName);
+    formik.setFieldValue("productDetails.title", product.title);
     formik.setFieldValue(
-      "productDetails.shortDescription",
-      product.shortDescription
-    );
-    formik.setFieldValue(
-      "productDetails.servicesDuration",
-      product.servicesDuration
+      "productDetails.duration_value",
+      product.duration_value
     );
     formik.setFieldValue("productDetails.amount", product.amount);
-    formik.setFieldValue("productDetails.sessions", product.sessions);
+    formik.setFieldValue("productDetails.discount", product.discount);
+    formik.setFieldValue("productDetails.total_amount", product.total_amount);
+    formik.setFieldValue("productDetails.gst", product.gst);
+    formik.setFieldValue("productDetails.gst_amount", product.gst_amount);
+    formik.setFieldValue("productDetails.final_amount", product.final_amount);
   };
 
   const handleApplyVoucher = () => {
@@ -570,15 +560,6 @@ const ConvertMemberForm = ({
     setPendingDob(null);
   };
 
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const imageUrl = URL.createObjectURL(file);
-      setProfileImage(imageUrl);
-      formik.setFieldValue("profile_pic", file);
-    }
-  };
-
   const handleOverlayClick = (e) => {
     if (leadBoxRef.current && !leadBoxRef.current.contains(e.target)) {
       setMemberModal(false);
@@ -588,6 +569,8 @@ const ConvertMemberForm = ({
   const handleLeadModal = () => {
     setMemberModal(false);
   };
+
+  console.log(formik.values.invoiceDate, "formik Date"); // works now
 
   return (
     <>
@@ -652,12 +635,6 @@ const ConvertMemberForm = ({
                           <div className="absolute bottom-[-10px] right-[-10px]">
                             <label className="cursor-pointer w-[45px] h-[45px] flex items-center justify-center bg-white text-sm px-2 py-1 rounded-full shadow">
                               <FaCamera className="text-2xl" />
-                              {/* <input
-                                type="file"
-                                accept="image/*"
-                                onChange={handleImageChange}
-                                className="hidden"
-                              /> */}
                             </label>
                           </div>
                         </div>
@@ -724,23 +701,6 @@ const ConvertMemberForm = ({
                               countryCallingCodeEditable={false}
                               className="custom--input w-full custom--phone"
                             />
-                            {/* {!duplicateError && matchingUsers.length > 0 && (
-                              <div className="border mt-2 bg-white shadow rounded p-2 max-h-40 overflow-y-auto z-10 absolute w-full">
-                                {matchingUsers.map((user) => (
-                                  <div
-                                    key={user.id}
-                                    className="p-2 cursor-pointer text-sm flex items-center gap-2 hover:bg-gray-100"
-                                    onClick={() => handleUserSelect(user)}
-                                  >
-                                    <div>
-                                      <div className="font-medium">
-                                        {user.name}
-                                      </div>
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                            )} */}
 
                             {duplicateError && showDuplicateModal && (
                               <div className="text-red-500 text-sm">
@@ -898,7 +858,6 @@ const ConvertMemberForm = ({
                                 </div>
                               )}
                           </div>
-                          
                         </div>
                       </div>
 
@@ -913,21 +872,26 @@ const ConvertMemberForm = ({
                             <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
                               <FaListCheck />
                             </span>
-                            <Select
-                              name="interested_in"
-                              value={servicesName.find(
-                                (opt) =>
-                                  opt.value === formik.values.interested_in
-                              )}
-                              onChange={(option) =>
-                                formik.setFieldValue(
-                                  "interested_in",
-                                  option.value
-                                )
-                              }
+
+                            <MultiSelect
                               options={servicesName}
-                              styles={selectIcon}
-                              className="pl-[]"
+                              value={selected} // selected objects
+                              onChange={(servicesName) => {
+                                setSelected(servicesName); // set objects
+                                const values = servicesName.map(
+                                  (opt) => opt.value
+                                ); // only IDs
+                                formik.setFieldValue("interested_in", values);
+                              }}
+                              labelledBy="Select..."
+                              hasSelectAll={false}
+                              disableSearch={true}
+                              overrideStrings={{
+                                selectSomeItems: "Select Interested...",
+                                allItemsAreSelected: "All Interested Selected",
+                                // search: "Search",
+                              }}
+                              className="custom--input w-full input--icon multi--select--new"
                             />
                           </div>
                         </div>
@@ -1244,12 +1208,11 @@ const ConvertMemberForm = ({
                             </span>
                             <input
                               type="text"
-                              name="membershipDetails.leadOwner"
-                              value={
-                                formik.values?.membershipDetails?.leadOwner
-                              }
+                              name="lead_owner"
+                              value={formik.values?.lead_owner}
                               readOnly={true}
-                              className="custom--input w-full input--icon bg-[#fafafa] pointer-events-none"
+                              disabled={true}
+                              className="custom--input w-full input--icon !bg-gray-100 pointer-events-none"
                             />
                           </div>
                         </div>
@@ -1262,10 +1225,11 @@ const ConvertMemberForm = ({
                             </span>
                             <input
                               type="text"
-                              name="membershipDetails.centre"
-                              value={formik.values?.membershipDetails?.centre}
+                              name="club_data.name"
+                              value={formik.values?.club_data?.name}
                               readOnly={true}
-                              className="custom--input w-full input--icon bg-[#fafafa] pointer-events-none"
+                              disabled={true}
+                              className="custom--input w-full input--icon !bg-gray-100 pointer-events-none"
                             />
                           </div>
                         </div>
@@ -1277,10 +1241,11 @@ const ConvertMemberForm = ({
                             </span>
                             <input
                               type="text"
-                              name="membershipDetails.state"
-                              value={formik.values?.membershipDetails?.state}
+                              name="club_data.state"
+                              value={formik.values?.club_data?.state}
                               readOnly={true}
-                              className="custom--input w-full input--icon bg-[#fafafa] pointer-events-none"
+                              disabled={true}
+                              className="custom--input w-full input--icon !bg-gray-100 pointer-events-none"
                             />
                           </div>
                         </div>
@@ -1293,10 +1258,11 @@ const ConvertMemberForm = ({
                             </span>
                             <input
                               type="text"
-                              name="membershipDetails.country"
-                              value={formik.values?.membershipDetails?.country}
+                              name="club_data.country"
+                              value={formik.values?.club_data?.country}
                               readOnly={true}
-                              className="custom--input w-full input--icon bg-[#fafafa] pointer-events-none"
+                              disabled={true}
+                              className="custom--input w-full input--icon !bg-gray-100 pointer-events-none"
                             />
                           </div>
                         </div>
@@ -1312,15 +1278,20 @@ const ConvertMemberForm = ({
                       <div className="grid grid-cols-3 gap-4">
                         <div>
                           <label className="mb-2 block">Invoice Date</label>
-                          <div className="relative">
-                            <span className="absolute top-[50%] translate-y-[-50%] left-[15px]">
-                              <FaLocationDot />
+                          <div className="custom--date dob-format relative">
+                            <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
+                              <FaCalendarDays />
                             </span>
-                            <input
-                              name="invoiceDetails.invoiceDate"
-                              value={formik.values?.invoiceDetails?.invoiceDate}
-                              readOnly={true}
-                              className="custom--input w-full input--icon bg-[#fafafa] pointer-events-none"
+                            <DatePicker
+                              selected={
+                                formik.values.invoiceDate
+                                  ? new Date(formik.values.invoiceDate) // convert back to Date here
+                                  : null
+                              }
+                              dateFormat="dd MMM yyyy"
+                              yearDropdownItemNumber={100}
+                              placeholderText="Select date"
+                              className="input--icon !bg-gray-100 pointer-events-none"
                             />
                           </div>
                         </div>
@@ -1331,13 +1302,12 @@ const ConvertMemberForm = ({
                               <FaUserTie />
                             </span>
                             <input
-                              name="membershipDetails.leadOwner"
-                              value={
-                                formik.values?.membershipDetails?.leadOwner
-                              }
+                              name="lead_owner"
+                              value={formik.values?.lead_owner}
                               // onChange={handleInput}
-                              className="custom--input w-full input--icon bg-[#fafafa] pointer-events-none"
+                              className="custom--input w-full input--icon !bg-gray-100 pointer-events-none"
                               readOnly={true}
+                              disabled={true}
                             />
                           </div>
                         </div>
@@ -1352,8 +1322,9 @@ const ConvertMemberForm = ({
                               name="full_name"
                               value={formik.values?.full_name}
                               // onChange={handleInput}
-                              className="custom--input w-full input--icon bg-[#fafafa] pointer-events-none"
+                              className="custom--input w-full input--icon !bg-gray-100 pointer-events-none"
                               readOnly={true}
+                              disabled={true}
                             />
                           </div>
                         </div>
@@ -1371,34 +1342,40 @@ const ConvertMemberForm = ({
                             </span>
                             <input
                               name="productType"
-                              value={formik.values?.productType}
+                              value={formatText(formik.values?.productType)}
                               // onChange={handleInput}
                               readOnly={true}
-                              className="custom--input w-full capitalize input--icon bg-[#fafafa] pointer-events-none"
+                              className="custom--input w-full capitalize input--icon !bg-gray-100 pointer-events-none"
+                              disabled={true}
                             />
                           </div>
                         </div>
                         <div>
-                          <label className="mb-2 block">Product Name<span className="text-red-500">*</span></label>
+                          <label className="mb-2 block">
+                            Product Name<span className="text-red-500">*</span>
+                          </label>
                           <div
                             className="relative"
-                            onClick={() => setShowProductModal(true)}
+                            onClick={() => {
+                              setShowProductModal(true);
+                              // setSelectedType(formik.values.productType);
+                            }}
                           >
                             <span className="absolute top-[50%] translate-y-[-50%] left-[15px]">
                               <FaListCheck />
                             </span>
                             <input
-                              name="productDetails.productName"
-                              value={formik.values?.productDetails?.productName}
+                              name="productDetails.title"
+                              value={formik.values?.productDetails?.title}
                               onChange={formik.handleChange}
                               className="custom--input w-full input--icon"
                               readOnly={true}
                             />
                           </div>
-                          {formik.errors?.productDetails?.productName &&
-                            formik.touched?.productDetails?.productName && (
+                          {formik.errors?.productDetails?.title &&
+                            formik.touched?.productDetails?.title && (
                               <div className="text-red-500 text-sm">
-                                {formik.errors?.productDetails?.productName}
+                                {formik.errors?.productDetails?.title}
                               </div>
                             )}
                         </div>
@@ -1450,28 +1427,31 @@ const ConvertMemberForm = ({
                               <IoIosTime className="text-xl" />
                             </span>
                             <input
-                              name="productDetails.servicesDuration"
+                              name="productDetails.duration_value"
                               value={
-                                formik.values?.productDetails?.servicesDuration
+                                formik.values?.productDetails?.duration_value ??
+                                0
                               }
-                              onChange={formik.handleChange}
-                              className="custom--input w-full input--icon bg-[#fafafa] pointer-events-none"
+                              // onChange={formik.handleChange}
+                              className="custom--input w-full input--icon !bg-gray-100 pointer-events-none"
                               readOnly={true}
+                              disabled={true}
                             />
                           </div>
                         </div>
 
                         <div>
-                          <label className="mb-2 block">Service Fee</label>
+                          <label className="mb-2 block">Amount</label>
                           <div className="relative">
                             <span className="absolute top-[50%] translate-y-[-50%] left-[12px]">
                               <LuIndianRupee className="text-xl" />
                             </span>
                             <input
                               name="productDetails.amount"
-                              value={formik.values?.productDetails?.amount}
+                              value={formik.values?.productDetails?.amount ?? 0}
                               readOnly={true}
-                              className="custom--input w-full input--icon bg-[#fafafa] pointer-events-none"
+                              className="custom--input w-full input--icon !bg-gray-100 pointer-events-none"
+                              disabled={true}
                             />
                           </div>
                         </div>
@@ -1484,41 +1464,9 @@ const ConvertMemberForm = ({
                         <div className="price--calculation2 my-5">
                           <div className="price--item">
                             <p className="flex items-center gap-2 justify-between mb-2 border-b pb-2">
-                              Reg Fee:{" "}
+                              Amount:{" "}
                               <span className="font-bold">
-                                ₹{regFee.toFixed(2)}
-                              </span>
-                            </p>
-                          </div>
-                          <div className="price--item">
-                            <p className="flex items-center gap-2 justify-between mb-2 border-b pb-2">
-                              Service Fee:{" "}
-                              <span className="font-bold">
-                                ₹{serviceFee.toFixed(2)}
-                              </span>
-                            </p>
-                          </div>
-                          <div className="price--item">
-                            <p className="flex items-center gap-2 justify-between mb-2 border-b pb-2">
-                              CGST (9%):{" "}
-                              <span className="font-bold">
-                                ₹{cgst.toFixed(2)}
-                              </span>
-                            </p>
-                          </div>
-                          <div className="price--item">
-                            <p className="flex items-center gap-2 justify-between mb-2 border-b pb-2">
-                              SGST (9%):{" "}
-                              <span className="font-bold">
-                                ₹{sgst.toFixed(2)}
-                              </span>
-                            </p>
-                          </div>
-                          <div className="price--item">
-                            <p className="flex items-center gap-2 justify-between mb-2 border-b pb-2">
-                              Subtotal:{" "}
-                              <span className="font-bold">
-                                ₹{subtotal.toFixed(2)}
+                                ₹{formik.values.productDetails?.amount ?? 0}
                               </span>
                             </p>
                           </div>
@@ -1526,15 +1474,35 @@ const ConvertMemberForm = ({
                             <p className="flex items-center gap-2 justify-between mb-2 border-b pb-2">
                               Discount:{" "}
                               <span className="font-bold">
-                                {discountPercent}% (₹
-                                {discountAmount.toFixed(2)})
+                                ₹{formik.values.productDetails?.discount ?? 0}
+                              </span>
+                            </p>
+                          </div>
+                          <div className="price--item">
+                            <p className="flex items-center gap-2 justify-between mb-2 border-b pb-2">
+                              Total Amount:{" "}
+                              <span className="font-bold">
+                                ₹
+                                {formik.values.productDetails?.total_amount ??
+                                  0}
+                              </span>
+                            </p>
+                          </div>
+                          <div className="price--item">
+                            <p className="flex items-center gap-2 justify-between mb-2 border-b pb-2">
+                              GST:{" "}
+                              <span className="font-bold">
+                                ({formik.values.productDetails?.gst ?? 0}%) ₹
+                                {formik.values.productDetails?.gst_amount ?? 0}
                               </span>
                             </p>
                           </div>
                         </div>
                         <p className="text-1xl font-semibold flex items-center gap-2 justify-between pb-2">
-                          Total Payment:{" "}
-                          <span className="font-bold">₹{total.toFixed(2)}</span>
+                          Final Amount:{" "}
+                          <span className="font-bold">
+                            ₹{formik.values.productDetails?.final_amount ?? 0}
+                          </span>
                         </p>
                       </div>
                     </>
@@ -1562,7 +1530,7 @@ const ConvertMemberForm = ({
                   onClick={handleNextStep}
                 >
                   {step === stepValidationSchemas.length - 1
-                    ? "Send Payment"
+                    ? "Make Payment"
                     : "Next"}
                 </button>
               </div>

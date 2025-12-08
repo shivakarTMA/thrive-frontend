@@ -9,7 +9,7 @@ import Tooltip from "../common/Tooltip";
 import { LiaEdit } from "react-icons/lia";
 import CreateCompany from "./CreateCompany";
 import { FaAngleLeft, FaAngleRight, FaCircle } from "react-icons/fa6";
-import { apiAxios } from "../../config/config";
+import { authAxios } from "../../config/config";
 import { IoSearchOutline } from "react-icons/io5";
 import Select from "react-select";
 import { customStyles } from "../../Helper/helper";
@@ -74,7 +74,7 @@ const CompanyList = () => {
 
   const fetchCompanies = async (search = "", currentPage = page) => {
     try {
-      const res = await apiAxios().get("/company/list", {
+      const res = await authAxios().get("/company/list", {
         params: {
           page: currentPage,
           limit: rowsPerPage,
@@ -157,13 +157,13 @@ const CompanyList = () => {
 
         if (editingCompany && editingCompany) {
           // Update
-          await apiAxios().put(`/company/${editingCompany}`, formData, {
+          await authAxios().put(`/company/${editingCompany}`, formData, {
             headers: { "Content-Type": "multipart/form-data" },
           });
           toast.success("Updated Successfully");
         } else {
           // Create
-          await apiAxios().post("/company/create", formData, {
+          await authAxios().post("/company/create", formData, {
             headers: { "Content-Type": "multipart/form-data" },
           });
           toast.success("Created Successfully");

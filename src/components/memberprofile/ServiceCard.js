@@ -9,7 +9,7 @@ import CreateInvoice from "../../Pages/CreateInvoice";
 import AddCoins from "../CoinsList/AddCoins";
 import CreateAppointment from "../Appointment/CreateAppointment";
 import SuspendAndPause from "../common/SuspendAndPause";
-import { apiAxios } from "../../config/config";
+import { authAxios } from "../../config/config";
 import { toast } from "react-toastify";
 
 const statusOptions = [
@@ -96,7 +96,7 @@ const ServiceCard = ({ details }) => {
   const fetchMemberCoins = async () => {
     try {
       // Make the API call with query parameters
-      const res = await apiAxios().get(`/coin/transaction/list/${details?.id}`);
+      const res = await authAxios().get(`/coin/transaction/list/${details?.id}`);
       const data = res.data?.data || [];
       const total = data.reduce((sum, coin) => sum + coin.coins, 0);
       setCoinsList(total);
@@ -411,7 +411,7 @@ const ServiceCard = ({ details }) => {
         />
       )}
       {appointmentModal && (
-        <CreateAppointment setAppointmentModal={setAppointmentModal} />
+        <CreateAppointment setAppointmentModal={setAppointmentModal} memberID={details?.id} />
       )}
       {suspendPauseModal && (
         <SuspendAndPause

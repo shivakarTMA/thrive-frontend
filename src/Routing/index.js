@@ -28,7 +28,6 @@ import EditLeadDetails from "../Pages/EditLeadDetails";
 import ForgotPassword from "../components/common/ForgotPassword";
 import SetPassword from "../components/common/SetPassword";
 import LeadCallLogs from "../Pages/LeadCallLogs";
-import ServicesLIst from "../Pages/ServicesLIst";
 import BookingService from "../Pages/BookingService";
 import CompanyList from "../components/Companies/CompanyList";
 import ProductsList from "../components/Products/ProductsList";
@@ -157,14 +156,6 @@ export default function Routing() {
               element={
                 <PrivateRoute>
                   <MemberCallLogs />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/services-list/"
-              element={
-                <PrivateRoute>
-                  <ServicesLIst />
                 </PrivateRoute>
               }
             />
@@ -377,14 +368,6 @@ export default function Routing() {
           element={
             <PrivateRoute>
               <MemberCallLogs />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/services-list/"
-          element={
-            <PrivateRoute>
-              <ServicesLIst />
             </PrivateRoute>
           }
         />

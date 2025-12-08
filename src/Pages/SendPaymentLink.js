@@ -3,7 +3,7 @@ import { IoCloseCircle } from "react-icons/io5";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import ProductModal from "../components/modal/ProductDetails";
-import { customStyles } from "../Helper/helper";
+import { customStyles, formatText } from "../Helper/helper";
 import Select from "react-select";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -24,21 +24,24 @@ const SendPaymentLink = ({ setSendPaymentModal, leadPaymentSend }) => {
   const [showProductModal, setShowProductModal] = useState(false);
   const [editingProductIndex, setEditingProductIndex] = useState(null);
   const { user } = useSelector((state) => state.auth);
-  const selectedProductType =("Membership Plan");
+  const selectedProductType = "Membership Plan";
 
   const leadBoxRef = useRef(null);
 
   const formik = useFormik({
     initialValues: {
-      productType: "",
-      serviceVariation: "",
-      startDate: null,
-      endDate: null,
-      duration: "",
-      productAmount: 0,
-      discountCode: "",
-      discountAmount: 0,
-      totalAmount: 0,
+      productType: "MEMBERSHIP_PLAN",
+      title: "",
+      duration_value: 0,
+      duration_type: "",
+      amount: 0,
+      discount: 0,
+      total_amount: 0,
+      gst: 0,
+      gst_amount: 0,
+      final_amount: 0,
+      startDate: "",
+      endDate: "",
     },
     validationSchema,
     onSubmit: (values) => {
@@ -54,8 +57,11 @@ const SendPaymentLink = ({ setSendPaymentModal, leadPaymentSend }) => {
 
   const handleStartDateChange = (date) => {
     formik.setFieldValue("startDate", date);
-    if (formik.values.duration) {
-      const endDate = addMonthsToDate(date, parseInt(formik.values.duration));
+    if (formik.values.duration_value) {
+      const endDate = addMonthsToDate(
+        date,
+        parseInt(formik.values.duration_value)
+      );
       formik.setFieldValue("endDate", endDate);
     }
   };
@@ -85,20 +91,55 @@ const SendPaymentLink = ({ setSendPaymentModal, leadPaymentSend }) => {
   };
 
   const handleProductSubmit = (product) => {
-    formik.setFieldValue("productType", "Membership Plan");
-    formik.setFieldValue("serviceVariation", product.shortDescription);
-    formik.setFieldValue("duration", product.servicesDuration);
-    formik.setFieldValue("productAmount", product.amount);
-    formik.setFieldValue("totalAmount", product.amount);
-    formik.setFieldValue("month", product.month);
-    console.log(product,'checikg')
+    formik.setFieldValue("title", product.title);
+    formik.setFieldValue("duration_value", product.duration_value);
+    formik.setFieldValue("duration_type", product.duration_type);
+    formik.setFieldValue("amount", product.amount);
+    formik.setFieldValue("discount", product.discount);
+    formik.setFieldValue("total_amount", product.total_amount);
+    formik.setFieldValue("gst", product.gst);
+    formik.setFieldValue("gst_amount", product.gst_amount);
+    formik.setFieldValue("final_amount", product.final_amount);
   };
 
   useEffect(() => {
-    if (leadPaymentSend && formik.values.productType !== "Membership Plan") {
-      formik.setFieldValue("productType", "Membership Plan");
+    if (leadPaymentSend && formik.values.productType !== "MEMBERSHIP_PLAN") {
+      formik.setFieldValue("productType", "MEMBERSHIP_PLAN");
     }
   }, [leadPaymentSend]);
+
+  const calculateEndDate = (startDate, durationValue, durationType) => {
+    if (!startDate || !durationValue || !durationType) return null;
+
+    const newDate = new Date(startDate);
+
+    if (durationType === "MONTH") {
+      newDate.setMonth(newDate.getMonth() + parseInt(durationValue));
+    } else if (durationType === "DAY") {
+      newDate.setDate(newDate.getDate() + parseInt(durationValue));
+    }
+
+    return newDate;
+  };
+
+  useEffect(() => {
+    const { startDate, duration_value, duration_type } = formik.values;
+
+    if (startDate && duration_value && duration_type) {
+      const endDate = calculateEndDate(
+        startDate,
+        duration_value,
+        duration_type
+      );
+      formik.setFieldValue("endDate", endDate);
+    } else {
+      formik.setFieldValue("endDate", "");
+    }
+  }, [
+    formik.values.startDate,
+    formik.values.duration_value,
+    formik.values.duration_type,
+  ]);
 
   return (
     <>
@@ -128,13 +169,18 @@ const SendPaymentLink = ({ setSendPaymentModal, leadPaymentSend }) => {
                   {/* Product Type */}
                   <div>
                     <label className="mb-2 block">Product Type</label>
-                    <Select
+                    <input
+                      name="productType"
+                      value={formatText(formik.values?.productType)}
+                      // onChange={handleInput}
+                      readOnly={true}
+                      className="custom--input w-full capitalize !bg-gray-100 pointer-events-none"
+                      disabled={true}
+                    />
+                    {/* <Select
                       name="productType"
                       styles={customStyles}
-                      value={{
-                        label: formik.values.productType,
-                        value: formik.values.productType,
-                      }}
+                      value={formatText(formik.values?.productType)}
                       onChange={(option) =>
                         formik.setFieldValue("productType", option.value)
                       }
@@ -142,7 +188,7 @@ const SendPaymentLink = ({ setSendPaymentModal, leadPaymentSend }) => {
                         { value: "membership plan", label: "Membership Plan" },
                       ]}
                       isDisabled={true}
-                    />
+                    /> */}
                   </div>
 
                   {/* Variation */}
@@ -150,8 +196,8 @@ const SendPaymentLink = ({ setSendPaymentModal, leadPaymentSend }) => {
                     <label className="mb-2 block">Variation</label>
                     <div onClick={() => setShowProductModal(true)}>
                       <input
-                        name="serviceVariation"
-                        value={formik.values.serviceVariation}
+                        name="title"
+                        value={formik.values.title}
                         className="custom--input w-full"
                         readOnly
                       />
@@ -168,7 +214,8 @@ const SendPaymentLink = ({ setSendPaymentModal, leadPaymentSend }) => {
                           onChange={handleStartDateChange}
                           dateFormat="dd MMM yyyy"
                           placeholderText="Select date"
-                          readOnly={!formik.values.serviceVariation}
+                          readOnly={!formik.values.title}
+                          minDate={new Date()}
                         />
                       </div>
                     </div>
@@ -190,21 +237,25 @@ const SendPaymentLink = ({ setSendPaymentModal, leadPaymentSend }) => {
                   <div>
                     <label className="mb-2 block">Duration</label>
                     <input
-                      name="duration"
-                      value={formik.values.duration}
-                      className="custom--input w-full bg-[#fafafa] pointer-events-none"
-                      readOnly
+                      name="duration_value"
+                      value={formik.values?.duration_value ?? 0}
+                      // onChange={formik.handleChange}
+                      className="custom--input w-full !bg-gray-100 pointer-events-none"
+                      readOnly={true}
+                      disabled={true}
                     />
                   </div>
 
-                  {/* Service Fee */}
+                  {/* Amount */}
                   <div>
-                    <label className="mb-2 block">Service Fee</label>
+                    <label className="mb-2 block">Amount</label>
                     <input
-                      name="productAmount"
-                      value={formik.values.productAmount}
-                      className="custom--input w-full bg-[#fafafa] pointer-events-none"
-                      readOnly
+                      name="amount"
+                      value={formik.values?.amount ?? 0}
+                      // onChange={formik.handleChange}
+                      className="custom--input w-full !bg-gray-100 pointer-events-none"
+                      readOnly={true}
+                      disabled={true}
                     />
                   </div>
 
@@ -222,7 +273,7 @@ const SendPaymentLink = ({ setSendPaymentModal, leadPaymentSend }) => {
                       />
                       <button
                         type="button"
-                        onClick={handleVoucherApply}
+                        // onClick={handleVoucherApply}
                         className="px-4 py-2 bg-black text-white rounded-r-[10px]"
                       >
                         Apply
@@ -231,21 +282,47 @@ const SendPaymentLink = ({ setSendPaymentModal, leadPaymentSend }) => {
                   </div>
                 </div>
 
-                <div className="bg-[#f7f7f7] p-[20px] rounded-[10px] mt-4">
-                  <div className="price--calculation2 my-5 mt-0">
+                <div className="mt-5 bg-[#f7f7f7] p-[20px] rounded-[10px]">
+                  <h3 className="text-2xl font-semibold">Price Calculation</h3>
+                  <div className="price--calculation2 my-5">
+                    <div className="price--item">
+                      <p className="flex items-center gap-2 justify-between mb-2 border-b pb-2">
+                        Amount:{" "}
+                        <span className="font-bold">
+                          ₹{formik.values.amount ?? 0}
+                        </span>
+                      </p>
+                    </div>
                     <div className="price--item">
                       <p className="flex items-center gap-2 justify-between mb-2 border-b pb-2">
                         Discount:{" "}
                         <span className="font-bold">
-                          ₹{formik.values.discountAmount}
+                          ₹{formik.values.discount ?? 0}
+                        </span>
+                      </p>
+                    </div>
+                    <div className="price--item">
+                      <p className="flex items-center gap-2 justify-between mb-2 border-b pb-2">
+                        Total Amount:{" "}
+                        <span className="font-bold">
+                          ₹{formik.values.total_amount ?? 0}
+                        </span>
+                      </p>
+                    </div>
+                    <div className="price--item">
+                      <p className="flex items-center gap-2 justify-between mb-2 border-b pb-2">
+                        GST:{" "}
+                        <span className="font-bold">
+                          ({formik.values.gst ?? 0}%) ₹
+                          {formik.values.gst_amount ?? 0}
                         </span>
                       </p>
                     </div>
                   </div>
                   <p className="text-1xl font-semibold flex items-center gap-2 justify-between pb-2">
-                    Total Payment:{" "}
+                    Final Amount:{" "}
                     <span className="font-bold">
-                      ₹{formik.values.totalAmount}
+                      ₹{formik.values.final_amount ?? 0}
                     </span>
                   </p>
                 </div>
@@ -276,9 +353,9 @@ const SendPaymentLink = ({ setSendPaymentModal, leadPaymentSend }) => {
 
       {showProductModal && (
         <ProductModal
-          selectedType={selectedProductType}
-          onSubmit={handleProductSubmit}
+          selectedType={formik.values?.productType}
           onClose={() => setShowProductModal(false)}
+          onSubmit={handleProductSubmit}
         />
       )}
     </>

@@ -35,7 +35,7 @@ import { RiDiscountPercentFill } from "react-icons/ri";
 import { IoIosTime } from "react-icons/io";
 import { LuIndianRupee } from "react-icons/lu";
 import { toast } from "react-toastify";
-import { apiAxios, phoneAxios } from "../config/config";
+import { authAxios, phoneAxios } from "../config/config";
 import { fetchOptionList } from "../Redux/Reducers/optionListSlice";
 import Webcam from "react-webcam";
 import { IoCheckmark, IoClose } from "react-icons/io5";
@@ -49,7 +49,7 @@ const voucherList = [
 const genderOptions = [
   { value: "MALE", label: "Male" },
   { value: "FEMALE", label: "Female" },
-  { value: "NOTDISCLOSE", label: "Not to Disclose" },
+  { value: "NOTDISCLOSE", label: "Prefer Not To Say" },
 ];
 
 const stepValidationSchemas = [
@@ -241,7 +241,7 @@ const CreateMemberForm = ({ setMemberModal, onMemberUpdate }) => {
   // Fetch companies
   const fetchCompanies = async (search = "") => {
     try {
-      const res = await apiAxios().get("/company/list", {
+      const res = await authAxios().get("/company/list", {
         params: search ? { search } : {},
       });
       const data = res.data?.data || [];

@@ -99,7 +99,7 @@ const SuspendAndPause = ({ setSuspendPause, actionType }) => {
                   Pause Until<span className="text-red-500">*</span>
                 </label>
                 <div className="custom--date flex-1">
-                  <span className="absolute z-[1] mt-[15px] ml-[15px]">
+                  <span className="absolute z-[1] mt-[11px] ml-[15px]">
                     <FaCalendarDays />
                   </span>
                   <div className="custom--date">

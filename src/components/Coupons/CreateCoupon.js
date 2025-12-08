@@ -8,7 +8,7 @@ import Select from "react-select";
 // Import custom styles for select input
 import { selectIcon } from "../../Helper/helper";
 import { toast } from "react-toastify";
-import { apiAxios } from "../../config/config";
+import { authAxios } from "../../config/config";
 import { LuCalendar } from "react-icons/lu";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -32,7 +32,7 @@ const CreateCoupon = ({
 
     const fetchCouponById = async (id) => {
       try {
-        const res = await apiAxios().get(`/coupon/${id}`);
+        const res = await authAxios().get(`/coupon/${id}`);
         const data = res.data?.data || res.data || null;
 
         if (data) {

@@ -7,10 +7,7 @@ import Tooltip from "../common/Tooltip";
 import { LiaEdit } from "react-icons/lia";
 import { FaCircle } from "react-icons/fa6";
 import CreateOnBoardingScreen from "./CreateOnBoardingScreen";
-import { apiAxios } from "../../config/config";
-import { IoSearchOutline } from "react-icons/io5";
-import Select from "react-select";
-import { customStyles } from "../../Helper/helper";
+import { authAxios } from "../../config/config";
 
 const OnBoardingScreen = () => {
   const [showModal, setShowModal] = useState(false);
@@ -18,20 +15,12 @@ const OnBoardingScreen = () => {
   const [editingOption, setEditingOption] = useState(null);
   const leadBoxRef = useRef(null);
 
-  const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState(null);
-
-  const [file, setFile] = useState(null);
-
   const fetchOnBoardingScreen = async (search = "") => {
     try {
-      const res = await apiAxios().get("/onboarding-screen/list", {
+      const res = await authAxios().get("/onboarding-screen/list", {
         params: search ? { search } : {},
       });
       let data = res.data?.data || res.data || [];
-      if (statusFilter?.value) {
-        data = data.filter((item) => item.status === statusFilter.value);
-      }
       setModule(data);
     } catch (err) {
       console.error(err);
@@ -43,21 +32,11 @@ const OnBoardingScreen = () => {
     fetchOnBoardingScreen();
   }, []);
 
-  useEffect(() => {
-    const delayDebounce = setTimeout(() => {
-      fetchOnBoardingScreen(searchTerm);
-    }, 300);
-
-    return () => clearTimeout(delayDebounce);
-  }, [searchTerm, statusFilter]);
-
   const handleOverlayClick = (e) => {
     if (leadBoxRef.current && !leadBoxRef.current.contains(e.target)) {
       setShowModal(false);
     }
   };
-
-  console.log(searchTerm, "searchTerm");
 
   const formik = useFormik({
     initialValues: {
@@ -86,7 +65,7 @@ const OnBoardingScreen = () => {
 
         if (editingOption && editingOption.id) {
           // Update
-          await apiAxios().put(
+          await authAxios().put(
             `/onboarding-screen/${editingOption.id}`,
             formData,
             {
@@ -96,7 +75,7 @@ const OnBoardingScreen = () => {
           toast.success("Updated Successfully");
         } else {
           // Create
-          await apiAxios().post("/onboarding-screen/create", formData, {
+          await authAxios().post("/onboarding-screen/create", formData, {
             headers: { "Content-Type": "multipart/form-data" },
           });
           toast.success("Created Successfully");
@@ -136,36 +115,6 @@ const OnBoardingScreen = () => {
         </div>
       </div>
 
-      <div className="flex gap-3 mb-4">
-        <div className="mb-4 w-full max-w-[200px]">
-          <div className="relative">
-            <span className="absolute top-[50%] translate-y-[-50%] left-[15px]">
-              <IoSearchOutline />
-            </span>
-            <input
-              type="text"
-              placeholder="Search on boarding..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="custom--input w-full input--icon"
-            />
-          </div>
-        </div>
-        {/* Status filter */}
-        <div className="w-full max-w-[200px]">
-          <Select
-            placeholder="Filter by Status"
-            options={[
-              { label: "Active", value: "ACTIVE" },
-              { label: "Inactive", value: "INACTIVE" },
-            ]}
-            value={statusFilter}
-            onChange={(option) => setStatusFilter(option)}
-            isClearable
-            styles={customStyles}
-          />
-        </div>
-      </div>
       <div className="box--shadow bg-white rounded-[15px] p-4">
         <div className="relative overflow-x-auto">
           <table className="w-full text-sm text-left text-gray-500">
@@ -248,7 +197,6 @@ const OnBoardingScreen = () => {
           formik={formik}
           handleOverlayClick={handleOverlayClick}
           leadBoxRef={leadBoxRef}
-          setFile={setFile}
         />
       )}
     </div>

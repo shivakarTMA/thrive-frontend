@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { apiAxios } from "../../config/config";
+import { authAxios } from "../../config/config";
 import { IoEyeOutline } from "react-icons/io5";
 import { RxUpdate } from "react-icons/rx";
 import { toast } from "react-toastify";
@@ -41,7 +41,7 @@ const KYCSubmission = ({ details }) => {
   useEffect(() => {
     const fetchKycDocuments = async () => {
       try {
-        const response = await apiAxios().get(`/kyc/document/list/${memberId}`);
+        const response = await authAxios().get(`/kyc/document/list/${memberId}`);
         if (response.data.status && response.data.data) {
           const data = response.data.data;
           const aadhar = data.find((d) => d.document_type === "ID_PROOF");
@@ -162,11 +162,11 @@ const KYCSubmission = ({ details }) => {
 
         const id = documents.aadharFront?.id || documents.aadharBack?.id;
         if (id) {
-          await apiAxios().put(`/kyc/document/${id}`, formData, {
+          await authAxios().put(`/kyc/document/${id}`, formData, {
             headers: { "Content-Type": "multipart/form-data" },
           });
         } else {
-          await apiAxios().post(`/kyc/document/create`, formData, {
+          await authAxios().post(`/kyc/document/create`, formData, {
             headers: { "Content-Type": "multipart/form-data" },
           });
         }
@@ -181,13 +181,13 @@ const KYCSubmission = ({ details }) => {
           formData.append("document_front_file", documents.corporateId.file);
 
         if (documents.corporateId?.id) {
-          await apiAxios().put(
+          await authAxios().put(
             `/kyc/document/${documents.corporateId.id}`,
             formData,
             { headers: { "Content-Type": "multipart/form-data" } }
           );
         } else {
-          await apiAxios().post(`/kyc/document/create`, formData, {
+          await authAxios().post(`/kyc/document/create`, formData, {
             headers: { "Content-Type": "multipart/form-data" },
           });
         }

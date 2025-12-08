@@ -7,7 +7,7 @@ import Tooltip from "../common/Tooltip";
 import { LiaEdit } from "react-icons/lia";
 import { FaCircle } from "react-icons/fa6";
 import CreateStudio from "./CreateStudio";
-import { apiAxios } from "../../config/config";
+import { authAxios } from "../../config/config";
 import { IoSearchOutline } from "react-icons/io5";
 import Select from "react-select";
 import { customStyles } from "../../Helper/helper";
@@ -26,7 +26,7 @@ const Studio = () => {
 
   const fetchClub = async (search = "") => {
     try {
-      const res = await apiAxios().get("/club/list", {
+      const res = await authAxios().get("/club/list", {
         params: search ? { search } : {},
       });
       let data = res.data?.data || res.data || [];
@@ -43,7 +43,7 @@ const Studio = () => {
 
   const fetchStudio = async (search = "") => {
     try {
-      const res = await apiAxios().get("/studio/list", {
+      const res = await authAxios().get("/studio/list", {
         params: search ? { search } : {},
       });
       let data = res.data?.data || res.data || [];
@@ -104,10 +104,10 @@ const Studio = () => {
         const payload = { ...values };
 
         if (editingOption && editingOption.id) {
-          await apiAxios().put(`/studio/${editingOption.id}`, payload);
+          await authAxios().put(`/studio/${editingOption.id}`, payload);
           toast.success("Updated Successfully");
         } else {
-          await apiAxios().post("/studio/create", payload);
+          await authAxios().post("/studio/create", payload);
           toast.success("Created Successfully");
         }
 
@@ -181,8 +181,8 @@ const Studio = () => {
             <thead className="text-xs text-gray-700 uppercase bg-gray-50">
               <tr>
                 {/* <th className="px-2 py-4">Module ID</th> */}
-                <th className="px-2 py-4">Club Name</th>
                 <th className="px-2 py-4">Name</th>
+                <th className="px-2 py-4">Club Name</th>
                 <th className="px-2 py-4">Position</th>
                 <th className="px-2 py-4">Status</th>
                 <th className="px-2 py-4">Action</th>
@@ -202,8 +202,8 @@ const Studio = () => {
                     className="group bg-white border-b hover:bg-gray-50 relative transition duration-700"
                   >
                     {/* <td className="px-2 py-4">{item?.id || "—"}</td> */}
-                    <td className="px-2 py-4">{item?.club_name}</td>
                     <td className="px-2 py-4">{item?.name}</td>
+                    <td className="px-2 py-4">{item?.club_name}</td>
                     <td>{item.position}</td>
                     <td className="px-2 py-4">
                       <div

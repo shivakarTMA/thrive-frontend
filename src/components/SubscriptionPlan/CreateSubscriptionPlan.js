@@ -1,9 +1,16 @@
-import React from "react";
-import { IoCloseCircle } from "react-icons/io5";
+import React, { useEffect } from "react";
+import { IoCalendarClearOutline, IoCloseCircle } from "react-icons/io5";
 import { FaListUl } from "react-icons/fa6";
 import { LuPlug } from "react-icons/lu";
 import Select from "react-select";
 import { selectIcon } from "../../Helper/helper";
+import { authAxios } from "../../config/config";
+import { toast } from "react-toastify";
+
+const subscriptionOption = [
+  { label: "Yes", value: true },
+  { label: "No", value: false },
+];
 
 const CreateSubscriptionPlan = ({
   setShowModal,
@@ -13,6 +20,43 @@ const CreateSubscriptionPlan = ({
   leadBoxRef,
   clubOptions,
 }) => {
+  useEffect(() => {
+    const fetchSubscriptionById = async (id) => {
+      try {
+        const res = await authAxios().get(`/subscription-plan/${id}`);
+        const data = res.data?.data || res.data || null;
+        console.log(data, "SHIVAKAR");
+
+        if (data) {
+          formik.setValues({
+            title: data?.title || "",
+            description: data?.description || "",
+            club_id: data?.club_id || "",
+            duration_type: data?.duration_type || "",
+            duration_value: data?.duration_value || "",
+            booking_type: data?.booking_type || "",
+            plan_type: data?.plan_type || "",
+            hsn_sac_code: data?.hsn_sac_code || "",
+            amount: data?.amount || "",
+            discount: data?.discount || "",
+            gst: data?.gst || "",
+            earn_coin: data?.earn_coin || "",
+            is_spouse_plan: data?.is_spouse_plan || false,
+            status: data?.status || "ACTIVE",
+            position: data?.position || "",
+          });
+        }
+      } catch (err) {
+        console.error(err);
+        toast.error("Failed to fetch subscription details");
+      }
+    };
+
+    if (editingOption) {
+      fetchSubscriptionById(editingOption);
+    }
+  }, [editingOption]);
+
   return (
     <div
       className="bg--blur create--lead--container overflow-auto hide--overflow fixed top-0 left-0 z-[999] w-full bg-black bg-opacity-60 h-full"
@@ -166,7 +210,7 @@ const CreateSubscriptionPlan = ({
                     </label>
                     <div className="relative">
                       <span className="absolute top-[50%] translate-y-[-50%] left-[15px]">
-                        <FaListUl />
+                        <IoCalendarClearOutline />
                       </span>
                       <input
                         type="number"
@@ -242,25 +286,20 @@ const CreateSubscriptionPlan = ({
                         onChange={(option) =>
                           formik.setFieldValue("plan_type", option.value)
                         }
-                        onBlur={() =>
-                          formik.setFieldTouched("plan_type", true)
-                        }
+                        onBlur={() => formik.setFieldTouched("plan_type", true)}
                         styles={selectIcon}
                         className="!capitalize"
                       />
                     </div>
-                    {formik.touched.plan_type &&
-                      formik.errors.plan_type && (
-                        <p className="text-red-500 text-sm mt-1">
-                          {formik.errors.plan_type}
-                        </p>
-                      )}
+                    {formik.touched.plan_type && formik.errors.plan_type && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {formik.errors.plan_type}
+                      </p>
+                    )}
                   </div>
 
                   <div className="">
-                    <label className="mb-2 block">
-                      HSC SAC Code
-                    </label>
+                    <label className="mb-2 block">HSN SAC Code</label>
                     <div className="relative">
                       <span className="absolute top-[50%] translate-y-[-50%] left-[15px]">
                         <FaListUl />
@@ -274,16 +313,17 @@ const CreateSubscriptionPlan = ({
                         className="custom--input w-full input--icon"
                       />
                     </div>
-                    {formik.touched.hsn_sac_code && formik.errors.hsn_sac_code && (
-                      <p className="text-red-500 text-sm mt-1">
-                        {formik.errors.hsn_sac_code}
-                      </p>
-                    )}
+                    {formik.touched.hsn_sac_code &&
+                      formik.errors.hsn_sac_code && (
+                        <p className="text-red-500 text-sm mt-1">
+                          {formik.errors.hsn_sac_code}
+                        </p>
+                      )}
                   </div>
 
                   <div className="">
                     <label className="mb-2 block">
-                      Amount<span className="text-red-500">*</span>
+                      Amount (₹)<span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
                       <span className="absolute top-[50%] translate-y-[-50%] left-[15px]">
@@ -306,7 +346,7 @@ const CreateSubscriptionPlan = ({
                   </div>
                   <div className="">
                     <label className="mb-2 block">
-                      Discount<span className="text-red-500">*</span>
+                      Discount (₹)<span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
                       <span className="absolute top-[50%] translate-y-[-50%] left-[15px]">
@@ -350,6 +390,62 @@ const CreateSubscriptionPlan = ({
                         {formik.errors.gst}
                       </p>
                     )}
+                  </div>
+
+                  <div className="">
+                    <label className="mb-2 block">
+                      Earn Coins<span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <span className="absolute top-[50%] translate-y-[-50%] left-[15px]">
+                        <FaListUl />
+                      </span>
+                      <input
+                        type="number"
+                        name="earn_coin"
+                        value={formik.values.earn_coin}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        className="custom--input w-full input--icon"
+                      />
+                    </div>
+                    {formik.touched.earn_coin && formik.errors.earn_coin && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {formik.errors.earn_coin}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="mb-2 block">Is Spouse Plan</label>
+                    <div className="relative">
+                      <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[10]">
+                        <LuPlug />
+                      </span>
+
+                      <Select
+                        name="is_spouse_plan"
+                        value={
+                          subscriptionOption.find(
+                            (opt) => opt.value === formik.values?.is_spouse_plan
+                          ) || null
+                        }
+                        options={subscriptionOption}
+                        onChange={(option) =>
+                          formik.setFieldValue("is_spouse_plan", option.value)
+                        }
+                        onBlur={() =>
+                          formik.setFieldTouched("is_spouse_plan", true)
+                        }
+                        styles={selectIcon}
+                      />
+                    </div>
+                    {formik.touched.is_spouse_plan &&
+                      formik.errors.is_spouse_plan && (
+                        <p className="text-red-500 text-sm mt-1">
+                          {formik.errors.is_spouse_plan}
+                        </p>
+                      )}
                   </div>
 
                   <div>

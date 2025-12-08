@@ -4,7 +4,7 @@ import { FaListUl } from "react-icons/fa6";
 import { LuPlug } from "react-icons/lu";
 import Select from "react-select";
 import { selectIcon } from "../../Helper/helper";
-import { apiAxios } from "../../config/config";
+import { authAxios } from "../../config/config";
 import { toast } from "react-toastify";
 
 const CreateModule = ({
@@ -21,7 +21,7 @@ const CreateModule = ({
 
     const fetchModuleById = async (id) => {
       try {
-        const res = await apiAxios().get(`/module/${id}`);
+        const res = await authAxios().get(`/module/${id}`);
         const data = res.data?.data || res.data || null;
 
         if (data) {

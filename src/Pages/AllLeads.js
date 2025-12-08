@@ -31,12 +31,13 @@ import ConvertMemberForm from "./ConvertMemberForm";
 import CreateInvoice from "./CreateInvoice";
 import SendPaymentLink from "./SendPaymentLink";
 import { toast } from "react-toastify";
-import { apiAxios } from "../config/config";
+import { authAxios } from "../config/config";
 import Pagination from "../components/common/Pagination";
 import { LuCalendarPlus } from "react-icons/lu";
 import CreateAppointment from "../components/Appointment/CreateAppointment";
 import { FaCalendarDays } from "react-icons/fa6";
 import LeadFilterPanel from "../components/FilterPanel/LeadFilterPanel";
+import { useSelector } from "react-redux";
 const useQuery = () => {
   return new URLSearchParams(useLocation().search);
 };
@@ -52,8 +53,10 @@ const AllLeads = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const location = useLocation();
+  const { user } = useSelector((state) => state.auth);
 
-  console.log(id, "id check lead");
+  const userRole = user.role;
+
   const [searchTerm, setSearchTerm] = useState("");
   const [leadModal, setLeadModal] = useState(false);
   const [selectedLead, setSelectedLead] = useState(null);
@@ -64,7 +67,7 @@ const AllLeads = () => {
   const [appointmentModal, setAppointmentModal] = useState(false);
   const [leadPaymentSend, setLeadPaymentSend] = useState(null);
 
-  const [selectedIds, setSelectedIds] = useState([]);
+  const [selectedUserId, setSelectedUserId] = useState([]);
   const [assignedOwners, setAssignedOwners] = useState({});
   const [bulkOwner, setBulkOwner] = useState(null);
   const [showOwnerDropdown, setShowOwnerDropdown] = useState(false);
@@ -88,77 +91,31 @@ const AllLeads = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
 
-  const handleCheckboxChange = (id) => {
-    setSelectedIds((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
-    );
-  };
-
-  const ownerOptions = [
-    {
-      label: "FOH", // Group label
-      options: [
-        { value: "shivakar", label: "Shivakar" },
-        { value: "divakar", label: "Divakar" },
-        { value: "parbhakar", label: "Parbhakar" },
-      ],
-    },
-  ];
-
-  // Handle bulk assigning owner to selected leads only
-  const handleBulkAssign = (selectedOption) => {
-    setBulkOwner(selectedOption); // Store selected option
-    const updatedAssignments = { ...assignedOwners };
-    selectedIds.forEach((id) => {
-      updatedAssignments[id] = selectedOption; // Assign same owner to all selected leads
-    });
-    setAssignedOwners(updatedAssignments);
-  };
-
-  // Handle submit bulk assignment (Assign Icon click logic)
-  const handleSubmitAssign = () => {
-    if (selectedIds.length === 0) {
-      // If no leads are selected, show an alert
-      toast.error("Please select the Lead to assign owners.");
-      setShowOwnerDropdown(false);
-    } else {
-      // If there are selected leads, show the dropdown to select an owner
-      setShowOwnerDropdown((prev) => !prev);
-    }
-  };
-
-  // Confirm assignment
-  const confirmAssign = () => {
-    console.log("Assigned Leads:", selectedIds); // Log selected lead IDs
-    console.log("Assigned Owner:", bulkOwner); // Log assigned owner
-    setShowOwnerDropdown(false); // Hide the dropdown
-    setSelectedIds([]); // Clear selection
-    setBulkOwner(null); // Clear bulk owner
-  };
+  const [staffList, setStaffList] = useState([]);
 
   const handleCommunicate = (type) => {
-  if (selectedIds.length === 0) {
-    toast.error(`Please select the Member to ${type} owners.`);
-    return;
-  }
+    if (selectedUserId.length === 0) {
+      toast.error(`Please select the Member to ${type} owners.`);
+      return;
+    }
 
-  const queryParams = new URLSearchParams({
-    type: "lead",
-    ids: selectedIds.join(","),
-  }).toString();
+    const queryParams = new URLSearchParams({
+      type: "lead",
+      ids: selectedUserId.join(","),
+    }).toString();
 
-  let url = "";
+    let url = "";
 
-  if (type === "sms") {
-    url = `/send-sms?${queryParams}`;
-  } else if (type === "email") {
-    url = `/send-mail?${queryParams}`;
-  }
+    if (type === "sms") {
+      url = `/send-sms?${queryParams}`;
+    } else if (type === "email") {
+      url = `/send-mail?${queryParams}`;
+    }
 
-  if (url) {
-    window.location.href = url;
-  }
-};
+    if (url) {
+      window.location.href = url;
+    }
+  };
 
   useEffect(() => {
     const dateParam = searchParams.get("date");
@@ -279,7 +236,7 @@ const AllLeads = () => {
         }
       }
 
-      const res = await apiAxios().get("/lead/list", { params });
+      const res = await authAxios().get("/lead/list", { params });
 
       const responseData = res.data;
       const data = responseData?.data || [];
@@ -293,6 +250,31 @@ const AllLeads = () => {
       toast.error("Failed to fetch leads");
     }
   };
+
+  // 🚀 Fetch staff list from API
+  const fetchStaff = async () => {
+    try {
+      const res = await authAxios().get("/staff/list?role=FOH");
+
+      let data = res.data?.data || [];
+
+      setStaffList(data);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to fetch staff");
+    }
+  };
+
+  // Initial load effect
+  useEffect(() => {
+    fetchStaff();
+  }, []);
+
+  const staffOptions =
+    staffList?.map((item) => ({
+      label: item.name,
+      value: item.id,
+    })) || [];
 
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
@@ -358,11 +340,6 @@ const AllLeads = () => {
     fetchLeadList();
   };
 
-  console.log(allLeads, "allLeads");
-  console.log(dateFilter, "dateFilter");
-  console.log(customFrom, "customFrom");
-  console.log(customTo, "customTo");
-
   const handleRemoveFilter = (filterKey) => {
     const setterMap = {
       leadSource: setSelectedLeadSource,
@@ -385,11 +362,69 @@ const AllLeads = () => {
     fetchLeadList("", 1);
   };
 
-  // useEffect(() => {
-  //   fetchLeadList("", 1);
-  // }, []);
+  const handleCheckboxChange = (id) => {
+    setSelectedUserId((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
+  };
 
-  console.log(dateFilter, "dateFilter");
+  // Handle bulk assigning owner to selected leads only
+  const handleBulkAssign = (selectedOption) => {
+    setBulkOwner(selectedOption); // Store selected option
+    const updatedAssignments = { ...assignedOwners };
+    selectedUserId.forEach((id) => {
+      updatedAssignments[id] = selectedOption; // Assign same owner to all selected leads
+    });
+    setAssignedOwners(updatedAssignments);
+  };
+
+  // Handle submit bulk assignment (Assign Icon click logic)
+  const handleSubmitAssign = () => {
+    if (selectedUserId.length === 0) {
+      // If no leads are selected, show an alert
+      toast.error("Please select the Lead to assign owners.");
+      setShowOwnerDropdown(false);
+    } else {
+      // If there are selected leads, show the dropdown to select an owner
+      setShowOwnerDropdown((prev) => !prev);
+    }
+  };
+
+  // Confirm assignment
+  const confirmAssign = async () => {
+    if (!bulkOwner) {
+      toast.error("Please select an owner.");
+      return;
+    }
+
+    // FINAL RESULT OBJECT
+    const bulkAssignmentData = {
+      member_ids: selectedUserId, // selected lead/user IDs
+      owner_id: bulkOwner.value, // owner id from dropdown
+    };
+
+    try {
+      const res = await authAxios().put(
+        "/lead/assign/owner",
+        bulkAssignmentData
+      );
+
+      toast.success("Owner assigned successfully!");
+
+      // Reset after success
+      setShowOwnerDropdown(false);
+      setSelectedUserId([]);
+      setBulkOwner(null);
+
+      // Optional: refresh list
+      fetchLeadList();
+    } catch (err) {
+      console.error(err);
+      toast.error(
+        err?.response?.data?.message || "Failed to assign owner. Try again."
+      );
+    }
+  };
 
   return (
     <>
@@ -420,8 +455,8 @@ const AllLeads = () => {
 
             {dateFilter?.value === "custom" && (
               <>
-                <div className="custom--date flex-1 max-w-[180px] w-full">
-                  <span className="absolute z-[1] mt-[15px] ml-[15px]">
+                <div className="custom--date dob-format flex-1 max-w-[180px] w-full">
+                  <span className="absolute z-[1] mt-[11px] ml-[15px]">
                     <FaCalendarDays />
                   </span>
                   <DatePicker
@@ -437,8 +472,8 @@ const AllLeads = () => {
                     dropdownMode="select"
                   />
                 </div>
-                <div className="custom--date flex-1 max-w-[180px] w-full">
-                  <span className="absolute z-[1] mt-[15px] ml-[15px]">
+                <div className="custom--date dob-format flex-1 max-w-[180px] w-full">
+                  <span className="absolute z-[1] mt-[11px] ml-[15px]">
                     <FaCalendarDays />
                   </span>
                   <DatePicker
@@ -539,32 +574,57 @@ const AllLeads = () => {
             </div>
             <div>
               <div className="flex gap-2 items-center">
-                {showOwnerDropdown && (
-                  <div>
-                    <Select
-                      options={ownerOptions}
-                      onChange={handleBulkAssign}
-                      placeholder="Select an owner"
-                      styles={dasboardStyles}
-                      className="min-w-[150px] w-full"
-                    />
-                  </div>
+                {(userRole === "CLUB_MANAGER" ||
+                  userRole === "GENERAL_MANAGER" ||
+                  userRole === "ADMIN") && (
+                  <>
+                    {showOwnerDropdown && selectedUserId.length > 0 && (
+                      <div>
+                        <Select
+                          options={staffOptions}
+                          onChange={handleBulkAssign}
+                          placeholder="Select an owner"
+                          styles={dasboardStyles}
+                          className="min-w-[150px] w-full"
+                        />
+                      </div>
+                    )}
+                    <Tooltip
+                      id={`tooltip-assin-lead`}
+                      content="Change Lead Owner"
+                      place="top"
+                    >
+                      <img
+                        src={AssignIcon}
+                        className="w-8 cursor-pointer"
+                        onClick={handleSubmitAssign}
+                        alt="assign"
+                      />
+                    </Tooltip>
+                  </>
                 )}
-                <img
-                  src={AssignIcon}
-                  className="w-8 cursor-pointer"
-                  onClick={handleSubmitAssign}
-                />
-                <img
-                  src={SmsIcon}
-                  className="w-8 cursor-pointer"
-                  onClick={() => handleCommunicate("sms")}
-                />
-                <img
-                  src={MailIcon}
-                  className="w-8 cursor-pointer"
-                  onClick={() => handleCommunicate("email")}
-                />
+                <Tooltip
+                  id={`tooltip-send-sms`}
+                  content="Bulk Send SMS"
+                  place="top"
+                >
+                  <img
+                    src={SmsIcon}
+                    className="w-8 cursor-pointer"
+                    onClick={() => handleCommunicate("sms")}
+                  />
+                </Tooltip>
+                <Tooltip
+                  id={`tooltip-send-mail`}
+                  content="Bulk Send Mail"
+                  place="top"
+                >
+                  <img
+                    src={MailIcon}
+                    className="w-8 cursor-pointer"
+                    onClick={() => handleCommunicate("email")}
+                  />
+                </Tooltip>
 
                 {/* Show confirm button after selecting an owner */}
                 {bulkOwner && (
@@ -575,7 +635,7 @@ const AllLeads = () => {
                       </h2>
                       <p className="mb-4">
                         Are you sure you want to assign{" "}
-                        <strong>{selectedIds.length}</strong> lead(s) to{" "}
+                        <strong>{selectedUserId.length}</strong> lead(s) to{" "}
                         <strong>{bulkOwner?.label}</strong>?
                       </p>
                       <div className="flex justify-center gap-4">
@@ -605,14 +665,16 @@ const AllLeads = () => {
                 <thead className="text-xs text-gray-700 uppercase bg-gray-50">
                   <tr>
                     <th className="px-2 py-4">#</th>
-                    <th className="px-2 py-4">S.No</th>
+                    {/* <th className="px-2 py-4">S.No</th> */}
                     <th className="px-2 py-4">Name</th>
                     <th className="px-2 py-4">Interested In</th>
-                    <th className="px-2 py-4">Created on</th>
+                    <th className="px-2 py-4">Lead Type</th>
                     <th className="px-2 py-4">Lead Source</th>
                     <th className="px-2 py-4">Lead Status</th>
                     <th className="px-2 py-4">Last Call Status</th>
                     <th className="px-2 py-4">Lead Owner</th>
+                    <th className="px-2 py-4">Created on</th>
+                    <th className="px-2 py-4">Last Updated On</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -626,22 +688,25 @@ const AllLeads = () => {
                           <input
                             type="checkbox"
                             className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
-                            checked={selectedIds.includes(row.id)}
+                            checked={selectedUserId.includes(row.id)}
                             onChange={() => handleCheckboxChange(row.id)}
                           />
                           <span className="checkmark--custom"></span>
                         </div>
                       </td>
-                      <td className="px-2 py-4">{row?.id}</td>
+                      {/* <td className="px-2 py-4">{row?.id}</td> */}
 
                       <td className="px-2 py-4">{row?.full_name}</td>
                       <td className="px-2 py-4">
-                        {row?.interested_in ? row?.interested_in : "--"}
+                        <div className="max-w-[200px]">
+                          {row?.interested_in?.length
+                            ? row.interested_in.join(", ")
+                            : "--"}
+                        </div>
                       </td>
                       <td className="px-2 py-4">
-                        {formatAutoDate(row?.createdAt)}
+                        {row?.interested_in ? row?.lead_type : "--"}
                       </td>
-
                       <td className="px-2 py-4">
                         {row?.lead_source == null ? "--" : row?.lead_source}
                       </td>
@@ -667,7 +732,13 @@ const AllLeads = () => {
                           : row?.last_call_status}
                       </td>
                       <td className="px-2 py-4">
-                        {row?.created_by == null ? "--" : row?.created_by}
+                        {row?.lead_owner == null ? "--" : row?.lead_owner}
+                      </td>
+                      <td className="px-2 py-4">
+                        {formatAutoDate(row?.createdAt)}
+                      </td>
+                      <td className="px-2 py-4">
+                        {formatAutoDate(row?.updatedAt)}
                       </td>
 
                       <div className="absolute hidden group-hover:flex gap-2 right-0 h-full top-0 w-[50%] items-center justify-end bg-[linear-gradient(269deg,_#ffffff_30%,_transparent)] pr-5 transition duration-700">
@@ -707,7 +778,7 @@ const AllLeads = () => {
                         >
                           <div
                             onClick={() => {
-                              setSelectedLeadMember(row);
+                              setSelectedLeadMember(row?.id);
                               setMemberModal(true);
                             }}
                             className="p-1 cursor-pointer"
@@ -737,6 +808,7 @@ const AllLeads = () => {
                         >
                           <div
                             onClick={() => {
+                              setSelectedLead(row?.id);
                               setAppointmentModal(true);
                             }}
                             className="p-1 cursor-pointer"
@@ -824,6 +896,7 @@ const AllLeads = () => {
       {appointmentModal && (
         <CreateAppointment
           setAppointmentModal={setAppointmentModal}
+          memberID={selectedLead}
           defaultCategory="complementary"
         />
       )}

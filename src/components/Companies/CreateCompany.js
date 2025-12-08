@@ -7,7 +7,7 @@ import Select from "react-select";
 import { selectIcon } from "../../Helper/helper";
 import PhoneInput from "react-phone-number-input";
 import { toast } from "react-toastify";
-import { apiAxios } from "../../config/config";
+import { authAxios } from "../../config/config";
 
 const CreateCompany = ({
   setShowModal,
@@ -36,7 +36,7 @@ const CreateCompany = ({
 
     const fetchCompanyById = async (id) => {
       try {
-        const res = await apiAxios().get(`/company/${id}`);
+        const res = await authAxios().get(`/company/${id}`);
         const data = res.data?.data || res.data || null;
 
         if (data) {

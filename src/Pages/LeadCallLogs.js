@@ -12,7 +12,7 @@ import {
 import { customStyles, selectIcon } from "../Helper/helper";
 import { useFormik } from "formik";
 import * as Yup from "yup";
-import { apiAxios } from "../config/config";
+import { authAxios } from "../config/config";
 import { toast } from "react-toastify";
 import PhoneInput from "react-phone-number-input";
 import LeadContactHistory from "./LeadContactHistory";
@@ -21,18 +21,6 @@ import { fetchOptionList } from "../Redux/Reducers/optionListSlice";
 import { FaCalendarDays } from "react-icons/fa6";
 import { LuIndianRupee } from "react-icons/lu";
 import { format } from "date-fns";
-
-// Trainer assignment options
-const assignTrainers = [
-  { value: 1, label: "Shivakar", key: "shivakar" },
-  { value: 2, label: "Nitin", key: "nitin" },
-  { value: 3, label: "Esha", key: "esha" },
-  { value: 4, label: "Apporva", key: "apporva" },
-];
-
-const trainerIdMap = Object.fromEntries(
-  assignTrainers.map((t) => [t.value, t.key])
-);
 
 const validationSchema = Yup.object().shape({
   call_status: Yup.string().required("Call status is required"),
@@ -94,33 +82,11 @@ const LeadCallLogs = () => {
   const queryParams = new URLSearchParams(location.search);
   const action = queryParams.get("action");
   const [leadDetails, setLeadDetails] = useState(null);
+  const [trainerList, setTrainerList] = useState([]);
   const [staffList, setStaffList] = useState([]);
+  const [editLog, setEditLog] = useState(null);
 
   const dataSource = action === "add-follow-up" ? assignedLeadsData : mockData;
-
-  const fetchStaff = async (search = "") => {
-    try {
-      const res = await apiAxios().get("/staff/list", {
-        params: search ? { search } : {},
-      });
-      let data = res.data?.data || res?.data || [];
-      const activeService = data?.filter((item) => item?.status === "ACTIVE");
-      setStaffList(activeService);
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to fetch club");
-    }
-  };
-
-  useEffect(() => {
-    fetchStaff();
-  }, []);
-
-  const staffListOptions =
-    staffList?.map((item) => ({
-      label: item.name,
-      value: item.id,
-    })) || [];
 
   // Redux state
   const dispatch = useDispatch();
@@ -152,7 +118,7 @@ const LeadCallLogs = () => {
         params.endDate = format(filters.endDate, "yyyy-MM-dd");
 
       // ✅ Correct way to send params — DO NOT add them inside the URL string
-      const res = await apiAxios().get(
+      const res = await authAxios().get(
         `/lead/call/log/list/${leadId}`,
         { params } // Axios will automatically append ?call_type=...&startDate=... etc.
       );
@@ -169,7 +135,7 @@ const LeadCallLogs = () => {
 
   const fetchLeadById = async (leadId) => {
     try {
-      const res = await apiAxios().get(`/lead/${leadId}`);
+      const res = await authAxios().get(`/lead/${leadId}`);
       const data = res.data?.data || res.data || null;
       setLeadDetails(data);
     } catch (err) {
@@ -209,13 +175,21 @@ const LeadCallLogs = () => {
     initialValues,
     validationSchema,
     onSubmit: async (values, { resetForm }) => {
-      console.log("Form validation errors:", formik.errors);
-
+      console.log(values, " values");
+      console.log(values.id, " values.id");
       try {
-        await apiAxios().post("/lead/call/log/create", values);
-        toast.success("Call created successfully!");
+        if (values.id) {
+          // UPDATE MODE
+          await authAxios().put(`/lead/call/log/${values.id}`, values);
+          toast.success("Call log updated successfully!");
+        } else {
+          // CREATE MODE
+          await authAxios().post("/lead/call/log/create", values);
+          toast.success("Call created successfully!");
+        }
 
         resetForm();
+        setEditLog(null); // Exit edit mode
         fetchLeadCallLogs(id);
       } catch (error) {
         toast.error("Something went wrong. Please try again.");
@@ -225,15 +199,19 @@ const LeadCallLogs = () => {
   });
 
   const handleDateChange = (date) => {
-    formik.setFieldValue("trial_tour_datetime", date);
+    formik.setFieldValue("follow_up_datetime", date);
   };
 
-  console.log(callLogs, "callLogs");
-
   const handleCallStatusChange = (option) => {
-    formik.resetForm({
-      values: { ...initialValues, call_status: option.value },
-    }); // Reset all fields except call_status
+    if (formik.values.id) {
+      // EDIT MODE → do not reset form
+      formik.setFieldValue("call_status", option.value);
+    } else {
+      // CREATE MODE → safe to reset
+      formik.resetForm({
+        values: { ...initialValues, call_status: option.value },
+      });
+    }
   };
 
   const handleDateTime = (date) => {
@@ -242,7 +220,7 @@ const LeadCallLogs = () => {
 
   const handleDateTrainerChange = (val) => {
     if (!val) return;
-    formik.setFieldValue("follow_up_datetime", val.toISOString());
+    formik.setFieldValue("trial_tour_datetime", val.toISOString());
     // reset selected trainer whenever date/time changes
     formik.setFieldValue("schedule_for", "");
   };
@@ -252,23 +230,23 @@ const LeadCallLogs = () => {
     formik.setFieldValue("schedule_for", selectedOption?.value ?? "");
   };
 
-  const getAvailableTrainers = () => {
-    const dt = formik.values.follow_up_datetime;
-    if (!dt) return [];
+  // const getAvailableTrainers = () => {
+  //   const dt = formik.values.follow_up_datetime;
+  //   if (!dt) return [];
 
-    const selected = new Date(dt);
-    if (isNaN(selected)) return [];
+  //   const selected = new Date(dt);
+  //   if (isNaN(selected)) return [];
 
-    return assignTrainers.filter((trainer) => {
-      const trainerKey = trainerIdMap[trainer.value];
-      if (!trainerKey) return false;
+  //   return assignTrainers.filter((trainer) => {
+  //     const trainerKey = trainerIdMap[trainer.value];
+  //     if (!trainerKey) return false;
 
-      return trainerAvailability[trainerKey]?.some((slot) => {
-        const slotDt = new Date(slot.date_time);
-        return slotDt.getTime() === selected.getTime();
-      });
-    });
-  };
+  //     return trainerAvailability[trainerKey]?.some((slot) => {
+  //       const slotDt = new Date(slot.date_time);
+  //       return slotDt.getTime() === selected.getTime();
+  //     });
+  //   });
+  // };
 
   const now = new Date();
   const minTime = new Date();
@@ -277,13 +255,110 @@ const LeadCallLogs = () => {
   const maxTime = new Date();
   maxTime.setHours(22, 0, 0, 0);
 
+  const baseMinTime = new Date();
+  baseMinTime.setHours(6, 0, 0, 0); // 6:00 AM
+
+  const baseMaxTime = new Date();
+  baseMaxTime.setHours(22, 0, 0, 0); // 10:00 PM
+
+  const getMinTime = (selectedDate) => {
+    if (!selectedDate) return baseMinTime;
+
+    const isToday = selectedDate.toDateString() === now.toDateString();
+
+    // If today → disable past times but still enforce 6 AM
+    if (isToday) {
+      const current = new Date();
+      const dynamicTime = current.getHours() < 6 ? baseMinTime : current;
+
+      return dynamicTime;
+    }
+
+    // For future dates → use normal 6 AM
+    return baseMinTime;
+  };
+
   useEffect(() => {
     if (action === "schedule-tour-trial") {
       formik.setFieldValue("call_status", "Trial/Tour Scheduled");
     }
   }, [action]);
 
-  console.log(formik.values, "CALL LOGS");
+  useEffect(() => {
+    if (editLog) {
+      formik.setValues({
+        member_id: leadDetails?.id,
+        call_status: editLog.call_status,
+        follow_up_datetime: editLog.follow_up_datetime || "",
+        schedule_for: editLog.schedule_for || "",
+        trial_tour_datetime: editLog.trial_tour_datetime
+          ? new Date(editLog.trial_tour_datetime)
+          : "",
+        training_by: editLog.training_by || "",
+        not_interested_reason: editLog.not_interested_reason || "",
+        closure_date: editLog.closure_date
+          ? new Date(editLog.closure_date)
+          : "",
+        amount: editLog.amount || "",
+        remark: editLog.remark || "",
+        id: editLog.id, // <-- VERY IMPORTANT for update mode
+      });
+    }
+  }, [editLog]);
+
+  const fetchStaff = async () => {
+    try {
+      // Fetch all staff needed for 'training_by' select (both roles)
+      const res = await authAxios().get("/staff/list?role=TRAINER&role=FOH");
+      const staff = res.data?.data || [];
+
+      console.log(staff, "updatedStaff");
+
+      // --- GROUPING STAFF BY ROLE ---
+      const foh = staff
+        .filter((item) => item.role === "FOH")
+        .map((item) => ({
+          value: item.id,
+          label: item.name,
+        }));
+
+      const trainer = staff
+        .filter((item) => item.role === "TRAINER")
+        .map((item) => ({
+          value: item.id,
+          label: item.name,
+        }));
+
+      // Final grouped structure for 'training_by' select
+      const groupedOptions = [
+        {
+          label: "FOH",
+          options: foh,
+        },
+        {
+          label: "TRAINER",
+          options: trainer,
+        },
+      ];
+
+      // Separate arrays for each select
+      setTrainerList(trainer); // For 'schedule_for'
+      setStaffList(groupedOptions); // For 'training_by'
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to fetch staff");
+    }
+  };
+
+  useEffect(() => {
+    fetchStaff();
+  }, []);
+
+  const staffListOptions =
+    staffList?.map((item) => ({
+      label: item.name,
+      value: item.id,
+    })) || [];
 
   return (
     <div className="page--content">
@@ -345,6 +420,7 @@ const LeadCallLogs = () => {
                   onChange={handleCallStatusChange}
                   styles={customStyles}
                   placeholder="Call Status"
+                  isDisabled={editLog ? true : false}
                 />
 
                 {formik.errors?.call_status && formik.touched?.call_status && (
@@ -364,7 +440,7 @@ const LeadCallLogs = () => {
                       Date & Time <span className="text-red-500">*</span>
                     </label>
                     <div className="custom--date flex-1">
-                      <span className="absolute z-[1] mt-[15px] ml-[15px]">
+                      <span className="absolute z-[1] mt-[11px] ml-[15px]">
                         <FaCalendarDays />
                       </span>
                       <DatePicker
@@ -379,9 +455,10 @@ const LeadCallLogs = () => {
                         dateFormat="dd/MM/yyyy hh:mm aa"
                         placeholderText="Select date & time"
                         className="border px-3 py-2 w-full input--icon"
-                        minDate={now}
-                        minTime={minTime}
-                        maxTime={maxTime}
+                        minDate={now} // Disable past dates
+                        minTime={getMinTime(new Date())} // Calculate minTime for selected date dynamically
+                        maxTime={baseMaxTime} // 10:00 PM limit
+                        disabled={editLog ? true : false}
                       />
                     </div>
                     {formik.touched.follow_up_datetime &&
@@ -400,13 +477,13 @@ const LeadCallLogs = () => {
                       Date & Time <span className="text-red-500">*</span>
                     </label>
                     <div className="custom--date flex-1">
-                      <span className="absolute z-[1] mt-[15px] ml-[15px]">
+                      <span className="absolute z-[1] mt-[11px] ml-[15px]">
                         <FaCalendarDays />
                       </span>
                       <DatePicker
                         selected={
-                          formik.values.follow_up_datetime
-                            ? new Date(formik.values.follow_up_datetime)
+                          formik.values.trial_tour_datetime
+                            ? new Date(formik.values.trial_tour_datetime)
                             : null
                         }
                         onChange={handleDateTrainerChange}
@@ -415,41 +492,42 @@ const LeadCallLogs = () => {
                         dateFormat="dd/MM/yyyy hh:mm aa"
                         placeholderText="Select date & time"
                         className="border px-3 py-2 w-full input--icon"
-                        minDate={now}
-                        minTime={minTime}
-                        maxTime={maxTime}
+                        minDate={now} // Disable past dates
+                        minTime={getMinTime(new Date())} // Calculate minTime for selected date dynamically
+                        maxTime={baseMaxTime} // 10:00 PM limit
+                        disabled={editLog ? true : false}
                       />
-                      {formik.touched.follow_up_datetime &&
-                        formik.errors.follow_up_datetime && (
+                      {formik.touched.trial_tour_datetime &&
+                        formik.errors.trial_tour_datetime && (
                           <p className="text-sm text-red-500 mt-1">
-                            {formik.errors.follow_up_datetime}
+                            {formik.errors.trial_tour_datetime}
                           </p>
                         )}
                     </div>
                   </div>
 
-                  {/* Staff Name */}
+                  {/* Trainer */}
                   <div>
                     <label className="mb-2 block">
-                      Staff Name <span className="text-red-500">*</span>
+                      Trainer <span className="text-red-500">*</span>
                     </label>
                     <Select
                       name="schedule_for"
                       value={
-                        assignTrainers.find(
+                        trainerList.find(
                           (opt) => opt.value === formik.values.schedule_for
                         ) || null
                       }
+                      options={trainerList}
                       onChange={(option) =>
                         handleSelectSchedule("schedule_for", option)
                       }
-                      options={getAvailableTrainers()}
-                      placeholder="Select Staff"
+                      placeholder="Select Trainer"
                       styles={customStyles}
+                      isDisabled={editLog ? true : false}
                     />
                     {formik.values.schedule &&
-                      formik.values.follow_up_datetime &&
-                      !getAvailableTrainers().length && (
+                      formik.values.follow_up_datetime && (
                         <p className="text-sm text-red-500 mt-1">
                           No trainers available at this date and time.
                         </p>
@@ -472,27 +550,28 @@ const LeadCallLogs = () => {
                       <div>
                         <label className="mb-2 block">Date & Time</label>
                         <div className="custom--date flex-1">
-                          <span className="absolute z-[1] mt-[15px] ml-[15px]">
+                          <span className="absolute z-[1] mt-[11px] ml-[15px]">
                             <FaCalendarDays />
                           </span>
                           <DatePicker
-                            selected={formik.values.trial_tour_datetime}
+                            selected={formik.values.follow_up_datetime}
                             onChange={handleDateChange}
                             showTimeSelect
                             timeFormat="hh:mm aa"
                             dateFormat="dd/MM/yyyy hh:mm aa"
                             placeholderText="Select date & time"
                             className="border px-3 py-2 w-full input--icon"
-                            minDate={now}
-                            minTime={minTime}
-                            maxTime={maxTime}
+                            minDate={now} // Disable past dates
+                            minTime={getMinTime(new Date())} // Calculate minTime for selected date dynamically
+                            maxTime={baseMaxTime} // 10:00 PM limit
+                            disabled={editLog ? true : false}
                           />
                         </div>
 
-                        {formik.errors?.trial_tour_datetime &&
-                          formik.touched?.trial_tour_datetime && (
+                        {formik.errors?.follow_up_datetime &&
+                          formik.touched?.follow_up_datetime && (
                             <div className="text-red-500 text-sm">
-                              {formik.errors?.trial_tour_datetime}
+                              {formik.errors?.follow_up_datetime}
                             </div>
                           )}
                       </div>
@@ -504,11 +583,14 @@ const LeadCallLogs = () => {
                         <Select
                           name="training_by"
                           value={
-                            staffListOptions.find(
-                              (opt) => opt.value === formik.values?.training_by
-                            ) || null
+                            staffList
+                              .flatMap((group) => group.options)
+                              .find(
+                                (opt) =>
+                                  opt.value === formik.values?.training_by
+                              ) || null
                           }
-                          options={staffListOptions}
+                          options={staffList}
                           onChange={(option) =>
                             formik.setFieldValue("training_by", option.value)
                           }
@@ -516,6 +598,7 @@ const LeadCallLogs = () => {
                             formik.setFieldTouched("training_by", true)
                           }
                           styles={customStyles}
+                          isDisabled={editLog ? true : false}
                         />
                         {formik.errors?.training_by &&
                           formik.touched?.training_by && (
@@ -552,6 +635,7 @@ const LeadCallLogs = () => {
                       }}
                       styles={customStyles}
                       placeholder="Select Reason"
+                      isDisabled={editLog ? true : false}
                     />
                     {formik.errors?.not_interested_reason &&
                       formik.touched?.not_interested_reason && (
@@ -570,7 +654,7 @@ const LeadCallLogs = () => {
                       Expected Date of Closure
                     </label>
                     <div className="custom--date flex-1">
-                      <span className="absolute z-[1] mt-[15px] ml-[15px]">
+                      <span className="absolute z-[1] mt-[11px] ml-[15px]">
                         <FaCalendarDays />
                       </span>
                       <DatePicker
@@ -582,6 +666,7 @@ const LeadCallLogs = () => {
                         placeholderText="Select Date"
                         className="border px-3 py-2 w-full input--icon"
                         minDate={now}
+                        disabled={editLog ? true : false}
                       />
                     </div>
                   </div>
@@ -596,7 +681,10 @@ const LeadCallLogs = () => {
                         name="amount"
                         value={formik.values.amount}
                         onChange={formik.handleChange}
-                        className="custom--input w-full input--icon"
+                        className={`custom--input w-full input--icon ${
+                          editLog ? "!bg-gray-100 pointer-events-none" : ""
+                        }`}
+                        disabled={editLog ? true : false}
                       />
                     </div>
                   </div>
@@ -625,7 +713,18 @@ const LeadCallLogs = () => {
             </div>
 
             {/* Buttons */}
-            <div className="flex justify-end gap-2 mt-3">
+            <div className="flex items-center justify-end gap-2 mt-3">
+              {editLog && (
+                <p
+                  className="cursor-pointer text-[#009eb2] underline"
+                  onClick={() => {
+                    formik.resetForm();
+                    setEditLog(null);
+                  }}
+                >
+                  Clear
+                </p>
+              )}
               <button
                 type="submit"
                 className="px-4 py-2 bg-black text-white rounded"
@@ -666,7 +765,7 @@ const LeadCallLogs = () => {
               />
 
               <div className="custom--date flex-1">
-                <span className="absolute z-[1] mt-[15px] ml-[15px]">
+                <span className="absolute z-[1] mt-[11px] ml-[15px]">
                   <FaCalendarDays />
                 </span>
                 <DatePicker
@@ -678,7 +777,7 @@ const LeadCallLogs = () => {
                 />
               </div>
               <div className="custom--date flex-1">
-                <span className="absolute z-[1] mt-[15px] ml-[15px]">
+                <span className="absolute z-[1] mt-[11px] ml-[15px]">
                   <FaCalendarDays />
                 </span>
                 <DatePicker
@@ -693,7 +792,11 @@ const LeadCallLogs = () => {
 
           {callLogs.length > 0 ? (
             callLogs.map((filteredLogs, index) => (
-              <LeadContactHistory key={index} filteredData={filteredLogs} />
+              <LeadContactHistory
+                key={index}
+                filteredData={filteredLogs}
+                handleEditLog={setEditLog}
+              />
             ))
           ) : (
             <p className="text-center text-gray-500">No records found</p>

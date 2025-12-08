@@ -7,7 +7,7 @@ import Tooltip from "../common/Tooltip";
 import { LiaEdit } from "react-icons/lia";
 import { FaCircle } from "react-icons/fa6";
 import CreateSubscriptionPlan from "./CreateSubscriptionPlan";
-import { apiAxios } from "../../config/config";
+import { authAxios } from "../../config/config";
 import { IoSearchOutline } from "react-icons/io5";
 import Select from "react-select";
 import { customStyles } from "../../Helper/helper";
@@ -24,7 +24,7 @@ const SubscriptionPlan = () => {
 
   const fetchClub = async (search = "") => {
     try {
-      const res = await apiAxios().get("/club/list", {
+      const res = await authAxios().get("/club/list", {
         params: search ? { search } : {},
       });
       let data = res.data?.data || res.data || [];
@@ -40,7 +40,7 @@ const SubscriptionPlan = () => {
 
   const fetchSubscription = async (search = "") => {
     try {
-      const res = await apiAxios().get("/subscription-plan/list", {
+      const res = await authAxios().get("/subscription-plan/list", {
         params: search ? { search } : {},
       });
       let data = res.data?.data || res.data || [];
@@ -91,13 +91,11 @@ const SubscriptionPlan = () => {
       hsn_sac_code: "",
       amount: "",
       discount: "",
-      total_amount: "",
       gst: "",
-      gst_amount: "",
-      final_amount: "",
+      earn_coin: "",
+      is_spouse_plan: "",
       status: "ACTIVE",
       position: "",
-      club_name: "",
     },
     validationSchema: Yup.object({
       title: Yup.string().required("Title is required"),
@@ -110,21 +108,23 @@ const SubscriptionPlan = () => {
       amount: Yup.string().required("Amount is required"),
       discount: Yup.string().required("Discount is required"),
       gst: Yup.string().required("GST is required"),
+      earn_coin: Yup.string().required("Earn Coins is required"),
       status: Yup.string().required("Status is required"),
       position: Yup.number().required("Position is required"),
     }),
+    enableReinitialize: true,
     onSubmit: async (values, { resetForm }) => {
       try {
         const payload = { ...values };
 
-        if (editingOption && editingOption.id) {
-          await apiAxios().put(
-            `/subscription-plan/${editingOption.id}`,
+        if (editingOption) {
+          await authAxios().put(
+            `/subscription-plan/${editingOption}`,
             payload
           );
           toast.success("Updated Successfully");
         } else {
-          await apiAxios().post("/subscription-plan/create", payload);
+          await authAxios().post("/subscription-plan/create", payload);
           toast.success("Created Successfully");
         }
 
@@ -140,21 +140,7 @@ const SubscriptionPlan = () => {
     },
   });
 
-  useEffect(() => {
-    const { amount, discount, gst } = formik.values;
-
-    if (amount !== "" && discount !== "" && gst !== "") {
-      const total = parseFloat(amount) - parseFloat(discount);
-      const gstAmt = (total * parseFloat(gst)) / 100;
-      const final = total + gstAmt;
-
-      formik.setFieldValue("total_amount", total.toFixed(2));
-      formik.setFieldValue("gst_amount", gstAmt.toFixed(2));
-      formik.setFieldValue("final_amount", final.toFixed(2));
-    }
-  }, [formik.values.amount, formik.values.discount, formik.values.gst]);
-
-  console.log(module,'module')
+  console.log(module, "module");
 
   return (
     <div className="page--content">
@@ -187,7 +173,7 @@ const SubscriptionPlan = () => {
             </span>
             <input
               type="text"
-              placeholder="Search"
+              placeholder="Search plan..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="custom--input w-full input--icon"
@@ -245,9 +231,13 @@ const SubscriptionPlan = () => {
                   >
                     {/* <td className="px-2 py-4">{item?.id || "—"}</td> */}
                     <td className="px-2 py-4">{item?.title}</td>
-                    <td className="px-2 py-4">{item?.description ? item?.description : "--"}</td>
+                    <td className="px-2 py-4">
+                      {item?.description ? item?.description : "--"}
+                    </td>
                     <td className="px-2 py-4">{item?.club_name}</td>
-                    <td className="px-2 py-4">{item?.duration_value} {item?.duration_type}</td>
+                    <td className="px-2 py-4">
+                      {item?.duration_value} {item?.duration_type}
+                    </td>
                     <td className="px-2 py-4">{item?.booking_type}</td>
                     <td className="px-2 py-4">₹{item?.amount}</td>
                     <td className="px-2 py-4">₹{item?.discount}</td>
@@ -282,7 +272,7 @@ const SubscriptionPlan = () => {
                           <div
                             className="p-1 cursor-pointer"
                             onClick={() => {
-                              setEditingOption(item);
+                              setEditingOption(item?.id);
                               formik.setValues(item);
                               setShowModal(true);
                             }}

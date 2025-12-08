@@ -8,7 +8,7 @@ import { MdCall } from "react-icons/md";
 import "react-datepicker/dist/react-datepicker.css";
 import { LiaEdit } from "react-icons/lia";
 import Tooltip from "../components/common/Tooltip";
-import { apiAxios } from "../config/config";
+import { authAxios } from "../config/config";
 import { toast } from "react-toastify";
 import Pagination from "../components/common/Pagination";
 import CreateMemberForm from "./CreateMemberForm";
@@ -16,11 +16,15 @@ import MailIcon from "../assets/images/icons/mail.png";
 import SmsIcon from "../assets/images/icons/sms.png";
 import AssignIcon from "../assets/images/icons/assign.png";
 import MemberFilterPanel from "../components/FilterPanel/MemberFilterPanel";
+import { useSelector } from "react-redux";
 
 const MemberList = () => {
   const { id } = useParams();
   const location = useLocation();
-  const [search, setSearch] = useState("");
+  const { user } = useSelector((state) => state.auth);
+  const userRole = user.role;
+  const [staffList, setStaffList] = useState([]);
+
   const [memberList, setMemberList] = useState([]);
   const [memberModal, setMemberModal] = useState(false);
   const [stats, setStats] = useState({
@@ -44,7 +48,7 @@ const MemberList = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
 
-  const [selectedIds, setSelectedIds] = useState([]);
+  const [selectedUserId, setSelectedUserId] = useState([]);
   const [assignedOwners, setAssignedOwners] = useState({});
   const [bulkOwner, setBulkOwner] = useState(null);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -104,7 +108,7 @@ const MemberList = () => {
         });
       }
 
-      const res = await apiAxios().get("/member/list", { params });
+      const res = await authAxios().get("/member/list", { params });
 
       const responseData = res.data;
       const data = responseData?.data || [];
@@ -121,7 +125,7 @@ const MemberList = () => {
 
   const fetchMemberStats = async () => {
     try {
-      const response = await apiAxios().get("/member/stats/count"); // Update with your actual endpoint
+      const response = await authAxios().get("/member/stats/count"); // Update with your actual endpoint
       if (response.data.status) {
         setStats(response.data.data);
       } else {
@@ -160,27 +164,41 @@ const MemberList = () => {
   }, [searchTerm]);
 
   const handleCheckboxChange = (id) => {
-    setSelectedIds((prev) =>
+    setSelectedUserId((prev) =>
       prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
     );
   };
 
-  const ownerOptions = [
-    {
-      label: "GT", // Group label
-      options: [
-        { value: "shivakar", label: "Shivakar" },
-        { value: "divakar", label: "Divakar" },
-        { value: "parbhakar", label: "Parbhakar" },
-      ],
-    },
-  ];
+  // 🚀 Fetch staff list from API
+  const fetchStaff = async () => {
+    try {
+      const res = await authAxios().get("/staff/list?role=FOH");
+
+      let data = res.data?.data || [];
+
+      setStaffList(data);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to fetch staff");
+    }
+  };
+
+  // Initial load effect
+  useEffect(() => {
+    fetchStaff();
+  }, []);
+
+  const staffOptions =
+    staffList?.map((item) => ({
+      label: item.name,
+      value: item.id,
+    })) || [];
 
   // Handle bulk assigning owner to selected leads only
   const handleBulkAssign = (selectedOption) => {
     setBulkOwner(selectedOption); // Store selected option
     const updatedAssignments = { ...assignedOwners };
-    selectedIds.forEach((id) => {
+    selectedUserId.forEach((id) => {
       updatedAssignments[id] = selectedOption; // Assign same owner to all selected leads
     });
     setAssignedOwners(updatedAssignments);
@@ -188,7 +206,7 @@ const MemberList = () => {
 
   // Handle submit bulk assignment (Assign Icon click logic)
   const handleSubmitAssign = () => {
-    if (selectedIds.length === 0) {
+    if (selectedUserId.length === 0) {
       // If no leads are selected, show an alert
       toast.error("Please select the Member to change the Trainers.");
       setShowOwnerDropdown(false);
@@ -199,37 +217,64 @@ const MemberList = () => {
   };
 
   // Confirm assignment
-  const confirmAssign = () => {
-    console.log("Assigned Members:", selectedIds); // Log selected lead IDs
-    console.log("Assigned Owner:", bulkOwner); // Log assigned owner
-    setShowOwnerDropdown(false); // Hide the dropdown
-    setSelectedIds([]); // Clear selection
-    setBulkOwner(null); // Clear bulk owner
+  const confirmAssign = async () => {
+    if (!bulkOwner) {
+      toast.error("Please select an owner.");
+      return;
+    }
+
+    // FINAL RESULT OBJECT
+    const bulkAssignmentData = {
+      member_ids: selectedUserId, // selected lead/user IDs
+      owner_id: bulkOwner.value, // owner id from dropdown
+    };
+
+    try {
+      const res = await authAxios().put(
+        "/lead/assign/owner",
+        bulkAssignmentData
+      );
+
+      toast.success("Owner assigned successfully!");
+
+      // Reset after success
+      setShowOwnerDropdown(false);
+      setSelectedUserId([]);
+      setBulkOwner(null);
+
+      // Optional: refresh list
+      fetchMemberList();
+    } catch (err) {
+      console.error(err);
+      toast.error(
+        err?.response?.data?.message || "Failed to assign owner. Try again."
+      );
+    }
   };
 
   const handleCommunicate = (type) => {
-  if (selectedIds.length === 0) {
-    toast.error(`Please select the Member to ${type} owners.`);
-    return;
-  }
+    if (selectedUserId.length === 0) {
+      toast.error(`Please select the Member to ${type} owners.`);
+      return;
+    }
 
-  const queryParams = new URLSearchParams({
-    type: "member",
-    ids: selectedIds.join(","),
-  }).toString();
+    const queryParams = new URLSearchParams({
+      type: "member",
+      ids: selectedUserId.join(","),
+    }).toString();
 
-  let url = "";
+    let url = "";
 
-  if (type === "sms") {
-    url = `/send-sms?${queryParams}`;
-  } else if (type === "email") {
-    url = `/send-mail?${queryParams}`;
-  }
+    if (type === "sms") {
+      url = `/send-sms?${queryParams}`;
+    } else if (type === "email") {
+      url = `/send-mail?${queryParams}`;
+    }
 
-  if (url) {
-    window.location.href = url;
-  }
-};
+    if (url) {
+      window.location.href = url;
+    }
+  };
 
   const handleRemoveFilter = (filterKey) => {
     const setterMap = {
@@ -312,7 +357,7 @@ const MemberList = () => {
               <h2 className="text-lg font-semibold mb-4">Confirm Assignment</h2>
               <p className="mb-4">
                 Are you sure you want to assign{" "}
-                <strong>{selectedIds.length}</strong> lead(s) to{" "}
+                <strong>{selectedUserId.length}</strong> lead(s) to{" "}
                 <strong>{bulkOwner?.label}</strong>?
               </p>
               <div className="flex justify-center gap-4">
@@ -360,32 +405,57 @@ const MemberList = () => {
             </div>
             <div>
               <div className="flex gap-2 items-center">
-                {showOwnerDropdown && (
-                  <div>
-                    <Select
-                      options={ownerOptions}
-                      onChange={handleBulkAssign}
-                      placeholder="Select an owner"
-                      styles={dasboardStyles}
-                      className="min-w-[150px] w-full"
-                    />
-                  </div>
+                {(userRole === "CLUB_MANAGER" ||
+                  userRole === "GENERAL_MANAGER" ||
+                  userRole === "ADMIN") && (
+                  <>
+                    {showOwnerDropdown && selectedUserId.length > 0 && (
+                      <div>
+                        <Select
+                          options={staffOptions}
+                          onChange={handleBulkAssign}
+                          placeholder="Select an owner"
+                          styles={dasboardStyles}
+                          className="min-w-[150px] w-full"
+                        />
+                      </div>
+                    )}
+                    <Tooltip
+                      id={`tooltip-assin-lead`}
+                      content="Change Member Owner"
+                      place="top"
+                    >
+                      <img
+                        src={AssignIcon}
+                        className="w-8 cursor-pointer"
+                        onClick={handleSubmitAssign}
+                        alt="assign"
+                      />
+                    </Tooltip>
+                  </>
                 )}
-                <img
-                  src={AssignIcon}
-                  className="w-8 cursor-pointer"
-                  onClick={handleSubmitAssign}
-                />
-                <img
-                  src={SmsIcon}
-                  className="w-8 cursor-pointer"
-                  onClick={() => handleCommunicate("sms")}
-                />
-                <img
-                  src={MailIcon}
-                  className="w-8 cursor-pointer"
-                  onClick={() => handleCommunicate("email")}
-                />
+                <Tooltip
+                  id={`tooltip-send-sms`}
+                  content="Bulk Send SMS"
+                  place="top"
+                >
+                  <img
+                    src={SmsIcon}
+                    className="w-8 cursor-pointer"
+                    onClick={() => handleCommunicate("sms")}
+                  />
+                </Tooltip>
+                <Tooltip
+                  id={`tooltip-send-mail`}
+                  content="Bulk Send Mail"
+                  place="top"
+                >
+                  <img
+                    src={MailIcon}
+                    className="w-8 cursor-pointer"
+                    onClick={() => handleCommunicate("email")}
+                  />
+                </Tooltip>
 
                 {/* Show confirm button after selecting an owner */}
 
@@ -397,7 +467,7 @@ const MemberList = () => {
                       </h2>
                       <p className="mb-4">
                         Are you sure you want to change{" "}
-                        <strong>{selectedIds.length}</strong> Trainer to{" "}
+                        <strong>{selectedUserId.length}</strong> Trainer to{" "}
                         <strong>{bulkOwner?.label}</strong>?
                       </p>
                       <div className="flex justify-center gap-4">
@@ -446,7 +516,7 @@ const MemberList = () => {
                           <input
                             type="checkbox"
                             className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
-                            checked={selectedIds.includes(member.id)}
+                            checked={selectedUserId.includes(member.id)}
                             onChange={() => handleCheckboxChange(member.id)}
                           />
                           <span className="checkmark--custom"></span>

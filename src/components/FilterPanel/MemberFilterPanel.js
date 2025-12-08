@@ -7,7 +7,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchOptionList } from "../../Redux/Reducers/optionListSlice";
 import { customStyles } from "../../Helper/helper";
 import { HiOutlineAdjustmentsHorizontal } from "react-icons/hi2";
-import { apiAxios } from "../../config/config";
+import { authAxios } from "../../config/config";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 
@@ -56,7 +56,7 @@ export default function MemberFilterPanel({
 
   const fetchStaff = async (search = "") => {
     try {
-      const res = await apiAxios().get("/staff/list", {
+      const res = await authAxios().get("/staff/list", {
         params: search ? { search } : {},
       });
       let data = res.data?.data || res?.data || [];
@@ -93,7 +93,7 @@ export default function MemberFilterPanel({
   const genderOptions = [
     { value: "MALE", label: "Male" },
     { value: "FEMALE", label: "Female" },
-    { value: "NOTDISCLOSE", label: "Not to Disclose" },
+    { value: "NOTDISCLOSE", label: "Prefer Not To Say" },
   ];
 
   useEffect(() => {

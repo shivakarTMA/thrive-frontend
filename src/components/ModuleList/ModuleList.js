@@ -7,7 +7,7 @@ import Tooltip from "../common/Tooltip";
 import { LiaEdit } from "react-icons/lia";
 import { FaCircle } from "react-icons/fa6";
 import CreateModule from "./CreateModule";
-import { apiAxios } from "../../config/config";
+import { authAxios } from "../../config/config";
 import { IoSearchOutline } from "react-icons/io5";
 import Select from "react-select";
 import { customStyles, formatDate } from "../../Helper/helper";
@@ -28,7 +28,7 @@ const ModuleList = () => {
 
   const fetchModuleList = async (search = "", currentPage = page) => {
     try {
-      const res = await apiAxios().get("/module/list", {
+      const res = await authAxios().get("/module/list", {
         params: {
           page: currentPage,
           limit: rowsPerPage,
@@ -89,11 +89,11 @@ const ModuleList = () => {
 
         if (editingOption && editingOption) {
           // Update
-          await apiAxios().put(`/module/${editingOption}`, payload);
+          await authAxios().put(`/module/${editingOption}`, payload);
           toast.success("Updated Successfully");
         } else {
           // Create
-          await apiAxios().post("/module/create", payload);
+          await authAxios().post("/module/create", payload);
           toast.success("Created Successfully");
         }
 
@@ -140,7 +140,7 @@ const ModuleList = () => {
             </span>
             <input
               type="text"
-              placeholder="Search companies..."
+              placeholder="Search module..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="custom--input w-full input--icon"

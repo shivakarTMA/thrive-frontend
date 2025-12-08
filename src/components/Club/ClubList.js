@@ -10,7 +10,7 @@ import { LiaEdit } from "react-icons/lia";
 import { FaCircle } from "react-icons/fa6";
 import CreateClub from "./CreateClub";
 import axios from "axios";
-import { apiAxios } from "../../config/config";
+import { authAxios } from "../../config/config";
 import { IoSearchOutline } from "react-icons/io5";
 import Select from "react-select";
 import { customStyles } from "../../Helper/helper";
@@ -75,7 +75,7 @@ const ClubList = () => {
 
   const fetchClubs = async (search = "", currentPage = page) => {
     try {
-      const res = await apiAxios().get("/club/list", {
+      const res = await authAxios().get("/club/list", {
         params: {
           page: currentPage,
           limit: rowsPerPage,
@@ -137,6 +137,7 @@ const ClubList = () => {
       open_time: null,
       close_time: null,
       trial_duration: "",
+      position:"",
     },
     validationSchema: Yup.object({
       name: Yup.string().required("Club name is required"),
@@ -161,6 +162,7 @@ const ClubList = () => {
       status: Yup.string().required("Status is required"),
       address: Yup.string().required("Address is required"),
       description: Yup.string().required("Description is required"),
+      position: Yup.string().required("Position is required"),
 
       map_url: Yup.string()
         .url("Invalid URL format")
@@ -207,6 +209,8 @@ const ClubList = () => {
         formData.append("country", values.country);
         formData.append("zipcode", values.zipcode);
         formData.append("status", values.status);
+        formData.append("map_url", values.map_url);
+        formData.append("position", values.position);
         formData.append(
           "club_available_service",
           JSON.stringify(values.club_available_service)
@@ -241,13 +245,13 @@ const ClubList = () => {
 
         if (editingClub && editingClub) {
           // Update
-          await apiAxios().put(`/club/${editingClub}`, formData, {
+          await authAxios().put(`/club/${editingClub}`, formData, {
             headers: { "Content-Type": "multipart/form-data" },
           });
           toast.success("Updated Successfully");
         } else {
           // Create
-          await apiAxios().post("/club/create", formData, {
+          await authAxios().post("/club/create", formData, {
             headers: { "Content-Type": "multipart/form-data" },
           });
           toast.success("Created Successfully");
@@ -334,8 +338,10 @@ const ClubList = () => {
                 <th className="px-2 py-4">Name</th>
                 <th className="px-2 py-4">Email</th>
                 <th className="px-2 py-4">City</th>
-                <th className="px-2 py-4">State</th>
-                <th className="px-2 py-4">Country</th>
+                <th className="px-2 py-4">Open Time</th>
+                <th className="px-2 py-4">Close Time</th>
+                <th className="px-2 py-4">Trial Duration</th>
+                <th className="px-2 py-4 text-center">Position</th>
                 <th className="px-2 py-4">Status</th>
                 <th className="px-2 py-4">Action</th>
               </tr>
@@ -358,9 +364,11 @@ const ClubList = () => {
                     <td className="px-2 py-4">{club?.email}</td>
                     <td className="px-2 py-4">{club?.city}</td>
                     <td className="px-2 py-4">
-                      {club?.state?.label || club?.state}
+                      {club?.open_time ? club?.open_time : "--"}
                     </td>
-                    <td className="px-2 py-4">{club?.country}</td>
+                    <td className="px-2 py-4">{club?.close_time ? club?.close_time : "--"}</td>
+                    <td className="px-2 py-4">{club?.trial_duration ? club?.trial_duration : "--"}</td>
+                    <td className="px-2 py-4 text-center">{club?.position}</td>
                     <td className="px-2 py-4">
                       <div
                         className={`flex gap-1 items-center ${

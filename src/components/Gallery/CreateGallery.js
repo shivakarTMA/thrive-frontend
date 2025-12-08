@@ -10,7 +10,7 @@ import Select from "react-select";
 // Import custom styles for select input
 import { selectIcon } from "../../Helper/helper";
 import { toast } from "react-toastify";
-import { apiAxios } from "../../config/config";
+import { authAxios } from "../../config/config";
 
 // CreateGallery component
 const CreateGallery = ({
@@ -35,7 +35,7 @@ const CreateGallery = ({
 
     const fetchGalleryById = async (id) => {
       try {
-        const res = await apiAxios().get(`/club/gallery/${id}`);
+        const res = await authAxios().get(`/club/gallery/${id}`);
         const data = res.data?.data || res.data || null;
 
         if (data) {

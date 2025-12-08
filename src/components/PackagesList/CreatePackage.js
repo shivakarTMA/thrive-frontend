@@ -8,7 +8,7 @@ import "react-datepicker/dist/react-datepicker.css"; // Date picker styles
 import { FaCalendarDays } from "react-icons/fa6";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchOptionList } from "../../Redux/Reducers/optionListSlice";
-import { apiAxios, authAxios } from "../../config/config";
+import { authAxios } from "../../config/config";
 import { toast } from "react-toastify";
 
 // status type options for dropdown
@@ -20,6 +20,12 @@ const statusType = [
 const bookingType = [
   { label: "Paid", value: "PAID" },
   { label: "Free", value: "FREE" },
+];
+// Booking type options for dropdown
+const ptType = [
+  { label: "Solo Plan", value: "SINGLE" },
+  { label: "Duo Plan (2 members)", value: "DOUBLE" },
+  { label: "Trio Plan (3 members)", value: "TRIPLE" },
 ];
 
 // Is Feature type options for dropdown
@@ -34,7 +40,6 @@ const CreatePackage = ({
   formik,
   serviceOptions,
 }) => {
-  const [sessionRows, setSessionRows] = useState([]);
   const leadBoxRef = useRef(null);
   const [studio, setStudio] = useState([]);
   const [club, setClub] = useState([]);
@@ -44,6 +49,11 @@ const CreatePackage = ({
     const found = serviceOptions.find((s) => s.value === service_id);
     return found?.type || null;
   };
+const [confirmDelete, setConfirmDelete] = useState({
+  open: false,
+  index: null,
+  id: null,
+});
 
   const dispatch = useDispatch();
   const { lists } = useSelector((state) => state.optionList);
@@ -57,7 +67,7 @@ const CreatePackage = ({
 
   const fetchStaff = async (search = "") => {
     try {
-      const res = await apiAxios().get("/staff/list", {
+      const res = await authAxios().get("/staff/list", {
         params: search ? { search } : {},
       });
       let data = res.data?.data || res.data || [];
@@ -70,7 +80,7 @@ const CreatePackage = ({
   };
   const fetchStudio = async (search = "") => {
     try {
-      const res = await apiAxios().get("/studio/list", {
+      const res = await authAxios().get("/studio/list", {
         params: search ? { search } : {},
       });
       let data = res.data?.data || res.data || [];
@@ -84,7 +94,7 @@ const CreatePackage = ({
 
   const fetchPackageCategory = async (search = "") => {
     try {
-      const res = await apiAxios().get("/package-category/list", {
+      const res = await authAxios().get("/package-category/list", {
         params: search ? { search } : {},
       });
       let data = res.data?.data || res.data || [];
@@ -99,7 +109,7 @@ const CreatePackage = ({
 
   const fetchClub = async (search = "") => {
     try {
-      const res = await apiAxios().get("/club/list", {
+      const res = await authAxios().get("/club/list", {
         params: search ? { search } : {},
       });
       let data = res.data?.data || res.data || [];
@@ -139,6 +149,39 @@ const CreatePackage = ({
       value: item.id,
     })) || [];
 
+  const fetchVariationList = async (packageId) => {
+  try {
+    const res = await authAxios().get(`/package/variation/list`, {
+      params: { package_id: packageId },
+    });
+
+    const data = res.data?.data || [];
+
+    // set variations in Formik
+    formik.setFieldValue("variation", data.length > 0 ? data : [
+      {
+        name: "",
+        image: "",
+        recovery_goals: "",
+        caption: "",
+        description: "",
+        no_of_sessions: "",
+        session_duration: "",
+        session_validity: "",
+        amount: "",
+        discount: "",
+        gst: "",
+        earn_coin: "",
+        position: "",
+      }
+    ]);
+
+  } catch (err) {
+    console.error(err);
+    toast.error("Failed to fetch variation list");
+  }
+};
+
   // ✅ Reset fields except image when service_id changes
   useEffect(() => {
     const fetchPackageById = async (id) => {
@@ -151,6 +194,8 @@ const CreatePackage = ({
           formik.setValues({
             name: data?.name || "",
             service_id: data?.service_id || "",
+            club_id: data?.club_id || "",
+            buddy_pt: data?.buddy_pt || "",
             studio_id: data?.studio_id || null,
             package_category_id: data?.package_category_id || "",
             caption: data?.caption || "",
@@ -180,9 +225,13 @@ const CreatePackage = ({
             position: data?.position !== undefined ? data.position : "",
             hsn_sac_code: data?.hsn_sac_code || "",
             is_featured: data?.is_featured || "",
-            // trainer_id: data?.trainer_id || null,
+            equipment: data?.equipment || "",
+            earn_coin: data?.earn_coin || "",
             status: data?.status || "",
+            variation: [],
           });
+
+          fetchVariationList(id);
         }
       } catch (err) {
         console.error(err);
@@ -195,10 +244,38 @@ const CreatePackage = ({
     }
   }, [editingOption]);
 
+const deletePackageVariation = async (id) => {
+  return authAxios().delete(`/package/variation/${id}`);
+};
+
+const handleConfirmDelete = async () => {
+  const { index, id } = confirmDelete;
+
+  try {
+    // If variation exists in DB → call API
+    if (id) {
+      await deletePackageVariation(id);
+      toast.success("Variation deleted successfully");
+    }
+
+    // Remove from Formik list
+    const updated = formik.values.variation.filter((_, i) => i !== index);
+    formik.setFieldValue("variation", updated);
+
+  } catch (err) {
+    toast.error("Failed to delete variation");
+  }
+
+  // Close modal
+  setConfirmDelete({ open: false, index: null, id: null });
+};
+
   const service_type_check = getServiceType(
     formik.values?.service_id,
     serviceOptions
   );
+
+  console.log(service_type_check,'service_type_check')
 
   // Add new row
   const handleAddSessionRow = () => {
@@ -212,9 +289,11 @@ const CreatePackage = ({
         description: "",
         no_of_sessions: "",
         session_duration: "",
+        session_validity: "",
         amount: "",
         discount: "",
         gst: "",
+        earn_coin: "",
         position: "",
       },
     ]);
@@ -231,22 +310,17 @@ const CreatePackage = ({
           description: "",
           no_of_sessions: "",
           session_duration: "",
+          session_validity: "",
           amount: "",
           discount: "",
           gst: "",
+          earn_coin: "",
           position: "",
         },
       ]);
     }
   }, [formik.values.variation]);
 
-  // Delete a row
-  const handleDeleteSessionRow = (index) => {
-    if (formik.values.variation.length === 1) return; // prevent empty array
-
-    const updated = formik.values.variation.filter((_, i) => i !== index);
-    formik.setFieldValue("variation", updated);
-  };
 
   // Handle image file change and set preview
   const handleFileChange = (e) => {
@@ -263,6 +337,7 @@ const CreatePackage = ({
   };
 
   return (
+    <>
     <div
       className="bg--blur create--lead--container overflow-auto hide--overflow fixed top-0 left-0 z-[999] w-full bg-black bg-opacity-60 h-full"
       onClick={handleOverlayClick}
@@ -317,7 +392,9 @@ const CreatePackage = ({
                   </div>
                   {/* Service ID */}
                   <div>
-                    <label className="mb-2 block">Service</label>
+                    <label className="mb-2 block">
+                      Service<span className="text-red-500">*</span>
+                    </label>
                     <Select
                       name="service_id"
                       value={
@@ -338,6 +415,37 @@ const CreatePackage = ({
                       </div>
                     )}
                   </div>
+
+                  {/* PT Type */}
+                  {service_type_check &&
+                    service_type_check === "PERSONAL_TRAINER" && (
+                      <div>
+                        <label className="mb-2 block">
+                          PT Type<span className="text-red-500">*</span>
+                        </label>
+                        <Select
+                          name="buddy_pt"
+                          value={
+                            ptType.find(
+                              (opt) => opt.value === formik.values.buddy_pt
+                            ) || null
+                          }
+                          options={ptType}
+                          onChange={(option) => {
+                            formik.setFieldValue("buddy_pt", option.value);
+                          }}
+                          onBlur={() =>
+                            formik.setFieldTouched("buddy_pt", true)
+                          }
+                          styles={customStyles}
+                        />
+                        {formik.touched.buddy_pt && formik.errors.buddy_pt && (
+                          <div className="text-red-500 text-sm">
+                            {formik.errors.buddy_pt}
+                          </div>
+                        )}
+                      </div>
+                    )}
 
                   {service_type_check &&
                     service_type_check === "GROUP_CLASS" && (
@@ -508,9 +616,8 @@ const CreatePackage = ({
                     </div>
                   ) : null}
 
-                  {/* Session Duration */}
-                  {service_type_check &&
-                  service_type_check !== "GROUP_CLASS" ? (
+                  {service_type_check !== "GROUP_CLASS" &&
+                  service_type_check !== "RECOVERY" ? (
                     <>
                       <div>
                         <label className="mb-2 block">
@@ -590,6 +697,13 @@ const CreatePackage = ({
                             </div>
                           )}
                       </div>
+                    </>
+                  ) : null}
+
+                  {/* Session Duration */}
+                  {service_type_check &&
+                  service_type_check !== "GROUP_CLASS" ? (
+                    <>
                       <div>
                         <label className="mb-2 block">Level</label>
                         <div className="relative">
@@ -634,7 +748,7 @@ const CreatePackage = ({
                         </label>
                         <div className="custom--date relative">
                           {/* Calendar Icon */}
-                          <span className="absolute z-[1] mt-[15px] ml-[15px]">
+                          <span className="absolute z-[1] mt-[11px] ml-[15px]">
                             <FaCalendarDays />
                           </span>
                           <DatePicker
@@ -674,7 +788,7 @@ const CreatePackage = ({
                         </label>
                         <div className="custom--date relative">
                           {/* Clock Icon */}
-                          <span className="absolute z-[1] mt-[15px] ml-[15px]">
+                          <span className="absolute z-[1] mt-[11px] ml-[15px]">
                             <FiClock />
                           </span>
                           <DatePicker
@@ -700,7 +814,7 @@ const CreatePackage = ({
                             }
                             showTimeSelect
                             showTimeSelectOnly
-                            timeIntervals={15}
+                            timeIntervals={30}
                             timeCaption="Time"
                             dateFormat="HH:mm"
                             className="custom--input w-full input--icon"
@@ -731,7 +845,7 @@ const CreatePackage = ({
                         </label>
                         <div className="custom--date relative">
                           {/* Clock Icon */}
-                          <span className="absolute z-[1] mt-[15px] ml-[15px]">
+                          <span className="absolute z-[1] mt-[11px] ml-[15px]">
                             <FiClock />
                           </span>
                           <DatePicker
@@ -757,7 +871,7 @@ const CreatePackage = ({
                             }
                             showTimeSelect
                             showTimeSelectOnly
-                            timeIntervals={15}
+                            timeIntervals={30}
                             timeCaption="Time"
                             dateFormat="HH:mm"
                             className="custom--input w-full input--icon"
@@ -989,34 +1103,9 @@ const CreatePackage = ({
                           )}
                       </div>
                     )}
-                  {/* Staff Dropdown */}
-                  {/* <div>
-                    <label className="mb-2 block">
-                      Staff<span className="text-red-500">*</span>
-                    </label>
-                    <Select
-                      name="trainer_id"
-                      value={
-                        staffListOptions.find(
-                          (opt) => opt.value === formik.values.trainer_id
-                        ) || null
-                      }
-                      options={staffListOptions}
-                      onChange={(option) =>
-                        formik.setFieldValue("trainer_id", option.value)
-                      }
-                      onBlur={() => formik.setFieldTouched("trainer_id", true)}
-                      styles={customStyles}
-                    />
-                    {formik.touched.trainer_id && formik.errors.trainer_id && (
-                      <div className="text-red-500 text-sm">
-                        {formik.errors.trainer_id}
-                      </div>
-                    )}
-                  </div> */}
-                  {/* HSC SAC Code */}
+                  {/* HSN SAC Code */}
                   <div>
-                    <label className="mb-2 block">HSC SAC Code</label>
+                    <label className="mb-2 block">HSN SAC Code</label>
                     <div className="relative">
                       <input
                         type="text"
@@ -1060,12 +1149,39 @@ const CreatePackage = ({
                       </div>
                     )}
                   </div>
+
+                  {/* Earn Coins */}
+                  {service_type_check !== "RECOVERY" && (
+                    <div>
+                      <label className="mb-2 block">
+                        Earn Coins<span className="text-red-500">*</span>
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="number"
+                          name="earn_coin"
+                          value={
+                            formik.values.earn_coin !== null
+                              ? formik.values.earn_coin
+                              : ""
+                          }
+                          onChange={formik.handleChange}
+                          onBlur={formik.handleBlur}
+                          className="custom--input w-full"
+                        />
+                      </div>
+                      {formik.touched.earn_coin && formik.errors.earn_coin && (
+                        <div className="text-red-500 text-sm">
+                          {formik.errors.earn_coin}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
                   {/* Status */}
                   {editingOption && editingOption && (
                     <div>
-                      <label className="mb-2 block">
-                        Status
-                      </label>
+                      <label className="mb-2 block">Status</label>
                       <div className="relative">
                         <Select
                           name="status"
@@ -1289,6 +1405,35 @@ const CreatePackage = ({
                                 </div>
                               )}
                           </div>
+                          {/* Session Duration */}
+                          <div>
+                            <label className="mb-2 block">
+                              Validity (In Days){" "}
+                              <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                              type="number"
+                              name={`variation[${index}].session_validity`}
+                              value={
+                                formik.values.variation[index]
+                                  ?.session_validity || ""
+                              }
+                              onChange={formik.handleChange}
+                              onBlur={formik.handleBlur}
+                              className="custom--input w-full"
+                            />
+                            {formik.touched.variation?.[index]
+                              ?.session_validity &&
+                              formik.errors.variation?.[index]
+                                ?.session_validity && (
+                                <div className="text-red-500 text-sm">
+                                  {
+                                    formik.errors.variation[index]
+                                      .session_validity
+                                  }
+                                </div>
+                              )}
+                          </div>
 
                           {/* Amount */}
                           <div>
@@ -1357,6 +1502,28 @@ const CreatePackage = ({
                                 </div>
                               )}
                           </div>
+                          {/* Earn Coins */}
+                          <div>
+                            <label className="mb-2 block">
+                              Earn Coins <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                              type="number"
+                              name={`variation[${index}].earn_coin`}
+                              value={
+                                formik.values.variation[index]?.earn_coin || ""
+                              }
+                              onChange={formik.handleChange}
+                              onBlur={formik.handleBlur}
+                              className="custom--input w-full"
+                            />
+                            {formik.touched.variation?.[index]?.earn_coin &&
+                              formik.errors.variation?.[index]?.earn_coin && (
+                                <div className="text-red-500 text-sm">
+                                  {formik.errors.variation[index].earn_coin}
+                                </div>
+                              )}
+                          </div>
 
                           {/* Position */}
                           <div>
@@ -1386,7 +1553,13 @@ const CreatePackage = ({
                         {index !== 0 && (
                           <button
                             type="button"
-                            onClick={() => handleDeleteSessionRow(index)}
+                            onClick={() => {
+    setConfirmDelete({
+      open: true,
+      index,
+      id: row.id || null, // If exists in DB, it has ID
+    });
+  }}
                             className="absolute flex items-center justify-center px-1 py-1 bg-red-600 text-white rounded-full w-9 h-9 top-[-5px] right-[-5px]"
                           >
                             <FiTrash2 />
@@ -1469,6 +1642,33 @@ const CreatePackage = ({
         </div>
       </div>
     </div>
+    {confirmDelete.open && (
+  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]">
+    <div className="bg-white p-6 rounded-lg shadow-lg w-[350px]">
+      <h3 className="text-lg font-semibold mb-4">Delete Variation?</h3>
+      <p className="text-sm text-gray-600 mb-6">
+        Are you sure you want to delete this variation? This action cannot be undone.
+      </p>
+
+      <div className="flex justify-end gap-3">
+        <button
+          className="px-4 py-2 bg-gray-200 text-gray-700 rounded"
+          onClick={() => setConfirmDelete({ open: false, index: null, id: null })}
+        >
+          Cancel
+        </button>
+
+        <button
+          className="px-4 py-2 bg-red-600 text-white rounded"
+          onClick={handleConfirmDelete}
+        >
+          Delete
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+    </>
   );
 };
 

@@ -8,7 +8,7 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { RiMedalLine } from "react-icons/ri";
 import { toast } from "react-toastify";
-import { apiAxios } from "../../config/config";
+import { authAxios } from "../../config/config";
 import { FaListCheck } from "react-icons/fa6";
 import Select from "react-select";
 import { customStyles } from "../../Helper/helper";
@@ -22,7 +22,7 @@ const ChallengeForm = ({ setShowModal, editingOption, formik }) => {
     const fetchChallengeById = async () => {
       if (editingOption) {
         try {
-          const response = await apiAxios().get(`/challenge/${editingOption}`);
+          const response = await authAxios().get(`/challenge/${editingOption}`);
           const exerciseData = response.data?.data || response.data || null;
 
           console.log(exerciseData,'exerciseData')

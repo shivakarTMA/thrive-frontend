@@ -6,7 +6,7 @@ import Select from "react-select";
 import { selectIcon } from "../../Helper/helper";
 import CreatableSelect from "react-select/creatable";
 import { toast } from "react-toastify";
-import { apiAxios } from "../../config/config";
+import { authAxios } from "../../config/config";
 
 const CreateOption = ({
   setShowModal,

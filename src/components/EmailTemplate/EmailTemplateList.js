@@ -3,7 +3,7 @@ import { FiPlus } from "react-icons/fi";
 import { toast } from "react-toastify";
 import Tooltip from "../common/Tooltip";
 import { FaCircle } from "react-icons/fa6";
-import { apiAxios } from "../../config/config";
+import { authAxios } from "../../config/config";
 import { Link } from "react-router-dom";
 import editIcon from "../../assets/images/icons/edit.svg";
 import deleteIcon from "../../assets/images/icons/delete.svg";
@@ -40,7 +40,7 @@ const EmailTemplateList = () => {
 
   // const fetchProductList = async () => {
   //   try {
-  //     const res = await apiAxios().get("/product/list");
+  //     const res = await authAxios().get("/product/list");
   //     const responseData = res.data;
   //     const data = responseData?.data || [];
 

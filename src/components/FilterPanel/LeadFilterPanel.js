@@ -4,7 +4,7 @@ import { IoClose, IoTriangle } from "react-icons/io5";
 import { HiOutlineAdjustmentsHorizontal } from "react-icons/hi2";
 import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-toastify";
-import { apiAxios } from "../../config/config";
+import { authAxios } from "../../config/config";
 import { fetchOptionList } from "../../Redux/Reducers/optionListSlice";
 import { customStyles } from "../../Helper/helper";
 import { useSearchParams } from "react-router-dom";
@@ -39,7 +39,7 @@ export default function LeadFilterPanel({
   // Fetch staff list
   const fetchStaff = async (search = "") => {
     try {
-      const res = await apiAxios().get("/staff/list", {
+      const res = await authAxios().get("/staff/list", {
         params: search ? { search } : {},
       });
       const data = res.data?.data || [];
@@ -70,7 +70,7 @@ export default function LeadFilterPanel({
   const genderOptions = [
     { value: "MALE", label: "Male" },
     { value: "FEMALE", label: "Female" },
-    { value: "NOTDISCLOSE", label: "Not to Disclose" },
+    { value: "NOTDISCLOSE", label: "Prefer Not To Say" },
   ];
   const leadStatusOptions = [
     { value: "new", label: "New" },
