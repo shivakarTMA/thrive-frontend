@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import Select from "react-select";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { customStyles, formatAutoDate } from "../../Helper/helper";
+import { customStyles, formatAutoDate, formatText } from "../../Helper/helper";
 import { FiPlus } from "react-icons/fi";
 import CreateAppointment from "../Appointment/CreateAppointment";
 import { toast } from "react-toastify";
@@ -61,7 +61,7 @@ const Appointments = ({ details }) => {
   return (
     <div className="p-4 bg-white rounded shadow">
       <div className="flex gap-3 justify-between mb-4">
-        <div className="flex flex-wrap items-center gap-2">
+        {/* <div className="flex flex-wrap items-center gap-2">
           <Select
             options={appointmentTypeOptions}
             value={appointmentTypeFilter}
@@ -102,7 +102,7 @@ const Appointments = ({ details }) => {
               className="custom--input w-full"
             />
           </div>
-        </div>
+        </div> */}
         <div>
           <div
             className="px-4 py-2 bg-black text-white rounded flex items-center gap-2 cursor-pointer"
@@ -119,13 +119,14 @@ const Appointments = ({ details }) => {
             <tr>
               {/* <th className="border px-3 py-2">Appointment ID</th> */}
               <th className="border px-3 py-2">Appointment Date</th>
-              <th className="border px-3 py-2">Appointment category</th>
+              <th className="border px-3 py-2">Name</th>
+              <th className="border px-3 py-2">Service Name</th>
               <th className="border px-3 py-2">Service/Appointment Name</th>
-              <th className="border px-3 py-2">Service variation</th>
-              <th className="border px-3 py-2">Date & Time</th>
+              <th className="border px-3 py-2">Type</th>
               <th className="border px-3 py-2">Staff name</th>
               <th className="border px-3 py-2">Scheduled By</th>
               <th className="border px-3 py-2">Status</th>
+              <th className="border px-3 py-2">Payment</th>
               <th className="border px-3 py-2">Action</th>
             </tr>
           </thead>
@@ -134,14 +135,18 @@ const Appointments = ({ details }) => {
               appointmentList.map((appt, idx) => (
                 <tr key={idx} className="hover:bg-gray-50">
                   {/* <td className="border px-3 py-2">{appt?.id}</td> */}
-                  <td className="border px-3 py-2">{formatAutoDate(appt?.appointment_date)}</td>
-                  <td className="border px-3 py-2">Service Appointment</td>
-                  <td className="border px-3 py-2">{appt?.package_name}</td>
-                  <td className="border px-3 py-2">{appt?.appointment_type}</td>
-                  <td className="border px-3 py-2">{appt.startTime}</td>
+                  <td className="border px-3 py-2">
+                    {formatAutoDate(appt?.start_date)}
+                    {appt?.start_time}
+                    </td>
+                  <td className="border px-3 py-2">{formatText(appt?.package_name)}</td>
+                  <td className="border px-3 py-2">{formatText(appt?.service_name)}</td>
+                  <td className="border px-3 py-2">{formatText(appt?.package_name)}</td>
+                  <td className="border px-3 py-2">{formatText(appt?.package_type)}</td>
                   <td className="border px-3 py-2">{appt.duration}</td>
                   <td className="border px-3 py-2">{appt.bookingChannel}</td>
-                  <td className="border px-3 py-2">{appt?.booking_status}</td>
+                  <td className="border px-3 py-2">{formatText(appt?.booking_status)}</td>
+                  <td className="border px-3 py-2">{formatText(appt?.payment_status)}</td>
                   <td className="border px-3 py-2">
                     <p
                       onClick={() =>

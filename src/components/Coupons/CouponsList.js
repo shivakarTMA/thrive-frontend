@@ -1,4 +1,4 @@
-// Import React and hooks
+// CouponsList.jsx
 import React, { useEffect, useRef, useState } from "react";
 import { FiPlus } from "react-icons/fi";
 import { LiaEdit } from "react-icons/lia";
@@ -14,9 +14,7 @@ import ConfirmPopup from "../common/ConfirmPopup";
 import { formatAutoDate, formatText } from "../../Helper/helper";
 import { FaCircle } from "react-icons/fa6";
 
-// Define the main GalleryList component
 const CouponsList = () => {
-  // Component state management
   const [showModal, setShowModal] = useState(false);
   const [couponsList, setCouponsList] = useState([]);
   const [editingOption, setEditingOption] = useState(null);
@@ -26,9 +24,9 @@ const CouponsList = () => {
   const [rowsPerPage] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
+  const [originalApplicableRules, setOriginalApplicableRules] = useState([]);
   const leadBoxRef = useRef(null);
 
-  // Function to fetch gallery list with filters applied
   const fetchCoupons = async (currentPage = page) => {
     try {
       const params = {
@@ -36,9 +34,7 @@ const CouponsList = () => {
         limit: rowsPerPage,
       };
 
-      // API request to get filtered gallery data
       const response = await authAxios().get("/coupon/list", { params });
-
       const data = response.data?.data || [];
       setCouponsList(data);
       setPage(response.data?.currentPage || 1);
@@ -50,19 +46,16 @@ const CouponsList = () => {
     }
   };
 
-  // Fetch clubs and gallery list on component mount
   useEffect(() => {
     fetchCoupons();
   }, []);
 
-  // Overlay click handler to close modal
   const handleOverlayClick = (event) => {
     if (leadBoxRef.current && !leadBoxRef.current.contains(event.target)) {
       setShowModal(false);
     }
   };
 
-  // Formik setup for form validation and submission
   const formik = useFormik({
     initialValues: {
       coupon: {
@@ -78,6 +71,12 @@ const CouponsList = () => {
         position: "",
         status: "",
       },
+      applicable_rules: [
+        {
+          applicable_type: "ALL",
+          applicable_id: null,
+        },
+      ],
     },
     validationSchema: Yup.object({
       coupon: Yup.object({
@@ -111,14 +110,98 @@ const CouponsList = () => {
     }),
     onSubmit: async (values, { resetForm }) => {
       try {
-        const payload = { ...values };
+        const couponPayload = { ...values.coupon };
 
-        if (editingOption && editingOption) {
-          // Update
+        if (editingOption) {
+          const current = Array.isArray(values.applicable_rules)
+            ? values.applicable_rules
+            : [];
+          const original = Array.isArray(originalApplicableRules)
+            ? originalApplicableRules
+            : [];
+
+          const mapById = (arr) => {
+            const m = new Map();
+            arr.forEach((r) => {
+              if (r && r.id != null) m.set(Number(r.id), r);
+            });
+            return m;
+          };
+
+          const originalById = mapById(original);
+          const currentById = mapById(current);
+
+          const add = [];
+          const update = [];
+          const deleteIds = [];
+
+          current.forEach((r) => {
+            const itemBase = {
+              applicable_type: r.applicable_type,
+              applicable_id:
+                r.applicable_type === "ALL"
+                  ? null
+                  : r.applicable_id == null
+                  ? null
+                  : Number(r.applicable_id),
+            };
+
+            if (r.id == null) {
+              add.push(itemBase);
+            } else {
+              const orig = originalById.get(Number(r.id));
+              const origType = orig?.applicable_type ?? "";
+              const origId =
+                orig && orig.applicable_id != null
+                  ? String(orig.applicable_id)
+                  : null;
+              const currId =
+                r && r.applicable_id != null ? String(r.applicable_id) : null;
+
+              const changed =
+                origType !== (r.applicable_type ?? "") || origId !== currId;
+
+              if (changed) {
+                update.push({ id: Number(r.id), ...itemBase });
+              }
+            }
+          });
+
+          for (const orig of original) {
+            if (orig && orig.id != null) {
+              if (!currentById.has(Number(orig.id))) {
+                deleteIds.push(Number(orig.id));
+              }
+            }
+          }
+
+          const payload = {
+            coupon: couponPayload,
+            applicable_rules: {
+              add,
+              update,
+              delete: deleteIds,
+            },
+          };
+
           await authAxios().put(`/coupon/update/${editingOption}`, payload);
           toast.success("Updated Successfully");
         } else {
-          // Create
+          const payload = {
+            coupon: couponPayload,
+            applicable_rules: Array.isArray(values.applicable_rules)
+              ? values.applicable_rules.map((r) => ({
+                  applicable_type: r.applicable_type,
+                  applicable_id:
+                    r.applicable_type === "ALL"
+                      ? null
+                      : r.applicable_id == null
+                      ? null
+                      : Number(r.applicable_id),
+                }))
+              : [],
+          };
+
           await authAxios().post("/coupon/create", payload);
           toast.success("Created Successfully");
         }
@@ -132,6 +215,7 @@ const CouponsList = () => {
       resetForm();
       setEditingOption(null);
       setShowModal(false);
+      setOriginalApplicableRules([]);
     },
   });
 
@@ -140,9 +224,6 @@ const CouponsList = () => {
     setShowConfirmPopup(true);
   };
 
-  console.log(couponToDelete, "couponToDelete");
-
-  // Confirm deletion
   const handleConfirmDelete = async () => {
     if (couponToDelete) {
       try {
@@ -151,26 +232,23 @@ const CouponsList = () => {
           (ex) => ex.id !== couponToDelete.id
         );
         setCouponsList(updatedCoupons);
-        toast.success("Exercise deleted successfully");
+        toast.success("Coupon deleted successfully");
       } catch (error) {
-        toast.error("Failed to delete exercise.");
-        console.error("Error deleting exercise:", error);
+        toast.error("Failed to delete coupon.");
+        console.error("Error deleting coupon:", error);
       }
     }
     setCouponToDelete(null);
     setShowConfirmPopup(false);
   };
 
-  // Cancel deletion
   const handleCancelDelete = () => {
     setCouponToDelete(null);
     setShowConfirmPopup(false);
   };
 
-  // Component render
   return (
     <div className="page--content">
-      {/* Header section */}
       <div className="flex items-end justify-between gap-2 mb-5">
         <div className="title--breadcrumbs">
           <p className="text-sm">{`Home > Coupons`}</p>
@@ -191,7 +269,6 @@ const CouponsList = () => {
         </div>
       </div>
 
-      {/* Table section */}
       <div className="box--shadow bg-white rounded-[15px] p-4">
         <div className="relative overflow-x-auto">
           <table className="w-full text-sm text-left text-gray-500">
@@ -199,7 +276,7 @@ const CouponsList = () => {
               <tr>
                 <th className="px-2 py-4">Club</th>
                 <th className="px-2 py-4">Code</th>
-                <th className="px-2 py-4">Description</th>
+                <th className="px-2 py-4 min-w-[200px]">Description</th>
                 <th className="px-2 py-4">Type</th>
                 <th className="px-2 py-4">Value</th>
                 <th className="px-2 py-4">Status</th>
@@ -212,8 +289,8 @@ const CouponsList = () => {
             <tbody>
               {couponsList.length === 0 ? (
                 <tr>
-                  <td colSpan="8" className="text-center py-4">
-                    No Gallery items found.
+                  <td colSpan="10" className="text-center py-4">
+                    No coupons found.
                   </td>
                 </tr>
               ) : (
@@ -222,7 +299,9 @@ const CouponsList = () => {
                     key={item.id || index}
                     className="group bg-white border-b hover:bg-gray-50 transition duration-700"
                   >
-                    <td className="px-2 py-4">{item?.club_name ? item?.club_name : "--"}</td>
+                    <td className="px-2 py-4">
+                      {item?.club_name ? item?.club_name : "--"}
+                    </td>
                     <td className="px-2 py-4">{item?.code}</td>
                     <td className="px-2 py-4">{item?.description}</td>
                     <td className="px-2 py-4">
@@ -231,14 +310,11 @@ const CouponsList = () => {
                     <td className="px-2 py-4">{item?.discount_value}</td>
                     <td className="px-2 py-4">
                       <span
-                        className={`
-                          flex items-center justify-between gap-1 rounded-full min-h-[30px] px-3 text-sm w-fit
-                        ${
+                        className={`flex items-center justify-between gap-1 rounded-full min-h-[30px] px-3 text-sm w-fit ${
                           item?.status !== "ACTIVE"
                             ? "bg-[#EEEEEE]"
                             : "bg-[#E8FFE6] text-[#138808]"
-                        }
-                        `}
+                        }`}
                       >
                         <FaCircle className="text-[10px]" />{" "}
                         {formatText(item?.status)}
@@ -263,6 +339,7 @@ const CouponsList = () => {
                               className="p-1 cursor-pointer"
                               onClick={() => {
                                 setEditingOption(item?.id);
+                                formik.resetForm(); // clear previous values
                                 setShowModal(true);
                               }}
                             >
@@ -270,9 +347,10 @@ const CouponsList = () => {
                             </div>
                           </Tooltip>
                         </div>
-                        {/* <div className="w-fit">
+                      {/* 
+                        <div className="w-fit ml-2">
                           <Tooltip
-                            id={`tooltip-delete-${item.id}`}
+                            id={`tooltip-delete-${item?.id}`}
                             content="Delete Coupon"
                             place="left"
                           >
@@ -293,7 +371,6 @@ const CouponsList = () => {
           </table>
         </div>
 
-        {/* Pagination Component */}
         <Pagination
           page={page}
           totalPages={totalPages}
@@ -307,7 +384,6 @@ const CouponsList = () => {
         />
       </div>
 
-      {/* Modal Component */}
       {showModal && (
         <CreateCoupon
           setShowModal={setShowModal}
@@ -315,10 +391,10 @@ const CouponsList = () => {
           formik={formik}
           handleOverlayClick={handleOverlayClick}
           leadBoxRef={leadBoxRef}
+          setOriginalApplicableRules={setOriginalApplicableRules}
         />
       )}
 
-      {/* Confirm Delete */}
       {showConfirmPopup && couponToDelete && (
         <ConfirmPopup
           message={`Are you sure you want to delete <br /> "${couponToDelete?.code}"?`}

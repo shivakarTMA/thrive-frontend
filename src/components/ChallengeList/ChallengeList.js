@@ -57,7 +57,7 @@ const ChallengeList = () => {
       name: "",
       caption: "",
       image: "",
-      condition: "",
+      condition: "[]",
       description: "",
       challenge_type: "",
       start_date_time: "",
@@ -72,15 +72,24 @@ const ChallengeList = () => {
       about_challenge: "",
       join_in_between: null,
       position: "",
-      status: "UPCOMING",
+      // status: "UPCOMING",
     },
 
     validationSchema: Yup.object({
       club_id: Yup.string().required("Club is required"),
       image: Yup.string().required("Image is required"),
       name: Yup.string().required("Challenge Name is required"),
-      caption: Yup.string().required("Caption is required"),
-      condition: Yup.string().required("Condition is required"),
+      // condition: Yup.string().required("Terms of play is required"),
+      condition: Yup.string()
+  .test("is-json-array", "Please add at least one rule", (value) => {
+    try {
+      const arr = JSON.parse(value);
+      return Array.isArray(arr) && arr.length > 0;
+    } catch {
+      return false;
+    }
+  })
+  .required("Terms of play is required"),
       description: Yup.string().required("Description is required"),
       challenge_type: Yup.string().required("Challenge Type is required"),
       start_date_time: Yup.date().required("Start date & time is required"),
@@ -99,7 +108,9 @@ const ChallengeList = () => {
       reward_third: Yup.number()
         .positive()
         .required("Third reward is required"),
-      about_challenge: Yup.string().required("About challenge is required"),
+      about_challenge: Yup.string().required(
+        "Challenge Essentials is required"
+      ),
       position: Yup.string().required("Position is required"),
     }),
 
@@ -230,10 +241,7 @@ const ChallengeList = () => {
                     <td className="px-2 py-4">
                       <span
                         className={`flex items-center gap-1 rounded-full min-h-[30px] px-3 text-sm w-fit 
-                          ${
-                            statusColors[item?.status] ||
-                            "bg-[#EEEEEE]"
-                          }`}
+                          ${statusColors[item?.status] || "bg-[#EEEEEE]"}`}
                       >
                         <FaCircle className="text-[10px]" />
                         {formatText(item?.status) ?? "--"}

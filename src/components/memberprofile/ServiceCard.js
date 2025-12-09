@@ -143,7 +143,8 @@ const ServiceCard = ({ details }) => {
         </div>
 
         {/* Membership Card */}
-        <div className="grid grid-cols-4 gap-3 border-b border-b-[#D4D4D4] pb-5 mb-5">
+        {/* <div className="grid grid-cols-4 gap-3 border-b border-b-[#D4D4D4] pb-5 mb-5"> */}
+        <div className="grid grid-cols-4 gap-3 pb-5 mb-5">
           <div className="bg-white rounded-lg shadow-sm border col-span-2">
             {/* Header with gradient */}
             <div className="bg--color p-4 py-3 rounded-t-lg">
@@ -232,7 +233,7 @@ const ServiceCard = ({ details }) => {
         </div>
 
         {/* Purchased Services */}
-        <div className="bg-white rounded-lg shadow-sm">
+        {/* <div className="bg-white rounded-lg shadow-sm">
           <div className="p-4 px-0">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-bold text-gray-900">
@@ -268,7 +269,7 @@ const ServiceCard = ({ details }) => {
                 </div>
 
                 <div className="flex gap-4 p-4 justify-between">
-                  {/* Service Details */}
+         
                   <div className="space-y-1">
                     <div>
                       <span className="text-sm text-black">Variation:</span>
@@ -291,7 +292,7 @@ const ServiceCard = ({ details }) => {
                     <div className="flex flex-wrap gap-2 pt-2">
                       {service.status === "active" ? (
                         <>
-                          {/* Show these buttons only if service is active */}
+                         
                           <button
                             className="px-3 py-2 bg-black text-white rounded flex items-center gap-2 border border-black text-sm"
                             onClick={() => {
@@ -328,7 +329,7 @@ const ServiceCard = ({ details }) => {
                         </>
                       ) : (
                         <>
-                          {/* Show renew button if service is expired */}
+                        
                           <button
                             className="px-3 py-2 bg-black text-white rounded flex items-center gap-2 border border-black text-sm"
                             onClick={() => {
@@ -343,7 +344,7 @@ const ServiceCard = ({ details }) => {
                     </div>
                   </div>
 
-                  {/* Countdown, Start Date, End Date */}
+             
                   <div className="rounded-lg bg--color p-[2px]">
                     <div className="flex gap-0 h-full rounded-lg bg-white overflow-hidden">
                       <div className="text-center border-r">
@@ -394,7 +395,7 @@ const ServiceCard = ({ details }) => {
               </div>
             ))}
           </div>
-        </div>
+        </div> */}
       </div>
       {invoiceModal && (
         <CreateInvoice

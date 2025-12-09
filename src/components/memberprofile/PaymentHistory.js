@@ -98,7 +98,7 @@ const PaymentHistory = ({ details }) => {
 
   return (
     <div className="p-4 bg-white rounded shadow relative">
-      <div className="flex flex-wrap items-center gap-4 mb-4">
+      {/* <div className="flex flex-wrap items-center gap-4 mb-4">
         <Select
           options={categoryOptions}
           value={category}
@@ -136,20 +136,20 @@ const PaymentHistory = ({ details }) => {
             className="custom--input w-full"
           />
         </div>
-      </div>
+      </div> */}
 
       <div className="overflow-auto">
         <table className="min-w-full border border-gray-300 text-sm">
           <thead className="bg-gray-100 text-left">
             <tr>
-              <th className="border px-3 py-2">Purchased Date</th>
+              <th className="border px-3 py-2">Transaction Date</th>
               <th className="border px-3 py-2">Invoice No.</th>
+              <th className="border px-3 py-2">Order No.</th>
               <th className="border px-3 py-2">Amount</th>
-              <th className="border px-3 py-2">Tax</th>
-              <th className="border px-3 py-2">Net</th>
-              <th className="border px-3 py-2">Paid</th>
+
               <th className="border px-3 py-2">Mode</th>
-              <th className="border px-3 py-2">Action Items</th>
+              <th className="border px-3 py-2">Status</th>
+              <th className="border px-3 py-2">Action</th>
             </tr>
           </thead>
           <tbody>
@@ -158,22 +158,22 @@ const PaymentHistory = ({ details }) => {
                 <tr key={order.orderId}>
                   <td className="border px-3 py-2">{formatAutoDate(order?.transaction_date)}</td>
                   <td className="border px-3 py-2">{order?.invoiceNumber}</td>
-                  <td className="border px-3 py-2">₹{order?.total_amount}</td>
-                  <td className="border px-3 py-2">₹{order.tax}</td>
-                  <td className="border px-3 py-2">₹{order.net}</td>
-                  <td className="border px-3 py-2">₹{order?.total_amount}</td>
+                  <td className="border px-3 py-2">{order?.reference_no}</td>
+                  <td className="border px-3 py-2">₹{order?.transaction_amount ? order?.transaction_amount : 0}</td>
+
                   <td className="border px-3 py-2">{order?.payment_mode ? toCapitalizedCase(order.payment_mode) : 'N/A'}</td>
+                  <td className="border px-3 py-2">{order?.payment_status}</td>
                  
                   <td className="border px-3 py-2">
                     <div className="flex items-center gap-2">
-                      <Tooltip content="View Invoice">
+                      {/* <Tooltip content="View Invoice">
                         <button
                           onClick={() => handleViewInvoice(order)}
                           className="text-xl"
                         >
                           <FaEye />
                         </button>
-                      </Tooltip>
+                      </Tooltip> */}
                       <Tooltip content="Print Invoice">
                         <button
                           onClick={() => handlePrintInvoice(order)}

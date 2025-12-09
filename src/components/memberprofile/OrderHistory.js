@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import Select from "react-select";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { customStyles, formatAutoDate } from "../../Helper/helper";
+import { customStyles, formatAutoDate, formatText } from "../../Helper/helper";
 import { authAxios } from "../../config/config";
 import { toast } from "react-toastify";
 
@@ -41,12 +41,12 @@ const OrderHistory = ({details}) => {
 
   useEffect(() => {
     fetchMemberOrders();
-  }, [ordersList]);
+  }, []);
 
   return (
     <div className="p-4 bg-white rounded shadow">
       {/* Filters */}
-      <div className="flex flex-wrap items-center gap-2 mb-4">
+      {/* <div className="flex flex-wrap items-center gap-2 mb-4">
         <Select
           options={categoryOptions}
           value={category}
@@ -86,7 +86,7 @@ const OrderHistory = ({details}) => {
             className="custom--input w-full"
           />
         </div>
-      </div>
+      </div> */}
 
       {/* Table */}
       <div className="overflow-auto">
@@ -95,15 +95,11 @@ const OrderHistory = ({details}) => {
             <tr>
               <th className="border px-3 py-2">Order ID</th>
               <th className="border px-3 py-2">Date</th>
-              <th className="border px-3 py-2">Product/Service</th>
-              <th className="border px-3 py-2">Category</th>
-              <th className="border px-3 py-2">Duration</th>
-              <th className="border px-3 py-2">Amount</th>
-              <th className="border px-3 py-2">Tax</th>
-              <th className="border px-3 py-2">Net Paid</th>
               <th className="border px-3 py-2">Status</th>
-              <th className="border px-3 py-2">Payment Mode</th>
-              <th className="border px-3 py-2">Invoice No.</th>
+              <th className="border px-3 py-2">Type</th>
+              <th className="border px-3 py-2">Method</th>
+              <th className="border px-3 py-2">Payment</th>
+              <th className="border px-3 py-2">Amount</th>
             </tr>
           </thead>
           <tbody>
@@ -112,20 +108,16 @@ const OrderHistory = ({details}) => {
                 <tr key={order.orderId} className="hover:bg-gray-50">
                   <td className="border px-3 py-2">{order?.order_no}</td>
                   <td className="border px-3 py-2">{formatAutoDate(order?.order_date)}</td>
-                  <td className="border px-3 py-2">{order?.order_type}</td>
-                  <td className="border px-3 py-2">{order?.category}</td>
-                  <td className="border px-3 py-2">{order?.duration || "-"}</td>
-                  <td className="border px-3 py-2">₹{order?.total_amount ? order?.total_amount : 0}</td>
-                  <td className="border px-3 py-2">₹{order?.tax ? order?.tax : 0}</td>
-                  <td className="border px-3 py-2">₹{order?.net ? order?.net : 0}</td>
-                  <td className="border px-3 py-2">{order?.payment_status}</td>
-                  <td className="border px-3 py-2">{order?.paymentMode}</td>
-                  <td className="border px-3 py-2">{order?.invoiceNumber}</td>
+                  <td className="border px-3 py-2">{formatText(order?.order_status)}</td>
+                  <td className="border px-3 py-2">{formatText(order?.order_type)}</td>
+                  <td className="border px-3 py-2">{formatText(order?.payment_method)}</td>
+                  <td className="border px-3 py-2">{formatText(order?.payment_status)}</td>
+                  <td className="border px-3 py-2">₹{order?.total_amount}</td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan="10" className="text-center py-4 text-gray-500">
+                <td colSpan="7" className="text-center py-4 text-gray-500">
                   No orders found.
                 </td>
               </tr>

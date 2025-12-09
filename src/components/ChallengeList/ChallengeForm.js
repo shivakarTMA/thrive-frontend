@@ -24,18 +24,22 @@ const frequencyType = [
   { label: "Daily", value: "DAILY" },
   { label: "Cumulative", value: "CUMULATIVE" },
 ];
-const statusType = [
-  { label: "Active", value: "ACTIVE" },
-  { label: "Inactive", value: "INACTIVE" },
-  { label: "Completed", value: "COMPLETED" },
-  { label: "Ongoing", value: "ONGOING" },
-  { label: "Upcoming", value: "UPCOMING" },
-];
+// const statusType = [
+//   { label: "Active", value: "ACTIVE" },
+//   { label: "Inactive", value: "INACTIVE" },
+//   { label: "Completed", value: "COMPLETED" },
+//   { label: "Ongoing", value: "ONGOING" },
+//   { label: "Upcoming", value: "UPCOMING" },
+// ];
 
 // Define the ChallengeForm component
 const ChallengeForm = ({ setShowModal, editingOption, formik }) => {
   const leadBoxRef = useRef();
   const [club, setClub] = useState([]);
+
+    // 👉 Local states for Terms of Play
+  const [conditionList, setConditionList] = useState([]);
+  const [tempCondition, setTempCondition] = useState("");
 
   const fetchClub = async (search = "") => {
     try {
@@ -84,7 +88,7 @@ const ChallengeForm = ({ setShowModal, editingOption, formik }) => {
             frequency: exerciseData?.frequency || "",
             target_value: exerciseData?.target_value || "",
             target_unit: exerciseData?.target_unit || "",
-            condition: exerciseData?.condition || "",
+            condition: exerciseData?.condition || "[]",
             reward_first: exerciseData?.reward_first || "",
             reward_second: exerciseData?.reward_second || "",
             reward_third: exerciseData?.reward_third || "",
@@ -93,6 +97,11 @@ const ChallengeForm = ({ setShowModal, editingOption, formik }) => {
             status: exerciseData?.status || "UPCOMING",
             join_in_between: exerciseData?.join_in_between || null,
           });
+          try {
+            setConditionList(JSON.parse(exerciseData?.condition || "[]"));
+          } catch {
+            setConditionList([]);
+          }
         } catch (error) {
           toast.error("Failed to fetch exercise data.");
           console.error("Error fetching exercise:", error);
@@ -298,28 +307,6 @@ const ChallengeForm = ({ setShowModal, editingOption, formik }) => {
                       )}
                   </div>
 
-                  {/* Condition Field */}
-                  <div>
-                    <label className="mb-2 block">
-                      Condition<span className="text-red-500">*</span>
-                    </label>
-                    <div className="relative">
-                      <FaListUl className="absolute top-[50%] translate-y-[-50%] left-[15px]" />
-                      <input
-                        name="condition"
-                        value={formik.values.condition}
-                        onChange={formik.handleChange}
-                        className="custom--input w-full input--icon"
-                      />
-                    </div>
-                    {formik.touched.condition && formik.errors.condition && (
-                      <p className="text-red-500 text-sm">
-                        {formik.errors.condition}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Start Date Field */}
                   {/* Start Date Field */}
                   <div>
                     <label className="mb-2 block">
@@ -489,7 +476,7 @@ const ChallengeForm = ({ setShowModal, editingOption, formik }) => {
                   </div>
 
                   {/* Status Field */}
-                  <div>
+                  {/* <div>
                     <label className="mb-2 block">
                       Status<span className="text-red-500">*</span>
                     </label>
@@ -514,7 +501,7 @@ const ChallengeForm = ({ setShowModal, editingOption, formik }) => {
                         {formik.errors.status}
                       </p>
                     )}
-                  </div>
+                  </div> */}
 
                   {/* Position Field */}
                   <div>
@@ -617,10 +604,11 @@ const ChallengeForm = ({ setShowModal, editingOption, formik }) => {
                         )}
                     </div>
 
-                    {/* About Challenge Field */}
+                    {/* Challenge Essentials Field */}
                     <div>
                       <label className="mb-2 block">
-                        About Challenge<span className="text-red-500">*</span>
+                        Challenge Essentials
+                        <span className="text-red-500">*</span>
                       </label>
                       <textarea
                         name="about_challenge"
@@ -636,6 +624,155 @@ const ChallengeForm = ({ setShowModal, editingOption, formik }) => {
                         )}
                     </div>
                   </div>
+
+
+{/* ======================================
+                       TERMS OF PLAY (TODO LIST)
+                  ======================================= */}
+                  <div className="md:col-span-4">
+                    <label className="mb-2 block">
+                      Terms of play <span className="text-red-500">*</span>
+                    </label>
+
+                    {/* Add item */}
+                    <div className="flex gap-2 mb-2">
+                      <input
+                        type="text"
+                        value={tempCondition}
+                        onChange={(e) => setTempCondition(e.target.value)}
+                        className="custom--input flex-1"
+                        placeholder="Add a rule..."
+                      />
+
+                      <button
+                        type="button"
+                        className="px-3 py-2 bg-blue-500 text-white rounded"
+                        onClick={() => {
+                          if (!tempCondition.trim()) return;
+
+                          const updated = [...conditionList, tempCondition.trim()];
+                          setConditionList(updated);
+
+                          // Save to Formik as JSON string
+                          formik.setFieldValue("condition", JSON.stringify(updated));
+
+                          setTempCondition("");
+                        }}
+                      >
+                        Add
+                      </button>
+                    </div>
+
+                    {/* List display */}
+                    <ul className="space-y-1">
+                      {conditionList.map((rule, index) => (
+                        <li key={index} className="flex justify-between bg-gray-100 p-2 rounded gap-2">
+                          <span className="text-sm">{rule}</span>
+                          <button
+                            type="button"
+                            className="text-red-500 text-sm"
+                            onClick={() => {
+                              const updated = conditionList.filter((_, i) => i !== index);
+                              setConditionList(updated);
+                              formik.setFieldValue("condition", JSON.stringify(updated));
+                            }}
+                          >
+                            Remove
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+
+                    {formik.touched.condition && formik.errors.condition && (
+                      <p className="text-red-500 text-sm">{formik.errors.condition}</p>
+                    )}
+                  </div>
+
+                  {/* Terms of play Field
+                  <div>
+                    <label className="mb-2 block">
+                      Terms of play<span className="text-red-500">*</span>
+                    </label>
+
+                    <div className="flex gap-2 mb-2">
+                      <input
+                        type="text"
+                        value={formik.values.newConditionItem || ""}
+                        onChange={(e) =>
+                          formik.setFieldValue(
+                            "newConditionItem",
+                            e.target.value
+                          )
+                        }
+                        className="custom--input flex-1"
+                        placeholder="Add a rule..."
+                      />
+                      <button
+                        type="button"
+                        className="px-3 py-2 bg-blue-500 text-white rounded"
+                        onClick={() => {
+                          if (!formik.values.newConditionItem) return;
+
+                          formik.setFieldValue("condition", [
+                            ...formik.values.condition,
+                            formik.values.newConditionItem,
+                          ]);
+
+                          formik.setFieldValue("newConditionItem", "");
+                        }}
+                      >
+                        Add
+                      </button>
+                    </div>
+
+                
+                    <ul className="space-y-1">
+                      {formik.values.condition.map((item, index) => (
+                        <li
+                          key={index}
+                          className="flex justify-between bg-gray-100 p-2 rounded"
+                        >
+                          <span>{item}</span>
+                          <button
+                            type="button"
+                            className="text-red-500"
+                            onClick={() => {
+                              const updated = [...formik.values.condition];
+                              updated.splice(index, 1);
+                              formik.setFieldValue("condition", updated);
+                            }}
+                          >
+                            Remove
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+
+                    {formik.touched.condition && formik.errors.condition && (
+                      <p className="text-red-500 text-sm">
+                        {formik.errors.condition}
+                      </p>
+                    )}
+                  </div> */}
+                  {/* <div>
+                    <label className="mb-2 block">
+                      Terms of play<span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <FaListUl className="absolute top-[50%] translate-y-[-50%] left-[15px]" />
+                      <input
+                        name="condition"
+                        value={formik.values.condition}
+                        onChange={formik.handleChange}
+                        className="custom--input w-full input--icon"
+                      />
+                    </div>
+                    {formik.touched.condition && formik.errors.condition && (
+                      <p className="text-red-500 text-sm">
+                        {formik.errors.condition}
+                      </p>
+                    )}
+                  </div> */}
                 </div>
               </div>
             </div>

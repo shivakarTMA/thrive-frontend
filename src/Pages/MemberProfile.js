@@ -34,7 +34,7 @@ const MemberProfile = () => {
     "Call Logs",
     "Appointments",
     "Referrals",
-    "Attendance",
+    // "Attendance",
     "Training",
     "Kyc Submission",
     "Health Profile",
@@ -124,7 +124,7 @@ const MemberProfile = () => {
           {activeTab === "Call Logs" && <MemberCallLogs details={member} />}
           {activeTab === "Appointments" && <Appointments details={member} />}
           {activeTab === "Referrals" && <Relations details={member} />}
-          {activeTab === "Attendance" && <AttendanceData details={member} />}
+          {/* {activeTab === "Attendance" && <AttendanceData details={member} />} */}
           {activeTab === "Training" && <WorkoutApp details={member} />}
           {activeTab === "Health Profile" && <HealthProfile details={member} />}
           {activeTab === "Coins" && <CoinsList details={member} />}

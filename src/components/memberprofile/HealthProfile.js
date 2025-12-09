@@ -143,7 +143,7 @@ const HealthProfile = ({ details }) => {
     <div className="p-4 bg-white rounded shadow">
       <div className="flex gap-3 w-full justify-between items-center mb-4">
         {/* Tab navigation */}
-        <div className="flex space-x-4">
+        {/* <div className="flex space-x-4">
           <button
             className={`px-4 py-2 rounded ${
               activeTab === "steps" ? "bg-black text-white" : "bg-gray-200"
@@ -176,7 +176,7 @@ const HealthProfile = ({ details }) => {
           >
             Body Fat
           </button>
-        </div>
+        </div> */}
         <div>
           <p>Last Updated : October 4, 2025, 4:30 PM</p>
         </div>

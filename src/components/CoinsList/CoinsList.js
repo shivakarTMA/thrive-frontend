@@ -4,7 +4,7 @@ import AddCoins from "./AddCoins";
 import Select from "react-select";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { customStyles, formatAutoDate } from "../../Helper/helper";
+import { customStyles, formatAutoDate, formatText } from "../../Helper/helper";
 import { authAxios } from "../../config/config";
 import { toast } from "react-toastify";
 
@@ -21,10 +21,14 @@ const CoinsList = ({ details }) => {
   const [dateFrom, setDateFrom] = useState(null);
   const [dateTo, setDateTo] = useState(null);
   const [coinsModal, setCoinsModal] = useState(false);
-  const columns = ["Date", "Coins", "Source", "Remarks"];
+  const columns = ["Date", "Coins", "Source", "Remarks", "Transaction Type"];
 
   // Fetch coins with filters applied
-  const fetchMemberCoins = async (source = "", startDate = "", endDate = "") => {
+  const fetchMemberCoins = async (
+    source = "",
+    startDate = "",
+    endDate = ""
+  ) => {
     try {
       // Prepare query parameters based on the selected filters
       const params = {
@@ -34,9 +38,12 @@ const CoinsList = ({ details }) => {
       };
 
       // Make the API call with query parameters
-      const res = await authAxios().get(`/coin/transaction/list/${details?.id}`, {
-        params: params,
-      });
+      const res = await authAxios().get(
+        `/coin/transaction/list/${details?.id}`,
+        {
+          params: params,
+        }
+      );
       const data = res.data?.data || [];
       setCoinsList(data);
     } catch (err) {
@@ -48,17 +55,17 @@ const CoinsList = ({ details }) => {
   // Fetch coins whenever the component mounts or filters change
   useEffect(() => {
     fetchMemberCoins(coinsTypeFilter.value, dateFrom, dateTo);
-  }, [coinsTypeFilter, dateFrom, dateTo,]);
+  }, [coinsTypeFilter, dateFrom, dateTo]);
 
-const handleUpdateCoins = () => {
-  fetchMemberCoins(coinsTypeFilter.value, dateFrom, dateTo);  // Refreshes the coins list
-};
+  const handleUpdateCoins = () => {
+    fetchMemberCoins(coinsTypeFilter.value, dateFrom, dateTo); // Refreshes the coins list
+  };
 
   return (
     <div className="p-4 bg-white rounded shadow">
-      <div className="flex gap-3 justify-between">
-        <div className="flex flex-wrap items-center gap-2 mb-4">
-          {/* Filter by source */}
+      <div className="flex gap-3 justify-between mb-4">
+        {/* <div className="flex flex-wrap items-center gap-2">
+  
           <Select
             options={coinsTypeOptions}
             value={coinsTypeFilter}
@@ -68,7 +75,7 @@ const handleUpdateCoins = () => {
             className="w-40"
           />
           
-          {/* Filter by date from */}
+    
           <div className="custom--date dob-format">
             <DatePicker
               selected={dateFrom}
@@ -87,7 +94,7 @@ const handleUpdateCoins = () => {
             />
           </div>
 
-          {/* Filter by date to */}
+   
           <div className="custom--date dob-format">
             <DatePicker
               selected={dateTo}
@@ -103,8 +110,8 @@ const handleUpdateCoins = () => {
               className="custom--input w-full"
             />
           </div>
-        </div>
-        
+        </div> */}
+
         {/* Button to open the modal for adding coins */}
         <div>
           <div
@@ -132,10 +139,23 @@ const handleUpdateCoins = () => {
             {coinsList.length > 0 ? (
               coinsList.map((item, idx) => (
                 <tr key={idx}>
-                  <td className="border px-3 py-2">{formatAutoDate(item?.createdAt)}</td>
-                  <td className="border px-3 py-2">{item?.coins}</td>
+                  <td className="border px-3 py-2">
+                    {formatAutoDate(item?.createdAt)}
+                  </td>
+                  <td className="border px-3 py-2">
+                    <span
+                      className={`${
+                        item?.transaction_type === "CREDIT"
+                          ? "text-green-600"
+                          : "text-red-600"
+                      }`}
+                    >
+                      {item?.coins}
+                    </span>
+                  </td>
                   <td className="border px-3 py-2">{item?.source}</td>
                   <td className="border px-3 py-2">{item?.remark}</td>
+                  <td className="border px-3 py-2">{formatText(item?.transaction_type)}</td>
                 </tr>
               ))
             ) : (
