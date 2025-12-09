@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import Select from "react-select";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { customStyles, formatAutoDate, formatText } from "../../Helper/helper";
+import { customStyles, formatAutoDate, formatText, formatTimeAppointment } from "../../Helper/helper";
 import { FiPlus } from "react-icons/fi";
 import CreateAppointment from "../Appointment/CreateAppointment";
 import { toast } from "react-toastify";
@@ -136,8 +136,7 @@ const Appointments = ({ details }) => {
                 <tr key={idx} className="hover:bg-gray-50">
                   {/* <td className="border px-3 py-2">{appt?.id}</td> */}
                   <td className="border px-3 py-2">
-                    {formatAutoDate(appt?.start_date)}
-                    {appt?.start_time}
+                    {formatAutoDate(appt?.start_date)}{" "}{formatTimeAppointment(appt?.start_time)}
                     </td>
                   <td className="border px-3 py-2">{formatText(appt?.package_name)}</td>
                   <td className="border px-3 py-2">{formatText(appt?.service_name)}</td>

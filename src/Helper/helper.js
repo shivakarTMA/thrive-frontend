@@ -198,6 +198,16 @@ export const formatTime = (date) => {
   return `${hours}:${minutes}:${seconds}`;
 };
 
+export const formatTimeAppointment = (timeString) => {
+  // timeString format: "HH:MM:SS"
+  const [hour, minute] = timeString.split(":").map(Number);
+
+  const period = hour >= 12 ? "PM" : "AM";
+  const hour12 = hour % 12 || 12; // convert 0 -> 12, 13->1, etc.
+
+  return `${hour12}:${minute.toString().padStart(2, "0")} ${period}`;
+}
+
 export const convertToISODate = (dateString) => {
   if (dateString instanceof Date) {
     return dateString;
