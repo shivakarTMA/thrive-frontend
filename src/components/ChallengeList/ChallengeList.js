@@ -79,7 +79,7 @@ const ChallengeList = () => {
       club_id: Yup.string().required("Club is required"),
       image: Yup.string().required("Image is required"),
       name: Yup.string().required("Challenge Name is required"),
-      // condition: Yup.string().required("Terms of play is required"),
+      caption: Yup.string().required("Caption is required"),
       condition: Yup.string()
   .test("is-json-array", "Please add at least one rule", (value) => {
     try {

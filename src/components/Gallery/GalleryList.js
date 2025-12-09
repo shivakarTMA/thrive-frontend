@@ -248,7 +248,7 @@ const GalleryList = () => {
                       </div>
                     </td>
                     <td className="px-2 py-4">{item?.title}</td>
-                    <td className="px-2 py-4">{item?.club_id}</td>
+                    <td className="px-2 py-4">{item?.club_name}</td>
                     <td className="px-2 py-4">{item?.position}</td>
                     <td className="px-2 py-4">
                       <div className="w-fit">

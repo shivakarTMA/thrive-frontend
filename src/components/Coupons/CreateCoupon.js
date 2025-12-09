@@ -653,7 +653,6 @@ const CreateCoupon = ({
                   </div>
                 </div>
 
-                {/* Applicable Rules block is same as earlier */}
                 {/* Applicable Rules */}
                 <div className="mt-6">
                   <div className="flex items-center justify-between mb-4">

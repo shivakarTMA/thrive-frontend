@@ -65,6 +65,7 @@ import CreateEmailTemplate from "../components/EmailTemplate/CreateEmailTemplate
 import EmailTemplateList from "../components/EmailTemplate/EmailTemplateList";
 import BulkEmailCriteriaForm from "../components/Marketing/BulkEmailCriteriaForm";
 import BulkSmsCriteriaForm from "../components/Marketing/BulkSmsCriteriaForm";
+import MarketingBanner from "../components/MarketingBanner/MarketingBanner";
 
 export default function Routing() {
   const { accessToken } = useSelector((state) => state.auth);
@@ -592,6 +593,14 @@ export default function Routing() {
           element={
             <PrivateRoute>
               <SmsModule />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/marketing-banner/"
+          element={
+            <PrivateRoute>
+              <MarketingBanner />
             </PrivateRoute>
           }
         />
