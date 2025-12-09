@@ -189,6 +189,7 @@ const ChallengeList = () => {
                 <th className="px-2 py-4">Challenge Type</th>
                 <th className="px-2 py-4">Start Dates</th>
                 <th className="px-2 py-4">End Dates</th>
+                <th className="px-2 py-4">Duration</th>
                 <th className="px-2 py-4">Status</th>
                 <th className="px-2 py-4">Action</th>
               </tr>
@@ -225,6 +226,7 @@ const ChallengeList = () => {
                     <td className="px-2 py-4">
                       {formatDateTimeLead(item.end_date_time)}
                     </td>
+                    <td className="px-2 py-4">{item?.duration_days} Days</td>
                     <td className="px-2 py-4">
                       <span
                         className={`flex items-center gap-1 rounded-full min-h-[30px] px-3 text-sm w-fit 

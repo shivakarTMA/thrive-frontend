@@ -2,18 +2,30 @@ import React from "react";
 import Select from "react-select";
 import { customStyles } from "../../Helper/helper";
 
-
-const AssignTemplateModal = ({ open, onClose, onAssign, selectedWorkoutType, setSelectedWorkoutType, selectedTemplate, setSelectedTemplate }) => {
+const AssignTemplateModal = ({
+  open,
+  onClose,
+  onAssign,
+  selectedWorkoutType,
+  setSelectedWorkoutType,
+  selectedTemplate,
+  setSelectedTemplate,
+}) => {
   const workoutTypeOptions = [
-    { value: "multiple", label: "Workout Plan (Multiple Days)" },
-    { value: "single", label: "Workout (One Day)" },
+    { value: "MULTIDAY", label: "Workout Plan (Multiple Days)" },
+    { value: "SINGLE", label: "Workout (One Day)" },
   ];
 
   const templateOptions = [
-    { value: "template1", label: "Leg Day + Cardio Mix" },
-    { value: "template2", label: "Push Day Strength" },
-    { value: "template3", label: "Full Body HIIT" },
+    { value: "template1", label: "Leg Day + Cardio Mix", type: "MULTIDAY" },
+    { value: "template2", label: "Push Day Strength", type: "MULTIDAY" },
+    { value: "template3", label: "Cardio Workout", type: "MULTIDAY" },
+    { value: "template4", label: "Full Body HIIT", type: "SINGLE" },
   ];
+
+  const filteredTemplateOptions = selectedWorkoutType
+    ? templateOptions.filter((t) => t.type === selectedWorkoutType.value)
+    : [];
 
   if (!open) return null;
 
@@ -37,10 +49,16 @@ const AssignTemplateModal = ({ open, onClose, onAssign, selectedWorkoutType, set
         <div className="mb-4">
           <label className="block mb-2">Template</label>
           <Select
-            options={templateOptions}
+            options={filteredTemplateOptions}
             value={selectedTemplate}
             onChange={setSelectedTemplate}
             styles={customStyles}
+            isDisabled={!selectedWorkoutType} // disable until type is selected
+            placeholder={
+              selectedWorkoutType
+                ? "Select Template"
+                : "Select workout type first"
+            }
           />
         </div>
 

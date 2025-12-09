@@ -4,6 +4,8 @@ import { FaListUl } from "react-icons/fa6";
 import { LuPlug } from "react-icons/lu";
 import Select from "react-select";
 import { selectIcon } from "../../Helper/helper";
+import { CiCamera } from "react-icons/ci";
+import { PiImageFill } from "react-icons/pi";
 
 const CreateOnBoardingScreen = ({
   setShowModal,
@@ -12,6 +14,16 @@ const CreateOnBoardingScreen = ({
   handleOverlayClick,
   leadBoxRef,
 }) => {
+  const handleLogoChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const previewURL = URL.createObjectURL(file);
+
+      formik.setFieldValue("screen_image", previewURL); // for preview
+      formik.setFieldValue("screen_imageFile", file); // actual file to upload
+    }
+  };
+
   return (
     <div
       className="bg--blur create--lead--container overflow-auto hide--overflow fixed top-0 left-0 z-[999] w-full bg-black bg-opacity-60 h-full"
@@ -41,7 +53,50 @@ const CreateOnBoardingScreen = ({
           <form onSubmit={formik.handleSubmit} className="p-0 space-y-0">
             <div className="flex bg-white rounded-b-[10px]">
               <div className="p-6 flex-1">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid md:grid-cols-2 grid-cols-1 gap-4 gap-y-2">
+                  {/* Image Preview */}
+                  <div className="md:row-span-3">
+                    <div className="w-full bg-gray-100 rounded-lg mx-auto overflow-hidden relative group">
+                      {formik.values?.screen_image ? (
+                        <img
+                          src={formik.values?.screen_image}
+                          alt="Preview"
+                          className="w-full h-[250px] object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-[250px] flex flex-col items-center justify-center">
+                          <PiImageFill className="text-gray-300 text-7xl" />
+                          <span className="text-gray-500 text-sm mt-2">
+                            Upload Image
+                          </span>
+                        </div>
+                      )}
+
+                      {/* Hover overlay for file input */}
+                      <label className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-25 opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity duration-300">
+                        <input
+                          type="file"
+                          name="screen_image"
+                          accept="image/*"
+                          onChange={handleLogoChange}
+                          onBlur={() =>
+                            formik.setFieldTouched("screen_image", true)
+                          }
+                          className="absolute w-full h-full opacity-0 cursor-pointer"
+                        />
+                        <div className="bg-white bg-opacity-25 w-[60px] h-[60px] flex items-center justify-center rounded-full">
+                          <CiCamera className="text-white text-4xl" />
+                        </div>
+                      </label>
+                    </div>
+                    {/* Validation error */}
+                    {formik.touched.screen_image &&
+                      formik.errors.screen_image && (
+                        <p className="text-red-500 text-sm mt-1">
+                          {formik.errors.screen_image}
+                        </p>
+                      )}
+                  </div>
                   <div>
                     <label className="mb-2 block">
                       Title<span className="text-red-500">*</span>
@@ -66,7 +121,7 @@ const CreateOnBoardingScreen = ({
                     )}
                   </div>
 
-                  <div className="">
+                  {/* <div className="">
                     <label className="mb-2 block">
                       Screen Image<span className="text-red-500">*</span>
                     </label>
@@ -89,7 +144,7 @@ const CreateOnBoardingScreen = ({
                           {formik.errors.screen_image}
                         </p>
                       )}
-                  </div>
+                  </div> */}
 
                   <div className="">
                     <label className="mb-2 block">

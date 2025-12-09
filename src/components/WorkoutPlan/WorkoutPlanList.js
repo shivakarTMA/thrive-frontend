@@ -84,13 +84,12 @@ const WorkoutPlanList = () => {
           to="/create-workout-plan"
           className="px-4 py-2 bg-black text-white rounded flex items-center gap-2"
         >
-          <FiPlus /> Add Exercise
+          <FiPlus /> Create Workout
         </Link>
       </div>
 
       {/* Filters */}
       <div className="flex items-center gap-2 mb-4">
-        <label className="block text-sm font-medium mb-1">Search</label>
         <div>
           <input
             type="text"

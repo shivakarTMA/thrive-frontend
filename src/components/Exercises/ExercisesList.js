@@ -128,7 +128,6 @@ const ExercisesList = () => {
       {/* Filters */}
       <div className="flex items-center gap-2 mb-4">
         {/* Search Input */}
-        <label className="block text-sm font-medium mb-1">Search</label>
         <div>
           <input
             type="text"

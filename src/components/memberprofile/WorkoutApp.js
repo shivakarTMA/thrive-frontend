@@ -11,69 +11,118 @@ const AssignedWorkout = [
   {
     id: 1,
     workoutName: "HYPERTROPHY",
-    noOfDays: 45,
-    startDate: "17-08-2024",
-    endDate: "-",
+    noOfDays: 2,
+    startDate: "11/12/2025",
+    endDate: "12/12/2025",
     followUpDate: "30-09-2024",
     status: "On-Going",
   },
 ];
 
 const WorkoutApp = () => {
-  // 🔹 Local state to manage workouts dynamically (for delete/cancel)
   const [workouts, setWorkouts] = useState(AssignedWorkout);
   const [editingId, setEditingId] = useState(null);
   const [workoutTable, setWorkoutTable] = useState(true);
   const [workoutModal, setWorkoutModal] = useState(false);
 
-  // 🔹 Handle view/edit button click
-  const handleAddWorkout = () => {
-    // const lastWorkoutStatus =
-    //   AssignedWorkout[AssignedWorkout.length - 1]?.status;
+  // Confirmation modal state
+  const [confirmModal, setConfirmModal] = useState({
+    show: false,
+    id: null,
+    action: null, // delete / cancel
+  });
 
-    // if (lastWorkoutStatus !== "Cancelled" && lastWorkoutStatus !== "Expired") {
-    //    toast.error(
-    //     "Cannot add workout: Last workout is either Cancelled or Expired"
-    //   );
-    // } else {
-    //   setWorkoutModal(true);
-    //   setWorkoutTable(false);
-    // }
+  const handleAddWorkout = () => {
     setWorkoutModal(true);
-      setWorkoutTable(false);
+    setWorkoutTable(false);
   };
-  // 🔹 Handle view/edit button click
+
   const handleViewEdit = (id) => {
     setEditingId(id);
     setWorkoutModal(true);
     setWorkoutTable(false);
   };
 
-  // 🔹 Handle Cancel add workout
   const handleCancelWorkout = () => {
     setWorkoutModal(false);
     setWorkoutTable(true);
     setEditingId(null);
   };
 
-  // 🔹 Handle cancel button click
-  const handleCancel = (id) => {
-    const updated = workouts.map((w) =>
-      w.id === id ? { ...w, status: "Cancelled" } : w
-    );
-    setWorkouts(updated);
-    alert(`Workout ID: ${id} has been cancelled`);
+  // Fire modal (instead of directly deleting/canceling)
+  const confirmAction = (id, action) => {
+    setConfirmModal({
+      show: true,
+      id,
+      action, // "delete" or "cancel"
+    });
   };
 
-  // 🔹 Handle delete button click
-  const handleDelete = (id) => {
-    const updated = workouts.filter((w) => w.id !== id);
-    setWorkouts(updated);
-    alert(`Workout ID: ${id} has been deleted`);
+  // Execute the confirmed action
+  const handleConfirmAction = () => {
+    const { id, action } = confirmModal;
+
+    if (action === "delete") {
+      setWorkouts(workouts.filter((w) => w.id !== id));
+      toast.success(`Workout ID: ${id} has been deleted`);
+    }
+
+    if (action === "cancel") {
+      setWorkouts(
+        workouts.map((w) =>
+          w.id === id ? { ...w, status: "Cancelled" } : w
+        )
+      );
+      toast.info(`Workout ID: ${id} has been cancelled`);
+    }
+
+    // Close modal
+    setConfirmModal({ show: false, id: null, action: null });
+  };
+
+  const closeConfirmModal = () => {
+    setConfirmModal({ show: false, id: null, action: null });
   };
 
   return (
     <div className="p-4 bg-white rounded shadow relative">
+
+      {/* ---------------- CONFIRMATION MODAL ---------------- */}
+      {confirmModal.show && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+          <div className="bg-white rounded shadow-lg p-6 w-[350px]">
+            <h2 className="text-lg font-semibold mb-3">
+              {confirmModal.action === "delete"
+                ? "Delete Workout?"
+                : "Cancel Workout?"}
+            </h2>
+
+            <p className="text-sm text-gray-600 mb-4">
+              {confirmModal.action === "delete"
+                ? "This action will permanently delete the workout. Continue?"
+                : "This will mark the workout as cancelled. Continue?"}
+            </p>
+
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={closeConfirmModal}
+                className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
+              >
+                No
+              </button>
+
+              <button
+                onClick={handleConfirmAction}
+                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+              >
+                Yes
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* ---------------------------------------------------- */}
+
       {workoutTable && (
         <div className="flex justify-end items-end gap-2 mb-3 w-full">
           <button
@@ -96,8 +145,6 @@ const WorkoutApp = () => {
                 <th className="border px-3 py-2">No Of Days</th>
                 <th className="border px-3 py-2">Start Date</th>
                 <th className="border px-3 py-2">End Date</th>
-                <th className="border px-3 py-2">Follow-up Date</th>
-                <th className="border px-3 py-2">Status</th>
                 <th className="border px-3 py-2">Action</th>
               </tr>
             </thead>
@@ -110,15 +157,10 @@ const WorkoutApp = () => {
                     <td className="border px-3 py-2">{workout.noOfDays}</td>
                     <td className="border px-3 py-2">{workout.startDate}</td>
                     <td className="border px-3 py-2">{workout.endDate}</td>
-                    <td className="border px-3 py-2">{workout.followUpDate}</td>
-                    <td className="border px-3 py-2">{workout.status}</td>
+
                     <td className="border px-3 py-2">
                       <div className="flex gap-0">
-                        <Tooltip
-                          id={`tooltip-edit-${workout.id}`}
-                          content="View/Edit"
-                          place="top"
-                        >
+                        <Tooltip content="View/Edit" place="top">
                           <div
                             onClick={() => handleViewEdit(workout.id)}
                             className="p-1 cursor-pointer"
@@ -127,26 +169,22 @@ const WorkoutApp = () => {
                           </div>
                         </Tooltip>
 
-                        <Tooltip
-                          id={`tooltip-edit-${workout.id}`}
-                          content="Cancel"
-                          place="top"
-                        >
+                        <Tooltip content="Cancel" place="top">
                           <div
-                            onClick={() => handleCancel(workout.id)}
+                            onClick={() =>
+                              confirmAction(workout.id, "cancel")
+                            }
                             className="p-1 cursor-pointer"
                           >
                             <IoCloseCircleOutline className="text-[25px] text-black" />
                           </div>
                         </Tooltip>
 
-                        <Tooltip
-                          id={`tooltip-edit-${workout.id}`}
-                          content="Delete"
-                          place="top"
-                        >
+                        <Tooltip content="Delete" place="top">
                           <div
-                            onClick={() => handleDelete(workout.id)}
+                            onClick={() =>
+                              confirmAction(workout.id, "delete")
+                            }
                             className="p-1 cursor-pointer"
                           >
                             <AiOutlineDelete className="text-[25px] text-black" />

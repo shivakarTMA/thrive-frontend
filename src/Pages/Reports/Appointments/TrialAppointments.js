@@ -120,26 +120,39 @@ const TrialAppointments = () => {
     }
   };
 
-  const fetchAppointmentStats = async () => {
-    try {
-      const params = { dateFilter: dateFilter?.value || "last_7_days" };
-      const res = await authAxios().get("/appointment/trial/count", { params });
-      const data = res.data?.data || {};
+const fetchAppointmentStats = async () => {
+  try {
+    let params = {};
 
-      setStats({
-        scheduled: Number(data.scheduled_count) || 0,
-        completed: Number(data.completed_count) || 0,
-        noShow: Number(data.no_show_count) || 0,
-      });
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to fetch appointment stats");
+    if (dateFilter?.value === "custom") {
+      if (customFrom && customTo) {
+        params.startDate = format(customFrom, "yyyy-MM-dd");
+        params.endDate = format(customTo, "yyyy-MM-dd");
+      } else {
+        return; // don't fetch until both dates selected
+      }
+    } else {
+      params.dateFilter = dateFilter?.value || "last_7_days";
     }
-  };
 
-  useEffect(() => {
-    fetchAppointmentStats();
-  }, [dateFilter]);
+    const res = await authAxios().get("/appointment/trial/count", { params });
+    const data = res.data?.data || {};
+
+    setStats({
+      scheduled: Number(data.scheduled_count) || 0,
+      completed: Number(data.completed_count) || 0,
+      noShow: Number(data.no_show_count) || 0,
+    });
+  } catch (err) {
+    console.error(err);
+    toast.error("Failed to fetch appointment stats");
+  }
+};
+
+
+useEffect(() => {
+  fetchAppointmentStats();
+}, [dateFilter, customFrom, customTo]);
 
   // Re-fetch when filters change
   useEffect(() => {
@@ -195,38 +208,37 @@ const TrialAppointments = () => {
             {/* Custom Date Range */}
             {dateFilter?.value === "custom" && (
               <>
-                <div className="custom--date dob-format max-w-[180px] w-full relative">
+                <div className="custom--date dob-format flex-1 max-w-[180px] w-full">
                   <span className="absolute z-[1] mt-[11px] ml-[15px]">
                     <FaCalendarDays />
                   </span>
                   <DatePicker
                     selected={customFrom}
-                    onChange={(date) => {
-                      setCustomFrom(date);
-                      setPage(1);
-                    }}
+                    onChange={(date) => setCustomFrom(date)}
                     placeholderText="From Date"
                     className="custom--input w-full input--icon"
                     minDate={subYears(new Date(), 20)}
                     maxDate={addYears(new Date(), 0)}
                     dateFormat="dd-MM-yyyy"
+                    showMonthDropdown
+                    showYearDropdown
+                    dropdownMode="select"
                   />
                 </div>
-
-                <div className="custom--date dob-format max-w-[180px] w-full relative">
+                <div className="custom--date dob-format flex-1 max-w-[180px] w-full">
                   <span className="absolute z-[1] mt-[11px] ml-[15px]">
                     <FaCalendarDays />
                   </span>
                   <DatePicker
                     selected={customTo}
-                    onChange={(date) => {
-                      setCustomTo(date);
-                      setPage(1);
-                    }}
+                    onChange={(date) => setCustomTo(date)}
                     placeholderText="To Date"
                     className="custom--input w-full input--icon"
                     minDate={subYears(new Date(), 20)}
                     maxDate={addYears(new Date(), 0)}
+                    showMonthDropdown
+                    showYearDropdown
+                    dropdownMode="select"
                     dateFormat="dd-MM-yyyy"
                   />
                 </div>
@@ -261,12 +273,12 @@ const TrialAppointments = () => {
 
         {/* Data Table */}
         <div className="w-full p-3 border bg-white shodow--box rounded-[10px]">
-          <div className="flex items-start gap-3 justify-between w-full mb-3 border-b border-b-[#D4D4D4] pb-3">
+          {/* <div className="flex items-start gap-3 justify-between w-full mb-3 border-b border-b-[#D4D4D4] pb-3">
             <TrialAppointmentPanel
               itemStatus={itemStatus}
               setItemStatus={setItemStatus}
             />
-          </div>
+          </div> */}
 
           <div className="table--data--bottom w-full">
             <div className="relative overflow-x-auto">

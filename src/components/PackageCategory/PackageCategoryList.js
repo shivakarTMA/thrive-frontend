@@ -45,7 +45,7 @@ const PackageCategoryList = () => {
     },
     validationSchema: Yup.object({
       title: Yup.string().required("Title is required"),
-      icon: Yup.string().required("Screen image is required"),
+      icon: Yup.string().required("Icon is required"),
       position: Yup.number().required("Position is required"),
       status: Yup.string().required("Status is required"),
     }),
@@ -57,8 +57,8 @@ const PackageCategoryList = () => {
         formData.append("status", values.status);
 
         // if file exists, append it (instead of just file name)
-        if (values.icon instanceof File) {
-          formData.append("file", values.icon);
+        if (values.iconFile instanceof File) {
+          formData.append("file", values.iconFile);
         }
 
         if (editingOption && editingOption) {

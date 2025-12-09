@@ -6,6 +6,7 @@ import Select from "react-select";
 import { selectIcon } from "../../Helper/helper";
 import { toast } from "react-toastify";
 import { authAxios } from "../../config/config";
+import { PiImageFill } from "react-icons/pi";
 
 const CreatePackageCategory = ({
   setShowModal,
@@ -42,6 +43,15 @@ const CreatePackageCategory = ({
     fetchPackageById(editingOption);
   }, [editingOption]);
  
+    const handleLogoChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const previewURL = URL.createObjectURL(file);
+
+      formik.setFieldValue("icon", previewURL); // for preview
+      formik.setFieldValue("iconFile", file); // actual file to upload
+    }
+  };
 
   return (
     <div
@@ -49,7 +59,7 @@ const CreatePackageCategory = ({
       onClick={handleOverlayClick}
     >
       <div
-        className="min-h-[70vh] w-[95%] max-w-xl mx-auto mt-[100px] mb-[100px] container--leadbox rounded-[10px] flex flex-col"
+        className="min-h-[70vh] w-[95%] max-w-[600px] mx-auto mt-[100px] mb-[100px] container--leadbox rounded-[10px] flex flex-col"
         ref={leadBoxRef}
         onClick={(e) => e.stopPropagation()}
       >
@@ -74,6 +84,42 @@ const CreatePackageCategory = ({
               <div className="p-6 flex-1">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
+                    <div className="flex gap-2">
+                      <div className="bg-gray-100 rounded-lg w-[80px] h-[80px] overflow-hidden p-2">
+                        {formik.values?.icon ? (
+                          <img
+                            src={formik.values?.icon}
+                            alt="Preview"
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex flex-col items-center justify-center">
+                            <PiImageFill className="text-gray-300 text-7xl" />
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <label className="mb-2 block">
+                          Icon<span className="text-red-500">*</span>
+                        </label>
+                        <div className="relative">
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleLogoChange}
+                            onBlur={() => formik.setFieldTouched("icon", true)}
+                            className="custom--input w-full"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                    {formik.touched.icon && formik.errors.icon && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {formik.errors.icon}
+                      </p>
+                    )}
+                  </div>
+                  <div>
                     <label className="mb-2 block">
                       Title<span className="text-red-500">*</span>
                     </label>
@@ -96,32 +142,6 @@ const CreatePackageCategory = ({
                       </p>
                     )}
                   </div>
-
-                  <div className="">
-                    <label className="mb-2 block">
-                      Screen Image<span className="text-red-500">*</span>
-                    </label>
-                    <div className="relative">
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) => {
-                          const file = e.target.files[0];
-                          if (file) {
-                            formik.setFieldValue("icon", file);
-                          }
-                        }}
-                        className="custom--input w-full"
-                      />
-                    </div>
-                    {formik.touched.icon &&
-                      formik.errors.icon && (
-                        <p className="text-red-500 text-sm mt-1">
-                          {formik.errors.icon}
-                        </p>
-                      )}
-                  </div>
-
                   <div className="">
                     <label className="mb-2 block">
                       Position<span className="text-red-500">*</span>

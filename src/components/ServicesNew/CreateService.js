@@ -9,6 +9,7 @@ import { LuPlug } from "react-icons/lu";
 import Select from "react-select";
 // Import custom styles for select input
 import { handleTextOnlyChange, selectIcon } from "../../Helper/helper";
+import { PiImageFill } from "react-icons/pi";
 
 // CreateService component
 const CreateService = ({
@@ -29,6 +30,16 @@ const CreateService = ({
     { label: "Product", value: "PRODUCT" },
   ];
 
+  const handleLogoChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const previewURL = URL.createObjectURL(file);
+
+      formik.setFieldValue("image", previewURL); // for preview
+      formik.setFieldValue("imageFile", file); // actual file to upload
+    }
+  };
+
   return (
     // Modal overlay
     <div
@@ -37,7 +48,7 @@ const CreateService = ({
     >
       {/* Modal container */}
       <div
-        className="min-h-[70vh] w-[95%] max-w-xl mx-auto mt-[100px] mb-[100px] container--leadbox rounded-[10px] flex flex-col"
+        className="min-h-[70vh] w-[95%] max-w-[800px] mx-auto mt-[100px] mb-[100px] container--leadbox rounded-[10px] flex flex-col"
         ref={leadBoxRef}
         onClick={(e) => e.stopPropagation()}
       >
@@ -62,7 +73,26 @@ const CreateService = ({
           <form onSubmit={formik.handleSubmit} className="p-0 space-y-0">
             <div className="flex bg-white rounded-b-[10px]">
               <div className="p-6 flex-1">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid md:grid-cols-3 grid-cols-1 gap-4">
+                  {/* Image Preview */}
+                  <div className="row-span-3">
+                    <div className="bg-gray-100 rounded-lg w-full h-full overflow-hidden">
+                      {formik.values?.image ? (
+                        <img
+                          src={formik.values?.image}
+                          alt="Preview"
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex flex-col items-center justify-center">
+                          <PiImageFill className="text-gray-300 text-7xl" />
+                          <span className="text-gray-500 text-sm mt-2">
+                            Upload Image
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                   {/* Image Upload */}
                   <div>
                     <label className="mb-2 block">
@@ -73,12 +103,8 @@ const CreateService = ({
                         type="file"
                         name="image"
                         accept="image/*"
-                        onChange={(event) =>
-                          formik.setFieldValue(
-                            "image",
-                            event.currentTarget.files[0]
-                          )
-                        }
+                        onChange={handleLogoChange}
+                        onBlur={() => formik.setFieldTouched("image", true)}
                         className="custom--input w-full"
                       />
                     </div>

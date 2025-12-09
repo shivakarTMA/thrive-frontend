@@ -181,9 +181,9 @@ const Services = () => {
 
         Object.keys(values).forEach((key) => {
           // Only append image if it's a new file
-          if (key === "image") {
-            if (values.image && typeof values.image !== "string") {
-              formData.append("image", values.image);
+          if (key === "imageFile") {
+            if (values.imageFile && typeof values.imageFile !== "string") {
+              formData.append("image", values.imageFile);
             }
           } else {
             formData.append(key, values[key]);
@@ -269,48 +269,50 @@ const Services = () => {
 
       {/* Table Section */}
       <div className="box--shadow bg-white rounded-[15px] p-4">
-      <div className="relative overflow-x-auto">
-        <table className="w-full text-sm text-left text-gray-500">
-          <thead className="text-xs text-gray-700 uppercase bg-gray-50">
-            <tr>
-              <th className="px-2 py-4">Image</th>
-              <th className="px-2 py-4">Name</th>
-              <th className="px-2 py-4">Club Name</th>
-              <th className="px-2 py-4">Type</th>
-              <th className="px-2 py-4">Position</th>
-              <th className="px-2 py-4">Status</th>
-              <th className="px-2 py-4">Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {module.length === 0 ? (
+        <div className="relative overflow-x-auto">
+          <table className="w-full text-sm text-left text-gray-500">
+            <thead className="text-xs text-gray-700 uppercase bg-gray-50">
               <tr>
-                <td colSpan="8" className="text-center py-4">
-                  No Services added yet.
-                </td>
+                <th className="px-2 py-4">Image</th>
+                <th className="px-2 py-4">Name</th>
+                <th className="px-2 py-4">Club Name</th>
+                <th className="px-2 py-4">Type</th>
+                <th className="px-2 py-4">Position</th>
+                <th className="px-2 py-4">Status</th>
+                <th className="px-2 py-4">Action</th>
               </tr>
-            ) : (
-              module.map((item, index) => (
-                <tr
-                  key={item.id || index}
-                  className="group bg-white border-b hover:bg-gray-50 relative transition duration-700"
-                >
-                  <td>
-                    {item.image ? (
-                      <img
-                        src={item.image}
-                        className="w-14 h-14 object-cover"
-                      />
-                    ) : (
-                      "--"
-                    )}
+            </thead>
+            <tbody>
+              {module.length === 0 ? (
+                <tr>
+                  <td colSpan="8" className="text-center py-4">
+                    No Services added yet.
                   </td>
-                  <td className="px-2 py-4">{item?.name}</td>
-                  <td className="px-2 py-4">{item?.club_name}</td>
-                  <td className="px-2 py-4">{formatText(item?.type)}</td>
-                  <td className="px-2 py-4">{item?.position}</td>
-                  <td className="px-2 py-4">
-                    <div
+                </tr>
+              ) : (
+                module.map((item, index) => (
+                  <tr
+                    key={item.id || index}
+                    className="group bg-white border-b hover:bg-gray-50 relative transition duration-700"
+                  >
+                    <td className="px-2 py-4">
+                      <div className="bg-black rounded-lg w-14 h-14 overflow-hidden">
+                        {item.image ? (
+                          <img
+                            src={item.image}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          "--"
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-2 py-4">{item?.name}</td>
+                    <td className="px-2 py-4">{item?.club_name}</td>
+                    <td className="px-2 py-4">{formatText(item?.type)}</td>
+                    <td className="px-2 py-4">{item?.position}</td>
+                    <td className="px-2 py-4">
+                      <div
                         className={`flex gap-1 items-center ${
                           item?.status === "ACTIVE"
                             ? "text-green-500"
@@ -323,29 +325,29 @@ const Services = () => {
                             item.status.slice(1).toLowerCase()
                           : ""}
                       </div>
-                  </td>
-                  <td className="px-2 py-4">
-                    <div className="w-fit">
-                      <Tooltip
-                        id={`tooltip-edit-${item.id || index}`}
-                        content="Edit Club"
-                        place="left"
-                      >
-                        <div
-                          className="p-1 cursor-pointer"
-                          onClick={() => handleEdit(item.id)}
+                    </td>
+                    <td className="px-2 py-4">
+                      <div className="w-fit">
+                        <Tooltip
+                          id={`tooltip-edit-${item.id || index}`}
+                          content="Edit Club"
+                          place="left"
                         >
-                          <LiaEdit className="text-[25px] text-black" />
-                        </div>
-                      </Tooltip>
-                    </div>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+                          <div
+                            className="p-1 cursor-pointer"
+                            onClick={() => handleEdit(item.id)}
+                          >
+                            <LiaEdit className="text-[25px] text-black" />
+                          </div>
+                        </Tooltip>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* Modal for Create/Update Service */}

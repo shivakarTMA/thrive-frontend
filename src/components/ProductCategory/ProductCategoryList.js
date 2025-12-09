@@ -45,7 +45,7 @@ const ProductCategoryList = () => {
     },
     validationSchema: Yup.object({
       title: Yup.string().required("Title is required"),
-      icon: Yup.string().required("Screen image is required"),
+      icon: Yup.string().required("Icon is required"),
       position: Yup.number().required("Position is required"),
       status: Yup.string().required("Status is required"),
     }),
@@ -57,8 +57,8 @@ const ProductCategoryList = () => {
         formData.append("status", values.status);
 
         // if file exists, append it (instead of just file name)
-        if (values.icon instanceof File) {
-          formData.append("file", values.icon);
+        if (values.iconFile instanceof File) {
+          formData.append("file", values.iconFile);
         }
 
         if (editingOption && editingOption) {
@@ -136,10 +136,10 @@ const ProductCategoryList = () => {
                   >
                     {/* <td className="px-2 py-4">{item?.id || "—"}</td> */}
                     <td>
-                      <div className="bg-black rounded-lg p-3 w-14 h-14">
+                      <div className="bg-gray-100 rounded-lg p-3 w-14 h-14">
                         <img
                           src={item.icon}
-                          className="w-full h-full object-contain invert-[1]"
+                          className="w-full h-full object-contain"
                         />
                       </div>
                     </td>

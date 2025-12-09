@@ -59,8 +59,8 @@ const OnBoardingScreen = () => {
         formData.append("status", values.status);
 
         // if file exists, append it (instead of just file name)
-        if (values.screen_image instanceof File) {
-          formData.append("file", values.screen_image);
+        if (values.screen_imageFile instanceof File) {
+          formData.append("file", values.screen_imageFile);
         }
 
         if (editingOption && editingOption.id) {
@@ -131,7 +131,7 @@ const OnBoardingScreen = () => {
             <tbody>
               {module.length === 0 ? (
                 <tr>
-                  <td colSpan="8" className="text-center py-4">
+                  <td colSpan="5" className="text-center py-4">
                     No boarding added yet.
                   </td>
                 </tr>
@@ -142,11 +142,20 @@ const OnBoardingScreen = () => {
                     className="group bg-white border-b hover:bg-gray-50 relative transition duration-700"
                   >
                     {/* <td className="px-2 py-4">{item?.id || "—"}</td> */}
-                    <td>
-                      <img src={item.screen_image} className="w-14" />
+                    <td className="px-2 py-4">
+                      <div className="bg-black rounded-lg w-14 h-14 overflow-hidden">
+                        {item.screen_image ? (
+                          <img
+                            src={item.screen_image}
+                            className="w-full h-full object-contain"
+                          />
+                        ) : (
+                          "--"
+                        )}
+                      </div>
                     </td>
                     <td className="px-2 py-4">{item?.title}</td>
-                    <td>{item.position}</td>
+                    <td className="px-2 py-4">{item.position}</td>
                     <td className="px-2 py-4">
                       <div
                         className={`flex gap-1 items-center ${
