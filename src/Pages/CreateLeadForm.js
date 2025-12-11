@@ -65,6 +65,10 @@ const validationSchema = Yup.object({
       const phoneNumber = parsePhoneNumberFromString(phoneNumberString);
       return phoneNumber?.isValid() || false;
     }),
+  interested_in: Yup.array()
+    .of(Yup.string())
+    .min(1, "Please select at least one interest")
+    .required("Please select at least one interest"),
   lead_source: Yup.string().required("Lead Source is required"),
   lead_type: Yup.string().required("Lead Type is required"),
   platform: Yup.string().when("lead_source", {
@@ -213,6 +217,11 @@ const CreateLeadForm = ({ setLeadModal, selectedLead, handleLeadUpdate }) => {
           company_id: companyId,
         };
 
+        // Remove interested_in if editing
+        if (selectedLead) {
+          delete payload.interested_in;
+        }
+
         // ✅ Normalize dates
         payload.date_of_birth = values.date_of_birth
           ? new Date(values.date_of_birth).toISOString().split("T")[0]
@@ -265,8 +274,6 @@ const CreateLeadForm = ({ setLeadModal, selectedLead, handleLeadUpdate }) => {
       try {
         const res = await authAxios().get(`/lead/${id}`);
         const data = res.data?.data || res.data || null;
-
-        console.log(data, "SHIVAKAR");
 
         if (data) {
           const interestedList = Array.isArray(data.interested_in)
@@ -647,7 +654,7 @@ const CreateLeadForm = ({ setLeadModal, selectedLead, handleLeadUpdate }) => {
     setLeadModal(false);
   };
 
-  console.log(formik.errors,'SHIVAKAR')
+  console.log(formik.errors, "SHIVAKAR");
 
   return (
     <>
@@ -916,7 +923,7 @@ const CreateLeadForm = ({ setLeadModal, selectedLead, handleLeadUpdate }) => {
                   </h3>
                   <div className="grid grid-cols-3 gap-4">
                     <div>
-                      <label className="mb-2 block">Interested In</label>
+                      <label className="mb-2 block">Interested In<span className="text-red-500">*</span></label>
                       <div className="relative">
                         <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
                           <FaListCheck />
@@ -944,7 +951,14 @@ const CreateLeadForm = ({ setLeadModal, selectedLead, handleLeadUpdate }) => {
                           }`}
                           disabled={!!selectedLead}
                         />
+                        
                       </div>
+                      {formik.errors?.interested_in &&
+                        formik.touched?.interested_in && (
+                          <div className="text-red-500 text-sm">
+                            {formik.errors.interested_in}
+                          </div>
+                        )}
                     </div>
                     <div>
                       <label className="mb-2 block">
@@ -1136,7 +1150,10 @@ const CreateLeadForm = ({ setLeadModal, selectedLead, handleLeadUpdate }) => {
                                       e.target.value
                                     );
                                     // Reset assigned_staff_id and schedule_date_time when NOTRIAL is selected
-                                    formik.setFieldValue("assigned_staff_id", "");
+                                    formik.setFieldValue(
+                                      "assigned_staff_id",
+                                      ""
+                                    );
                                     formik.setFieldValue(
                                       "schedule_date_time",
                                       ""
@@ -1220,12 +1237,16 @@ const CreateLeadForm = ({ setLeadModal, selectedLead, handleLeadUpdate }) => {
                                     .flatMap((group) => group.options)
                                     .find(
                                       (opt) =>
-                                        opt.value === formik.values.assigned_staff_id
+                                        opt.value ===
+                                        formik.values.assigned_staff_id
                                     ) || null
                                 }
                                 options={staffList} // grouped options
                                 onChange={(value) =>
-                                  formik.setFieldValue("assigned_staff_id", value?.value)
+                                  formik.setFieldValue(
+                                    "assigned_staff_id",
+                                    value?.value
+                                  )
                                 }
                                 placeholder="Select staff"
                                 styles={selectIcon}

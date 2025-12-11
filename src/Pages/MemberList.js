@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { FaCircle } from "react-icons/fa";
 import Select from "react-select";
-import { dasboardStyles, formatAutoDate } from "../Helper/helper";
+import { dasboardStyles, formatAutoDate, formatText } from "../Helper/helper";
 import { Link, useParams, useLocation } from "react-router-dom";
 import { IoIosAddCircleOutline } from "react-icons/io";
 import { MdCall } from "react-icons/md";
@@ -17,6 +17,7 @@ import SmsIcon from "../assets/images/icons/sms.png";
 import AssignIcon from "../assets/images/icons/assign.png";
 import MemberFilterPanel from "../components/FilterPanel/MemberFilterPanel";
 import { useSelector } from "react-redux";
+import DummyProfile from "../assets/images/dummy-profile.png";
 
 const MemberList = () => {
   const { id } = useParams();
@@ -72,8 +73,8 @@ const MemberList = () => {
       } else {
         if (search) params.search = search;
         const filters = {
-          status: overrideSelected.hasOwnProperty("status")
-            ? overrideSelected.status
+          is_subscribed: overrideSelected.hasOwnProperty("is_subscribed")
+            ? overrideSelected.is_subscribed
             : filterStatus,
           serviceName: overrideSelected.hasOwnProperty("serviceName")
             ? overrideSelected.serviceName
@@ -278,7 +279,7 @@ const MemberList = () => {
 
   const handleRemoveFilter = (filterKey) => {
     const setterMap = {
-      status: setFilterStatus,
+      is_subscribed: setFilterStatus,
       serviceName: setFilterService,
       service_variation: setFilterServiceVariation,
       ageGroup: setFilterAgeGroup,
@@ -497,7 +498,9 @@ const MemberList = () => {
                 <thead className="text-xs text-gray-700 uppercase bg-gray-50">
                   <tr>
                     <th className="px-2 py-4">#</th>
+                    <th className="px-2 py-4">Profile Image</th>
                     <th className="px-2 py-4">Name</th>
+                    <th className="px-2 py-4">Gender</th>
                     <th className="px-2 py-4">MemeberShip Duration</th>
                     <th className="px-2 py-4">Status</th>
                     <th className="px-2 py-4">Expired On</th>
@@ -522,7 +525,23 @@ const MemberList = () => {
                           <span className="checkmark--custom"></span>
                         </div>
                       </td>
+                      <td className="px-2 py-4">
+                        <div className="bg-gray-100 rounded-lg w-14 h-14 overflow-hidden">
+                        {member?.profile_pic ? (
+                          <img
+                            src={member?.profile_pic}
+                            className="w-full h-full object-cover object-center"
+                          />
+                        ) : (
+                          <img
+                            src={DummyProfile}
+                            className="w-full h-full object-cover object-center"
+                          />
+                        )}
+                      </div>
+                      </td>
                       <td className="px-2 py-4">{member?.full_name}</td>
+                      <td className="px-2 py-4">{formatText(member?.gender === "NOTDISCLOSE" ? "Prefer Not To Say" : member?.gender)}</td>
                       <td className="px-2 py-4">
                         {/* {formatAutoDate(member?.createdAt)} */}6 Months
                       </td>
@@ -556,10 +575,11 @@ const MemberList = () => {
                           <div className="progress--bar bg-[#E5E5E5] rounded-full h-[10px] w-full max-w-[150px]">
                             <div
                               className="bg--color w-full rounded-full h-full"
-                              style={{ width: "40%" }}
+                              style={{ width: member?.lead_source === "APP" ? "100%" : "25%" }}
                             ></div>
                           </div>
-                          40%
+                          {member?.lead_source === "APP" ? "100%" : "25%"}
+                         
                         </div>
                       </td>
 

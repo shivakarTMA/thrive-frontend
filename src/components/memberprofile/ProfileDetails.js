@@ -48,6 +48,7 @@ const validationSchema = Yup.object({
     }),
   date_of_birth: Yup.date().required("Date of birth is required"),
   email: Yup.string().required("Email is required"),
+  company_name: Yup.string().required("Company is required"),
   location: Yup.string().required("Location is required"),
 });
 
@@ -62,6 +63,8 @@ const ProfileDetails = ({ member }) => {
   const webcamRef = useRef(null);
   const memberId = member?.id;
   const [profileImage, setProfileImage] = useState("");
+  const [staffList, setStaffList] = useState([]);
+  const [trainerList, setTrainerList] = useState([]);
 
   const [initialValues, setInitialValues] = useState({
     profile_pic: DummyProfile,
@@ -84,12 +87,61 @@ const ProfileDetails = ({ member }) => {
 
   const [emergencyContacts, setEmergencyContacts] = useState([]);
   const [newEmergencies, setNewEmergencies] = useState([]);
+  const [emergencyErrors, setEmergencyErrors] = useState([]);
+
+  const fetchStaff = async () => {
+    try {
+      // Fetch all staff needed for 'training_by' select (both roles)
+      const res = await authAxios().get("/staff/list?role=TRAINER&role=FOH");
+      const staff = res.data?.data || [];
+
+      console.log(staff, "updatedStaff");
+
+      // --- GROUPING STAFF BY ROLE ---
+      const foh = staff
+        .filter((item) => item.role === "FOH")
+        .map((item) => ({
+          value: item.id,
+          label: item.name,
+        }));
+
+      const trainer = staff
+        .filter((item) => item.role === "TRAINER")
+        .map((item) => ({
+          value: item.id,
+          label: item.name,
+        }));
+
+      // Final grouped structure for 'training_by' select
+      const groupedOptions = [
+        {
+          label: "FOH",
+          options: foh,
+        },
+        {
+          label: "TRAINER",
+          options: trainer,
+        },
+      ];
+
+      // Separate arrays for each select
+      setTrainerList(trainer); // For 'schedule_for'
+      setStaffList(groupedOptions); // For 'training_by'
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to fetch staff");
+    }
+  };
+
+  useEffect(() => {
+    fetchStaff();
+  }, []);
 
   // Fetch emergency contact list by member ID
   const fetchEmergencyContacts = async () => {
     try {
       const response = await authAxios().get(
-        `/member-emergency-contact/list?member_id=${member?.id}`
+        `/member-emergency-contact/list?member_id=${memberId}`
       );
       const res = response?.data?.data;
       setEmergencyContacts(res);
@@ -172,24 +224,24 @@ const ProfileDetails = ({ member }) => {
 
         setInitialValues({
           profile_pic: image,
-          country_code: data.country_code || "",
-          mobile: data.mobile || "",
+          country_code: data?.country_code || "",
+          mobile: data?.mobile || "",
           phoneFull:
-            data.country_code && data.mobile
-              ? `+${data.country_code}${data.mobile}`
+            data?.country_code && data?.mobile
+              ? `+${data?.country_code}${data?.mobile}`
               : "",
-          full_name: data.full_name || "",
-          date_of_birth: data.date_of_birth || "",
-          gender: data.gender || "NOTDISCLOSE",
-          email: data.email || "",
-          location: data.location || "",
-          address: data.address || "",
-          created_by: data.created_by || "",
-          leadType: leadTypes.find((g) => g.value === data.lead_type) || null,
-          leadSource: data.lead_source || "",
-          company_name: data.company_name || "",
-          designation: data.designation || "",
-          officialEmail: data.official_email || "",
+          full_name: data?.full_name || "",
+          date_of_birth: data?.date_of_birth || "",
+          gender: data?.gender || "NOTDISCLOSE",
+          email: data?.email || "",
+          location: data?.location || "",
+          address: data?.address || "",
+          created_by: data?.created_by || "",
+          leadType: leadTypes.find((g) => g.value === data?.lead_type) || null,
+          leadSource: data?.lead_source || "",
+          company_name: data?.company_name || "",
+          designation: data?.designation || "",
+          officialEmail: data?.official_email || "",
         });
       } catch (error) {
         console.error("Error fetching member data:", error);
@@ -200,107 +252,297 @@ const ProfileDetails = ({ member }) => {
     fetchMemberData();
   }, [memberId, leadTypes]);
 
+  // const formik = useFormik({
+  //   enableReinitialize: true, // Important to update form when initialValues change
+  //   initialValues: initialValues,
+  //   validationSchema,
+  //   onSubmit: async (values) => {
+  //     let profilePayload = new FormData();
+
+  //     if (values?.profile_pic instanceof File) {
+  //       profilePayload.append("profile_pic", values.profile_pic);
+  //     }
+
+  //     // ✅ Normalize phone
+  //     if (values.phoneFull) {
+  //       const phoneNumber = parsePhoneNumberFromString(values.phoneFull);
+  //       if (phoneNumber) {
+  //         profilePayload.country_code = phoneNumber.countryCallingCode;
+  //         profilePayload.mobile = phoneNumber.nationalNumber;
+  //       }
+  //     } else {
+  //       profilePayload.country_code = null;
+  //       profilePayload.mobile = null;
+  //     }
+
+  //     let companyId = null;
+  //     if (values.company_name !== null && !isNaN(values.company_name)) {
+  //       companyId = Number(values.company_name); // Only numeric
+  //     }
+
+  //     // Append other fields
+  //     Object.entries(values).forEach(([key, value]) => {
+  //       if (
+  //         key !== "phoneFull" &&
+  //         key !== "company_name" &&
+  //         key !== "profile_pic"
+  //       ) {
+  //         profilePayload.append(key, value || "");
+  //       }
+  //     });
+
+  //     if (companyId !== null) {
+  //       profilePayload.append("company_id", companyId);
+  //     }
+
+  //     const profileResponse = await authAxios().put(
+  //       `/member/update/${member.id}`,
+  //       profilePayload,
+  //       {
+  //         headers: {
+  //           "Content-Type": "multipart/form-data",
+  //         },
+  //       }
+  //     );
+  //     toast.success("Profile updated successfully.");
+  //     console.log("Profile updated successfully.", profileResponse?.data?.data);
+
+  //     const allContacts = [...emergencyContacts, ...newEmergencies];
+
+  //     // ----- Update Emergency Contacts -----
+  //     for (let contact of allContacts) {
+  //       const contactPayload = {
+  //         member_id: member.id,
+  //         name: contact.name,
+  //         relationship: contact.relationship || "",
+  //         phone: contact.phone || "",
+  //         alt_phone: contact.alt_phone || "",
+  //         email: contact.email || "",
+  //         address: contact.address || "",
+  //       };
+
+  //       // If contact has ID, update; else create
+  //       if (contact.id) {
+  //         await authAxios().put(
+  //           `/member-emergency-contact/${contact.id}`,
+  //           contactPayload
+  //         );
+  //       } else {
+  //         await authAxios().post(
+  //           `/member-emergency-contact/create`,
+  //           contactPayload
+  //         );
+  //       }
+  //     }
+  //   },
+  // });
+
+  // ✅ Validate all emergency contacts
+  const validateEmergencyContacts = () => {
+    const allContacts = [...emergencyContacts, ...newEmergencies];
+    const errors = {};
+    let isValid = true;
+
+    // Check if at least one contact exists
+    if (allContacts.length === 0) {
+      toast.error("At least one emergency contact is required");
+      return false;
+    }
+
+    // Validate each contact
+    allContacts.forEach((contact, index) => {
+      const contactErrors = {};
+
+      if (!contact.name || contact.name.trim() === "") {
+        contactErrors.name = "Name is required";
+        isValid = false;
+      }
+
+      if (!contact.phone || contact.phone.trim() === "") {
+        contactErrors.phone = "Phone is required";
+        isValid = false;
+      }
+
+      if (!contact.relationship || contact.relationship.trim() === "") {
+        contactErrors.relationship = "Relationship is required";
+        isValid = false;
+      }
+
+      if (Object.keys(contactErrors).length > 0) {
+        errors[index] = contactErrors;
+      }
+    });
+
+    setEmergencyErrors(errors);
+
+    if (!isValid) {
+      toast.error("Please fix emergency contact value");
+    }
+
+    return isValid;
+  };
+
   const formik = useFormik({
     enableReinitialize: true, // Important to update form when initialValues change
     initialValues: initialValues,
     validationSchema,
     onSubmit: async (values) => {
-      let profilePayload = new FormData();
-
-      if (values.profile_pic instanceof File) {
-        profilePayload.append("profile_pic", values.profile_pic);
-      }
-
-      // ✅ Normalize phone
-      if (values.phoneFull) {
-        const phoneNumber = parsePhoneNumberFromString(values.phoneFull);
-        if (phoneNumber) {
-          profilePayload.country_code = phoneNumber.countryCallingCode;
-          profilePayload.mobile = phoneNumber.nationalNumber;
+      try {
+        if (!validateEmergencyContacts()) {
+          return;
         }
-      } else {
-        profilePayload.country_code = null;
-        profilePayload.mobile = null;
-      }
+        let profilePayload = new FormData();
 
-      let companyId = null;
-      if (values.company_name !== null && !isNaN(values.company_name)) {
-  companyId = Number(values.company_name); // Only numeric
-}
-
-      // Append other fields
-      Object.entries(values).forEach(([key, value]) => {
-        if (
-          key !== "phoneFull" &&
-          key !== "company_name" &&
-          key !== "profile_pic"
-        ) {
-          profilePayload.append(key, value || "");
+        // ✅ Append profile picture if it's a File
+        if (values.profile_pic instanceof File) {
+          profilePayload.append("profile_pic", values.profile_pic);
         }
-      });
 
-      if (companyId !== null) {
-  profilePayload.append("company_id", companyId);
-}
-
-      const profileResponse = await authAxios().put(
-        `/member/update/${member.id}`,
-        profilePayload,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
-      toast.success("Profile updated successfully.");
-      console.log("Profile updated successfully.", profileResponse?.data?.data);
-
-      const allContacts = [...emergencyContacts, ...newEmergencies];
-
-      // ----- Update Emergency Contacts -----
-      for (let contact of allContacts) {
-        const contactPayload = {
-          member_id: member.id,
-          name: contact.name,
-          relationship: contact.relationship || "",
-          phone: contact.phone || "",
-          alt_phone: contact.alt_phone || "",
-          email: contact.email || "",
-          address: contact.address || "",
-        };
-
-        // If contact has ID, update; else create
-        if (contact.id) {
-          await authAxios().put(
-            `/member-emergency-contact/${contact.id}`,
-            contactPayload
-          );
+        // ✅ Normalize phone
+        if (values.phoneFull) {
+          const phoneNumber = parsePhoneNumberFromString(values.phoneFull);
+          if (phoneNumber) {
+            profilePayload.append(
+              "country_code",
+              phoneNumber.countryCallingCode
+            );
+            profilePayload.append("mobile", phoneNumber.nationalNumber);
+          }
         } else {
-          await authAxios().post(
-            `/member-emergency-contact/create`,
-            contactPayload
-          );
+          profilePayload.append("country_code", "");
+          profilePayload.append("mobile", "");
         }
+
+        // ✅ Handle company_id
+        let companyId = null;
+        if (values.company_name !== null && !isNaN(values.company_name)) {
+          companyId = Number(values.company_name);
+        }
+
+        // ✅ Append company_id if valid
+        if (companyId !== null) {
+          profilePayload.append("company_id", companyId);
+        }
+
+        // ✅ Append other fields
+        Object.entries(values).forEach(([key, value]) => {
+          if (
+            key !== "phoneFull" &&
+            key !== "company_name" &&
+            key !== "profile_pic" &&
+            key !== "mobile" &&
+            key !== "country_code"
+          ) {
+            profilePayload.append(key, value || "");
+          }
+        });
+
+        // ✅ Update profile
+        const profileResponse = await authAxios().put(
+          `/member/update/${member.id}`,
+          profilePayload,
+          {
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+          }
+        );
+        toast.success("Profile updated successfully.");
+        console.log(
+          "Profile updated successfully.",
+          profileResponse?.data?.data
+        );
+
+        // ✅ Update Emergency Contacts
+        const allContacts = [...emergencyContacts, ...newEmergencies];
+
+        for (let contact of allContacts) {
+          const contactPayload = {
+            member_id: member.id,
+            name: contact.name,
+            relationship: contact.relationship || "",
+            phone: contact.phone || "",
+            alt_phone: contact.alt_phone || "",
+            email: contact.email || "",
+            address: contact.address || "",
+          };
+
+          // If contact has ID, update; else create
+          if (contact.id) {
+            await authAxios().put(
+              `/member-emergency-contact/${contact.id}`,
+              contactPayload
+            );
+          } else {
+            await authAxios().post(
+              `/member-emergency-contact/create`,
+              contactPayload
+            );
+          }
+        }
+
+        // toast.success("Emergency contacts updated successfully.");
+        // ✅ Refresh data after successful update
+        await fetchEmergencyContacts();
+        setNewEmergencies([]); // ✅ Clear new emergency forms after success
+        setEmergencyErrors({}); // ✅ Clear validation errors
+      } catch (error) {
+        console.error("Error updating profile:", error);
+        toast.error(
+          error?.response?.data?.message || "Failed to update profile."
+        );
       }
     },
   });
 
-  const displayImage =
-    formik.values.profile_pic instanceof File
-      ? URL.createObjectURL(formik.values.profile_pic)
-      : profileImage || DummyProfile;
-
   const updateEmergencyContactField = (index, field, value) => {
-    const updatedContacts = [...emergencyContacts];
-    updatedContacts[index][field] = value;
-    setEmergencyContacts(updatedContacts);
+    setEmergencyContacts((prev) => {
+      const copy = [...prev];
+      copy[index] = { ...copy[index], [field]: value };
+      return copy;
+    });
+
+    // Clear that specific error field (if present)
+    setEmergencyErrors((prev) => {
+      if (!prev || !prev.existing) return prev;
+      const existing = { ...prev.existing };
+      if (existing[index] && existing[index][field]) {
+        const nextFieldErrors = { ...existing[index] };
+        delete nextFieldErrors[field];
+        if (Object.keys(nextFieldErrors).length === 0) {
+          delete existing[index];
+        } else {
+          existing[index] = nextFieldErrors;
+        }
+        return { ...prev, existing };
+      }
+      return prev;
+    });
   };
 
-  // Function to update a field in a new emergency contact
   const updateNewEmergencyField = (index, field, value) => {
-    const updatedNew = [...newEmergencies];
-    updatedNew[index][field] = value;
-    setNewEmergencies(updatedNew);
+    setNewEmergencies((prev) => {
+      const copy = [...prev];
+      copy[index] = { ...copy[index], [field]: value };
+      return copy;
+    });
+
+    // Clear that specific error field (if present)
+    setEmergencyErrors((prev) => {
+      if (!prev || !prev.new) return prev;
+      const nextNew = { ...prev.new };
+      if (nextNew[index] && nextNew[index][field]) {
+        const nextFieldErrors = { ...nextNew[index] };
+        delete nextFieldErrors[field];
+        if (Object.keys(nextFieldErrors).length === 0) {
+          delete nextNew[index];
+        } else {
+          nextNew[index] = nextFieldErrors;
+        }
+        return { ...prev, new: nextNew };
+      }
+      return prev;
+    });
   };
 
   // Function to add a blank newEmergency form
@@ -397,8 +639,8 @@ const ProfileDetails = ({ member }) => {
 
     try {
       // ✅ Use POST method
-      const endpoint = member?.id
-        ? `/lead/verify/availability/${member?.id}` // If lead is selected, use verification endpoint
+      const endpoint = memberId
+        ? `/lead/verify/availability/${memberId}` // If lead is selected, use verification endpoint
         : "/lead/check/unique";
 
       const response = await phoneAxios.post(endpoint, payload);
@@ -438,8 +680,8 @@ const ProfileDetails = ({ member }) => {
     try {
       // ✅ Use POST method
       // ✅ Use POST method
-      const endpoint = member?.id
-        ? `/lead/verify/availability/${member?.id}` // If lead is selected, use verification endpoint
+      const endpoint = memberId
+        ? `/lead/verify/availability/${memberId}` // If lead is selected, use verification endpoint
         : "/lead/check/unique";
 
       const response = await phoneAxios.post(endpoint, payload);
@@ -498,8 +740,6 @@ const ProfileDetails = ({ member }) => {
     setShowUnderageModal(false);
     setPendingDob(null);
   };
-
-  console.log(formik?.values, "SHIVAKAR");
 
   return (
     <div className="min-h-screen">
@@ -662,7 +902,7 @@ const ProfileDetails = ({ member }) => {
                   </label>
                   <PhoneInput
                     name="phoneFull"
-                    value={formik.values.phoneFull}
+                    value={formik.values?.phoneFull}
                     onChange={handlePhoneChange}
                     onBlur={handlePhoneBlur}
                     international
@@ -684,7 +924,7 @@ const ProfileDetails = ({ member }) => {
                   </label>
                   <input
                     name="full_name"
-                    value={formik.values.full_name}
+                    value={formik.values?.full_name}
                     onChange={formik.handleChange}
                     className="custom--input w-full"
                   />
@@ -702,8 +942,8 @@ const ProfileDetails = ({ member }) => {
                   <div className="custom--date dob-format relative">
                     <DatePicker
                       selected={
-                        formik.values.date_of_birth
-                          ? new Date(formik.values.date_of_birth) // convert back to Date here
+                        formik.values?.date_of_birth
+                          ? new Date(formik.values?.date_of_birth) // convert back to Date here
                           : null
                       }
                       onChange={handleDobChange}
@@ -724,7 +964,7 @@ const ProfileDetails = ({ member }) => {
                   <Select
                     name="gender"
                     value={genderOptions.find(
-                      (opt) => opt.value === formik.values.gender
+                      (opt) => opt.value === formik.values?.gender
                     )}
                     options={genderOptions}
                     onChange={(option) =>
@@ -742,7 +982,7 @@ const ProfileDetails = ({ member }) => {
                   <input
                     type="email"
                     name="email"
-                    value={formik.values.email}
+                    value={formik.values?.email}
                     onChange={formik.handleChange}
                     onBlur={handleEmailBlur}
                     className="custom--input w-full"
@@ -766,7 +1006,7 @@ const ProfileDetails = ({ member }) => {
                   <input
                     type="text"
                     name="location"
-                    value={formik.values.location}
+                    value={formik.values?.location}
                     onChange={formik.handleChange}
                     className="custom--input w-full"
                   />
@@ -783,7 +1023,7 @@ const ProfileDetails = ({ member }) => {
                   </label>
                   <textarea
                     name="address"
-                    value={formik.values.address}
+                    value={formik.values?.address}
                     onChange={formik.handleChange}
                     rows={1}
                     className="custom--input w-full"
@@ -806,7 +1046,7 @@ const ProfileDetails = ({ member }) => {
                   <Select
                     name="created_by"
                     value={servicesName.find(
-                      (opt) => opt.value === formik.values.created_by
+                      (opt) => opt.value === formik.values?.created_by
                     )}
                     options={servicesName}
                     onChange={(option) =>
@@ -824,21 +1064,23 @@ const ProfileDetails = ({ member }) => {
                   </label>
                   <Select
                     name="gt"
-                    styles={customStyles}
-                    className="!capitalize"
-                    value={genralTrainer.find(
-                      (opt) => opt.value === formik.values.gt
-                    )}
-                    options={genralTrainer}
+                    value={
+                      trainerList.find(
+                        (opt) => opt.value === formik.values?.gt
+                      ) || null
+                    }
+                    options={trainerList}
                     onChange={(option) =>
                       formik.setFieldValue("gt", option.value)
                     }
+                    placeholder="Select Trainer"
+                    styles={customStyles}
                   />
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-black mb-2">
-                    Lead Source<span className="text-red-500">*</span>
+                    Lead Source
                   </label>
                   <Select
                     name="leadSource"
@@ -846,7 +1088,7 @@ const ProfileDetails = ({ member }) => {
                     className="!capitalize"
                     isDisabled={true}
                     value={leadsSources.find(
-                      (opt) => opt.value === formik.values.leadSource
+                      (opt) => opt.value === formik.values?.leadSource
                     )}
                     options={leadsSources}
                     onChange={(option) =>
@@ -858,13 +1100,19 @@ const ProfileDetails = ({ member }) => {
                   <label className="block text-sm font-medium text-black mb-2">
                     Personal Trainer
                   </label>
-                  <input
-                    type="text"
+                  <Select
                     name="personal_trainer"
-                    value={formik.values.personal_trainer}
-                    onChange={formik.handleChange}
-                    className="custom--input w-full"
-                    disabled={true}
+                    value={
+                      trainerList.find(
+                        (opt) => opt.value === formik.values?.personal_trainer
+                      ) || null
+                    }
+                    options={trainerList}
+                    onChange={(option) =>
+                      formik.setFieldValue("personal_trainer", option.value)
+                    }
+                    placeholder="Select Trainer"
+                    styles={customStyles}
                   />
                 </div>
               </div>
@@ -883,13 +1131,13 @@ const ProfileDetails = ({ member }) => {
                   </label>
                   <Select
                     name="company_name"
-                   value={
-                      formik.values.company_name
+                    value={
+                      formik.values?.company_name
                         ? companyOptions.find(
-                            (opt) => opt.value === formik.values.company_name
+                            (opt) => opt.value === formik.values?.company_name
                           ) || {
-                            label: formik.values.company_name,
-                            value: formik.values.company_name,
+                            label: formik.values?.company_name,
+                            value: formik.values?.company_name,
                           }
                         : null
                     }
@@ -900,6 +1148,12 @@ const ProfileDetails = ({ member }) => {
                     isLoading={loading}
                     styles={customStyles}
                   />
+                  {formik.errors?.company_name &&
+                    formik.touched?.company_name && (
+                      <div className="text-red-500 text-sm">
+                        {formik.errors.company_name}
+                      </div>
+                    )}
                 </div>
 
                 <div>
@@ -909,7 +1163,7 @@ const ProfileDetails = ({ member }) => {
                   <input
                     type="text"
                     name="designation"
-                    value={formik.values.designation}
+                    value={formik.values?.designation}
                     onChange={formik.handleChange}
                     className="custom--input w-full"
                   />
@@ -922,7 +1176,7 @@ const ProfileDetails = ({ member }) => {
                   <input
                     type="text"
                     name="officialEmail"
-                    value={formik.values.officialEmail}
+                    value={formik.values?.officialEmail}
                     onChange={formik.handleChange}
                     className="custom--input w-full"
                   />
@@ -936,181 +1190,219 @@ const ProfileDetails = ({ member }) => {
                 Emergency Contact
               </h2>
 
-              {emergencyContacts.map((contact, index) => (
-                <div className="relative flex items-center gap-2" key={index}>
-                  <div className="grid grid-cols-4 gap-3 mb-3 items-end relative">
-                    <div>
-                      <label className="block text-sm font-medium text-black mb-2">
-                        Name<span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        value={contact.name}
-                        onChange={(e) =>
-                          updateEmergencyContactField(
-                            index,
-                            "name",
-                            e.target.value
-                          )
-                        }
-                        className="custom--input w-full"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-black mb-2">
-                        Phone<span className="text-red-500">*</span>
-                      </label>
-                      <PhoneInput
-                        value={contact.phone}
-                        onChange={(value) =>
-                          updateEmergencyContactField(index, "phone", value)
-                        }
-                        international
-                        defaultCountry="IN"
-                        countryCallingCodeEditable={false}
-                        className="custom--input w-full custom--phone"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-black mb-2">
-                        Email
-                      </label>
-                      <input
-                        type="email"
-                        value={contact.email}
-                        onChange={(e) =>
-                          updateEmergencyContactField(
-                            index,
-                            "email",
-                            e.target.value
-                          )
-                        }
-                        className="custom--input w-full"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-black mb-2">
-                        Relationship<span className="text-red-500">*</span>
-                      </label>
-                      <Select
-                        options={relationList}
-                        value={relationList.find(
-                          (option) => option.value === contact.relationship
+              {emergencyContacts.map((contact, index) => {
+                const errs = emergencyErrors?.[index] || {};
+                return (
+                  <div
+                    className="relative flex items-center gap-2"
+                    key={contact.id ?? index}
+                  >
+                    <div className="grid grid-cols-4 gap-3 mb-3 items-end relative">
+                      <div>
+                        <label className="block text-sm font-medium text-black mb-2">
+                          Name<span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={contact.name}
+                          onChange={(e) =>
+                            updateEmergencyContactField(
+                              index,
+                              "name",
+                              e.target.value
+                            )
+                          }
+                          className="custom--input w-full"
+                        />
+                        {errs.name && (
+                          <p className="text-red-500 text-xs mt-1">
+                            {errs.name}
+                          </p>
                         )}
-                        onChange={(selectedOption) =>
-                          updateEmergencyContactField(
-                            index,
-                            "relationship",
-                            selectedOption.value
-                          )
-                        }
-                        styles={customStyles}
-                      />
-                    </div>
-                  </div>
-                  <div className="flex items-center">
-                    <button
-                      type="button"
-                      onClick={() => removeEmergencyContact(index)}
-                      className="text-black font-bold"
-                    >
-                      <IoIosCloseCircle className="text-2xl mt-2" />
-                    </button>
-                  </div>
-                </div>
-              ))}
+                      </div>
 
-              {newEmergencies.map((contact, index) => (
-                <div
-                  className="relative flex items-center gap-2"
-                  key={`new-${index}`}
-                >
-                  <div className="grid grid-cols-4 gap-3 mb-3 items-start">
-                    <div>
-                      <label className="block text-sm font-medium text-black mb-2">
-                        Name<span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        placeholder="Name"
-                        value={contact.name}
-                        onChange={(e) =>
-                          updateNewEmergencyField(index, "name", e.target.value)
-                        }
-                        className="custom--input w-full"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-black mb-2">
-                        Phone<span className="text-red-500">*</span>
-                      </label>
-                      <PhoneInput
-                        placeholder="Phone"
-                        value={contact.phone}
-                        onChange={(value) =>
-                          updateNewEmergencyField(index, "phone", value)
-                        }
-                        international
-                        defaultCountry="IN"
-                        countryCallingCodeEditable={false}
-                        className="custom--input w-full custom--phone"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-black mb-2">
-                        Email
-                      </label>
-                      <input
-                        type="email"
-                        placeholder="Email"
-                        value={contact.email}
-                        onChange={(e) =>
-                          updateNewEmergencyField(
-                            index,
-                            "email",
-                            e.target.value
-                          )
-                        }
-                        className="custom--input w-full"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-black mb-2">
-                        Relationship<span className="text-red-500">*</span>
-                      </label>
-                      <Select
-                        options={relationList}
-                        value={relationList.find(
-                          (option) => option.value === contact.relationship
+                      <div>
+                        <label className="block text-sm font-medium text-black mb-2">
+                          Phone<span className="text-red-500">*</span>
+                        </label>
+                        <PhoneInput
+                          value={contact.phone}
+                          onChange={(value) =>
+                            updateEmergencyContactField(index, "phone", value)
+                          }
+                          international
+                          defaultCountry="IN"
+                          countryCallingCodeEditable={false}
+                          className="custom--input w-full custom--phone"
+                        />
+                        {errs.phone && (
+                          <p className="text-red-500 text-xs mt-1">
+                            {errs.phone}
+                          </p>
                         )}
-                        onChange={(selectedOption) =>
-                          updateNewEmergencyField(
-                            index,
-                            "relationship",
-                            selectedOption.value
-                          )
-                        }
-                        styles={customStyles}
-                      />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-black mb-2">
+                          Email
+                        </label>
+                        <input
+                          type="email"
+                          value={contact.email}
+                          onChange={(e) =>
+                            updateEmergencyContactField(
+                              index,
+                              "email",
+                              e.target.value
+                            )
+                          }
+                          className="custom--input w-full"
+                        />
+                        {errs.email && (
+                          <p className="text-red-500 text-xs mt-1">
+                            {errs.email}
+                          </p>
+                        )}
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-black mb-2">
+                          Relationship<span className="text-red-500">*</span>
+                        </label>
+                        <Select
+                          options={relationList}
+                          value={relationList.find(
+                            (option) => option.value === contact.relationship
+                          )}
+                          onChange={(selectedOption) =>
+                            updateEmergencyContactField(
+                              index,
+                              "relationship",
+                              selectedOption?.value
+                            )
+                          }
+                          styles={customStyles}
+                        />
+                        {errs.relationship && (
+                          <p className="text-red-500 text-xs mt-1">
+                            {errs.relationship}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center">
+                      <button
+                        type="button"
+                        onClick={() => removeEmergencyContact(index)}
+                        className="text-black font-bold"
+                      >
+                        <IoIosCloseCircle className="text-2xl mt-2" />
+                      </button>
                     </div>
                   </div>
-                  <div className="flex items-center">
-                    <button
-                      type="button"
-                      onClick={() => removeNewEmergency(index)}
-                      className="text-black font-bold"
-                    >
-                      <IoIosCloseCircle className="text-2xl mt-2" />
-                    </button>
+                );
+              })}
+
+              {newEmergencies.map((contact, index) => {
+                const errs =
+                  (emergencyErrors &&
+                    emergencyErrors.new &&
+                    emergencyErrors.new[index]) ||
+                  {};
+                return (
+                  <div
+                    className="relative flex items-center gap-2"
+                    key={`new-${index}`}
+                  >
+                    <div className="grid grid-cols-4 gap-3 mb-3 items-start">
+                      <div>
+                        <label className="block text-sm font-medium text-black mb-2">
+                          Name<span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="Name"
+                          value={contact.name}
+                          onChange={(e) =>
+                            updateNewEmergencyField(
+                              index,
+                              "name",
+                              e.target.value
+                            )
+                          }
+                          className="custom--input w-full"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-black mb-2">
+                          Phone<span className="text-red-500">*</span>
+                        </label>
+                        <PhoneInput
+                          placeholder="Phone"
+                          value={contact.phone}
+                          onChange={(value) =>
+                            updateNewEmergencyField(index, "phone", value)
+                          }
+                          international
+                          defaultCountry="IN"
+                          countryCallingCodeEditable={false}
+                          className="custom--input w-full custom--phone"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-black mb-2">
+                          Email
+                        </label>
+                        <input
+                          type="email"
+                          placeholder="Email"
+                          value={contact.email}
+                          onChange={(e) =>
+                            updateNewEmergencyField(
+                              index,
+                              "email",
+                              e.target.value
+                            )
+                          }
+                          className="custom--input w-full"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-black mb-2">
+                          Relationship<span className="text-red-500">*</span>
+                        </label>
+                        <Select
+                          options={relationList}
+                          value={relationList.find(
+                            (option) => option.value === contact.relationship
+                          )}
+                          onChange={(selectedOption) =>
+                            updateNewEmergencyField(
+                              index,
+                              "relationship",
+                              selectedOption.value
+                            )
+                          }
+                          styles={customStyles}
+                        />
+                      </div>
+                    </div>
+                    <div className="flex items-center">
+                      <button
+                        type="button"
+                        onClick={() => removeNewEmergency(index)}
+                        className="text-black font-bold"
+                      >
+                        <IoIosCloseCircle className="text-2xl mt-2" />
+                      </button>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
               <button
                 type="button"
                 onClick={addNewEmergencyForm}

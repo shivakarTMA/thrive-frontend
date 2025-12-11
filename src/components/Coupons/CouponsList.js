@@ -251,8 +251,8 @@ const CouponsList = () => {
     <div className="page--content">
       <div className="flex items-end justify-between gap-2 mb-5">
         <div className="title--breadcrumbs">
-          <p className="text-sm">{`Home > Coupons`}</p>
-          <h1 className="text-3xl font-semibold">Coupons</h1>
+          <p className="text-sm">{`Home > Discount Coupons`}</p>
+          <h1 className="text-3xl font-semibold">Discount Coupons</h1>
         </div>
         <div className="flex items-end gap-2">
           <button

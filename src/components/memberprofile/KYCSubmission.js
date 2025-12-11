@@ -4,6 +4,10 @@ import { IoEyeOutline } from "react-icons/io5";
 import { RxUpdate } from "react-icons/rx";
 import { toast } from "react-toastify";
 
+import viewIcon from "../../assets/images/icons/eye.svg";
+import printIcon from "../../assets/images/icons/print-icon.svg";
+import mailIcon from "../../assets/images/icons/mail-icon.svg";
+
 const KYCSubmission = ({ details }) => {
   const memberId = details?.id;
   const [errors, setErrors] = useState({});
@@ -25,7 +29,7 @@ const KYCSubmission = ({ details }) => {
   const documentTypes = {
     aadharFront: { label: "Aadhar Card (Front)", accept: "image/*" },
     aadharBack: { label: "Aadhar Card (Back)", accept: "image/*" },
-    corporateId: { label: "Corporate ID", accept: "image/*" },
+    corporateId: { label: "Passport Photo", accept: "image/*" },
   };
 
   // Format file size
@@ -50,7 +54,7 @@ const KYCSubmission = ({ details }) => {
           setDocuments({
             aadharFront: aadhar
               ? {
-                  preview: aadhar.document_front_file,
+                  preview: viewIcon,
                   name: "Aadhar Front (Uploaded)",
                   id: aadhar.id,
                   uploaded: true,
@@ -60,7 +64,7 @@ const KYCSubmission = ({ details }) => {
               : null,
             aadharBack: aadhar
               ? {
-                  preview: aadhar.document_back_file,
+                  preview: printIcon,
                   name: "Aadhar Back (Uploaded)",
                   id: aadhar.id,
                   uploaded: true,
@@ -70,7 +74,7 @@ const KYCSubmission = ({ details }) => {
               : null,
             corporateId: corp
               ? {
-                  preview: corp.document_front_file,
+                  preview: mailIcon,
                   name: "Corporate ID (Uploaded)",
                   id: corp.id,
                   uploaded: true,

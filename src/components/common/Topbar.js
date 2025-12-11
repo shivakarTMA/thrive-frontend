@@ -347,13 +347,13 @@ const Topbar = ({ setToggleMenuBar, toggleMenuBar }) => {
                   <FiUser className="menu--icon" />
                   <span className="nav-text">Profile</span>
                 </div>
-                <Link
+                {/* <Link
                   to="#"
                   className="nav-link flex items-center gap-2 px-3 py-2 hover:bg-black hover:text-white transition border-b"
                 >
                   <IoSettingsOutline className="menu--icon" />
                   <span className="nav-text">Setting</span>
-                </Link>
+                </Link> */}
                 <div
                   onClick={handleLogout}
                   className="nav-link flex items-center cursor-pointer gap-2 px-3 py-2 hover:bg-black hover:text-white transition"

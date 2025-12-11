@@ -3,13 +3,18 @@ import { FiPlus } from "react-icons/fi";
 import Tooltip from "../common/Tooltip";
 import { LiaEdit } from "react-icons/lia";
 import ChallengeForm from "./ChallengeForm";
-import { formatDateTimeLead, formatText } from "../../Helper/helper";
+import {
+  customStyles,
+  formatDateTimeLead,
+  formatText,
+} from "../../Helper/helper";
 import { authAxios } from "../../config/config";
 import { toast } from "react-toastify";
 import Pagination from "../common/Pagination";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { FaCircle } from "react-icons/fa";
+import Select from "react-select";
 
 const statusColors = {
   ACTIVE: "bg-[#D1FADF] text-[#027A48]", // green
@@ -19,37 +24,70 @@ const statusColors = {
   UPCOMING: "bg-[#e7edfc] text-[#156ec1]", // blue
 };
 
+const challengeType = [
+  { label: "Steps", value: "STEPS" },
+  { label: "Distance Travelled", value: "DISTANCE_TRAVELLED" },
+  { label: "Calories Burnt", value: "CALORIES_BURNT" },
+  { label: "Active Minutes", value: "ACTIVE_MINUTES" },
+];
+
+const statusType = [
+  { label: "Active", value: "ACTIVE" },
+  { label: "Inactive", value: "INACTIVE" },
+  { label: "Completed", value: "COMPLETED" },
+  { label: "Ongoing", value: "ONGOING" },
+  { label: "Upcoming", value: "UPCOMING" },
+];
+
 const ChallengeList = () => {
   const [showModal, setShowModal] = useState(false);
   const [challenges, setChallenges] = useState([]);
   const [editingOption, setEditingOption] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [typeFilter, setTypeFilter] = useState(null);
+  const [statusFilter, setStatusFilter] = useState(null);
 
   const [page, setPage] = useState(1);
   const [rowsPerPage] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
 
-  const fetchChallengeList = async (currentPage = page) => {
+  const fetchChallengeList = async (search = "", currentPage = page) => {
     try {
-      const params = {
-        page: currentPage,
-        limit: rowsPerPage,
-      };
-      const res = await authAxios().get(`/challenge/list`, { params });
-      const data = res.data?.data || [];
+      const res = await authAxios().get("/challenge/list", {
+        params: {
+          page: currentPage,
+          limit: rowsPerPage,
+          ...(search ? { search } : {}),
+          ...(typeFilter ? { challenge_type: typeFilter } : {}),
+          ...(statusFilter ? { status: statusFilter } : {}),
+        },
+      });
+
+      // Handling the data processing
+      let data = res.data?.data || [];
       setChallenges(data);
       setPage(res.data?.currentPage || 1);
       setTotalPages(res.data?.totalPage || 1);
       setTotalCount(res.data?.totalCount || data.length);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch exercises");
+      toast.error("Failed to fetch challenges");
     }
   };
 
   useEffect(() => {
     fetchChallengeList();
   }, []);
+
+  useEffect(() => {
+    const delayDebounce = setTimeout(() => {
+      fetchChallengeList(searchTerm);
+      setPage(1);
+    }, 300);
+
+    return () => clearTimeout(delayDebounce);
+  }, [searchTerm, statusFilter, typeFilter]);
 
   const formik = useFormik({
     initialValues: {
@@ -81,15 +119,15 @@ const ChallengeList = () => {
       name: Yup.string().required("Challenge Name is required"),
       caption: Yup.string().required("Caption is required"),
       condition: Yup.string()
-  .test("is-json-array", "Please add at least one rule", (value) => {
-    try {
-      const arr = JSON.parse(value);
-      return Array.isArray(arr) && arr.length > 0;
-    } catch {
-      return false;
-    }
-  })
-  .required("Terms of play is required"),
+        .test("is-json-array", "Please add at least one rule", (value) => {
+          try {
+            const arr = JSON.parse(value);
+            return Array.isArray(arr) && arr.length > 0;
+          } catch {
+            return false;
+          }
+        })
+        .required("Terms of play is required"),
       description: Yup.string().required("Description is required"),
       challenge_type: Yup.string().required("Challenge Type is required"),
       start_date_time: Yup.date().required("Start date & time is required"),
@@ -99,15 +137,9 @@ const ChallengeList = () => {
       frequency: Yup.string().required("Frequency is required"),
       target_value: Yup.string().required("Target value is required"),
       target_unit: Yup.string().required("Target unit is required"),
-      reward_first: Yup.number()
-        .positive()
-        .required("First reward is required"),
-      reward_second: Yup.number()
-        .positive()
-        .required("Second reward is required"),
-      reward_third: Yup.number()
-        .positive()
-        .required("Third reward is required"),
+      reward_first: Yup.string().required("First reward is required"),
+      reward_second: Yup.string().required("Second reward is required"),
+      reward_third: Yup.string().required("Third reward is required"),
       about_challenge: Yup.string().required(
         "Challenge Essentials is required"
       ),
@@ -189,6 +221,37 @@ const ChallengeList = () => {
           <FiPlus /> Create Challenge
         </button>
       </div>
+
+      <div className="flex flex-wrap items-center gap-2 mb-4">
+        <input
+          type="text"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          placeholder="Search by name"
+          className="custom--input w-full max-w-[210px]"
+        />
+        <div className="w-full max-w-[200px]">
+          <Select
+            placeholder="Challenge Type"
+            alue={challengeType.find((o) => o.value === typeFilter) || null}
+            options={challengeType}
+            onChange={(option) => setTypeFilter(option?.value)}
+            isClearable
+            styles={customStyles}
+          />
+        </div>
+        <div className="w-full max-w-[200px]">
+          <Select
+            placeholder="Status"
+            alue={statusType.find((o) => o.value === statusFilter) || null}
+            options={statusType}
+            onChange={(option) => setStatusFilter(option?.value)}
+            isClearable
+            styles={customStyles}
+          />
+        </div>
+      </div>
+
       <div className="box--shadow bg-white rounded-[15px] p-4">
         <div className="relative overflow-x-auto">
           <table className="w-full text-sm text-left text-gray-500">
@@ -208,7 +271,7 @@ const ChallengeList = () => {
             <tbody>
               {challenges.length === 0 ? (
                 <tr>
-                  <td colSpan="6" className="text-center py-4">
+                  <td colSpan="8" className="text-center py-4">
                     No challenge added yet.
                   </td>
                 </tr>

@@ -1,12 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { authAxios } from "../../config/config";
-
+import { filterActiveItems } from "../../Helper/helper";
 
 const ProductModal = ({ selectedType, onClose, onSubmit }) => {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [loading, setLoading] = useState(false);
-
 
   useEffect(() => {
     if (!selectedType) return;
@@ -35,8 +34,12 @@ const ProductModal = ({ selectedType, onClose, onSubmit }) => {
           return;
         }
 
+        const data = response.data?.data || response.data || [];
+
+        const activeOnly = filterActiveItems(data);
+
         // API success
-        setFilteredProducts(response.data?.data || []);
+        setFilteredProducts(activeOnly);
       } catch (err) {
         console.error("Failed to fetch products", err);
       }
@@ -62,9 +65,7 @@ const ProductModal = ({ selectedType, onClose, onSubmit }) => {
         {loading ? (
           <p className="text-center py-10">Loading...</p>
         ) : filteredProducts.length === 0 ? (
-          <p className="text-center py-10 text-gray-500">
-            No products found.
-          </p>
+          <p className="text-center py-10 text-gray-500">No products found.</p>
         ) : (
           <div className="max-h-72 overflow-y-auto space-y-3">
             {filteredProducts.map((product) => (
@@ -89,8 +90,9 @@ const ProductModal = ({ selectedType, onClose, onSubmit }) => {
                     {product?.shortDescription}
                   </div> */}
                   <div className="text-sm text-gray-600">
-                    Duration: {product?.duration_value} {product?.duration_type} | Amount: ₹{product?.amount} |
-                    Sessions: {product?.sessions ? product?.sessions : "N/A"}
+                    Duration: {product?.duration_value} {product?.duration_type}{" "}
+                    | Amount: ₹{product?.amount} | Sessions:{" "}
+                    {product?.sessions ? product?.sessions : "N/A"}
                   </div>
                 </div>
               </label>
@@ -107,7 +109,7 @@ const ProductModal = ({ selectedType, onClose, onSubmit }) => {
           </button>
           <button
             onClick={handleSubmit}
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded"
+            className="px-4 py-2 bg-black hover:bg-black text-white rounded"
             disabled={!selectedProduct}
           >
             Add Selected

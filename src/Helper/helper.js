@@ -328,3 +328,11 @@ export const buildFormData = (values) => {
 
   return formData;
 };
+
+export const filterActiveItems = (data) => {
+  if (!Array.isArray(data)) return [];
+
+  return data.filter(
+    (item) => String(item?.status || "").toUpperCase() === "ACTIVE"
+  );
+};

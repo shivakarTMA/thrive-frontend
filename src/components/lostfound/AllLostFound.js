@@ -289,8 +289,8 @@ const AllLostFound = () => {
                             flex items-center justify-between gap-1 rounded-full min-h-[30px] px-3 text-sm w-fit
                           ${
                             row?.status === "AVAILABLE"
-                              ? "bg-[#FFE7E7] text-[#C80000]"
-                              : "bg-[#E8FFE6] text-[#138808]"
+                              ? "bg-[#E8FFE6] text-[#138808]"
+                              : "bg-[#FFE7E7] text-[#C80000]"
                           }
                           `}
                       >

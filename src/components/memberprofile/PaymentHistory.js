@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import Select from "react-select";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { customStyles, formatAutoDate } from "../../Helper/helper";
+import { customStyles, formatAutoDate, formatText } from "../../Helper/helper";
 import Tooltip from "../common/Tooltip";
 import { FaEye, FaPrint, FaShareSquare } from "react-icons/fa";
 import { authAxios } from "../../config/config";
@@ -161,8 +161,8 @@ const PaymentHistory = ({ details }) => {
                   <td className="border px-3 py-2">{order?.reference_no}</td>
                   <td className="border px-3 py-2">₹{order?.transaction_amount ? order?.transaction_amount : 0}</td>
 
-                  <td className="border px-3 py-2">{order?.payment_mode ? toCapitalizedCase(order.payment_mode) : 'N/A'}</td>
-                  <td className="border px-3 py-2">{order?.payment_status}</td>
+                  <td className="border px-3 py-2">{order?.payment_mode ? formatText(order.payment_mode) : 'N/A'}</td>
+                  <td className="border px-3 py-2">{formatText(order?.payment_status)}</td>
                  
                   <td className="border px-3 py-2">
                     <div className="flex items-center gap-2">

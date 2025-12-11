@@ -317,7 +317,7 @@ const ProductsList = () => {
                     className="group bg-white border-b hover:bg-gray-50 relative transition duration-700"
                   >
                     {/* <td className="px-2 py-4">{item?.id || "—"}</td> */}
-                    <td>
+                    <td className="px-2 py-4">
                       <div className="bg-black rounded-lg w-14 h-14 overflow-hidden">
                         <img
                           src={item.image}

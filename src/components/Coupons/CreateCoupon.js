@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { IoCloseCircle } from "react-icons/io5";
 import { FaListUl } from "react-icons/fa6";
 import Select from "react-select";
-import { selectIcon } from "../../Helper/helper";
+import { filterActiveItems, selectIcon } from "../../Helper/helper";
 import { toast } from "react-toastify";
 import { authAxios } from "../../config/config";
 import { LuCalendar, LuPlug } from "react-icons/lu";
@@ -50,7 +50,10 @@ const CreateCoupon = ({
     try {
       const response = await authAxios().get("/club/list");
       const data = response.data?.data || response.data || [];
-      setClub(data);
+
+      const activeOnly = filterActiveItems(data);
+
+      setClub(activeOnly);
     } catch (error) {
       console.error(error);
       toast.error("Failed to fetch clubs");
@@ -281,17 +284,33 @@ const CreateCoupon = ({
     formik.setFieldValue("applicable_rules", current);
   };
 
-  const getApplicableOptions = (type) => {
+  const getSelectedApplicableIds = (excludeIndex = null) => {
+    return (formik.values.applicable_rules || [])
+      .filter((_, idx) => idx !== excludeIndex)
+      .map((rule) => rule?.applicable_id)
+      .filter(Boolean);
+  };
+
+  const getApplicableOptions = (type, ruleIndex = null) => {
+    let list = [];
+
     switch (type) {
       case "SUBSCRIPTION":
-        return subscriptionOptions;
+        list = subscriptionOptions;
+        break;
       case "PACKAGE":
-        return packageOptions;
+        list = packageOptions;
+        break;
       case "PRODUCT":
-        return productOptions;
+        list = productOptions;
+        break;
       default:
         return [];
     }
+
+    const selectedIds = getSelectedApplicableIds(ruleIndex);
+
+    return list.filter((opt) => !selectedIds.includes(opt.value));
   };
 
   return (
@@ -713,7 +732,8 @@ const CreateCoupon = ({
                                 value={
                                   rule?.applicable_type !== "ALL"
                                     ? getApplicableOptions(
-                                        rule?.applicable_type
+                                        rule?.applicable_type,
+                                        index
                                       ).find(
                                         (opt) =>
                                           opt.value === rule?.applicable_id
@@ -721,7 +741,8 @@ const CreateCoupon = ({
                                     : null
                                 }
                                 options={getApplicableOptions(
-                                  rule?.applicable_type
+                                  rule?.applicable_type,
+                                  index
                                 )}
                                 onChange={(option) =>
                                   handleApplicableIdChange(index, option)

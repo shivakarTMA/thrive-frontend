@@ -11,7 +11,11 @@ import CreateService from "./CreateService";
 import { authAxios } from "../../config/config";
 import { IoSearchOutline } from "react-icons/io5";
 import Select from "react-select";
-import { customStyles, formatText } from "../../Helper/helper";
+import {
+  customStyles,
+  filterActiveItems,
+  formatText,
+} from "../../Helper/helper";
 import { FaCircle } from "react-icons/fa6";
 
 // Main Services component
@@ -43,7 +47,8 @@ const Services = () => {
       if (statusFilter?.value) {
         data = data.filter((item) => item.status === statusFilter.value);
       }
-      setClub(data);
+      const activeOnly = filterActiveItems(data);
+      setClub(activeOnly);
     } catch (err) {
       console.error(err);
       toast.error("Failed to fetch companies");
@@ -60,7 +65,8 @@ const Services = () => {
       if (statusFilter?.value) {
         data = data.filter((item) => item.status === statusFilter.value);
       }
-      setStudio(data);
+      const activeOnly = filterActiveItems(data);
+      setStudio(activeOnly);
     } catch (err) {
       console.error(err);
       toast.error("Failed to fetch companies");

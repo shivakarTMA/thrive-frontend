@@ -138,6 +138,7 @@ const ClubList = () => {
       phone: "",
       address: "",
       city: "",
+      gstno: "",
       state: indianStates[0],
       country: "India",
       zipcode: "",
@@ -169,6 +170,7 @@ const ClubList = () => {
         )
         .required("State/Province is required"),
       country: Yup.string().required("Country is required"),
+      gstno: Yup.string().required("GST No. is required"),
       zipcode: Yup.string().required("ZIP or Postal is required"),
       status: Yup.string().required("Status is required"),
       address: Yup.string().required("Address is required"),
@@ -212,6 +214,7 @@ const ClubList = () => {
         formData.append("position", values.position);
         formData.append("open_time", values.open_time);
         formData.append("close_time", values.close_time);
+        formData.append("gstno", values.gstno);
         formData.append(
           "club_available_service",
           JSON.stringify(values.club_available_service)
@@ -318,6 +321,7 @@ const ClubList = () => {
                 {/* <th className="px-2 py-4">Club ID</th> */}
                 <th className="px-2 py-4">Name</th>
                 <th className="px-2 py-4">Email</th>
+                <th className="px-2 py-4">GST No.</th>
                 <th className="px-2 py-4">City</th>
                 <th className="px-2 py-4">Open Time</th>
                 <th className="px-2 py-4">Close Time</th>
@@ -343,6 +347,7 @@ const ClubList = () => {
                     {/* <td className="px-2 py-4">{club?.id || "—"}</td> */}
                     <td className="px-2 py-4">{club?.name}</td>
                     <td className="px-2 py-4">{club?.email}</td>
+                    <td className="px-2 py-4">{club?.gstno ? club?.gstno : "--"}</td>
                     <td className="px-2 py-4">{club?.city}</td>
                     <td className="px-2 py-4">
                       {club?.open_time ? formatTime(club?.open_time) : "--"}

@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { FiClock, FiPlus, FiTrash2 } from "react-icons/fi";
 import { IoCloseCircle } from "react-icons/io5";
 import Select from "react-select";
-import { customStyles } from "../../Helper/helper";
+import { customStyles, filterActiveItems } from "../../Helper/helper";
 import DatePicker from "react-datepicker"; // Date picker component
 import "react-datepicker/dist/react-datepicker.css"; // Date picker styles
 import { FaCalendarDays } from "react-icons/fa6";
@@ -71,7 +71,8 @@ const CreatePackage = ({
         params: search ? { search } : {},
       });
       let data = res.data?.data || res.data || [];
-      setClub(data);
+      const activeOnly = filterActiveItems(data);
+      setClub(activeOnly);
     } catch (err) {
       console.error(err);
       toast.error("Failed to fetch companies");

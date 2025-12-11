@@ -60,6 +60,8 @@ const CreateAppointment = ({
     }
   };
 
+
+
   const fetchStaff = async (search = "") => {
     try {
       const res = await authAxios().get("/staff/list?role=TRAINER", {
@@ -94,6 +96,8 @@ const CreateAppointment = ({
     fetchService();
   }, []);
 
+    console.log(memberPurchasedServices,'memberPurchasedServices')
+
   console.log(packageList, "packageList");
 
   const staffListOptions =
@@ -111,6 +115,8 @@ const CreateAppointment = ({
     { label: "Assessment", value: "ASSESSMENT" },
     { label: "Tour", value: "TOUR" },
   ]);
+
+  console.log(appointmentTypes,'appointmentTypes')
 
   const appointmentCategories = [
     { value: "service", label: "Service Appointment" },
@@ -239,6 +245,8 @@ const CreateAppointment = ({
       formik.setFieldValue("appointment_category", defaultCategory);
     }
   }, [defaultCategory]);
+
+  console.log(memberPurchasedServices,'memberPurchasedServices')
 
   return (
     <div

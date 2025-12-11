@@ -12,24 +12,6 @@ export const workoutTemplateWithExercises = {
       position: 1,
       exercises: [
         {
-          name: "Rest Time",
-          category: "Rest",
-          sets: null,
-          reps: null,
-          weight: null,
-          distance: null,
-          duration: null,
-          rest_secs: 90,
-          notes: "",
-          position: 1,
-          groupType: "giant",
-          groupId: "group-101",
-          _ui: {
-            id: "rest-1001",
-            type: "rest",
-          }
-        },
-        {
           name: "Barbell Squat",
           category: "legs",
           sets: 86,
@@ -111,24 +93,6 @@ export const workoutTemplateWithExercises = {
             hasWeight: true,
             hasDistance: true,
             hasDuration: true,
-          }
-        },
-        {
-          name: "Rest Time",
-          category: "Rest",
-          sets: null,
-          reps: null,
-          weight: null,
-          distance: null,
-          duration: null,
-          rest_secs: 60,
-          notes: "",
-          position: 6,
-          groupType: null,
-          groupId: null,
-          _ui: {
-            id: "rest-1002",
-            type: "rest",
           }
         },
       ],

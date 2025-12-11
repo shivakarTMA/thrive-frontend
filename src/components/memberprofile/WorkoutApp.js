@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Tooltip from "../common/Tooltip";
 import { LiaEdit } from "react-icons/lia";
 import { IoCloseCircleOutline } from "react-icons/io5";
@@ -6,21 +6,12 @@ import { AiOutlineDelete } from "react-icons/ai";
 import { FiPlus } from "react-icons/fi";
 import WorkoutPlan from "./WorkoutPlan";
 import { toast } from "react-toastify";
+import { authAxios } from "../../config/config";
+import { formatAutoDate, formatText } from "../../Helper/helper";
 
-const AssignedWorkout = [
-  {
-    id: 1,
-    workoutName: "HYPERTROPHY",
-    noOfDays: 2,
-    startDate: "11/12/2025",
-    endDate: "12/12/2025",
-    followUpDate: "30-09-2024",
-    status: "On-Going",
-  },
-];
-
-const WorkoutApp = () => {
-  const [workouts, setWorkouts] = useState(AssignedWorkout);
+const WorkoutApp = ({ member }) => {
+  const memberId = member?.id;
+  const [workouts, setWorkouts] = useState([]);
   const [editingId, setEditingId] = useState(null);
   const [workoutTable, setWorkoutTable] = useState(true);
   const [workoutModal, setWorkoutModal] = useState(false);
@@ -58,22 +49,45 @@ const WorkoutApp = () => {
     });
   };
 
+  const fetchWorkouts = async () => {
+    try {
+      const res = await authAxios().get("/member/workoutplan/list", {
+        params: { member_id: memberId },
+      });
+
+      let data = res.data?.data || res.data || [];
+      setWorkouts(data);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to fetch workout plans");
+    }
+  };
+
+  useEffect(() => {
+    fetchWorkouts();
+  }, []);
+
   // Execute the confirmed action
-  const handleConfirmAction = () => {
+  const handleConfirmAction = async () => {
     const { id, action } = confirmModal;
 
-    if (action === "delete") {
-      setWorkouts(workouts.filter((w) => w.id !== id));
-      toast.success(`Workout ID: ${id} has been deleted`);
-    }
+    try {
+      if (action === "delete") {
+        await authAxios().delete(`/member/workoutplan/${id}`);
+        toast.success(`Workout ID: ${id} has been deleted`);
+        fetchWorkouts(); // refresh list
+      }
 
-    if (action === "cancel") {
-      setWorkouts(
-        workouts.map((w) =>
-          w.id === id ? { ...w, status: "Cancelled" } : w
-        )
-      );
-      toast.info(`Workout ID: ${id} has been cancelled`);
+      if (action === "cancel") {
+        // ❗ If cancel also needs API, add here
+        setWorkouts(
+          workouts.map((w) => (w.id === id ? { ...w, status: "Cancelled" } : w))
+        );
+        toast.info(`Workout ID: ${id} has been cancelled`);
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Action failed");
     }
 
     // Close modal
@@ -86,7 +100,6 @@ const WorkoutApp = () => {
 
   return (
     <div className="p-4 bg-white rounded shadow relative">
-
       {/* ---------------- CONFIRMATION MODAL ---------------- */}
       {confirmModal.show && (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
@@ -123,7 +136,7 @@ const WorkoutApp = () => {
       )}
       {/* ---------------------------------------------------- */}
 
-      {workoutTable && (
+      {workoutTable && workouts.length === 0 && (
         <div className="flex justify-end items-end gap-2 mb-3 w-full">
           <button
             type="button"
@@ -140,11 +153,12 @@ const WorkoutApp = () => {
           <table className="min-w-full border border-gray-300 text-sm">
             <thead className="bg-gray-100 text-left">
               <tr>
-                <th className="border px-3 py-2">S.No</th>
                 <th className="border px-3 py-2">Workout Name</th>
+                <th className="border px-3 py-2">Workout Type</th>
                 <th className="border px-3 py-2">No Of Days</th>
                 <th className="border px-3 py-2">Start Date</th>
                 <th className="border px-3 py-2">End Date</th>
+                <th className="border px-3 py-2">Status</th>
                 <th className="border px-3 py-2">Action</th>
               </tr>
             </thead>
@@ -152,11 +166,20 @@ const WorkoutApp = () => {
               {workouts.length > 0 ? (
                 workouts.map((workout) => (
                   <tr key={workout.id} className="hover:bg-gray-50">
-                    <td className="border px-3 py-2">{workout.id}</td>
-                    <td className="border px-3 py-2">{workout.workoutName}</td>
-                    <td className="border px-3 py-2">{workout.noOfDays}</td>
-                    <td className="border px-3 py-2">{workout.startDate}</td>
-                    <td className="border px-3 py-2">{workout.endDate}</td>
+                    <td className="border px-3 py-2">{workout?.name}</td>
+                    <td className="border px-3 py-2">
+                      {formatText(workout?.workout_type)}
+                    </td>
+                    <td className="border px-3 py-2">{workout?.no_of_days}</td>
+                    <td className="border px-3 py-2">
+                      {formatAutoDate(workout?.start_date)}
+                    </td>
+                    <td className="border px-3 py-2">
+                      {formatAutoDate(workout?.end_date)}
+                    </td>
+                    <td className="border px-3 py-2">
+                      {formatText(workout?.status)}
+                    </td>
 
                     <td className="border px-3 py-2">
                       <div className="flex gap-0">
@@ -169,22 +192,18 @@ const WorkoutApp = () => {
                           </div>
                         </Tooltip>
 
-                        <Tooltip content="Cancel" place="top">
+                        {/* <Tooltip content="Cancel" place="top">
                           <div
-                            onClick={() =>
-                              confirmAction(workout.id, "cancel")
-                            }
+                            onClick={() => confirmAction(workout.id, "cancel")}
                             className="p-1 cursor-pointer"
                           >
                             <IoCloseCircleOutline className="text-[25px] text-black" />
                           </div>
-                        </Tooltip>
+                        </Tooltip> */}
 
                         <Tooltip content="Delete" place="top">
                           <div
-                            onClick={() =>
-                              confirmAction(workout.id, "delete")
-                            }
+                            onClick={() => confirmAction(workout.id, "delete")}
                             className="p-1 cursor-pointer"
                           >
                             <AiOutlineDelete className="text-[25px] text-black" />
@@ -210,6 +229,7 @@ const WorkoutApp = () => {
         <WorkoutPlan
           handleCancelWorkout={handleCancelWorkout}
           editingId={editingId}
+          handleWorkoutUpdate={fetchWorkouts}
         />
       )}
     </div>

@@ -522,7 +522,7 @@ const ChallengeForm = ({ setShowModal, editingOption, formik }) => {
                     <div className="relative">
                       <RiMedalLine className="absolute top-[50%] translate-y-[-50%] left-[15px]" />
                       <input
-                        type="number"
+                        type="text"
                         name="reward_first"
                         value={formik.values.reward_first}
                         onChange={formik.handleChange}
@@ -545,7 +545,7 @@ const ChallengeForm = ({ setShowModal, editingOption, formik }) => {
                     <div className="relative">
                       <RiMedalLine className="absolute top-[50%] translate-y-[-50%] left-[15px]" />
                       <input
-                        type="number"
+                        type="text"
                         name="reward_second"
                         value={formik.values.reward_second}
                         onChange={formik.handleChange}
@@ -568,7 +568,7 @@ const ChallengeForm = ({ setShowModal, editingOption, formik }) => {
                     <div className="relative">
                       <RiMedalLine className="absolute top-[50%] translate-y-[-50%] left-[15px]" />
                       <input
-                        type="number"
+                        type="text"
                         name="reward_third"
                         value={formik.values.reward_third}
                         onChange={formik.handleChange}

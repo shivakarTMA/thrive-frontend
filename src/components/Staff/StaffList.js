@@ -4,7 +4,7 @@ import { toast } from "react-toastify";
 import { LiaEdit } from "react-icons/lia";
 import Tooltip from "../common/Tooltip";
 import Select from "react-select";
-import { customStyles, formatText } from "../../Helper/helper";
+import { customStyles, filterActiveItems, formatText } from "../../Helper/helper";
 import CreateStaff from "./CreateStaff";
 import { authAxios } from "../../config/config";
 import Pagination from "../common/Pagination";
@@ -103,7 +103,8 @@ const StaffList = () => {
         params: search ? { search } : {},
       });
       const data = response.data?.data || [];
-      setClubList(data);
+      const activeOnly = filterActiveItems(data);
+      setClubList(activeOnly);
     } catch (error) {
       toast.error("Failed to fetch clubs");
     }
@@ -266,8 +267,8 @@ const StaffList = () => {
         }
 
         // --- Image file ---
-        if (values.profile_image instanceof File) {
-          formData.append("profile_image", values.profile_image);
+        if (values.profile_imageFile instanceof File) {
+          formData.append("profile_image", values.profile_imageFile);
         }
 
         // --- API call ---
@@ -341,7 +342,7 @@ const StaffList = () => {
         <div className="w-full max-w-[200px]">
           <Select
             placeholder="Filter by club"
-            alue={clubOptions.find((o) => o.value === clubFilter) || null}
+            value={clubOptions.find((o) => o.value === clubFilter) || null}
             options={clubOptions}
             onChange={(option) => setClubFilter(option?.value)}
             isClearable
@@ -351,7 +352,7 @@ const StaffList = () => {
         <div className="w-full max-w-[200px]">
           <Select
             placeholder="Filter by role"
-            alue={roleOptions.find((o) => o.value === roleFilter) || null}
+            value={roleOptions.find((o) => o.value === roleFilter) || null}
             options={roleOptions}
             onChange={(option) => setRoleFilter(option?.value)}
             isClearable

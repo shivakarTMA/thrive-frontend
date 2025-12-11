@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import Select from "react-select";
 import { IoAppsSharp, IoCloseCircle, IoPricetagSharp } from "react-icons/io5";
-import { selectIcon } from "../../Helper/helper";
+import { filterActiveItems, selectIcon } from "../../Helper/helper";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { toast } from "react-toastify";
@@ -18,12 +18,10 @@ import { LuPlug } from "react-icons/lu";
 import { authAxios } from "../../config/config";
 import parsePhoneNumberFromString from "libphonenumber-js";
 import { FaBirthdayCake } from "react-icons/fa";
-import { PiGenderIntersexBold } from "react-icons/pi";
+import { PiGenderIntersexBold, PiImageFill } from "react-icons/pi";
 import { FiPlus, FiTrash2 } from "react-icons/fi";
 import MultiSelect from "react-multi-select-component";
 import { useSelector } from "react-redux";
-
-
 
 const yesNoOptions = [
   { value: true, label: "Active" },
@@ -48,7 +46,12 @@ const genderOptions = [
   { value: "FEMALE", label: "Female" },
 ];
 
-const CreateStaff = ({ setShowModal, formik, editingOption, roleOptionsByUser }) => {
+const CreateStaff = ({
+  setShowModal,
+  formik,
+  editingOption,
+  roleOptionsByUser,
+}) => {
   const leadBoxRef = useRef(null);
   const [club, setClub] = useState([]);
   const [selected, setSelected] = useState([]);
@@ -61,7 +64,8 @@ const CreateStaff = ({ setShowModal, formik, editingOption, roleOptionsByUser })
     try {
       const response = await authAxios().get("/club/list");
       const data = response.data?.data || response.data || [];
-      setClub(data);
+      const activeOnly = filterActiveItems(data);
+      setClub(activeOnly);
     } catch (error) {
       console.error(error);
       toast.error("Failed to fetch clubs");
@@ -143,7 +147,6 @@ const CreateStaff = ({ setShowModal, formik, editingOption, roleOptionsByUser })
     fetchStaffById(editingOption);
   }, [editingOption, club]);
 
-
   const handleOverlayClick = (e) => {
     if (leadBoxRef.current && !leadBoxRef.current.contains(e.target)) {
       setShowModal(false);
@@ -167,6 +170,16 @@ const CreateStaff = ({ setShowModal, formik, editingOption, roleOptionsByUser })
       formik.setFieldValue("country_code", phoneNumber.countryCallingCode);
     }
     formik.setFieldError("mobile", "");
+  };
+
+    const handleLogoChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const previewURL = URL.createObjectURL(file);
+
+      formik.setFieldValue("profile_image", previewURL); // for preview
+      formik.setFieldValue("profile_imageFile", file); // actual file to upload
+    }
   };
 
   return (
@@ -576,32 +589,53 @@ const CreateStaff = ({ setShowModal, formik, editingOption, roleOptionsByUser })
                   {formik.values?.show_on_app === true && (
                     <>
                       {/* Profile Picture */}
-                      <div>
-                        <label className="mb-2 block">
-                          Profile Picture<span className="text-red-500">*</span>
-                        </label>
-                        <div className="relative">
-                          <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
-                            <MdInsertPhoto />
-                          </span>
-
-                          <input
-                            type="file"
-                            name="profile_image"
-                            accept="image/*"
-                            onChange={(event) => {
-                              const file = event.currentTarget.files[0];
-                              formik.setFieldValue("profile_image", file);
-                            }}
-                            className="custom--input w-full input--icon"
-                          />
-                        </div>
-                        {formik.touched.profile_image &&
-                          formik.errors.profile_image && (
-                            <p className="text-red-500 text-sm">
-                              {formik.errors.profile_image}
-                            </p>
+                      <div className="flex gap-2">
+                        <div>
+                          {formik.values?.profile_image ? (
+                            <img
+                              src={formik.values?.profile_image}
+                              alt="Preview"
+                              className="w-[75px] h-[75px] object-cover rounded-[10px]"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex flex-col items-center justify-center">
+                              <PiImageFill className="text-gray-300 text-7xl" />
+                              <span className="text-gray-500 text-sm mt-2">
+                                Upload Image
+                              </span>
+                            </div>
                           )}
+                        </div>
+                        <div className="flex-1">
+                          <label className="mb-2 block">
+                            Profile Picture
+                            <span className="text-red-500">*</span>
+                          </label>
+                          <div className="relative">
+                            <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
+                              <MdInsertPhoto />
+                            </span>
+
+                            <input
+                              type="file"
+                              name="profile_image"
+                              accept="image/*"
+                              // onChange={(event) => {
+                              //   const file = event.currentTarget.files[0];
+                              //   formik.setFieldValue("profile_image", file);
+                              // }}
+                              onChange={handleLogoChange}
+                          onBlur={() => formik.setFieldTouched("profile_image", true)}
+                              className="custom--input w-full input--icon"
+                            />
+                          </div>
+                          {formik.touched.profile_image &&
+                            formik.errors.profile_image && (
+                              <p className="text-red-500 text-sm">
+                                {formik.errors.profile_image}
+                              </p>
+                            )}
+                        </div>
                       </div>
 
                       {/* Tags */}

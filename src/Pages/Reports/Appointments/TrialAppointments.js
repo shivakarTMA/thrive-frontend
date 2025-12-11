@@ -28,12 +28,23 @@ const dateFilterOptions = [
   { value: "custom", label: "Custom Date" },
 ];
 
+const statusUpdateOptions = [
+  { value: "ACTIVE", label: "Scheduled" },
+  { value: "COMPLETED", label: "Completed" },
+  { value: "CANCELLED", label: "Cancelled" },
+  { value: "NO_SHOW", label: "No Show" },
+];
+
 const TrialAppointments = () => {
   const [appointmentList, setAppointmentList] = useState([]);
 
   const [dateFilter, setDateFilter] = useState(dateFilterOptions[1]);
   const [customFrom, setCustomFrom] = useState(null);
   const [customTo, setCustomTo] = useState(null);
+
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [pendingStatus, setPendingStatus] = useState(null);
+  const [pendingId, setPendingId] = useState(null);
 
   const [page, setPage] = useState(1);
   const [rowsPerPage] = useState(10);
@@ -43,6 +54,7 @@ const TrialAppointments = () => {
     scheduled: 0,
     completed: 0,
     noShow: 0,
+    cancelled: 0,
   });
 
   const location = useLocation();
@@ -120,39 +132,39 @@ const TrialAppointments = () => {
     }
   };
 
-const fetchAppointmentStats = async () => {
-  try {
-    let params = {};
+  const fetchAppointmentStats = async () => {
+    try {
+      let params = {};
 
-    if (dateFilter?.value === "custom") {
-      if (customFrom && customTo) {
-        params.startDate = format(customFrom, "yyyy-MM-dd");
-        params.endDate = format(customTo, "yyyy-MM-dd");
+      if (dateFilter?.value === "custom") {
+        if (customFrom && customTo) {
+          params.startDate = format(customFrom, "yyyy-MM-dd");
+          params.endDate = format(customTo, "yyyy-MM-dd");
+        } else {
+          return; // don't fetch until both dates selected
+        }
       } else {
-        return; // don't fetch until both dates selected
+        params.dateFilter = dateFilter?.value || "last_7_days";
       }
-    } else {
-      params.dateFilter = dateFilter?.value || "last_7_days";
+
+      const res = await authAxios().get("/appointment/trial/count", { params });
+      const data = res.data?.data || {};
+
+      setStats({
+        scheduled: Number(data.scheduled_count) || 0,
+        completed: Number(data.completed_count) || 0,
+        noShow: Number(data.no_show_count) || 0,
+        cancelled: Number(data.cancelled_count) || 0,
+      });
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to fetch appointment stats");
     }
+  };
 
-    const res = await authAxios().get("/appointment/trial/count", { params });
-    const data = res.data?.data || {};
-
-    setStats({
-      scheduled: Number(data.scheduled_count) || 0,
-      completed: Number(data.completed_count) || 0,
-      noShow: Number(data.no_show_count) || 0,
-    });
-  } catch (err) {
-    console.error(err);
-    toast.error("Failed to fetch appointment stats");
-  }
-};
-
-
-useEffect(() => {
-  fetchAppointmentStats();
-}, [dateFilter, customFrom, customTo]);
+  useEffect(() => {
+    fetchAppointmentStats();
+  }, [dateFilter, customFrom, customTo]);
 
   // Re-fetch when filters change
   useEffect(() => {
@@ -160,7 +172,7 @@ useEffect(() => {
     setPage(1);
   }, [dateFilter, customFrom, customTo, itemStatus]);
 
-  const { scheduled, completed, noShow } = stats;
+  const { scheduled, completed, noShow, cancelled } = stats;
 
   // Status colors
   const statusColors = {
@@ -172,6 +184,37 @@ useEffect(() => {
     RESCHEDULED: "bg-[#FFF2CC]",
     NO_SHOW: "bg-[#FCE7F3]",
   };
+
+  const updateAppointmentStatus = (id, newStatus) => {
+    setPendingId(id);
+    setPendingStatus(newStatus);
+    setShowConfirmModal(true);
+  };
+
+  const confirmStatusUpdate = async () => {
+    try {
+      const body = { booking_status: pendingStatus };
+
+      await authAxios().put(`/appointment/${pendingId}`, body);
+
+      toast.success("Status updated successfully");
+
+      setShowConfirmModal(false);
+      fetchAppointments(page);
+      fetchAppointmentStats();
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to update status");
+    }
+  };
+
+  const getSelectedStatusOption = (status) => {
+    return statusUpdateOptions.find((opt) => opt.value === status) || null;
+  };
+
+  const filteredStatusOptions = statusUpdateOptions.filter(
+  (opt) => opt.value !== "ACTIVE"
+);
 
   return (
     <>
@@ -248,7 +291,7 @@ useEffect(() => {
         </div>
 
         {/* Dynamic Statistics */}
-        <div className="grid grid-cols-3 gap-5 mb-5 p-3 border bg-white shodow--box rounded-[10px]">
+        <div className="grid grid-cols-4 gap-5 mb-5 p-3 border bg-white shodow--box rounded-[10px]">
           <div className="border rounded-[5px] overflow-hidden w-full">
             <div className="flex justify-center bg-[#F1F1F1] p-4 py-3">
               <div className="text-lg font-bold">Scheduled</div>
@@ -268,6 +311,12 @@ useEffect(() => {
               <div className="text-lg font-bold">No Show</div>
             </div>
             <p className="text-3xl font-bold text-center py-5">{noShow}</p>
+          </div>
+          <div className="border rounded-[5px] overflow-hidden w-full">
+            <div className="flex justify-center bg-[#F1F1F1] p-4 py-3">
+              <div className="text-lg font-bold">Cancelled</div>
+            </div>
+            <p className="text-3xl font-bold text-center py-5">{cancelled}</p>
           </div>
         </div>
 
@@ -311,10 +360,10 @@ useEffect(() => {
                         {formatAutoDate(row?.start_date)} {row?.start_time}
                       </td>
 
-                      <td className="px-2 py-4">{row?.staff_name || "--"}</td>
+                      <td className="px-2 py-4">{row?.staff_name || "Shivakar Sharma"}</td>
 
                       <td className="px-2 py-4">
-                        {row?.assigned_staff_name || "--"}
+                        {row?.assigned_staff_name || "Self"}
                       </td>
 
                       <td className="px-2 py-4">
@@ -325,12 +374,43 @@ useEffect(() => {
                           }`}
                         >
                           <FaCircle className="text-[10px]" />
-                          {formatText(row?.booking_status) ?? "--"}
+                          {formatText(row?.booking_status === "ACTIVE" ? "SCHEDULED" : row?.booking_status) ?? "--"}
                         </span>
                       </td>
 
                       <td className="px-2 py-4">
-                        <div className="flex">
+                        {/* <Select
+                          placeholder="Select"
+                          options={statusUpdateOptions}
+                          value={getSelectedStatusOption(row?.booking_status)} // <-- FIXED
+                          isDisabled={row?.booking_status !== "ACTIVE"}
+                          onChange={(selected) => {
+                            if (!selected) return;
+
+                            updateAppointmentStatus(
+                              row?.id,
+                              selected.value,
+                              (success) => {
+                                if (success) {
+                                  // table will refresh automatically
+                                }
+                              }
+                            );
+                          }}
+                          styles={customStyles}
+                        /> */}
+                        <Select
+                          placeholder="Select"
+                          options={filteredStatusOptions}
+                          value={getSelectedStatusOption(row?.booking_status)}
+                          isDisabled={row?.booking_status !== "ACTIVE"}
+                          onChange={(selected) => {
+                            if (!selected) return;
+                            updateAppointmentStatus(row?.id, selected.value);
+                          }}
+                          styles={customStyles}
+                        />
+                        {/* <div className="flex">
                           <div className="bg-[#F1F1F1] border border-[#D4D4D4] rounded-l-[5px] w-[32px] h-[32px] flex items-center justify-center cursor-pointer">
                             <img src={viewIcon} />
                           </div>
@@ -344,7 +424,7 @@ useEffect(() => {
                           >
                             <img src={mailIcon} />
                           </div>
-                        </div>
+                        </div> */}
                       </td>
                     </tr>
                   ))}
@@ -366,6 +446,37 @@ useEffect(() => {
           </div>
         </div>
       </div>
+
+      {showConfirmModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-[10px] w-[350px] shadow-lg">
+            <h3 className="text-lg font-semibold mb-4 text-center">
+              Confirm Status Update
+            </h3>
+
+            <p className="text-center mb-6">
+              Are you sure you want to mark this appointment as
+              <span className="font-bold ml-1">{pendingStatus}</span>?
+            </p>
+
+            <div className="flex justify-between gap-3">
+              <button
+                onClick={() => setShowConfirmModal(false)}
+                className="w-1/2 border border-gray-400 rounded py-2"
+              >
+                Cancel
+              </button>
+
+              <button
+                onClick={confirmStatusUpdate}
+                className="w-1/2 bg-black text-white rounded py-2"
+              >
+                Confirm
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };

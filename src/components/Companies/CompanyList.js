@@ -267,13 +267,13 @@ const CompanyList = () => {
                     key={company.id || index}
                     className="group bg-white border-b hover:bg-gray-50 relative transition duration-700"
                   >
-                    <td className="px-2 py-4">{company?.name}</td>
-                    <td className="px-2 py-4">{company?.email}</td>
-                    <td className="px-2 py-4">{company?.city}</td>
+                    <td className="px-2 py-4">{company?.name ? company?.name : "--"}</td>
+                    <td className="px-2 py-4">{company?.email ? company?.email : "--"}</td>
+                    <td className="px-2 py-4">{company?.city ? company?.city : "--"}</td>
                     <td className="px-2 py-4">
-                      {company?.state?.label || company?.state}
+                      {company?.state ? company?.state : "--"}
                     </td>
-                    <td className="px-2 py-4">{company?.country}</td>
+                    <td className="px-2 py-4">{company?.country ? company?.country : "--"}</td>
                     <td className="px-2 py-4">
                       <div
                         className={`flex gap-1 items-center ${

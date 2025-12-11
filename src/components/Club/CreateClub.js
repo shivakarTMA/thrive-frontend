@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { IoCloseCircle, IoLocationOutline } from "react-icons/io5";
+import { IoCloseCircle, IoDocumentTextOutline, IoLocationOutline } from "react-icons/io5";
 import {
   FaEnvelope,
   FaListCheck,
@@ -142,6 +142,7 @@ const CreateClub = ({
             email: data?.email || "",
             phone: "+" + data?.phone || "",
             address: data?.address || "",
+            gstno: data?.gstno || "",
             city: data?.city || "",
             state:
               typeof data?.state === "string"
@@ -347,6 +348,30 @@ const CreateClub = ({
                     )}
                   </div>
 
+                  {/* GST No. */}
+                  <div>
+                    <label className="mb-2 block">
+                      GST No.<span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <span className="absolute top-[50%] translate-y-[-50%] left-[15px]">
+                        <IoDocumentTextOutline />
+                      </span>
+                      <input
+                        type="text"
+                        name="gstno"
+                        value={formik.values.gstno}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        className="custom--input w-full input--icon"
+                      />
+                    </div>
+                    {formik.touched.gstno && formik.errors.gstno && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {formik.errors.gstno}
+                      </p>
+                    )}
+                  </div>
                   {/* City */}
                   <div>
                     <label className="mb-2 block">

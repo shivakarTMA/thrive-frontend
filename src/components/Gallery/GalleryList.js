@@ -13,7 +13,8 @@ import Tooltip from "../common/Tooltip";
 import Pagination from "../common/Pagination";
 import CreateGallery from "./CreateGallery";
 import { authAxios } from "../../config/config";
-import { customStyles } from "../../Helper/helper";
+import { customStyles, filterActiveItems } from "../../Helper/helper";
+import { RiDeleteBin6Line } from "react-icons/ri";
 
 // Define display position options
 const displayPosition = [
@@ -44,7 +45,8 @@ const GalleryList = () => {
         params: search ? { search } : {},
       });
       const data = response.data?.data || response.data || [];
-      setClub(data);
+      const activeOnly = filterActiveItems(data);
+      setClub(activeOnly);
     } catch (error) {
       console.error(error);
       toast.error("Failed to fetch clubs");
@@ -161,6 +163,17 @@ const GalleryList = () => {
     },
   });
 
+  const handleDelete = async (id) => {
+    try {
+      await authAxios().delete(`/club/gallery/${id}`);
+      toast.success("Gallery item deleted successfully");
+      fetchGallery(); // refresh list
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to delete gallery item");
+    }
+  };
+
   // Component render
   return (
     <div className="page--content">
@@ -251,7 +264,7 @@ const GalleryList = () => {
                     <td className="px-2 py-4">{item?.club_name}</td>
                     <td className="px-2 py-4">{item?.position}</td>
                     <td className="px-2 py-4">
-                      <div className="w-fit">
+                      <div className="flex items-center">
                         <Tooltip
                           id={`tooltip-edit-${item.id}`}
                           content="Edit Gallery"
@@ -265,6 +278,20 @@ const GalleryList = () => {
                             }}
                           >
                             <LiaEdit className="text-[25px] text-black" />
+                          </div>
+                        </Tooltip>
+
+                        {/* Delete Button */}
+                        <Tooltip
+                          id={`tooltip-delete-${item.id}`}
+                          content="Delete Gallery"
+                          place="left"
+                        >
+                          <div
+                            className="p-1 cursor-pointer"
+                            onClick={() => handleDelete(item.id)}
+                          >
+                            <RiDeleteBin6Line className="text-[22px] text-black" />
                           </div>
                         </Tooltip>
                       </div>

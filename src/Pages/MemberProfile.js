@@ -125,7 +125,7 @@ const MemberProfile = () => {
           {activeTab === "Appointments" && <Appointments details={member} />}
           {activeTab === "Referrals" && <Relations details={member} />}
           {/* {activeTab === "Attendance" && <AttendanceData details={member} />} */}
-          {activeTab === "Training" && <WorkoutApp details={member} />}
+          {activeTab === "Training" && <WorkoutApp member={member} />}
           {activeTab === "Health Profile" && <HealthProfile details={member} />}
           {activeTab === "Coins" && <CoinsList details={member} />}
         </div>

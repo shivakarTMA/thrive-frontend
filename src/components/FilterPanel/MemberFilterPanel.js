@@ -12,8 +12,8 @@ import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 
 const memberStatus = [
-  { value: "ACTIVE", label: "Active" },
-  { value: "INACTIVE", label: "Inactive" },
+  { value: true, label: "Active" },
+  { value: false, label: "Inactive" },
 ];
 
 const ageGroupOptions = [
@@ -50,6 +50,7 @@ export default function MemberFilterPanel({
   const [showFilters, setShowFilters] = useState(false);
   const panelRef = useRef(null);
   const [staffList, setStaffList] = useState([]);
+  const [serviceList, setServiceList] = useState([]);
   const navigate = useNavigate();
 
   const [appliedFilters, setAppliedFilters] = useState({});
@@ -68,8 +69,23 @@ export default function MemberFilterPanel({
     }
   };
 
+    const fetchService = async (search = "") => {
+    try {
+      const res = await authAxios().get("/service/list", {
+        params: search ? { search } : {},
+      });
+      let data = res.data?.data || res?.data || [];
+      const activeService = data?.filter((item) => item?.status === "ACTIVE");
+      setServiceList(activeService);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to fetch club");
+    }
+  };
+
   useEffect(() => {
     fetchStaff();
+    fetchService();
   }, []);
 
   // Redux state
@@ -87,6 +103,11 @@ export default function MemberFilterPanel({
   const leadServiceOptions = lists["INTERESTED_IN"] || [];
   const leadOwnerOptions =
     staffList?.map((item) => ({
+      label: item.name,
+      value: item.id,
+    })) || [];
+  const serviceOptions =
+    serviceList?.map((item) => ({
       label: item.name,
       value: item.id,
     })) || [];
@@ -127,7 +148,7 @@ export default function MemberFilterPanel({
   // Handle Submit (apply filters)
   const handleSubmitFilters = () => {
     setAppliedFilters({
-      status: filterStatus,
+      is_subscribed: filterStatus,
       serviceName: filterService,
       service_variation: filterServiceVariation,
       ageGroup: filterAgeGroup,
@@ -148,7 +169,7 @@ export default function MemberFilterPanel({
   // Handle remove filter chip
  const removeFilter = (filterKey) => {
   const setterMap = {
-    status: setFilterStatus,
+    is_subscribed: setFilterStatus,
     serviceName: setFilterService,
     service_variation: setFilterServiceVariation,
     ageGroup: setFilterAgeGroup,
@@ -211,14 +232,14 @@ export default function MemberFilterPanel({
                 <Select
                   value={filterService}
                   onChange={setFilterService}
-                  options={leadServiceOptions}
+                  options={serviceOptions}
                   // isClearable
                   placeholder="Select Service"
                   styles={customStyles}
                 />
               </div>
               {/* Service Variations */}
-              <div>
+              {/* <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Service Variations
                 </label>
@@ -230,7 +251,7 @@ export default function MemberFilterPanel({
                   placeholder="Select Service Variations"
                   styles={customStyles}
                 />
-              </div>
+              </div> */}
               {/* Age Group */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -289,7 +310,7 @@ export default function MemberFilterPanel({
                 />
               </div>
               {/* Fitness Goal */}
-              <div>
+              {/* <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Fitness Goal
                 </label>
@@ -301,7 +322,7 @@ export default function MemberFilterPanel({
                   placeholder="Select Fitness Goal"
                   styles={customStyles}
                 />
-              </div>
+              </div> */}
               {/* Gender */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">

@@ -210,8 +210,8 @@ const ConvertMemberForm = ({
   };
   const formik = useFormik({
     initialValues,
-    // validationSchema: stepValidationSchemas[step],
-    // enableReinitialize: true,
+    validationSchema: stepValidationSchemas[step],
+    enableReinitialize: true,
     onSubmit: async (values) => {
       if (step === stepValidationSchemas.length - 1) {
         try {
@@ -288,6 +288,10 @@ const ConvertMemberForm = ({
             ? new Date(data.date_of_birth).toISOString()
             : "";
 
+          const interestedList = Array.isArray(data.interested_in)
+          ? data.interested_in.map((v) => ({ label: v, value: v }))
+          : [];
+
           const emergencyContacts =
             data.emergencyContacts && data.emergencyContacts.length > 0
               ? data.emergencyContacts
@@ -315,7 +319,7 @@ const ConvertMemberForm = ({
             address: data.address || "",
             location: data.location || "",
             company_name: data.company_name || "",
-            interested_in: data.interested_in || [],
+            interested_in: interestedList.map((i) => i.value),
             lead_source: data.lead_source || "",
             lead_type: data.lead_type || "",
             platform: data.platform || "",
@@ -331,6 +335,7 @@ const ConvertMemberForm = ({
             club_data: data.club_data || { name: "", state: "", country: "" },
             productType: "MEMBERSHIP_PLAN",
           });
+          setSelected(interestedList);
         }
       } catch (err) {
         console.error(err);
@@ -369,7 +374,7 @@ const ConvertMemberForm = ({
 
       // ✅ Convert to dropdown-friendly format
       const options = activeCompanies.map((company) => ({
-        value: company.id,
+        value: company.name,
         label: company.name,
       }));
 
@@ -876,6 +881,32 @@ const ConvertMemberForm = ({
                             <MultiSelect
                               options={servicesName}
                               value={selected} // selected objects
+                              onChange={(serviceList) => {
+                                setSelected(serviceList); // UI needs objects
+                                const values = serviceList.map(
+                                  (opt) => opt.value
+                                );
+                                formik.setFieldValue("interested_in", values); // Formik stores strings
+                              }}
+                              labelledBy="Select..."
+                              hasSelectAll={false}
+                              disableSearch={true}
+                              overrideStrings={{
+                                selectSomeItems: "Select Interested...",
+                                allItemsAreSelected: "All Interested Selected",
+                                // search: "Search",
+                              }}
+                              className={`custom--input w-full input--icon multi--select--new ${
+                                selected
+                                  ? "cursor-not-allowed pointer-events-none !bg-gray-100"
+                                  : ""
+                              }`}
+                              disabled={!!selected}
+                            />
+
+                            {/* <MultiSelect
+                              options={servicesName}
+                              value={selected} // selected objects
                               onChange={(servicesName) => {
                                 setSelected(servicesName); // set objects
                                 const values = servicesName.map(
@@ -892,7 +923,7 @@ const ConvertMemberForm = ({
                                 // search: "Search",
                               }}
                               className="custom--input w-full input--icon multi--select--new"
-                            />
+                            /> */}
                           </div>
                         </div>
                         <div>

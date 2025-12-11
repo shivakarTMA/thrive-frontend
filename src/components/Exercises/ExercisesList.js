@@ -25,10 +25,11 @@ const exerciseTypeOptions = [
 ];
 
 const columns = [
-  "S.NO",
+  // "S.NO",
   "Category Name",
   "Exercise Name",
   "Created By",
+  "Position",
   "Action",
 ];
 
@@ -128,7 +129,7 @@ const ExercisesList = () => {
       {/* Filters */}
       <div className="flex items-center gap-2 mb-4">
         {/* Search Input */}
-        <div>
+        <div className="max-w-[200px] w-full">
           <input
             type="text"
             value={searchTerm}
@@ -171,10 +172,11 @@ const ExercisesList = () => {
                     key={row.id}
                     className="group bg-white border-b hover:bg-gray-50 transition duration-700 relative"
                   >
-                    <td className="px-2 py-4">{idx + 1}</td>
+                    {/* <td className="px-2 py-4">{idx + 1}</td> */}
                     <td className="px-2 py-4">{row?.category}</td>
                     <td className="px-2 py-4">{row?.name}</td>
                     <td className="px-2 py-4">Admin</td>
+                    <td className="px-2 py-4">{row?.position ? row?.position : "--"}</td>
                     <td className="px-2 py-4">
                       <div className="flex">
                         <Tooltip

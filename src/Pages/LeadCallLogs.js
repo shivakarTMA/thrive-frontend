@@ -9,7 +9,7 @@ import {
   trainerAvailability,
 } from "../DummyData/DummyData";
 
-import { customStyles, selectIcon } from "../Helper/helper";
+import { customStyles, filterActiveItems, selectIcon } from "../Helper/helper";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { authAxios } from "../config/config";
@@ -26,7 +26,7 @@ const validationSchema = Yup.object().shape({
   call_status: Yup.string().required("Call status is required"),
 
   // Follow-up Date & Time
-  follow_up_datetime: Yup.string().when("call_status", {
+  trial_tour_datetime: Yup.string().when("call_status", {
     is: (val) =>
       val !== "Not Interested" &&
       val !== "Not Relevant" &&
@@ -78,6 +78,7 @@ const validationSchema = Yup.object().shape({
 
 const LeadCallLogs = () => {
   const { id } = useParams();
+  console.log(id,'id')
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
   const action = queryParams.get("action");
@@ -159,7 +160,7 @@ const LeadCallLogs = () => {
   }, [id, filterStatus, startDate, endDate]);
 
   const initialValues = {
-    member_id: leadDetails?.id,
+    member_id: id,
     call_status: "",
     follow_up_datetime: "",
     schedule_for: null,
@@ -175,8 +176,6 @@ const LeadCallLogs = () => {
     initialValues,
     validationSchema,
     onSubmit: async (values, { resetForm }) => {
-      console.log(values, " values");
-      console.log(values.id, " values.id");
       try {
         if (values.id) {
           // UPDATE MODE
@@ -287,7 +286,7 @@ const LeadCallLogs = () => {
   useEffect(() => {
     if (editLog) {
       formik.setValues({
-        member_id: leadDetails?.id,
+        member_id: id,
         call_status: editLog.call_status,
         follow_up_datetime: editLog.follow_up_datetime || "",
         schedule_for: editLog.schedule_for || "",
@@ -312,17 +311,19 @@ const LeadCallLogs = () => {
       const res = await authAxios().get("/staff/list?role=TRAINER&role=FOH");
       const staff = res.data?.data || [];
 
-      console.log(staff, "updatedStaff");
+      const activeOnly = filterActiveItems(staff);
+
+      console.log(activeOnly, "activeOnly");
 
       // --- GROUPING STAFF BY ROLE ---
-      const foh = staff
+      const foh = activeOnly
         .filter((item) => item.role === "FOH")
         .map((item) => ({
           value: item.id,
           label: item.name,
         }));
 
-      const trainer = staff
+      const trainer = activeOnly
         .filter((item) => item.role === "TRAINER")
         .map((item) => ({
           value: item.id,
@@ -568,12 +569,12 @@ const LeadCallLogs = () => {
                           />
                         </div>
 
-                        {formik.errors?.follow_up_datetime &&
+                        {/* {formik.errors?.follow_up_datetime &&
                           formik.touched?.follow_up_datetime && (
                             <div className="text-red-500 text-sm">
                               {formik.errors?.follow_up_datetime}
                             </div>
-                          )}
+                          )} */}
                       </div>
 
                       {/* Schedule For */}

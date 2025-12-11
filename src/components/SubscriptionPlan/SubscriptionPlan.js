@@ -10,7 +10,7 @@ import CreateSubscriptionPlan from "./CreateSubscriptionPlan";
 import { authAxios } from "../../config/config";
 import { IoSearchOutline } from "react-icons/io5";
 import Select from "react-select";
-import { customStyles } from "../../Helper/helper";
+import { customStyles, filterActiveItems } from "../../Helper/helper";
 
 const SubscriptionPlan = () => {
   const [showModal, setShowModal] = useState(false);
@@ -31,7 +31,8 @@ const SubscriptionPlan = () => {
       if (statusFilter?.value) {
         data = data.filter((item) => item.status === statusFilter.value);
       }
-      setClub(data);
+      const activeOnly = filterActiveItems(data);
+      setClub(activeOnly);
     } catch (err) {
       console.error(err);
       toast.error("Failed to fetch club");
