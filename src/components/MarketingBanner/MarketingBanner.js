@@ -90,6 +90,7 @@ const MarketingBanner = () => {
       banner_heading: "",
       banner_subheading: "",
       button_text: "",
+      external_url: "",
       description_heading: "",
       description_subheading: "",
       caption: "",
@@ -107,6 +108,7 @@ const MarketingBanner = () => {
         formData.append("banner_heading", values.banner_heading);
         formData.append("banner_subheading", values.banner_subheading);
         formData.append("button_text", values.button_text);
+        formData.append("external_url", values.external_url);
         formData.append("description_heading", values.description_heading);
         formData.append(
           "description_subheading",
@@ -160,8 +162,8 @@ const MarketingBanner = () => {
     <div className="page--content">
       <div className="flex items-end justify-between gap-2 mb-5">
         <div className="title--breadcrumbs">
-          <p className="text-sm">{`Home > Marketing Banner`}</p>
-          <h1 className="text-3xl font-semibold">Marketing Banner</h1>
+          <p className="text-sm">{`Home > App Banner`}</p>
+          <h1 className="text-3xl font-semibold">App Banner</h1>
         </div>
         <div className="flex items-end gap-2">
           <button

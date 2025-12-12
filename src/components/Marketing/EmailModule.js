@@ -14,8 +14,8 @@ const EmailModule = () => {
     <div className="page--content">
       <div className=" flex items-end justify-between gap-2 mb-0">
         <div className="title--breadcrumbs">
-          <p className="text-sm">{`Home > Members > All Members > Send Mail`}</p>
-          <h1 className="text-3xl font-semibold">Send Mail</h1>
+          <p className="text-sm">{`Home > Members > All Members > Send Email`}</p>
+          <h1 className="text-3xl font-semibold">Send Email</h1>
         </div>
       </div>
       <div className="flexs">

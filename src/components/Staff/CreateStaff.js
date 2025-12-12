@@ -59,6 +59,7 @@ const CreateStaff = ({
   const currentUserRole = user.role; // Example, dynamically from user info
   const roleOptions = roleOptionsByUser[currentUserRole] || [];
 
+  console.log("roleOptions", roleOptions);
   // Function to fetch club list
   const fetchClub = async () => {
     try {
@@ -92,8 +93,6 @@ const CreateStaff = ({
       try {
         const res = await authAxios().get(`/staff/${id}`);
         const data = res.data?.data || res.data || null;
-
-        console.log("SHIVAKAR", data);
 
         if (data) {
           const clubIds = Array.isArray(data.staff_clubs)
@@ -172,7 +171,7 @@ const CreateStaff = ({
     formik.setFieldError("mobile", "");
   };
 
-    const handleLogoChange = (e) => {
+  const handleLogoChange = (e) => {
     const file = e.target.files[0];
     if (file) {
       const previewURL = URL.createObjectURL(file);
@@ -181,6 +180,12 @@ const CreateStaff = ({
       formik.setFieldValue("profile_imageFile", file); // actual file to upload
     }
   };
+
+  useEffect(() => {
+    if (formik.values?.role !== "TRAINER") {
+      formik.setFieldValue("show_on_app", false); // Set show_on_app to false when role is TRAINER
+    }
+  }, [formik.values?.role]);
 
   return (
     <div
@@ -471,31 +476,34 @@ const CreateStaff = ({
                     )}
 
                     {/* Show on App */}
-                    <div>
-                      <label className="mb-2 block">Show on App</label>
-                      <div className="relative">
-                        <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
-                          <IoAppsSharp />
-                        </span>
+                    {formik.values?.role === "TRAINER" && (
+                      <div>
+                        <label className="mb-2 block">Show on App</label>
+                        <div className="relative">
+                          <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
+                            <IoAppsSharp />
+                          </span>
 
-                        <Select
-                          name="show_on_app"
-                          value={
-                            yesNoOptions.find(
-                              (opt) => opt.value === formik.values?.show_on_app
-                            ) || null
-                          }
-                          options={yesNoOptions}
-                          onChange={(option) =>
-                            formik.setFieldValue("show_on_app", option.value)
-                          }
-                          onBlur={() =>
-                            formik.setFieldTouched("show_on_app", true)
-                          }
-                          styles={selectIcon}
-                        />
+                          <Select
+                            name="show_on_app"
+                            value={
+                              yesNoOptions.find(
+                                (opt) =>
+                                  opt.value === formik.values?.show_on_app
+                              ) || null
+                            }
+                            options={yesNoOptions}
+                            onChange={(option) =>
+                              formik.setFieldValue("show_on_app", option.value)
+                            }
+                            onBlur={() =>
+                              formik.setFieldTouched("show_on_app", true)
+                            }
+                            styles={selectIcon}
+                          />
+                        </div>
                       </div>
-                    </div>
+                    )}
                   </div>
 
                   <div className="col-span-3 space-y-4">
@@ -625,7 +633,9 @@ const CreateStaff = ({
                               //   formik.setFieldValue("profile_image", file);
                               // }}
                               onChange={handleLogoChange}
-                          onBlur={() => formik.setFieldTouched("profile_image", true)}
+                              onBlur={() =>
+                                formik.setFieldTouched("profile_image", true)
+                              }
                               className="custom--input w-full input--icon"
                             />
                           </div>

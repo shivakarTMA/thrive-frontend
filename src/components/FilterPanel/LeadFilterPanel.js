@@ -59,12 +59,12 @@ export default function LeadFilterPanel({
   useEffect(() => {
     dispatch(fetchOptionList("LEAD_SOURCE"));
     dispatch(fetchOptionList("LEAD_CALL_STATUS"));
-    dispatch(fetchOptionList("INTERESTED_IN"));
+    dispatch(fetchOptionList("GOAL"));
   }, [dispatch]);
 
   const leadsSources = lists["LEAD_SOURCE"] || [];
   const lastCallStatusOptions = lists["LEAD_CALL_STATUS"] || [];
-  const leadServiceOptions = lists["INTERESTED_IN"] || [];
+  const leadServiceOptions = lists["GOAL"] || [];
   const leadOwnerOptions =
     staffList.map((item) => ({ label: item.name, value: item.id })) || [];
   const genderOptions = [

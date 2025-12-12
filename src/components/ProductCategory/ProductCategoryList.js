@@ -91,8 +91,8 @@ const ProductCategoryList = () => {
     <div className="page--content">
       <div className="flex items-end justify-between gap-2 mb-5">
         <div className="title--breadcrumbs">
-          <p className="text-sm">{`Home > Product Category`}</p>
-          <h1 className="text-3xl font-semibold">Product Category</h1>
+          <p className="text-sm">{`Home > Nourish Category`}</p>
+          <h1 className="text-3xl font-semibold">Nourish Category</h1>
         </div>
         <div className="flex items-end gap-2">
           <button

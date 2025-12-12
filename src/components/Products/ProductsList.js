@@ -237,8 +237,8 @@ const ProductsList = () => {
     <div className="page--content">
       <div className="flex items-end justify-between gap-2 mb-5">
         <div className="title--breadcrumbs">
-          <p className="text-sm">{`Home > All Products`}</p>
-          <h1 className="text-3xl font-semibold">All Products</h1>
+          <p className="text-sm">{`Home > Nourish Products`}</p>
+          <h1 className="text-3xl font-semibold">Nourish Products</h1>
         </div>
         <div className="flex items-end gap-2">
           <button

@@ -147,14 +147,14 @@ const CreateMemberForm = ({ setMemberModal, onMemberUpdate }) => {
   useEffect(() => {
     dispatch(fetchOptionList("LEAD_SOURCE"));
     dispatch(fetchOptionList("LEAD_TYPE"));
-    dispatch(fetchOptionList("INTERESTED_IN"));
+    dispatch(fetchOptionList("GOAL"));
     dispatch(fetchOptionList("RELATIONSHIP"));
   }, [dispatch]);
 
   // Extract Redux lists
   const leadsSources = lists["LEAD_SOURCE"] || [];
   const leadTypes = lists["LEAD_TYPE"] || [];
-  const servicesName = lists["INTERESTED_IN"] || [];
+  const servicesName = lists["GOAL"] || [];
   const relationList = lists["RELATIONSHIP"] || [];
 
   const initialValues = {

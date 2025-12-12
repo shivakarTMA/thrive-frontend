@@ -224,8 +224,8 @@ const Services = () => {
       {/* Header Section */}
       <div className="flex items-end justify-between gap-2 mb-5">
         <div className="title--breadcrumbs">
-          <p className="text-sm">{`Home > All Services`}</p>
-          <h1 className="text-3xl font-semibold">All Services</h1>
+          <p className="text-sm">{`Home > Club Services`}</p>
+          <h1 className="text-3xl font-semibold">Club Services</h1>
         </div>
         <div className="flex items-end gap-2">
           <button

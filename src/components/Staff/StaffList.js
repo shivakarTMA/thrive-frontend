@@ -4,7 +4,11 @@ import { toast } from "react-toastify";
 import { LiaEdit } from "react-icons/lia";
 import Tooltip from "../common/Tooltip";
 import Select from "react-select";
-import { customStyles, filterActiveItems, formatText } from "../../Helper/helper";
+import {
+  customStyles,
+  filterActiveItems,
+  formatText,
+} from "../../Helper/helper";
 import CreateStaff from "./CreateStaff";
 import { authAxios } from "../../config/config";
 import Pagination from "../common/Pagination";
@@ -54,8 +58,10 @@ const StaffList = () => {
   const [statusFilter, setStatusFilter] = useState(null);
   const [editingOption, setEditingOption] = useState(null);
   const { user } = useSelector((state) => state.auth);
-  const currentUserRole = user.role; // Example, dynamically from user info
+  const currentUserRole = user?.role; // Example, dynamically from user info
   const roleOptions = roleOptionsByUser[currentUserRole] || [];
+
+  console.log(currentUserRole, "currentUserRole");
 
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -295,14 +301,12 @@ const StaffList = () => {
     },
   });
 
-  console.log(staffList, "staffList");
-
   return (
     <div className="page--content">
       <div className="flex items-end justify-between gap-2 mb-5">
         <div className="title--breadcrumbs">
-          <p className="text-sm">{`Home > All Staff`}</p>
-          <h1 className="text-3xl font-semibold">All Staff</h1>
+          <p className="text-sm">{`Home > All Users`}</p>
+          <h1 className="text-3xl font-semibold">All Users</h1>
         </div>
         <button
           type="button"
@@ -313,7 +317,7 @@ const StaffList = () => {
             setShowModal(true);
           }}
         >
-          <FiPlus /> Add Staff
+          <FiPlus /> Add User
         </button>
       </div>
 
@@ -368,6 +372,9 @@ const StaffList = () => {
             <thead className="text-xs text-gray-700 uppercase bg-gray-50">
               <tr>
                 <th className="px-2 py-4">Staff Name</th>
+                {currentUserRole === "ADMIN" && (
+                  <th className="px-2 py-4">Mobile</th>
+                )}
                 <th className="px-2 py-4">Role</th>
                 <th className="px-2 py-4">Club</th>
                 <th className="px-2 py-4">Status</th>
@@ -378,7 +385,7 @@ const StaffList = () => {
             <tbody>
               {staffList.length === 0 ? (
                 <tr>
-                  <td colSpan="6" className="text-center py-4">
+                  <td colSpan={`${currentUserRole === "ADMIN" ? "7" : "6"}`} className="text-center py-4">
                     No club added yet.
                   </td>
                 </tr>
@@ -389,6 +396,9 @@ const StaffList = () => {
                     className="group bg-white border-b hover:bg-gray-50 transition duration-700"
                   >
                     <td className="px-2 py-4">{row?.name}</td>
+                    {currentUserRole === "ADMIN" && (
+                      <td className="px-2 py-4">{row?.mobile}</td>
+                    )}
                     <td className="px-2 py-4">{formatText(row?.role)}</td>
                     <td className="px-2 py-4">
                       <div className="max-w-[200px]">
@@ -419,15 +429,19 @@ const StaffList = () => {
                       </div>
                     </td>
                     <td className="px-2 py-4">
-                      <span
-                        className={`px-3 py-1 rounded-full text-sm font-medium ${
-                          row?.show_on_app === true
-                            ? "bg-green-100 text-green-800"
-                            : "bg-red-100 text-red-800"
-                        }`}
-                      >
-                        {row?.show_on_app === true ? "Active" : "Inactive"}
-                      </span>
+                      {row?.role === "TRAINER" ? (
+                        <span
+                          className={`px-3 py-1 rounded-full text-sm font-medium ${
+                            row?.show_on_app === true
+                              ? "bg-green-100 text-green-800"
+                              : "bg-red-100 text-red-800"
+                          }`}
+                        >
+                          {row?.show_on_app === true ? "Active" : "Inactive"}
+                        </span>
+                      ) : (
+                        "--"
+                      )}
                     </td>
 
                     <td className="px-2 py-4">

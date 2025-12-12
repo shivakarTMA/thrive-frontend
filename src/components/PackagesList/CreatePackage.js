@@ -6,8 +6,6 @@ import { customStyles, filterActiveItems } from "../../Helper/helper";
 import DatePicker from "react-datepicker"; // Date picker component
 import "react-datepicker/dist/react-datepicker.css"; // Date picker styles
 import { FaCalendarDays } from "react-icons/fa6";
-import { useDispatch, useSelector } from "react-redux";
-import { fetchOptionList } from "../../Redux/Reducers/optionListSlice";
 import { authAxios } from "../../config/config";
 import { toast } from "react-toastify";
 import { PiImageFill } from "react-icons/pi";
@@ -40,6 +38,9 @@ const CreatePackage = ({
   editingOption,
   formik,
   serviceOptions,
+  setSessionLevelValue,
+  sessionLevel,
+  sessionLevelValue,
 }) => {
   const leadBoxRef = useRef(null);
   const [studio, setStudio] = useState([]);
@@ -54,16 +55,6 @@ const CreatePackage = ({
     index: null,
     id: null,
   });
-
-  const dispatch = useDispatch();
-  const { lists } = useSelector((state) => state.optionList);
-
-  // Fetch option lists
-  useEffect(() => {
-    dispatch(fetchOptionList("SESSION_LEVEL"));
-  }, [dispatch]);
-
-  const sessionLevel = lists["SESSION_LEVEL"] || [];
 
   const fetchClub = async (search = "") => {
     try {
@@ -179,7 +170,6 @@ const CreatePackage = ({
       try {
         const res = await authAxios().get(`/package/${id}`);
         const data = res.data?.data || res.data || null;
-        console.log(data, "SHIVAKAR");
 
         if (data) {
           formik.setValues({
@@ -192,7 +182,10 @@ const CreatePackage = ({
             caption: data?.caption || "",
             description: data?.description || "",
             image: data?.image || null,
-            session_level: data?.session_level || "",
+            session_level:
+              sessionLevelValue === "GROUP_CLASS"
+                ? sessionLevel[0].value
+                : data?.session_level || "",
             no_of_sessions:
               data?.no_of_sessions !== undefined ? data.no_of_sessions : "",
             session_duration:
@@ -265,7 +258,21 @@ const CreatePackage = ({
     serviceOptions
   );
 
-  console.log(service_type_check, "service_type_check");
+  console.log("service_type_check", service_type_check);
+
+  useEffect(() => {
+    if (
+      service_type_check === "GROUP_CLASS" &&
+      sessionLevelValue !== "GROUP_CLASS"
+    ) {
+      setSessionLevelValue(service_type_check);
+    }
+
+    // Optional: clear when not GROUP_CLASS
+    if (service_type_check !== "GROUP_CLASS" && sessionLevelValue !== "") {
+      setSessionLevelValue("");
+    }
+  }, [service_type_check, sessionLevelValue]);
 
   // Add new row
   const handleAddSessionRow = () => {
@@ -347,8 +354,6 @@ const CreatePackage = ({
       setShowModal(false);
     }
   };
-
-  console.log(formik.values, "shviakar CHECK VALUE");
 
   return (
     <>
@@ -748,40 +753,12 @@ const CreatePackage = ({
                     ) : null}
 
                     {/* Session Level */}
-                    <div>
-                      <label className="mb-2 block">
-                        Level<span className="text-red-500">*</span>
-                      </label>
-                      <div className="relative">
-                        <Select
-                          name="session_level"
-                          value={
-                            sessionLevel.find(
-                              (opt) => opt.value === formik.values.session_level
-                            ) || null
-                          }
-                          options={sessionLevel}
-                          onChange={(option) =>
-                            formik.setFieldValue("session_level", option.value)
-                          }
-                          onBlur={() =>
-                            formik.setFieldTouched("session_level", true)
-                          }
-                          styles={customStyles}
-                        />
-                      </div>
-                      {formik.touched.session_level &&
-                        formik.errors.session_level && (
-                          <div className="text-red-500 text-sm">
-                            {formik.errors.session_level}
-                          </div>
-                        )}
-                    </div>
-                    {/* {service_type_check &&
-                    service_type_check !== "GROUP_CLASS" ? (
-                      <>
+                    {service_type_check &&
+                      service_type_check !== "GROUP_CLASS" && (
                         <div>
-                          <label className="mb-2 block">Level</label>
+                          <label className="mb-2 block">
+                            Level<span className="text-red-500">*</span>
+                          </label>
                           <div className="relative">
                             <Select
                               name="session_level"
@@ -811,8 +788,7 @@ const CreatePackage = ({
                               </div>
                             )}
                         </div>
-                      </>
-                    ) : null} */}
+                      )}
 
                     {service_type_check &&
                     service_type_check === "GROUP_CLASS" ? (
@@ -1449,7 +1425,8 @@ const CreatePackage = ({
                                 type="number"
                                 name={`variation[${index}].no_of_sessions`}
                                 value={
-                                  formik.values.variation[index]?.no_of_sessions ?? ""
+                                  formik.values.variation[index]
+                                    ?.no_of_sessions ?? ""
                                 }
                                 onChange={formik.handleChange}
                                 onBlur={formik.handleBlur}
@@ -1478,7 +1455,8 @@ const CreatePackage = ({
                                 type="number"
                                 name={`variation[${index}].session_duration`}
                                 value={
-                                  formik.values.variation[index]?.session_duration ?? ""
+                                  formik.values.variation[index]
+                                    ?.session_duration ?? ""
                                 }
                                 onChange={formik.handleChange}
                                 onBlur={formik.handleBlur}
@@ -1506,7 +1484,8 @@ const CreatePackage = ({
                                 type="number"
                                 name={`variation[${index}].session_validity`}
                                 value={
-                                  formik.values.variation[index]?.session_validity ?? ""
+                                  formik.values.variation[index]
+                                    ?.session_validity ?? ""
                                 }
                                 onChange={formik.handleChange}
                                 onBlur={formik.handleBlur}
@@ -1605,7 +1584,8 @@ const CreatePackage = ({
                                 type="number"
                                 name={`variation[${index}].earn_coin`}
                                 value={
-                                  formik.values.variation[index]?.earn_coin ?? ""
+                                  formik.values.variation[index]?.earn_coin ??
+                                  ""
                                 }
                                 onChange={formik.handleChange}
                                 onBlur={formik.handleBlur}

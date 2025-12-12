@@ -95,12 +95,12 @@ export default function MemberFilterPanel({
   // Fetch option lists
   useEffect(() => {
     dispatch(fetchOptionList("LEAD_SOURCE"));
-    dispatch(fetchOptionList("INTERESTED_IN"));
+    dispatch(fetchOptionList("GOAL"));
   }, [dispatch]);
 
   // Extract Redux lists
   const leadsSources = lists["LEAD_SOURCE"] || [];
-  const leadServiceOptions = lists["INTERESTED_IN"] || [];
+  const leadServiceOptions = lists["GOAL"] || [];
   const leadOwnerOptions =
     staffList?.map((item) => ({
       label: item.name,

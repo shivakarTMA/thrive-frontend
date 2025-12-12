@@ -355,17 +355,17 @@ const WorkoutPlan = ({
     });
   };
 
-const handleCopyDay = (dayIdx) => {
-  const dayToCopy = data.days[dayIdx];
+  const handleCopyDay = (dayIdx) => {
+    const dayToCopy = data.days[dayIdx];
 
-  // copy only exercises
-  const copiedExercises = JSON.parse(JSON.stringify(dayToCopy.exercises || []));
+    // copy only exercises
+    const copiedExercises = JSON.parse(
+      JSON.stringify(dayToCopy.exercises || [])
+    );
 
-  setCopiedDay(copiedExercises);
-  toast.success("Exercises copied successfully!");
-};
-
-
+    setCopiedDay(copiedExercises);
+    toast.success("Exercises copied successfully!");
+  };
 
   // const handlePasteDay = (dayIdx) => {
   //   if (!copiedDay) return;
@@ -382,25 +382,23 @@ const handleCopyDay = (dayIdx) => {
   //   toast.success("Paste Successfully");
   // };
 
- const handlePasteDay = (dayIdx) => {
-  if (!copiedDay) return;
+  const handlePasteDay = (dayIdx) => {
+    if (!copiedDay) return;
 
-  setData((prev) => {
-    const updatedDays = [...prev.days];
+    setData((prev) => {
+      const updatedDays = [...prev.days];
 
-    // Replace ONLY exercises
-    updatedDays[dayIdx] = {
-      ...updatedDays[dayIdx],
-      exercises: JSON.parse(JSON.stringify(copiedDay)), // overwrite exercises
-    };
+      // Replace ONLY exercises
+      updatedDays[dayIdx] = {
+        ...updatedDays[dayIdx],
+        exercises: JSON.parse(JSON.stringify(copiedDay)), // overwrite exercises
+      };
 
-    return { ...prev, days: updatedDays };
-  });
+      return { ...prev, days: updatedDays };
+    });
 
-  toast.success("Exercises pasted successfully!");
-};
-
-
+    toast.success("Exercises pasted successfully!");
+  };
 
   const handleAddRestTime = (dayIndex) => {
     setData((previousState) => {
@@ -453,11 +451,26 @@ const handleCopyDay = (dayIdx) => {
         ...day,
         exercises: day.exercises.map((ex) => {
           const { isSelected, groupType, groupId, _ui, ...cleanEx } = ex;
-          return {
+
+          // Focus on specific fields: reps, rest_secs, sets, weight_kg
+          const cleanedEx = {
             ...cleanEx,
             group_type: groupType || null,
             group_id: groupId || null,
           };
+
+          // Define the fields you want to clean
+          const fieldsToClean = ["reps", "rest_secs", "sets", "weight_kg"];
+
+          // Loop through each specific field and clean it
+          fieldsToClean.forEach((field) => {
+            if (cleanedEx[field] === null || cleanedEx[field] === undefined) {
+              // Set to 0 for numbers or leave it out entirely
+              cleanedEx[field] = 0; // Use 0 as a default for these numeric fields
+            }
+          });
+
+          return cleanedEx;
         }),
       })),
     };
@@ -557,47 +570,49 @@ const handleCopyDay = (dayIdx) => {
 
     const cleanedData = cleanDataForSubmission(data);
 
-    try {
-      setLoading(true);
-      let response;
+    console.log("cleanedData", cleanedData);
 
-      if (editingId) {
-        // Update existing workout plan with delete actions
-        const updatePayload = {
-          ...cleanedData,
-          delete_actions: deleteActions,
-        };
+    // try {
+    //   setLoading(true);
+    //   let response;
 
-        response = await authAxios().put(
-          `/member/workoutplan/${editingId}`,
-          updatePayload
-        );
-        toast.success("Workout plan updated successfully!");
-      } else {
-        // Create new workout plan
-        response = await authAxios().post(
-          `/member/workoutplan/create`,
-          cleanedData
-        );
-        toast.success("Workout plan created successfully!");
-      }
+    //   if (editingId) {
+    //     // Update existing workout plan with delete actions
+    //     const updatePayload = {
+    //       ...cleanedData,
+    //       delete_actions: deleteActions,
+    //     };
 
-      // Reset delete actions after successful save
-      setDeleteActions({
-        delete_days: [],
-        delete_exercises: [],
-      });
+    //     response = await authAxios().put(
+    //       `/member/workoutplan/${editingId}`,
+    //       updatePayload
+    //     );
+    //     toast.success("Workout plan updated successfully!");
+    //   } else {
+    //     // Create new workout plan
+    //     response = await authAxios().post(
+    //       `/member/workoutplan/create`,
+    //       cleanedData
+    //     );
+    //     toast.success("Workout plan created successfully!");
+    //   }
 
-      handleCancelWorkout();
-      handleWorkoutUpdate();
-    } catch (error) {
-      console.error("Error saving workout plan:", error);
-      toast.error(
-        error.response?.data?.message || "Failed to save workout plan"
-      );
-    } finally {
-      setLoading(false);
-    }
+    //   // Reset delete actions after successful save
+    //   setDeleteActions({
+    //     delete_days: [],
+    //     delete_exercises: [],
+    //   });
+
+    //   handleCancelWorkout();
+    //   handleWorkoutUpdate();
+    // } catch (error) {
+    //   console.error("Error saving workout plan:", error);
+    //   toast.error(
+    //     error.response?.data?.message || "Failed to save workout plan"
+    //   );
+    // } finally {
+    //   setLoading(false);
+    // }
   };
 
   const renderGroupedExercises = (groupId, groupType, groupExercises) => {
@@ -912,7 +927,7 @@ const handleCopyDay = (dayIdx) => {
             <div className="block">
               <div className="w-full">
                 <input
-                type="text"
+                  type="text"
                   placeholder="Notes"
                   value={exercise.notes || ""}
                   onChange={(e) =>
@@ -1005,8 +1020,7 @@ const handleCopyDay = (dayIdx) => {
       templateData = workoutTemplateWithExercises;
     if (selectedTemplate.value === "template2")
       templateData = workoutTemplatePushDay;
-    if (selectedTemplate.value === "template3")
-      templateData = TrainingList;
+    if (selectedTemplate.value === "template3") templateData = TrainingList;
     if (selectedTemplate.value === "template4")
       templateData = workoutTemplateHIIT;
 

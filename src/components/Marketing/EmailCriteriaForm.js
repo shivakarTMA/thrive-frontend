@@ -200,7 +200,7 @@ const EmailCriteriaForm = ({activeTab}) => {
             type="submit"
             className="px-4 py-2 bg-black text-white rounded flex items-center gap-2 mt-4"
           >
-            Send Mail
+            Send Email
           </button>
         </div>
       </form>

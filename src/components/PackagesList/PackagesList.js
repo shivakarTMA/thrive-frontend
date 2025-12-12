@@ -13,6 +13,8 @@ import Pagination from "../common/Pagination";
 import { IoSearchOutline } from "react-icons/io5";
 import Select from "react-select";
 import { customStyles, formatText } from "../../Helper/helper";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchOptionList } from "../../Redux/Reducers/optionListSlice";
 
 const PackagesList = () => {
   const [showModal, setShowModal] = useState(false);
@@ -21,11 +23,24 @@ const PackagesList = () => {
   const [service, setService] = useState([]);
   const [serviceFilter, setServiceFilter] = useState(null);
 
+  const [sessionLevelValue, setSessionLevelValue] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [page, setPage] = useState(1);
   const [rowsPerPage] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
+
+  const dispatch = useDispatch();
+  const { lists } = useSelector((state) => state.optionList);
+
+  // Fetch option lists
+  useEffect(() => {
+    dispatch(fetchOptionList("SESSION_LEVEL"));
+  }, [dispatch]);
+
+  const sessionLevel = lists["SESSION_LEVEL"] || [];
+
+
 
   const fetchService = async (search = "") => {
     try {
@@ -261,6 +276,9 @@ const PackagesList = () => {
       return Yup.object(schema);
     });
 
+  console.log(sessionLevel[0].value,'sessionLevel')
+  console.log(sessionLevelValue, "sessionLevelValue");
+
   const initialValues = {
     name: "",
     service_id: "",
@@ -385,6 +403,22 @@ const PackagesList = () => {
       }
     },
   });
+
+useEffect(() => {
+  if (sessionLevelValue === "GROUP_CLASS") {
+    if (!formik.values.session_level && sessionLevel.length > 0) {
+      formik.setFieldValue("session_level", sessionLevel[0].value);
+    }
+  } else {
+    // Only clear if the current value is the previously auto-set value
+    if (formik.values.session_level === sessionLevel[0]?.value) {
+      formik.setFieldValue("session_level", "");
+    }
+  }
+}, [sessionLevelValue, sessionLevel]);
+
+
+  console.log(formik.values?.session_level,'didijidj')
 
   const createPackageVariation = async (packageId, variation) => {
     const fd = new FormData();
@@ -652,8 +686,12 @@ const PackagesList = () => {
                       </div>
                     </td>
                     <td className="px-2 py-4">{item?.name}</td>
-                    <td className="px-2 py-4">{formatText(item?.booking_type)}</td>
-                    <td className="px-2 py-4">{formatText(item?.service_name)}</td>
+                    <td className="px-2 py-4">
+                      {formatText(item?.booking_type)}
+                    </td>
+                    <td className="px-2 py-4">
+                      {formatText(item?.service_name)}
+                    </td>
                     <td className="px-2 py-4 text-center">{item.position}</td>
                     <td className="px-2 py-4">
                       <div
@@ -714,6 +752,9 @@ const PackagesList = () => {
           editingOption={editingOption}
           serviceOptions={serviceOptions}
           formik={formik}
+          setSessionLevelValue={setSessionLevelValue}
+          sessionLevel={sessionLevel}
+          sessionLevelValue={sessionLevelValue}
         />
       )}
     </div>

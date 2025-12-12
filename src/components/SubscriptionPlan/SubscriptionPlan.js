@@ -147,8 +147,8 @@ const SubscriptionPlan = () => {
     <div className="page--content">
       <div className="flex items-end justify-between gap-2 mb-5">
         <div className="title--breadcrumbs">
-          <p className="text-sm">{`Home > Subscription Plan`}</p>
-          <h1 className="text-3xl font-semibold">Subscription Plan</h1>
+          <p className="text-sm">{`Home > Membership Plans`}</p>
+          <h1 className="text-3xl font-semibold">Membership Plans</h1>
         </div>
 
         <div className="flex items-end gap-2">

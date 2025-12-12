@@ -13,7 +13,7 @@ import Tooltip from "../common/Tooltip";
 import Pagination from "../common/Pagination";
 import CreateGallery from "./CreateGallery";
 import { authAxios } from "../../config/config";
-import { customStyles, filterActiveItems } from "../../Helper/helper";
+import { customStyles, filterActiveItems, formatText } from "../../Helper/helper";
 import { RiDeleteBin6Line } from "react-icons/ri";
 
 // Define display position options
@@ -231,6 +231,7 @@ const GalleryList = () => {
                 <th className="px-2 py-4">Image</th>
                 <th className="px-2 py-4">Title</th>
                 <th className="px-2 py-4">Club Name</th>
+                <th className="px-2 py-4">Display Position</th>
                 <th className="px-2 py-4">Position</th>
                 <th className="px-2 py-4">Action</th>
               </tr>
@@ -262,6 +263,7 @@ const GalleryList = () => {
                     </td>
                     <td className="px-2 py-4">{item?.title}</td>
                     <td className="px-2 py-4">{item?.club_name}</td>
+                    <td className="px-2 py-4">{formatText(item?.display_position)}</td>
                     <td className="px-2 py-4">{item?.position}</td>
                     <td className="px-2 py-4">
                       <div className="flex items-center">

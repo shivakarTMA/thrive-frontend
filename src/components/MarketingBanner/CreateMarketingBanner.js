@@ -124,6 +124,7 @@ const CreateMarketingBanner = ({
             banner_heading: data.banner_heading || "",
             banner_subheading: data.banner_subheading || "",
             button_text: data.button_text || "",
+            external_url: data.external_url || "",
             description_heading: data.description_heading || "",
             description_subheading: data.description_subheading || "",
             caption: data.caption || "",
@@ -445,6 +446,18 @@ const CreateMarketingBanner = ({
                     </div>
                   )}
 
+                  {/* Description Subheading */}
+                  <div className="lg:col-span-4">
+                    <label className="mb-2 block">External URL</label>
+                    <input
+                      type="text"
+                      name="external_url"
+                      value={formik.values.external_url}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      className="custom--input w-full"
+                    />
+                  </div>
                   {/* Description Subheading */}
                   <div className="lg:col-span-4">
                     <label className="mb-2 block">Description Subheading<span className="text-red-500">*</span></label>
