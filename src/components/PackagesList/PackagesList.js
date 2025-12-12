@@ -406,6 +406,7 @@ const PackagesList = () => {
 
 useEffect(() => {
   if (sessionLevelValue === "GROUP_CLASS") {
+      formik.setFieldValue("caption", "");
     if (!formik.values.session_level && sessionLevel.length > 0) {
       formik.setFieldValue("session_level", sessionLevel[0].value);
     }

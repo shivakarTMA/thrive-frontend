@@ -179,7 +179,10 @@ const CreatePackage = ({
             buddy_pt: data?.buddy_pt || "",
             studio_id: data?.studio_id || null,
             package_category_id: data?.package_category_id || "",
-            caption: data?.caption || "",
+            caption:
+              sessionLevelValue === "GROUP_CLASS"
+                ? ""
+                : data?.caption || "",
             description: data?.description || "",
             image: data?.image || null,
             session_level:
@@ -556,31 +559,34 @@ const CreatePackage = ({
                     </div>
 
                     {/* Caption */}
-                    <div>
-                      <label className="mb-2 block">
-                        Caption
-                        {formik.values.service_id === 1 ? (
-                          ""
-                        ) : (
-                          <span className="text-red-500">*</span>
-                        )}
-                      </label>
-                      <div className="relative">
-                        <input
-                          type="text"
-                          name="caption"
-                          value={formik.values.caption}
-                          onChange={formik.handleChange}
-                          onBlur={formik.handleBlur}
-                          className="custom--input w-full"
-                        />
-                      </div>
-                      {formik.touched.caption && formik.errors.caption && (
-                        <div className="text-red-500 text-sm">
-                          {formik.errors.caption}
+                    {service_type_check &&
+                      service_type_check !== "GROUP_CLASS" && (
+                        <div>
+                          <label className="mb-2 block">
+                            Caption
+                            {formik.values.service_id === 1 ? (
+                              ""
+                            ) : (
+                              <span className="text-red-500">*</span>
+                            )}
+                          </label>
+                          <div className="relative">
+                            <input
+                              type="text"
+                              name="caption"
+                              value={formik.values.caption}
+                              onChange={formik.handleChange}
+                              onBlur={formik.handleBlur}
+                              className="custom--input w-full"
+                            />
+                          </div>
+                          {formik.touched.caption && formik.errors.caption && (
+                            <div className="text-red-500 text-sm">
+                              {formik.errors.caption}
+                            </div>
+                          )}
                         </div>
                       )}
-                    </div>
 
                     {/* Tags */}
                     <div>
