@@ -15,16 +15,10 @@ import "react-datepicker/dist/react-datepicker.css";
 import MailIcon from "../assets/images/icons/mail.png";
 import SmsIcon from "../assets/images/icons/sms.png";
 import AssignIcon from "../assets/images/icons/assign.png";
-import {
-  addYears,
-  subYears,
-  startOfToday,
-  subDays,
-  startOfMonth,
-} from "date-fns";
+import { addYears, subYears } from "date-fns";
 import { useLocation } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
-import { RiCalendarScheduleLine, RiResetLeftFill } from "react-icons/ri";
+import { RiCalendarScheduleLine } from "react-icons/ri";
 import { TbArrowsExchange } from "react-icons/tb";
 import Tooltip from "../components/common/Tooltip";
 import ConvertMemberForm from "./ConvertMemberForm";
@@ -38,9 +32,8 @@ import CreateAppointment from "../components/Appointment/CreateAppointment";
 import { FaCalendarDays } from "react-icons/fa6";
 import LeadFilterPanel from "../components/FilterPanel/LeadFilterPanel";
 import { useSelector } from "react-redux";
-const useQuery = () => {
-  return new URLSearchParams(useLocation().search);
-};
+import Sidebar from "../components/common/Sidebar";
+import Topbar from "../components/common/Topbar";
 
 const dateFilterOptions = [
   { value: "today", label: "Today" },
@@ -55,9 +48,9 @@ const AllLeads = () => {
   const location = useLocation();
   const { user } = useSelector((state) => state.auth);
 
-  const userRole = user.role;
+  const [toggleMenuBar, setToggleMenuBar] = useState(false);
 
-  const [searchTerm, setSearchTerm] = useState("");
+  const userRole = user.role;
   const [leadModal, setLeadModal] = useState(false);
   const [selectedLead, setSelectedLead] = useState(null);
   const [memberModal, setMemberModal] = useState(false);
@@ -140,11 +133,7 @@ const AllLeads = () => {
     }
   }, []);
 
-  const fetchLeadList = async (
-    search = searchTerm,
-    currentPage = page,
-    overrideSelected = {}
-  ) => {
+  const fetchLeadList = async (currentPage = page, overrideSelected = {}) => {
     try {
       const params = {
         page: currentPage,
@@ -211,7 +200,7 @@ const AllLeads = () => {
         }
 
         // ✅ Build query params (only if value exists)
-        if (search) params.search = search;
+
         if (selLeadSource?.value) params.lead_source = selLeadSource.value;
         if (selLeadStatus?.value) params.lead_status = selLeadStatus.value;
         if (selLastCallType?.value)
@@ -310,15 +299,6 @@ const AllLeads = () => {
       // You may need to update the URL with a custom date range
     }
   };
-
-  useEffect(() => {
-    const delayDebounce = setTimeout(() => {
-      fetchLeadList(searchTerm, 1);
-      setPage(1);
-    }, 300);
-
-    return () => clearTimeout(delayDebounce);
-  }, [searchTerm]);
 
   useEffect(() => {
     // When 'id' changes, fetch data based on the new 'id'
@@ -428,72 +408,92 @@ const AllLeads = () => {
 
   return (
     <>
-      <div className="page--content">
-        <div className="flex items-end justify-between gap-2 mb-2">
-          <div className="title--breadcrumbs">
-            <p className="text-sm">{`Home > My Leads > All Leads`}</p>
-            <h1 className="text-3xl font-semibold" onClick={handleLeadUpdate}>
-              All Leads
-            </h1>
-          </div>
-        </div>
-
-        {/* Filters */}
-        <div className="flex gap-3 mb-4 items-center justify-between">
-          <div className="flex gap-2 w-full">
-            <div className="max-w-[180px] w-full">
-              <Select
-                placeholder="Select Date"
-                options={dateFilterOptions}
-                value={dateFilter}
-                onChange={handleDateFilterChange}
-                // isClearable
-                styles={customStyles}
-                className="w-full"
-              />
-            </div>
-
-            {dateFilter?.value === "custom" && (
-              <>
-                <div className="custom--date dob-format flex-1 max-w-[180px] w-full">
-                  <span className="absolute z-[1] mt-[11px] ml-[15px]">
-                    <FaCalendarDays />
-                  </span>
-                  <DatePicker
-                    selected={customFrom}
-                    onChange={(date) => setCustomFrom(date)}
-                    placeholderText="From Date"
-                    className="custom--input w-full input--icon"
-                    minDate={subYears(new Date(), 20)}
-                    maxDate={addYears(new Date(), 0)}
-                    dateFormat="dd-MM-yyyy"
-                    showMonthDropdown
-                    showYearDropdown
-                    dropdownMode="select"
-                  />
+      <div className="flex  h-full w-full">
+        <Sidebar
+          toggleMenuBar={toggleMenuBar}
+          setToggleMenuBar={setToggleMenuBar}
+        />
+        <div
+          className={`${
+            toggleMenuBar ? "w-[calc(100%-100px)]" : "w-[calc(100%-250px)]"
+          } ml-[auto] side--content--area transition duration-150]`}
+        >
+          <Topbar
+            setToggleMenuBar={setToggleMenuBar}
+            toggleMenuBar={toggleMenuBar}
+            setLeadModal={setLeadModal}
+            setSelectedLead={setSelectedLead}
+          />
+          <div className="content--area p-5">
+            <div className="page--content">
+              <div className="flex items-end justify-between gap-2 mb-2">
+                <div className="title--breadcrumbs">
+                  <p className="text-sm">{`Home > My Leads > All Leads`}</p>
+                  <h1
+                    className="text-3xl font-semibold"
+                    onClick={handleLeadUpdate}
+                  >
+                    All Leads
+                  </h1>
                 </div>
-                <div className="custom--date dob-format flex-1 max-w-[180px] w-full">
-                  <span className="absolute z-[1] mt-[11px] ml-[15px]">
-                    <FaCalendarDays />
-                  </span>
-                  <DatePicker
-                    selected={customTo}
-                    onChange={(date) => setCustomTo(date)}
-                    placeholderText="To Date"
-                    className="custom--input w-full input--icon"
-                    minDate={subYears(new Date(), 20)}
-                    maxDate={addYears(new Date(), 0)}
-                    showMonthDropdown
-                    showYearDropdown
-                    dropdownMode="select"
-                    dateFormat="dd-MM-yyyy"
-                  />
+              </div>
+
+              {/* Filters */}
+              <div className="flex gap-3 mb-4 items-center justify-between">
+                <div className="flex gap-2 w-full">
+                  <div className="max-w-[180px] w-full">
+                    <Select
+                      placeholder="Select Date"
+                      options={dateFilterOptions}
+                      value={dateFilter}
+                      onChange={handleDateFilterChange}
+                      // isClearable
+                      styles={customStyles}
+                      className="w-full"
+                    />
+                  </div>
+
+                  {dateFilter?.value === "custom" && (
+                    <>
+                      <div className="custom--date dob-format flex-1 max-w-[180px] w-full">
+                        <span className="absolute z-[1] mt-[11px] ml-[15px]">
+                          <FaCalendarDays />
+                        </span>
+                        <DatePicker
+                          selected={customFrom}
+                          onChange={(date) => setCustomFrom(date)}
+                          placeholderText="From Date"
+                          className="custom--input w-full input--icon"
+                          minDate={subYears(new Date(), 20)}
+                          maxDate={addYears(new Date(), 0)}
+                          dateFormat="dd-MM-yyyy"
+                          showMonthDropdown
+                          showYearDropdown
+                          dropdownMode="select"
+                        />
+                      </div>
+                      <div className="custom--date dob-format flex-1 max-w-[180px] w-full">
+                        <span className="absolute z-[1] mt-[11px] ml-[15px]">
+                          <FaCalendarDays />
+                        </span>
+                        <DatePicker
+                          selected={customTo}
+                          onChange={(date) => setCustomTo(date)}
+                          placeholderText="To Date"
+                          className="custom--input w-full input--icon"
+                          minDate={subYears(new Date(), 20)}
+                          maxDate={addYears(new Date(), 0)}
+                          showMonthDropdown
+                          showYearDropdown
+                          dropdownMode="select"
+                          dateFormat="dd-MM-yyyy"
+                        />
+                      </div>
+                    </>
+                  )}
                 </div>
-              </>
-            )}
-          </div>
-        </div>
-        {/* <div className="grid grid-cols-2 gap-5 mb-5 p-3 border bg-white shodow--box rounded-[10px]">
+              </div>
+              {/* <div className="grid grid-cols-2 gap-5 mb-5 p-3 border bg-white shodow--box rounded-[10px]">
           <div className="border rounded-[5px] overflow-hidden w-full">
             <div className="flex gap-1 justify-between bg-[#F1F1F1] p-4 py-3">
               <div className="text-xl font-bold">Total Enquiries</div>
@@ -552,167 +552,169 @@ const AllLeads = () => {
           </div>
         </div> */}
 
-        <div className="w-full p-3 border bg-white shodow--box rounded-[10px]">
-          <div className="flex items-start gap-3 justify-between w-full mb-3 border-b border-b-[#D4D4D4] pb-3">
-            <div>
-              <LeadFilterPanel
-                selectedLeadSource={selectedLeadSource}
-                setSelectedLeadSource={setSelectedLeadSource}
-                selectedLastCallType={selectedLastCallType}
-                selectedLeadStatus={selectedLeadStatus}
-                setSelectedLeadStatus={setSelectedLeadStatus}
-                selectedCallTag={selectedCallTag}
-                setSelectedCallTag={setSelectedCallTag}
-                setSelectedLastCallType={setSelectedLastCallType}
-                selectedGender={selectedGender}
-                setSelectedGender={setSelectedGender}
-                selectedServiceName={selectedServiceName}
-                setSelectedServiceName={setSelectedServiceName}
-                onApplyFilters={handleApplyFiltersFromChild} // child "Apply" -> parent fetch
-                onRemoveFilter={handleRemoveFilter}
-              />
-            </div>
-            <div>
-              <div className="flex gap-2 items-center">
-                {(userRole === "CLUB_MANAGER" ||
-                  userRole === "GENERAL_MANAGER" ||
-                  userRole === "ADMIN") && (
-                  <>
-                    {showOwnerDropdown && selectedUserId.length > 0 && (
-                      <div>
-                        <Select
-                          options={staffOptions}
-                          onChange={handleBulkAssign}
-                          placeholder="Select an owner"
-                          styles={dasboardStyles}
-                          className="min-w-[150px] w-full"
+              <div className="w-full p-3 border bg-white shodow--box rounded-[10px]">
+                <div className="flex items-start gap-3 justify-between w-full mb-3 border-b border-b-[#D4D4D4] pb-3">
+                  <div>
+                    <LeadFilterPanel
+                      selectedLeadSource={selectedLeadSource}
+                      setSelectedLeadSource={setSelectedLeadSource}
+                      selectedLastCallType={selectedLastCallType}
+                      selectedLeadStatus={selectedLeadStatus}
+                      setSelectedLeadStatus={setSelectedLeadStatus}
+                      selectedCallTag={selectedCallTag}
+                      setSelectedCallTag={setSelectedCallTag}
+                      setSelectedLastCallType={setSelectedLastCallType}
+                      selectedGender={selectedGender}
+                      setSelectedGender={setSelectedGender}
+                      selectedServiceName={selectedServiceName}
+                      setSelectedServiceName={setSelectedServiceName}
+                      onApplyFilters={handleApplyFiltersFromChild} // child "Apply" -> parent fetch
+                      onRemoveFilter={handleRemoveFilter}
+                    />
+                  </div>
+                  <div>
+                    <div className="flex gap-2 items-center">
+                      {(userRole === "CLUB_MANAGER" ||
+                        userRole === "GENERAL_MANAGER" ||
+                        userRole === "ADMIN") && (
+                        <>
+                          {showOwnerDropdown && selectedUserId.length > 0 && (
+                            <div>
+                              <Select
+                                options={staffOptions}
+                                onChange={handleBulkAssign}
+                                placeholder="Select an owner"
+                                styles={dasboardStyles}
+                                className="min-w-[150px] w-full"
+                              />
+                            </div>
+                          )}
+                          <Tooltip
+                            id={`tooltip-assin-lead`}
+                            content="Change Lead Owner"
+                            place="top"
+                          >
+                            <img
+                              src={AssignIcon}
+                              className="w-8 cursor-pointer"
+                              onClick={handleSubmitAssign}
+                              alt="assign"
+                            />
+                          </Tooltip>
+                        </>
+                      )}
+                      <Tooltip
+                        id={`tooltip-send-sms`}
+                        content="Bulk Send SMS"
+                        place="top"
+                      >
+                        <img
+                          src={SmsIcon}
+                          className="w-8 cursor-pointer"
+                          onClick={() => handleCommunicate("sms")}
                         />
-                      </div>
-                    )}
-                    <Tooltip
-                      id={`tooltip-assin-lead`}
-                      content="Change Lead Owner"
-                      place="top"
-                    >
-                      <img
-                        src={AssignIcon}
-                        className="w-8 cursor-pointer"
-                        onClick={handleSubmitAssign}
-                        alt="assign"
-                      />
-                    </Tooltip>
-                  </>
-                )}
-                <Tooltip
-                  id={`tooltip-send-sms`}
-                  content="Bulk Send SMS"
-                  place="top"
-                >
-                  <img
-                    src={SmsIcon}
-                    className="w-8 cursor-pointer"
-                    onClick={() => handleCommunicate("sms")}
-                  />
-                </Tooltip>
-                <Tooltip
-                  id={`tooltip-send-mail`}
-                  content="Bulk Send Mail"
-                  place="top"
-                >
-                  <img
-                    src={MailIcon}
-                    className="w-8 cursor-pointer"
-                    onClick={() => handleCommunicate("email")}
-                  />
-                </Tooltip>
+                      </Tooltip>
+                      <Tooltip
+                        id={`tooltip-send-mail`}
+                        content="Bulk Send Mail"
+                        place="top"
+                      >
+                        <img
+                          src={MailIcon}
+                          className="w-8 cursor-pointer"
+                          onClick={() => handleCommunicate("email")}
+                        />
+                      </Tooltip>
 
-                {/* Show confirm button after selecting an owner */}
-                {bulkOwner && (
-                  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-white p-6 rounded-xl shadow-lg w-96 text-center">
-                      <h2 className="text-lg font-semibold mb-4">
-                        Confirm Assignment
-                      </h2>
-                      <p className="mb-4">
-                        Are you sure you want to assign{" "}
-                        <strong>{selectedUserId.length}</strong> lead(s) to{" "}
-                        <strong>{bulkOwner?.label}</strong>?
-                      </p>
-                      <div className="flex justify-center gap-4">
-                        <button
-                          onClick={() => setBulkOwner(null)}
-                          className="px-4 py-2 bg-white text-black border-black border rounded-[5px] flex items-center gap-2"
-                        >
-                          Cancel
-                        </button>
-                        <button
-                          onClick={confirmAssign}
-                          className="px-4 py-2 bg-black text-white rounded-[5px] border-black border flex items-center gap-2"
-                        >
-                          Confirm
-                        </button>
-                      </div>
+                      {/* Show confirm button after selecting an owner */}
+                      {bulkOwner && (
+                        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                          <div className="bg-white p-6 rounded-xl shadow-lg w-96 text-center">
+                            <h2 className="text-lg font-semibold mb-4">
+                              Confirm Assignment
+                            </h2>
+                            <p className="mb-4">
+                              Are you sure you want to assign{" "}
+                              <strong>{selectedUserId.length}</strong> lead(s)
+                              to <strong>{bulkOwner?.label}</strong>?
+                            </p>
+                            <div className="flex justify-center gap-4">
+                              <button
+                                onClick={() => setBulkOwner(null)}
+                                className="px-4 py-2 bg-white text-black border-black border rounded-[5px] flex items-center gap-2"
+                              >
+                                Cancel
+                              </button>
+                              <button
+                                onClick={confirmAssign}
+                                className="px-4 py-2 bg-black text-white rounded-[5px] border-black border flex items-center gap-2"
+                              >
+                                Confirm
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
-                )}
-              </div>
-            </div>
-          </div>
+                </div>
 
-          <div className="table--data--bottom w-full">
-            <div className="relative overflow-x-auto">
-              <table className="w-full text-sm text-left text-gray-500">
-                <thead className="text-xs text-gray-700 uppercase bg-gray-50">
-                  <tr>
-                    <th className="px-2 py-4">#</th>
-                    {/* <th className="px-2 py-4">S.No</th> */}
-                    <th className="px-2 py-4">Name</th>
-                    <th className="px-2 py-4">Interested In</th>
-                    <th className="px-2 py-4">Lead Type</th>
-                    <th className="px-2 py-4">Lead Source</th>
-                    <th className="px-2 py-4">Lead Status</th>
-                    <th className="px-2 py-4">Last Call Status</th>
-                    <th className="px-2 py-4">Lead Owner</th>
-                    <th className="px-2 py-4">Created on</th>
-                    <th className="px-2 py-4">Last Updated On</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {allLeads.map((row, id) => (
-                    <tr
-                      key={row.id}
-                      className="group bg-white border-b hover:bg-gray-50 relative transition duration-700"
-                    >
-                      <td className="px-2 py-4">
-                        <div className="flex items-center custom--checkbox--2">
-                          <input
-                            type="checkbox"
-                            className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
-                            checked={selectedUserId.includes(row.id)}
-                            onChange={() => handleCheckboxChange(row.id)}
-                          />
-                          <span className="checkmark--custom"></span>
-                        </div>
-                      </td>
-                      {/* <td className="px-2 py-4">{row?.id}</td> */}
+                <div className="table--data--bottom w-full">
+                  <div className="relative overflow-x-auto">
+                    <table className="w-full text-sm text-left text-gray-500">
+                      <thead className="text-xs text-gray-700 uppercase bg-gray-50">
+                        <tr>
+                          <th className="px-2 py-4">#</th>
+                          {/* <th className="px-2 py-4">S.No</th> */}
+                          <th className="px-2 py-4">Name</th>
+                          <th className="px-2 py-4">Interested In</th>
+                          <th className="px-2 py-4">Lead Type</th>
+                          <th className="px-2 py-4">Lead Source</th>
+                          <th className="px-2 py-4">Lead Status</th>
+                          <th className="px-2 py-4">Last Call Status</th>
+                          <th className="px-2 py-4">Lead Owner</th>
+                          <th className="px-2 py-4">Created on</th>
+                          <th className="px-2 py-4">Last Updated On</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {allLeads.map((row, id) => (
+                          <tr
+                            key={row.id}
+                            className="group bg-white border-b hover:bg-gray-50 relative transition duration-700"
+                          >
+                            <td className="px-2 py-4">
+                              <div className="flex items-center custom--checkbox--2">
+                                <input
+                                  type="checkbox"
+                                  className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                                  checked={selectedUserId.includes(row.id)}
+                                  onChange={() => handleCheckboxChange(row.id)}
+                                />
+                                <span className="checkmark--custom"></span>
+                              </div>
+                            </td>
+                            {/* <td className="px-2 py-4">{row?.id}</td> */}
 
-                      <td className="px-2 py-4">{row?.full_name}</td>
-                      <td className="px-2 py-4">
-                        <div className="max-w-[200px]">
-                          {row?.interested_in?.length
-                            ? row.interested_in.join(", ")
-                            : "--"}
-                        </div>
-                      </td>
-                      <td className="px-2 py-4">
-                        {row?.interested_in ? row?.lead_type : "--"}
-                      </td>
-                      <td className="px-2 py-4">
-                        {row?.lead_source == null ? "--" : row?.lead_source}
-                      </td>
-                      <td className="px-2 py-4">
-                        <span
-                          className={`
+                            <td className="px-2 py-4">{row?.full_name}</td>
+                            <td className="px-2 py-4">
+                              <div className="max-w-[200px]">
+                                {row?.interested_in?.length
+                                  ? row.interested_in.join(", ")
+                                  : "--"}
+                              </div>
+                            </td>
+                            <td className="px-2 py-4">
+                              {row?.interested_in ? row?.lead_type : "--"}
+                            </td>
+                            <td className="px-2 py-4">
+                              {row?.lead_source == null
+                                ? "--"
+                                : row?.lead_source}
+                            </td>
+                            <td className="px-2 py-4">
+                              <span
+                                className={`
                             flex items-center justify-between gap-1 rounded-full bg-[#EEEEEE] min-h-[30px] px-3 text-sm w-fit
                           ${
                             row?.lead_status == "Opportunity"
@@ -721,146 +723,151 @@ const AllLeads = () => {
                           }
                           ${row?.lead_status == "New" ? "bg-[#E4FCFF]" : ""}
                           `}
-                        >
-                          <FaCircle className="text-[10px]" />
-                          {row?.lead_status == null ? "--" : row?.lead_status}
-                        </span>
-                      </td>
-                      <td className="px-2 py-4">
-                        {row?.last_call_status == null
-                          ? "--"
-                          : row?.last_call_status}
-                      </td>
-                      <td className="px-2 py-4">
-                        {row?.lead_owner == null ? "--" : row?.lead_owner}
-                      </td>
-                      <td className="px-2 py-4">
-                        {formatAutoDate(row?.createdAt)}
-                      </td>
-                      <td className="px-2 py-4">
-                        {formatAutoDate(row?.updatedAt)}
-                      </td>
+                              >
+                                <FaCircle className="text-[10px]" />
+                                {row?.lead_status == null
+                                  ? "--"
+                                  : row?.lead_status}
+                              </span>
+                            </td>
+                            <td className="px-2 py-4">
+                              {row?.last_call_status == null
+                                ? "--"
+                                : row?.last_call_status}
+                            </td>
+                            <td className="px-2 py-4">
+                              {row?.lead_owner == null ? "--" : row?.lead_owner}
+                            </td>
+                            <td className="px-2 py-4">
+                              {formatAutoDate(row?.createdAt)}
+                            </td>
+                            <td className="px-2 py-4">
+                              {formatAutoDate(row?.updatedAt)}
+                            </td>
 
-                      <div className="absolute hidden group-hover:flex gap-2 right-0 h-full top-0 w-[50%] items-center justify-end bg-[linear-gradient(269deg,_#ffffff_30%,_transparent)] pr-5 transition duration-700">
-                        <Tooltip
-                          id={`tooltip-edit-${row.id}`}
-                          content="Edit Lead"
-                          place="top"
-                        >
-                          <div
-                            onClick={() => {
-                              setSelectedLead(row?.id);
-                              setLeadModal(true);
-                            }}
-                            className="p-1 cursor-pointer"
-                          >
-                            <LiaEdit className="text-[25px] text-black" />
-                          </div>
-                        </Tooltip>
-                        <Tooltip
-                          id={`tooltip-call-${row.id}`}
-                          content="Add Call log"
-                          place="top"
-                        >
-                          <div className="p-1 cursor-pointer">
-                            <Link
-                              to={`/lead-follow-up/${row.id}`}
-                              className="p-0"
-                            >
-                              <MdCall className="text-[25px] text-black" />
-                            </Link>
-                          </div>
-                        </Tooltip>
-                        <Tooltip
-                          id={`tooltip-convert-${row.id}`}
-                          content="Convert to member"
-                          place="top"
-                        >
-                          <div
-                            onClick={() => {
-                              setSelectedLeadMember(row?.id);
-                              setMemberModal(true);
-                            }}
-                            className="p-1 cursor-pointer"
-                          >
-                            <TbArrowsExchange className="text-[25px] text-black" />
-                          </div>
-                        </Tooltip>
-                        <Tooltip
-                          id={`tooltip-schedule-${row.id}`}
-                          content="Schedule Trial"
-                          place="top"
-                        >
-                          <div className="p-1 cursor-pointer">
-                            <Link
-                              to={`/lead-follow-up/${row.id}?action=schedule-tour-trial`}
-                              className="p-0"
-                            >
-                              <RiCalendarScheduleLine className="text-[25px] text-black" />
-                            </Link>
-                          </div>
-                        </Tooltip>
+                            <div className="absolute hidden group-hover:flex gap-2 right-0 h-full top-0 w-[50%] items-center justify-end bg-[linear-gradient(269deg,_#ffffff_30%,_transparent)] pr-5 transition duration-700">
+                              <Tooltip
+                                id={`tooltip-edit-${row.id}`}
+                                content="Edit Lead"
+                                place="top"
+                              >
+                                <div
+                                  onClick={() => {
+                                    setSelectedLead(row?.id);
+                                    setLeadModal(true);
+                                  }}
+                                  className="p-1 cursor-pointer"
+                                >
+                                  <LiaEdit className="text-[25px] text-black" />
+                                </div>
+                              </Tooltip>
+                              <Tooltip
+                                id={`tooltip-call-${row.id}`}
+                                content="Add Call log"
+                                place="top"
+                              >
+                                <div className="p-1 cursor-pointer">
+                                  <Link
+                                    to={`/lead-follow-up/${row.id}`}
+                                    className="p-0"
+                                  >
+                                    <MdCall className="text-[25px] text-black" />
+                                  </Link>
+                                </div>
+                              </Tooltip>
+                              <Tooltip
+                                id={`tooltip-convert-${row.id}`}
+                                content="Convert to member"
+                                place="top"
+                              >
+                                <div
+                                  onClick={() => {
+                                    setSelectedLeadMember(row?.id);
+                                    setMemberModal(true);
+                                  }}
+                                  className="p-1 cursor-pointer"
+                                >
+                                  <TbArrowsExchange className="text-[25px] text-black" />
+                                </div>
+                              </Tooltip>
+                              <Tooltip
+                                id={`tooltip-schedule-${row.id}`}
+                                content="Schedule Trial"
+                                place="top"
+                              >
+                                <div className="p-1 cursor-pointer">
+                                  <Link
+                                    to={`/lead-follow-up/${row.id}?action=schedule-tour-trial`}
+                                    className="p-0"
+                                  >
+                                    <RiCalendarScheduleLine className="text-[25px] text-black" />
+                                  </Link>
+                                </div>
+                              </Tooltip>
 
-                        <Tooltip
-                          id={`tooltip-appointment-${row.id}`}
-                          content="Add Appointment"
-                          place="top"
-                        >
-                          <div
-                            onClick={() => {
-                              setSelectedLead(row?.id);
-                              setAppointmentModal(true);
-                            }}
-                            className="p-1 cursor-pointer"
-                          >
-                            <LuCalendarPlus className="text-[25px] text-black" />
-                          </div>
-                        </Tooltip>
+                              <Tooltip
+                                id={`tooltip-appointment-${row.id}`}
+                                content="Add Appointment"
+                                place="top"
+                              >
+                                <div
+                                  onClick={() => {
+                                    setSelectedLead(row?.id);
+                                    setAppointmentModal(true);
+                                  }}
+                                  className="p-1 cursor-pointer"
+                                >
+                                  <LuCalendarPlus className="text-[25px] text-black" />
+                                </div>
+                              </Tooltip>
 
-                        <Tooltip
-                          id={`tooltip-send-${row.id}`}
-                          content="Send Payment Link"
-                          place="top"
-                        >
-                          <div
-                            onClick={() => {
-                              setLeadPaymentSend(row.id);
-                              setSendPaymentModal(true);
-                            }}
-                            className="p-1 cursor-pointer"
-                          >
-                            <IoIosAddCircleOutline className="text-[25px] text-black" />
-                          </div>
-                        </Tooltip>
-                      </div>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                              <Tooltip
+                                id={`tooltip-send-${row.id}`}
+                                content="Send Payment Link"
+                                place="top"
+                              >
+                                <div
+                                  onClick={() => {
+                                    setLeadPaymentSend(row.id);
+                                    setSendPaymentModal(true);
+                                  }}
+                                  className="p-1 cursor-pointer"
+                                >
+                                  <IoIosAddCircleOutline className="text-[25px] text-black" />
+                                </div>
+                              </Tooltip>
+                            </div>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  {/* Pagination */}
+                  <Pagination
+                    page={page}
+                    totalPages={totalPages}
+                    rowsPerPage={rowsPerPage}
+                    totalCount={totalCount}
+                    currentDataLength={allLeads.length}
+                    onPageChange={(newPage) => {
+                      setPage(newPage);
+
+                      // Prepare overrideSelected for removed filters
+                      const overrideSelected = {
+                        leadStatus: selectedLeadStatus || null,
+                        leadSource: selectedLeadSource || null,
+                        lastCallType: selectedLastCallType || null,
+                        callTag: selectedCallTag || null,
+                        serviceName: selectedServiceName || null,
+                        gender: selectedGender || null,
+                      };
+
+                      fetchLeadList(newPage, overrideSelected);
+                    }}
+                  />
+                </div>
+              </div>
             </div>
-            {/* Pagination */}
-            <Pagination
-              page={page}
-              totalPages={totalPages}
-              rowsPerPage={rowsPerPage}
-              totalCount={totalCount}
-              currentDataLength={allLeads.length}
-              onPageChange={(newPage) => {
-                setPage(newPage);
-
-                // Prepare overrideSelected for removed filters
-                const overrideSelected = {
-                  leadStatus: selectedLeadStatus || null,
-                  leadSource: selectedLeadSource || null,
-                  lastCallType: selectedLastCallType || null,
-                  callTag: selectedCallTag || null,
-                  serviceName: selectedServiceName || null,
-                  gender: selectedGender || null,
-                };
-
-                fetchLeadList(searchTerm, newPage, overrideSelected);
-              }}
-            />
           </div>
         </div>
       </div>
@@ -869,7 +876,7 @@ const AllLeads = () => {
         <CreateLeadForm
           setLeadModal={setLeadModal}
           selectedLead={selectedLead}
-          handleLeadUpdate={handleLeadUpdate}
+          handleLeadUpdate={fetchLeadList}
         />
       )}
 
@@ -898,6 +905,7 @@ const AllLeads = () => {
           setAppointmentModal={setAppointmentModal}
           memberID={selectedLead}
           defaultCategory="complementary"
+          memberType="LEAD"
         />
       )}
     </>

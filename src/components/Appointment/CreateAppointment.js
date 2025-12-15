@@ -22,8 +22,9 @@ const CreateAppointment = ({
   setAppointmentModal,
   defaultCategory,
   memberID,
+  memberType,
 }) => {
-  console.log(memberID, "details");
+  console.log(memberType, "memberType");
   const leadBoxRef = useRef(null);
   const [packageList, setPackageList] = useState([]);
   const [memberPurchasedServices, setMemberPurchasedServices] = useState([]);
@@ -60,8 +61,6 @@ const CreateAppointment = ({
     }
   };
 
-
-
   const fetchStaff = async (search = "") => {
     try {
       const res = await authAxios().get("/staff/list?role=TRAINER", {
@@ -96,7 +95,7 @@ const CreateAppointment = ({
     fetchService();
   }, []);
 
-    console.log(memberPurchasedServices,'memberPurchasedServices')
+  console.log(memberPurchasedServices, "memberPurchasedServices");
 
   console.log(packageList, "packageList");
 
@@ -106,17 +105,17 @@ const CreateAppointment = ({
       value: item.id,
     })) || [];
 
-  const appointmentTypes = (
-    serviceList?.map((item) => ({
+  const appointmentTypes = [
+    ...(serviceList?.map((item) => ({
       label: item.name,
       value: item.id,
-    })) || []
-  ).concat([
-    { label: "Assessment", value: "ASSESSMENT" },
-    { label: "Tour", value: "TOUR" },
-  ]);
+    })) || []),
+    ...(memberType === "LEAD"
+      ? [{ label: "Tour / Trial", value: "TOURTRIAL" }]
+      : []),
+  ];
 
-  console.log(appointmentTypes,'appointmentTypes')
+  console.log(appointmentTypes, "appointmentTypes");
 
   const appointmentCategories = [
     { value: "service", label: "Service Appointment" },
@@ -246,7 +245,7 @@ const CreateAppointment = ({
     }
   }, [defaultCategory]);
 
-  console.log(memberPurchasedServices,'memberPurchasedServices')
+  console.log(memberPurchasedServices, "memberPurchasedServices");
 
   return (
     <div
@@ -378,7 +377,7 @@ const CreateAppointment = ({
                   onChange={(selectedOption) =>
                     formik.setFieldValue(
                       "appointment_type",
-                      selectedOption?.value
+                      selectedOption?.value || ""
                     )
                   }
                   options={appointmentTypes}

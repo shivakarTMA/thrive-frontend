@@ -66,6 +66,7 @@ import EmailTemplateList from "../components/EmailTemplate/EmailTemplateList";
 import BulkEmailCriteriaForm from "../components/Marketing/BulkEmailCriteriaForm";
 import BulkSmsCriteriaForm from "../components/Marketing/BulkSmsCriteriaForm";
 import MarketingBanner from "../components/MarketingBanner/MarketingBanner";
+import RecoveryServicesList from "../components/RecoveryServices/RecoveryServicesList";
 
 export default function Routing() {
   const { accessToken } = useSelector((state) => state.auth);
@@ -302,17 +303,17 @@ export default function Routing() {
         <Route
           path="/all-leads"
           element={
-            <PrivateRoute>
+            // <PrivateRoute>
               <AllLeads />
-            </PrivateRoute>
+            // </PrivateRoute>
           }
         />
         <Route
           path="/all-leads/:id"
           element={
-            <PrivateRoute>
+            // <PrivateRoute>
               <AllLeads />
-            </PrivateRoute>
+            // </PrivateRoute>
           }
         />
         <Route
@@ -465,6 +466,14 @@ export default function Routing() {
           element={
             <PrivateRoute>
               <Services />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/recovery-services"
+          element={
+            <PrivateRoute>
+              <RecoveryServicesList />
             </PrivateRoute>
           }
         />

@@ -22,8 +22,14 @@ import notificationBell from "../../assets/images/bellnotification.svg";
 import CreateMemberForm from "../../Pages/CreateMemberForm";
 import { useDropzone } from "react-dropzone";
 import { authAxios } from "../../config/config";
+import { toast } from "react-toastify";
 
-const Topbar = ({ setToggleMenuBar, toggleMenuBar }) => {
+const Topbar = ({
+  setToggleMenuBar,
+  toggleMenuBar,
+  setLeadModal,
+  setSelectedLead,
+}) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [searchItem, setSearchItem] = useState("");
@@ -36,7 +42,6 @@ const Topbar = ({ setToggleMenuBar, toggleMenuBar }) => {
   const location = useLocation();
   const [hasSearched, setHasSearched] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState(null);
-  const [leadModal, setLeadModal] = useState(false);
   const [memberModal, setMemberModal] = useState(false);
   const [invoiceModal, setInvoiceModal] = useState(false);
   const [profileModal, setProfileModal] = useState(false);
@@ -286,7 +291,10 @@ const Topbar = ({ setToggleMenuBar, toggleMenuBar }) => {
                 onClose={() => setActiveDropdown(null)}
               >
                 <div
-                  onClick={() => setLeadModal(true)}
+                  onClick={() => {
+                    setLeadModal(true);
+                    setSelectedLead(null);
+                  }}
                   className="nav-link flex items-center gap-2 px-3 py-2 hover:bg-black hover:text-white transition border-b cursor-pointer"
                 >
                   <IoBarChartOutline className="menu--icon" />
@@ -367,7 +375,6 @@ const Topbar = ({ setToggleMenuBar, toggleMenuBar }) => {
         </div>
       </section>
 
-      {leadModal && <CreateLeadForm setLeadModal={setLeadModal} />}
       {memberModal && <CreateMemberForm setMemberModal={setMemberModal} />}
       {invoiceModal && <CreateInvoice setInvoiceModal={setInvoiceModal} />}
       {profileModal && (

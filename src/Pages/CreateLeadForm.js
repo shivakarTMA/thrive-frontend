@@ -9,8 +9,6 @@ import {
   isPossiblePhoneNumber,
 } from "libphonenumber-js";
 import {
-  FaMale,
-  FaFemale,
   FaUser,
   FaEnvelope,
   FaBuilding,
@@ -18,7 +16,7 @@ import {
 } from "react-icons/fa";
 import { trainerAvailability } from "../DummyData/DummyData";
 
-import { getCompanyNameById, selectIcon } from "../Helper/helper";
+import { selectIcon } from "../Helper/helper";
 import { IoBan, IoCloseCircle } from "react-icons/io5";
 import { useFormik } from "formik";
 import * as Yup from "yup";
@@ -87,6 +85,7 @@ const validationSchema = Yup.object({
 });
 
 const CreateLeadForm = ({ setLeadModal, selectedLead, handleLeadUpdate }) => {
+  console.log('selectedLead', selectedLead)
   const leadBoxRef = useRef(null);
   const now = new Date();
   const [showUnderageModal, setShowUnderageModal] = useState(false);
@@ -126,8 +125,6 @@ const CreateLeadForm = ({ setLeadModal, selectedLead, handleLeadUpdate }) => {
   const leadTypes = lists["LEAD_TYPE"] || [];
   const servicesName = lists["GOAL"] || [];
   const socialList = lists["SOCIAL_MEDIA"] || [];
-
-  console.log(servicesName, "servicesName");
 
   const filteredLeadSources =
     selectedLead === "APP"
@@ -170,7 +167,7 @@ const CreateLeadForm = ({ setLeadModal, selectedLead, handleLeadUpdate }) => {
     validationSchema,
     enableReinitialize: true, // 👈 ensures selectedLead values re-populate
     onSubmit: async (values) => {
-      console.log(values, "values");
+
       if (duplicateError || duplicateEmailError) {
         setShowDuplicateEmailModal(!!duplicateEmailError);
         return;
@@ -245,19 +242,15 @@ const CreateLeadForm = ({ setLeadModal, selectedLead, handleLeadUpdate }) => {
 
         // ✅ Update or Create Lead
         if (selectedLead) {
-          console.log(selectedLead, "selectedLead");
           await authAxios().put(`/lead/${selectedLead}`, payload);
           toast.success("Lead updated successfully!");
         } else {
-          console.log("create working");
           const res = await authAxios().post("/lead/create", payload);
           toast.success("Lead created successfully!");
         }
 
         setLeadModal(false);
-        if (typeof handleLeadUpdate === "function") {
-          handleLeadUpdate();
-        }
+        handleLeadUpdate();
       } catch (err) {
         console.error("❌ API Error:", err.response?.data || err.message);
         toast.error(err.response?.data?.message || err.message);
@@ -267,7 +260,6 @@ const CreateLeadForm = ({ setLeadModal, selectedLead, handleLeadUpdate }) => {
 
   // ✅ Fetch lead details when selectedId changes
   useEffect(() => {
-    console.log(selectedLead, "SHIVAKAR");
     if (!selectedLead) return;
 
     const fetchLeadById = async (id) => {
@@ -356,7 +348,6 @@ const CreateLeadForm = ({ setLeadModal, selectedLead, handleLeadUpdate }) => {
   const fetchStaff = async () => {
     try {
       const schedule = formik.values?.schedule;
-      console.log(schedule, "schedule");
 
       let url = "/staff/list?role=TRAINER";
 
@@ -368,8 +359,6 @@ const CreateLeadForm = ({ setLeadModal, selectedLead, handleLeadUpdate }) => {
 
       const res = await authAxios().get(url);
       const staff = res.data?.data || [];
-
-      console.log(staff, "updatedStaff");
 
       // --- GROUPING STAFF BY ROLE ---
       const foh = staff
@@ -404,8 +393,6 @@ const CreateLeadForm = ({ setLeadModal, selectedLead, handleLeadUpdate }) => {
       toast.error("Failed to fetch staff");
     }
   };
-
-  console.log(formik.values?.schedule, "TOUR");
 
   // Function to fetch club list
   const fetchClub = async () => {
@@ -555,8 +542,6 @@ const CreateLeadForm = ({ setLeadModal, selectedLead, handleLeadUpdate }) => {
       mobile: phoneNumber.nationalNumber,
     };
 
-    console.log(payload.mobile);
-
     try {
       // ✅ Use POST method
       const endpoint = selectedLead
@@ -564,8 +549,6 @@ const CreateLeadForm = ({ setLeadModal, selectedLead, handleLeadUpdate }) => {
         : "/lead/check/unique";
 
       const response = await phoneAxios.post(endpoint, payload);
-
-      console.log(response?.data?.status, "response");
 
       if (response?.data?.status === true) {
         setDuplicateError(response?.data?.message);
@@ -607,8 +590,6 @@ const CreateLeadForm = ({ setLeadModal, selectedLead, handleLeadUpdate }) => {
         : "/lead/check/unique";
 
       const response = await phoneAxios.post(endpoint, payload);
-
-      console.log(response?.data?.status, "response");
 
       if (response?.data?.status === true) {
         setDuplicateEmailError(response?.data?.message);
@@ -653,8 +634,6 @@ const CreateLeadForm = ({ setLeadModal, selectedLead, handleLeadUpdate }) => {
   const handleLeadModal = () => {
     setLeadModal(false);
   };
-
-  console.log(formik.errors, "SHIVAKAR");
 
   return (
     <>
@@ -923,7 +902,9 @@ const CreateLeadForm = ({ setLeadModal, selectedLead, handleLeadUpdate }) => {
                   </h3>
                   <div className="grid grid-cols-3 gap-4">
                     <div>
-                      <label className="mb-2 block">Interested In<span className="text-red-500">*</span></label>
+                      <label className="mb-2 block">
+                        Interested In<span className="text-red-500">*</span>
+                      </label>
                       <div className="relative">
                         <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
                           <FaListCheck />
@@ -951,7 +932,6 @@ const CreateLeadForm = ({ setLeadModal, selectedLead, handleLeadUpdate }) => {
                           }`}
                           disabled={!!selectedLead}
                         />
-                        
                       </div>
                       {formik.errors?.interested_in &&
                         formik.touched?.interested_in && (

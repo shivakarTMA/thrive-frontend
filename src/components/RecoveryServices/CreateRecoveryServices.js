@@ -8,55 +8,51 @@ import { LuPlug } from "react-icons/lu";
 // Import select component
 import Select from "react-select";
 // Import custom styles for select input
-import { selectIcon } from "../../Helper/helper";
+import { handleTextOnlyChange, selectIcon } from "../../Helper/helper";
+import { PiImageFill } from "react-icons/pi";
 import { toast } from "react-toastify";
 import { authAxios } from "../../config/config";
-import { PiImageFill } from "react-icons/pi";
-import { CiCamera } from "react-icons/ci";
 
-// CreateGallery component
-const CreateGallery = ({
+// CreateService component
+const RecoveryServices = ({
   setShowModal,
   editingOption,
   formik,
   handleOverlayClick,
   leadBoxRef,
-  clubOptions,
+  servicesOptions,
 }) => {
-  console.log(editingOption, "editingOption");
 
-  const displayPosition = [
-    { label: "Top", value: "TOP" },
-    { label: "Bottom", value: "BOTTOM" },
-    { label: "Both", value: "BOTH" },
-  ];
 
+  // Fetch exercise by ID when editingExercise changes
   useEffect(() => {
-    if (!editingOption) return;
+    const fetchRecoveryServiceById = async () => {
+      if (editingOption) {
+        try {
+          const response = await authAxios().get(
+            `/ourservices/${editingOption}`
+          );
+          const data = response.data?.data || response.data || null;
 
-    const fetchGalleryById = async (id) => {
-      try {
-        const res = await authAxios().get(`/club/gallery/${id}`);
-        const data = res.data?.data || res.data || null;
-
-        if (data) {
-          // ✅ Prefill formik fields with fetched data
+          // Set form values from fetched data
           formik.setValues({
-            id: data.id || "",
-            club_id: data.club_id || "",
-            title: data.title || "",
-            image: data.image || "",
-            display_position: data.display_position || "",
+            name: data.name || "",
+            service_id: data.service_id || "3",
+            image: data.image || null,
+            tags: data.tags || "",
+            caption: data.caption || "",
+            description: data.description || "",
             position: data.position || "",
+            status: data.status || "ACTIVE",
           });
+        } catch (error) {
+          toast.error("Failed to fetch recovery data.");
+          console.error("Error fetching recovery:", error);
         }
-      } catch (err) {
-        console.error(err);
-        toast.error("Failed to fetch module details");
       }
     };
 
-    fetchGalleryById(editingOption);
+    fetchRecoveryServiceById();
   }, [editingOption]);
 
   const handleLogoChange = (e) => {
@@ -77,14 +73,14 @@ const CreateGallery = ({
     >
       {/* Modal container */}
       <div
-        className="min-h-[70vh] w-[95%] max-w-[800px] mx-auto mt-[100px] mb-[100px] container--leadbox rounded-[10px] flex flex-col"
+        className="min-h-[70vh] w-[95%] max-w-[900px] mx-auto mt-[100px] mb-[100px] container--leadbox rounded-[10px] flex flex-col"
         ref={leadBoxRef}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal header */}
         <div className="bg-white rounded-t-[10px] flex gap-3 items-center justify-between py-4 px-4 border-b">
           <h2 className="text-xl font-semibold">
-            {editingOption ? "Edit Gallery" : "Create Gallery"}
+            {editingOption ? "Edit Recovery Service" : "Create Recovery Service"}
           </h2>
           <div
             className="close--lead cursor-pointer"
@@ -102,10 +98,10 @@ const CreateGallery = ({
           <form onSubmit={formik.handleSubmit} className="p-0 space-y-0">
             <div className="flex bg-white rounded-b-[10px]">
               <div className="p-6 flex-1">
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid md:grid-cols-3 grid-cols-1 gap-4 mdgap-y-2">
                   {/* Image Preview */}
                   <div className="row-span-3">
-                    <div className="w-full bg-gray-100 h-full rounded-lg mx-auto overflow-hidden relative group">
+                    <div className="bg-gray-100 rounded-lg w-full h-[200px] overflow-hidden">
                       {formik.values?.image ? (
                         <img
                           src={formik.values?.image}
@@ -121,14 +117,7 @@ const CreateGallery = ({
                         </div>
                       )}
                     </div>
-                    {/* Validation error */}
-                    {formik.touched.image && formik.errors.image && (
-                      <p className="text-red-500 text-sm mt-1">
-                        {formik.errors.image}
-                      </p>
-                    )}
                   </div>
-
                   {/* Image Upload */}
                   <div>
                     <label className="mb-2 block">
@@ -162,82 +151,109 @@ const CreateGallery = ({
                       </span>
                       <input
                         type="text"
-                        name="title"
-                        value={formik.values.title}
-                        onChange={formik.handleChange}
+                        name="name"
+                        value={formik.values.name}
+                        onChange={(e) =>
+                          handleTextOnlyChange(e, formik, "name")
+                        }
                         onBlur={formik.handleBlur}
                         className="custom--input w-full input--icon"
                       />
                     </div>
-                    {formik.touched.title && formik.errors.title && (
+                    {formik.touched.name && formik.errors.name && (
                       <p className="text-red-500 text-sm mt-1">
-                        {formik.errors.title}
+                        {formik.errors.name}
                       </p>
                     )}
                   </div>
 
-                  {/* Club Dropdown */}
+                  {/* Tags Input */}
                   <div>
                     <label className="mb-2 block">
-                      Club<span className="text-red-500">*</span>
+                      Tags<span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[10]">
+                        <FaListUl />
+                      </span>
+                      <input
+                        type="text"
+                        name="tags"
+                        value={formik.values.tags}
+                        onChange={(e) =>
+                          handleTextOnlyChange(e, formik, "tags")
+                        }
+                        onBlur={formik.handleBlur}
+                        className="custom--input w-full input--icon"
+                      />
+                    </div>
+                    {formik.touched.tags && formik.errors.tags && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {formik.errors.tags}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Caption Input */}
+                  {/* <div>
+                    <label className="mb-2 block">
+                      Caption
+                    </label>
+                    <div className="relative">
+                      <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[10]">
+                        <FaListUl />
+                      </span>
+                      <input
+                        type="text"
+                        name="caption"
+                        value={formik.values.caption}
+                        onChange={(e) =>
+                          handleTextOnlyChange(e, formik, "caption")
+                        }
+                        onBlur={formik.handleBlur}
+                        className="custom--input w-full input--icon"
+                      />
+                    </div>
+  
+                  </div> */}
+
+                  {/* Service Dropdown */}
+                  {/* <div>
+                    <label className="mb-2 block">
+                      Service<span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
                       <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[10]">
                         <FaListUl />
                       </span>
                       <Select
-                        name="club_id"
+                        name="service_id"
                         value={
-                          clubOptions.find(
+                          servicesOptions.find(
                             (option) =>
                               option.value.toString() ===
-                              formik.values.club_id?.toString()
+                              formik.values.service_id?.toString()
                           ) || null
                         }
-                        options={clubOptions}
+                        options={servicesOptions}
                         onChange={(option) =>
-                          formik.setFieldValue("club_id", option.value)
+                          formik.setFieldValue("service_id", option.value)
                         }
-                        onBlur={() => formik.setFieldTouched("club_id", true)}
+                        onBlur={() =>
+                          formik.setFieldTouched("service_id", true)
+                        }
                         styles={selectIcon}
                         className="!capitalize"
                       />
                     </div>
-                    {formik.touched.club_id && formik.errors.club_id && (
+                    {formik.touched.service_id && formik.errors.service_id && (
                       <p className="text-red-500 text-sm mt-1">
-                        {formik.errors.club_id}
+                        {formik.errors.service_id}
                       </p>
                     )}
-                  </div>
+                  </div> */}
 
-                  {/* Type Dropdown */}
-                  <div>
-                    <label className="mb-2 block">
-                      Display Position<span className="text-red-500">*</span>
-                    </label>
-                    <div className="relative">
-                      <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[10]">
-                        <FaListUl />
-                      </span>
-                      <Select
-                        name="display_position"
-                        value={displayPosition.find(
-                          (opt) => opt.value === formik.values.display_position
-                        )}
-                        onChange={(option) =>
-                          formik.setFieldValue("display_position", option.value)
-                        }
-                        options={displayPosition}
-                        styles={selectIcon}
-                      />
-                    </div>
-                    {formik.touched.display_position &&
-                      formik.errors.display_position && (
-                        <p className="text-red-500 text-sm mt-1">
-                          {formik.errors.display_position}
-                        </p>
-                      )}
-                  </div>
+                  
 
                   {/* Position Input */}
                   <div>
@@ -249,7 +265,7 @@ const CreateGallery = ({
                         <FaListUl />
                       </span>
                       <input
-                        type="text"
+                        type="number"
                         name="position"
                         value={formik.values.position}
                         onChange={formik.handleChange}
@@ -260,6 +276,66 @@ const CreateGallery = ({
                     {formik.touched.position && formik.errors.position && (
                       <p className="text-red-500 text-sm mt-1">
                         {formik.errors.position}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Status Dropdown */}
+                  {editingOption && editingOption && (
+                    <div>
+                      <label className="mb-2 block">Status</label>
+                      <div className="relative">
+                        <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[10]">
+                          <LuPlug />
+                        </span>
+                        <Select
+                          name="status"
+                          value={
+                            formik.values.status
+                              ? {
+                                  label: formik.values.status,
+                                  value: formik.values.status,
+                                }
+                              : ""
+                          }
+                          options={[
+                            { label: "Active", value: "ACTIVE" },
+                            { label: "Inactive", value: "INACTIVE" },
+                          ]}
+                          onChange={(option) =>
+                            formik.setFieldValue("status", option.value)
+                          }
+                          onBlur={() => formik.setFieldTouched("status", true)}
+                          styles={selectIcon}
+                          className="!capitalize"
+                        />
+                      </div>
+                      {formik.touched.status && formik.errors.status && (
+                        <p className="text-red-500 text-sm mt-1">
+                          {formik.errors.status}
+                        </p>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Description Input */}
+                  <div className="md:col-span-3">
+                    <label className="mb-2 block">
+                      Description<span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <textarea
+                        rows={3}
+                        name="description"
+                        value={formik.values.description}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        className="custom--input w-full"
+                      />
+                    </div>
+                    {formik.touched.description && formik.errors.description && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {formik.errors.description}
                       </p>
                     )}
                   </div>
@@ -275,7 +351,7 @@ const CreateGallery = ({
                   formik.resetForm();
                   setShowModal(false);
                 }}
-                className="px-4 py-2 bg-transparent border border-gray-400 text-white rounded max-w-[150px] w-full"
+                className="px-4 py-2 bg-transparent border border-gray-400 text-white  rounded max-w-[150px] w-full"
               >
                 Cancel
               </button>
@@ -293,4 +369,4 @@ const CreateGallery = ({
   );
 };
 
-export default CreateGallery;
+export default RecoveryServices;

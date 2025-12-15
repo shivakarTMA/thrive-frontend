@@ -7,7 +7,7 @@ import * as Yup from "yup";
 import { toast } from "react-toastify";
 import Tooltip from "../common/Tooltip";
 import { LiaEdit } from "react-icons/lia";
-import CreateService from "./CreateService";
+import CreateRecoveryServices from "./CreateRecoveryServices";
 import { authAxios } from "../../config/config";
 import { IoSearchOutline } from "react-icons/io5";
 import Select from "react-select";
@@ -17,63 +17,27 @@ import {
   formatText,
 } from "../../Helper/helper";
 import { FaCircle } from "react-icons/fa6";
+import Pagination from "../common/Pagination";
 
 // Main Services component
-const Services = () => {
-  // State to control modal visibility
+const RecoveryServicesList = () => {
   const [showModal, setShowModal] = useState(false);
-  // State to hold list of services
-  const [module, setModule] = useState([]);
-  // State to hold list of clubs
-  const [club, setClub] = useState([]);
-  // State to hold list of studios
-  const [studio, setStudio] = useState([]);
-  // State to hold editing option data
+  const [recoveryServiceList, setRecoveryServiceList] = useState([]);
+  const [servicesList, setServicesList] = useState([]);
+  const [packageList, setPackageList] = useState([]);
   const [editingOption, setEditingOption] = useState(null);
-  // Ref to handle modal close on outside click
   const leadBoxRef = useRef(null);
-  // State for search input
   const [searchTerm, setSearchTerm] = useState("");
-  // State for status filter
   const [statusFilter, setStatusFilter] = useState(null);
+  const [packageFilter, setPackageFilter] = useState(null);
+  const [serviceFilter, setServiceFilter] = useState(null);
+
+  const [page, setPage] = useState(1);
+  const [rowsPerPage] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
 
   // Function to fetch clubs
-  const fetchClub = async (search = "") => {
-    try {
-      const res = await authAxios().get("/club/list", {
-        params: search ? { search } : {},
-      });
-      let data = res.data?.data || res.data || [];
-      if (statusFilter?.value) {
-        data = data.filter((item) => item.status === statusFilter.value);
-      }
-      const activeOnly = filterActiveItems(data);
-      setClub(activeOnly);
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to fetch companies");
-    }
-  };
-
-  // Function to fetch studios
-  const fetchStudio = async (search = "") => {
-    try {
-      const res = await authAxios().get("/studio/list", {
-        params: search ? { search } : {},
-      });
-      let data = res.data?.data || res.data || [];
-      if (statusFilter?.value) {
-        data = data.filter((item) => item.status === statusFilter.value);
-      }
-      const activeOnly = filterActiveItems(data);
-      setStudio(activeOnly);
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to fetch companies");
-    }
-  };
-
-  // Function to fetch services
   const fetchServices = async (search = "") => {
     try {
       const res = await authAxios().get("/service/list", {
@@ -83,55 +47,53 @@ const Services = () => {
       if (statusFilter?.value) {
         data = data.filter((item) => item.status === statusFilter.value);
       }
-      setModule(data);
+      const activeOnly = filterActiveItems(data);
+      setServicesList(activeOnly);
     } catch (err) {
       console.error(err);
       toast.error("Failed to fetch companies");
     }
   };
 
-  // Handle edit service action
-  const handleEdit = (id) => {
-    const data = module.find((item) => item.id === id);
 
-    if (data) {
-      setEditingOption(data);
-
-      formik.setValues({
-        id: data.id || "",
-        name: data.name || "",
-        // Keep existing image if already present
-        image: data.image || null,
-        club_id: data.club_id || "",
-        // studio_id: data.studio_id || "",
-        type: data.type || "",
-        position: data.position || "",
-        status: data.status || "ACTIVE",
+  // Function to fetch services
+  const fetchRecoveryServices = async (search = "", currentPage = page) => {
+    try {
+      const res = await authAxios().get("/ourservices/list", {
+        params: {
+          page: currentPage,
+          limit: rowsPerPage,
+          ...(search ? { search } : {}),
+        },
       });
-
-      setShowModal(true);
-    } else {
-      toast.error("Service not found in list");
+      let data = res.data?.data || res.data || [];
+      if (statusFilter?.value) {
+        data = data.filter((item) => item.status === statusFilter.value);
+      }
+      if (serviceFilter) {
+        data = data.filter((item) => item.service_id === serviceFilter);
+      }
+      if (packageFilter) {
+        data = data.filter((item) => item.package_id === packageFilter);
+      }
+      setRecoveryServiceList(data);
+      setPage(res.data?.currentPage || 1);
+      setTotalPages(res.data?.totalPage || 1);
+      setTotalCount(res.data?.totalCount || data.length);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to fetch recovery services");
     }
   };
 
   // Load initial data
   useEffect(() => {
     fetchServices();
-    fetchClub();
-    fetchStudio();
+    fetchRecoveryServices();
   }, []);
 
-  // Prepare dropdown options for clubs
-  const clubOptions =
-    club?.map((item) => ({
-      label: item.name,
-      value: item.id,
-    })) || [];
-
-  // Prepare dropdown options for studios
-  const studioOptions =
-    studio?.map((item) => ({
+  const servicesOptions =
+    servicesList?.map((item) => ({
       label: item.name,
       value: item.id,
     })) || [];
@@ -139,10 +101,12 @@ const Services = () => {
   // Debounced search for services
   useEffect(() => {
     const delayDebounce = setTimeout(() => {
-      fetchServices(searchTerm);
+      fetchRecoveryServices(searchTerm);
+      setPage(1);
     }, 300);
+
     return () => clearTimeout(delayDebounce);
-  }, [searchTerm, statusFilter]);
+  }, [searchTerm, statusFilter, serviceFilter, packageFilter]);
 
   // Handle overlay click to close modal
   const handleOverlayClick = (e) => {
@@ -154,11 +118,13 @@ const Services = () => {
   // Formik initialization
   const formik = useFormik({
     initialValues: {
-      image: null,
       name: "",
-      club_id: "",
-      // studio_id: "",
-      type: "",
+      service_id: "3",
+      // package_id: "",
+      image: null,
+      tags: "",
+      // caption: "",
+      description: "",
       position: "",
       status: "ACTIVE",
     },
@@ -174,11 +140,12 @@ const Services = () => {
         }
       ),
       name: Yup.string().required("Title is required"),
-      club_id: Yup.string().required("Club is required"),
-      // studio_id: Yup.string().required("Studio is required"),
-      type: Yup.string().required("Type is required"),
+      service_id: Yup.string().required("Service is required"),
+      // package_id: Yup.string().required("Package is required"),
+      tags: Yup.string().required("Type is required"),
+      // caption: Yup.string().required("Caption is required"),
+      description: Yup.string().required("Description is required"),
       position: Yup.string().required("Position is required"),
-      status: Yup.string().required("Status is required"),
     }),
     onSubmit: async (values, { resetForm }) => {
       try {
@@ -195,13 +162,13 @@ const Services = () => {
             formData.append(key, values[key]);
           }
         });
-        if (editingOption && editingOption.id) {
-          await authAxios().put(`/service/${editingOption.id}`, formData, {
+        if (editingOption && editingOption) {
+          await authAxios().put(`/ourservices/${editingOption}`, formData, {
             headers: { "Content-Type": "multipart/form-data" },
           });
           toast.success("Updated Successfully");
         } else {
-          await authAxios().post("/service/create", formData, {
+          await authAxios().post("/ourservices/create", formData, {
             headers: { "Content-Type": "multipart/form-data" },
           });
           toast.success("Created Successfully");
@@ -224,8 +191,8 @@ const Services = () => {
       {/* Header Section */}
       <div className="flex items-end justify-between gap-2 mb-5">
         <div className="title--breadcrumbs">
-          <p className="text-sm">{`Home > Club Services`}</p>
-          <h1 className="text-3xl font-semibold">Club Services</h1>
+          <p className="text-sm">{`Home > Recovery Services`}</p>
+          <h1 className="text-3xl font-semibold">Recovery Services</h1>
         </div>
         <div className="flex items-end gap-2">
           <button
@@ -271,6 +238,30 @@ const Services = () => {
             styles={customStyles}
           />
         </div>
+        {/* <div className="w-full max-w-[200px]">
+          <Select
+            placeholder="Filter by service"
+            value={
+              servicesOptions.find((o) => o.value === serviceFilter) || null
+            }
+            options={servicesOptions}
+            onChange={(option) => setServiceFilter(option?.value)}
+            isClearable
+            styles={customStyles}
+          />
+        </div>
+        <div className="w-full max-w-[200px]">
+          <Select
+            placeholder="Filter by package"
+            value={
+              packageOptions.find((o) => o.value === packageFilter) || null
+            }
+            options={packageOptions}
+            onChange={(option) => setPackageFilter(option?.value)}
+            isClearable
+            styles={customStyles}
+          />
+        </div> */}
       </div>
 
       {/* Table Section */}
@@ -281,22 +272,24 @@ const Services = () => {
               <tr>
                 <th className="px-2 py-4">Image</th>
                 <th className="px-2 py-4">Name</th>
-                <th className="px-2 py-4">Club Name</th>
-                <th className="px-2 py-4">Type</th>
+                <th className="px-2 py-4">Tags</th>
+                <th className="px-2 py-4">Club</th>
+                <th className="px-2 py-4">Service</th>
+                <th className="px-2 py-4">Package</th>
                 <th className="px-2 py-4">Position</th>
                 <th className="px-2 py-4">Status</th>
                 <th className="px-2 py-4">Action</th>
               </tr>
             </thead>
             <tbody>
-              {module.length === 0 ? (
+              {recoveryServiceList.length === 0 ? (
                 <tr>
                   <td colSpan="8" className="text-center py-4">
                     No Services added yet.
                   </td>
                 </tr>
               ) : (
-                module.map((item, index) => (
+                recoveryServiceList.map((item, index) => (
                   <tr
                     key={item.id || index}
                     className="group bg-white border-b hover:bg-gray-50 relative transition duration-700"
@@ -313,9 +306,22 @@ const Services = () => {
                         )}
                       </div>
                     </td>
-                    <td className="px-2 py-4">{item?.name}</td>
-                    <td className="px-2 py-4">{item?.club_name}</td>
-                    <td className="px-2 py-4">{formatText(item?.type)}</td>
+                    <td className="px-2 py-4">
+                      <div className="max-w-[200px]">{item?.name}</div>
+                    </td>
+                   
+                    <td className="px-2 py-4">
+                      {item?.tags ? item?.tags : "--"}
+                    </td>
+                    <td className="px-2 py-4">
+                      {item?.club_name ? item?.club_name : "--"}
+                    </td>
+                    <td className="px-2 py-4">
+                      {item?.service_name ? item?.service_name : "--"}
+                    </td>
+                    <td className="px-2 py-4">
+                      {item?.package_name ? item?.package_name : "--"}
+                    </td>
                     <td className="px-2 py-4">{item?.position}</td>
                     <td className="px-2 py-4">
                       <div
@@ -341,7 +347,10 @@ const Services = () => {
                         >
                           <div
                             className="p-1 cursor-pointer"
-                            onClick={() => handleEdit(item.id)}
+                            onClick={() => {
+                              setEditingOption(item?.id);
+                              setShowModal(true);
+                            }}
                           >
                             <LiaEdit className="text-[25px] text-black" />
                           </div>
@@ -356,20 +365,32 @@ const Services = () => {
         </div>
       </div>
 
+      {/* Pagination */}
+      <Pagination
+        page={page}
+        totalPages={totalPages}
+        rowsPerPage={rowsPerPage}
+        totalCount={totalCount}
+        currentDataLength={recoveryServiceList.length}
+        onPageChange={(newPage) => {
+          setPage(newPage);
+          fetchRecoveryServices(searchTerm, newPage);
+        }}
+      />
+
       {/* Modal for Create/Update Service */}
       {showModal && (
-        <CreateService
+        <CreateRecoveryServices
           setShowModal={setShowModal}
           editingOption={editingOption}
           formik={formik}
           handleOverlayClick={handleOverlayClick}
           leadBoxRef={leadBoxRef}
-          clubOptions={clubOptions}
-          studioOptions={studioOptions}
+          servicesOptions={servicesOptions}
         />
       )}
     </div>
   );
 };
 
-export default Services;
+export default RecoveryServicesList;

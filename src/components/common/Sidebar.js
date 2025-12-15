@@ -390,6 +390,13 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
               <span className="nav-text">Club Services</span>
             </Link>
             <Link
+              to="/recovery-services"
+              className="text-white flex items-center gap-[5px] mb-2 text-sm"
+            >
+              <FaCircle className="menu--icon !text-[10px]" />
+              <span className="nav-text">Recovery Services</span>
+            </Link>
+            <Link
               to="/product-category"
               className="text-white flex items-center gap-[5px] mb-2 text-sm"
             >
