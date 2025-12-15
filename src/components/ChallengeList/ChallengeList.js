@@ -110,6 +110,10 @@ const ChallengeList = () => {
       about_challenge: "",
       join_in_between: null,
       position: "",
+      winning_caption_heading:"",
+      winning_caption_subheading:"",
+      progress_caption_heading:"",
+      progress_caption_subheading:"",
       // status: "UPCOMING",
     },
 
@@ -144,6 +148,10 @@ const ChallengeList = () => {
         "Challenge Essentials is required"
       ),
       position: Yup.string().required("Position is required"),
+      winning_caption_heading: Yup.string().required("Winning caption heading is required"),
+      winning_caption_subheading: Yup.string().required("Winning caption subheading is required"),
+      progress_caption_heading: Yup.string().required("Progress caption heading is required"),
+      progress_caption_subheading: Yup.string().required("Progress caption subheading is required"),
     }),
 
     onSubmit: async (values, { resetForm }) => {
@@ -260,6 +268,7 @@ const ChallengeList = () => {
                 {/* <th className="px-2 py-4">ID</th> */}
                 <th className="px-2 py-4">Image</th>
                 <th className="px-2 py-4">Name</th>
+                <th className="px-2 py-4">Club Name</th>
                 <th className="px-2 py-4">Challenge Type</th>
                 <th className="px-2 py-4">Start Dates</th>
                 <th className="px-2 py-4">End Dates</th>
@@ -291,6 +300,7 @@ const ChallengeList = () => {
                       </div>
                     </td>
                     <td className="px-2 py-4">{item?.name}</td>
+                    <td className="px-2 py-4">{item?.club_name}</td>
                     <td className="px-2 py-4">
                       {formatText(item?.challenge_type)}
                     </td>

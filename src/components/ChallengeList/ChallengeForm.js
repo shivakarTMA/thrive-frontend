@@ -96,6 +96,10 @@ const ChallengeForm = ({ setShowModal, editingOption, formik }) => {
             position: exerciseData?.position || "",
             status: exerciseData?.status || "UPCOMING",
             join_in_between: exerciseData?.join_in_between || null,
+            winning_caption_heading: exerciseData?.winning_caption_heading || "",
+            winning_caption_subheading: exerciseData?.winning_caption_subheading || "",
+            progress_caption_heading: exerciseData?.progress_caption_heading || "",
+            progress_caption_subheading: exerciseData?.progress_caption_subheading || "",
           });
           try {
             setConditionList(JSON.parse(exerciseData?.condition || "[]"));
@@ -580,6 +584,94 @@ const ChallengeForm = ({ setShowModal, editingOption, formik }) => {
                       formik.errors.reward_third && (
                         <p className="text-red-500 text-sm">
                           {formik.errors.reward_third}
+                        </p>
+                      )}
+                  </div>
+
+                  <div>
+                    <label className="mb-2 block">
+                      Winning caption heading<span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        name="winning_caption_heading"
+                        value={formik.values.winning_caption_heading}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        className="custom--input w-full"
+                      />
+                    </div>
+                    {formik.touched.winning_caption_heading &&
+                      formik.errors.winning_caption_heading && (
+                        <p className="text-red-500 text-sm">
+                          {formik.errors.winning_caption_heading}
+                        </p>
+                      )}
+                  </div>
+
+                  <div>
+                    <label className="mb-2 block">
+                      Winning caption subheading<span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        name="winning_caption_subheading"
+                        value={formik.values.winning_caption_subheading}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        className="custom--input w-full"
+                      />
+                    </div>
+                    {formik.touched.winning_caption_subheading &&
+                      formik.errors.winning_caption_subheading && (
+                        <p className="text-red-500 text-sm">
+                          {formik.errors.winning_caption_subheading}
+                        </p>
+                      )}
+                  </div>
+
+                  <div>
+                    <label className="mb-2 block">
+                      Progress caption heading<span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        name="progress_caption_heading"
+                        value={formik.values.progress_caption_heading}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        className="custom--input w-full"
+                      />
+                    </div>
+                    {formik.touched.progress_caption_heading &&
+                      formik.errors.progress_caption_heading && (
+                        <p className="text-red-500 text-sm">
+                          {formik.errors.progress_caption_heading}
+                        </p>
+                      )}
+                  </div>
+
+                  <div>
+                    <label className="mb-2 block">
+                      Progress caption subheading<span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        name="progress_caption_subheading"
+                        value={formik.values.progress_caption_subheading}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        className="custom--input w-full"
+                      />
+                    </div>
+                    {formik.touched.progress_caption_subheading &&
+                      formik.errors.progress_caption_subheading && (
+                        <p className="text-red-500 text-sm">
+                          {formik.errors.progress_caption_subheading}
                         </p>
                       )}
                   </div>

@@ -9,11 +9,15 @@ const Pagination = ({
   currentDataLength,
   onPageChange,
 }) => {
-  // Calculate "Showing X to Y of Z entries"
-  const start = currentDataLength === 0 ? 0 : (page - 1) * rowsPerPage + 1;
-  const end = Math.min(page * rowsPerPage, totalCount);
+  if (totalCount <= rowsPerPage) {
+    return null;
+  }
 
-  // Compute which page numbers to display (always 3)
+  const start = currentDataLength === 0 ? 0 : (page - 1) * rowsPerPage + 1;
+  const end =
+    currentDataLength === 0 ? 0 : (page - 1) * rowsPerPage + currentDataLength;
+
+  // Compute page numbers
   let pagesToShow = [];
   if (totalPages <= 3) {
     pagesToShow = Array.from({ length: totalPages }, (_, i) => i + 1);
@@ -28,39 +32,65 @@ const Pagination = ({
   return (
     <div className="flex justify-between items-center mt-4 gap-2">
       {/* Showing Info */}
-      <p className="text-gray-700">
+      <p className="text-gray-700 text-sm">
         Showing {start} to {end} of {totalCount} entries
       </p>
 
       {/* Pagination Controls */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1">
         {/* Prev */}
         <button
           onClick={() => onPageChange(page - 1)}
           disabled={page === 1}
-          className="px-3 py-2 border rounded disabled:opacity-50"
+          className="px-3 py-2 border rounded disabled:opacity-50 text-sm"
         >
           <FaAngleLeft />
         </button>
 
         {/* Page Numbers */}
+        {pagesToShow[0] > 1 && (
+          <>
+            <button
+              onClick={() => onPageChange(1)}
+              className="px-3 py-1 border rounded text-sm"
+            >
+              1
+            </button>
+            <span className="px-2">...</span>
+          </>
+        )}
+
         {pagesToShow.map((p) => (
           <button
             key={p}
             onClick={() => onPageChange(p)}
-            className={`px-3 py-1 border rounded ${
-              page === p ? "bg-gray-200 font-semibold" : ""
+            className={`px-3 py-1 border rounded transition ${
+              page === p
+                ? "bg-black text-white font-[500]"
+                : "hover:bg-gray-100"
             }`}
           >
             {p}
           </button>
         ))}
 
+        {pagesToShow[pagesToShow.length - 1] < totalPages && (
+          <>
+            <span className="px-2">...</span>
+            <button
+              onClick={() => onPageChange(totalPages)}
+              className="px-3 py-1 border rounded text-sm"
+            >
+              {totalPages}
+            </button>
+          </>
+        )}
+
         {/* Next */}
         <button
           onClick={() => onPageChange(page + 1)}
           disabled={page === totalPages}
-          className="px-3 py-2 border rounded disabled:opacity-50"
+          className="px-3 py-2 border rounded disabled:opacity-50 text-sm"
         >
           <FaAngleRight />
         </button>

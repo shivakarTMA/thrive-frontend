@@ -69,7 +69,15 @@ const WorkoutPlan = ({
   const [selectedWorkoutType, setSelectedWorkoutType] = useState(null);
   const [selectedTemplate, setSelectedTemplate] = useState(null);
 
-  // API: Fetch workout plan when editing
+  // FIX 3: Number Formatting Helper
+  const formatNumber = (value) => {
+    if (value === null || value === undefined || value === "") return "";
+    const num = Number(value);
+    // Return integer if it's a whole number, otherwise return with decimals
+    return num % 1 === 0 ? Math.floor(num) : num;
+  };
+
+  // API: Fetch workout plan when editing - UPDATED WITH FIX 3
   const fetchWorkoutPlan = async (workoutId) => {
     try {
       setLoading(true);
@@ -94,6 +102,13 @@ const WorkoutPlan = ({
 
                 return {
                   ...exercise,
+                  // FIX 3: FORMAT NUMBERS HERE
+                  sets: formatNumber(exercise.sets),
+                  reps: formatNumber(exercise.reps),
+                  weight_kg: formatNumber(exercise.weight_kg),
+                  distance: formatNumber(exercise.distance),
+                  duration: formatNumber(exercise.duration),
+                  rest_secs: formatNumber(exercise.rest_secs),
                   // Convert group_type and group_id from API to frontend format
                   groupType: exercise.group_type || null,
                   groupId: exercise.group_id || null,
@@ -101,11 +116,11 @@ const WorkoutPlan = ({
                   isSelected: false,
                   _ui: isRestTime
                     ? {
-                        id: exercise.id,
+                        id: exercise.id || `rest-${Date.now()}`,
                         type: "rest",
                       }
                     : {
-                        id: exercise.id,
+                        id: exercise.id || `ex-${Date.now()}`,
                         // Infer capabilities from existing data
                         hasReps:
                           exercise.reps !== null && exercise.reps !== undefined,
@@ -244,12 +259,8 @@ const WorkoutPlan = ({
     });
   };
 
-  // API: Delete exercise
-  const handleDeleteExercise = async (dayIdx, position) => {
-    const exerciseToDelete = data.days[dayIdx].exercises.find(
-      (ex) => ex.position === position
-    );
-
+  // FIX 2: Delete exercise - UPDATED to accept exercise object
+  const handleDeleteExercise = async (dayIdx, exerciseToDelete) => {
     // If exercise has an id (saved to backend), track it for deletion
     if (exerciseToDelete?.id && editingId) {
       setDeleteActions((prev) => ({
@@ -261,9 +272,20 @@ const WorkoutPlan = ({
     // Update local state
     setData((prev) => {
       const updatedDays = [...prev.days];
+      
+      // Filter out the specific exercise and recalculate positions
       updatedDays[dayIdx].exercises = updatedDays[dayIdx].exercises
-        .filter((ex) => ex.position !== position)
+        .filter((ex) => {
+          // Use multiple criteria for matching
+          if (ex.id && exerciseToDelete.id) {
+            return ex.id !== exerciseToDelete.id;
+          }
+          // For new exercises without IDs, use position and UI id
+          return !(ex.position === exerciseToDelete.position && 
+                   ex._ui?.id === exerciseToDelete._ui?.id);
+        })
         .map((ex, idx) => ({ ...ex, position: idx + 1 }));
+      
       return { ...prev, days: updatedDays };
     });
   };
@@ -355,43 +377,43 @@ const WorkoutPlan = ({
     });
   };
 
+  // FIX 1: Copy Day - UPDATED to remove IDs
   const handleCopyDay = (dayIdx) => {
     const dayToCopy = data.days[dayIdx];
 
-    // copy only exercises
+    // Deep clone exercises and remove IDs to avoid conflicts
     const copiedExercises = JSON.parse(
       JSON.stringify(dayToCopy.exercises || [])
-    );
+    ).map((ex) => {
+      // Remove id field to treat as new exercises
+      const { id, ...exerciseWithoutId } = ex;
+      return exerciseWithoutId;
+    });
 
     setCopiedDay(copiedExercises);
     toast.success("Exercises copied successfully!");
   };
 
-  // const handlePasteDay = (dayIdx) => {
-  //   if (!copiedDay) return;
-  //   setData((prev) => {
-  //     const updatedDays = [...prev.days];
-  //     updatedDays[dayIdx] = {
-  //       ...copiedDay,
-  //       day_no: updatedDays[dayIdx].day_no,
-  //       day_date: updatedDays[dayIdx].day_date,
-  //       position: updatedDays[dayIdx].position,
-  //     };
-  //     return { ...prev, days: updatedDays };
-  //   });
-  //   toast.success("Paste Successfully");
-  // };
-
+  // FIX 1: Paste Day - UPDATED to regenerate IDs and positions
   const handlePasteDay = (dayIdx) => {
     if (!copiedDay) return;
 
     setData((prev) => {
       const updatedDays = [...prev.days];
+      
+      // Deep clone and recalculate positions
+      const pastedExercises = JSON.parse(JSON.stringify(copiedDay)).map((ex, idx) => ({
+        ...ex,
+        position: idx + 1,
+        // Generate new unique IDs for UI
+        _ui: ex._ui?.type === "rest" 
+          ? { ...ex._ui, id: `rest-${Date.now()}-${idx}` }
+          : { ...ex._ui, id: `${ex._ui?.id || 'ex'}-${Date.now()}-${idx}` }
+      }));
 
-      // Replace ONLY exercises
       updatedDays[dayIdx] = {
         ...updatedDays[dayIdx],
-        exercises: JSON.parse(JSON.stringify(copiedDay)), // overwrite exercises
+        exercises: pastedExercises,
       };
 
       return { ...prev, days: updatedDays };
@@ -451,26 +473,11 @@ const WorkoutPlan = ({
         ...day,
         exercises: day.exercises.map((ex) => {
           const { isSelected, groupType, groupId, _ui, ...cleanEx } = ex;
-
-          // Focus on specific fields: reps, rest_secs, sets, weight_kg
-          const cleanedEx = {
+          return {
             ...cleanEx,
             group_type: groupType || null,
             group_id: groupId || null,
           };
-
-          // Define the fields you want to clean
-          const fieldsToClean = ["reps", "rest_secs", "sets", "weight_kg"];
-
-          // Loop through each specific field and clean it
-          fieldsToClean.forEach((field) => {
-            if (cleanedEx[field] === null || cleanedEx[field] === undefined) {
-              // Set to 0 for numbers or leave it out entirely
-              cleanedEx[field] = 0; // Use 0 as a default for these numeric fields
-            }
-          });
-
-          return cleanedEx;
         }),
       })),
     };
@@ -537,13 +544,7 @@ const WorkoutPlan = ({
     return errors;
   };
 
-  // API: Create or Update workout plan
   const handleSaveWorkoutPlan = async () => {
-    // if (!data.plan.name || !data.plan.description || !data.plan.start_date) {
-    //   toast.error("Please fill in all required fields");
-    //   return;
-    // }
-
     const newErrors = {};
 
     if (!data.plan.start_date) newErrors.start_date = "Start Date is required.";
@@ -572,47 +573,47 @@ const WorkoutPlan = ({
 
     console.log("cleanedData", cleanedData);
 
-    // try {
-    //   setLoading(true);
-    //   let response;
+    try {
+      setLoading(true);
+      let response;
 
-    //   if (editingId) {
-    //     // Update existing workout plan with delete actions
-    //     const updatePayload = {
-    //       ...cleanedData,
-    //       delete_actions: deleteActions,
-    //     };
+      if (editingId) {
+        // Update existing workout plan with delete actions
+        const updatePayload = {
+          ...cleanedData,
+          delete_actions: deleteActions,
+        };
 
-    //     response = await authAxios().put(
-    //       `/member/workoutplan/${editingId}`,
-    //       updatePayload
-    //     );
-    //     toast.success("Workout plan updated successfully!");
-    //   } else {
-    //     // Create new workout plan
-    //     response = await authAxios().post(
-    //       `/member/workoutplan/create`,
-    //       cleanedData
-    //     );
-    //     toast.success("Workout plan created successfully!");
-    //   }
+        response = await authAxios().put(
+          `/member/workoutplan/${editingId}`,
+          updatePayload
+        );
+        toast.success("Workout plan updated successfully!");
+      } else {
+        // Create new workout plan
+        response = await authAxios().post(
+          `/member/workoutplan/create`,
+          cleanedData
+        );
+        toast.success("Workout plan created successfully!");
+      }
 
-    //   // Reset delete actions after successful save
-    //   setDeleteActions({
-    //     delete_days: [],
-    //     delete_exercises: [],
-    //   });
+      // Reset delete actions after successful save
+      setDeleteActions({
+        delete_days: [],
+        delete_exercises: [],
+      });
 
-    //   handleCancelWorkout();
-    //   handleWorkoutUpdate();
-    // } catch (error) {
-    //   console.error("Error saving workout plan:", error);
-    //   toast.error(
-    //     error.response?.data?.message || "Failed to save workout plan"
-    //   );
-    // } finally {
-    //   setLoading(false);
-    // }
+      handleCancelWorkout();
+      handleWorkoutUpdate();
+    } catch (error) {
+      console.error("Error saving workout plan:", error);
+      toast.error(
+        error.response?.data?.message || "Failed to save workout plan"
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   const renderGroupedExercises = (groupId, groupType, groupExercises) => {
@@ -624,7 +625,7 @@ const WorkoutPlan = ({
             <input
               type="number"
               min={1}
-              value={groupExercises[0].sets ?? ""}
+              value={formatNumber(groupExercises[0].sets)}
               onChange={(e) => {
                 const newValue =
                   e.target.value === "" ? null : Number(e.target.value);
@@ -658,6 +659,7 @@ const WorkoutPlan = ({
     );
   };
 
+  // FIX 3: Updated sanitizeNumber
   const sanitizeNumber = (value) => {
     // Allow empty for typing
     if (value === "") return "";
@@ -665,31 +667,24 @@ const WorkoutPlan = ({
     const num = Number(value);
 
     // Prevent NaN or negatives
-    if (isNaN(num) || num < 0) return 0;
+    if (isNaN(num) || num < 0) return "";
 
-    return num;
+    // Return integer if whole number
+    return num % 1 === 0 ? Math.floor(num) : num;
   };
 
   const renderExercise = (exercise, exIdx, isGrouped = false) => (
     <div key={exIdx} className="mb-2 border p-2 px-4 rounded bg-white">
       <div className="flex justify-between mb-3">
         <div className="flex items-center gap-2">
-          {/* {!isGrouped && (
-            <input
-              type="checkbox"
-              checked={exercise.isSelected || false}
-              onChange={() => toggleExerciseSelect(exIdx)}
-            />
-          )} */}
           <h3 className="mb-1">
             <strong>Exercise</strong>: {exercise.name}
           </h3>
         </div>
         <div className="flex gap-2">
+          {/* FIX 2: Pass exercise object instead of position */}
           <button
-            onClick={() =>
-              handleDeleteExercise(activeDayIndex, exercise.position)
-            }
+            onClick={() => handleDeleteExercise(activeDayIndex, exercise)}
             className="text-red-600 text-sm"
           >
             Remove
@@ -702,19 +697,11 @@ const WorkoutPlan = ({
             <div className="grid grid-cols-4 gap-3">
               {!isGrouped && (
                 <div className="w-full">
+                  {/* FIX 3: Apply formatNumber to display */}
                   <input
                     type="number"
                     placeholder="No. of sets"
-                    value={exercise.sets ?? ""}
-                    // onChange={(e) =>
-                    //   handleExerciseFieldChange(
-                    //     activeDayIndex,
-                    //     exIdx,
-                    //     "sets",
-                    //     e.target.value === "" ? null : Number(e.target.value)
-                    //   )
-                    // }
-
+                    value={formatNumber(exercise.sets)}
                     onChange={(e) =>
                       handleExerciseFieldChange(
                         activeDayIndex,
@@ -740,18 +727,11 @@ const WorkoutPlan = ({
               )}
               {exercise._ui?.hasReps && (
                 <div>
+                  {/* FIX 3: Apply formatNumber to display */}
                   <input
                     type="number"
                     placeholder="Reps"
-                    value={exercise.reps ?? ""}
-                    // onChange={(e) =>
-                    //   handleExerciseFieldChange(
-                    //     activeDayIndex,
-                    //     exIdx,
-                    //     "reps",
-                    //     e.target.value === "" ? null : Number(e.target.value)
-                    //   )
-                    // }
+                    value={formatNumber(exercise.reps)}
                     onChange={(e) =>
                       handleExerciseFieldChange(
                         activeDayIndex,
@@ -777,18 +757,11 @@ const WorkoutPlan = ({
               )}
               {exercise._ui?.hasDuration && (
                 <div>
+                  {/* FIX 3: Apply formatNumber to display */}
                   <input
                     type="number"
                     placeholder="Duration (sec)"
-                    value={exercise.duration ?? ""}
-                    // onChange={(e) =>
-                    //   handleExerciseFieldChange(
-                    //     activeDayIndex,
-                    //     exIdx,
-                    //     "duration",
-                    //     e.target.value === "" ? null : Number(e.target.value)
-                    //   )
-                    // }
+                    value={formatNumber(exercise.duration)}
                     onChange={(e) =>
                       handleExerciseFieldChange(
                         activeDayIndex,
@@ -814,18 +787,11 @@ const WorkoutPlan = ({
               )}
               {exercise._ui?.hasDistance && (
                 <div>
+                  {/* FIX 3: Apply formatNumber to display */}
                   <input
                     type="number"
                     placeholder="Distance (m)"
-                    value={exercise.distance ?? ""}
-                    // onChange={(e) =>
-                    //   handleExerciseFieldChange(
-                    //     activeDayIndex,
-                    //     exIdx,
-                    //     "distance",
-                    //     e.target.value === "" ? null : Number(e.target.value)
-                    //   )
-                    // }
+                    value={formatNumber(exercise.distance)}
                     onChange={(e) =>
                       handleExerciseFieldChange(
                         activeDayIndex,
@@ -851,18 +817,11 @@ const WorkoutPlan = ({
               )}
               {exercise._ui?.hasWeight && (
                 <div>
+                  {/* FIX 3: Apply formatNumber to display */}
                   <input
                     type="number"
                     placeholder="Weight (Kg)"
-                    value={exercise.weight_kg ?? ""}
-                    // onChange={(e) =>
-                    //   handleExerciseFieldChange(
-                    //     activeDayIndex,
-                    //     exIdx,
-                    //     "weight_kg",
-                    //     e.target.value === "" ? null : Number(e.target.value)
-                    //   )
-                    // }
+                    value={formatNumber(exercise.weight_kg)}
                     onChange={(e) =>
                       handleExerciseFieldChange(
                         activeDayIndex,
@@ -888,18 +847,11 @@ const WorkoutPlan = ({
               )}
               {!isGrouped && (
                 <div>
+                  {/* FIX 3: Apply formatNumber to display */}
                   <input
                     type="number"
                     placeholder="Rest(Secs)"
-                    value={exercise.rest_secs ?? ""}
-                    // onChange={(e) =>
-                    //   handleExerciseFieldChange(
-                    //     activeDayIndex,
-                    //     exIdx,
-                    //     "rest_secs",
-                    //     e.target.value === "" ? null : Number(e.target.value)
-                    //   )
-                    // }
+                    value={formatNumber(exercise.rest_secs)}
                     onChange={(e) =>
                       handleExerciseFieldChange(
                         activeDayIndex,
@@ -938,14 +890,6 @@ const WorkoutPlan = ({
                       e.target.value
                     )
                   }
-                  // onChange={(e) =>
-                  //   handleExerciseFieldChange(
-                  //     activeDayIndex,
-                  //     exIdx,
-                  //     "notes",
-                  //     sanitizeNumber(e.target.value)
-                  //   )
-                  // }
                   className="custom--input w-full"
                 />
               </div>
@@ -969,29 +913,40 @@ const WorkoutPlan = ({
           )}
           <h3 className="text-sm font-semibold text-gray-700">Rest Time</h3>
         </div>
+        {/* FIX 2: Pass restBlock object instead of position */}
         <button
-          onClick={() =>
-            handleDeleteExercise(activeDayIndex, restBlock.position)
-          }
+          onClick={() => handleDeleteExercise(activeDayIndex, restBlock)}
           className="text-red-600 text-sm"
         >
           Remove
         </button>
       </div>
+      {/* FIX 3: Apply formatNumber to display */}
       <input
         type="number"
         placeholder="Rest (seconds)"
-        value={restBlock.rest_secs || ""}
+        value={formatNumber(restBlock.rest_secs)}
         onChange={(e) =>
           handleExerciseFieldChange(
             activeDayIndex,
             restBlock.index,
             "rest_secs",
-            e.target.value === "" ? null : Number(e.target.value)
+            sanitizeNumber(e.target.value)
           )
         }
         className="border p-2 rounded w-full number--appearance-none"
       />
+      {validationErrors[
+        `day_${activeDayIndex}_ex_${restBlock.index}_rest_secs`
+      ] && (
+        <p className="text-red-600 text-sm mt-1">
+          {
+            validationErrors[
+              `day_${activeDayIndex}_ex_${restBlock.index}_rest_secs`
+            ]
+          }
+        </p>
+      )}
     </div>
   );
 
@@ -1293,8 +1248,8 @@ const WorkoutPlan = ({
               </div>
 
               <div className="rounded p-0 mb-6">
-                <div className="flex items-center justify-end gap-3 mb-3">
-                  {/* {activeDayIndex !== null && (
+                <div className="flex items-center justify-between gap-3 mb-3">
+                  {activeDayIndex !== null && (
                     <div className="flex items-center gap-1">
                       <button
                         onClick={() => handleCopyDay(activeDayIndex)}
@@ -1318,7 +1273,7 @@ const WorkoutPlan = ({
                         Clear All
                       </button>
                     </div>
-                  )} */}
+                  )}
 
                   {!data.days[activeDayIndex]?.is_rest_day && (
                     <div className="flex items-center gap-1">
@@ -1451,7 +1406,10 @@ const WorkoutPlan = ({
         open={saveTemplate}
         onClose={() => setSaveTemplate(false)}
       />
+
+      {console.log('SHIVAKAR',data)}
     </div>
+    
   );
 };
 

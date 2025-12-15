@@ -274,7 +274,7 @@ const CouponsList = () => {
           <table className="w-full text-sm text-left text-gray-500">
             <thead className="text-xs text-gray-700 uppercase bg-gray-50">
               <tr>
-                <th className="px-2 py-4">Club</th>
+                <th className="px-2 py-4">Club Name</th>
                 <th className="px-2 py-4">Code</th>
                 <th className="px-2 py-4 min-w-[200px]">Description</th>
                 <th className="px-2 py-4">Type</th>
