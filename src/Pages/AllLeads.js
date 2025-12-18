@@ -59,7 +59,7 @@ const AllLeads = () => {
   const [sendPaymentModal, setSendPaymentModal] = useState(false);
   const [appointmentModal, setAppointmentModal] = useState(false);
   const [leadPaymentSend, setLeadPaymentSend] = useState(null);
-  const leadModalPage ="ALLLEAD"
+  const leadModalPage = "ALLLEAD";
   const [leadTopModal, setLeadTopModal] = useState(false);
 
   const [selectedUserId, setSelectedUserId] = useState([]);
@@ -135,6 +135,11 @@ const AllLeads = () => {
     }
   }, []);
 
+  const urlLastCallType = searchParams.get("lastCallType");
+  const lastCallType = urlLastCallType
+    ? decodeURIComponent(urlLastCallType)
+    : null;
+
   const fetchLeadList = async (currentPage = page, overrideSelected = {}) => {
     try {
       const params = {
@@ -162,9 +167,16 @@ const AllLeads = () => {
           : urlLeadStatus
           ? { label: urlLeadStatus, value: urlLeadStatus }
           : null;
+        // const selLastCallType = overrideSelected.hasOwnProperty("lastCallType")
+        //   ? overrideSelected.lastCallType
+        //   : selectedLastCallType;
         const selLastCallType = overrideSelected.hasOwnProperty("lastCallType")
           ? overrideSelected.lastCallType
-          : selectedLastCallType;
+          : selectedLastCallType
+          ? selectedLastCallType
+          : lastCallType
+          ? { label: lastCallType, value: lastCallType }
+          : null;
         const selCallTag = overrideSelected.hasOwnProperty("callTag")
           ? overrideSelected.callTag
           : selectedCallTag;
@@ -241,6 +253,8 @@ const AllLeads = () => {
       toast.error("Failed to fetch leads");
     }
   };
+
+  console.log('selectedLastCallType',selectedLastCallType)
 
   // 🚀 Fetch staff list from API
   const fetchStaff = async () => {

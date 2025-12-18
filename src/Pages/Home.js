@@ -110,13 +110,25 @@ const Home = () => {
           events: {
             click: function () {
               const statusMap = {
-                New: "new",
+                New: "New",
                 Contacted: "contacted",
-                Lost: "lost",
-                "Trial Scheduled": "trial scheduled",
+                Lost: "Lost",
+                "Trial Scheduled": "Trial/Tour Scheduled",
               };
+
+              const paramMap = {
+                "Trial Scheduled": "lastCallType",
+                Contacted: "leadStatus",
+                Lost: "leadStatus",
+                New: "leadStatus",
+              };
+
               const selectedStatus = statusMap[this.category];
-              navigate(`/all-leads?leadStatus=${selectedStatus}`);
+              const paramName = paramMap[this.category] || "leadStatus";
+
+              navigate(
+                `/all-leads?${paramName}=${encodeURIComponent(selectedStatus)}`
+              );
             },
           },
         },

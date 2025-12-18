@@ -139,15 +139,29 @@ export default function LeadFilterPanel({
 
   useEffect(() => {
     const urlLeadStatus = searchParams.get("leadStatus");
+    const urlLastCallType = searchParams.get("lastCallType");
 
     const initialFilters = {};
 
     if (urlLeadStatus) {
+      const decodedStatus = decodeURIComponent(urlLeadStatus);
       initialFilters.leadStatus = {
-        label: urlLeadStatus,
-        value: urlLeadStatus,
+        label: decodedStatus,
+        value: decodedStatus,
       };
-      setSelectedLeadStatus({ label: urlLeadStatus, value: urlLeadStatus });
+      setSelectedLeadStatus({ label: decodedStatus, value: decodedStatus });
+    }
+
+    if (urlLastCallType) {
+      const decodedLastCall = decodeURIComponent(urlLastCallType);
+      initialFilters.lastCallType = {
+        label: decodedLastCall,
+        value: decodedLastCall,
+      };
+      setSelectedLastCallType({
+        label: decodedLastCall,
+        value: decodedLastCall,
+      });
     }
 
     // Add other filters if needed (e.g., leadSource, dateFilter)
