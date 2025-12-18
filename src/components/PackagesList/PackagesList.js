@@ -276,9 +276,6 @@ const PackagesList = () => {
       return Yup.object(schema);
     });
 
-  console.log(sessionLevel[0].value,'sessionLevel')
-  console.log(sessionLevelValue, "sessionLevelValue");
-
   const initialValues = {
     name: "",
     service_id: "",

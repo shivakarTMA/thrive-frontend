@@ -24,6 +24,7 @@ const RecoveryServicesList = () => {
   const [showModal, setShowModal] = useState(false);
   const [recoveryServiceList, setRecoveryServiceList] = useState([]);
   const [servicesList, setServicesList] = useState([]);
+  const [club, setClub] = useState([]);
   const [packageList, setPackageList] = useState([]);
   const [editingOption, setEditingOption] = useState(null);
   const leadBoxRef = useRef(null);
@@ -38,11 +39,9 @@ const RecoveryServicesList = () => {
   const [totalCount, setTotalCount] = useState(0);
 
   // Function to fetch clubs
-  const fetchServices = async (search = "") => {
+  const fetchServices = async () => {
     try {
-      const res = await authAxios().get("/service/list", {
-        params: search ? { search } : {},
-      });
+      const res = await authAxios().get("/service/list");
       let data = res.data?.data || res.data || [];
       if (statusFilter?.value) {
         data = data.filter((item) => item.status === statusFilter.value);
@@ -54,7 +53,18 @@ const RecoveryServicesList = () => {
       toast.error("Failed to fetch companies");
     }
   };
-
+  // club list
+  const fetchClub = async () => {
+    try {
+      const response = await authAxios().get("/club/list");
+      const data = response.data?.data || response.data || [];
+      const activeOnly = filterActiveItems(data);
+      setClub(activeOnly);
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to fetch clubs");
+    }
+  };
 
   // Function to fetch services
   const fetchRecoveryServices = async (search = "", currentPage = page) => {
@@ -64,12 +74,13 @@ const RecoveryServicesList = () => {
           page: currentPage,
           limit: rowsPerPage,
           ...(search ? { search } : {}),
+          ...(statusFilter?.value ? { status: statusFilter.value } : {}),
         },
       });
       let data = res.data?.data || res.data || [];
-      if (statusFilter?.value) {
-        data = data.filter((item) => item.status === statusFilter.value);
-      }
+      // if (statusFilter?.value) {
+      //   data = data.filter((item) => item.status === statusFilter.value);
+      // }
       if (serviceFilter) {
         data = data.filter((item) => item.service_id === serviceFilter);
       }
@@ -89,11 +100,19 @@ const RecoveryServicesList = () => {
   // Load initial data
   useEffect(() => {
     fetchServices();
+    fetchClub();
     fetchRecoveryServices();
   }, []);
 
   const servicesOptions =
     servicesList?.map((item) => ({
+      label: item.name,
+      value: item.id,
+    })) || [];
+
+  // Club dropdown options
+  const clubOptions =
+    club?.map((item) => ({
       label: item.name,
       value: item.id,
     })) || [];
@@ -118,6 +137,7 @@ const RecoveryServicesList = () => {
   // Formik initialization
   const formik = useFormik({
     initialValues: {
+      club_id: "",
       name: "",
       service_id: "3",
       // package_id: "",
@@ -129,6 +149,7 @@ const RecoveryServicesList = () => {
       status: "ACTIVE",
     },
     validationSchema: Yup.object({
+      club_id: Yup.string().required("Club is required"),
       image: Yup.mixed().test(
         "required-image",
         "Image is required",
@@ -174,7 +195,7 @@ const RecoveryServicesList = () => {
           toast.success("Created Successfully");
         }
 
-        fetchServices();
+        fetchRecoveryServices();
       } catch (err) {
         console.error("API Error:", err.response?.data || err.message);
         toast.error("Failed to save onboarding");
@@ -275,7 +296,7 @@ const RecoveryServicesList = () => {
                 <th className="px-2 py-4">Tags</th>
                 <th className="px-2 py-4">Club</th>
                 <th className="px-2 py-4">Service</th>
-                <th className="px-2 py-4">Package</th>
+                {/* <th className="px-2 py-4">Package</th> */}
                 <th className="px-2 py-4">Position</th>
                 <th className="px-2 py-4">Status</th>
                 <th className="px-2 py-4">Action</th>
@@ -309,7 +330,7 @@ const RecoveryServicesList = () => {
                     <td className="px-2 py-4">
                       <div className="max-w-[200px]">{item?.name}</div>
                     </td>
-                   
+
                     <td className="px-2 py-4">
                       {item?.tags ? item?.tags : "--"}
                     </td>
@@ -319,9 +340,9 @@ const RecoveryServicesList = () => {
                     <td className="px-2 py-4">
                       {item?.service_name ? item?.service_name : "--"}
                     </td>
-                    <td className="px-2 py-4">
+                    {/* <td className="px-2 py-4">
                       {item?.package_name ? item?.package_name : "--"}
-                    </td>
+                    </td> */}
                     <td className="px-2 py-4">{item?.position}</td>
                     <td className="px-2 py-4">
                       <div
@@ -387,6 +408,7 @@ const RecoveryServicesList = () => {
           handleOverlayClick={handleOverlayClick}
           leadBoxRef={leadBoxRef}
           servicesOptions={servicesOptions}
+          clubOptions={clubOptions}
         />
       )}
     </div>

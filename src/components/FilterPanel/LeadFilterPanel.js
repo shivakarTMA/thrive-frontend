@@ -34,10 +34,6 @@ export default function LeadFilterPanel({
   // Only update appliedFilters when user clicks Apply
   const [appliedFilters, setAppliedFilters] = useState({});
 
-  const dispatch = useDispatch();
-  const { lists } = useSelector((state) => state.optionList);
-
-  // Fetch staff list
   const fetchStaff = async (search = "") => {
     try {
       const res = await authAxios().get("/staff/list", {
@@ -55,6 +51,9 @@ export default function LeadFilterPanel({
   useEffect(() => {
     fetchStaff();
   }, []);
+
+  const dispatch = useDispatch();
+  const { lists, loading } = useSelector((state) => state.optionList);
 
   // Fetch dropdown options from Redux
   useEffect(() => {

@@ -21,6 +21,7 @@ const RecoveryServices = ({
   handleOverlayClick,
   leadBoxRef,
   servicesOptions,
+  clubOptions
 }) => {
 
 
@@ -36,6 +37,7 @@ const RecoveryServices = ({
 
           // Set form values from fetched data
           formik.setValues({
+            club_id: data.club_id || "",
             name: data.name || "",
             service_id: data.service_id || "3",
             image: data.image || null,
@@ -136,6 +138,40 @@ const RecoveryServices = ({
                     {formik.touched.image && formik.errors.image && (
                       <p className="text-red-500 text-sm mt-1">
                         {formik.errors.image}
+                      </p>
+                    )}
+                  </div>
+
+                                    {/* Club Dropdown */}
+                  <div>
+                    <label className="mb-2 block">
+                      Club<span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[10]">
+                        <FaListUl />
+                      </span>
+                      <Select
+                        name="club_id"
+                        value={
+                          clubOptions.find(
+                            (option) =>
+                              option.value.toString() ===
+                              formik.values.club_id?.toString()
+                          ) || null
+                        }
+                        options={clubOptions}
+                        onChange={(option) =>
+                          formik.setFieldValue("club_id", option.value)
+                        }
+                        onBlur={() => formik.setFieldTouched("club_id", true)}
+                        styles={selectIcon}
+                        className="!capitalize"
+                      />
+                    </div>
+                    {formik.touched.club_id && formik.errors.club_id && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {formik.errors.club_id}
                       </p>
                     )}
                   </div>
