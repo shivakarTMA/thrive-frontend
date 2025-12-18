@@ -238,6 +238,7 @@ const StaffList = () => {
     initialValues,
     validationSchema,
     onSubmit: async (values, { resetForm }) => {
+      console.log(values,'SHIVAKAR')
       try {
         const formData = new FormData();
 
@@ -447,7 +448,7 @@ const StaffList = () => {
                     <td className="px-2 py-4">
                       <Tooltip
                         id={`edit-product-${row?.id}`}
-                        content="Edit Product"
+                        content="Edit User"
                         place="left"
                       >
                         <div

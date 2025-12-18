@@ -187,6 +187,14 @@ const CreateStaff = ({
     }
   }, [formik.values?.role]);
 
+  const getValidDate = (value) => {
+    if (!value) return null;
+
+    const date = value instanceof Date ? value : new Date(value);
+
+    return isNaN(date.getTime()) ? null : date;
+  };
+
   return (
     <div
       className="bg--blur create--lead--container overflow-auto hide--overflow fixed top-0 left-0 z-[999] w-full bg-black bg-opacity-60 h-full"
@@ -207,7 +215,7 @@ const CreateStaff = ({
           <form onSubmit={formik.handleSubmit}>
             <div className="flex bg-white rounded-b-[10px]">
               <div className="p-6 flex-1">
-                <div className="grid lg:grid-cols-3 md:grid-cols-2 gap-4">
+                <div className="grid md:grid-cols-3 gap-4">
                   {/* Full Name */}
                   <div>
                     <label className="mb-2 block">
@@ -287,10 +295,10 @@ const CreateStaff = ({
                       <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
                         <FaBirthdayCake />
                       </span>
-                      <DatePicker
+                      {/* <DatePicker
                         selected={
-                          formik.values.date_of_birth
-                            ? new Date(formik.values.date_of_birth)
+                          formik.values?.date_of_birth
+                            ? new Date(formik.values?.date_of_birth)
                             : null
                         }
                         onChange={(date) =>
@@ -307,7 +315,23 @@ const CreateStaff = ({
                         maxDate={adultLimitDate} // cannot select a date younger than 18
                         minDate={oldestYearLimit} // limit oldest possible age to 100 years
                         yearDropdownItemNumber={100}
-                      />
+                      /> */}
+                      <DatePicker
+  selected={getValidDate(formik.values?.date_of_birth)}
+  onChange={(date) =>
+    formik.setFieldValue("date_of_birth", date)
+  }
+  dateFormat="dd MMM yyyy"
+  showMonthDropdown
+  showYearDropdown
+  scrollableYearDropdown
+  dropdownMode="select"
+  placeholderText="Select date of birth"
+  className="input--icon"
+  maxDate={adultLimitDate}
+  minDate={oldestYearLimit}
+  yearDropdownItemNumber={100}
+/>
                     </div>
                   </div>
 
@@ -374,7 +398,7 @@ const CreateStaff = ({
                   </div>
 
                   <div
-                    className={`col-span-3 ${
+                    className={`md:col-span-3 ${
                       editingOption ? "grid-cols-4" : "grid-cols-3"
                     }  grid  gap-4 "`}
                   >
@@ -506,7 +530,7 @@ const CreateStaff = ({
                     )}
                   </div>
 
-                  <div className="col-span-3 space-y-4">
+                  <div className="md:col-span-3 space-y-4">
                     <label className="mb-0 block">
                       Profile Info.<span className="text-red-500">*</span>
                     </label>
@@ -675,7 +699,7 @@ const CreateStaff = ({
                       </div>
 
                       {/* Description */}
-                      <div className="col-span-3">
+                      <div className="md:col-span-3">
                         <label className="mb-2 block">
                           Description
                           <span className="text-red-500">*</span>
