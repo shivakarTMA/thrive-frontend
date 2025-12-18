@@ -59,6 +59,8 @@ const AllLeads = () => {
   const [sendPaymentModal, setSendPaymentModal] = useState(false);
   const [appointmentModal, setAppointmentModal] = useState(false);
   const [leadPaymentSend, setLeadPaymentSend] = useState(null);
+  const leadModalPage ="ALLLEAD"
+  const [leadTopModal, setLeadTopModal] = useState(false);
 
   const [selectedUserId, setSelectedUserId] = useState([]);
   const [assignedOwners, setAssignedOwners] = useState({});
@@ -88,7 +90,7 @@ const AllLeads = () => {
 
   const handleCommunicate = (type) => {
     if (selectedUserId.length === 0) {
-      toast.error(`Please select the Member to ${type} owners.`);
+      toast.error(`Please select the Lead for ${type}.`);
       return;
     }
 
@@ -293,7 +295,7 @@ const AllLeads = () => {
       navigate(`/all-leads?date=${selected.value}`, { replace: true });
 
       // Re-fetch the lead list based on the selected filter
-      fetchLeadList("", 1, { dateFilter: selected });
+      fetchLeadList(1, { dateFilter: selected });
     } else {
       // Handle custom date filter logic here (e.g., open a date picker)
       // You may need to update the URL with a custom date range
@@ -303,7 +305,7 @@ const AllLeads = () => {
   useEffect(() => {
     // When 'id' changes, fetch data based on the new 'id'
     if (id) {
-      fetchLeadList("", 1, { id });
+      fetchLeadList(1, { id });
     } else {
       fetchLeadList(); // Fetch without the id if it's removed
     }
@@ -312,7 +314,7 @@ const AllLeads = () => {
   // // Trigger only for custom range once both dates selected
   useEffect(() => {
     if (dateFilter?.value === "custom" && customFrom && customTo) {
-      fetchLeadList("", 1, { dateFilter, customFrom, customTo });
+      fetchLeadList(1, { dateFilter, customFrom, customTo });
     }
   }, [dateFilter, customFrom, customTo]);
 
@@ -335,11 +337,11 @@ const AllLeads = () => {
 
     // Pass explicit null in overrideSelected so fetchLeadList knows to skip it
     const overrideSelected = { [filterKey]: null };
-    fetchLeadList("", 1, overrideSelected);
+    fetchLeadList(1, overrideSelected);
   };
 
   const handleApplyFiltersFromChild = () => {
-    fetchLeadList("", 1);
+    fetchLeadList(1);
   };
 
   const handleCheckboxChange = (id) => {
@@ -423,6 +425,7 @@ const AllLeads = () => {
             toggleMenuBar={toggleMenuBar}
             setLeadModal={setLeadModal}
             setSelectedLead={setSelectedLead}
+            leadModalPage={leadModalPage}
           />
           <div className="content--area p-5">
             <div className="page--content">
@@ -877,6 +880,8 @@ const AllLeads = () => {
           setLeadModal={setLeadModal}
           selectedLead={selectedLead}
           handleLeadUpdate={fetchLeadList}
+          setLeadTopModal={setLeadTopModal}
+          leadModalPage={leadModalPage}
         />
       )}
 

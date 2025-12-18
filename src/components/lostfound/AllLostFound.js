@@ -9,7 +9,7 @@ import MarkReturnedModal from "./MarkReturnedModal";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { addYears, format, subYears } from "date-fns";
-import { customStyles, formatAutoDate } from "../../Helper/helper";
+import { customStyles, formatAutoDate, formatText } from "../../Helper/helper";
 import viewIcon from "../../assets/images/icons/eye.svg";
 import returnIcon from "../../assets/images/icons/return.svg";
 import { FaCalendarDays } from "react-icons/fa6";
@@ -295,7 +295,7 @@ const AllLostFound = () => {
                           `}
                       >
                         <FaCircle className="text-[10px]" />
-                        {row?.status == null ? "--" : row?.status}
+                        {row?.status == null ? "--" : formatText(row?.status)}
                       </span>
                     </td>
                     <td className="px-2 py-4">

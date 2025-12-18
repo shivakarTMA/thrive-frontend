@@ -209,7 +209,7 @@ const MemberList = () => {
   const handleSubmitAssign = () => {
     if (selectedUserId.length === 0) {
       // If no leads are selected, show an alert
-      toast.error("Please select the Member to change the Trainers.");
+      toast.error("Please select the Member to change the Owner.");
       setShowOwnerDropdown(false);
     } else {
       // If there are selected leads, show the dropdown to select an owner
@@ -255,7 +255,7 @@ const MemberList = () => {
 
   const handleCommunicate = (type) => {
     if (selectedUserId.length === 0) {
-      toast.error(`Please select the Member to ${type} owners.`);
+      toast.error(`Please select the Member for ${type}.`);
       return;
     }
 

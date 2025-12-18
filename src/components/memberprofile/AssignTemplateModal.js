@@ -1,78 +1,117 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Select from "react-select";
 import { customStyles } from "../../Helper/helper";
+import { authAxios } from "../../config/config";
+
+const workoutTypeOptions = [
+  { value: "MULTIDAY", label: "Workout Plan (Multiple Days)" },
+  { value: "SINGLE", label: "Workout (One Day)" },
+];
 
 const AssignTemplateModal = ({
   open,
   onClose,
   onAssign,
-  selectedWorkoutType,
-  setSelectedWorkoutType,
   selectedTemplate,
   setSelectedTemplate,
 }) => {
-  const workoutTypeOptions = [
-    { value: "MULTIDAY", label: "Workout Plan (Multiple Days)" },
-    { value: "SINGLE", label: "Workout (One Day)" },
-  ];
+  const [templates, setTemplates] = useState([]);
+  const [selectedWorkoutType, setSelectedWorkoutType] = useState(null);
+  const [loading, setLoading] = useState(false);
 
-  const templateOptions = [
-    { value: "template1", label: "Leg Day + Cardio Mix", type: "MULTIDAY" },
-    { value: "template2", label: "Push Day Strength", type: "MULTIDAY" },
-    { value: "template3", label: "Cardio Workout", type: "MULTIDAY" },
-    { value: "template4", label: "Full Body HIIT", type: "SINGLE" },
-  ];
+  useEffect(() => {
+    if (!open) return;
 
-  const filteredTemplateOptions = selectedWorkoutType
-    ? templateOptions.filter((t) => t.type === selectedWorkoutType.value)
+    const fetchTemplates = async () => {
+      try {
+        setLoading(true);
+        const res = await authAxios().get("/workoutplan/list");
+        console.log("Workout template list:", res.data);
+        setTemplates(res.data?.data || []);
+      } catch (err) {
+        console.error("❌ Failed to fetch workout templates", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTemplates();
+  }, [open]);
+
+  // 🔧 Filter templates by workout type
+  const filteredTemplates = selectedWorkoutType
+    ? templates.filter(
+        (t) => t.workout_type === selectedWorkoutType.value
+      )
     : [];
+
+  const templateOptions = filteredTemplates.map((t) => ({
+    value: t.id,
+    label: `${t.name} (${t.no_of_days} days)`,
+  }));
+
+  const handleClose = () => {
+    setSelectedWorkoutType(null);
+    setSelectedTemplate(null);
+    onClose();
+  };
 
   if (!open) return null;
 
   return (
     <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50">
-      <div className="bg-white rounded-2xl p-6 w-[400px] shadow-xl">
+      <div className="bg-white rounded-xl p-6 w-[420px] shadow-lg">
         <h2 className="text-xl font-semibold mb-4">Assign Template</h2>
 
-        {/* Workout Type Select */}
+        {/* Workout Type */}
         <div className="mb-4">
-          <label className="block mb-2">Workout Type</label>
+          <label className="block mb-2 font-medium">
+            Workout Type
+          </label>
           <Select
             options={workoutTypeOptions}
             value={selectedWorkoutType}
-            onChange={setSelectedWorkoutType}
+            onChange={(val) => {
+              setSelectedWorkoutType(val);
+              setSelectedTemplate(null); // reset template
+            }}
             styles={customStyles}
+            placeholder="Select workout type"
           />
         </div>
 
-        {/* Template Select */}
+        {/* Template */}
         <div className="mb-4">
-          <label className="block mb-2">Template</label>
+          <label className="block mb-2 font-medium">
+            Template
+          </label>
           <Select
-            options={filteredTemplateOptions}
+            options={templateOptions}
             value={selectedTemplate}
             onChange={setSelectedTemplate}
             styles={customStyles}
-            isDisabled={!selectedWorkoutType} // disable until type is selected
+            isDisabled={!selectedWorkoutType}
+            isLoading={loading}
             placeholder={
               selectedWorkoutType
-                ? "Select Template"
+                ? "Select template"
                 : "Select workout type first"
             }
           />
         </div>
 
-        {/* Buttons */}
-        <div className="flex justify-end gap-2">
+        {/* Actions */}
+        <div className="flex justify-end gap-2 mt-6">
           <button
-            onClick={onClose}
-            className="px-4 py-2 bg-gray-200 rounded-lg"
+            onClick={handleClose}
+            className="px-4 py-2 bg-gray-200 rounded"
           >
             Cancel
           </button>
           <button
             onClick={onAssign}
-            className="px-4 py-2 bg-black text-white rounded-lg"
+            disabled={!selectedTemplate}
+            className="px-4 py-2 bg-black text-white rounded disabled:opacity-50"
           >
             Assign
           </button>

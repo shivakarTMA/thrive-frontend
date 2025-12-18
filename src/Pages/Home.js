@@ -18,6 +18,8 @@ import TrialUserCard from "../components/TrialUserCard";
 import DatePicker from "react-datepicker";
 import PendingOrderTable from "../components/PendingOrderTable";
 import { useNavigate } from "react-router-dom";
+import { FaCalendarDays } from "react-icons/fa6";
+import { addYears, subYears } from "date-fns";
 
 const callOptions = [
   { value: "enquiry calls", label: "Enquiry Calls" },
@@ -35,11 +37,11 @@ const callOptions = [
   },
 ];
 
-const filterOptions = [
+const dateFilterOptions = [
   { value: "today", label: "Today" },
-  { value: "last 7 days", label: "Last 7 Days" },
-  { value: "month till date", label: "Month till Date" },
-  { value: "custom date range", label: "Custom Date Range" },
+  { value: "last_7_days", label: "Last 7 Days" },
+  { value: "month_till_date", label: "Month Till Date" },
+  { value: "custom", label: "Custom Date" },
 ];
 
 const tabs = ["Scheduled", "Attempted", "Contacted", "Not Contacted", "Missed"];
@@ -47,9 +49,9 @@ const tabs = ["Scheduled", "Attempted", "Contacted", "Not Contacted", "Missed"];
 const Home = () => {
   const navigate = useNavigate();
   const [selectedType, setSelectedType] = useState(callOptions[0]);
-  const [filterData, setFilterData] = useState(filterOptions[0]);
-  const [fromDate, setFromDate] = useState(null);
-  const [toDate, setToDate] = useState(null);
+  const [dateFilter, setDateFilter] = useState(dateFilterOptions[1]);
+  const [customFrom, setCustomFrom] = useState(null);
+  const [customTo, setCustomTo] = useState(null);
   const [selectedTab, setSelectedTab] = useState("Scheduled");
   const [trialLeads, setTrialLeads] = useState(trialScheduledUsers);
   const leadsStatus = {
@@ -203,6 +205,19 @@ const Home = () => {
     console.log("Selected:", selectedOption);
   };
 
+  const handleDateFilterChange = (selected) => {
+    setDateFilter(selected);
+
+    // If custom date filter is selected, handle the logic for custom dates
+    if (selected?.value !== "custom") {
+      setCustomFrom(null);
+      setCustomTo(null);
+    } else {
+      // Handle custom date filter logic here (e.g., open a date picker)
+      // You may need to update the URL with a custom date range
+    }
+  };
+
   return (
     <div className="page--content">
       <div className=" flex items-end justify-between gap-2 mb-5">
@@ -210,51 +225,57 @@ const Home = () => {
           <p className="text-sm">{`Home > Dashboard`}</p>
           <h1 className="text-3xl font-semibold">Dashboard</h1>
         </div>
-        <div className="flex items-end gap-2">
-          {filterData.value === "custom date range" && (
-            <div className="flex gap-4 items-center">
-              <div className="flex gap-1 items-center">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  From
-                </label>
-                <div className="custom--date">
-                  <DatePicker
-                    selected={fromDate}
-                    onChange={(date) => setFromDate(date)}
-                    dateFormat="dd MMM yyyy"
-                    className="border rounded px-3 py-2"
-                    maxDate={toDate || new Date()}
-                    placeholderText="Select start date"
-                  />
-                </div>
-              </div>
-              <div className="flex gap-1 items-center">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  To
-                </label>
-                <div className="custom--date">
-                  <DatePicker
-                    selected={toDate}
-                    onChange={(date) => setToDate(date)}
-                    dateFormat="dd MMM yyyy"
-                    className="border rounded px-3 py-2"
-                    minDate={fromDate}
-                    maxDate={new Date()}
-                    placeholderText="Select end date"
-                  />
-                </div>
-              </div>
-            </div>
-          )}
 
-          <Select
-            options={filterOptions}
-            value={filterData}
-            onChange={(option) => setFilterData(option)}
-            isSearchable={false}
-            className="custom--select min-w-[150px]"
-            styles={customStyles}
-          />
+        <div className="flex justify-end gap-2 w-full">
+          {dateFilter?.value === "custom" && (
+            <>
+              <div className="custom--date dob-format flex-1 max-w-[180px] w-full">
+                <span className="absolute z-[1] mt-[11px] ml-[15px]">
+                  <FaCalendarDays />
+                </span>
+                <DatePicker
+                  selected={customFrom}
+                  onChange={(date) => setCustomFrom(date)}
+                  placeholderText="From Date"
+                  className="custom--input w-full input--icon"
+                  minDate={subYears(new Date(), 20)}
+                  maxDate={addYears(new Date(), 0)}
+                  dateFormat="dd-MM-yyyy"
+                  showMonthDropdown
+                  showYearDropdown
+                  dropdownMode="select"
+                />
+              </div>
+              <div className="custom--date dob-format flex-1 max-w-[180px] w-full">
+                <span className="absolute z-[1] mt-[11px] ml-[15px]">
+                  <FaCalendarDays />
+                </span>
+                <DatePicker
+                  selected={customTo}
+                  onChange={(date) => setCustomTo(date)}
+                  placeholderText="To Date"
+                  className="custom--input w-full input--icon"
+                  minDate={subYears(new Date(), 20)}
+                  maxDate={addYears(new Date(), 0)}
+                  showMonthDropdown
+                  showYearDropdown
+                  dropdownMode="select"
+                  dateFormat="dd-MM-yyyy"
+                />
+              </div>
+            </>
+          )}
+          <div className="max-w-[180px] w-full">
+            <Select
+              placeholder="Select Date"
+              options={dateFilterOptions}
+              value={dateFilter}
+              onChange={handleDateFilterChange}
+              // isClearable
+              styles={customStyles}
+              className="w-full"
+            />
+          </div>
         </div>
       </div>
       {/* end title */}
@@ -357,7 +378,10 @@ const Home = () => {
 
           <div className="top--side flex items-center gap-2 justify-between mt-5">
             <h2>Assigned Leads ({assignedLeadsData.length})</h2>
-            <Link to={`/all-leads?view=assigned`} className="underline text-blue-500">
+            <Link
+              to={`/all-leads?view=assigned`}
+              className="underline text-blue-500"
+            >
               View All
             </Link>
           </div>
@@ -389,7 +413,10 @@ const Home = () => {
                         </div>
                       </div>
                     </div>
-                    <Link to={`/lead-follow-up/${user.id}?action=add-follow-up`} className="text-2xl font-bold text-black">
+                    <Link
+                      to={`/lead-follow-up/${user.id}?action=add-follow-up`}
+                      className="text-2xl font-bold text-black"
+                    >
                       <GoPlusCircle />
                     </Link>
                   </div>
@@ -398,7 +425,7 @@ const Home = () => {
               <p className="text-sm text-gray-500">No records found.</p>
             )}
 
-            {console.log(assignedLeadsData,'assignedLeadsData')}
+            {console.log(assignedLeadsData, "assignedLeadsData")}
           </div>
         </div>
       </div>

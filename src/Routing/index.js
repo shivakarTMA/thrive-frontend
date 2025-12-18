@@ -273,22 +273,7 @@ export default function Routing() {
                 </PrivateRoute>
               }
             />
-            <Route
-              path="/create-workout-plan"
-              element={
-                <PrivateRoute>
-                  <CreateWorkoutplan />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/create-workout-plan/:id"
-              element={
-                <PrivateRoute>
-                  <CreateWorkoutplan />
-                </PrivateRoute>
-              }
-            />
+            
           </>
         )} */}
 

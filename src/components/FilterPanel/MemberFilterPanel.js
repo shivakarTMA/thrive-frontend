@@ -160,7 +160,6 @@ export default function MemberFilterPanel({
     });
     setShowFilters(false);
 
-    setShowFilters(false);
     if (onApplyFilters) onApplyFilters();
     navigate(`/all-members/`);
   };

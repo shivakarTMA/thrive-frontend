@@ -39,6 +39,7 @@ const WorkoutPlan = ({
   });
 
   const [validationErrors, setValidationErrors] = useState({});
+  const [isFromTemplate, setIsFromTemplate] = useState(false);
 
   const [data, setData] = useState({
     plan: {
@@ -69,12 +70,32 @@ const WorkoutPlan = ({
   const [selectedWorkoutType, setSelectedWorkoutType] = useState(null);
   const [selectedTemplate, setSelectedTemplate] = useState(null);
 
-  // FIX 3: Number Formatting Helper
+  /* -------------------------------------------------------
+     HELPERS
+  ------------------------------------------------------- */
+
   const formatNumber = (value) => {
     if (value === null || value === undefined || value === "") return "";
     const num = Number(value);
     // Return integer if it's a whole number, otherwise return with decimals
     return num % 1 === 0 ? Math.floor(num) : num;
+  };
+
+  const sanitizeNumber = (value) => {
+    if (value === "") return "";
+    const num = Number(value);
+    if (isNaN(num) || num < 0) return "";
+    return Number.isInteger(num) ? num : num;
+  };
+
+  const normalizeNumber = (val) =>
+    val === "" || val === undefined ? null : val;
+
+  const calculateEndDate = (startDate, numDays) => {
+    if (!startDate || !numDays) return null;
+    const end = new Date(startDate);
+    end.setDate(end.getDate() + Number(numDays) - 1);
+    return end.toISOString().split("T")[0];
   };
 
   // API: Fetch workout plan when editing - UPDATED WITH FIX 3
@@ -106,8 +127,8 @@ const WorkoutPlan = ({
                   sets: formatNumber(exercise.sets),
                   reps: formatNumber(exercise.reps),
                   weight_kg: formatNumber(exercise.weight_kg),
-                  distance: formatNumber(exercise.distance),
-                  duration: formatNumber(exercise.duration),
+                  distance_mts: formatNumber(exercise.distance_mts),
+                  duration_mins: formatNumber(exercise.duration_mins),
                   rest_secs: formatNumber(exercise.rest_secs),
                   // Convert group_type and group_id from API to frontend format
                   groupType: exercise.group_type || null,
@@ -128,11 +149,11 @@ const WorkoutPlan = ({
                           exercise.weight_kg !== null &&
                           exercise.weight_kg !== undefined,
                         hasDistance:
-                          exercise.distance !== null &&
-                          exercise.distance !== undefined,
+                          exercise.distance_mts !== null &&
+                          exercise.distance_mts !== undefined,
                         hasDuration:
-                          exercise.duration !== null &&
-                          exercise.duration !== undefined,
+                          exercise.duration_mins !== null &&
+                          exercise.duration_mins !== undefined,
                       },
                 };
               }) || [],
@@ -140,16 +161,13 @@ const WorkoutPlan = ({
 
         setData({
           plan: {
-            id: data?.plan.id || null,
             member_id: data?.plan.member_id || id,
             name: data?.plan.name || "",
             description: data?.plan.description || "",
             workout_type: data?.plan.workout_type || "MULTIDAY",
             no_of_days: data?.plan.no_of_days || null,
-            start_date: data?.plan.start_date || "",
-            end_date: data?.plan.end_date || "",
-            created_by: data?.plan.created_by || createdBy,
-            position: data?.plan.position || 1,
+            start_date: data?.plan.start_date || null,
+            end_date: data?.plan.end_date || null,
           },
           days: processedDays,
         });
@@ -164,11 +182,24 @@ const WorkoutPlan = ({
     }
   };
 
-  const calculateEndDate = (startDate, numDays) => {
-    if (!startDate || !numDays) return "";
-    const endDate = new Date(startDate);
-    endDate.setDate(endDate.getDate() + Number(numDays) - 1);
-    return endDate.toISOString().split("T")[0];
+  const generateDaysWithDates = (startDate, noOfDays, existingDays = []) => {
+    if (!startDate || !noOfDays) return [];
+
+    return Array.from({ length: noOfDays }, (_, i) => {
+      const d = new Date(startDate);
+      d.setDate(d.getDate() + i);
+
+      const existingDay = existingDays[i];
+
+      return {
+        id: existingDay?.id, // ✅ PRESERVE day.id
+        day_no: i + 1,
+        day_date: d.toISOString().split("T")[0],
+        is_rest_day: existingDay?.is_rest_day ?? false,
+        position: i + 1,
+        exercises: existingDay?.exercises ?? [],
+      };
+    });
   };
 
   const handleNextClick = (e) => {
@@ -192,20 +223,10 @@ const WorkoutPlan = ({
       data.plan.no_of_days
     );
 
-    const generatedDays = Array.from(
-      { length: data.plan.no_of_days },
-      (_, i) => {
-        const dayDate = new Date(data.plan.start_date);
-        dayDate.setDate(dayDate.getDate() + i);
-
-        return {
-          day_no: i + 1,
-          day_date: dayDate.toISOString().split("T")[0],
-          is_rest_day: false,
-          position: i + 1,
-          exercises: [],
-        };
-      }
+    const generatedDays = generateDaysWithDates(
+      data.plan.start_date,
+      data.plan.no_of_days,
+      data.days // ✅ preserve IDs if any
     );
 
     setData((prev) => ({
@@ -232,8 +253,8 @@ const WorkoutPlan = ({
           sets: null,
           reps: exercise.has_reps ? null : null,
           weight_kg: exercise.has_weight ? null : null,
-          distance: exercise.has_distance ? null : null,
-          duration: exercise.has_duration ? null : null,
+          distance_mts: exercise.has_distance ? null : null,
+          duration_mins: exercise.has_duration ? null : null,
           rest_secs: null,
           notes: "",
           position: day.exercises.length + 1,
@@ -272,7 +293,7 @@ const WorkoutPlan = ({
     // Update local state
     setData((prev) => {
       const updatedDays = [...prev.days];
-      
+
       // Filter out the specific exercise and recalculate positions
       updatedDays[dayIdx].exercises = updatedDays[dayIdx].exercises
         .filter((ex) => {
@@ -281,11 +302,13 @@ const WorkoutPlan = ({
             return ex.id !== exerciseToDelete.id;
           }
           // For new exercises without IDs, use position and UI id
-          return !(ex.position === exerciseToDelete.position && 
-                   ex._ui?.id === exerciseToDelete._ui?.id);
+          return !(
+            ex.position === exerciseToDelete.position &&
+            ex._ui?.id === exerciseToDelete._ui?.id
+          );
         })
         .map((ex, idx) => ({ ...ex, position: idx + 1 }));
-      
+
       return { ...prev, days: updatedDays };
     });
   };
@@ -303,51 +326,6 @@ const WorkoutPlan = ({
       });
 
       return { ...prev, days: updatedDays };
-    });
-  };
-
-  const toggleExerciseSelect = (exIdx) => {
-    setData((prev) => {
-      const updatedDays = prev.days.map((day, index) => {
-        if (index !== activeDayIndex) return day;
-
-        const updatedExercises = day.exercises.map((exercise, i) =>
-          i === exIdx
-            ? { ...exercise, isSelected: !exercise.isSelected }
-            : exercise
-        );
-
-        return { ...day, exercises: updatedExercises };
-      });
-
-      return { ...prev, days: updatedDays };
-    });
-  };
-
-  const handleGroupSelected = (type) => {
-    setData((previousState) => {
-      const updatedDays = [...previousState.days];
-      const groupId = `group-${Date.now()}`;
-      updatedDays[activeDayIndex].exercises = updatedDays[
-        activeDayIndex
-      ].exercises.map((ex) =>
-        ex.isSelected
-          ? { ...ex, groupType: type, groupId, isSelected: false }
-          : ex
-      );
-      return { ...previousState, days: updatedDays };
-    });
-  };
-
-  const handleUngroup = (groupId) => {
-    setData((previousState) => {
-      const updatedDays = [...previousState.days];
-      updatedDays[activeDayIndex].exercises = updatedDays[
-        activeDayIndex
-      ].exercises.map((ex) =>
-        ex.groupId === groupId ? { ...ex, groupId: null, groupType: null } : ex
-      );
-      return { ...previousState, days: updatedDays };
     });
   };
 
@@ -400,16 +378,19 @@ const WorkoutPlan = ({
 
     setData((prev) => {
       const updatedDays = [...prev.days];
-      
+
       // Deep clone and recalculate positions
-      const pastedExercises = JSON.parse(JSON.stringify(copiedDay)).map((ex, idx) => ({
-        ...ex,
-        position: idx + 1,
-        // Generate new unique IDs for UI
-        _ui: ex._ui?.type === "rest" 
-          ? { ...ex._ui, id: `rest-${Date.now()}-${idx}` }
-          : { ...ex._ui, id: `${ex._ui?.id || 'ex'}-${Date.now()}-${idx}` }
-      }));
+      const pastedExercises = JSON.parse(JSON.stringify(copiedDay)).map(
+        (ex, idx) => ({
+          ...ex,
+          position: idx + 1,
+          // Generate new unique IDs for UI
+          _ui:
+            ex._ui?.type === "rest"
+              ? { ...ex._ui, id: `rest-${Date.now()}-${idx}` }
+              : { ...ex._ui, id: `${ex._ui?.id || "ex"}-${Date.now()}-${idx}` },
+        })
+      );
 
       updatedDays[dayIdx] = {
         ...updatedDays[dayIdx],
@@ -420,38 +401,6 @@ const WorkoutPlan = ({
     });
 
     toast.success("Exercises pasted successfully!");
-  };
-
-  const handleAddRestTime = (dayIndex) => {
-    setData((previousState) => {
-      const updatedDays = previousState.days.map((day, index) => {
-        if (index !== dayIndex) return day;
-        return {
-          ...day,
-          exercises: [
-            ...day.exercises,
-            {
-              name: "Rest Time",
-              category: "Rest",
-              sets: null,
-              reps: null,
-              weight_kg: null,
-              distance: null,
-              duration: null,
-              rest_secs: null,
-              notes: "",
-              position: day.exercises.length + 1,
-              isSelected: false,
-              _ui: {
-                id: `rest-${Date.now()}`,
-                type: "rest",
-              },
-            },
-          ],
-        };
-      });
-      return { ...previousState, days: updatedDays };
-    });
   };
 
   const handleToggleRestDay = (dayIdx, isRest) => {
@@ -468,209 +417,137 @@ const WorkoutPlan = ({
 
   const cleanDataForSubmission = (data) => {
     return {
-      plan: data.plan,
-      days: data.days.map((day) => ({
-        ...day,
-        exercises: day.exercises.map((ex) => {
-          const { isSelected, groupType, groupId, _ui, ...cleanEx } = ex;
-          return {
-            ...cleanEx,
-            group_type: groupType || null,
-            group_id: groupId || null,
-          };
-        }),
-      })),
+      plan: {
+        id: editingId || undefined, // ✅ required for update
+        member_id: data.plan.member_id,
+        name: data.plan.name,
+        description: data.plan.description,
+        workout_type: data.plan.workout_type,
+        no_of_days: Number(data.plan.no_of_days),
+        start_date: data.plan.start_date,
+        end_date: data.plan.end_date,
+      },
+      days: data.days.map((day) => {
+        const cleanDay = {
+          day_no: day.day_no,
+          day_date: day.day_date,
+          is_rest_day: day.is_rest_day,
+          position: day.position,
+          exercises: day.exercises.map((ex) => {
+            const { isSelected, groupType, groupId, _ui, ...cleanEx } = ex;
+
+            const cleanedExercise = {
+              ...cleanEx,
+              sets: normalizeNumber(cleanEx.sets),
+              reps: normalizeNumber(cleanEx.reps),
+              weight_kg: normalizeNumber(cleanEx.weight_kg),
+              distance_mts: normalizeNumber(cleanEx.distance_mts),
+              duration_mins: normalizeNumber(cleanEx.duration_mins),
+              rest_secs: normalizeNumber(cleanEx.rest_secs),
+              group_type: groupType || null,
+              group_id: groupId || null,
+            };
+
+            // ✅ KEEP exercise.id ONLY during update
+            if (editingId && ex.id) {
+              cleanedExercise.id = ex.id;
+            }
+
+            return cleanedExercise;
+          }),
+        };
+
+        // ✅ KEEP day.id ONLY during update
+        if (editingId && day.id) {
+          cleanDay.id = day.id;
+        }
+
+        return cleanDay;
+      }),
     };
   };
 
   const validateWorkoutPlan = (data) => {
-    let errors = {};
+    const errs = {};
 
-    data.days.forEach((day, dayIndex) => {
+    data.days.forEach((day, dIdx) => {
       if (day.is_rest_day) return;
 
-      day.exercises.forEach((ex, exIndex) => {
-        const prefix = `day_${dayIndex}_ex_${exIndex}`;
+      day.exercises.forEach((ex, eIdx) => {
+        const key = `day_${dIdx}_ex_${eIdx}`;
 
-        // Skip rest block
-        if (ex._ui?.type === "rest") {
-          if (ex.rest_secs == null || ex.rest_secs === "") {
-            errors[`${prefix}_rest_secs`] = "Rest seconds is required";
-          }
-          return;
-        }
+        if (ex.sets == null) errs[`${key}_sets`] = "Sets required";
 
-        // sets
-        if (ex.sets == null || ex.sets === "") {
-          errors[`${prefix}_sets`] = "Sets is required";
-        }
+        if (ex._ui?.hasReps && ex.reps == null)
+          errs[`${key}_reps`] = "Reps required";
 
-        // reps
-        if (ex._ui?.hasReps && (ex.reps == null || ex.reps === "")) {
-          errors[`${prefix}_reps`] = "Reps is required";
-        }
+        if (ex._ui?.hasWeight && ex.weight_kg == null)
+          errs[`${key}_weight`] = "Weight required";
 
-        // duration
-        if (
-          ex._ui?.hasDuration &&
-          (ex.duration == null || ex.duration === "")
-        ) {
-          errors[`${prefix}_duration`] = "Duration is required";
-        }
-
-        // distance
-        if (
-          ex._ui?.hasDistance &&
-          (ex.distance == null || ex.distance === "")
-        ) {
-          errors[`${prefix}_distance`] = "Distance is required";
-        }
-
-        // weight
-        if (
-          ex._ui?.hasWeight &&
-          (ex.weight_kg == null || ex.weight_kg === "")
-        ) {
-          errors[`${prefix}_weight_kg`] = "Weight is required";
-        }
-
-        // rest
-        if (ex.rest_secs == null || ex.rest_secs === "") {
-          errors[`${prefix}_rest_secs`] = "Rest seconds is required";
-        }
+        if (ex.rest_secs == null) errs[`${key}_rest`] = "Rest required";
       });
     });
 
-    return errors;
+    return errs;
   };
 
   const handleSaveWorkoutPlan = async () => {
-    const newErrors = {};
-
-    if (!data.plan.start_date) newErrors.start_date = "Start Date is required.";
-    if (!data.plan.name.trim()) newErrors.name = "Workout name is required.";
-    if (!data.plan.no_of_days || data.plan.no_of_days < 1)
-      newErrors.no_of_days = "Number of days is required.";
-    if (!data.plan.description.trim())
-      newErrors.description = "Description is required.";
-
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
-      return;
-    }
-
-    // NEW VALIDATION
-    const errors = validateWorkoutPlan(data);
-
-    if (Object.keys(errors).length > 0) {
-      setValidationErrors(errors);
-      return; // stop save
-    }
-
-    setValidationErrors({});
-
-    const cleanedData = cleanDataForSubmission(data);
-
-    console.log("cleanedData", cleanedData);
-
     try {
-      setLoading(true);
-      let response;
+      console.log("Saving workout plan…", data);
 
-      if (editingId) {
-        // Update existing workout plan with delete actions
-        const updatePayload = {
-          ...cleanedData,
-          delete_actions: deleteActions,
-        };
+      const formErrors = {};
+      if (!data.plan.name.trim()) formErrors.name = "Name required";
+      if (!data.plan.start_date) formErrors.start_date = "Start date required";
+      if (!data.plan.no_of_days || data.plan.no_of_days < 1)
+        formErrors.no_of_days = "Days required";
 
-        response = await authAxios().put(
-          `/member/workoutplan/${editingId}`,
-          updatePayload
-        );
-        toast.success("Workout plan updated successfully!");
-      } else {
-        // Create new workout plan
-        response = await authAxios().post(
-          `/member/workoutplan/create`,
-          cleanedData
-        );
-        toast.success("Workout plan created successfully!");
+      if (Object.keys(formErrors).length) {
+        console.error("❌ Form validation errors:", formErrors);
+        setErrors(formErrors);
+        return;
       }
 
-      // Reset delete actions after successful save
-      setDeleteActions({
-        delete_days: [],
-        delete_exercises: [],
-      });
+      const exErrors = validateWorkoutPlan(data);
+      if (Object.keys(exErrors).length) {
+        console.error("❌ Exercise validation errors:", exErrors);
+        setValidationErrors(exErrors);
+        return;
+      }
+
+      const payload = {
+        ...cleanDataForSubmission(data),
+        delete_actions: editingId ? deleteActions : undefined,
+      };
+
+      // console.log("📦 Final payload:", payload);
+      // console.log(
+      //   "🧪 Day IDs:",
+      //   data.days.map((d) => ({ day_no: d.day_no, id: d.id }))
+      // );
+      setLoading(true);
+
+      if (editingId) {
+        const missingIds = data.days.filter((d) => !d.id);
+        if (missingIds.length) {
+          console.error("❌ Missing day IDs:", missingIds);
+          toast.error("Internal error: day IDs missing");
+          return;
+        }
+        await authAxios().put(`/member/workoutplan/${editingId}`, payload);
+        toast.success("Workout updated");
+      } else {
+        await authAxios().post(`/member/workoutplan/create`, payload);
+        toast.success("Workout created");
+      }
 
       handleCancelWorkout();
       handleWorkoutUpdate();
-    } catch (error) {
-      console.error("Error saving workout plan:", error);
-      toast.error(
-        error.response?.data?.message || "Failed to save workout plan"
-      );
+    } catch (err) {
+      console.error("❌ Save failed:", err);
+      toast.error(err.response?.data?.message || "Save failed");
     } finally {
       setLoading(false);
     }
-  };
-
-  const renderGroupedExercises = (groupId, groupType, groupExercises) => {
-    return (
-      <div key={groupId} className="border p-3 rounded mb-3 bg-gray-100">
-        <div className="flex justify-between items-center mb-2">
-          <div className="flex items-center gap-3">
-            <p className="font-semibold capitalize">{groupType} Set of</p>
-            <input
-              type="number"
-              min={1}
-              value={formatNumber(groupExercises[0].sets)}
-              onChange={(e) => {
-                const newValue =
-                  e.target.value === "" ? null : Number(e.target.value);
-                groupExercises.forEach((exercise) =>
-                  handleExerciseFieldChange(
-                    activeDayIndex,
-                    exercise.index,
-                    "sets",
-                    newValue
-                  )
-                );
-              }}
-              className="custom--input max-w-[60px] w-full text-center !px-0"
-            />
-            <p>{groupType === "circuit" ? "round(s)" : "set(s)"}</p>
-          </div>
-          <button
-            onClick={() => handleUngroup(groupId)}
-            className="text-sm text-blue-600 hover:underline"
-          >
-            Ungroup
-          </button>
-        </div>
-
-        {groupExercises.map((exercise) =>
-          exercise._ui?.type === "rest"
-            ? renderRestBlock({ ...exercise, index: exercise.index }, true)
-            : renderExercise(exercise, exercise.index, true)
-        )}
-      </div>
-    );
-  };
-
-  // FIX 3: Updated sanitizeNumber
-  const sanitizeNumber = (value) => {
-    // Allow empty for typing
-    if (value === "") return "";
-
-    const num = Number(value);
-
-    // Prevent NaN or negatives
-    if (isNaN(num) || num < 0) return "";
-
-    // Return integer if whole number
-    return num % 1 === 0 ? Math.floor(num) : num;
   };
 
   const renderExercise = (exercise, exIdx, isGrouped = false) => (
@@ -698,6 +575,9 @@ const WorkoutPlan = ({
               {!isGrouped && (
                 <div className="w-full">
                   {/* FIX 3: Apply formatNumber to display */}
+                  <label className="mb-2 block">
+                    No. of sets<span className="text-red-500">*</span>
+                  </label>
                   <input
                     type="number"
                     placeholder="No. of sets"
@@ -728,6 +608,9 @@ const WorkoutPlan = ({
               {exercise._ui?.hasReps && (
                 <div>
                   {/* FIX 3: Apply formatNumber to display */}
+                  <label className="mb-2 block">
+                    Reps<span className="text-red-500">*</span>
+                  </label>
                   <input
                     type="number"
                     placeholder="Reps"
@@ -758,15 +641,18 @@ const WorkoutPlan = ({
               {exercise._ui?.hasDuration && (
                 <div>
                   {/* FIX 3: Apply formatNumber to display */}
+                  <label className="mb-2 block">
+                    Duration (minutes)<span className="text-red-500">*</span>
+                  </label>
                   <input
                     type="number"
-                    placeholder="Duration (sec)"
-                    value={formatNumber(exercise.duration)}
+                    placeholder="Duration (minutes)"
+                    value={formatNumber(exercise.duration_mins)}
                     onChange={(e) =>
                       handleExerciseFieldChange(
                         activeDayIndex,
                         exIdx,
-                        "duration",
+                        "duration_mins",
                         sanitizeNumber(e.target.value)
                       )
                     }
@@ -788,15 +674,18 @@ const WorkoutPlan = ({
               {exercise._ui?.hasDistance && (
                 <div>
                   {/* FIX 3: Apply formatNumber to display */}
+                  <label className="mb-2 block">
+                    Distance (meter)<span className="text-red-500">*</span>
+                  </label>
                   <input
                     type="number"
-                    placeholder="Distance (m)"
-                    value={formatNumber(exercise.distance)}
+                    placeholder="Distance (meter)"
+                    value={formatNumber(exercise.distance_mts)}
                     onChange={(e) =>
                       handleExerciseFieldChange(
                         activeDayIndex,
                         exIdx,
-                        "distance",
+                        "distance_mts",
                         sanitizeNumber(e.target.value)
                       )
                     }
@@ -818,6 +707,9 @@ const WorkoutPlan = ({
               {exercise._ui?.hasWeight && (
                 <div>
                   {/* FIX 3: Apply formatNumber to display */}
+                  <label className="mb-2 block">
+                    Weight (Kg)<span className="text-red-500">*</span>
+                  </label>
                   <input
                     type="number"
                     placeholder="Weight (Kg)"
@@ -848,9 +740,12 @@ const WorkoutPlan = ({
               {!isGrouped && (
                 <div>
                   {/* FIX 3: Apply formatNumber to display */}
+                  <label className="mb-2 block">
+                    Rest (Secs)<span className="text-red-500">*</span>
+                  </label>
                   <input
                     type="number"
-                    placeholder="Rest(Secs)"
+                    placeholder="Rest (Secs)"
                     value={formatNumber(exercise.rest_secs)}
                     onChange={(e) =>
                       handleExerciseFieldChange(
@@ -878,6 +773,7 @@ const WorkoutPlan = ({
             </div>
             <div className="block">
               <div className="w-full">
+                <label className="mb-2 block">Notes</label>
                 <input
                   type="text"
                   placeholder="Notes"
@@ -900,56 +796,6 @@ const WorkoutPlan = ({
     </div>
   );
 
-  const renderRestBlock = (restBlock, isGrouped = false) => (
-    <div key={restBlock.index} className="mb-2 border p-3 rounded bg-yellow-50">
-      <div className="flex justify-between items-center mb-2">
-        <div className="flex items-center gap-2">
-          {!isGrouped && (
-            <input
-              type="checkbox"
-              checked={restBlock.isSelected || false}
-              onChange={() => toggleExerciseSelect(restBlock.index)}
-            />
-          )}
-          <h3 className="text-sm font-semibold text-gray-700">Rest Time</h3>
-        </div>
-        {/* FIX 2: Pass restBlock object instead of position */}
-        <button
-          onClick={() => handleDeleteExercise(activeDayIndex, restBlock)}
-          className="text-red-600 text-sm"
-        >
-          Remove
-        </button>
-      </div>
-      {/* FIX 3: Apply formatNumber to display */}
-      <input
-        type="number"
-        placeholder="Rest (seconds)"
-        value={formatNumber(restBlock.rest_secs)}
-        onChange={(e) =>
-          handleExerciseFieldChange(
-            activeDayIndex,
-            restBlock.index,
-            "rest_secs",
-            sanitizeNumber(e.target.value)
-          )
-        }
-        className="border p-2 rounded w-full number--appearance-none"
-      />
-      {validationErrors[
-        `day_${activeDayIndex}_ex_${restBlock.index}_rest_secs`
-      ] && (
-        <p className="text-red-600 text-sm mt-1">
-          {
-            validationErrors[
-              `day_${activeDayIndex}_ex_${restBlock.index}_rest_secs`
-            ]
-          }
-        </p>
-      )}
-    </div>
-  );
-
   useEffect(() => {
     if (editingId) {
       fetchWorkoutPlan(editingId);
@@ -959,43 +805,95 @@ const WorkoutPlan = ({
   const handleAssignTemplate = () => {
     setShowModal(true);
   };
-
-  const handleSaveTemplate = () => {
-    setSaveTemplate(true);
-  };
-
-  const handleAssignFromModal = () => {
+  const handleAssignFromModal = async () => {
     if (!selectedTemplate) {
       toast.error("Please select a template");
       return;
     }
 
-    let templateData = null;
-    if (selectedTemplate.value === "template1")
-      templateData = workoutTemplateWithExercises;
-    if (selectedTemplate.value === "template2")
-      templateData = workoutTemplatePushDay;
-    if (selectedTemplate.value === "template3") templateData = TrainingList;
-    if (selectedTemplate.value === "template4")
-      templateData = workoutTemplateHIIT;
+    try {
+      setLoading(true);
 
-    setData((prev) => ({
-      ...prev,
-      plan: {
-        ...prev.plan,
-        name: templateData.name,
-        workout_type: templateData.type,
-        no_of_days: templateData.numDays,
-        description: templateData.description,
-      },
-      days: templateData.days,
-    }));
+      // 1️⃣ Fetch full workout plan
+      const res = await authAxios().get(
+        `/workoutplan/${selectedTemplate.value}`
+      );
 
-    setActiveDayIndex(0);
-    setShowConfiguration(true);
-    setWorkoutForm(true);
-    setShowModal(false);
-    toast.success("Template Assigned Successfully!");
+      console.log("Template full data:", res.data);
+
+      const apiData = res.data?.data;
+      if (!apiData) {
+        toast.error("Invalid template data");
+        return;
+      }
+
+      // 2️⃣ Decide start date
+      // If user already selected a start date → use it
+      // Otherwise default to today
+      const startDate =
+        data.plan.start_date || new Date().toISOString().split("T")[0];
+
+      // 3️⃣ Generate days based on start_date
+      const processedDays = generateDaysWithDates(
+        startDate,
+        apiData.plan.no_of_days,
+        apiData.days.map((day) => ({
+          is_rest_day: day.is_rest_day,
+          exercises: day.exercises.map((ex, exIdx) => ({
+            name: ex.name,
+            category: ex.category,
+            sets: ex.sets ?? null,
+            reps: ex.reps ?? null,
+            weight_kg: ex.weight_kg ?? null,
+            duration_mins: ex.duration_mins ?? null,
+            distance_mts: ex.distance_mts ?? null,
+            rest_secs: ex.rest_secs ?? null,
+            notes: ex.notes || "",
+            position: exIdx + 1,
+            groupType: null,
+            groupId: null,
+            isSelected: false,
+            _ui: {
+              id: `ex-${Date.now()}-${exIdx}`,
+              hasReps: ex.reps !== null,
+              hasWeight: ex.weight_kg !== null,
+              hasDistance: ex.distance_mts !== null,
+              hasDuration: ex.duration_mins !== null,
+            },
+          })),
+        }))
+      );
+
+      // 4️⃣ Update state
+      setData((prev) => ({
+        ...prev,
+        plan: {
+          ...prev.plan,
+          member_id: id, // ✅ important (fixes member_id null error)
+          name: apiData.plan.name,
+          description: apiData.plan.description,
+          workout_type: apiData.plan.workout_type,
+          no_of_days: apiData.plan.no_of_days,
+          start_date: startDate,
+          end_date: calculateEndDate(startDate, apiData.plan.no_of_days),
+        },
+        days: processedDays,
+      }));
+
+      setIsFromTemplate(true);
+
+      setActiveDayIndex(0);
+      setShowConfiguration(true);
+      setWorkoutForm(true);
+      setShowModal(false);
+
+      toast.success("Template assigned successfully!");
+    } catch (err) {
+      console.error("❌ Assign template failed:", err);
+      toast.error("Failed to assign template");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSaveTemplateModal = () => {
@@ -1032,6 +930,19 @@ const WorkoutPlan = ({
     data.plan.no_of_days,
   ]);
 
+  useEffect(() => {
+    if (!data.plan.start_date || !data.plan.no_of_days) return;
+
+    setData((prev) => ({
+      ...prev,
+      days: generateDaysWithDates(
+        prev.plan.start_date,
+        prev.plan.no_of_days,
+        prev.days // ✅ keep IDs
+      ),
+    }));
+  }, [data.plan.start_date]);
+
   if (loading) {
     return (
       <div className="flex justify-center items-center p-8">
@@ -1044,13 +955,15 @@ const WorkoutPlan = ({
     <div className="p-0">
       <div className="flex justify-end items-end gap-2 mb-3 w-full">
         {workoutForm && (
-          <button
-            type="button"
-            onClick={handleAssignTemplate}
-            className="bg-black text-white px-4 py-2 rounded text-sm flex gap-1 items-center"
-          >
-            <FiPlus /> Assign Template
-          </button>
+          <div className="flex justify-end items-end gap-2 mb-3 w-full">
+            <button
+              type="button"
+              onClick={handleAssignTemplate}
+              className="px-4 py-2 bg-black text-white rounded flex items-center gap-2"
+            >
+              <FiPlus /> Assign Template
+            </button>
+          </div>
         )}
       </div>
 
@@ -1097,7 +1010,7 @@ const WorkoutPlan = ({
                       },
                     }));
                   }}
-                  isDisabled={editingId ? true : false}
+                  isDisabled={editingId || selectedTemplate ? true : false}
                   styles={customStyles}
                 />
               </div>
@@ -1171,9 +1084,11 @@ const WorkoutPlan = ({
                         },
                       }));
                     }}
-                    disabled={data.plan.workout_type === "SINGLE"}
+                    disabled={
+                      data.plan.workout_type === "SINGLE" || selectedTemplate
+                    }
                     className={`custom--input w-full ${
-                      data.plan.workout_type === "SINGLE"
+                      data.plan.workout_type === "SINGLE" || selectedTemplate
                         ? "cursor-not-allowed pointer-events-none !bg-gray-100"
                         : ""
                     }`}
@@ -1207,21 +1122,25 @@ const WorkoutPlan = ({
             </div>
           </div>
 
-          <div className="flex gap-1">
-            <button
-              type="submit"
-              className="px-4 py-2 bg-black text-white rounded flex items-center gap-2 border border-black"
-            >
-              Apply
-            </button>
-            <button
-              type="button"
-              onClick={handleCancelWorkout}
-              className="px-4 py-2 bg-white text-black rounded flex items-center gap-2 border border-black"
-            >
-              Cancel
-            </button>
-          </div>
+          {selectedTemplate && selectedTemplate ? null : (
+            <>
+              <div className="flex gap-1">
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-black text-white rounded flex items-center gap-2 border border-black"
+                >
+                  Apply
+                </button>
+                <button
+                  type="button"
+                  onClick={handleCancelWorkout}
+                  className="px-4 py-2 bg-white text-black rounded flex items-center gap-2 border border-black"
+                >
+                  Cancel
+                </button>
+              </div>
+            </>
+          )}
         </form>
       )}
 
@@ -1248,31 +1167,39 @@ const WorkoutPlan = ({
               </div>
 
               <div className="rounded p-0 mb-6">
-                <div className="flex items-center justify-between gap-3 mb-3">
-                  {activeDayIndex !== null && (
-                    <div className="flex items-center gap-1">
-                      <button
-                        onClick={() => handleCopyDay(activeDayIndex)}
-                        className="text-sm text-white px-3 py-1 rounded-[5px] bg-blue-500"
-                      >
-                        Copy
-                      </button>
-                      <button
-                        onClick={() => handlePasteDay(activeDayIndex)}
-                        disabled={!copiedDay}
-                        className={`text-sm text-white px-3 py-1 rounded-[5px] bg-green-500 ${
-                          !copiedDay ? "opacity-50 cursor-not-allowed" : ""
-                        }`}
-                      >
-                        Paste
-                      </button>
-                      <button
-                        onClick={() => handleClearDay(activeDayIndex)}
-                        className="text-sm text-white px-3 py-1 rounded-[5px] bg-red-500"
-                      >
-                        Clear All
-                      </button>
-                    </div>
+                <div
+                  className={`flex items-center ${
+                    data.days?.length === 1 ? "justify-end" : "justify-between"
+                  } gap-3 mb-3`}
+                >
+                  {data.days?.length === 1 ? null : (
+                    <>
+                      {!data.days[activeDayIndex]?.is_rest_day && (
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={() => handleCopyDay(activeDayIndex)}
+                            className="text-sm text-white px-3 py-1 rounded-[5px] bg-blue-500"
+                          >
+                            Copy
+                          </button>
+                          <button
+                            onClick={() => handlePasteDay(activeDayIndex)}
+                            disabled={!copiedDay}
+                            className={`text-sm text-white px-3 py-1 rounded-[5px] bg-green-500 ${
+                              !copiedDay ? "opacity-50 cursor-not-allowed" : ""
+                            }`}
+                          >
+                            Paste
+                          </button>
+                          <button
+                            onClick={() => handleClearDay(activeDayIndex)}
+                            className="text-sm text-white px-3 py-1 rounded-[5px] bg-red-500"
+                          >
+                            Clear All
+                          </button>
+                        </div>
+                      )}
+                    </>
                   )}
 
                   {!data.days[activeDayIndex]?.is_rest_day && (
@@ -1353,23 +1280,25 @@ const WorkoutPlan = ({
                         </div>
                       )}
 
-                      {Object.entries(grouped).map(
-                        ([groupId, { type, items }]) =>
-                          renderGroupedExercises(groupId, type, items)
-                      )}
-
                       {ungrouped.map((exercise) =>
                         renderExercise(exercise, exercise.index)
                       )}
-
-                      {restBlocks.map((rest) => renderRestBlock(rest))}
                     </>
                   );
                 })()}
               </div>
             </>
           )}
-          <div className="flex justify-between mt-6">
+          <div className="flex gap-3 mt-6">
+            <button
+              type="button"
+              onClick={() => {
+                handleCancelWorkout();
+              }}
+              className="bg-white text-black border border-black px-4 py-2 rounded text-sm disabled:opacity-50"
+            >
+              Cancel
+            </button>
             <button
               type="button"
               onClick={handleSaveWorkoutPlan}
@@ -1406,10 +1335,7 @@ const WorkoutPlan = ({
         open={saveTemplate}
         onClose={() => setSaveTemplate(false)}
       />
-
-      {console.log('SHIVAKAR',data)}
     </div>
-    
   );
 };
 

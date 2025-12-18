@@ -7,7 +7,7 @@ import { toast } from "react-toastify";
 import { authAxios } from "../../config/config";
 import { fetchOptionList } from "../../Redux/Reducers/optionListSlice";
 import { customStyles } from "../../Helper/helper";
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 export default function LeadFilterPanel({
   selectedLeadSource,
@@ -29,6 +29,7 @@ export default function LeadFilterPanel({
   const [showFilters, setShowFilters] = useState(false);
   const panelRef = useRef(null);
   const [staffList, setStaffList] = useState([]);
+  const navigate = useNavigate();
 
   // Only update appliedFilters when user clicks Apply
   const [appliedFilters, setAppliedFilters] = useState({});
@@ -95,6 +96,7 @@ export default function LeadFilterPanel({
 
     setShowFilters(false);
     if (onApplyFilters) onApplyFilters();
+    navigate(`/all-leads`);
   };
 
   // Handle remove filter chip
@@ -116,7 +118,7 @@ export default function LeadFilterPanel({
 
     // Call parent API for updated data
     if (onRemoveFilter) onRemoveFilter(filterKey);
-    else if (onApplyFilters) onApplyFilters(); // fallback
+    // else if (onApplyFilters) onApplyFilters(); // fallback
   };
 
   // Close filter panel if clicked outside

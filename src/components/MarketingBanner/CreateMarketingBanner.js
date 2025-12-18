@@ -220,9 +220,9 @@ const CreateMarketingBanner = ({
           <form onSubmit={formik.handleSubmit} className="p-0 space-y-0">
             <div className="flex bg-white rounded-b-[10px]">
               <div className="p-6 flex-1">
-                <div className="grid lg:grid-cols-4 grid-cols-1 lg:gap-4 gap-2">
+                <div className="grid md:grid-cols-4 grid-cols-1 lg:gap-4 gap-2">
                   {/* Banner Image Preview */}
-                  <div className="row-span-2">
+                  <div className="md:row-span-2">
                     <div className="bg-gray-100 rounded-lg w-full h-[160px] overflow-hidden p-4">
                       {bannerPreview ? (
                         <img
@@ -447,7 +447,7 @@ const CreateMarketingBanner = ({
                   )}
 
                   {/* Description Subheading */}
-                  <div className="lg:col-span-4">
+                  <div className="md:col-span-4">
                     <label className="mb-2 block">External URL</label>
                     <input
                       type="text"
@@ -459,7 +459,7 @@ const CreateMarketingBanner = ({
                     />
                   </div>
                   {/* Description Subheading */}
-                  <div className="lg:col-span-4">
+                  <div className="md:col-span-4">
                     <label className="mb-2 block">Description Subheading<span className="text-red-500">*</span></label>
                     <textarea
                       rows={2}

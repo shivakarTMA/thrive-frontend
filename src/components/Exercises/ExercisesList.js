@@ -80,18 +80,17 @@ const ExercisesList = () => {
     setShowConfirmPopup(true);
   };
 
-  console.log(exerciseToDelete,'exerciseToDelete')
-
   // Confirm deletion
   const handleConfirmDelete = async () => {
     if (exerciseToDelete) {
       try {
         await authAxios().delete(`/exercise/${exerciseToDelete.id}`);
-        const updatedExercises = exerciseList.filter(
-          (ex) => ex.id !== exerciseToDelete.id
-        );
-        setExercisesList(updatedExercises);
+        // const updatedExercises = exerciseList.filter(
+        //   (ex) => ex.id !== exerciseToDelete.id
+        // );
+        // setExercisesList(updatedExercises);
         toast.success("Exercise deleted successfully");
+        fetchExercisesList();
       } catch (error) {
         toast.error("Failed to delete exercise.");
         console.error("Error deleting exercise:", error);

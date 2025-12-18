@@ -29,7 +29,9 @@ const Topbar = ({
   toggleMenuBar,
   setLeadModal,
   setSelectedLead,
+  leadModalPage,
 }) => {
+  console.log("leadModalPage", leadModalPage);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [searchItem, setSearchItem] = useState("");
@@ -42,6 +44,7 @@ const Topbar = ({
   const location = useLocation();
   const [hasSearched, setHasSearched] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState(null);
+  const [leadTopModal, setLeadTopModal] = useState(false);
   const [memberModal, setMemberModal] = useState(false);
   const [invoiceModal, setInvoiceModal] = useState(false);
   const [profileModal, setProfileModal] = useState(false);
@@ -290,16 +293,29 @@ const Topbar = ({
                 isOpen={activeDropdown === "quicklinks"}
                 onClose={() => setActiveDropdown(null)}
               >
-                <div
-                  onClick={() => {
-                    setLeadModal(true);
-                    setSelectedLead(null);
-                  }}
-                  className="nav-link flex items-center gap-2 px-3 py-2 hover:bg-black hover:text-white transition border-b cursor-pointer"
-                >
-                  <IoBarChartOutline className="menu--icon" />
-                  <span className="nav-text">Add Lead</span>
-                </div>
+                {leadModalPage === "ALLLEAD" ? (
+                  <div
+                    onClick={() => {
+                      setLeadModal(true);
+                      setSelectedLead(null);
+                    }}
+                    className="nav-link flex items-center gap-2 px-3 py-2 hover:bg-black hover:text-white transition border-b cursor-pointer"
+                  >
+                    <IoBarChartOutline className="menu--icon" />
+                    <span className="nav-text">Add Lead</span>
+                  </div>
+                ) : (
+                  <div
+                    onClick={() => {
+                      setLeadTopModal(true);
+                    }}
+                    className="nav-link flex items-center gap-2 px-3 py-2 hover:bg-black hover:text-white transition border-b cursor-pointer"
+                  >
+                    <IoBarChartOutline className="menu--icon" />
+                    <span className="nav-text">Add Lead</span>
+                  </div>
+                )}
+
                 <div
                   onClick={() => setMemberModal(true)}
                   className="nav-link flex items-center gap-2 px-3 py-2 hover:bg-black hover:text-white transition border-b cursor-pointer"
@@ -355,13 +371,6 @@ const Topbar = ({
                   <FiUser className="menu--icon" />
                   <span className="nav-text">Profile</span>
                 </div>
-                {/* <Link
-                  to="#"
-                  className="nav-link flex items-center gap-2 px-3 py-2 hover:bg-black hover:text-white transition border-b"
-                >
-                  <IoSettingsOutline className="menu--icon" />
-                  <span className="nav-text">Setting</span>
-                </Link> */}
                 <div
                   onClick={handleLogout}
                   className="nav-link flex items-center cursor-pointer gap-2 px-3 py-2 hover:bg-black hover:text-white transition"
@@ -374,7 +383,7 @@ const Topbar = ({
           </div>
         </div>
       </section>
-
+      {leadTopModal && <CreateLeadForm setLeadModal={setLeadTopModal} />}
       {memberModal && <CreateMemberForm setMemberModal={setMemberModal} />}
       {invoiceModal && <CreateInvoice setInvoiceModal={setInvoiceModal} />}
       {profileModal && (
