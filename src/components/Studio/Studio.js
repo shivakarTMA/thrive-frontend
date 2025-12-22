@@ -191,8 +191,8 @@ const Studio = () => {
             <tbody>
               {module.length === 0 ? (
                 <tr>
-                  <td colSpan="8" className="text-center py-4">
-                    No Studio added yet.
+                  <td colSpan="5" className="text-center py-4">
+                    No studio found.
                   </td>
                 </tr>
               ) : (

@@ -20,6 +20,8 @@ import {
 } from "libphonenumber-js";
 import { FaCircle } from "react-icons/fa6";
 import { useSelector } from "react-redux";
+import ConfirmPopup from "../common/ConfirmPopup";
+import { RiDeleteBin6Fill } from "react-icons/ri";
 
 // Roles for ADMIN
 export const roleOptionsByUser = {
@@ -61,7 +63,8 @@ const StaffList = () => {
   const currentUserRole = user?.role; // Example, dynamically from user info
   const roleOptions = roleOptionsByUser[currentUserRole] || [];
 
-  console.log(currentUserRole, "currentUserRole");
+  const [staffToDelete, setStaffToDelete] = useState(null);
+  const [showConfirmPopup, setShowConfirmPopup] = useState(false);
 
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -238,7 +241,7 @@ const StaffList = () => {
     initialValues,
     validationSchema,
     onSubmit: async (values, { resetForm }) => {
-      console.log(values,'SHIVAKAR')
+      console.log(values, "SHIVAKAR");
       try {
         const formData = new FormData();
 
@@ -301,6 +304,37 @@ const StaffList = () => {
       }
     },
   });
+
+  const handleDeleteClick = (exercise) => {
+    setStaffToDelete(exercise);
+    setShowConfirmPopup(true);
+  };
+
+  // Confirm deletion
+  const handleConfirmDelete = async () => {
+    if (staffToDelete) {
+      try {
+        await authAxios().delete(`/staff/${staffToDelete.id}`);
+        // const updatedExercises = exerciseList.filter(
+        //   (ex) => ex.id !== staffToDelete.id
+        // );
+        // setExercisesList(updatedExercises);
+        toast.success("Staff deleted successfully");
+        fetchStaff();
+      } catch (error) {
+        toast.error("Failed to delete Staff.");
+        console.error("Error deleting Staff:", error);
+      }
+    }
+    setStaffToDelete(null);
+    setShowConfirmPopup(false);
+  };
+
+  // Cancel deletion
+  const handleCancelDelete = () => {
+    setStaffToDelete(null);
+    setShowConfirmPopup(false);
+  };
 
   return (
     <div className="page--content">
@@ -386,8 +420,11 @@ const StaffList = () => {
             <tbody>
               {staffList.length === 0 ? (
                 <tr>
-                  <td colSpan={`${currentUserRole === "ADMIN" ? "7" : "6"}`} className="text-center py-4">
-                    No club added yet.
+                  <td
+                    colSpan={`${currentUserRole === "ADMIN" ? "7" : "6"}`}
+                    className="text-center py-4"
+                  >
+                    No staff found.
                   </td>
                 </tr>
               ) : (
@@ -446,21 +483,35 @@ const StaffList = () => {
                     </td>
 
                     <td className="px-2 py-4">
-                      <Tooltip
-                        id={`edit-product-${row?.id}`}
-                        content="Edit User"
-                        place="left"
-                      >
-                        <div
-                          onClick={() => {
-                            setEditingOption(row?.id);
-                            setShowModal(true);
-                          }}
-                          className="p-1 cursor-pointer"
+                      <div className="flex">
+                        <Tooltip
+                          id={`edit-product-${row?.id}`}
+                          content="Edit User"
+                          place="left"
                         >
-                          <LiaEdit className="text-[25px] text-black" />
-                        </div>
-                      </Tooltip>
+                          <div
+                            onClick={() => {
+                              setEditingOption(row?.id);
+                              setShowModal(true);
+                            }}
+                            className="p-1 cursor-pointer"
+                          >
+                            <LiaEdit className="text-[25px] text-black" />
+                          </div>
+                        </Tooltip>
+                        <Tooltip
+                          id={`delete-staff-${row.id}`}
+                          content="Delete Staff"
+                          place="top"
+                        >
+                          <div
+                            onClick={() => handleDeleteClick(row)}
+                            className="p-1 cursor-pointer"
+                          >
+                            <RiDeleteBin6Fill className="text-[25px] text-black" />
+                          </div>
+                        </Tooltip>
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -489,6 +540,15 @@ const StaffList = () => {
           formik={formik}
           editingOption={editingOption}
           roleOptionsByUser={roleOptionsByUser}
+        />
+      )}
+
+      {/* Confirm Delete */}
+      {showConfirmPopup && staffToDelete && (
+        <ConfirmPopup
+          message={`Are you sure you want to delete <br /> "${staffToDelete?.name}"?`}
+          onConfirm={handleConfirmDelete}
+          onCancel={handleCancelDelete}
         />
       )}
     </div>

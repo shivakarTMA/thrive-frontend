@@ -124,62 +124,76 @@ const WorkoutPlanList = () => {
                 </tr>
               </thead>
               <tbody>
-                {workouts.map((row, idx) => (
-                  <tr
-                    key={row.id}
-                    className="group bg-white border-b hover:bg-gray-50 transition duration-700 relative"
-                  >
-                    <td className="px-2 py-4">{row?.name}</td>
-                    <td className="px-2 py-4">{row?.no_of_days} Days</td>
-                    <td className="px-2 py-4">
-                      {formatAutoDate(row?.createdAt)}
-                    </td>
-                    {/* <td className="px-2 py-4">{row?.centerName}</td> */}
-                    <td className="px-2 py-4">{row?.staff_name}</td>
-                    <td className="px-2 py-4">
-                      <div
-                        className={`flex gap-1 items-center ${
-                          row?.status === "ACTIVE"
-                            ? "text-green-500"
-                            : "text-red-500"
-                        }`}
-                      >
-                        <FaCircle />
-                        {row?.status ? formatText(row?.status) : "--"}
-                      </div>
-                    </td>
-                    <td className="px-2 py-4">
-                      <div className="flex gap-2 items-center">
-                        <Tooltip
-                          content="Edit Workout"
-                          id={`edit-workout-${row.id}`}
-                          place="top"
+                {workouts.length ? (
+                  workouts.map((row, idx) => (
+                    <tr
+                      key={row.id}
+                      className="group bg-white border-b hover:bg-gray-50 transition duration-700 relative"
+                    >
+                      <td className="px-2 py-4">{row?.name}</td>
+                      <td className="px-2 py-4">{row?.no_of_days} Days</td>
+                      <td className="px-2 py-4">
+                        {formatAutoDate(row?.createdAt)}
+                      </td>
+                      {/* <td className="px-2 py-4">{row?.centerName}</td> */}
+                      <td className="px-2 py-4">{row?.staff_name}</td>
+                      <td className="px-2 py-4">
+                        <div
+                          className={`flex gap-1 items-center ${
+                            row?.status === "ACTIVE"
+                              ? "text-green-500"
+                              : "text-red-500"
+                          }`}
                         >
-                          <div className="p-1 cursor-pointer">
-                            <Link
-                              to={`/create-workout-plan/${row.id}`}
-                              className="p-0"
-                            >
-                              <LiaEdit className="text-[25px] text-black" />
-                            </Link>
-                          </div>
-                        </Tooltip>
-                        <Tooltip
-                          id={`delete-workout-${row.id}`}
-                          content="Delete Exercise"
-                          place="top"
-                        >
-                          <div
-                            onClick={() => handleDeleteClick(row)}
-                            className="p-1 cursor-pointer"
+                          <FaCircle />
+                          {row?.status ? formatText(row?.status) : "--"}
+                        </div>
+                      </td>
+                      <td className="px-2 py-4">
+                        <div className="flex gap-2 items-center">
+                          <Tooltip
+                            content="Edit Workout"
+                            id={`edit-workout-${row.id}`}
+                            place="top"
                           >
-                            <RiDeleteBin6Fill className={`text-[25px] text-black ${row.id === 4 ? 'hidden':'block'}`} />
-                          </div>
-                        </Tooltip>
-                      </div>
+                            <div className="p-1 cursor-pointer">
+                              <Link
+                                to={`/create-workout-plan/${row.id}`}
+                                className="p-0"
+                              >
+                                <LiaEdit className="text-[25px] text-black" />
+                              </Link>
+                            </div>
+                          </Tooltip>
+                          <Tooltip
+                            id={`delete-workout-${row.id}`}
+                            content="Delete Exercise"
+                            place="top"
+                          >
+                            <div
+                              onClick={() => handleDeleteClick(row)}
+                              className="p-1 cursor-pointer"
+                            >
+                              <RiDeleteBin6Fill
+                                className={`text-[25px] text-black ${
+                                  row.id === 4 ? "hidden" : "block"
+                                }`}
+                              />
+                            </div>
+                          </Tooltip>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={6} className="px-2 py-4">
+                      <p className="text-center text-sm text-gray-500">
+                        No workout found.
+                      </p>
                     </td>
                   </tr>
-                ))}
+                )}
               </tbody>
             </table>
           </div>

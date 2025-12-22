@@ -318,7 +318,7 @@ const MemberList = () => {
                   <FaCircle className="text-[10px] text-[#009EB2]" /> Total
                   Members
                 </div>
-                <div className="flex flex-wrap items-center justify-between">
+                <div className="pr-2">
                   <span className="text-md font-semibold">
                     {stats?.total_members}
                   </span>
@@ -329,7 +329,7 @@ const MemberList = () => {
                   <FaCircle className="text-[10px] text-[#1F9254]" />
                   Active Members
                 </div>
-                <div className="flex flex-wrap items-center justify-between">
+                <div className="pr-2">
                   <span className="text-md font-semibold">
                     {stats?.active_members}
                   </span>
@@ -340,7 +340,7 @@ const MemberList = () => {
                   <FaCircle className="text-[10px] text-[#FF0000]" />
                   Inactive Members
                 </div>
-                <div className="flex flex-wrap items-center justify-between">
+                <div className="pr-2">
                   <span className="text-md font-semibold">
                     {stats?.inactive_members}
                   </span>

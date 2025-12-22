@@ -291,8 +291,8 @@ const Services = () => {
             <tbody>
               {module.length === 0 ? (
                 <tr>
-                  <td colSpan="8" className="text-center py-4">
-                    No Services added yet.
+                  <td colSpan="7" className="text-center py-4">
+                    No services found.
                   </td>
                 </tr>
               ) : (

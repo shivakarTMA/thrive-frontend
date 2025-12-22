@@ -206,7 +206,9 @@ const CreateStaff = ({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="bg-white rounded-t-[10px] flex gap-3 items-center justify-between py-4 px-4 border-b">
-          <h2 className="text-xl font-semibold">Create a Staff</h2>
+          <h2 className="text-xl font-semibold">
+            {editingOption ? "Edit a Staff" : "Create a Staff"}
+            </h2>
           <div className="close--lead cursor-pointer" onClick={handleLeadModal}>
             <IoCloseCircle className="text-3xl" />
           </div>
@@ -317,21 +319,21 @@ const CreateStaff = ({
                         yearDropdownItemNumber={100}
                       /> */}
                       <DatePicker
-  selected={getValidDate(formik.values?.date_of_birth)}
-  onChange={(date) =>
-    formik.setFieldValue("date_of_birth", date)
-  }
-  dateFormat="dd MMM yyyy"
-  showMonthDropdown
-  showYearDropdown
-  scrollableYearDropdown
-  dropdownMode="select"
-  placeholderText="Select date of birth"
-  className="input--icon"
-  maxDate={adultLimitDate}
-  minDate={oldestYearLimit}
-  yearDropdownItemNumber={100}
-/>
+                        selected={getValidDate(formik.values?.date_of_birth)}
+                        onChange={(date) =>
+                          formik.setFieldValue("date_of_birth", date)
+                        }
+                        dateFormat="dd MMM yyyy"
+                        showMonthDropdown
+                        showYearDropdown
+                        scrollableYearDropdown
+                        dropdownMode="select"
+                        placeholderText="Select date of birth"
+                        className="input--icon"
+                        maxDate={adultLimitDate}
+                        minDate={oldestYearLimit}
+                        yearDropdownItemNumber={100}
+                      />
                     </div>
                   </div>
 

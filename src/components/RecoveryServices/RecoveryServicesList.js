@@ -306,7 +306,7 @@ const RecoveryServicesList = () => {
               {recoveryServiceList.length === 0 ? (
                 <tr>
                   <td colSpan="8" className="text-center py-4">
-                    No Services added yet.
+                    No recovery services found.
                   </td>
                 </tr>
               ) : (

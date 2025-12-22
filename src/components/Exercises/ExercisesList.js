@@ -215,7 +215,7 @@ const ExercisesList = () => {
                     colSpan={columns.length}
                     className="text-center py-4 text-gray-500"
                   >
-                    No data found.
+                    No exercises found.
                   </td>
                 </tr>
               )}

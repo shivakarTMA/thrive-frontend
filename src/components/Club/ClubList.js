@@ -334,8 +334,8 @@ const ClubList = () => {
             <tbody>
               {club.length === 0 ? (
                 <tr>
-                  <td colSpan="8" className="text-center py-4">
-                    No club added yet.
+                  <td colSpan="10" className="text-center py-4">
+                    No club found.
                   </td>
                 </tr>
               ) : (

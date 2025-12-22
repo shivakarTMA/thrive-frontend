@@ -664,8 +664,8 @@ useEffect(() => {
             <tbody>
               {packages.length === 0 ? (
                 <tr>
-                  <td colSpan="8" className="text-center py-4">
-                    No packages added yet.
+                  <td colSpan="7" className="text-center py-4">
+                    No packages found.
                   </td>
                 </tr>
               ) : (

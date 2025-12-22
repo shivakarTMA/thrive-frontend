@@ -213,8 +213,8 @@ const TrialAppointments = () => {
   };
 
   const filteredStatusOptions = statusUpdateOptions.filter(
-  (opt) => opt.value !== "ACTIVE"
-);
+    (opt) => opt.value !== "ACTIVE"
+  );
 
   return (
     <>
@@ -340,7 +340,7 @@ const TrialAppointments = () => {
                     <th className="px-2 py-4">Staff Name</th>
                     <th className="px-2 py-4">Scheduled By</th>
                     <th className="px-2 py-4">Status</th>
-                    <th className="px-2 py-4">Action</th>
+                    <th className="px-2 py-4 text-center">Action</th>
                   </tr>
                 </thead>
 
@@ -360,7 +360,9 @@ const TrialAppointments = () => {
                         {formatAutoDate(row?.start_date)} {row?.start_time}
                       </td>
 
-                      <td className="px-2 py-4">{row?.staff_name || "Shivakar Sharma"}</td>
+                      <td className="px-2 py-4">
+                        {row?.staff_name || "Shivakar Sharma"}
+                      </td>
 
                       <td className="px-2 py-4">
                         {row?.assigned_staff_name || "Self"}
@@ -374,7 +376,11 @@ const TrialAppointments = () => {
                           }`}
                         >
                           <FaCircle className="text-[10px]" />
-                          {formatText(row?.booking_status === "ACTIVE" ? "SCHEDULED" : row?.booking_status) ?? "--"}
+                          {formatText(
+                            row?.booking_status === "ACTIVE"
+                              ? "SCHEDULED"
+                              : row?.booking_status
+                          ) ?? "--"}
                         </span>
                       </td>
 
@@ -399,17 +405,19 @@ const TrialAppointments = () => {
                           }}
                           styles={customStyles}
                         /> */}
-                        <Select
-                          placeholder="Select"
-                          options={filteredStatusOptions}
-                          value={getSelectedStatusOption(row?.booking_status)}
-                          isDisabled={row?.booking_status !== "ACTIVE"}
-                          onChange={(selected) => {
-                            if (!selected) return;
-                            updateAppointmentStatus(row?.id, selected.value);
-                          }}
-                          styles={customStyles}
-                        />
+                        <div className="max-w-[130px] w-full mx-auto">
+                          <Select
+                            placeholder="Select"
+                            options={filteredStatusOptions}
+                            value={getSelectedStatusOption(row?.booking_status)}
+                            isDisabled={row?.booking_status !== "ACTIVE"}
+                            onChange={(selected) => {
+                              if (!selected) return;
+                              updateAppointmentStatus(row?.id, selected.value);
+                            }}
+                            styles={customStyles}
+                          />
+                        </div>
                         {/* <div className="flex">
                           <div className="bg-[#F1F1F1] border border-[#D4D4D4] rounded-l-[5px] w-[32px] h-[32px] flex items-center justify-center cursor-pointer">
                             <img src={viewIcon} />

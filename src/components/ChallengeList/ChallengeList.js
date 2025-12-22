@@ -280,8 +280,8 @@ const ChallengeList = () => {
             <tbody>
               {challenges.length === 0 ? (
                 <tr>
-                  <td colSpan="8" className="text-center py-4">
-                    No challenge added yet.
+                  <td colSpan="9" className="text-center py-4">
+                    No challenge found.
                   </td>
                 </tr>
               ) : (

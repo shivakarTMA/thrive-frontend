@@ -306,8 +306,8 @@ const ProductsList = () => {
             <tbody>
               {packages.length === 0 ? (
                 <tr>
-                  <td colSpan="8" className="text-center py-4">
-                    No packages added yet.
+                  <td colSpan="13" className="text-center py-4">
+                    No nourish products found.
                   </td>
                 </tr>
               ) : (

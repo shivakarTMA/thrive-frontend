@@ -272,20 +272,21 @@ const AllLostFound = () => {
                 </tr>
               </thead>
               <tbody>
-                {data.map((row, idx) => (
-                  <tr
-                    key={row.id}
-                    className="bg-white border-b hover:bg-gray-50 border-gray-200"
-                  >
-                    <td className="px-2 py-4">{row?.item_name}</td>
-                    <td className="px-2 py-4">{row?.category}</td>
-                    <td className="px-2 py-4">{row?.found_at_location}</td>
-                    <td className="px-2 py-4">
-                      {formatAutoDate(row?.found_date_time)}
-                    </td>
-                    <td className="px-2 py-4">
-                      <span
-                        className={`
+                {data.length ? (
+                  data.map((row, idx) => (
+                    <tr
+                      key={row.id}
+                      className="bg-white border-b hover:bg-gray-50 border-gray-200"
+                    >
+                      <td className="px-2 py-4">{row?.item_name}</td>
+                      <td className="px-2 py-4">{row?.category}</td>
+                      <td className="px-2 py-4">{row?.found_at_location}</td>
+                      <td className="px-2 py-4">
+                        {formatAutoDate(row?.found_date_time)}
+                      </td>
+                      <td className="px-2 py-4">
+                        <span
+                          className={`
                             flex items-center justify-between gap-1 rounded-full min-h-[30px] px-3 text-sm w-fit
                           ${
                             row?.status === "AVAILABLE"
@@ -293,48 +294,57 @@ const AllLostFound = () => {
                               : "bg-[#FFE7E7] text-[#C80000]"
                           }
                           `}
-                      >
-                        <FaCircle className="text-[10px]" />
-                        {row?.status == null ? "--" : formatText(row?.status)}
-                      </span>
-                    </td>
-                    <td className="px-2 py-4">
-                      {row?.returned_by == null ? "--" : row?.returned_by}
-                    </td>
-                    <td className="px-2 py-4">
-                      <div className="flex">
-                        <Tooltip
-                          id={`tooltip-edit-${row.id}`}
-                          content="View Details"
-                          place="left"
                         >
-                        <div className="bg-[#F1F1F1] border border-[#D4D4D4] rounded-l-[5px] w-[32px] h-[32px] flex items-center justify-center cursor-pointer">
-                          <img src={viewIcon} />
+                          <FaCircle className="text-[10px]" />
+                          {row?.status == null ? "--" : formatText(row?.status)}
+                        </span>
+                      </td>
+                      <td className="px-2 py-4">
+                        {row?.returned_by == null ? "--" : row?.returned_by}
+                      </td>
+                      <td className="px-2 py-4">
+                        <div className="flex">
+                          <Tooltip
+                            id={`tooltip-edit-${row.id}`}
+                            content="View Details"
+                            place="left"
+                          >
+                            <div className="bg-[#F1F1F1] border border-[#D4D4D4] rounded-l-[5px] w-[32px] h-[32px] flex items-center justify-center cursor-pointer">
+                              <img src={viewIcon} />
+                            </div>
+                          </Tooltip>
+                          <Tooltip
+                            id={`tooltip-return-${row.id}`}
+                            content="Return Item"
+                            place="left"
+                          >
+                            <div
+                              className={`bg-[#F1F1F1] border border-[#D4D4D4] rounded-r-[5px] w-[32px] h-[32px] flex items-center justify-center ${
+                                row.status !== "AVAILABLE"
+                                  ? "cursor-not-allowed pointer-events-none opacity-[0.5]"
+                                  : "cursor-pointer"
+                              } `}
+                              onClick={() => {
+                                setReturnedModalOpen(true);
+                                setMarkReturnedData(row?.id);
+                              }}
+                            >
+                              <img src={returnIcon} />
+                            </div>
+                          </Tooltip>
                         </div>
-                        </Tooltip>
-                        <Tooltip
-                          id={`tooltip-return-${row.id}`}
-                          content="Return Item"
-                          place="left"
-                        >
-                        <div
-                          className={`bg-[#F1F1F1] border border-[#D4D4D4] rounded-r-[5px] w-[32px] h-[32px] flex items-center justify-center ${
-                            row.status !== "AVAILABLE"
-                              ? "cursor-not-allowed pointer-events-none opacity-[0.5]"
-                              : "cursor-pointer"
-                          } `}
-                          onClick={() => {
-                            setReturnedModalOpen(true);
-                            setMarkReturnedData(row?.id);
-                          }}
-                        >
-                          <img src={returnIcon} />
-                        </div>
-                        </Tooltip>
-                      </div>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={7} className="px-2 py-4">
+                      <p className="text-center text-sm text-gray-500">
+                        No data found.
+                      </p>
                     </td>
                   </tr>
-                ))}
+                )}
               </tbody>
             </table>
           </div>
@@ -355,8 +365,8 @@ const AllLostFound = () => {
       {/* Modals */}
       {modalOpen && (
         <AddNewItemModal
-        onSuccess={refreshData}
-        onClose={() => setModalOpen(false)}
+          onSuccess={refreshData}
+          onClose={() => setModalOpen(false)}
         />
       )}
 

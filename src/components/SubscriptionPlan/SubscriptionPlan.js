@@ -220,8 +220,8 @@ const SubscriptionPlan = () => {
             <tbody>
               {module.length === 0 ? (
                 <tr>
-                  <td colSpan="8" className="text-center py-4">
-                    No Studio added yet.
+                  <td colSpan="15" className="text-center py-4">
+                    No membership plans found.
                   </td>
                 </tr>
               ) : (
