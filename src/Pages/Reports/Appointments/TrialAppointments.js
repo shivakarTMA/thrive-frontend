@@ -6,6 +6,7 @@ import { addYears, subYears } from "date-fns";
 import { FaCalendarDays, FaCircle } from "react-icons/fa6";
 import {
   customStyles,
+  filterActiveItems,
   formatAutoDate,
   formatText,
 } from "../../../Helper/helper";
@@ -37,6 +38,8 @@ const statusUpdateOptions = [
 
 const TrialAppointments = () => {
   const [appointmentList, setAppointmentList] = useState([]);
+  const [clubList, setClubList] = useState([]);
+  const [clubFilter, setClubFilter] = useState(null);
 
   const [dateFilter, setDateFilter] = useState(dateFilterOptions[1]);
   const [customFrom, setCustomFrom] = useState(null);
@@ -105,6 +108,30 @@ const TrialAppointments = () => {
 
     return finalFilters;
   };
+
+  // Function to fetch club list
+  const fetchClub = async (search = "") => {
+    try {
+      const response = await authAxios().get("/club/list", {
+        params: search ? { search } : {},
+      });
+      const data = response.data?.data || [];
+      const activeOnly = filterActiveItems(data);
+      setClubList(activeOnly);
+    } catch (error) {
+      toast.error("Failed to fetch clubs");
+    }
+  };
+  // Function to fetch role list
+
+  useEffect(() => {
+    fetchClub();
+  }, []);
+
+  const clubOptions = clubList.map((item) => ({
+    label: item.name,
+    value: item.id,
+  }));
 
   // ---------------------------
   // FETCH APPOINTMENTS
@@ -220,7 +247,7 @@ const TrialAppointments = () => {
     <>
       <div className="page--content">
         {/* Page heading */}
-        <div className="flex items-end justify-between gap-2 mb-2">
+        <div className="flex items-end justify-between gap-2 mb-5">
           <div className="title--breadcrumbs">
             <p className="text-sm">{`Home > Reports > Appointments > Trial Appointments`}</p>
             <h1 className="text-3xl font-semibold">Trial Appointments</h1>
@@ -287,6 +314,16 @@ const TrialAppointments = () => {
                 </div>
               </>
             )}
+            <div className="w-full max-w-[200px]">
+              <Select
+                placeholder="Filter by club"
+                value={clubOptions.find((o) => o.value === clubFilter) || null}
+                options={clubOptions}
+                onChange={(option) => setClubFilter(option?.value)}
+                isClearable
+                styles={customStyles}
+              />
+            </div>
           </div>
         </div>
 
@@ -334,13 +371,16 @@ const TrialAppointments = () => {
               <table className="w-full text-sm text-left text-gray-500">
                 <thead className="text-xs text-gray-700 uppercase bg-gray-50">
                   <tr>
-                    <th className="px-2 py-4">Enquiry Date</th>
-                    <th className="px-2 py-4">Lead Name</th>
-                    <th className="px-2 py-4">Date & Time</th>
-                    <th className="px-2 py-4">Staff Name</th>
-                    <th className="px-2 py-4">Scheduled By</th>
-                    <th className="px-2 py-4">Status</th>
-                    <th className="px-2 py-4 text-center">Action</th>
+                    <th className="px-2 py-4 min-w-[100px]">Enquiry Date</th>
+                    <th className="px-2 py-4 min-w-[150px]">Club Name</th>
+                    <th className="px-2 py-4 min-w-[200px]">Appointment Category</th>
+                    <th className="px-2 py-4 min-w-[200px]">Service/Appointment Name</th>
+                    <th className="px-2 py-4 min-w-[130px]">Lead Name</th>
+                    <th className="px-2 py-4 min-w-[110px]">Date & Time</th>
+                    <th className="px-2 py-4 min-w-[130px]">Staff Name</th>
+                    <th className="px-2 py-4 min-w-[130px]">Scheduled By</th>
+                    <th className="px-2 py-4 min-w-[130px]">Status</th>
+                    <th className="px-2 py-4 text-center min-w-[150px]">Action</th>
                   </tr>
                 </thead>
 
@@ -353,6 +393,9 @@ const TrialAppointments = () => {
                       <td className="px-2 py-4">
                         {formatAutoDate(row?.createdAt)}
                       </td>
+                      <td className="px-2 py-4">DLF Summit Plaza</td>
+                      <td className="px-2 py-4">Complimentary Appointment</td>
+                      <td className="px-2 py-4">Trial/test</td>
 
                       <td className="px-2 py-4">{row?.lead_name || "--"}</td>
 

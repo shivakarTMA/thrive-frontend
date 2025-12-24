@@ -47,6 +47,21 @@
     color: white;
     background-color: rgba(255, 255, 255, 0.1);
   }
+
+  .submenu-link:before {
+    margin-right: 3px;
+    width: 10px;
+    height: 1px;
+    display: block;
+    background: #fff;
+    content: '';
+}
+
+.submenu-link {
+    display: flex;
+    align-items: center;
+    gap: 1px;
+}
 }
 
 .sidebar.activetoggle {

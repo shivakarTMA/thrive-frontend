@@ -67,6 +67,32 @@ import BulkEmailCriteriaForm from "../components/Marketing/BulkEmailCriteriaForm
 import BulkSmsCriteriaForm from "../components/Marketing/BulkSmsCriteriaForm";
 import MarketingBanner from "../components/MarketingBanner/MarketingBanner";
 import RecoveryServicesList from "../components/RecoveryServices/RecoveryServicesList";
+import NewJoineesReport from "../components/Reports/SalesReports/NewJoineesReport";
+import RenewalReport from "../components/Reports/SalesReports/RenewalReport";
+import AllEnquiriesReport from "../components/Reports/SalesReports/AllEnquiriesReport";
+import ActiveMemberReport from "../components/Reports/SalesReports/ActiveMemberReport";
+import AllInvoiceReport from "../components/Reports/FinanceReports/AllInvoiceReport";
+import PendingCollectionReport from "../components/Reports/FinanceReports/PendingCollectionReport";
+import CancelledPaidInvioceReport from "../components/Reports/FinanceReports/CancelledPaidInvioceReport";
+import RefundReport from "../components/Reports/FinanceReports/RefundReport";
+import CollectionReport from "../components/Reports/FinanceReports/CollectionReport";
+import CheckInsReport from "../components/Reports/OperationsReports/CheckInsReport";
+import MembershipsReport from "../components/Reports/OperationsReports/MembershipsReport";
+import MembershipExpiryReport from "../components/Reports/OperationsReports/MembershipExpiryReport";
+import PtExpiryReport from "../components/Reports/OperationsReports/PtExpiryReport";
+import IrregularMembersReport from "../components/Reports/OperationsReports/IrregularMembersReport";
+import ActiveClientSummaryReport from "../components/Reports/OperationsReports/ActiveClientSummaryReport";
+import InactiveClientSummaryReport from "../components/Reports/OperationsReports/InactiveClientSummaryReport";
+import MembershipFrozenReport from "../components/Reports/OperationsReports/MembershipFrozenReport";
+import AttendanceHeatmapReport from "../components/Reports/OperationsReports/AttendanceHeatmapReport";
+import PtRevenueReport from "../components/Reports/SalesReports/PtRevenueReport";
+import PtRevenueListReport from "../components/Reports/SalesReports/PtRevenueListReport";
+import MemberCheckInsReport from "../components/Reports/SalesReports/MemberCheckInsReport";
+import LeadSourceReport from "../components/Reports/SalesReports/LeadSourceReport";
+import GroupClassesUtilizationReport from "../components/Reports/SalesReports/GroupClassesUtilizationReport";
+import TDSReport from "../components/Reports/FinanceReports/TDSReport";
+import AdvancePaymentsReport from "../components/Reports/FinanceReports/AdvancePaymentsReport";
+import ReferralReport from "../components/Reports/OperationsReports/ReferralReport";
 
 export default function Routing() {
   const { accessToken } = useSelector((state) => state.auth);
@@ -646,6 +672,225 @@ export default function Routing() {
             </PrivateRoute>
           }
         />
+        
+        <Route
+          path="/reports/sales-reports/new-joinees-report"
+          element={
+            <PrivateRoute>
+              <NewJoineesReport />
+            </PrivateRoute>
+          }
+        />
+        
+        <Route
+          path="/reports/sales-reports/renewal-report"
+          element={
+            <PrivateRoute>
+              <RenewalReport />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/reports/sales-reports/all-enquiries-report"
+          element={
+            <PrivateRoute>
+              <AllEnquiriesReport />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/reports/sales-reports/active-member-report"
+          element={
+            <PrivateRoute>
+              <ActiveMemberReport />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/reports/sales-reports/pt-revenue-report"
+          element={
+            <PrivateRoute>
+              <PtRevenueReport />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/reports/sales-reports/pt-revenue-report-list/:id"
+          element={
+            <PrivateRoute>
+              <PtRevenueListReport />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/reports/sales-reports/member-checkins-report/"
+          element={
+            <PrivateRoute>
+              <MemberCheckInsReport />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/reports/sales-reports/member-checkins-report/:id"
+          element={
+            <PrivateRoute>
+              <MemberCheckInsReport />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/reports/sales-reports/lead-source-report/"
+          element={
+            <PrivateRoute>
+              <LeadSourceReport />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/reports/sales-reports/group-classes-utilization-report/"
+          element={
+            <PrivateRoute>
+              <GroupClassesUtilizationReport />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/reports/finance-reports/all-invoice-report"
+          element={
+            <PrivateRoute>
+              <AllInvoiceReport />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/reports/finance-reports/pending-collection"
+          element={
+            <PrivateRoute>
+              <PendingCollectionReport />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/reports/finance-reports/cancelled-paid-invoice"
+          element={
+            <PrivateRoute>
+              <CancelledPaidInvioceReport />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/reports/finance-reports/refund-report"
+          element={
+            <PrivateRoute>
+              <RefundReport />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/reports/finance-reports/collection-report"
+          element={
+            <PrivateRoute>
+              <CollectionReport />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/reports/finance-reports/tds-report"
+          element={
+            <PrivateRoute>
+              <TDSReport />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/reports/finance-reports/advance-payments-report"
+          element={
+            <PrivateRoute>
+              <AdvancePaymentsReport />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/reports/operations-reports/checkins-report"
+          element={
+            <PrivateRoute>
+              <CheckInsReport />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/reports/operations-reports/memberships-report"
+          element={
+            <PrivateRoute>
+              <MembershipsReport />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/reports/operations-reports/membership-expiry-report"
+          element={
+            <PrivateRoute>
+              <MembershipExpiryReport />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/reports/operations-reports/pt-expiry-report"
+          element={
+            <PrivateRoute>
+              <PtExpiryReport />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/reports/operations-reports/irregular-members-report"
+          element={
+            <PrivateRoute>
+              <IrregularMembersReport />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/reports/operations-reports/active-client-summary-report"
+          element={
+            <PrivateRoute>
+              <ActiveClientSummaryReport />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/reports/operations-reports/inactive-client-summary-report"
+          element={
+            <PrivateRoute>
+              <InactiveClientSummaryReport />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/reports/operations-reports/membership-frozen-report"
+          element={
+            <PrivateRoute>
+              <MembershipFrozenReport />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/reports/operations-reports/attendance-heatmap-report"
+          element={
+            <PrivateRoute>
+              <AttendanceHeatmapReport />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/reports/operations-reports/referral-report"
+          element={
+            <PrivateRoute>
+              <ReferralReport />
+            </PrivateRoute>
+          }
+        />
+
         <Route
           path="/trainer-dashboard/"
           element={
@@ -670,6 +915,7 @@ export default function Routing() {
             </PrivateRoute>
           }
         />
+
 
         {/* PT Routes */}
         {userType === "PT" && (
