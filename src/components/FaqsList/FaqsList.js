@@ -134,7 +134,7 @@ const FaqsList = () => {
         fetchFaqsList();
       } catch (err) {
         console.error("API Error:", err.response?.data || err.message);
-        toast.error("Failed to save faq category");
+        toast.error("Failed to save faq");
       }
 
       resetForm();
