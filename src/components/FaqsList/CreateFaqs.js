@@ -77,7 +77,7 @@ const CreateFaqs = ({
               <div className="p-6 flex-1">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="mb-2 block">Category</label>
+                    <label className="mb-2 block">Category<span className="text-red-500">*</span></label>
                     <div className="relative">
                       <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[10]">
                         <LuPlug />
@@ -155,7 +155,7 @@ const CreateFaqs = ({
                   </div>
 
                   <div>
-                    <label className="mb-2 block">Top Search</label>
+                    <label className="mb-2 block">Top Search<span className="text-red-500">*</span></label>
                     <div className="relative">
                       <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[10]">
                         <MdOutlineContentPasteSearch />
