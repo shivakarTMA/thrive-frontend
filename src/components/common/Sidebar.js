@@ -675,6 +675,20 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
               <FaCircle className="menu--icon !text-[10px]" />
               <span className="nav-text">Options List</span>
             </Link>
+            <Link
+              to="/faq-category"
+              className="text-white flex items-center gap-[5px] mb-2 text-sm"
+            >
+              <FaCircle className="menu--icon !text-[10px]" />
+              <span className="nav-text">FAQ Category</span>
+            </Link>
+            <Link
+              to="/faq-list"
+              className="text-white flex items-center gap-[5px] mb-2 text-sm"
+            >
+              <FaCircle className="menu--icon !text-[10px]" />
+              <span className="nav-text">FAQ List</span>
+            </Link>
           </div>
         )}
 

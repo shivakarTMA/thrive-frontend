@@ -6,20 +6,20 @@ import { toast } from "react-toastify";
 import Tooltip from "../common/Tooltip";
 import { LiaEdit } from "react-icons/lia";
 import { FaCircle } from "react-icons/fa6";
-import CreatePackageCategory from "./CreatePackageCategory";
+import CreateFaqCategory from "./CreateFaqCategory";
 import { authAxios } from "../../config/config";
 
-const PackageCategoryList = () => {
+const FaqCategoryList = () => {
   const [showModal, setShowModal] = useState(false);
-  const [packages, setPackages] = useState([]);
+  const [faqCategory, setFaqCategory] = useState([]);
   const [editingOption, setEditingOption] = useState(null);
   const leadBoxRef = useRef(null);
 
-  const fetchPackageCategoryList = async () => {
+  const fetchFaqCategoryList = async () => {
     try {
-      const res = await authAxios().get("/package-category/list");
+      const res = await authAxios().get("/faqcategory/list");
       let data = res.data?.data || res.data || [];
-      setPackages(data);
+      setFaqCategory(data);
     } catch (err) {
       console.error(err);
       toast.error("Failed to fetch companies");
@@ -27,7 +27,7 @@ const PackageCategoryList = () => {
   };
 
   useEffect(() => {
-    fetchPackageCategoryList();
+    fetchFaqCategoryList();
   }, []);
 
   const handleOverlayClick = (e) => {
@@ -45,40 +45,24 @@ const PackageCategoryList = () => {
     },
     validationSchema: Yup.object({
       title: Yup.string().required("Title is required"),
-      icon: Yup.string().required("Icon is required"),
       position: Yup.number().required("Position is required"),
-      status: Yup.string().required("Status is required"),
     }),
     onSubmit: async (values, { resetForm }) => {
       try {
-        const formData = new FormData();
-        formData.append("title", values.title);
-        formData.append("position", values.position);
-        formData.append("status", values.status);
-
-        // if file exists, append it (instead of just file name)
-        if (values.iconFile instanceof File) {
-          formData.append("file", values.iconFile);
-        }
+        const payload = { ...values };
 
         if (editingOption && editingOption) {
-          // Update
-          await authAxios().put(`/faqcategory/${editingOption}`, formData, {
-            headers: { "Content-Type": "multipart/form-data" },
-          });
+          await authAxios().put(`/faqcategory/${editingOption}`, payload);
           toast.success("Updated Successfully");
         } else {
-          // Create
-          await authAxios().post("/faqcategory/create", formData, {
-            headers: { "Content-Type": "multipart/form-data" },
-          });
+          await authAxios().post("/faqcategory/create", payload);
           toast.success("Created Successfully");
         }
 
-        fetchPackageCategoryList();
+        fetchFaqCategoryList();
       } catch (err) {
         console.error("API Error:", err.response?.data || err.message);
-        toast.error("Failed to save package");
+        toast.error("Failed to save faq category");
       }
 
       resetForm();
@@ -91,8 +75,8 @@ const PackageCategoryList = () => {
     <div className="page--content">
       <div className="flex items-end justify-between gap-2 mb-5">
         <div className="title--breadcrumbs">
-          <p className="text-sm">{`Home > Classes Category`}</p>
-          <h1 className="text-3xl font-semibold">Classes Category</h1>
+          <p className="text-sm">{`Home > FAQ Category`}</p>
+          <h1 className="text-3xl font-semibold">FAQ Category</h1>
         </div>
         <div className="flex items-end gap-2">
           <button
@@ -113,8 +97,6 @@ const PackageCategoryList = () => {
           <table className="w-full text-sm text-left text-gray-500">
             <thead className="text-xs text-gray-700 uppercase bg-gray-50">
               <tr>
-                {/* <th className="px-2 py-4">Module ID</th> */}
-                <th className="px-2 py-4">Image</th>
                 <th className="px-2 py-4">Title</th>
                 <th className="px-2 py-4">Position</th>
                 <th className="px-2 py-4">Status</th>
@@ -122,27 +104,18 @@ const PackageCategoryList = () => {
               </tr>
             </thead>
             <tbody>
-              {packages.length === 0 ? (
+              {faqCategory.length === 0 ? (
                 <tr>
-                  <td colSpan="8" className="text-center py-4">
-                    No packages added yet.
+                  <td colSpan="4" className="text-center py-4">
+                    No data found.
                   </td>
                 </tr>
               ) : (
-                packages.map((item, index) => (
+                faqCategory.map((item, index) => (
                   <tr
                     key={item.id || index}
                     className="group bg-white border-b hover:bg-gray-50 relative transition duration-700"
                   >
-                    {/* <td className="px-2 py-4">{item?.id || "—"}</td> */}
-                    <td className="px-2 py-4">
-                      <div className="bg-black rounded-lg p-3 w-14 h-14">
-                        <img
-                          src={item.icon}
-                          className="w-full h-full object-contain"
-                        />
-                      </div>
-                    </td>
                     <td className="px-2 py-4">{item?.title}</td>
                     <td className="px-2 py-4">{item.position}</td>
                     <td className="px-2 py-4">
@@ -187,7 +160,7 @@ const PackageCategoryList = () => {
         </div>
       </div>
       {showModal && (
-        <CreatePackageCategory
+        <CreateFaqCategory
           setShowModal={setShowModal}
           editingOption={editingOption}
           formik={formik}
@@ -199,4 +172,4 @@ const PackageCategoryList = () => {
   );
 };
 
-export default PackageCategoryList;
+export default FaqCategoryList;

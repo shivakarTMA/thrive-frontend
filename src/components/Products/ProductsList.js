@@ -256,7 +256,7 @@ const ProductsList = () => {
       </div>
 
       {/* Filters */}
-      <div className="flex flex-wrap gap-3 mb-4">
+      <div className="flex flex-wrap gap-3">
         <div className="mb-4 w-full max-w-[250px]">
           <div className="relative">
             <span className="absolute top-[50%] translate-y-[-50%] left-[15px]">
@@ -375,19 +375,19 @@ const ProductsList = () => {
             </tbody>
           </table>
         </div>
-        {/* Pagination */}
-        <Pagination
-          page={page}
-          totalPages={totalPages}
-          rowsPerPage={rowsPerPage}
-          totalCount={totalCount}
-          currentDataLength={packages.length}
-          onPageChange={(newPage) => {
-            setPage(newPage);
-            fetchProductList(searchTerm, newPage);
-          }}
-        />
       </div>
+      {/* Pagination */}
+      <Pagination
+        page={page}
+        totalPages={totalPages}
+        rowsPerPage={rowsPerPage}
+        totalCount={totalCount}
+        currentDataLength={packages.length}
+        onPageChange={(newPage) => {
+          setPage(newPage);
+          fetchProductList(searchTerm, newPage);
+        }}
+      />
       {showModal && (
         <CreateProduct
           setShowModal={setShowModal}

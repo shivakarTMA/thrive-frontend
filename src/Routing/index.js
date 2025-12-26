@@ -93,6 +93,8 @@ import GroupClassesUtilizationReport from "../components/Reports/SalesReports/Gr
 import TDSReport from "../components/Reports/FinanceReports/TDSReport";
 import AdvancePaymentsReport from "../components/Reports/FinanceReports/AdvancePaymentsReport";
 import ReferralReport from "../components/Reports/OperationsReports/ReferralReport";
+import FaqCategoryList from "../components/FaqCategory/FaqCategoryList";
+import FaqsList from "../components/FaqsList/FaqsList";
 
 export default function Routing() {
   const { accessToken } = useSelector((state) => state.auth);
@@ -912,6 +914,22 @@ export default function Routing() {
           element={
             <PrivateRoute>
               <CouponsList />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/faq-category"
+          element={
+            <PrivateRoute>
+              <FaqCategoryList />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/faq-list"
+          element={
+            <PrivateRoute>
+              <FaqsList />
             </PrivateRoute>
           }
         />
