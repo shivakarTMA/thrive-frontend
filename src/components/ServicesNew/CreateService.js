@@ -1,5 +1,5 @@
 // Import React
-import React from "react";
+import React, { useEffect } from "react";
 // Import close icon
 import { IoCloseCircle } from "react-icons/io5";
 // Import icons for input fields
@@ -10,6 +10,8 @@ import Select from "react-select";
 // Import custom styles for select input
 import { handleTextOnlyChange, selectIcon } from "../../Helper/helper";
 import { PiImageFill } from "react-icons/pi";
+import { authAxios } from "../../config/config";
+import { toast } from "react-toastify";
 
 // CreateService component
 const CreateService = ({
@@ -29,6 +31,34 @@ const CreateService = ({
     { label: "Recreation", value: "RECREATION" },
     { label: "Product", value: "PRODUCT" },
   ];
+
+  useEffect(() => {
+    if (!editingOption) return;
+
+    const fetchServiceById = async (id) => {
+      try {
+        const res = await authAxios().get(`/service/${id}`);
+        const data = res.data?.data || res.data || null;
+
+        if (data) {
+          formik.setValues({
+            name: data.name || "",
+            image: data.image || null,
+            club_id: data.club_id || "",
+            type: data.type || "",
+            position: data.position || "",
+            status: data.status || "ACTIVE",
+          });
+        }
+      } catch (err) {
+        console.error(err);
+        toast.error("Failed to fetch service details");
+      }
+    };
+
+    fetchServiceById(editingOption);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editingOption]);
 
   const handleLogoChange = (e) => {
     const file = e.target.files[0];

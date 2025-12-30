@@ -34,11 +34,9 @@ export default function LeadFilterPanel({
   // Only update appliedFilters when user clicks Apply
   const [appliedFilters, setAppliedFilters] = useState({});
 
-  const fetchStaff = async (search = "") => {
+  const fetchStaff = async () => {
     try {
-      const res = await authAxios().get("/staff/list", {
-        params: search ? { search } : {},
-      });
+      const res = await authAxios().get("/staff/list?role=FOH");
       const data = res.data?.data || [];
       const activeStaff = data.filter((item) => item.status === "ACTIVE");
       setStaffList(activeStaff);

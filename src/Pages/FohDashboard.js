@@ -102,7 +102,7 @@ const classPerformance = [
 
 const formatIndianNumber = (num) => new Intl.NumberFormat("en-IN").format(num);
 
-const ClubManagerDashboard = () => {
+const FohDashboard = () => {
   const navigate = useNavigate();
   const days = ["Yesterday", "Today", "Tomorrow"];
   const [currentDayIndex, setCurrentDayIndex] = useState(1); // Default to Today
@@ -768,4 +768,4 @@ const ClubManagerDashboard = () => {
   );
 };
 
-export default ClubManagerDashboard;
+export default FohDashboard;

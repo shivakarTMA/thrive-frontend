@@ -104,9 +104,12 @@ const MemberList = () => {
             : filterGender,
         };
 
-        Object.entries(filters).forEach(([key, val]) => {
-          if (val?.value) params[key] = val.value;
-        });
+       // Add filters to API params
+Object.entries(filters).forEach(([key, val]) => {
+  if (val !== null && val !== undefined) {
+    params[key] = val?.value !== undefined ? val.value : val;
+  }
+});
       }
 
       const res = await authAxios().get("/member/list", { params });
@@ -123,6 +126,8 @@ const MemberList = () => {
       toast.error("Failed to fetch member");
     }
   };
+
+  console.log("check status", filterStatus);
 
   const fetchMemberStats = async () => {
     try {
@@ -154,7 +159,6 @@ const MemberList = () => {
     fetchMemberList();
   };
 
-  console.log(memberList, "memberList");
   useEffect(() => {
     const delayDebounce = setTimeout(() => {
       fetchMemberList(searchTerm, 1);
@@ -527,21 +531,27 @@ const MemberList = () => {
                       </td>
                       <td className="px-2 py-4">
                         <div className="bg-gray-100 rounded-lg w-14 h-14 overflow-hidden">
-                        {member?.profile_pic ? (
-                          <img
-                            src={member?.profile_pic}
-                            className="w-full h-full object-cover object-center"
-                          />
-                        ) : (
-                          <img
-                            src={DummyProfile}
-                            className="w-full h-full object-cover object-center"
-                          />
-                        )}
-                      </div>
+                          {member?.profile_pic ? (
+                            <img
+                              src={member?.profile_pic}
+                              className="w-full h-full object-cover object-center"
+                            />
+                          ) : (
+                            <img
+                              src={DummyProfile}
+                              className="w-full h-full object-cover object-center"
+                            />
+                          )}
+                        </div>
                       </td>
                       <td className="px-2 py-4">{member?.full_name}</td>
-                      <td className="px-2 py-4">{formatText(member?.gender === "NOTDISCLOSE" ? "Prefer Not To Say" : member?.gender)}</td>
+                      <td className="px-2 py-4">
+                        {formatText(
+                          member?.gender === "NOTDISCLOSE"
+                            ? "Prefer Not To Say"
+                            : member?.gender
+                        )}
+                      </td>
                       <td className="px-2 py-4">
                         {/* {formatAutoDate(member?.createdAt)} */}6 Months
                       </td>
@@ -575,11 +585,15 @@ const MemberList = () => {
                           <div className="progress--bar bg-[#E5E5E5] rounded-full h-[10px] w-full max-w-[150px]">
                             <div
                               className="bg--color w-full rounded-full h-full"
-                              style={{ width: member?.lead_source === "APP" ? "100%" : "25%" }}
+                              style={{
+                                width:
+                                  member?.lead_source === "APP"
+                                    ? "100%"
+                                    : "25%",
+                              }}
                             ></div>
                           </div>
                           {member?.lead_source === "APP" ? "100%" : "25%"}
-                         
                         </div>
                       </td>
 

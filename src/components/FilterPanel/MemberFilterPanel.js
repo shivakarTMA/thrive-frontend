@@ -50,26 +50,46 @@ export default function MemberFilterPanel({
   const [showFilters, setShowFilters] = useState(false);
   const panelRef = useRef(null);
   const [staffList, setStaffList] = useState([]);
+  const [trainerList, setTrainerList] = useState([]);
   const [serviceList, setServiceList] = useState([]);
   const navigate = useNavigate();
 
   const [appliedFilters, setAppliedFilters] = useState({});
 
-  const fetchStaff = async (search = "") => {
+  const fetchStaff = async () => {
     try {
-      const res = await authAxios().get("/staff/list", {
-        params: search ? { search } : {},
-      });
-      let data = res.data?.data || res?.data || [];
-      const activeService = data?.filter((item) => item?.status === "ACTIVE");
-      setStaffList(activeService);
+      // Separate API calls for trainers and FOH staff
+      const trainerUrl = "/staff/list?role=TRAINER";
+      const fohUrl = "/staff/list?role=FOH";
+
+      // Make concurrent API calls to fetch data
+      const [trainerRes, fohRes] = await Promise.all([
+        authAxios().get(trainerUrl), // Fetch trainers
+        authAxios().get(fohUrl), // Fetch FOH staff
+      ]);
+
+      // Extract data from responses
+      const trainerData = trainerRes.data?.data || trainerRes?.data || [];
+      const fohData = fohRes.data?.data || fohRes?.data || [];
+
+      // Filter only active staff
+      const activeTrainers = trainerData.filter(
+        (item) => item?.status === "ACTIVE"
+      );
+      const activeFohStaff = fohData.filter(
+        (item) => item?.status === "ACTIVE"
+      );
+
+      // Update state
+      setTrainerList(activeTrainers);
+      setStaffList(activeFohStaff);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch club");
+      toast.error("Failed to fetch club staff.");
     }
   };
 
-    const fetchService = async (search = "") => {
+  const fetchService = async (search = "") => {
     try {
       const res = await authAxios().get("/service/list", {
         params: search ? { search } : {},
@@ -103,6 +123,11 @@ export default function MemberFilterPanel({
   const leadServiceOptions = lists["GOAL"] || [];
   const leadOwnerOptions =
     staffList?.map((item) => ({
+      label: item.name,
+      value: item.id,
+    })) || [];
+  const trainerOptions =
+    trainerList?.map((item) => ({
       label: item.name,
       value: item.id,
     })) || [];
@@ -148,7 +173,9 @@ export default function MemberFilterPanel({
   // Handle Submit (apply filters)
   const handleSubmitFilters = () => {
     setAppliedFilters({
-      is_subscribed: filterStatus,
+  is_subscribed: filterStatus !== null
+    ? memberStatus.find(option => option.value === filterStatus)
+    : null,
       serviceName: filterService,
       service_variation: filterServiceVariation,
       ageGroup: filterAgeGroup,
@@ -164,31 +191,29 @@ export default function MemberFilterPanel({
     navigate(`/all-members/`);
   };
 
-
   // Handle remove filter chip
- const removeFilter = (filterKey) => {
-  const setterMap = {
-    is_subscribed: setFilterStatus,
-    serviceName: setFilterService,
-    service_variation: setFilterServiceVariation,
-    ageGroup: setFilterAgeGroup,
-    leadSource: setFilterLeadSource,
-    created_by: setFilterLeadOwner,
-    staff: setFilterTrainer,
-    fitness: setFilterFitness,
-    gender: setFilterGender,
+  const removeFilter = (filterKey) => {
+    const setterMap = {
+      is_subscribed: setFilterStatus,
+      serviceName: setFilterService,
+      service_variation: setFilterServiceVariation,
+      ageGroup: setFilterAgeGroup,
+      leadSource: setFilterLeadSource,
+      created_by: setFilterLeadOwner,
+      staff: setFilterTrainer,
+      fitness: setFilterFitness,
+      gender: setFilterGender,
+    };
+
+    // Clear UI state
+    setterMap[filterKey]?.(null);
+
+    // Remove from appliedFilters
+    setAppliedFilters((prev) => ({ ...prev, [filterKey]: null }));
+
+    // Trigger parent to refetch API
+    if (onRemoveFilter) onRemoveFilter(filterKey);
   };
-
-  // Clear UI state
-  setterMap[filterKey]?.(null);
-
-  // Remove from appliedFilters
-  setAppliedFilters((prev) => ({ ...prev, [filterKey]: null }));
-
-  // Trigger parent to refetch API
-  if (onRemoveFilter) onRemoveFilter(filterKey);
-};
-
 
   return (
     <div className="relative max-w-fit w-full" ref={panelRef}>
@@ -215,8 +240,13 @@ export default function MemberFilterPanel({
                   Member Status
                 </label>
                 <Select
-                  value={filterStatus}
-                  onChange={setFilterStatus}
+                  value={memberStatus.find(
+                    (option) => option.value === filterStatus
+                  )}
+                  onChange={(selectedOption) => {
+                    // Store only the value (true/false) in state
+                    setFilterStatus(selectedOption?.value ?? null);
+                  }}
                   options={memberStatus}
                   // isClearable
                   placeholder="Select Status"
@@ -302,7 +332,7 @@ export default function MemberFilterPanel({
                 <Select
                   value={filterTrainer}
                   onChange={setFilterTrainer}
-                  options={leadOwnerOptions}
+                  options={trainerOptions}
                   // isClearable
                   placeholder="Select Trainer Name"
                   styles={customStyles}

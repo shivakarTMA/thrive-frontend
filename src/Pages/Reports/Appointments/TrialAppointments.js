@@ -249,8 +249,8 @@ const TrialAppointments = () => {
         {/* Page heading */}
         <div className="flex items-end justify-between gap-2 mb-5">
           <div className="title--breadcrumbs">
-            <p className="text-sm">{`Home > Reports > Appointments > Trial Appointments`}</p>
-            <h1 className="text-3xl font-semibold">Trial Appointments</h1>
+            <p className="text-sm">{`Home > Reports > Sales Reports > Appointments Report`}</p>
+            <h1 className="text-3xl font-semibold">Appointments Report</h1>
           </div>
         </div>
 
@@ -373,14 +373,20 @@ const TrialAppointments = () => {
                   <tr>
                     <th className="px-2 py-4 min-w-[100px]">Enquiry Date</th>
                     <th className="px-2 py-4 min-w-[150px]">Club Name</th>
-                    <th className="px-2 py-4 min-w-[200px]">Appointment Category</th>
-                    <th className="px-2 py-4 min-w-[200px]">Service/Appointment Name</th>
+                    <th className="px-2 py-4 min-w-[200px]">
+                      Appointment Category
+                    </th>
+                    <th className="px-2 py-4 min-w-[200px]">
+                      Service/Appointment Name
+                    </th>
                     <th className="px-2 py-4 min-w-[130px]">Lead Name</th>
                     <th className="px-2 py-4 min-w-[110px]">Date & Time</th>
-                    <th className="px-2 py-4 min-w-[130px]">Staff Name</th>
+                    <th className="px-2 py-4 min-w-[130px]">Trainer Name</th>
                     <th className="px-2 py-4 min-w-[130px]">Scheduled By</th>
                     <th className="px-2 py-4 min-w-[130px]">Status</th>
-                    <th className="px-2 py-4 text-center min-w-[150px]">Action</th>
+                    <th className="px-2 py-4 text-center min-w-[150px]">
+                      Action
+                    </th>
                   </tr>
                 </thead>
 
@@ -394,7 +400,7 @@ const TrialAppointments = () => {
                         {formatAutoDate(row?.createdAt)}
                       </td>
                       <td className="px-2 py-4">DLF Summit Plaza</td>
-                      <td className="px-2 py-4">Complimentary Appointment</td>
+                      <td className="px-2 py-4">{row?.appointment_category ? row?.appointment_category : "--"}</td>
                       <td className="px-2 py-4">Trial/test</td>
 
                       <td className="px-2 py-4">{row?.lead_name || "--"}</td>
@@ -404,12 +410,9 @@ const TrialAppointments = () => {
                       </td>
 
                       <td className="px-2 py-4">
-                        {row?.staff_name || "Shivakar Sharma"}
+                        {row?.assigned_staff_name || "--"}
                       </td>
-
-                      <td className="px-2 py-4">
-                        {row?.assigned_staff_name || "Self"}
-                      </td>
+                      <td className="px-2 py-4">{row?.staff_name || "Self"}</td>
 
                       <td className="px-2 py-4">
                         <span

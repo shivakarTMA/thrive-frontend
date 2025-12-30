@@ -15,6 +15,7 @@ import { IoSearchOutline } from "react-icons/io5";
 import Select from "react-select";
 import { customStyles } from "../../Helper/helper";
 import Pagination from "../common/Pagination";
+import { QRCodeCanvas } from "qrcode.react";
 
 const indianStates = [
   { label: "Haryana", value: "Haryana" },
@@ -61,6 +62,7 @@ const indianStates = [
 ];
 
 const ClubList = () => {
+  const qrRefs = useRef({});
   const [showModal, setShowModal] = useState(false);
   const [club, setClub] = useState([]);
   const [editingClub, setEditingClub] = useState(null);
@@ -258,7 +260,23 @@ const ClubList = () => {
     formik.setFieldValue("phone", value);
   };
 
-  console.log(club, "club");
+  const downloadQRCode = (clubId) => {
+    const canvas = document.getElementById(`qr-download-${clubId}`);
+
+    if (!canvas) {
+      toast.error("QR code not found");
+      return;
+    }
+
+    const pngUrl = canvas.toDataURL("image/png");
+
+    const link = document.createElement("a");
+    link.href = pngUrl;
+    link.download = `club_${clubId}_qr.png`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   return (
     <div className="page--content">
@@ -319,6 +337,7 @@ const ClubList = () => {
             <thead className="text-xs text-gray-700 uppercase bg-gray-50">
               <tr>
                 {/* <th className="px-2 py-4">Club ID</th> */}
+                <th className="px-2 py-4">QR Code</th>
                 <th className="px-2 py-4">Name</th>
                 <th className="px-2 py-4">Email</th>
                 <th className="px-2 py-4">GST No.</th>
@@ -345,9 +364,52 @@ const ClubList = () => {
                     className="group bg-white border-b hover:bg-gray-50 relative transition duration-700"
                   >
                     {/* <td className="px-2 py-4">{club?.id || "—"}</td> */}
+                    <td className="px-2 py-4">
+                      <div className="relative">
+                        <QRCodeCanvas
+                          id={`qr-view-${club.id}`}
+                          value={JSON.stringify({
+                            club_id: club.id,
+                            type: "ATTENDANCE",
+                          })}
+                          size={50}
+                          level="H"
+                        />
+
+                        <div className="w-full h-full absolute top-0 left-0">
+                          <Tooltip
+                            id={`tooltip-qr-${club.id || index}`}
+                            content="Download QR Code"
+                            place="top"
+                          >
+                            <button
+                              className="w-full h-full opacity-0"
+                              onClick={() => downloadQRCode(club.id)}
+                            >
+                              QR
+                            </button>
+                          </Tooltip>
+
+                          {/* Hidden QR Code */}
+                          <div style={{ display: "none" }}>
+                            <QRCodeCanvas
+                              id={`qr-download-${club.id}`}
+                              value={JSON.stringify({
+                                club_id: club.id,
+                                type: "ATTENDANCE",
+                              })}
+                              size={250}
+                              level="H"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </td>
                     <td className="px-2 py-4">{club?.name}</td>
                     <td className="px-2 py-4">{club?.email}</td>
-                    <td className="px-2 py-4">{club?.gstno ? club?.gstno : "--"}</td>
+                    <td className="px-2 py-4">
+                      {club?.gstno ? club?.gstno : "--"}
+                    </td>
                     <td className="px-2 py-4">{club?.city}</td>
                     <td className="px-2 py-4">
                       {club?.open_time ? formatTime(club?.open_time) : "--"}
@@ -356,7 +418,9 @@ const ClubList = () => {
                       {club?.close_time ? formatTime(club?.close_time) : "--"}
                     </td>
                     <td className="px-2 py-4">
-                      {club?.trial_duration ? club?.trial_duration + " Minutes" : "--"}
+                      {club?.trial_duration
+                        ? club?.trial_duration + " Minutes"
+                        : "--"}
                     </td>
                     <td className="px-2 py-4 text-center">{club?.position}</td>
                     <td className="px-2 py-4">

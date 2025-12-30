@@ -7,7 +7,7 @@ import { customStyles } from "../../Helper/helper";
 import Select from "react-select";
 import CreateInvoice from "../../Pages/CreateInvoice";
 import AddCoins from "../CoinsList/AddCoins";
-import CreateAppointment from "../Appointment/CreateAppointment";
+import CreateMemberAppointment from "../Appointment/CreateMemberAppointment";
 import SuspendAndPause from "../common/SuspendAndPause";
 import { authAxios } from "../../config/config";
 import { toast } from "react-toastify";
@@ -412,7 +412,7 @@ const ServiceCard = ({ details }) => {
         />
       )}
       {appointmentModal && (
-        <CreateAppointment setAppointmentModal={setAppointmentModal} memberID={details?.id} />
+        <CreateMemberAppointment setAppointmentModal={setAppointmentModal} memberID={details?.id} />
       )}
       {suspendPauseModal && (
         <SuspendAndPause

@@ -20,6 +20,7 @@ import {
 import ConfirmUnderAge from "../modal/ConfirmUnderAge";
 import { toast } from "react-toastify";
 import { IoIosAddCircle, IoIosCloseCircle } from "react-icons/io";
+import MultiSelect from "react-multi-select-component";
 
 // Lead source types
 const genderOptions = [
@@ -83,6 +84,7 @@ const ProfileDetails = ({ member }) => {
     company_name: "",
     designation: "",
     officialEmail: "",
+    interested_in: [],
   });
 
   const [emergencyContacts, setEmergencyContacts] = useState([]);
@@ -242,6 +244,9 @@ const ProfileDetails = ({ member }) => {
           company_name: data?.company_name || "",
           designation: data?.designation || "",
           officialEmail: data?.official_email || "",
+          interested_in: Array.isArray(data?.interested_in)
+            ? data.interested_in
+            : [],
         });
       } catch (error) {
         console.error("Error fetching member data:", error);
@@ -252,90 +257,12 @@ const ProfileDetails = ({ member }) => {
     fetchMemberData();
   }, [memberId, leadTypes]);
 
-  // const formik = useFormik({
-  //   enableReinitialize: true, // Important to update form when initialValues change
-  //   initialValues: initialValues,
-  //   validationSchema,
-  //   onSubmit: async (values) => {
-  //     let profilePayload = new FormData();
-
-  //     if (values?.profile_pic instanceof File) {
-  //       profilePayload.append("profile_pic", values.profile_pic);
-  //     }
-
-  //     // ✅ Normalize phone
-  //     if (values.phoneFull) {
-  //       const phoneNumber = parsePhoneNumberFromString(values.phoneFull);
-  //       if (phoneNumber) {
-  //         profilePayload.country_code = phoneNumber.countryCallingCode;
-  //         profilePayload.mobile = phoneNumber.nationalNumber;
-  //       }
-  //     } else {
-  //       profilePayload.country_code = null;
-  //       profilePayload.mobile = null;
-  //     }
-
-  //     let companyId = null;
-  //     if (values.company_name !== null && !isNaN(values.company_name)) {
-  //       companyId = Number(values.company_name); // Only numeric
-  //     }
-
-  //     // Append other fields
-  //     Object.entries(values).forEach(([key, value]) => {
-  //       if (
-  //         key !== "phoneFull" &&
-  //         key !== "company_name" &&
-  //         key !== "profile_pic"
-  //       ) {
-  //         profilePayload.append(key, value || "");
-  //       }
-  //     });
-
-  //     if (companyId !== null) {
-  //       profilePayload.append("company_id", companyId);
-  //     }
-
-  //     const profileResponse = await authAxios().put(
-  //       `/member/update/${member.id}`,
-  //       profilePayload,
-  //       {
-  //         headers: {
-  //           "Content-Type": "multipart/form-data",
-  //         },
-  //       }
-  //     );
-  //     toast.success("Profile updated successfully.");
-  //     console.log("Profile updated successfully.", profileResponse?.data?.data);
-
-  //     const allContacts = [...emergencyContacts, ...newEmergencies];
-
-  //     // ----- Update Emergency Contacts -----
-  //     for (let contact of allContacts) {
-  //       const contactPayload = {
-  //         member_id: member.id,
-  //         name: contact.name,
-  //         relationship: contact.relationship || "",
-  //         phone: contact.phone || "",
-  //         alt_phone: contact.alt_phone || "",
-  //         email: contact.email || "",
-  //         address: contact.address || "",
-  //       };
-
-  //       // If contact has ID, update; else create
-  //       if (contact.id) {
-  //         await authAxios().put(
-  //           `/member-emergency-contact/${contact.id}`,
-  //           contactPayload
-  //         );
-  //       } else {
-  //         await authAxios().post(
-  //           `/member-emergency-contact/create`,
-  //           contactPayload
-  //         );
-  //       }
-  //     }
-  //   },
-  // });
+  // --------------------
+  // Map strings → objects for MultiSelect
+  // --------------------
+  const selectedInterested = servicesName.filter((item) =>
+    initialValues.interested_in.includes(item.value)
+  );
 
   // ✅ Validate all emergency contacts
   const validateEmergencyContacts = () => {
@@ -1077,25 +1004,6 @@ const ProfileDetails = ({ member }) => {
                     styles={customStyles}
                   />
                 </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-black mb-2">
-                    Lead Source
-                  </label>
-                  <Select
-                    name="leadSource"
-                    styles={customStyles}
-                    className="!capitalize"
-                    isDisabled={true}
-                    value={leadsSources.find(
-                      (opt) => opt.value === formik.values?.leadSource
-                    )}
-                    options={leadsSources}
-                    onChange={(option) =>
-                      formik.setFieldValue("leadSource", option.value)
-                    }
-                  />
-                </div>
                 <div>
                   <label className="block text-sm font-medium text-black mb-2">
                     Personal Trainer
@@ -1113,6 +1021,61 @@ const ProfileDetails = ({ member }) => {
                     }
                     placeholder="Select Trainer"
                     styles={customStyles}
+                  />
+                </div>
+                <div className="hide-clear-icon">
+                  <label className="block text-sm font-medium text-black mb-2">
+                    Interested In
+                  </label>
+
+                  <MultiSelect
+                    options={servicesName}
+                    value={selectedInterested}
+                    labelledBy="Select..."
+                    hasSelectAll={false}
+                    disableSearch={false}
+                    overrideStrings={{
+                      selectSomeItems: "Select Interested...",
+                      allItemsAreSelected: "All Interested Selected",
+                    }}
+                    className="custom--input w-full cursor-not-allowed pointer-events-none !bg-gray-100 !text-gray-500"
+                    disabled
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-black mb-2">
+                    Lead Type
+                  </label>
+                  <Select
+                    name="leadType"
+                    styles={customStyles}
+                    className="!capitalize"
+                    isDisabled={true}
+                    value={leadTypes.find(
+                      (opt) => opt.value === formik.values?.leadType
+                    )}
+                    options={leadTypes}
+                    onChange={(option) =>
+                      formik.setFieldValue("leadType", option.value)
+                    }
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-black mb-2">
+                    Lead Source
+                  </label>
+                  <Select
+                    name="leadSource"
+                    styles={customStyles}
+                    className="!capitalize"
+                    isDisabled={true}
+                    value={leadsSources.find(
+                      (opt) => opt.value === formik.values?.leadSource
+                    )}
+                    options={leadsSources}
+                    onChange={(option) =>
+                      formik.setFieldValue("leadSource", option.value)
+                    }
                   />
                 </div>
               </div>

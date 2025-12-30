@@ -273,7 +273,6 @@ const FaqsList = () => {
             </tbody>
           </table>
         </div>
-      </div>
       {/* Pagination */}
       <Pagination
         page={page}
@@ -286,6 +285,7 @@ const FaqsList = () => {
           fetchFaqsList(searchTerm, newPage);
         }}
       />
+      </div>
       {showModal && (
         <CreateFaqs
           setShowModal={setShowModal}

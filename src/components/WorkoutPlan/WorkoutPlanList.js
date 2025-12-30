@@ -197,20 +197,19 @@ const WorkoutPlanList = () => {
               </tbody>
             </table>
           </div>
+          {/* Pagination */}
+          <Pagination
+            page={page}
+            totalPages={totalPages}
+            rowsPerPage={rowsPerPage}
+            totalCount={totalCount}
+            currentDataLength={workouts.length}
+            onPageChange={(newPage) => {
+              setPage(newPage);
+              fetchWorkouts(searchTerm, newPage);
+            }}
+          />
         </div>
-
-        {/* Pagination */}
-        <Pagination
-          page={page}
-          totalPages={totalPages}
-          rowsPerPage={rowsPerPage}
-          totalCount={totalCount}
-          currentDataLength={workouts.length}
-          onPageChange={(newPage) => {
-            setPage(newPage);
-            fetchWorkouts(searchTerm, newPage);
-          }}
-        />
       </div>
 
       {showConfirmPopup && workoutToDelete && (

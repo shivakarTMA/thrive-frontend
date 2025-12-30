@@ -519,7 +519,6 @@ const StaffList = () => {
             </tbody>
           </table>
         </div>
-      </div>
       {/* Pagination */}
       <Pagination
         page={page}
@@ -532,6 +531,7 @@ const StaffList = () => {
           fetchStaff(searchTerm, newPage);
         }}
       />
+      </div>
 
       {/* Modal */}
       {showModal && (

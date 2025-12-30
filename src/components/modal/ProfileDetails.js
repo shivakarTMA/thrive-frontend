@@ -29,7 +29,7 @@ const ProfileDetails = ({ profile, setProfileModal }) => {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex gap-3 items-center justify-between p-6 border-b">
-          <h2 className="text-xl font-semibold">Profile Details</h2>
+          <h2 className="text-xl font-semibold">{formatText(profile?.role)} Profile Details</h2>
           <div
             className="close--lead cursor-pointer"
             onClick={handleProfileModal}
@@ -41,8 +41,8 @@ const ProfileDetails = ({ profile, setProfileModal }) => {
         <div className="p-5">
           <div className="grid grid-cols-2 gap-2">
             <div className="border py-2 px-3 rounded">
-              <label className="mb-1 block font-semibold text-sm">Role</label>
-              <p>{formatText(profile?.role)}</p>
+              <label className="mb-1 block font-semibold text-sm">Name</label>
+              <p>{profile?.name}</p>
             </div>
             <div className="border py-2 px-3 rounded">
               <label className="mb-1 block font-semibold text-sm">

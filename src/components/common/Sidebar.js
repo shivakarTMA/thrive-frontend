@@ -19,6 +19,7 @@ import { FaLayerGroup } from "react-icons/fa";
 import TopLogo from "../../assets/images/DLF-Thrive-New-Logo-1-White.png";
 import { HiTemplate } from "react-icons/hi";
 import { TfiAnnouncement } from "react-icons/tfi";
+import { MdOutlineDashboardCustomize } from "react-icons/md";
 
 const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
   const location = useLocation();
@@ -133,7 +134,7 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
           style={{ cursor: "pointer" }}
         >
           <div className="flex items-center">
-            <TbGymnastics className="menu--icon" />
+            <MdOutlineDashboardCustomize className="menu--icon" />
             <span className="nav-text">Other Dashboard</span>
           </div>
           <FaAngleDown
@@ -160,6 +161,13 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
               <FaCircle className="menu--icon !text-[10px]" />
               <span className="nav-text">Trainer Dashboard</span>
             </Link>
+            <Link
+              to="/foh-dashboard"
+              className="text-white flex items-center gap-[5px] mb-2 text-sm"
+            >
+              <FaCircle className="menu--icon !text-[10px]" />
+              <span className="nav-text">FOH Dashboard</span>
+            </Link>
           </div>
         )}
 
@@ -182,18 +190,6 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
           <FiUsers className="menu--icon" />
           <span className="nav-text">All Members</span>
         </Link>
-
-        {/* <Link
-          to="/reports/appointments/trial-appointments"
-          className={`nav-link mb-2 ${
-            location.pathname === "/reports/appointments/trial-appointments"
-              ? "active"
-              : ""
-          }`}
-        >
-          <AiOutlineHome className="menu--icon" />
-          <span className="nav-text">Trial Appointments</span>
-        </Link> */}
 
         <Link
           to="/workout-plans"
@@ -292,20 +288,6 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
           <div className="mt-2 pl-5 relative">
             <div className="absolute h-[calc(100%-15px)] w-[2px] bg-white left-[23px] top-[8px]"></div>
             <Link
-              to="/reports/finance/sales-report"
-              className="text-white flex items-center gap-[5px] mb-2 text-sm"
-            >
-              <FaCircle className="menu--icon !text-[10px]" />
-              <span className="nav-text">Sales Report</span>
-            </Link>
-            <Link
-              to="/reports/member-management/member-check-ins"
-              className="text-white flex items-center gap-[5px] mb-2 text-sm"
-            >
-              <FaCircle className="menu--icon !text-[10px]" />
-              <span className="nav-text">Member Check-ins</span>
-            </Link>
-            <Link
               to="/reports/products-sold/"
               className="text-white flex items-center gap-[5px] mb-2 text-sm"
             >
@@ -360,22 +342,16 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                   New Joinees Report
                 </Link>
                 <Link
-                  to="/reports/sales-reports/renewal-report"
-                  className="submenu-link text-white text-sm"
-                >
-                  Renewal Report
-                </Link>
-                <Link
                   to="/reports/sales-reports/all-enquiries-report"
                   className="submenu-link text-white text-sm"
                 >
                   All Enquiries Report
                 </Link>
                 <Link
-                  to="/reports/appointments/trial-appointments"
+                  to="/reports/appointments/all-appointments"
                   className="submenu-link text-white text-sm"
                 >
-                  Trial Appointments
+                  Appointments Report
                 </Link>
                 <Link
                   to="/reports/sales-reports/active-member-report"
@@ -480,10 +456,16 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
             {operationsReportsOpen && (
               <div className="pl-[5px] flex flex-col gap-1 mb-3">
                 <Link
-                  to="/reports/operations-reports/checkins-report"
+                  to="/reports/operations-reports/renewal-report"
                   className="submenu-link text-white text-sm"
                 >
-                  Check-ins Report
+                  Renewal Report
+                </Link>
+                <Link
+                  to="/reports/operations-reports/member-checkins-report"
+                  className="submenu-link text-white text-sm"
+                >
+                  Member Check-ins
                 </Link>
                 <Link
                   to="/reports/operations-reports/memberships-report"

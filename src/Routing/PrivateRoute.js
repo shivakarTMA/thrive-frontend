@@ -24,9 +24,6 @@ export default function PrivateRoute({ children }) {
         const res = await authAxios().get(`/staff/${user.id}`);
 
         const staff = res?.data?.data;
-
-        console.log("staff", staff);
-
         // ✅ User is not staff (ADMIN or API returned nothing)
         if (!staff) {
           console.warn("User is not a staff member — skipping staff validation");
@@ -35,14 +32,12 @@ export default function PrivateRoute({ children }) {
 
         // ❌ Soft delete check
         if (staff.is_deleted === 1) {
-          console.log("Staff soft-deleted → logout");
           handleLogout();
           return;
         }
 
         // ❌ Status check
         if (staff.status !== "ACTIVE") {
-          console.log("Staff inactive → logout");
           handleLogout();
           return;
         }

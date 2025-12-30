@@ -221,21 +221,21 @@ const ExercisesList = () => {
               )}
             </tbody>
           </table>
-        </div>
-      </div>
+        </div> 
 
-      {/* Pagination */}
-      <Pagination
-        page={page}
-        totalPages={totalPages}
-        rowsPerPage={rowsPerPage}
-        totalCount={totalCount}
-        currentDataLength={exerciseList.length}
-        onPageChange={(newPage) => {
-          setPage(newPage);
-          fetchExercisesList(searchTerm, newPage);
-        }}
-      />
+        {/* Pagination */}
+        <Pagination
+          page={page}
+          totalPages={totalPages}
+          rowsPerPage={rowsPerPage}
+          totalCount={totalCount}
+          currentDataLength={exerciseList.length}
+          onPageChange={(newPage) => {
+            setPage(newPage);
+            fetchExercisesList(searchTerm, newPage);
+          }}
+        />
+      </div>
 
       {/* Modal */}
       {showModal && (

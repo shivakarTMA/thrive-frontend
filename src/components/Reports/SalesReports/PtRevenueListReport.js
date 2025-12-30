@@ -104,7 +104,7 @@ const PtRevenueListReport = () => {
                         <div className="flex gap-2 items-center">
                           {row.completed_sessions}{" "}
                           <Link
-                            to={`/reports/sales-reports/member-checkins-report/${row.id}`}
+                            to={`/reports/operations-reports/member-checkins-report/${row.id}`}
                             className="px-3 py-1 bg-black text-white rounded flex items-center gap-2 !text-[13px] w-fit"
                           >
                             View

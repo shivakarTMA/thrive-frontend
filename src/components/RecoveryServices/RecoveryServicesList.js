@@ -384,20 +384,19 @@ const RecoveryServicesList = () => {
             </tbody>
           </table>
         </div>
+        {/* Pagination */}
+        <Pagination
+          page={page}
+          totalPages={totalPages}
+          rowsPerPage={rowsPerPage}
+          totalCount={totalCount}
+          currentDataLength={recoveryServiceList.length}
+          onPageChange={(newPage) => {
+            setPage(newPage);
+            fetchRecoveryServices(searchTerm, newPage);
+          }}
+        />
       </div>
-
-      {/* Pagination */}
-      <Pagination
-        page={page}
-        totalPages={totalPages}
-        rowsPerPage={rowsPerPage}
-        totalCount={totalCount}
-        currentDataLength={recoveryServiceList.length}
-        onPageChange={(newPage) => {
-          setPage(newPage);
-          fetchRecoveryServices(searchTerm, newPage);
-        }}
-      />
 
       {/* Modal for Create/Update Service */}
       {showModal && (

@@ -90,31 +90,6 @@ const Services = () => {
     }
   };
 
-  // Handle edit service action
-  const handleEdit = (id) => {
-    const data = module.find((item) => item.id === id);
-
-    if (data) {
-      setEditingOption(data);
-
-      formik.setValues({
-        id: data.id || "",
-        name: data.name || "",
-        // Keep existing image if already present
-        image: data.image || null,
-        club_id: data.club_id || "",
-        // studio_id: data.studio_id || "",
-        type: data.type || "",
-        position: data.position || "",
-        status: data.status || "ACTIVE",
-      });
-
-      setShowModal(true);
-    } else {
-      toast.error("Service not found in list");
-    }
-  };
-
   // Load initial data
   useEffect(() => {
     fetchServices();
@@ -195,8 +170,8 @@ const Services = () => {
             formData.append(key, values[key]);
           }
         });
-        if (editingOption && editingOption.id) {
-          await authAxios().put(`/service/${editingOption.id}`, formData, {
+        if (editingOption && editingOption) {
+          await authAxios().put(`/service/${editingOption}`, formData, {
             headers: { "Content-Type": "multipart/form-data" },
           });
           toast.success("Updated Successfully");
@@ -243,7 +218,7 @@ const Services = () => {
       </div>
 
       {/* Search and Filter Section */}
-      <div className="flex gap-3 mb-4">
+      <div className="flex gap-3">
         <div className="mb-4 w-full max-w-[250px]">
           <div className="relative">
             <span className="absolute top-[50%] translate-y-[-50%] left-[15px]">
@@ -341,7 +316,10 @@ const Services = () => {
                         >
                           <div
                             className="p-1 cursor-pointer"
-                            onClick={() => handleEdit(item.id)}
+                            onClick={() => {
+                              setEditingOption(item?.id);
+                              setShowModal(true);
+                            }}
                           >
                             <LiaEdit className="text-[25px] text-black" />
                           </div>

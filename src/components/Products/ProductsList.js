@@ -375,7 +375,6 @@ const ProductsList = () => {
             </tbody>
           </table>
         </div>
-      </div>
       {/* Pagination */}
       <Pagination
         page={page}
@@ -388,6 +387,7 @@ const ProductsList = () => {
           fetchProductList(searchTerm, newPage);
         }}
       />
+      </div>
       {showModal && (
         <CreateProduct
           setShowModal={setShowModal}

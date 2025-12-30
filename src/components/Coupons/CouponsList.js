@@ -11,8 +11,9 @@ import CreateCoupon from "./CreateCoupon";
 import { authAxios } from "../../config/config";
 import { RiDeleteBin6Line } from "react-icons/ri";
 import ConfirmPopup from "../common/ConfirmPopup";
-import { formatAutoDate, formatText } from "../../Helper/helper";
+import { customStyles, formatAutoDate, formatText } from "../../Helper/helper";
 import { FaCircle } from "react-icons/fa6";
+import Select from "react-select";
 
 const CouponsList = () => {
   const [showModal, setShowModal] = useState(false);
@@ -20,6 +21,7 @@ const CouponsList = () => {
   const [editingOption, setEditingOption] = useState(null);
   const [couponToDelete, setCouponToDelete] = useState(null);
   const [showConfirmPopup, setShowConfirmPopup] = useState(false);
+  const [statusFilter, setStatusFilter] = useState(null);
   const [page, setPage] = useState(1);
   const [rowsPerPage] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
@@ -32,6 +34,7 @@ const CouponsList = () => {
       const params = {
         page: currentPage,
         limit: rowsPerPage,
+        ...(statusFilter?.value && { status: statusFilter.value }),
       };
 
       const response = await authAxios().get("/coupon/list", { params });
@@ -47,8 +50,8 @@ const CouponsList = () => {
   };
 
   useEffect(() => {
-    fetchCoupons();
-  }, []);
+    fetchCoupons(1); // reset to first page when filter changes
+  }, [statusFilter]);
 
   const handleOverlayClick = (event) => {
     if (leadBoxRef.current && !leadBoxRef.current.contains(event.target)) {
@@ -269,6 +272,24 @@ const CouponsList = () => {
         </div>
       </div>
 
+      {/* Search and Filter Section */}
+      <div className="flex gap-3 mb-4">
+        <div className="w-full max-w-[200px]">
+          <Select
+            placeholder="Filter by Status"
+            options={[
+              { label: "Active", value: "ACTIVE" },
+              { label: "Inactive", value: "INACTIVE" },
+              { label: "Expired", value: "EXPIRED" },
+            ]}
+            value={statusFilter}
+            onChange={(option) => setStatusFilter(option)}
+            isClearable
+            styles={customStyles}
+          />
+        </div>
+      </div>
+
       <div className="box--shadow bg-white rounded-[15px] p-4">
         <div className="relative overflow-x-auto">
           <table className="w-full text-sm text-left text-gray-500">
@@ -311,10 +332,15 @@ const CouponsList = () => {
                     <td className="px-2 py-4">
                       <span
                         className={`flex items-center justify-between gap-1 rounded-full min-h-[30px] px-3 text-sm w-fit ${
-                          item?.status !== "ACTIVE"
-                            ? "bg-[#EEEEEE]"
-                            : "bg-[#E8FFE6] text-[#138808]"
-                        }`}
+                          item?.status === "ACTIVE"
+                            ? "bg-[#E8FFE6] text-[#138808]"
+                            : item?.status === "INACTIVE"
+                            ? "bg-[#EEEEEE] text-[#666666]"
+                            : item?.status === "EXPIRED"
+                            ? "bg-[#FFE8E8] text-[#D32F2F]"
+                            : ""
+                        }
+                        `}
                       >
                         <FaCircle className="text-[10px]" />{" "}
                         {formatText(item?.status)}
@@ -339,7 +365,6 @@ const CouponsList = () => {
                               className="p-1 cursor-pointer"
                               onClick={() => {
                                 setEditingOption(item?.id);
-                                formik.resetForm(); // clear previous values
                                 setShowModal(true);
                               }}
                             >
@@ -347,7 +372,7 @@ const CouponsList = () => {
                             </div>
                           </Tooltip>
                         </div>
-                      {/* 
+                        {/* 
                         <div className="w-fit ml-2">
                           <Tooltip
                             id={`tooltip-delete-${item?.id}`}

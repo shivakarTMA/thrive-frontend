@@ -677,3 +677,6 @@ border-radius: 5px !important;
 .input--icon:disabled, .input--icon:disabled {
     color: #999999;
 }
+.hide-clear-icon .clear-selected-button {
+  display: none !important;
+}

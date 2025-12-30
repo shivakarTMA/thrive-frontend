@@ -2,9 +2,14 @@ import React, { useEffect, useState } from "react";
 import Select from "react-select";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { customStyles, formatAutoDate, formatText, formatTimeAppointment } from "../../Helper/helper";
+import {
+  customStyles,
+  formatAutoDate,
+  formatText,
+  formatTimeAppointment,
+} from "../../Helper/helper";
 import { FiPlus } from "react-icons/fi";
-import CreateAppointment from "../Appointment/CreateAppointment";
+import CreateMemberAppointment from "../Appointment/CreateMemberAppointment";
 import { toast } from "react-toastify";
 import { authAxios } from "../../config/config";
 
@@ -30,9 +35,9 @@ const Appointments = ({ details }) => {
     }
   };
 
-  useEffect(() =>{
+  useEffect(() => {
     fetchAppointmentsList();
-  },[])
+  }, []);
 
   const appointmentTypeOptions = [
     { value: "All", label: "All" },
@@ -113,66 +118,92 @@ const Appointments = ({ details }) => {
         </div>
       </div>
 
-      <div className="overflow-auto">
-        <table className="min-w-full border border-gray-300 text-sm">
-          <thead className="bg-gray-100 text-left">
-            <tr>
-              {/* <th className="border px-3 py-2">Appointment ID</th> */}
-              <th className="border px-3 py-2">Appointment Date</th>
-              <th className="border px-3 py-2">Name</th>
-              <th className="border px-3 py-2">Service Name</th>
-              <th className="border px-3 py-2">Service/Appointment Name</th>
-              <th className="border px-3 py-2">Type</th>
-              <th className="border px-3 py-2">Staff name</th>
-              <th className="border px-3 py-2">Scheduled By</th>
-              <th className="border px-3 py-2">Status</th>
-              <th className="border px-3 py-2">Payment</th>
-              <th className="border px-3 py-2">Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {appointmentList.length > 0 ? (
-              appointmentList.map((appt, idx) => (
-                <tr key={idx} className="hover:bg-gray-50">
-                  {/* <td className="border px-3 py-2">{appt?.id}</td> */}
-                  <td className="border px-3 py-2">
-                    {formatAutoDate(appt?.start_date)}{" "}{formatTimeAppointment(appt?.start_time)}
+      <div className="table--data--bottom w-full">
+        <div className="relative overflow-x-auto">
+          <table className="min-w-full border border-gray-300 text-sm">
+            <thead className="bg-gray-100 text-left">
+              <tr>
+                {/* <th className="border px-3 py-2">Appointment ID</th> */}
+                <th className="border px-3 py-2 min-w-[180px]">
+                  Appointment Date
+                </th>
+                <th className="border px-3 py-2 min-w-[200px]">
+                  Appointment Category
+                </th>
+                <th className="border px-3 py-2 min-w-[200px]">Name</th>
+                <th className="border px-3 py-2 min-w-[200px]">Service Name</th>
+                <th className="border px-3 py-2 min-w-[200px]">Service/Appointment Name</th>
+                <th className="border px-3 py-2 min-w-[100px]">Type</th>
+                <th className="border px-3 py-2 min-w-[130px]">Trainer Name</th>
+                <th className="border px-3 py-2 min-w-[130px]">Scheduled By</th>
+                <th className="border px-3 py-2 min-w-[100px]">Status</th>
+                <th className="border px-3 py-2 min-w-[100px]">Payment</th>
+                <th className="border px-3 py-2 min-w-[100px]">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {appointmentList.length > 0 ? (
+                appointmentList.map((appt, idx) => (
+                  <tr key={idx} className="hover:bg-gray-50">
+                    {/* <td className="border px-3 py-2">{appt?.id}</td> */}
+                    <td className="border px-3 py-2">
+                      {formatAutoDate(appt?.start_date)}{" "}
+                      {formatTimeAppointment(appt?.start_time)}
                     </td>
-                  <td className="border px-3 py-2">{formatText(appt?.package_name)}</td>
-                  <td className="border px-3 py-2">{formatText(appt?.service_name)}</td>
-                  <td className="border px-3 py-2">{formatText(appt?.package_name)}</td>
-                  <td className="border px-3 py-2">{formatText(appt?.package_type)}</td>
-                  <td className="border px-3 py-2">{appt.duration}</td>
-                  <td className="border px-3 py-2">{appt.bookingChannel}</td>
-                  <td className="border px-3 py-2">{formatText(appt?.booking_status)}</td>
-                  <td className="border px-3 py-2">{formatText(appt?.payment_status)}</td>
-                  <td className="border px-3 py-2">
-                    <p
-                      onClick={() =>
-                        toast.success("Appointment cancelled successfully")
-                      }
-                      className={`text-[#009EB2] underline text-sm cursor-pointer`}
-                    >
-                      Cancel
-                    </p>
+                    <td className="border px-3 py-2">
+                      {appt?.appointment_category
+                        ? formatText(appt?.appointment_category)
+                        : "--"}
+                    </td>
+                    <td className="border px-3 py-2">
+                      {appt?.package_name ? formatText(appt?.package_name) : "--"}
+                    </td>
+                    <td className="border px-3 py-2">
+                      {appt?.service_name ? formatText(appt?.service_name) : "--"}
+                    </td>
+                    <td className="border px-3 py-2">
+                      {appt?.package_name ? formatText(appt?.package_name) : "--"}
+                    </td>
+                    <td className="border px-3 py-2">
+                      {appt?.package_type ? formatText(appt?.package_type) : "--"}
+                    </td>
+                    <td className="border px-3 py-2">{appt.assigned_staff_name ? appt.assigned_staff_name : "--"}</td>
+                    <td className="border px-3 py-2">{appt.staff_name ? appt.staff_name : "--"}</td>
+                    <td className="border px-3 py-2">
+                      {formatText(appt?.booking_status)}
+                    </td>
+                    <td className="border px-3 py-2">
+                      {formatText(appt?.payment_status)}
+                    </td>
+                    <td className="border px-3 py-2">
+                      <p
+                        onClick={() =>
+                          toast.success("Appointment cancelled successfully")
+                        }
+                        className={`text-[#009EB2] underline text-sm cursor-pointer`}
+                      >
+                        Cancel
+                      </p>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="12" className="text-center py-4 text-gray-500">
+                    No appointments found.
                   </td>
                 </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan="12" className="text-center py-4 text-gray-500">
-                  No appointments found.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {appointmentModal && (
-        <CreateAppointment
+        <CreateMemberAppointment
           setAppointmentModal={setAppointmentModal}
           memberID={details?.id}
+          handleUpdate={fetchAppointmentsList}
         />
       )}
     </div>

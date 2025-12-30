@@ -28,7 +28,7 @@ import { toast } from "react-toastify";
 import { authAxios } from "../config/config";
 import Pagination from "../components/common/Pagination";
 import { LuCalendarPlus } from "react-icons/lu";
-import CreateAppointment from "../components/Appointment/CreateAppointment";
+import CreateLeadAppointment from "../components/Appointment/CreateLeadAppointment";
 import { FaCalendarDays } from "react-icons/fa6";
 import LeadFilterPanel from "../components/FilterPanel/LeadFilterPanel";
 import { useSelector } from "react-redux";
@@ -285,18 +285,22 @@ const AllLeads = () => {
     const searchParams = new URLSearchParams(location.search);
     const urlDateFilter = searchParams.get("date");
 
-    if (urlDateFilter) {
-      // Find the matching date filter option from dateFilterOptions
-      const foundOption = dateFilterOptions.find(
-        (option) => option.value === urlDateFilter
-      );
+    const foundDateOption = dateFilterOptions.find(
+      (option) => option.value === urlDateFilter
+    );
 
-      // Set the dateFilter if a valid match is found
-      if (foundOption) {
-        setDateFilter(foundOption);
-      }
+    if (id) {
+      // If id exists, fetch by id, but also include URL date filter if any
+      fetchLeadList(1, { id, dateFilter: foundDateOption });
+    } else if (foundDateOption) {
+      // If no id, but date filter exists in URL
+      setDateFilter(foundDateOption);
+      fetchLeadList(1, { dateFilter: foundDateOption });
+    } else {
+      // Default fetch without id or URL date filter
+      fetchLeadList();
     }
-  }, [location.search]);
+  }, [id, location.search]);
 
   const handleDateFilterChange = (selected) => {
     setDateFilter(selected);
@@ -316,16 +320,7 @@ const AllLeads = () => {
     }
   };
 
-  useEffect(() => {
-    // When 'id' changes, fetch data based on the new 'id'
-    if (id) {
-      fetchLeadList(1, { id });
-    } else {
-      fetchLeadList(); // Fetch without the id if it's removed
-    }
-  }, [id]);
-
-  // // Trigger only for custom range once both dates selected
+  // Trigger only for custom range once both dates selected
   useEffect(() => {
     if (dateFilter?.value === "custom" && customFrom && customTo) {
       fetchLeadList(1, { dateFilter, customFrom, customTo });
@@ -443,7 +438,7 @@ const AllLeads = () => {
           />
           <div className="content--area p-5">
             <div className="page--content">
-              <div className="flex items-end justify-between gap-2 mb-2">
+              <div className="flex items-end justify-between gap-2 mb-5">
                 <div className="title--breadcrumbs">
                   <p className="text-sm">{`Home > My Leads > All Leads`}</p>
                   <h1
@@ -934,11 +929,12 @@ const AllLeads = () => {
         />
       )}
       {appointmentModal && (
-        <CreateAppointment
+        <CreateLeadAppointment
           setAppointmentModal={setAppointmentModal}
           memberID={selectedLead}
           defaultCategory="complementary"
           memberType="LEAD"
+          handleLeadUpdate={fetchLeadList}
         />
       )}
     </>
