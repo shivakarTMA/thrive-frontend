@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { FaCircle } from "react-icons/fa";
 import Select from "react-select";
-import { dasboardStyles, formatAutoDate, formatText } from "../Helper/helper";
+import { dasboardStyles, filterActiveItems, formatAutoDate, formatText } from "../Helper/helper";
 import { Link, useParams, useLocation } from "react-router-dom";
 import { IoIosAddCircleOutline } from "react-icons/io";
 import { MdCall } from "react-icons/md";
@@ -87,8 +87,8 @@ const MemberList = () => {
           ageGroup: overrideSelected.hasOwnProperty("ageGroup")
             ? overrideSelected.ageGroup
             : filterAgeGroup,
-          leadSource: overrideSelected.hasOwnProperty("leadSource")
-            ? overrideSelected.leadSource
+          lead_source: overrideSelected.hasOwnProperty("lead_source")
+            ? overrideSelected.lead_source
             : filterLeadSource,
           created_by: overrideSelected.hasOwnProperty("created_by")
             ? overrideSelected.created_by
@@ -181,7 +181,9 @@ Object.entries(filters).forEach(([key, val]) => {
 
       let data = res.data?.data || [];
 
-      setStaffList(data);
+      const activeOnly = filterActiveItems(data);
+
+      setStaffList(activeOnly);
     } catch (err) {
       console.error(err);
       toast.error("Failed to fetch staff");
@@ -287,7 +289,7 @@ Object.entries(filters).forEach(([key, val]) => {
       serviceName: setFilterService,
       service_variation: setFilterServiceVariation,
       ageGroup: setFilterAgeGroup,
-      leadSource: setFilterLeadSource,
+      lead_source: setFilterLeadSource,
       created_by: setFilterLeadOwner,
       staff: setFilterTrainer,
       fitness: setFilterFitness,

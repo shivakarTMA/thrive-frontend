@@ -8,12 +8,7 @@ import {
   parsePhoneNumberFromString,
   isPossiblePhoneNumber,
 } from "libphonenumber-js";
-import {
-  FaUser,
-  FaEnvelope,
-  FaBuilding,
-  FaBirthdayCake,
-} from "react-icons/fa";
+import { FaUser, FaEnvelope, FaBuilding, FaBirthdayCake } from "react-icons/fa";
 import { trainerAvailability } from "../DummyData/DummyData";
 
 import { selectIcon } from "../Helper/helper";
@@ -84,8 +79,13 @@ const validationSchema = Yup.object({
   }),
 });
 
-const CreateLeadForm = ({ setLeadModal, selectedLead, handleLeadUpdate, leadModalPage }) => {
-  console.log('selectedLead', selectedLead)
+const CreateLeadForm = ({
+  setLeadModal,
+  selectedLead,
+  handleLeadUpdate,
+  leadModalPage,
+}) => {
+  console.log("selectedLead", selectedLead);
   const leadBoxRef = useRef(null);
   const now = new Date();
   const [showUnderageModal, setShowUnderageModal] = useState(false);
@@ -167,7 +167,6 @@ const CreateLeadForm = ({ setLeadModal, selectedLead, handleLeadUpdate, leadModa
     validationSchema,
     enableReinitialize: true, // 👈 ensures selectedLead values re-populate
     onSubmit: async (values) => {
-
       if (duplicateError || duplicateEmailError) {
         setShowDuplicateEmailModal(!!duplicateEmailError);
         return;
@@ -250,7 +249,7 @@ const CreateLeadForm = ({ setLeadModal, selectedLead, handleLeadUpdate, leadModa
         }
 
         setLeadModal(false);
-        if(leadModalPage){
+        if (leadModalPage) {
           handleLeadUpdate();
         }
       } catch (err) {
@@ -360,9 +359,12 @@ const CreateLeadForm = ({ setLeadModal, selectedLead, handleLeadUpdate, leadModa
       }
 
       const res = await authAxios().get(url);
-      const staff = res.data?.data || [];
 
-      // --- GROUPING STAFF BY ROLE ---
+      // ✅ FILTER ACTIVE STAFF HERE
+      const staff = (res.data?.data || []).filter(
+        (item) => String(item?.status).toUpperCase() === "ACTIVE"
+      );
+
       const foh = staff
         .filter((item) => item.role === "FOH")
         .map((item) => ({
@@ -377,17 +379,21 @@ const CreateLeadForm = ({ setLeadModal, selectedLead, handleLeadUpdate, leadModa
           label: item.name,
         }));
 
-      // Final grouped structure for react-select
-      const groupedOptions = [
-        {
+      const groupedOptions = [];
+
+      if (foh.length) {
+        groupedOptions.push({
           label: "FOH",
           options: foh,
-        },
-        {
+        });
+      }
+
+      if (trainer.length) {
+        groupedOptions.push({
           label: "TRAINER",
           options: trainer,
-        },
-      ];
+        });
+      }
 
       setStaffList(groupedOptions);
     } catch (err) {

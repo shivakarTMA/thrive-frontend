@@ -7,7 +7,12 @@ import { FiPlus } from "react-icons/fi";
 import { LiaEdit } from "react-icons/lia";
 import { MdCall } from "react-icons/md";
 import Select from "react-select";
-import { customStyles, dasboardStyles, formatAutoDate } from "../Helper/helper";
+import {
+  customStyles,
+  dasboardStyles,
+  filterActiveItems,
+  formatAutoDate,
+} from "../Helper/helper";
 import CreateLeadForm from "./CreateLeadForm";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import DatePicker from "react-datepicker";
@@ -262,8 +267,8 @@ const AllLeads = () => {
       const res = await authAxios().get("/staff/list?role=FOH");
 
       let data = res.data?.data || [];
-
-      setStaffList(data);
+      const activeOnly = filterActiveItems(data);
+      setStaffList(activeOnly);
     } catch (err) {
       console.error(err);
       toast.error("Failed to fetch staff");
