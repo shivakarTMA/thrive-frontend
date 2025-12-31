@@ -113,36 +113,56 @@ const FohDashboard = () => {
   const [orders, setOrders] = useState([
     {
       id: "ORD001",
-      member: "John Doe",
-      items: "Latte & Salad",
+      member_id:1,
+      member_name: "John Doe",
+      category:'Product',
+      product_name: "Latte & Salad",
+      final_amount: 500,
+      stock_pending: 10,
       placedOn: "2025-04-28",
       isDone: false,
     },
     {
       id: "ORD002",
-      member: "Jane Smith",
-      items: "Black Coffice",
+      member_id:2,
+      member_name: "Jane Smith",
+      category:'Product',
+      product_name: "Black Coffice",
+      final_amount: 600,
+      stock_pending: 10,
       placedOn: "2025-04-27",
       isDone: false,
     },
     {
       id: "ORD003",
-      member: "Jane Smith",
-      items: "Espresso",
+      member_id:3,
+      member_name: "Jane Smith",
+      category:'Product',
+      product_name: "Espresso",
+      final_amount: 300,
+      stock_pending: 5,
       placedOn: "2025-04-27",
       isDone: false,
     },
     {
       id: "ORD004",
-      member: "Jane Smith",
-      items: "Americano",
+      member_id:4,
+      member_name: "Jane Smith",
+      category:'Product',
+      product_name: "Americano",
+      final_amount: 250,
+      stock_pending: 2,
       placedOn: "2025-04-27",
       isDone: false,
     },
     {
       id: "ORD005",
-      member: "Jane Smith",
-      items: "Broccoli Soup",
+      member_id:5,
+      member_name: "Jane Smith",
+      category:'Product',
+      product_name: "Broccoli Soup",
+      final_amount: 350,
+      stock_pending: 2,
       placedOn: "2025-04-27",
       isDone: false,
     },
@@ -173,7 +193,7 @@ const FohDashboard = () => {
       },
     },
     xAxis: {
-      categories: ["New", "Opportunity","Lead", "Won", "Lost"],
+      categories: ["New", "Opportunity", "Lead", "Won", "Lost"],
       labels: {
         style: {
           fontSize: "13px",
@@ -386,59 +406,39 @@ const FohDashboard = () => {
           <p className="text-sm">{`Home > Dashboard`}</p>
           <h1 className="text-3xl font-semibold">Dashboard</h1>
         </div>
+        <div className="bg-white box--shadow rounded-[10px] px-3 py-3 flex gap-3 justify-between items-center">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-5 border-r pr-3">
+              <div className="text-md font-medium text-gray-600 flex gap-2 items-center">
+                <FaCircle className="text-[10px] text-[#009EB2]" /> Total
+                Members
+              </div>
+              <div className="flex flex-wrap items-center justify-between">
+                <span className="text-md font-semibold">2315</span>
+              </div>
+            </div>
+            <div className="flex items-center gap-5 border-r pr-3">
+              <div className="text-md font-medium text-gray-600 flex gap-2 items-center">
+                <FaCircle className="text-[10px] text-[#1F9254]" />
+                Active Members
+              </div>
+              <div className="flex flex-wrap items-center justify-between">
+                <span className="text-md font-semibold">590</span>
+              </div>
+            </div>
+            <div className="flex items-center gap-5">
+              <div className="text-md font-medium text-gray-600 flex gap-2 items-center">
+                <FaCircle className="text-[10px] text-[#FF0000]" />
+                Inactive Members
+              </div>
+              <div className="flex flex-wrap items-center justify-between">
+                <span className="text-md font-semibold">1725</span>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
       {/* end title */}
-
-      <div className="w-full bg-white box--shadow rounded-[10px] px-3 py-3 flex gap-3 justify-between items-center mb-4">
-        <div className="flex gap-3">
-          <button
-            type="button"
-            className={`px-4 py-2 rounded ${
-              activeTab === "Snapshot" ? "bg--color text-white" : ""
-            }`}
-            onClick={() => setActiveTab("Snapshot")}
-          >
-            Snapshot
-          </button>
-          <button
-            type="button"
-            className={`px-4 py-2 rounded ${
-              activeTab === "Leaderboard" ? "bg--color text-white" : ""
-            }`}
-            onClick={() => setActiveTab("Leaderboard")}
-          >
-            Leaderboard
-          </button>
-        </div>
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-5 border-r pr-3">
-            <div className="text-md font-medium text-gray-600 flex gap-2 items-center">
-              <FaCircle className="text-[10px] text-[#009EB2]" /> Total Members
-            </div>
-            <div className="flex flex-wrap items-center justify-between">
-              <span className="text-md font-semibold">2315</span>
-            </div>
-          </div>
-          <div className="flex items-center gap-5 border-r pr-3">
-            <div className="text-md font-medium text-gray-600 flex gap-2 items-center">
-              <FaCircle className="text-[10px] text-[#1F9254]" />
-              Active Members
-            </div>
-            <div className="flex flex-wrap items-center justify-between">
-              <span className="text-md font-semibold">590</span>
-            </div>
-          </div>
-          <div className="flex items-center gap-5">
-            <div className="text-md font-medium text-gray-600 flex gap-2 items-center">
-              <FaCircle className="text-[10px] text-[#FF0000]" />
-              Inactive Members
-            </div>
-            <div className="flex flex-wrap items-center justify-between">
-              <span className="text-md font-semibold">1725</span>
-            </div>
-          </div>
-        </div>
-      </div>
 
       <div className="flex gap-3">
         <div className="rounded-[15px] p-4 box--shadow bg-white w-[75%]">
@@ -505,7 +505,9 @@ const FohDashboard = () => {
             <SalesSummary
               icon={totalSalesIcon}
               title="Total Sales"
-              titleLink={generateUrl(`/reports/sales-reports/new-joinees-report?`)}
+              titleLink={generateUrl(
+                `/reports/sales-reports/new-joinees-report?`
+              )}
               totalSales={`₹${formatIndianNumber(20900)}`}
               items={[
                 {
@@ -598,9 +600,7 @@ const FohDashboard = () => {
             <SalesSummary
               icon={trialIcon}
               title="Trials"
-              titleLink={generateUrl(
-                `/reports/appointments/all-appointments?`
-              )}
+              titleLink={generateUrl(`/reports/appointments/all-appointments?`)}
               totalSales="03"
               items={[
                 {
@@ -681,7 +681,7 @@ const FohDashboard = () => {
 
           <div className="border border-[#D4D4D4] rounded-[5px] bg-white p-2 pb-1 w-full relative mt-3">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="font-semibold">Class Performances Overview</h2>
+              <h2 className="font-semibold">Session Performance</h2>
             </div>
             <div className="relative overflow-x-auto">
               <table className="min-w-full text-sm text-left">

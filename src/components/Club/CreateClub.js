@@ -1,5 +1,9 @@
 import React, { useEffect } from "react";
-import { IoCloseCircle, IoDocumentTextOutline, IoLocationOutline } from "react-icons/io5";
+import {
+  IoCloseCircle,
+  IoDocumentTextOutline,
+  IoLocationOutline,
+} from "react-icons/io5";
 import {
   FaEnvelope,
   FaListCheck,
@@ -18,6 +22,13 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { GoClock } from "react-icons/go";
 import { PiImageFill } from "react-icons/pi";
+
+const parseTime = (time) => {
+  const [hours, minutes] = time.split(":");
+  const date = new Date();
+  date.setHours(hours, minutes, 0, 0);
+  return date;
+};
 
 const CreateClub = ({
   setShowModal,
@@ -554,9 +565,8 @@ const CreateClub = ({
                         }
                         showTimeSelect
                         showTimeSelectOnly
-                        dateFormat="hh:mm aa"
-                        timeFormat="hh:mm aa"
                         timeIntervals={30}
+                        dateFormat="hh:mm aa"
                         className="custom--input w-full input--icon"
                         placeholderText="Select Open Time"
                       />
@@ -595,11 +605,16 @@ const CreateClub = ({
                         }
                         showTimeSelect
                         showTimeSelectOnly
-                        dateFormat="hh:mm aa"
-                        timeFormat="hh:mm aa"
                         timeIntervals={30}
+                        dateFormat="hh:mm aa"
                         className="custom--input w-full input--icon"
-                        placeholderText="Select Open Time"
+                        placeholderText="Select Close Time"
+                        minTime={
+                          formik.values.open_time
+                            ? parseTime(formik.values.open_time)
+                            : new Date(0, 0, 0, 0, 0)
+                        }
+                        maxTime={new Date(0, 0, 0, 23, 59)}
                       />
                     </div>
                     {formik.touched.close_time && formik.errors.close_time && (

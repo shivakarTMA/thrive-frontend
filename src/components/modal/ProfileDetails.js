@@ -1,9 +1,33 @@
-import React, { useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { IoCloseCircle } from "react-icons/io5";
-import { formatText } from "../../Helper/helper";
+import { authAxios } from "../../config/config";
+import { toast } from "react-toastify";
 
-const ProfileDetails = ({ profile, setProfileModal }) => {
-  console.log(profile, "profile");
+const ProfileDetails = ({ staffID, setProfileModal }) => {
+  const [profileData, setProfileData] = useState("");
+
+  useEffect(() => {
+    if (!staffID) return;
+
+    const fetchStaffById = async (id) => {
+      try {
+        const res = await authAxios().get(`/staff/${id}`);
+        const data = res.data?.data || res.data || null;
+
+        if (data) {
+          setProfileData(data);
+        }
+      } catch (err) {
+        console.error(err);
+        toast.error("Failed to fetch module details");
+      }
+    };
+
+    fetchStaffById(staffID);
+  }, [staffID]);
+
+  console.log(profileData, "profileData");
+
   const leadBoxRef = useRef(null);
 
   const handleOverlayClick = (e) => {
@@ -16,8 +40,6 @@ const ProfileDetails = ({ profile, setProfileModal }) => {
     setProfileModal(false);
   };
 
-  const clubNames = profile?.staff_club.map(item => item.club_name).join(", ");
-
   return (
     <div
       className="bg--blur create--lead--container fixed top-0 left-0 z-[999] w-full bg-black bg-opacity-60 h-full"
@@ -29,7 +51,9 @@ const ProfileDetails = ({ profile, setProfileModal }) => {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex gap-3 items-center justify-between p-6 border-b">
-          <h2 className="text-xl font-semibold">{formatText(profile?.role)} Profile Details</h2>
+          <h2 className="text-xl font-semibold">
+            {profileData?.role} Profile Details
+          </h2>
           <div
             className="close--lead cursor-pointer"
             onClick={handleProfileModal}
@@ -42,25 +66,27 @@ const ProfileDetails = ({ profile, setProfileModal }) => {
           <div className="grid grid-cols-2 gap-2">
             <div className="border py-2 px-3 rounded">
               <label className="mb-1 block font-semibold text-sm">Name</label>
-              <p>{profile?.name}</p>
+              <p>{profileData?.name}</p>
             </div>
             <div className="border py-2 px-3 rounded">
               <label className="mb-1 block font-semibold text-sm">
                 Email Id
               </label>
-              <p>{profile?.email}</p>
+              <p>{profileData?.email}</p>
             </div>
             <div className="border py-2 px-3 rounded">
               <label className="mb-1 block font-semibold text-sm">
                 Phone Number
               </label>
-              <p>{profile?.mobile}</p>
+              <p>{profileData?.mobile}</p>
             </div>
             <div className="border py-2 px-3 rounded">
               <label className="mb-1 block font-semibold text-sm">
                 Club Access
               </label>
-              {clubNames}
+              {profileData?.staff_clubs
+                ?.map((club) => club.club_name)
+                .join(", ")}
             </div>
           </div>
         </div>

@@ -11,7 +11,7 @@ import {
 import { FaUser, FaEnvelope, FaBuilding, FaBirthdayCake } from "react-icons/fa";
 import { trainerAvailability } from "../DummyData/DummyData";
 
-import { selectIcon } from "../Helper/helper";
+import { filterActiveItems, selectIcon } from "../Helper/helper";
 import { IoBan, IoCloseCircle } from "react-icons/io5";
 import { useFormik } from "formik";
 import * as Yup from "yup";
@@ -96,13 +96,6 @@ const CreateLeadForm = ({
   const [companyOptions, setCompanyOptions] = useState([]);
   const { user } = useSelector((state) => state.auth);
 
-  const clubList = user?.staff_club || [];
-
-  let defaultClubId = "";
-  if (clubList.length === 1) {
-    defaultClubId = clubList[0].club_id; // Default to the only club available
-  }
-
   const [club, setClub] = useState([]);
   const [staffList, setStaffList] = useState([]);
 
@@ -140,7 +133,7 @@ const CreateLeadForm = ({
   // ✅ Initial form values
   const initialValues = {
     id: "",
-    club_id: defaultClubId,
+    club_id: "",
     full_name: "",
     mobile: "",
     country_code: "",
@@ -407,7 +400,8 @@ const CreateLeadForm = ({
     try {
       const response = await authAxios().get("/club/list");
       const data = response.data?.data || [];
-      setClub(data);
+      const activeOnly = filterActiveItems(data);
+      setClub(activeOnly);
     } catch (error) {
       toast.error("Failed to fetch clubs");
     }
@@ -423,9 +417,9 @@ const CreateLeadForm = ({
 
   // Club dropdown options
   const clubOptions =
-    clubList?.map((item) => ({
-      label: item.club_name,
-      value: item.club_id,
+    club?.map((item) => ({
+      label: item.name,
+      value: item.id,
     })) || [];
 
   // Staff dropdown options

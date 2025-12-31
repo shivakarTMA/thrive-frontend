@@ -164,34 +164,10 @@ const StaffList = () => {
     club_id: Yup.array()
       .min(1, "Please select at least one club")
       .required("Club selection is required"),
-    profile_image: Yup.mixed().when("show_on_app", {
+  
+    profile_image: Yup.string().when("show_on_app", {
       is: true,
-      then: () =>
-        Yup.mixed()
-          .required("Profile image is required")
-          .test("fileOrUrl", "Only image files are allowed", (value) => {
-            if (!value) return false;
-
-            // Case 1: Existing URL (editing mode)
-            if (typeof value === "string") return true;
-
-            // Case 2: New uploaded file
-            return value.type && value.type.startsWith("image/");
-          }),
-      otherwise: () =>
-        Yup.mixed().test(
-          "fileOrUrl",
-          "Only image files are allowed",
-          (value) => {
-            if (!value) return true; // Not required if show_on_app = false
-
-            // Accept string URL
-            if (typeof value === "string") return true;
-
-            // Accept File image
-            return value.type && value.type.startsWith("image/");
-          }
-        ),
+      then: () => Yup.string().required("Image is required"),
     }),
 
     description: Yup.string().when("show_on_app", {
@@ -228,7 +204,7 @@ const StaffList = () => {
     status: "ACTIVE",
     show_on_app: false,
     tags: "",
-    profile_image: null,
+    profile_image: "",
     content: [
       {
         title: "",
@@ -241,7 +217,6 @@ const StaffList = () => {
     initialValues,
     validationSchema,
     onSubmit: async (values, { resetForm }) => {
-      console.log(values, "SHIVAKAR");
       try {
         const formData = new FormData();
 
@@ -519,18 +494,18 @@ const StaffList = () => {
             </tbody>
           </table>
         </div>
-      {/* Pagination */}
-      <Pagination
-        page={page}
-        totalPages={totalPages}
-        rowsPerPage={rowsPerPage}
-        totalCount={totalCount}
-        currentDataLength={staffList.length}
-        onPageChange={(newPage) => {
-          setPage(newPage);
-          fetchStaff(searchTerm, newPage);
-        }}
-      />
+        {/* Pagination */}
+        <Pagination
+          page={page}
+          totalPages={totalPages}
+          rowsPerPage={rowsPerPage}
+          totalCount={totalCount}
+          currentDataLength={staffList.length}
+          onPageChange={(newPage) => {
+            setPage(newPage);
+            fetchStaff(searchTerm, newPage);
+          }}
+        />
       </div>
 
       {/* Modal */}

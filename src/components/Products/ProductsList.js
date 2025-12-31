@@ -12,7 +12,7 @@ import { IoIosSearch } from "react-icons/io";
 import Pagination from "../common/Pagination";
 import { IoSearchOutline } from "react-icons/io5";
 import Select from "react-select";
-import { customStyles } from "../../Helper/helper";
+import { customStyles, filterActiveItems } from "../../Helper/helper";
 
 const ProductsList = () => {
   const [showModal, setShowModal] = useState(false);
@@ -21,6 +21,7 @@ const ProductsList = () => {
   const [service, setService] = useState([]);
   const [productCategory, setProductCategory] = useState([]);
   const [productFilter, setProductFilter] = useState(null);
+  const [club, setClub] = useState([]);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [page, setPage] = useState(1);
@@ -42,6 +43,26 @@ const ProductsList = () => {
     }
   };
 
+  const fetchClub = async (search = "") => {
+    try {
+      const res = await authAxios().get("/club/list", {
+        params: search ? { search } : {},
+      });
+      let data = res.data?.data || res.data || [];
+      const activeOnly = filterActiveItems(data);
+      setClub(activeOnly);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to fetch companies");
+    }
+  };
+
+  const clubOptions =
+    club?.map((item) => ({
+      label: item.name,
+      value: item.id,
+    })) || [];
+
   const productServices = service?.filter((item) => item.type === "PRODUCT");
 
   const serviceOptions =
@@ -49,7 +70,7 @@ const ProductsList = () => {
       label: item.name,
       value: item.id,
     })) || [];
-  console.log(service, "service service");
+
 
   const fetchProductCategory = async (search = "") => {
     try {
@@ -118,6 +139,7 @@ const ProductsList = () => {
   useEffect(() => {
     fetchProductList();
     fetchService();
+    fetchClub();
     fetchProductCategory();
   }, []);
 
@@ -129,10 +151,11 @@ const ProductsList = () => {
         return ["image/jpeg", "image/png", "image/webp"].includes(value.type);
       }),
     // service_id: Yup.string().required("Service is required"),
+    club_id: Yup.string().required("Club is required"),
     product_category_id: Yup.string().required("Product category is required"),
     name: Yup.string().required("Name is required"),
     caption: Yup.string().required("Caption is required"),
-    // sku: Yup.string().required("sku is required"),
+    sku: Yup.string().required("sku is required"),
     product_type: Yup.string().required("Product type is required"),
     food_type: Yup.string().required("Food type is required"),
     // short_description: Yup.string().required("Short Description is required"),
@@ -160,7 +183,7 @@ const ProductsList = () => {
   const initialValues = {
     image: "",
     // service_id: "",
-    product_category_id: "",
+    club_id:"",
     product_category_id: "",
     name: "",
     caption: "",
@@ -231,7 +254,6 @@ const ProductsList = () => {
     },
   });
 
-  console.log(formik.errors, "errorchecking");
 
   return (
     <div className="page--content">
@@ -393,6 +415,7 @@ const ProductsList = () => {
           setShowModal={setShowModal}
           editingOption={editingOption}
           serviceOptions={serviceOptions}
+          clubOptions={clubOptions}
           productCategoryOptions={productCategoryOptions}
           formik={formik}
         />

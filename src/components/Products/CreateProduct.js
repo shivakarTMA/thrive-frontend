@@ -33,6 +33,7 @@ const CreateProduct = ({
   formik,
   editingOption,
   serviceOptions,
+  clubOptions,
   productCategoryOptions,
 }) => {
   const leadBoxRef = useRef(null);
@@ -47,7 +48,7 @@ const CreateProduct = ({
           formik.setValues({
             image: data?.image || "",
             service_id: data?.service_id || "",
-            product_category_id: data?.product_category_id || "",
+            club_id: data?.club_id || "",
             product_category_id: data?.product_category_id || "",
             name: data?.name || "",
             caption: data?.caption || "",
@@ -170,6 +171,38 @@ const CreateProduct = ({
                       </div>
                     )}
                   </div>
+
+{/* Club Dropdown */}
+                  <div>
+                    <label className="mb-2 block">
+                      Club<span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <Select
+                        name="club_id"
+                        value={
+                          clubOptions.find(
+                            (option) =>
+                              option.value.toString() ===
+                              formik.values.club_id?.toString()
+                          ) || null
+                        }
+                        options={clubOptions}
+                        onChange={(option) =>
+                          formik.setFieldValue("club_id", option.value)
+                        }
+                        onBlur={() => formik.setFieldTouched("club_id", true)}
+                        styles={customStyles}
+                        className="!capitalize"
+                      />
+                    </div>
+                    {formik.touched.club_id && formik.errors.club_id && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {formik.errors.club_id}
+                      </p>
+                    )}
+                  </div>
+
                   {/* Product Name */}
                   <div>
                     <label className="mb-2 block">
@@ -327,7 +360,7 @@ const CreateProduct = ({
 
                   {/* SKU */}
                   <div>
-                    <label className="mb-2 block">SKU</label>
+                    <label className="mb-2 block">SKU<span className="text-red-500">*</span></label>
                     <div className="relative">
                       <input
                         type="text"
@@ -338,11 +371,11 @@ const CreateProduct = ({
                         onBlur={formik.handleBlur}
                       />
                     </div>
-                    {/* {formik.touched.sku && formik.errors.sku && (
+                    {formik.touched.sku && formik.errors.sku && (
                       <p className="text-red-500 text-sm mt-1">
                         {formik.errors.sku}
                       </p>
-                    )} */}
+                    )}
                   </div>
                   {/* Allergens */}
                   <div>

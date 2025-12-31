@@ -11,7 +11,7 @@ import { toast } from "react-toastify";
 import { authAxios } from "../../config/config";
 import { FaListCheck } from "react-icons/fa6";
 import Select from "react-select";
-import { customStyles } from "../../Helper/helper";
+import { customStyles, filterActiveItems } from "../../Helper/helper";
 import { PiImageFill } from "react-icons/pi";
 
 const challengeType = [
@@ -47,7 +47,8 @@ const ChallengeForm = ({ setShowModal, editingOption, formik }) => {
         params: search ? { search } : {},
       });
       let data = res.data?.data || res.data || [];
-      setClub(data);
+      const activeOnly = filterActiveItems(data);
+      setClub(activeOnly);
     } catch (err) {
       console.error(err);
       toast.error("Failed to fetch companies");

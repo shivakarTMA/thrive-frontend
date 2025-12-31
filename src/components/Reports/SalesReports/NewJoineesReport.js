@@ -727,13 +727,12 @@ const NewJoineesReport = () => {
                   <th className="px-2 py-4 min-w-[150px]">Club Name</th>
                   <th className="px-2 py-4 min-w-[100px]">Member ID</th>
                   <th className="px-2 py-4 min-w-[150px]">Member Name</th>
-                  <th className="px-2 py-4 min-w-[150px]">Service</th>
-                  <th className="px-2 py-4 min-w-[150px]">Service Variation</th>
+                  <th className="px-2 py-4 min-w-[150px]">Service Type</th>
+                  <th className="px-2 py-4 min-w-[150px]">Sevice Name</th>
                   <th className="px-2 py-4 min-w-[130px]">Invoice ID</th>
                   <th className="px-2 py-4 min-w-[150px]">Purchase Date</th>
                   <th className="px-2 py-4 min-w-[120px]">Start Date</th>
                   <th className="px-2 py-4 min-w-[120px]">End Date</th>
-                  <th className="px-2 py-4 min-w-[120px]">Total Check-ins</th>
                   <th className="px-2 py-4 min-w-[120px]">Lead Source</th>
                   <th className="px-2 py-4 min-w-[150px]">Sales Rep Name</th>
                   <th className="px-2 py-4 min-w-[100px]">Bill Type</th>
@@ -760,7 +759,6 @@ const NewJoineesReport = () => {
                       <td className="px-2 py-4">{row.purchaseDate || "-"}</td>
                       <td className="px-2 py-4">{row.start_date || "-"}</td>
                       <td className="px-2 py-4">{row.end_date || "-"}</td>
-                      <td className="px-2 py-4">{row.total_checkins || "-"}</td>
                       <td className="px-2 py-4">{row.lead_source || "-"}</td>
                       <td className="px-2 py-4">{row.sales_rep_name || "-"}</td>
                       <td className="px-2 py-4">{row.billType || "-"}</td>
