@@ -1,7 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { FaCircle } from "react-icons/fa";
 import Select from "react-select";
-import { dasboardStyles, filterActiveItems, formatAutoDate, formatText } from "../Helper/helper";
+import {
+  dasboardStyles,
+  filterActiveItems,
+  formatAutoDate,
+  formatText,
+} from "../Helper/helper";
 import { Link, useParams, useLocation } from "react-router-dom";
 import { IoIosAddCircleOutline } from "react-icons/io";
 import { MdCall } from "react-icons/md";
@@ -34,6 +39,7 @@ const MemberList = () => {
     inactive_members: 0,
   });
 
+  const [selectedClub, setSelectedClub] = useState(null);
   const [filterStatus, setFilterStatus] = useState(null);
   const [filterService, setFilterService] = useState(null);
   const [filterServiceVariation, setFilterServiceVariation] = useState(null);
@@ -102,14 +108,17 @@ const MemberList = () => {
           gender: overrideSelected.hasOwnProperty("gender")
             ? overrideSelected.gender
             : filterGender,
+          club_id: overrideSelected.hasOwnProperty("club_id")
+            ? overrideSelected.club_id
+            : selectedClub,
         };
 
-       // Add filters to API params
-Object.entries(filters).forEach(([key, val]) => {
-  if (val !== null && val !== undefined) {
-    params[key] = val?.value !== undefined ? val.value : val;
-  }
-});
+        // Add filters to API params
+        Object.entries(filters).forEach(([key, val]) => {
+          if (val !== null && val !== undefined) {
+            params[key] = val?.value !== undefined ? val.value : val;
+          }
+        });
       }
 
       const res = await authAxios().get("/member/list", { params });
@@ -285,6 +294,7 @@ Object.entries(filters).forEach(([key, val]) => {
 
   const handleRemoveFilter = (filterKey) => {
     const setterMap = {
+      club_id: setSelectedClub,
       is_subscribed: setFilterStatus,
       serviceName: setFilterService,
       service_variation: setFilterServiceVariation,
@@ -388,6 +398,8 @@ Object.entries(filters).forEach(([key, val]) => {
           <div className="flex items-start gap-3 justify-between w-full mb-3 border-b border-b-[#D4D4D4] pb-3">
             <div>
               <MemberFilterPanel
+                selectedClub={selectedClub}
+                setSelectedClub={setSelectedClub}
                 filterStatus={filterStatus}
                 setFilterStatus={setFilterStatus}
                 filterService={filterService}
@@ -506,6 +518,7 @@ Object.entries(filters).forEach(([key, val]) => {
                     <th className="px-2 py-4">#</th>
                     <th className="px-2 py-4">Profile Image</th>
                     <th className="px-2 py-4">Name</th>
+                    <th className="px-2 py-4">Club Name</th>
                     <th className="px-2 py-4">Gender</th>
                     <th className="px-2 py-4">MemeberShip Duration</th>
                     <th className="px-2 py-4">Status</th>
@@ -546,7 +559,14 @@ Object.entries(filters).forEach(([key, val]) => {
                           )}
                         </div>
                       </td>
-                      <td className="px-2 py-4">{member?.full_name}</td>
+                      <td className="px-2 py-4">
+                        {member?.full_name ? member?.full_name : "--"}
+                      </td>
+                      <td className="px-2 py-4">
+                        {member?.club_name
+                          ? member?.club_name
+                          : "--"}
+                      </td>
                       <td className="px-2 py-4">
                         {formatText(
                           member?.gender === "NOTDISCLOSE"
@@ -583,10 +603,11 @@ Object.entries(filters).forEach(([key, val]) => {
                         {member?.trainer ? member?.trainer : "--"}
                       </td>
                       <td className="px-2 py-4">
-                        <div className="flex gap-2 items-center">
+                        <div className="flex flex-col gap-1">
+                          {member?.lead_source === "APP" ? "100%" : "25%"}
                           <div className="progress--bar bg-[#E5E5E5] rounded-full h-[10px] w-full max-w-[150px]">
                             <div
-                              className="bg--color w-full rounded-full h-full"
+                              className="bg--color w-full rounded-full h-full flex items-center"
                               style={{
                                 width:
                                   member?.lead_source === "APP"
@@ -595,7 +616,6 @@ Object.entries(filters).forEach(([key, val]) => {
                               }}
                             ></div>
                           </div>
-                          {member?.lead_source === "APP" ? "100%" : "25%"}
                         </div>
                       </td>
 

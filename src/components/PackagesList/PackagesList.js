@@ -654,6 +654,7 @@ useEffect(() => {
                 {/* <th className="px-2 py-4">Module ID</th> */}
                 <th className="px-2 py-4">Image</th>
                 <th className="px-2 py-4">Title</th>
+                <th className="px-2 py-4">Club Name</th>
                 <th className="px-2 py-4">Booking Type</th>
                 <th className="px-2 py-4">Service</th>
                 <th className="px-2 py-4 text-center">Position</th>
@@ -684,6 +685,7 @@ useEffect(() => {
                       </div>
                     </td>
                     <td className="px-2 py-4">{item?.name}</td>
+                    <td className="px-2 py-4">{item?.club_name}</td>
                     <td className="px-2 py-4">
                       {formatText(item?.booking_type)}
                     </td>

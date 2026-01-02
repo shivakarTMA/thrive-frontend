@@ -9,7 +9,12 @@ import MarkReturnedModal from "./MarkReturnedModal";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { addYears, format, subYears } from "date-fns";
-import { customStyles, formatAutoDate, formatText } from "../../Helper/helper";
+import {
+  customStyles,
+  filterActiveItems,
+  formatAutoDate,
+  formatText,
+} from "../../Helper/helper";
 import viewIcon from "../../assets/images/icons/eye.svg";
 import returnIcon from "../../assets/images/icons/return.svg";
 import { FaCalendarDays } from "react-icons/fa6";
@@ -31,6 +36,8 @@ const AllLostFound = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [returnedModalOpen, setReturnedModalOpen] = useState(false);
   const [markReturnedData, setMarkReturnedData] = useState([]);
+  const [clubList, setClubList] = useState([]);
+  const [editingOption, setEditingOption] = useState(null);
 
   const [dateFilter, setDateFilter] = useState(dateFilterOptions[1]);
   const [customFrom, setCustomFrom] = useState(null);
@@ -41,6 +48,7 @@ const AllLostFound = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
 
+  const [selectedClub, setSelectedClub] = useState(null);
   const [itemStatus, setItemStatus] = useState(null);
   const [itemCategory, setItemCategory] = useState(null);
   const [itemLocation, setItemLocation] = useState(null);
@@ -49,6 +57,29 @@ const AllLostFound = () => {
   const [itemFoundTo, setItemFoundTo] = useState(null);
   const [itemReturnedFrom, setItemReturnedFrom] = useState(null);
   const [itemReturnedTo, setItemReturnedTo] = useState(null);
+
+  // Function to fetch club list
+  const fetchClub = async () => {
+    try {
+      const response = await authAxios().get("/club/list");
+      const data = response.data?.data || [];
+      const activeOnly = filterActiveItems(data);
+      setClubList(activeOnly);
+    } catch (error) {
+      toast.error("Failed to fetch clubs");
+    }
+  };
+
+  useEffect(() => {
+    fetchClub();
+  }, []);
+
+  // Club dropdown options
+  const clubOptions =
+    clubList?.map((item) => ({
+      label: item.name,
+      value: item.id,
+    })) || [];
 
   // ✅ Build complete filter params including date filter
   const buildFinalFilters = (filters = {}) => {
@@ -92,6 +123,7 @@ const AllLostFound = () => {
   // ✅ Helper function to get current filters
   const getCurrentFilters = () => {
     const currentFilters = {
+      club_id: selectedClub?.value,
       status: itemStatus?.value,
       category: itemCategory?.value,
       found_at_location: itemLocation?.value,
@@ -133,6 +165,7 @@ const AllLostFound = () => {
   // ✅ Remove filter from LostFoundPanel
   const handleRemoveFilter = (remainingFilters) => {
     // Reset local state for removed filters
+    if (!remainingFilters.club_id) setSelectedClub(null);
     if (!remainingFilters.status) setItemStatus(null);
     if (!remainingFilters.category) setItemCategory(null);
     if (!remainingFilters.found_at_location) setItemLocation(null);
@@ -226,6 +259,8 @@ const AllLostFound = () => {
         <div className="flex items-start gap-3 justify-between w-full mb-3 border-b border-b-[#D4D4D4] pb-3">
           <div>
             <LostFoundPanel
+              selectedClub={selectedClub}
+              setSelectedClub={setSelectedClub}
               itemStatus={itemStatus}
               setItemStatus={setItemStatus}
               itemCategory={itemCategory}
@@ -242,6 +277,7 @@ const AllLostFound = () => {
               setItemReturnedFrom={setItemReturnedFrom}
               itemReturnedTo={itemReturnedTo}
               setItemReturnedTo={setItemReturnedTo}
+              clubOptions={clubOptions}
               onApplyFilters={handleApplyFilters}
               onRemoveFilter={handleRemoveFilter}
             />
@@ -262,6 +298,7 @@ const AllLostFound = () => {
             <table className="w-full text-sm text-left text-gray-500">
               <thead className="text-xs text-gray-700 uppercase bg-gray-50">
                 <tr>
+                  <th className="px-2 py-4">Club Name</th>
                   <th className="px-2 py-4">Item Name</th>
                   <th className="px-2 py-4">Category</th>
                   <th className="px-2 py-4">Found At</th>
@@ -278,6 +315,9 @@ const AllLostFound = () => {
                       key={row.id}
                       className="bg-white border-b hover:bg-gray-50 border-gray-200"
                     >
+                      <td className="px-2 py-4">
+                        {row?.club_name ? row?.club_name : "--"}
+                      </td>
                       <td className="px-2 py-4">{row?.item_name}</td>
                       <td className="px-2 py-4">{row?.category}</td>
                       <td className="px-2 py-4">{row?.found_at_location}</td>
@@ -309,7 +349,13 @@ const AllLostFound = () => {
                             content="View Details"
                             place="left"
                           >
-                            <div className="bg-[#F1F1F1] border border-[#D4D4D4] rounded-l-[5px] w-[32px] h-[32px] flex items-center justify-center cursor-pointer">
+                            <div
+                              className="bg-[#F1F1F1] border border-[#D4D4D4] rounded-l-[5px] w-[32px] h-[32px] flex items-center justify-center cursor-pointer"
+                              onClick={() => {
+                                setEditingOption(row.id);
+                                setModalOpen(true);
+                              }}
+                            >
                               <img src={viewIcon} />
                             </div>
                           </Tooltip>
@@ -367,6 +413,8 @@ const AllLostFound = () => {
         <AddNewItemModal
           onSuccess={refreshData}
           onClose={() => setModalOpen(false)}
+          clubOptions={clubOptions}
+          editingOption={editingOption}
         />
       )}
 
@@ -375,6 +423,7 @@ const AllLostFound = () => {
           lostID={markReturnedData}
           onClose={() => setReturnedModalOpen(false)}
           onSuccess={refreshData}
+          clubOptions={clubOptions}
         />
       )}
     </div>

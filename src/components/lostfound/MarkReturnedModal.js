@@ -13,8 +13,10 @@ import { authAxios } from "../../config/config";
 import { toast } from "react-toastify";
 import { FaCalendarDays } from "react-icons/fa6";
 import { useSelector } from "react-redux";
+import Select from "react-select";
+import { customStyles } from "../../Helper/helper";
 
-const MarkReturnedModal = ({ lostID, onClose, onSuccess }) => {
+const MarkReturnedModal = ({ lostID, onClose, onSuccess, clubOptions }) => {
   const { user } = useSelector((state) => state.auth);
   const leadBoxRef = useRef(null);
   const [mobileError, setMobileError] = useState("");
@@ -23,6 +25,7 @@ const MarkReturnedModal = ({ lostID, onClose, onSuccess }) => {
 
   const formik = useFormik({
     initialValues: {
+      club_id:null,
       item: "",
       description: "",
       date_time: null,
@@ -60,6 +63,7 @@ const MarkReturnedModal = ({ lostID, onClose, onSuccess }) => {
       try {
         // Prepare payload for update
         const payload = {
+          club_id: values.club_id,
           item_name: values.item,
           category: values.category,
           found_at_location: values.foundAt,
@@ -112,6 +116,7 @@ const MarkReturnedModal = ({ lostID, onClose, onSuccess }) => {
 
       // Set form values with fetched data
       formik.setValues({
+        club_id: data.club_id || null,
         item: data.item_name || "",
         description: data.description || "",
         date_time: data.found_date_time ? new Date(data.found_date_time) : null,
@@ -225,6 +230,32 @@ const MarkReturnedModal = ({ lostID, onClose, onSuccess }) => {
             >
               <div className="p-6 flex-1 bg-white rounded-b-[10px]">
                 <div className="grid grid-cols-2 gap-4">
+                  {/* Club Dropdown */}
+                  <div>
+                    <label className="mb-2 block">
+                      Club<span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <Select
+                        name="club_id"
+                        value={
+                          clubOptions.find(
+                            (option) =>
+                              option.value.toString() ===
+                              formik.values.club_id?.toString()
+                          ) || null
+                        }
+                        options={clubOptions}
+                        onChange={(option) =>
+                          formik.setFieldValue("club_id", option.value)
+                        }
+                        onBlur={() => formik.setFieldTouched("club_id", true)}
+                        styles={customStyles}
+                        className="!capitalize"
+                        isDisabled={true}
+                      />
+                    </div>
+                  </div>
                   <div>
                     <label className="mb-2 block">Item Name</label>
                     <input
@@ -233,7 +264,7 @@ const MarkReturnedModal = ({ lostID, onClose, onSuccess }) => {
                       value={formik.values.item}
                       onChange={formik.handleChange}
                       placeholder="Item"
-                      className="custom--input w-full"
+                      className="custom--input w-full !bg-gray-100 pointer-events-none text-gray-500"
                       disabled={true}
                     />
                   </div>
@@ -246,7 +277,7 @@ const MarkReturnedModal = ({ lostID, onClose, onSuccess }) => {
                       value={formik.values.description}
                       onChange={formik.handleChange}
                       placeholder="Description"
-                      className="custom--input w-full"
+                      className="custom--input w-full !bg-gray-100 pointer-events-none text-gray-500"
                       disabled={true}
                     />
                   </div>
@@ -278,8 +309,23 @@ const MarkReturnedModal = ({ lostID, onClose, onSuccess }) => {
                       value={formik.values.foundAt}
                       onChange={formik.handleChange}
                       placeholder="Found At"
-                      className="custom--input w-full"
+                      className="custom--input w-full !bg-gray-100 pointer-events-none text-gray-500"
                       disabled={true}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="mb-2 block">
+                      Returned By<span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      name="returnedBy"
+                      value={formik.values.returnedBy}
+                      onChange={formik.handleChange}
+                      placeholder="Returned By"
+                      disabled={true}
+                      className="custom--input w-full !bg-gray-100 pointer-events-none text-gray-500"
                     />
                   </div>
 
@@ -297,12 +343,12 @@ const MarkReturnedModal = ({ lostID, onClose, onSuccess }) => {
                       countryCallingCodeEditable={false}
                       className="custom--input w-full custom--phone"
                     />
-                    {(formik.touched.mobile &&
-                      (formik.errors.mobile || mobileError)) && (
-                      <div className="text-red-500 text-sm">
-                        {mobileError || formik.errors.mobile}
-                      </div>
-                    )}
+                    {formik.touched.mobile &&
+                      (formik.errors.mobile || mobileError) && (
+                        <div className="text-red-500 text-sm">
+                          {mobileError || formik.errors.mobile}
+                        </div>
+                      )}
                   </div>
 
                   <div>
@@ -315,7 +361,7 @@ const MarkReturnedModal = ({ lostID, onClose, onSuccess }) => {
                       value={formik.values.claimant_name}
                       onChange={formik.handleChange}
                       placeholder="Claimant Name"
-                      className="custom--input w-full"
+                      className="custom--input w-full !bg-gray-100 pointer-events-none text-gray-500"
                       disabled={true}
                     />
                     {formik.touched.claimant_name &&
@@ -354,20 +400,7 @@ const MarkReturnedModal = ({ lostID, onClose, onSuccess }) => {
                       )}
                   </div>
 
-                  <div>
-                    <label className="mb-2 block">
-                      Returned By<span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      name="returnedBy"
-                      value={formik.values.returnedBy}
-                      onChange={formik.handleChange}
-                      placeholder="Returned By"
-                      disabled={true}
-                      className="custom--input w-full"
-                    />
-                  </div>
+                  
 
                   <div className="col-span-2">
                     <label className="mb-2 block">Verification Notes</label>

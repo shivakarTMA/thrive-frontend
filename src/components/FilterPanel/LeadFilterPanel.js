@@ -6,10 +6,12 @@ import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import { authAxios } from "../../config/config";
 import { fetchOptionList } from "../../Redux/Reducers/optionListSlice";
-import { customStyles } from "../../Helper/helper";
+import { customStyles, filterActiveItems } from "../../Helper/helper";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
 export default function LeadFilterPanel({
+  selectedClub,
+  setSelectedClub,
   selectedLeadSource,
   setSelectedLeadSource,
   selectedLastCallType,
@@ -29,6 +31,7 @@ export default function LeadFilterPanel({
   const [showFilters, setShowFilters] = useState(false);
   const panelRef = useRef(null);
   const [staffList, setStaffList] = useState([]);
+  const [clubList, setClubList] = useState([]);
   const navigate = useNavigate();
 
   // Only update appliedFilters when user clicks Apply
@@ -46,9 +49,29 @@ export default function LeadFilterPanel({
     }
   };
 
+  // Function to fetch club list
+  const fetchClub = async () => {
+    try {
+      const response = await authAxios().get("/club/list");
+      const data = response.data?.data || [];
+      const activeOnly = filterActiveItems(data);
+      setClubList(activeOnly);
+    } catch (error) {
+      toast.error("Failed to fetch clubs");
+    }
+  };
+
   useEffect(() => {
     fetchStaff();
+    fetchClub();
   }, []);
+
+  // Club dropdown options
+  const clubOptions =
+    clubList?.map((item) => ({
+      label: item.name,
+      value: item.id,
+    })) || [];
 
   const dispatch = useDispatch();
   const { lists, loading } = useSelector((state) => state.optionList);
@@ -70,7 +93,7 @@ export default function LeadFilterPanel({
     { value: "FEMALE", label: "Female" },
     { value: "NOTDISCLOSE", label: "Prefer Not To Say" },
   ];
-  const leadStatusOptions = [
+  const lead_statusOptions = [
     { value: "new", label: "New" },
     { value: "lead", label: "Lead" },
     { value: "opportunity", label: "Opportunity" },
@@ -83,12 +106,13 @@ export default function LeadFilterPanel({
   // Handle Apply click
   const handleSubmitFilters = () => {
     setAppliedFilters({
-      leadSource: selectedLeadSource,
-      lastCallType: selectedLastCallType,
-      leadStatus: selectedLeadStatus,
-      callTag: selectedCallTag,
+      club_id: selectedClub,
+      lead_source: selectedLeadSource,
+      last_call_status: selectedLastCallType,
+      lead_status: selectedLeadStatus,
+      created_by: selectedCallTag,
       gender: selectedGender,
-      serviceName: selectedServiceName,
+      interested_in: selectedServiceName,
     });
 
     setShowFilters(false);
@@ -96,15 +120,18 @@ export default function LeadFilterPanel({
     navigate(`/all-leads`);
   };
 
+  console.log('appliedFilters', appliedFilters)
+
   // Handle remove filter chip
   const removeFilter = (filterKey) => {
     const setterMap = {
-      leadSource: setSelectedLeadSource,
-      lastCallType: setSelectedLastCallType,
-      leadStatus: setSelectedLeadStatus,
-      callTag: setSelectedCallTag,
+      club_id: setSelectedClub,
+      lead_source: setSelectedLeadSource,
+      last_call_status: setSelectedLastCallType,
+      lead_status: setSelectedLeadStatus,
+      created_by: setSelectedCallTag,
       gender: setSelectedGender,
-      serviceName: setSelectedServiceName,
+      interested_in: setSelectedServiceName,
     };
 
     // Clear parent state
@@ -136,14 +163,14 @@ export default function LeadFilterPanel({
   }, [showFilters]);
 
   useEffect(() => {
-    const urlLeadStatus = searchParams.get("leadStatus");
-    const urlLastCallType = searchParams.get("lastCallType");
+    const urlLeadStatus = searchParams.get("lead_status");
+    const urlLastCallType = searchParams.get("last_call_status");
 
     const initialFilters = {};
 
     if (urlLeadStatus) {
       const decodedStatus = decodeURIComponent(urlLeadStatus);
-      initialFilters.leadStatus = {
+      initialFilters.lead_status = {
         label: decodedStatus,
         value: decodedStatus,
       };
@@ -152,7 +179,7 @@ export default function LeadFilterPanel({
 
     if (urlLastCallType) {
       const decodedLastCall = decodeURIComponent(urlLastCallType);
-      initialFilters.lastCallType = {
+      initialFilters.last_call_status = {
         label: decodedLastCall,
         value: decodedLastCall,
       };
@@ -162,7 +189,7 @@ export default function LeadFilterPanel({
       });
     }
 
-    // Add other filters if needed (e.g., leadSource, dateFilter)
+    // Add other filters if needed (e.g., lead_source, dateFilter)
 
     setAppliedFilters(initialFilters);
   }, []);
@@ -186,6 +213,19 @@ export default function LeadFilterPanel({
           </div>
           <div className="p-4">
             <div className="grid grid-cols-2 gap-4 min-w-[500px]">
+              {/* Club */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Club
+                </label>
+                <Select
+                  value={selectedClub}
+                  onChange={setSelectedClub}
+                  options={clubOptions}
+                  placeholder="Select Club"
+                  styles={customStyles}
+                />
+              </div>
               {/* Lead Source */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -208,7 +248,7 @@ export default function LeadFilterPanel({
                 <Select
                   value={selectedLeadStatus}
                   onChange={setSelectedLeadStatus}
-                  options={leadStatusOptions}
+                  options={lead_statusOptions}
                   placeholder="Select Lead Status"
                   styles={customStyles}
                 />

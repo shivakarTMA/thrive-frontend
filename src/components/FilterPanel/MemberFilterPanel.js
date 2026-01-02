@@ -5,7 +5,7 @@ import { RiResetLeftFill } from "react-icons/ri";
 import { IoClose, IoTriangle } from "react-icons/io5";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchOptionList } from "../../Redux/Reducers/optionListSlice";
-import { customStyles } from "../../Helper/helper";
+import { customStyles, filterActiveItems } from "../../Helper/helper";
 import { HiOutlineAdjustmentsHorizontal } from "react-icons/hi2";
 import { authAxios } from "../../config/config";
 import { toast } from "react-toastify";
@@ -26,6 +26,8 @@ const ageGroupOptions = [
 ];
 
 export default function MemberFilterPanel({
+  selectedClub,
+  setSelectedClub,
   filterStatus,
   setFilterStatus,
   filterService,
@@ -52,6 +54,7 @@ export default function MemberFilterPanel({
   const [staffList, setStaffList] = useState([]);
   const [trainerList, setTrainerList] = useState([]);
   const [serviceList, setServiceList] = useState([]);
+  const [clubList, setClubList] = useState([]);
   const navigate = useNavigate();
 
   const [appliedFilters, setAppliedFilters] = useState({});
@@ -103,10 +106,30 @@ export default function MemberFilterPanel({
     }
   };
 
+  // Function to fetch club list
+  const fetchClub = async () => {
+    try {
+      const response = await authAxios().get("/club/list");
+      const data = response.data?.data || [];
+      const activeOnly = filterActiveItems(data);
+      setClubList(activeOnly);
+    } catch (error) {
+      toast.error("Failed to fetch clubs");
+    }
+  };
+
   useEffect(() => {
     fetchStaff();
     fetchService();
+    fetchClub();
   }, []);
+
+  // Club dropdown options
+  const clubOptions =
+    clubList?.map((item) => ({
+      label: item.name,
+      value: item.id,
+    })) || [];
 
   // Redux state
   const dispatch = useDispatch();
@@ -173,9 +196,11 @@ export default function MemberFilterPanel({
   // Handle Submit (apply filters)
   const handleSubmitFilters = () => {
     setAppliedFilters({
-  is_subscribed: filterStatus !== null
-    ? memberStatus.find(option => option.value === filterStatus)
-    : null,
+      club_id: selectedClub,
+      is_subscribed:
+        filterStatus !== null
+          ? memberStatus.find((option) => option.value === filterStatus)
+          : null,
       serviceName: filterService,
       service_variation: filterServiceVariation,
       ageGroup: filterAgeGroup,
@@ -194,6 +219,7 @@ export default function MemberFilterPanel({
   // Handle remove filter chip
   const removeFilter = (filterKey) => {
     const setterMap = {
+      club_id: setSelectedClub,
       is_subscribed: setFilterStatus,
       serviceName: setFilterService,
       service_variation: setFilterServiceVariation,
@@ -234,6 +260,19 @@ export default function MemberFilterPanel({
           </div>
           <div className="p-4">
             <div className="grid grid-cols-2 gap-4 min-w-[500px]">
+              {/* Club */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Club
+                </label>
+                <Select
+                  value={selectedClub}
+                  onChange={setSelectedClub}
+                  options={clubOptions}
+                  placeholder="Select Club"
+                  styles={customStyles}
+                />
+              </div>
               {/* Status */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">

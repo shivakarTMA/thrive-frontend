@@ -166,9 +166,9 @@ const SendPaymentLink = ({ setSendPaymentModal, leadPaymentSend }) => {
             <div className="flex bg-white rounded-b-[10px]">
               <div className="p-6 flex-1">
                 <div className="grid grid-cols-3 gap-4 mb-6 border pb-4 bg-gray-50 p-3 rounded mt-4">
-                  {/* Product Type */}
+                  {/* Service Type */}
                   <div>
-                    <label className="mb-2 block">Product Type</label>
+                    <label className="mb-2 block">Service Type</label>
                     <input
                       name="productType"
                       value={formatText(formik.values?.productType)}

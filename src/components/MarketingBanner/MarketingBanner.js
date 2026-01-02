@@ -48,7 +48,7 @@ const MarketingBanner = () => {
       // setTotalCount(res.data?.totalCount || data.length);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch club");
+      toast.error("Failed to fetch banner");
     }
   };
 
@@ -216,6 +216,7 @@ const MarketingBanner = () => {
               <tr>
                 {/* <th className="px-2 py-4">Club ID</th> */}
                 <th className="px-2 py-4">Image</th>
+                <th className="px-2 py-4">Club Name</th>
                 <th className="px-2 py-4">Heading</th>
                 <th className="px-2 py-4">Sub Heading</th>
                 {/* <th className="px-2 py-4">Description Heading</th>
@@ -248,6 +249,7 @@ const MarketingBanner = () => {
                         />
                       </div>
                     </td>
+                    <td className="px-2 py-4">{item?.club_name ? item?.club_name : "--"}</td>
                     <td className="px-2 py-4">{item?.banner_heading}</td>
                     <td className="px-2 py-4">{item?.banner_subheading}</td>
                     {/* <td className="px-2 py-4">{item?.description_heading}</td>

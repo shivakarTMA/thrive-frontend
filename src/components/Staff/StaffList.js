@@ -386,7 +386,7 @@ const StaffList = () => {
                   <th className="px-2 py-4">Mobile</th>
                 )}
                 <th className="px-2 py-4">Role</th>
-                <th className="px-2 py-4">Club</th>
+                <th className="px-2 py-4">Assigned Club</th>
                 <th className="px-2 py-4">Status</th>
                 <th className="px-2 py-4">Show on App</th>
                 <th className="px-2 py-4">Action</th>

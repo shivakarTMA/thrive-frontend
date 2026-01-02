@@ -122,7 +122,9 @@ const CreateProduct = ({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="bg-white rounded-t-[10px] flex gap-3 items-center justify-between py-4 px-4 border-b">
-          <h2 className="text-xl font-semibold">Create a Product</h2>
+          <h2 className="text-xl font-semibold">
+            {editingOption ? "Edit Product" : "Create Product"}
+          </h2>
           <div className="close--lead cursor-pointer" onClick={handleLeadModal}>
             <IoCloseCircle className="text-3xl" />
           </div>
@@ -172,7 +174,7 @@ const CreateProduct = ({
                     )}
                   </div>
 
-{/* Club Dropdown */}
+                  {/* Club Dropdown */}
                   <div>
                     <label className="mb-2 block">
                       Club<span className="text-red-500">*</span>
@@ -360,7 +362,9 @@ const CreateProduct = ({
 
                   {/* SKU */}
                   <div>
-                    <label className="mb-2 block">SKU<span className="text-red-500">*</span></label>
+                    <label className="mb-2 block">
+                      SKU<span className="text-red-500">*</span>
+                    </label>
                     <div className="relative">
                       <input
                         type="text"
@@ -595,8 +599,6 @@ const CreateProduct = ({
                     )}
                   </div>
 
-                  
-
                   {/* Earn Coins */}
                   <div>
                     <label className="mb-2 block">
@@ -640,8 +642,6 @@ const CreateProduct = ({
                       </div>
                     )}
                   </div>
-
-                  
 
                   {/* Short Description */}
                   <div className="md:col-span-2">

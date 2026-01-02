@@ -72,6 +72,7 @@ const AllLeads = () => {
   const [bulkOwner, setBulkOwner] = useState(null);
   const [showOwnerDropdown, setShowOwnerDropdown] = useState(false);
 
+  const [selectedClub, setSelectedClub] = useState(null);
   const [selectedLeadSource, setSelectedLeadSource] = useState(null);
   const [selectedLeadStatus, setSelectedLeadStatus] = useState(null);
   const [selectedLastCallType, setSelectedLastCallType] = useState(null);
@@ -140,8 +141,8 @@ const AllLeads = () => {
     }
   }, []);
 
-  const urlLastCallType = searchParams.get("lastCallType");
-  const lastCallType = urlLastCallType
+  const urlLastCallType = searchParams.get("last_call_status");
+  const last_call_status = urlLastCallType
     ? decodeURIComponent(urlLastCallType)
     : null;
 
@@ -156,41 +157,44 @@ const AllLeads = () => {
         params.id = id;
         setDateFilter("");
       } else {
-        const urlLeadStatus = searchParams.get("leadStatus");
+        const urlLeadStatus = searchParams.get("lead_status");
         const urlDate = searchParams.get("date");
         const urlCustomFrom = searchParams.get("customFrom");
         const urlCustomTo = searchParams.get("customTo");
 
         // ✅ Use overrideSelected first, then selected state, then URL, otherwise null
-        const selLeadSource = overrideSelected.hasOwnProperty("leadSource")
-          ? overrideSelected.leadSource
+        const selLeadSource = overrideSelected.hasOwnProperty("lead_source")
+          ? overrideSelected.lead_source
           : selectedLeadSource;
-        const selLeadStatus = overrideSelected.hasOwnProperty("leadStatus")
-          ? overrideSelected.leadStatus
+        const selLeadStatus = overrideSelected.hasOwnProperty("lead_status")
+          ? overrideSelected.lead_status
           : selectedLeadStatus
           ? selectedLeadStatus
           : urlLeadStatus
           ? { label: urlLeadStatus, value: urlLeadStatus }
           : null;
-        // const selLastCallType = overrideSelected.hasOwnProperty("lastCallType")
-        //   ? overrideSelected.lastCallType
+        // const selLastCallType = overrideSelected.hasOwnProperty("last_call_status")
+        //   ? overrideSelected.last_call_status
         //   : selectedLastCallType;
-        const selLastCallType = overrideSelected.hasOwnProperty("lastCallType")
-          ? overrideSelected.lastCallType
+        const selLastCallType = overrideSelected.hasOwnProperty("last_call_status")
+          ? overrideSelected.last_call_status
           : selectedLastCallType
           ? selectedLastCallType
-          : lastCallType
-          ? { label: lastCallType, value: lastCallType }
+          : last_call_status
+          ? { label: last_call_status, value: last_call_status }
           : null;
-        const selCallTag = overrideSelected.hasOwnProperty("callTag")
-          ? overrideSelected.callTag
+        const selCallTag = overrideSelected.hasOwnProperty("created_by")
+          ? overrideSelected.created_by
           : selectedCallTag;
-        const selServiceName = overrideSelected.hasOwnProperty("serviceName")
-          ? overrideSelected.serviceName
+        const selServiceName = overrideSelected.hasOwnProperty("interested_in")
+          ? overrideSelected.interested_in
           : selectedServiceName;
         const selGender = overrideSelected.hasOwnProperty("gender")
           ? overrideSelected.gender
           : selectedGender;
+        const selClub = overrideSelected.hasOwnProperty("club_id")
+          ? overrideSelected.club_id
+          : selectedClub;
 
         let selDateFilter =
           overrideSelected.dateFilter?.value || dateFilter?.value || urlDate;
@@ -227,6 +231,7 @@ const AllLeads = () => {
         if (selCallTag?.value) params.created_by = selCallTag.value;
         if (selServiceName?.value) params.interested_in = selServiceName.value;
         if (selGender?.value) params.gender = selGender.value;
+        if (selClub?.value) params.club_id = selClub.value;
 
         // ✅ Date filter
         if (selDateFilter && selDateFilter !== "custom") {
@@ -258,8 +263,6 @@ const AllLeads = () => {
       toast.error("Failed to fetch leads");
     }
   };
-
-  console.log("selectedLastCallType", selectedLastCallType);
 
   // 🚀 Fetch staff list from API
   const fetchStaff = async () => {
@@ -338,11 +341,12 @@ const AllLeads = () => {
 
   const handleRemoveFilter = (filterKey) => {
     const setterMap = {
-      leadSource: setSelectedLeadSource,
-      lastCallType: setSelectedLastCallType,
-      leadStatus: setSelectedLeadStatus,
-      callTag: setSelectedCallTag,
-      serviceName: setSelectedServiceName,
+      club_id: setSelectedClub,
+      lead_source: setSelectedLeadSource,
+      last_call_status: setSelectedLastCallType,
+      lead_status: setSelectedLeadStatus,
+      created_by: setSelectedCallTag,
+      interested_in: setSelectedServiceName,
       gender: setSelectedGender,
     };
 
@@ -573,6 +577,8 @@ const AllLeads = () => {
                 <div className="flex items-start gap-3 justify-between w-full mb-3 border-b border-b-[#D4D4D4] pb-3">
                   <div>
                     <LeadFilterPanel
+                      selectedClub={selectedClub}
+                      setSelectedClub={setSelectedClub}
                       selectedLeadSource={selectedLeadSource}
                       setSelectedLeadSource={setSelectedLeadSource}
                       selectedLastCallType={selectedLastCallType}
@@ -683,15 +689,30 @@ const AllLeads = () => {
                         <tr>
                           <th className="px-2 py-4">#</th>
                           {/* <th className="px-2 py-4">S.No</th> */}
-                          <th className="px-2 py-4">Name</th>
-                          <th className="px-2 py-4">Interested In</th>
-                          <th className="px-2 py-4">Lead Type</th>
-                          <th className="px-2 py-4">Lead Source</th>
-                          <th className="px-2 py-4">Lead Status</th>
-                          <th className="px-2 py-4">Last Call Status</th>
-                          <th className="px-2 py-4">Lead Owner</th>
-                          <th className="px-2 py-4">Created on</th>
-                          <th className="px-2 py-4">Last Updated On</th>
+                          <th className="px-2 py-4 min-w-[130px]">Name</th>
+                          <th className="px-2 py-4 min-w-[150px]">Club Name</th>
+                          <th className="px-2 py-4 min-w-[150px]">
+                            Interested In
+                          </th>
+                          <th className="px-2 py-4 min-w-[90px]">Lead Type</th>
+                          <th className="px-2 py-4 min-w-[100px]">
+                            Lead Source
+                          </th>
+                          <th className="px-2 py-4 min-w-[100px]">
+                            Lead Status
+                          </th>
+                          <th className="px-2 py-4 min-w-[150px]">
+                            Last Call Status
+                          </th>
+                          <th className="px-2 py-4 min-w-[140px]">
+                            Lead Owner
+                          </th>
+                          <th className="px-2 py-4 min-w-[100px]">
+                            Created on
+                          </th>
+                          <th className="px-2 py-4 min-w-[120px]">
+                            Last Updated On
+                          </th>
                         </tr>
                       </thead>
                       <tbody>
@@ -716,7 +737,12 @@ const AllLeads = () => {
                               </td>
                               {/* <td className="px-2 py-4">{row?.id}</td> */}
 
-                              <td className="px-2 py-4">{row?.full_name}</td>
+                              <td className="px-2 py-4">
+                                {row?.full_name ? row?.full_name : "--"}
+                              </td>
+                              <td className="px-2 py-4">
+                                {row?.club_name ? row?.club_name : "--"}
+                              </td>
                               <td className="px-2 py-4">
                                 <div className="max-w-[200px]">
                                   {row?.interested_in?.length
@@ -885,11 +911,11 @@ const AllLeads = () => {
 
                       // Prepare overrideSelected for removed filters
                       const overrideSelected = {
-                        leadStatus: selectedLeadStatus || null,
-                        leadSource: selectedLeadSource || null,
-                        lastCallType: selectedLastCallType || null,
-                        callTag: selectedCallTag || null,
-                        serviceName: selectedServiceName || null,
+                        lead_status: selectedLeadStatus || null,
+                        lead_source: selectedLeadSource || null,
+                        last_call_status: selectedLastCallType || null,
+                        created_by: selectedCallTag || null,
+                        interested_in: selectedServiceName || null,
                         gender: selectedGender || null,
                       };
 

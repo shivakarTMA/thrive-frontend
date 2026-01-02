@@ -2,13 +2,13 @@ import React, { useEffect, useState } from "react";
 import { authAxios } from "../../config/config";
 import { filterActiveItems } from "../../Helper/helper";
 
-const ProductModal = ({ selectedType, onClose, onSubmit }) => {
+const ProductModal = ({ selectedType, onClose, onSubmit, planType }) => {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!selectedType) return;
+    if (!selectedType || !planType) return;
 
     const fetchProducts = async () => {
       setLoading(true);
@@ -16,11 +16,17 @@ const ProductModal = ({ selectedType, onClose, onSubmit }) => {
       try {
         let response;
 
+        const params = {
+          plan_type: planType, // MUST match backend key
+        };
+
         // -------------------------------
         // CHECK PRODUCT TYPE & CALL API
         // -------------------------------
         if (selectedType === "MEMBERSHIP_PLAN") {
-          response = await authAxios().get("/subscription-plan/list");
+          response = await authAxios().get("/subscription-plan/list", {
+            params,
+          });
         }
 
         // (Add more conditions for other product types)
@@ -48,7 +54,7 @@ const ProductModal = ({ selectedType, onClose, onSubmit }) => {
     };
 
     fetchProducts();
-  }, [selectedType]);
+  }, [selectedType, planType]);
 
   const handleSubmit = () => {
     if (selectedProduct) {

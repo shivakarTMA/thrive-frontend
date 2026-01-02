@@ -780,7 +780,7 @@ const ProfileDetails = ({ member }) => {
                     Centre Name:
                   </span>
                   <span className="text-[#6F6F6F] font-[500] text-[15px]">
-                    {member?.location || "N/A"}
+                    {member?.club_name || "N/A"}
                   </span>
                 </div>
               </div>

@@ -12,20 +12,26 @@ import { FaCalendarDays } from "react-icons/fa6";
 import { toast } from "react-toastify";
 import { authAxios } from "../../config/config";
 
-const AddNewItemModal = ({ onClose, onSuccess }) => {
-  const { user } = useSelector((state) => state.auth);
-  console.log(user, "user");
+const AddNewItemModal = ({
+  onClose,
+  onSuccess,
+  clubOptions,
+  editingOption,
+}) => {
   const leadBoxRef = useRef(null);
+  const { user } = useSelector((state) => state.auth);
+
   const formik = useFormik({
     initialValues: {
+      club_id: null,
       item_name: "",
       category: null,
       description: "",
       found_at_location: null,
       found_date_time: new Date(),
-      loggedBy: "Nitin",
+      loggedBy: user?.name,
       notes: "",
-      status:"AVAILABLE",
+      status: "AVAILABLE",
     },
     validationSchema: Yup.object({
       item_name: Yup.string().required("Item Name is required"),
@@ -35,7 +41,6 @@ const AddNewItemModal = ({ onClose, onSuccess }) => {
       description: Yup.string().required("Description is required"),
     }),
     onSubmit: async (values, { resetForm }) => {
-
       try {
         await authAxios().post("/lost/found/create", values);
         toast.success("Item Successfully Added");
@@ -57,6 +62,36 @@ const AddNewItemModal = ({ onClose, onSuccess }) => {
       }
     },
   });
+
+  useEffect(() => {
+    const fetchProductById = async (id) => {
+      try {
+        const res = await authAxios().get(`/lost/found/${id}`);
+        const data = res.data?.data || res.data || null;
+
+        if (data) {
+          formik.setValues({
+            club_id: data?.club_id || null,
+            item_name: data?.item_name || "",
+            category: data?.category || null,
+            description: data?.description || "",
+            found_at_location: data?.found_at_location || null,
+            found_date_time: data?.found_date_time || new Date(),
+            loggedBy: data?.loggedBy || user?.name,
+            notes: data?.notes || "",
+            status: data?.status || "AVAILABLE",
+          });
+        }
+      } catch (err) {
+        console.error(err);
+        toast.error("Failed to fetch item details");
+      }
+    };
+
+    if (editingOption) {
+      fetchProductById(editingOption);
+    }
+  }, [editingOption]);
 
   // Redux state
   const dispatch = useDispatch();
@@ -93,7 +128,9 @@ const AddNewItemModal = ({ onClose, onSuccess }) => {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="bg-white rounded-t-[10px] flex gap-3 items-center justify-between py-4 px-4 border-b">
-          <h2 className="text-xl font-semibold">Add New Lost Item</h2>
+          <h2 className="text-xl font-semibold">
+            {editingOption ? "View Lost Item" : "Add Lost Item"}
+          </h2>
           <div className="close--lead cursor-pointer" onClick={onClose}>
             <IoCloseCircle className="text-3xl" />
           </div>
@@ -105,6 +142,37 @@ const AddNewItemModal = ({ onClose, onSuccess }) => {
           >
             <div className="p-6 flex-1 bg-white rounded-b-[10px]">
               <div className="grid grid-cols-2 gap-4">
+                {/* Club Dropdown */}
+                <div>
+                  <label className="mb-2 block">
+                    Club<span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <Select
+                      name="club_id"
+                      value={
+                        clubOptions.find(
+                          (option) =>
+                            option.value.toString() ===
+                            formik.values.club_id?.toString()
+                        ) || null
+                      }
+                      options={clubOptions}
+                      onChange={(option) =>
+                        formik.setFieldValue("club_id", option.value)
+                      }
+                      onBlur={() => formik.setFieldTouched("club_id", true)}
+                      styles={customStyles}
+                      className="!capitalize"
+                      isDisabled={editingOption}
+                    />
+                  </div>
+                  {formik.touched.club_id && formik.errors.club_id && (
+                    <p className="text-red-500 text-sm mt-1">
+                      {formik.errors.club_id}
+                    </p>
+                  )}
+                </div>
                 <div>
                   <label className="mb-2 block">
                     Item Name<span className="text-red-500">*</span>
@@ -116,7 +184,12 @@ const AddNewItemModal = ({ onClose, onSuccess }) => {
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
                     placeholder="Item Name"
-                    className="custom--input w-full"
+                    className={`custom--input w-full ${
+                      editingOption
+                        ? "!bg-gray-100 pointer-events-none text-gray-500"
+                        : ""
+                    }`}
+                    disabled={editingOption}
                   />
                   {formik.touched.item_name && formik.errors.item_name && (
                     <div className="text-red-500 text-sm">
@@ -135,10 +208,16 @@ const AddNewItemModal = ({ onClose, onSuccess }) => {
                         (option) => option.value === formik.values.category
                       ) || null
                     }
-                    onChange={(option) => formik.setFieldValue("category", option ? option.value : "")} 
+                    onChange={(option) =>
+                      formik.setFieldValue(
+                        "category",
+                        option ? option.value : ""
+                      )
+                    }
                     options={lostCategory}
                     placeholder="Select Category"
                     styles={customStyles}
+                    isDisabled={editingOption}
                   />
                   {formik.touched.category && formik.errors.category && (
                     <div className="text-red-500 text-sm">
@@ -154,19 +233,27 @@ const AddNewItemModal = ({ onClose, onSuccess }) => {
                     name="found_at_location"
                     value={
                       foundLocation.find(
-                        (option) => option.value === formik.values.found_at_location
+                        (option) =>
+                          option.value === formik.values.found_at_location
                       ) || null
                     }
-                    onChange={(option) => formik.setFieldValue("found_at_location", option ? option.value : "")} 
+                    onChange={(option) =>
+                      formik.setFieldValue(
+                        "found_at_location",
+                        option ? option.value : ""
+                      )
+                    }
                     options={foundLocation}
                     placeholder="Select Location"
                     styles={customStyles}
+                    isDisabled={editingOption}
                   />
-                  {formik.touched.found_at_location && formik.errors.found_at_location && (
-                    <div className="text-red-500 text-sm">
-                      {formik.errors.found_at_location}
-                    </div>
-                  )}
+                  {formik.touched.found_at_location &&
+                    formik.errors.found_at_location && (
+                      <div className="text-red-500 text-sm">
+                        {formik.errors.found_at_location}
+                      </div>
+                    )}
                 </div>
                 <div>
                   <label className="mb-2 block">
@@ -189,13 +276,15 @@ const AddNewItemModal = ({ onClose, onSuccess }) => {
                       placeholderText="Select date & time"
                       className="border px-3 py-2 w-full input--icon"
                       maxDate={new Date()}
+                      disabled={editingOption}
                     />
                   </div>
-                  {formik.touched.found_date_time && formik.errors.found_date_time && (
-                    <p className="text-sm text-red-500 mt-1">
-                      {formik.errors.found_date_time}
-                    </p>
-                  )}
+                  {formik.touched.found_date_time &&
+                    formik.errors.found_date_time && (
+                      <p className="text-sm text-red-500 mt-1">
+                        {formik.errors.found_date_time}
+                      </p>
+                    )}
                 </div>
                 <div>
                   <label className="mb-2 block">Logged By</label>
@@ -204,7 +293,7 @@ const AddNewItemModal = ({ onClose, onSuccess }) => {
                     type="text"
                     value={formik.values.loggedBy}
                     disabled={true}
-                    className="custom--input w-full"
+                    className="custom--input w-full !bg-gray-100 pointer-events-none text-gray-500"
                   />
                 </div>
 
@@ -218,7 +307,12 @@ const AddNewItemModal = ({ onClose, onSuccess }) => {
                     value={formik.values.description}
                     onChange={formik.handleChange}
                     placeholder="Description"
-                    className="custom--input w-full"
+                    disabled={editingOption}
+                    className={`custom--input w-full ${
+                      editingOption
+                        ? "!bg-gray-100 pointer-events-none text-gray-500"
+                        : ""
+                    }`}
                   />
                   {formik.touched.description && formik.errors.description && (
                     <div className="text-red-500 text-sm">
@@ -234,26 +328,33 @@ const AddNewItemModal = ({ onClose, onSuccess }) => {
                     value={formik.values.notes}
                     onChange={formik.handleChange}
                     placeholder="Any additional remarks"
-                    className="custom--input w-full"
+                    className={`custom--input w-full ${
+                      editingOption
+                        ? "!bg-gray-100 pointer-events-none text-gray-500"
+                        : ""
+                    }`}
+                    disabled={editingOption}
                   />
                 </div>
               </div>
             </div>
-            <div className="flex gap-4 py-5 pt-0 justify-end">
-              <button
-                type="button"
-                className="px-4 py-2 bg-transparent border border-white text-white font-semibold rounded max-w-[150px] w-full"
-                onClick={onClose}
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="px-4 py-2 bg-white text-black font-semibold rounded max-w-[150px] w-full"
-              >
-                Submit
-              </button>
-            </div>
+            {!editingOption && (
+              <div className="flex gap-4 py-5 pt-0 justify-end">
+                <button
+                  type="button"
+                  className="px-4 py-2 bg-transparent border border-white text-white font-semibold rounded max-w-[150px] w-full"
+                  onClick={onClose}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-white text-black font-semibold rounded max-w-[150px] w-full"
+                >
+                  Submit
+                </button>
+              </div>
+            )}
           </form>
         </div>
       </div>

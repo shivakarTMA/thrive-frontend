@@ -3,7 +3,7 @@ import { IoCloseCircle } from "react-icons/io5";
 import { PiImageFill } from "react-icons/pi";
 import { authAxios } from "../../config/config";
 import { toast } from "react-toastify";
-import { customStyles } from "../../Helper/helper";
+import { customStyles, filterActiveItems } from "../../Helper/helper";
 import Select from "react-select";
 
 const CreateMarketingBanner = ({
@@ -32,7 +32,8 @@ const CreateMarketingBanner = ({
       // Normalize response data to an array
       const data = res.data?.data || res.data || [];
       // Save clubs in local state
-      setClub(data);
+      const activeOnly = filterActiveItems(data);
+      setClub(activeOnly);
     } catch (err) {
       // Log error in console for debugging
       console.error(err);

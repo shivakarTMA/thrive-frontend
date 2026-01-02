@@ -5,7 +5,10 @@ import "react-datepicker/dist/react-datepicker.css";
 import { IoClose, IoTriangle } from "react-icons/io5";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchOptionList } from "../../Redux/Reducers/optionListSlice";
-import { customStyles, formatAutoDate } from "../../Helper/helper";
+import {
+  customStyles,
+  formatAutoDate,
+} from "../../Helper/helper";
 import { HiOutlineAdjustmentsHorizontal } from "react-icons/hi2";
 import { format } from "date-fns";
 
@@ -20,6 +23,9 @@ const StatusOptions = [
 ];
 
 export default function LostFoundPanel({
+  clubOptions,
+  selectedClub,
+  setSelectedClub,
   itemStatus,
   setItemStatus,
   itemCategory,
@@ -40,9 +46,11 @@ export default function LostFoundPanel({
   onRemoveFilter,
 }) {
   const [showFilters, setShowFilters] = useState(false);
+ 
   const panelRef = useRef(null);
 
   const [appliedFilters, setAppliedFilters] = useState({
+    club_id: selectedClub,
     status: itemStatus,
     category: itemCategory,
     found_at_location: itemLocation,
@@ -52,6 +60,12 @@ export default function LostFoundPanel({
     returned_from: itemReturnedFrom,
     returned_to: itemReturnedTo,
   });
+
+  
+
+  const handleClubChange = (selectedOption) => {
+    setSelectedClub(selectedOption); // selectedOption will have { label, value }
+  };
 
   // Redux state
   const dispatch = useDispatch();
@@ -93,6 +107,7 @@ export default function LostFoundPanel({
 
   const handleSubmitFilters = () => {
     const applied = {
+      club_id: selectedClub?.value,
       status: itemStatus?.value,
       category: itemCategory?.value,
       found_at_location: itemLocation?.value,
@@ -113,9 +128,12 @@ export default function LostFoundPanel({
     }
   };
 
+  console.log("appliedFilters", appliedFilters);
+
   const removeFilter = (filterKey) => {
     // ✅ Fixed: Correct setter map without .value
     const setterMap = {
+      club_id: setSelectedClub,
       status: setItemStatus,
       category: setItemCategory,
       found_at_location: setItemLocation,
@@ -171,6 +189,21 @@ export default function LostFoundPanel({
           </div>
           <div className="p-4">
             <div className="grid grid-cols-2 gap-4 min-w-[500px]">
+              {/* Club */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Club
+                </label>
+                <Select
+                  value={selectedClub}
+                  onChange={handleClubChange} // When user selects an option
+                  getOptionLabel={(e) => e.label} // Show the label (club name)
+                  getOptionValue={(e) => e.value} // Use value (club ID) for filtering
+                  options={clubOptions}
+                  placeholder="Select Club"
+                  styles={customStyles}
+                />
+              </div>
               {/* Status */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -339,6 +372,11 @@ export default function LostFoundPanel({
 
             // Format display label
             let displayLabel = value;
+
+            if (key === "club_id") {
+              displayLabel = selectedClub?.label || value;
+            }
+
             if (
               key === "status" ||
               key === "category" ||
@@ -355,10 +393,10 @@ export default function LostFoundPanel({
             } else if (key.includes("from") || key.includes("to")) {
               // Display dates in readable format
               // displayLabel = value;
-                if (isValidDate(value)) {
-                  const parsedDate = new Date(value);
-                  displayLabel = formatAutoDate(parsedDate);
-                }
+              if (isValidDate(value)) {
+                const parsedDate = new Date(value);
+                displayLabel = formatAutoDate(parsedDate);
+              }
             }
 
             return (
