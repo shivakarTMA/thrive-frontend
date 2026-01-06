@@ -18,6 +18,7 @@ import { authAxios } from "../../../config/config";
 import Pagination from "../../../components/common/Pagination";
 import { FaCalendarDays } from "react-icons/fa6";
 import AllEnquiresFilterPanel from "../../../components/FilterPanel/AllEnquiresFilterPanel";
+import { useSelector } from "react-redux";
 
 const dateFilterOptions = [
   { value: "today", label: "Today" },
@@ -30,6 +31,8 @@ const AllEnquiriesReport = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const location = useLocation();
+  const { user } = useSelector((state) => state.auth);
+  const userRole = user.role;
 
   const [selectedClub, setSelectedClub] = useState(null);
   const [selectedLeadSource, setSelectedLeadSource] = useState(null);
@@ -356,6 +359,7 @@ const AllEnquiriesReport = () => {
             <div className="flex items-start gap-3 justify-between w-full mb-3 border-b border-b-[#D4D4D4] pb-3">
               <div>
                 <AllEnquiresFilterPanel
+                  userRole={userRole}
                   selectedClub={selectedClub}
                   setSelectedClub={setSelectedClub}
                   selectedLeadSource={selectedLeadSource}

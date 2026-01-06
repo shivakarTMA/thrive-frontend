@@ -1065,7 +1065,7 @@ const ConvertMemberForm = ({
                       <div className="grid grid-cols-3 gap-4">
                         <div>
                           <label className="mb-2 block">Interested In</label>
-                          <div className="relative">
+                          <div className="relative hide-clear-icon">
                             <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
                               <FaListCheck />
                             </span>
@@ -1088,7 +1088,7 @@ const ConvertMemberForm = ({
                                 allItemsAreSelected: "All Interested Selected",
                                 // search: "Search",
                               }}
-                              className={`custom--input w-full input--icon multi--select--new ${
+                              className={`custom--input w-full input--icon multi--select--new !text-gray-500 ${
                                 selected
                                   ? "cursor-not-allowed pointer-events-none !bg-gray-100"
                                   : ""
@@ -1136,6 +1136,7 @@ const ConvertMemberForm = ({
                               }
                               options={leadTypes}
                               styles={selectIcon}
+                              isDisabled={true}
                             />
                           </div>
                           {formik.errors?.lead_type &&
@@ -1167,6 +1168,7 @@ const ConvertMemberForm = ({
                               }
                               options={leadsSources}
                               styles={selectIcon}
+                              isDisabled={true}
                             />
                           </div>
                           {formik.errors?.lead_source &&

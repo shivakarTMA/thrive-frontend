@@ -186,12 +186,32 @@ const MemberList = () => {
   // 🚀 Fetch staff list from API
   const fetchStaff = async () => {
     try {
-      const res = await authAxios().get("/staff/list?role=FOH");
+      const requests = [authAxios().get("/staff/list?role=FOH")];
 
-      let data = res.data?.data || [];
+      if (userRole === "CLUB_MANAGER" || userRole === "ADMIN") {
+        requests.push(authAxios().get("/staff/list?role=CLUB_MANAGER"));
+      }
 
-      const activeOnly = filterActiveItems(data);
+      const responses = await Promise.all(requests);
 
+      let mergedData = [];
+
+      responses.forEach((res) => {
+        const role = res.config.url.includes("FOH") ? "FOH" : "CLUB_MANAGER";
+
+        const users = (res.data?.data || []).map((user) => ({
+          ...user,
+          role,
+        }));
+
+        mergedData.push(...users);
+      });
+
+      const uniqueData = Array.from(
+        new Map(mergedData.map((user) => [user.id, user])).values()
+      );
+
+      const activeOnly = filterActiveItems(uniqueData);
       setStaffList(activeOnly);
     } catch (err) {
       console.error(err);
@@ -204,11 +224,26 @@ const MemberList = () => {
     fetchStaff();
   }, []);
 
-  const staffOptions =
-    staffList?.map((item) => ({
-      label: item.name,
-      value: item.id,
-    })) || [];
+  const staffOptions = [
+    {
+      label: "FOH",
+      options: staffList
+        .filter((user) => user.role === "FOH")
+        .map((user) => ({
+          value: user.id,
+          label: user.name,
+        })),
+    },
+    {
+      label: "CLUB MANAGER",
+      options: staffList
+        .filter((user) => user.role === "CLUB_MANAGER")
+        .map((user) => ({
+          value: user.id,
+          label: user.name,
+        })),
+    },
+  ].filter((group) => group.options.length > 0); // remove empty groups
 
   // Handle bulk assigning owner to selected leads only
   const handleBulkAssign = (selectedOption) => {
@@ -398,6 +433,7 @@ const MemberList = () => {
           <div className="flex items-start gap-3 justify-between w-full mb-3 border-b border-b-[#D4D4D4] pb-3">
             <div>
               <MemberFilterPanel
+                userRole={userRole}
                 selectedClub={selectedClub}
                 setSelectedClub={setSelectedClub}
                 filterStatus={filterStatus}
@@ -563,9 +599,7 @@ const MemberList = () => {
                         {member?.full_name ? member?.full_name : "--"}
                       </td>
                       <td className="px-2 py-4">
-                        {member?.club_name
-                          ? member?.club_name
-                          : "--"}
+                        {member?.club_name ? member?.club_name : "--"}
                       </td>
                       <td className="px-2 py-4">
                         {formatText(
@@ -621,53 +655,52 @@ const MemberList = () => {
                       {(userRole === "CLUB_MANAGER" ||
                         userRole === "GENERAL_MANAGER" ||
                         userRole === "ADMIN") && (
+                        <div className="absolute hidden group-hover:flex gap-2 right-0 h-full top-0 w-[50%] items-center justify-end bg-[linear-gradient(269deg,_#ffffff_30%,_transparent)] pr-5 transition duration-700">
+                          <div className="flex gap-1">
+                            <Tooltip
+                              id={`edit-member-${member?.id}`}
+                              content="Edit Member"
+                              place="top"
+                            >
+                              <div className="p-1 cursor-pointer">
+                                <Link
+                                  to={`/member/${member?.id}`}
+                                  className="p-0"
+                                >
+                                  <LiaEdit className="text-[25px] text-black" />
+                                </Link>
+                              </div>
+                            </Tooltip>
 
-                      <div className="absolute hidden group-hover:flex gap-2 right-0 h-full top-0 w-[50%] items-center justify-end bg-[linear-gradient(269deg,_#ffffff_30%,_transparent)] pr-5 transition duration-700">
-                        <div className="flex gap-1">
-                          <Tooltip
-                            id={`edit-member-${member?.id}`}
-                            content="Edit Member"
-                            place="top"
-                          >
-                            <div className="p-1 cursor-pointer">
-                              <Link
-                                to={`/member/${member?.id}`}
-                                className="p-0"
-                              >
-                                <LiaEdit className="text-[25px] text-black" />
-                              </Link>
-                            </div>
-                          </Tooltip>
+                            <Tooltip
+                              id={`member-call-${member?.id}`}
+                              content="Call Logs"
+                              place="top"
+                            >
+                              <div className="p-1 cursor-pointer">
+                                <Link
+                                  to={`/member/${member?.id}?view=call-logs`}
+                                  className="p-0"
+                                >
+                                  <MdCall className="text-[25px] text-black" />
+                                </Link>
+                              </div>
+                            </Tooltip>
 
-                          <Tooltip
-                            id={`member-call-${member?.id}`}
-                            content="Call Logs"
-                            place="top"
-                          >
-                            <div className="p-1 cursor-pointer">
-                              <Link
-                                to={`/member/${member?.id}?view=call-logs`}
-                                className="p-0"
-                              >
-                                <MdCall className="text-[25px] text-black" />
-                              </Link>
-                            </div>
-                          </Tooltip>
-
-                          <Tooltip
-                            id={`send-payment-${member?.id}`}
-                            content="Send Payment Link"
-                            place="top"
-                          >
-                            <div className="p-1 cursor-pointer">
-                              <Link to="#" className="p-0">
-                                <IoIosAddCircleOutline className="text-[25px] text-black" />
-                              </Link>
-                            </div>
-                          </Tooltip>
+                            <Tooltip
+                              id={`send-payment-${member?.id}`}
+                              content="Send Payment Link"
+                              place="top"
+                            >
+                              <div className="p-1 cursor-pointer">
+                                <Link to="#" className="p-0">
+                                  <IoIosAddCircleOutline className="text-[25px] text-black" />
+                                </Link>
+                              </div>
+                            </Tooltip>
+                          </div>
                         </div>
-                      </div>
-                        )}
+                      )}
                     </tr>
                   ))}
                 </tbody>

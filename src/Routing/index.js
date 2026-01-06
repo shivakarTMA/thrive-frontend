@@ -115,6 +115,9 @@ const RoleBasedHome = () => {
 
   if (userType === "ADMIN") return <Home />;
   if (userType === "MARKETING_MANAGER") return <MarketingManagerDashboard />;
+  if (userType === "FOH") return <FohDashboard />;
+  if (userType === "TRAINER") return <TrainerDashboard />;
+  if (userType === "CLUB_MANAGER") return <ClubManagerDashboard />;
 
   return <Navigate to="/login" />; // or Unauthorized page
 };

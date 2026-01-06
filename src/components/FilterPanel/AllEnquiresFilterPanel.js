@@ -26,6 +26,7 @@ export default function AllEnquiresFilterPanel({
   setSelectedServiceName,
   onApplyFilters,
   onRemoveFilter,
+  userRole,
 }) {
   const [searchParams] = useSearchParams();
   const [showFilters, setShowFilters] = useState(false);
@@ -39,10 +40,36 @@ export default function AllEnquiresFilterPanel({
 
   const fetchStaff = async () => {
     try {
-      const res = await authAxios().get("/staff/list?role=FOH");
-      const data = res.data?.data || [];
-      const activeStaff = data.filter((item) => item.status === "ACTIVE");
-      setStaffList(activeStaff);
+      const requests = [authAxios().get("/staff/list?role=FOH")];
+
+      if (userRole === "CLUB_MANAGER" || userRole === "ADMIN") {
+        requests.push(authAxios().get("/staff/list?role=CLUB_MANAGER"));
+      }
+
+      const responses = await Promise.all(requests);
+
+      let mergedData = [];
+
+      responses.forEach((res) => {
+        const role = res.config.url.includes("FOH") ? "FOH" : "CLUB_MANAGER";
+
+        const users = (res.data?.data || []).map((user) => ({
+          ...user,
+          role,
+        }));
+
+        mergedData.push(...users);
+      });
+
+      const uniqueData = Array.from(
+        new Map(mergedData.map((user) => [user.id, user])).values()
+      );
+
+      const activeOnly = filterActiveItems(uniqueData);
+
+      console.log(activeOnly,'activeOnly')
+
+      setStaffList(activeOnly);
     } catch (err) {
       console.error(err);
       toast.error("Failed to fetch staff");
@@ -86,8 +113,28 @@ export default function AllEnquiresFilterPanel({
   const leadsSources = lists["LEAD_SOURCE"] || [];
   const lastCallStatusOptions = lists["LEAD_CALL_STATUS"] || [];
   const leadServiceOptions = lists["GOAL"] || [];
-  const leadOwnerOptions =
-    staffList.map((item) => ({ label: item.name, value: item.id })) || [];
+  // const leadOwnerOptions =
+  //   staffList.map((item) => ({ label: item.name, value: item.id })) || [];
+  const leadOwnerOptions = [
+    {
+      label: "FOH",
+      options: staffList
+        .filter((user) => user.role === "FOH")
+        .map((user) => ({
+          value: user.id,
+          label: user.name,
+        })),
+    },
+    {
+      label: "CLUB MANAGER",
+      options: staffList
+        .filter((user) => user.role === "CLUB_MANAGER")
+        .map((user) => ({
+          value: user.id,
+          label: user.name,
+        })),
+    },
+  ].filter((group) => group.options.length > 0); // remove empty groups
   const genderOptions = [
     { value: "MALE", label: "Male" },
     { value: "FEMALE", label: "Female" },

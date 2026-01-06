@@ -48,6 +48,7 @@ export default function MemberFilterPanel({
   setFilterGender,
   onApplyFilters,
   onRemoveFilter,
+  userRole,
 }) {
   const [showFilters, setShowFilters] = useState(false);
   const panelRef = useRef(null);
@@ -59,36 +60,50 @@ export default function MemberFilterPanel({
 
   const [appliedFilters, setAppliedFilters] = useState({});
 
-  const fetchStaff = async () => {
+  const fetchTrainer = async () => {
     try {
-      // Separate API calls for trainers and FOH staff
-      const trainerUrl = "/staff/list?role=TRAINER";
-      const fohUrl = "/staff/list?role=FOH";
-
-      // Make concurrent API calls to fetch data
-      const [trainerRes, fohRes] = await Promise.all([
-        authAxios().get(trainerUrl), // Fetch trainers
-        authAxios().get(fohUrl), // Fetch FOH staff
-      ]);
-
-      // Extract data from responses
-      const trainerData = trainerRes.data?.data || trainerRes?.data || [];
-      const fohData = fohRes.data?.data || fohRes?.data || [];
-
-      // Filter only active staff
-      const activeTrainers = trainerData.filter(
-        (item) => item?.status === "ACTIVE"
-      );
-      const activeFohStaff = fohData.filter(
-        (item) => item?.status === "ACTIVE"
-      );
-
-      // Update state
-      setTrainerList(activeTrainers);
-      setStaffList(activeFohStaff);
+      const res = await authAxios().get("/staff/list?role=TRAINER");
+      const data = res.data?.data || [];
+      const activeStaff = data.filter((item) => item.status === "ACTIVE");
+      setTrainerList(activeStaff);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch club staff.");
+      toast.error("Failed to fetch trainer");
+    }
+  };
+
+  const fetchStaffList = async () => {
+    try {
+      const requests = [authAxios().get("/staff/list?role=FOH")];
+
+      if (userRole === "CLUB_MANAGER" || userRole === "ADMIN") {
+        requests.push(authAxios().get("/staff/list?role=CLUB_MANAGER"));
+      }
+
+      const responses = await Promise.all(requests);
+
+      let mergedData = [];
+
+      responses.forEach((res) => {
+        const role = res.config.url.includes("FOH") ? "FOH" : "CLUB_MANAGER";
+
+        const users = (res.data?.data || []).map((user) => ({
+          ...user,
+          role,
+        }));
+
+        mergedData.push(...users);
+      });
+
+      const uniqueData = Array.from(
+        new Map(mergedData.map((user) => [user.id, user])).values()
+      );
+
+      const activeOnly = filterActiveItems(uniqueData);
+      setStaffList(activeOnly);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to fetch staff");
     }
   };
 
@@ -119,7 +134,8 @@ export default function MemberFilterPanel({
   };
 
   useEffect(() => {
-    fetchStaff();
+    fetchTrainer();
+    fetchStaffList();
     fetchService();
     fetchClub();
   }, []);
@@ -144,11 +160,33 @@ export default function MemberFilterPanel({
   // Extract Redux lists
   const leadsSources = lists["LEAD_SOURCE"] || [];
   const leadServiceOptions = lists["GOAL"] || [];
-  const leadOwnerOptions =
-    staffList?.map((item) => ({
-      label: item.name,
-      value: item.id,
-    })) || [];
+  // const leadOwnerOptions =
+  //   staffList?.map((item) => ({
+  //     label: item.name,
+  //     value: item.id,
+  //   })) || [];
+
+  const leadOwnerOptions = [
+    {
+      label: "FOH",
+      options: staffList
+        .filter((user) => user.role === "FOH")
+        .map((user) => ({
+          value: user.id,
+          label: user.name,
+        })),
+    },
+    {
+      label: "CLUB MANAGER",
+      options: staffList
+        .filter((user) => user.role === "CLUB_MANAGER")
+        .map((user) => ({
+          value: user.id,
+          label: user.name,
+        })),
+    },
+  ].filter((group) => group.options.length > 0); // remove empty groups
+
   const trainerOptions =
     trainerList?.map((item) => ({
       label: item.name,
