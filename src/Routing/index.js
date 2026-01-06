@@ -94,10 +94,34 @@ import FaqCategoryList from "../components/FaqCategory/FaqCategoryList";
 import FaqsList from "../components/FaqsList/FaqsList";
 import FohDashboard from "../Pages/FohDashboard";
 import RenewalReport from "../components/Reports/OperationsReports/RenewalReport";
+import ChallengeParticipantsList from "../components/ChallengeParticipants/ChallengeParticipantsList";
+import NotificationModule from "../components/Marketing/NotificationModule";
+import MarketingManagerDashboard from "../Pages/MarketingManagerDashboard";
+import LeadSourcePerformance from "../components/Reports/MarketingReports/LeadSourcePerformance";
+import ThriveCoinsUsage from "../components/Reports/MarketingReports/ThriveCoinsUsage";
+import CustomerSegmentationReport from "../components/Reports/MarketingReports/CustomerSegmentationReport";
+import DiscountCodesPerformance from "../components/Reports/MarketingReports/DiscountCodesPerformance";
+import EngagementTrackingReport from "../components/Reports/MarketingReports/EngagementTrackingReport";
+import EmailAutomationReport from "../components/Reports/MarketingReports/EmailAutomationReport";
+import SMSDeliveryReport from "../components/Reports/MarketingReports/SMSDeliveryReport";
+import EventCommunityEngagement from "../components/Reports/MarketingReports/EventCommunityEngagement";
+import EmailList from "../components/Reports/MarketingReports/EmailList";
+import SmsList from "../components/Reports/MarketingReports/SmsList";
+import NotificationList from "../components/Reports/MarketingReports/NotificationList";
+
+
+const RoleBasedHome = () => {
+  const userType = useSelector((state) => state.auth?.user?.role);
+
+  if (userType === "ADMIN") return <Home />;
+  if (userType === "MARKETING_MANAGER") return <MarketingManagerDashboard />;
+
+  return <Navigate to="/login" />; // or Unauthorized page
+};
 
 export default function Routing() {
   const { accessToken } = useSelector((state) => state.auth);
-  const userType = useSelector((state) => state.auth?.user?.userType);
+
 
   if (!accessToken) {
     return (
@@ -120,14 +144,16 @@ export default function Routing() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/set-password" element={<SetPassword />} />
 
+        
         <Route
           path="/"
           element={
             <PrivateRoute>
-              <Home />
+              <RoleBasedHome />
             </PrivateRoute>
           }
         />
+
         <Route
           path="/all-leads"
           element={
@@ -265,6 +291,22 @@ export default function Routing() {
             </PrivateRoute>
           }
         />
+        {/* <Route
+          path="/challenge-participants-list"
+          element={
+            <PrivateRoute>
+              <ChallengeParticipantsList />
+            </PrivateRoute>
+          }
+        /> */}
+        <Route
+          path="/challenge-participants-list/:id"
+          element={
+            <PrivateRoute>
+              <ChallengeParticipantsList />
+            </PrivateRoute>
+          }
+        />
         <Route
           path="/on-boarding-list"
           element={
@@ -394,6 +436,14 @@ export default function Routing() {
           }
         />
         <Route
+          path="/send-mail-list/:id"
+          element={
+            <PrivateRoute>
+              <EmailModule />
+            </PrivateRoute>
+          }
+        />
+        <Route
           path="/email-template-list/"
           element={
             <PrivateRoute>
@@ -426,10 +476,42 @@ export default function Routing() {
           }
         />
         <Route
-          path="/send-sms-list/"
+          path="/reports/marketing-reports/send-sms-list/"
           element={
             <PrivateRoute>
               <SmsModule />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/reports/marketing-reports/send-sms-list/:id"
+          element={
+            <PrivateRoute>
+              <SmsModule />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/reports/marketing-reports/notification-list/"
+          element={
+            <PrivateRoute>
+              <NotificationList />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/reports/marketing-reports/send-notification/"
+          element={
+            <PrivateRoute>
+              <NotificationModule />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/reports/marketing-reports/send-notification/:id"
+          element={
+            <PrivateRoute>
+              <NotificationModule />
             </PrivateRoute>
           }
         />
@@ -458,6 +540,14 @@ export default function Routing() {
           }
         />
         <Route
+          path="/marketing-manager/"
+          element={
+            <PrivateRoute>
+              <MarketingManagerDashboard />
+            </PrivateRoute>
+          }
+        />
+        <Route
           path="/foh-dashboard/"
           element={
             <PrivateRoute>
@@ -474,7 +564,7 @@ export default function Routing() {
           }
         />
         <Route
-          path="/reports/products-sold/"
+          path="/reports/products-sold"
           element={
             <PrivateRoute>
               <ProductsSold />
@@ -533,7 +623,7 @@ export default function Routing() {
           }
         />
         <Route
-          path="/reports/sales-reports/group-classes-utilization-report/"
+          path="/reports/sales-reports/group-classes-report/"
           element={
             <PrivateRoute>
               <GroupClassesUtilizationReport />
@@ -689,6 +779,86 @@ export default function Routing() {
           element={
             <PrivateRoute>
               <RenewalReport />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/reports/marketing-reports/lead-source-performance"
+          element={
+            <PrivateRoute>
+              <LeadSourcePerformance />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/reports/marketing-reports/thrive-coins-usage"
+          element={
+            <PrivateRoute>
+              <ThriveCoinsUsage />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/reports/marketing-reports/customer-segmentation-report"
+          element={
+            <PrivateRoute>
+              <CustomerSegmentationReport />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/reports/marketing-reports/discount-codes-performance"
+          element={
+            <PrivateRoute>
+              <DiscountCodesPerformance />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/reports/marketing-reports/engagement-tracking-report"
+          element={
+            <PrivateRoute>
+              <EngagementTrackingReport />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/reports/marketing-reports/email-list"
+          element={
+            <PrivateRoute>
+              <EmailList />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/reports/marketing-reports/email-automation-report"
+          element={
+            <PrivateRoute>
+              <EmailAutomationReport />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/reports/marketing-reports/sms-delivery-report"
+          element={
+            <PrivateRoute>
+              <SMSDeliveryReport />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/reports/marketing-reports/sms-list"
+          element={
+            <PrivateRoute>
+              <SmsList />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/reports/marketing-reports/event-community-engagement"
+          element={
+            <PrivateRoute>
+              <EventCommunityEngagement />
             </PrivateRoute>
           }
         />

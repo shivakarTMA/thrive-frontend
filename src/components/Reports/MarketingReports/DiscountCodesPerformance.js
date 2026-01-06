@@ -27,7 +27,7 @@ const formatDate = (date) => {
   return date.toISOString().split("T")[0]; // YYYY-MM-DD
 };
 
-const NewJoineesReport = () => {
+const DiscountCodesPerformance = () => {
   const [leadSource, setLeadSource] = useState([]);
   const [clubList, setClubList] = useState([]);
   const [clubFilter, setClubFilter] = useState(null);
@@ -64,7 +64,7 @@ const NewJoineesReport = () => {
     value: item.id,
   }));
 
-  const fetchLeadSourcePerformance = async () => {
+  const fetchDiscountCodesPerformance = async () => {
     try {
       const params = {};
 
@@ -83,9 +83,10 @@ const NewJoineesReport = () => {
         params.dateFilter = dateFilter.value;
       }
 
-      const res = await authAxios().get("/marketing/report/newjoinee", {
-        params,
-      });
+      const res = await authAxios().get(
+        "/marketing/report/discount/codes/performance",
+        { params }
+      );
       const responseData = res.data;
       const data = responseData?.data || [];
 
@@ -99,13 +100,13 @@ const NewJoineesReport = () => {
     // If custom date is selected, wait for both dates
     if (dateFilter?.value === "custom") {
       if (customFrom && customTo) {
-        fetchLeadSourcePerformance();
+        fetchDiscountCodesPerformance();
       }
       return;
     }
 
     // For all non-custom filters
-    fetchLeadSourcePerformance();
+    fetchDiscountCodesPerformance();
   }, [dateFilter, customFrom, customTo, clubFilter]);
 
   return (
@@ -113,8 +114,10 @@ const NewJoineesReport = () => {
       {/* Header */}
       <div className="flex items-end justify-between gap-2 mb-5">
         <div className="title--breadcrumbs">
-          <p className="text-sm">{`Home >  Reports > Sales Reports > New Joinees Report`}</p>
-          <h1 className="text-3xl font-semibold">New Joinees Report</h1>
+          <p className="text-sm">
+            {`Home > Reports > Marketing Reports > Discount Codes Performance`}
+          </p>
+          <h1 className="text-3xl font-semibold">Discount Codes Performance</h1>
         </div>
       </div>
 
@@ -199,71 +202,67 @@ const NewJoineesReport = () => {
           <table className="w-full text-sm text-left text-gray-500">
             <thead className="text-xs text-gray-700 uppercase bg-gray-50">
               <tr>
-                <th className="px-2 py-4 min-w-[50px]">S.no</th>
-                <th className="px-2 py-4 min-w-[150px]">Club Name</th>
-                <th className="px-2 py-4 min-w-[100px]">Member ID</th>
-                <th className="px-2 py-4 min-w-[150px]">Member Name</th>
-                <th className="px-2 py-4 min-w-[150px]">Service Type</th>
-                <th className="px-2 py-4 min-w-[130px]">Sevice Name</th>
-                <th className="px-2 py-4 min-w-[140px]">Invoice ID</th>
-                <th className="px-2 py-4 min-w-[130px]">Purchase Date</th>
-                <th className="px-2 py-4 min-w-[120px]">Start Date</th>
-                <th className="px-2 py-4 min-w-[120px]">End Date</th>
-                <th className="px-2 py-4 min-w-[120px]">Lead Source</th>
-                <th className="px-2 py-4 min-w-[150px]">Sales Rep Name</th>
-                <th className="px-2 py-4 min-w-[100px]">Bill Type</th>
-                <th className="px-2 py-4 min-w-[100px]">Bill Amount</th>
+                <th className="px-2 py-4">S.No</th>
+                <th className="px-2 py-4">Discount Code</th>
+                <th className="px-2 py-4">Discount</th>
+                <th className="px-2 py-4">Product Type</th>
+                <th className="px-2 py-4">Product Name</th>
                 <th className="px-2 py-4">Status</th>
+                <th className="px-2 py-4">Start Date</th>
+                <th className="px-2 py-4">End Date</th>
+                <th className="px-2 py-4">Transactions</th>
+                <th className="px-2 py-4">Revenue</th>
               </tr>
             </thead>
 
             <tbody>
               {leadSource.length ? (
-                leadSource.map((row, index) => (
+                leadSource.map((item, index) => (
                   <tr
                     key={index}
                     className="bg-white border-b hover:bg-gray-50"
                   >
-                    <td className="px-2 py-4">{index + 1}</td>
-                    <td className="px-2 py-4">{row.club_name || "--"}</td>
-                    <td className="px-2 py-4">
-                      {row.membership_number || "--"}
+                    <td className="px-2 py-3">{index + 1}</td>
+                    <td className="px-2 py-3">{item.discount_code}</td>
+                    <td className="px-2 py-3">
+                      {item?.discount_type === "FIXED" && "₹"}
+                      {formatIndianNumber(item?.discount_value)}
+                      {item?.discount_type === "PERCENTAGE" && "%"}
                     </td>
-                    <td className="px-2 py-4">{row.member_name || "--"}</td>
-                    <td className="px-2 py-4">
-                      {formatText(row.service_type) || "--"}
-                    </td>
-                    <td className="px-2 py-4">{row.service_name || "--"}</td>
-                    <td className="px-2 py-4">{row.invoice_id || "--"}</td>
-                    <td className="px-2 py-4">
-                      {formatAutoDate(row.purchase_date) || "--"}
-                    </td>
-                    <td className="px-2 py-4">
-                      {formatAutoDate(row.start_date) || "--"}
-                    </td>
-                    <td className="px-2 py-4">
-                      {formatAutoDate(row.end_date) || "--"}
-                    </td>
-                    <td className="px-2 py-4">{row.lead_source || "--"}</td>
-                    <td className="px-2 py-4">{row.sales_rep_name || "--"}</td>
-                    <td className="px-2 py-4">{row.bill_type || "--"}</td>
-                    <td className="px-2 py-4">₹{formatIndianNumber(row.booking_amount) || 0}</td>
-                    <td className="px-2 py-4">
+                    <td className="px-2 py-3">{item.product_type}</td>
+                    <td className="px-2 py-3">{item.product_name}</td>
+                    <td className="px-2 py-3">
                       <span
                         className={`flex items-center justify-between gap-1 rounded-full min-h-[30px] px-3 text-sm w-fit ${
-                          row?.status !== "ACTIVE"
-                            ? "bg-[#EEEEEE]"
-                            : "bg-[#E8FFE6] text-[#138808]"
-                        }`}
+                          item?.status === "ACTIVE"
+                            ? "bg-[#E8FFE6] text-[#138808]"
+                            : item?.status === "INACTIVE"
+                            ? "bg-[#EEEEEE] text-[#666666]"
+                            : item?.status === "EXPIRED"
+                            ? "bg-[#FFE8E8] text-[#D32F2F]"
+                            : ""
+                        }
+                                            `}
                       >
-                        <FaCircle className="text-[10px]" /> {row?.status}
+                        <FaCircle className="text-[10px]" />{" "}
+                        {formatText(item?.status)}
                       </span>
+                    </td>
+                    <td className="px-2 py-3">
+                      {formatAutoDate(item.start_date)}
+                    </td>
+                    <td className="px-2 py-3">
+                      {formatAutoDate(item.end_date)}
+                    </td>
+                    <td className="px-2 py-3">{item.number_of_transactions}</td>
+                    <td className="px-2 py-3">
+                      ₹{formatIndianNumber(item.revenue_generated)}
                     </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan={6} className="text-center py-4">
+                  <td colSpan={10} className="text-center py-4">
                     No data found
                   </td>
                 </tr>
@@ -276,4 +275,4 @@ const NewJoineesReport = () => {
   );
 };
 
-export default NewJoineesReport;
+export default DiscountCodesPerformance;

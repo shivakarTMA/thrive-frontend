@@ -336,3 +336,11 @@ export const filterActiveItems = (data) => {
     (item) => String(item?.status || "").toUpperCase() === "ACTIVE"
   );
 };
+
+export const formatIndianNumber = (value) => {
+  const number = Number(value);
+
+  if (isNaN(number)) return 0; // or return "-" if you prefer
+
+  return new Intl.NumberFormat("en-IN").format(number);
+};

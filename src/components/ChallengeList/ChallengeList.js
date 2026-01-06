@@ -5,6 +5,7 @@ import { LiaEdit } from "react-icons/lia";
 import ChallengeForm from "./ChallengeForm";
 import {
   customStyles,
+  filterActiveItems,
   formatDateTimeLead,
   formatText,
 } from "../../Helper/helper";
@@ -15,6 +16,8 @@ import { useFormik } from "formik";
 import * as Yup from "yup";
 import { FaCircle } from "react-icons/fa";
 import Select from "react-select";
+import { IoCheckboxOutline, IoEyeOutline } from "react-icons/io5";
+import { Link } from "react-router-dom";
 
 const statusColors = {
   ACTIVE: "bg-[#D1FADF] text-[#027A48]", // green
@@ -46,11 +49,37 @@ const ChallengeList = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [typeFilter, setTypeFilter] = useState(null);
   const [statusFilter, setStatusFilter] = useState(null);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [selectedChallenge, setSelectedChallenge] = useState({
+    id: null,
+    name: "",
+  });
+
+  const [clubList, setClubList] = useState([]);
+  const [clubFilter, setClubFilter] = useState(null);
 
   const [page, setPage] = useState(1);
   const [rowsPerPage] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
+
+  // Function to fetch club list
+  const fetchClub = async (search = "") => {
+    try {
+      const response = await authAxios().get("/club/list", {
+        params: search ? { search } : {},
+      });
+      const data = response.data?.data || [];
+      const activeOnly = filterActiveItems(data);
+      if (activeOnly.length === 1) {
+        setClubFilter(activeOnly[0].id);
+      }
+      setClubList(activeOnly);
+    } catch (error) {
+      toast.error("Failed to fetch clubs");
+    }
+  };
+  // Function to fetch role list
 
   const fetchChallengeList = async (search = "", currentPage = page) => {
     try {
@@ -61,6 +90,7 @@ const ChallengeList = () => {
           ...(search ? { search } : {}),
           ...(typeFilter ? { challenge_type: typeFilter } : {}),
           ...(statusFilter ? { status: statusFilter } : {}),
+          ...(clubFilter ? { club_id: clubFilter } : {}),
         },
       });
 
@@ -77,8 +107,14 @@ const ChallengeList = () => {
   };
 
   useEffect(() => {
+    fetchClub();
     fetchChallengeList();
   }, []);
+
+  const clubOptions = clubList.map((item) => ({
+    label: item.name,
+    value: item.id,
+  }));
 
   useEffect(() => {
     const delayDebounce = setTimeout(() => {
@@ -110,10 +146,10 @@ const ChallengeList = () => {
       about_challenge: "",
       join_in_between: null,
       position: "",
-      winning_caption_heading:"",
-      winning_caption_subheading:"",
-      progress_caption_heading:"",
-      progress_caption_subheading:"",
+      winning_caption_heading: "",
+      winning_caption_subheading: "",
+      progress_caption_heading: "",
+      progress_caption_subheading: "",
       // status: "UPCOMING",
     },
 
@@ -148,10 +184,18 @@ const ChallengeList = () => {
         "Challenge Essentials is required"
       ),
       position: Yup.string().required("Position is required"),
-      winning_caption_heading: Yup.string().required("Winning caption heading is required"),
-      winning_caption_subheading: Yup.string().required("Winning caption subheading is required"),
-      progress_caption_heading: Yup.string().required("Progress caption heading is required"),
-      progress_caption_subheading: Yup.string().required("Progress caption subheading is required"),
+      winning_caption_heading: Yup.string().required(
+        "Winning caption heading is required"
+      ),
+      winning_caption_subheading: Yup.string().required(
+        "Winning caption subheading is required"
+      ),
+      progress_caption_heading: Yup.string().required(
+        "Progress caption heading is required"
+      ),
+      progress_caption_subheading: Yup.string().required(
+        "Progress caption subheading is required"
+      ),
     }),
 
     onSubmit: async (values, { resetForm }) => {
@@ -193,6 +237,24 @@ const ChallengeList = () => {
       }
     },
   });
+
+  const handleMarkCompleted = async () => {
+    try {
+      await authAxios().put(`/challenge/${selectedChallenge.id}`, {
+        status: "COMPLETED",
+      });
+
+      toast.success(
+        `"${selectedChallenge.name}" marked as completed successfully!`
+      );
+      setShowConfirmModal(false);
+      setSelectedChallenge({ id: null, name: "" });
+      fetchChallengeList(); // refresh table
+    } catch (error) {
+      toast.error("Failed to update challenge status");
+      console.error(error);
+    }
+  };
 
   useEffect(() => {
     const { start_date_time, end_date_time } = formik.values;
@@ -258,6 +320,16 @@ const ChallengeList = () => {
             styles={customStyles}
           />
         </div>
+        <div className="w-fit min-w-[200px]">
+          <Select
+            placeholder="Filter by club"
+            value={clubOptions.find((o) => o.value === clubFilter) || null}
+            options={clubOptions}
+            onChange={(option) => setClubFilter(option?.value)}
+            styles={customStyles}
+            className="w-full"
+          />
+        </div>
       </div>
 
       <div className="box--shadow bg-white rounded-[15px] p-4">
@@ -273,6 +345,7 @@ const ChallengeList = () => {
                 <th className="px-2 py-4">Start Dates</th>
                 <th className="px-2 py-4">End Dates</th>
                 <th className="px-2 py-4">Duration</th>
+                <th className="px-2 py-4">Total Participants</th>
                 <th className="px-2 py-4">Status</th>
                 <th className="px-2 py-4">Action</th>
               </tr>
@@ -312,6 +385,11 @@ const ChallengeList = () => {
                     </td>
                     <td className="px-2 py-4">{item?.duration_days} Days</td>
                     <td className="px-2 py-4">
+                      {item?.total_participants
+                        ? item?.total_participants
+                        : "--"}
+                    </td>
+                    <td className="px-2 py-4">
                       <span
                         className={`flex items-center gap-1 rounded-full min-h-[30px] px-3 text-sm w-fit 
                           ${statusColors[item?.status] || "bg-[#EEEEEE]"}`}
@@ -321,21 +399,74 @@ const ChallengeList = () => {
                       </span>
                     </td>
                     <td className="px-2 py-4">
-                      <Tooltip
-                        id={`tooltip-edit-${item.id}`}
-                        content="Edit Challenge"
-                        place="left"
-                      >
-                        <div
-                          className="p-1 cursor-pointer"
-                          onClick={() => {
-                            setEditingOption(item.id);
-                            setShowModal(true);
-                          }}
+                      <div className="flex items-center">
+                        <Tooltip
+                          id={`tooltip-view-${item.id}`}
+                          content={
+                            item?.status === "ONGOING" ||
+                            item?.status === "COMPLETED"
+                              ? item?.total_participants > 0
+                                ? "View Participants"
+                                : "No participants yet"
+                              : "Challenge not started"
+                          }
+                          place="left"
                         >
-                          <LiaEdit className="text-[25px] text-black" />
-                        </div>
-                      </Tooltip>
+                          <Link
+                            to={`/challenge-participants-list/${item.id}`}
+                            className={`p-1 cursor-pointer ${
+                              item?.status === "ONGOING" ||
+                              item?.status === "COMPLETED"
+                                ? item?.total_participants > 0
+                                  ? ""
+                                  : "opacity-[0.5] pointer-events-none"
+                                : "opacity-[0.5] pointer-events-none"
+                            }`}
+                          >
+                            <IoEyeOutline className="text-[25px] text-black" />
+                          </Link>
+                        </Tooltip>
+
+                        <Tooltip
+                          id={`tooltip-status-${item.id}`}
+                          content={`${
+                            item?.status === "ONGOING" ? "Mark Completed" : ""
+                          }`}
+                          place="left"
+                        >
+                          <div
+                            className={`p-1 cursor-pointer ${
+                              item?.status === "ONGOING"
+                                ? ""
+                                : "opacity-[0.5] pointer-events-none"
+                            }`}
+                            onClick={() => {
+                              setSelectedChallenge({
+                                id: item.id,
+                                name: item.name,
+                              });
+                              setShowConfirmModal(true);
+                            }}
+                          >
+                            <IoCheckboxOutline className="text-[25px] text-black" />
+                          </div>
+                        </Tooltip>
+                        <Tooltip
+                          id={`tooltip-edit-${item.id}`}
+                          content="Edit Challenge"
+                          place="left"
+                        >
+                          <div
+                            className="p-1 cursor-pointer"
+                            onClick={() => {
+                              setEditingOption(item.id);
+                              setShowModal(true);
+                            }}
+                          >
+                            <LiaEdit className="text-[25px] text-black" />
+                          </div>
+                        </Tooltip>
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -363,6 +494,43 @@ const ChallengeList = () => {
           editingOption={editingOption}
           formik={formik}
         />
+      )}
+
+      {showConfirmModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-[380px]">
+            <h3 className="text-lg font-semibold mb-2">
+              Mark Challenge as Completed
+            </h3>
+
+            <p className="text-sm text-gray-600 mb-4">
+              Are you sure you want to mark{" "}
+              <span className="font-semibold text-black">
+                {selectedChallenge.name}
+              </span>{" "}
+              as completed?
+            </p>
+
+            <div className="flex justify-end gap-3">
+              <button
+                className="px-4 py-2 border rounded-md"
+                onClick={() => {
+                  setShowConfirmModal(false);
+                  setSelectedChallenge({ id: null, name: "" });
+                }}
+              >
+                Cancel
+              </button>
+
+              <button
+                className="px-4 py-2 bg-black text-white rounded-md"
+                onClick={handleMarkCompleted}
+              >
+                Yes, Complete
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

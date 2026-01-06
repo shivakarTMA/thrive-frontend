@@ -328,7 +328,11 @@ const CouponsList = () => {
                     <td className="px-2 py-4">
                       {formatText(item?.discount_type)}
                     </td>
-                    <td className="px-2 py-4">{item?.discount_value}</td>
+                    <td className="px-2 py-4">
+                      {item?.discount_type === "FIXED" && ("₹")}
+                      {item?.discount_value}
+                      {item?.discount_type === "PERCENTAGE" && ("%")}
+                      </td>
                     <td className="px-2 py-4">
                       <span
                         className={`flex items-center justify-between gap-1 rounded-full min-h-[30px] px-3 text-sm w-fit ${

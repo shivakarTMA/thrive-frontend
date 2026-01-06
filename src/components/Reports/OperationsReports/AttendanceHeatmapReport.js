@@ -33,6 +33,9 @@ const AttendanceHeatmapReport = () => {
       });
       const data = response.data?.data || [];
       const activeOnly = filterActiveItems(data);
+      if (activeOnly.length === 1) {
+        setClubFilter(activeOnly[0].id);
+      }
       setClubList(activeOnly);
     } catch (error) {
       toast.error("Failed to fetch clubs");
@@ -63,14 +66,14 @@ const AttendanceHeatmapReport = () => {
 
       {/* Date Range Picker and Buttons */}
       <div className="flex items-center gap-3 mb-4">
-        <div className="w-full max-w-[200px]">
+        <div className="w-fit min-w-[200px]">
           <Select
             placeholder="Filter by club"
             value={clubOptions.find((o) => o.value === clubFilter) || null}
             options={clubOptions}
             onChange={(option) => setClubFilter(option?.value)}
-            isClearable
             styles={customStyles}
+            className="w-full"
           />
         </div>
 
@@ -78,7 +81,10 @@ const AttendanceHeatmapReport = () => {
           <FaCalendarDays className="absolute z-[1] mt-[11px] ml-[15px]" />
           <DatePicker
             selected={customFrom}
-            onChange={setCustomFrom}
+            onChange={(date) => {
+              setCustomFrom(date);
+              setCustomTo(null); // ✅ reset To Date if From Date changes
+            }}
             placeholderText="From Date"
             className="custom--input w-full input--icon"
             dateFormat="dd-MM-yyyy"
@@ -98,11 +104,12 @@ const AttendanceHeatmapReport = () => {
             placeholderText="To Date"
             className="custom--input w-full input--icon"
             dateFormat="dd-MM-yyyy"
-            minDate={subYears(new Date(), 20)}
+            minDate={customFrom || subYears(new Date(), 20)}
             maxDate={addYears(new Date(), 0)}
             showMonthDropdown
             showYearDropdown
             dropdownMode="select"
+            disabled={!customFrom}
           />
         </div>
 
@@ -110,9 +117,9 @@ const AttendanceHeatmapReport = () => {
           Go
         </button>
 
-        <button className="bg-black text-white font-semibold py-2 px-4 rounded">
+        {/* <button className="bg-black text-white font-semibold py-2 px-4 rounded">
           Export Excel
-        </button>
+        </button> */}
       </div>
 
       {/* Attendance Table */}

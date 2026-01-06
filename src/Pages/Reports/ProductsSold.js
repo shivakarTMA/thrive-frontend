@@ -5,20 +5,19 @@ import { addYears, subYears } from "date-fns";
 import { FaCalendarDays } from "react-icons/fa6";
 import { customStyles } from "../../Helper/helper";
 import Select from "react-select";
-import TrialAppointmentPanel from "../../components/FilterPanel/TrialAppointmentPanel";
+import ProductSoldPanel from "../../components/FilterPanel/ProductSoldPanel";
 import { productsSold } from "../../DummyData/DummyData";
 import { useLocation } from "react-router-dom";
 import {
   parse,
   isWithinInterval,
-  startOfToday,
   startOfMonth,
   subDays,
   startOfDay,
   endOfDay,
 } from "date-fns";
+import { useFormik } from "formik";
 
-// Date filter dropdown options
 const dateFilterOptions = [
   { value: "today", label: "Today" },
   { value: "last_7_days", label: "Last 7 Days" },
@@ -27,34 +26,24 @@ const dateFilterOptions = [
 ];
 
 const ProductsSold = () => {
-  const [data, setData] = useState(productsSold);
+  const location = useLocation();
   const [dateFilter, setDateFilter] = useState(dateFilterOptions[1]);
   const [customFrom, setCustomFrom] = useState(null);
   const [customTo, setCustomTo] = useState(null);
 
-  const location = useLocation();
-
-  useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const filterValue = params.get("date");
-    const customFromValue = params.get("customFrom");
-    const customToValue = params.get("customTo");
-
-    if (filterValue) {
-      const matchedOption = dateFilterOptions.find(
-        (option) => option.value === filterValue
-      );
-      if (matchedOption) {
-        setDateFilter(matchedOption);
-      }
-    }
-    if (customFromValue) {
-      setCustomFrom(customFromValue);
-    }
-    if (customToValue) {
-      setCustomTo(customToValue);
-    }
-  }, [location.search]);
+  const formik = useFormik({
+    enableReinitialize: true,
+    initialValues: {
+      filterClub: null,
+      filterBillType: null,
+      filterServiceType: null,
+      filterServiceName: null,
+      filterLeadSource: null,
+    },
+    onSubmit: (values) => {
+      console.log(values);
+    },
+  });
 
   // Extract query params
   const queryParams = useMemo(() => {
@@ -62,142 +51,207 @@ const ProductsSold = () => {
     return {
       date: params.get("date"),
       status: params.get("status"),
+      bill_type: params.get("bill_type"),
       customFrom: params.get("customFrom"),
       customTo: params.get("customTo"),
+      club_id: params.get("club_id"),
+      service_type: params.get("service_type"),
+      service_name: params.get("service_name"),
+      lead_source: params.get("lead_source"),
     };
   }, [location.search]);
 
-  // State for status filter
-  const [itemStatus, setItemStatus] = useState(null);
-
-  // Auto-apply status filter if in URL
+  // Apply URL params on mount/change
   useEffect(() => {
-    const searchParams = new URLSearchParams(location.search);
-    const statusParam = searchParams.get("status");
-    if (statusParam) {
-      setItemStatus({ value: statusParam, label: statusParam });
+    const params = new URLSearchParams(location.search);
+
+    // Date filter
+    const dateValue = params.get("date");
+    const matchedDate = dateFilterOptions.find(
+      (opt) => opt.value === dateValue
+    );
+    if (matchedDate) {
+      setDateFilter(matchedDate);
     }
+
+    // Custom dates
+    if (params.get("customFrom")) {
+      setCustomFrom(new Date(params.get("customFrom")));
+    }
+    if (params.get("customTo")) {
+      setCustomTo(new Date(params.get("customTo")));
+    }
+
+    // Apply all filter params to Formik
+    formik.setValues({
+      filterClub: params.get("club_id") || null,
+      filterBillType: params.get("bill_type") || null,
+      filterServiceType: params.get("service_type") || null,
+      filterServiceName: params.get("service_name") || null,
+      filterLeadSource: params.get("lead_source") || null,
+    });
   }, [location.search]);
 
-  // Helper function to calculate date range
-  const getDateRangeFromFilter = (filterValue) => {
-    const today = new Date();
+  // Single source of truth for filters
+  const filters = useMemo(
+    () => ({
+      dateType: dateFilter?.value,
+      customFrom,
+      customTo,
+      club: formik.values.filterClub,
+      billType: formik.values.filterBillType,
+      serviceType: formik.values.filterServiceType,
+      serviceName: formik.values.filterServiceName,
+      leadSource: formik.values.filterLeadSource,
+      status: queryParams.status,
+    }),
+    [dateFilter, customFrom, customTo, formik.values, queryParams.status]
+  );
 
-    switch (filterValue) {
-      case "today":
-        return { from: startOfDay(today), to: endOfDay(today) };
-      case "last_7_days":
-        return { from: startOfDay(subDays(today, 6)), to: endOfDay(today) };
-      case "month_till_date":
-        return { from: startOfDay(startOfMonth(today)), to: endOfDay(today) };
-      default:
-        return null;
-    }
-  };
-
-  // Filter data dynamically
-  useEffect(() => {
-    let filteredData = [...productsSold];
-
-    // Handle custom date filter
-    if (dateFilter?.value === "custom") {
-      const from = customFrom ? startOfDay(customFrom) : null;
-      const to = customTo ? endOfDay(customTo) : null;
-
-      if (from && to) {
-        filteredData = filteredData.filter((item) => {
-          const purchaseDate = parse(item.purchaseDate, "dd/MM/yyyy", new Date());
-          return isWithinInterval(purchaseDate, { start: from, end: to });
-        });
-      }
-    } else {
-      const range = getDateRangeFromFilter(dateFilter?.value);
-
-      if (range) {
-        filteredData = filteredData.filter((item) => {
-          const purchaseDate = parse(item.purchaseDate, "dd/MM/yyyy", new Date());
-
-          if (isNaN(purchaseDate)) return false;
-
-          return isWithinInterval(purchaseDate, {
-            start: range.from,
-            end: range.to,
-          });
-        });
-      }
-    }
-
-    // Apply status filter
-    if (queryParams.status) {
-      filteredData = filteredData.filter(
-        (item) =>
-          item.status?.toLowerCase() === queryParams.status?.toLowerCase()
-      );
-    }
-
-    setData(filteredData);
-  }, [dateFilter, queryParams.status, customFrom, customTo]);
-
-  console.log(dateFilter?.value, "dateFilter");
-
-  // Function to calculate stats dynamically
-  const calculateStats = () => {
-    // Get the correct date range for the current date filter
-    const { from, to } = getDateRangeFromFilter(dateFilter?.value) || {
-    from: customFrom ? startOfDay(customFrom) : null,
-    to: customTo ? endOfDay(customTo) : null,
-  };
-
-    console.log("Filtering from:", from);
-    console.log("Filtering to:", to);
-
-    let filteredData = data.filter((item) => {
+  // Single filtering function
+  const applyAllFilters = (data, filters) => {
+    return data.filter((item) => {
       const purchaseDate = parse(item.purchaseDate, "dd/MM/yyyy", new Date());
 
-      console.log("Parsed purchaseDate:", purchaseDate);
-      console.log(
-        "Checking date in range:",
-        isWithinInterval(purchaseDate, { start: from, end: to })
-      );
+      // Check if date parsing failed
+      if (isNaN(purchaseDate.getTime())) {
+        console.warn("Invalid date:", item.purchaseDate);
+        return false;
+      }
 
-      // Check if date is within the range if the range is defined
-      const dateInRange =
-        from && to
-          ? isWithinInterval(purchaseDate, { start: from, end: to })
-          : true;
+      // DATE FILTER
+      // DATE FILTER
+      if (filters.dateType) {
+        let from = null;
+        let to = null;
 
-      return dateInRange // Make sure status exists and is correctly matched
+        const allDates = productsSold
+          .map((i) => parse(i.purchaseDate, "dd/MM/yyyy", new Date()))
+          .filter((d) => !isNaN(d));
+
+        const baseDate = allDates.length
+          ? new Date(Math.max(...allDates))
+          : new Date();
+
+        if (filters.dateType === "today") {
+          from = startOfDay(baseDate);
+          to = endOfDay(baseDate);
+        }
+
+        if (filters.dateType === "last_7_days") {
+          from = startOfDay(subDays(baseDate, 6));
+          to = endOfDay(baseDate);
+        }
+
+        if (filters.dateType === "month_till_date") {
+          from = startOfDay(startOfMonth(baseDate));
+          to = endOfDay(baseDate);
+        }
+
+        if (filters.dateType === "custom") {
+          if (!filters.customFrom || !filters.customTo) return true;
+          from = startOfDay(filters.customFrom);
+          to = endOfDay(filters.customTo);
+        }
+
+        if (from && to) {
+          if (!isWithinInterval(purchaseDate, { start: from, end: to })) {
+            return false;
+          }
+        }
+      }
+
+      // CLUB FILTER
+      if (filters.club && item.clubId !== parseInt(filters.club)) {
+        return false;
+      }
+
+      // BILL TYPE FILTER
+      if (
+        filters.billType &&
+        item.billType?.toLowerCase() !== filters.billType.toLowerCase()
+      ) {
+        return false;
+      }
+
+      // SERVICE TYPE FILTER (match by serviceType field)
+      if (
+        filters.serviceType &&
+        item.serviceType?.toLowerCase() !== filters.serviceType.toLowerCase()
+      ) {
+        return false;
+      }
+
+      // SERVICE NAME FILTER (match by serviceId)
+      if (
+        filters.serviceName &&
+        item.servicesName?.toLowerCase() !== filters.serviceName.toLowerCase()
+      ) {
+        return false;
+      }
+
+      // LEAD SOURCE FILTER
+      if (
+        filters.leadSource &&
+        item.lead_source?.toLowerCase() !== filters.leadSource.toLowerCase()
+      ) {
+        return false;
+      }
+
+      // STATUS FILTER
+      if (
+        filters.status &&
+        item.status?.toLowerCase() !== filters.status.toLowerCase()
+      ) {
+        return false;
+      }
+
+      return true;
     });
-
-    console.log("Filtered Data Length:", filteredData.length);
-
-    const totalCheckIn = filteredData.length;
-    const totalUniqueCheckIn = filteredData.length;
-    const totalUniqueMembers = filteredData.length;
-
-    return { totalCheckIn, totalUniqueCheckIn, totalUniqueMembers };
   };
 
-  // Call stats function
-  const { totalCheckIn, totalUniqueCheckIn, totalUniqueMembers } =
-    calculateStats();
+  // Apply filters to get filtered data
+  const filteredData = useMemo(() => {
+    const result = applyAllFilters(productsSold, filters);
+    console.log("Filtered Data:", result);
+    console.log("Applied Filters:", filters);
+    return result;
+  }, [filters]);
 
-  console.log("Total Check-In: ", totalCheckIn);
-  console.log("Total Unique Check-In: ", totalUniqueCheckIn);
-  console.log("Total Unique No-Show: ", totalUniqueMembers);
+  // Calculate statistics from filtered data
+  const stats = useMemo(() => {
+    const serviceCounts = {
+      Membership: 0,
+      "Personal Training": 0,
+      Pilates: 0,
+      Recovery: 0,
+      Cafe: 0,
+    };
+
+    filteredData.forEach((item) => {
+      const serviceName = item.servicesName;
+      if (serviceCounts.hasOwnProperty(serviceName)) {
+        serviceCounts[serviceName]++;
+      }
+    });
+
+    return {
+      totalRecords: filteredData.length,
+      totalUniqueMembers: new Set(filteredData.map((i) => i.memberId)).size,
+      serviceCounts,
+    };
+  }, [filteredData]);
 
   return (
     <>
       <div className="page--content">
-        {/* Page heading */}
         <div className="flex items-end justify-between gap-2 mb-2">
           <div className="title--breadcrumbs">
-            <p className="text-sm">{`Home >  Reports > Products Sold`}</p>
+            <p className="text-sm">{`Home > Reports > Products Sold`}</p>
             <h1 className="text-3xl font-semibold">Products Sold</h1>
           </div>
         </div>
 
-        {/* Filters */}
         <div className="flex gap-3 mb-4 items-center justify-between">
           <div className="flex gap-2 w-full">
             <div className="max-w-[180px] w-full">
@@ -217,7 +271,6 @@ const ProductsSold = () => {
               />
             </div>
 
-            {/* Custom Date Range */}
             {dateFilter?.value === "custom" && (
               <>
                 <div className="custom--date dob-format flex-1 max-w-[180px] w-full">
@@ -226,12 +279,15 @@ const ProductsSold = () => {
                   </span>
                   <DatePicker
                     selected={customFrom}
-                    onChange={(date) => setCustomFrom(date)}
+                    onChange={(date) => {
+                      setCustomFrom(date);
+                      setCustomTo(null); // ✅ reset To Date if From Date changes
+                    }}
                     placeholderText="From Date"
                     className="custom--input w-full input--icon"
                     minDate={subYears(new Date(), 20)}
                     maxDate={addYears(new Date(), 0)}
-                    dateFormat="dd/MM/yyyy"
+                    dateFormat="dd-MM-yyyy"
                     showMonthDropdown
                     showYearDropdown
                     dropdownMode="select"
@@ -246,12 +302,13 @@ const ProductsSold = () => {
                     onChange={(date) => setCustomTo(date)}
                     placeholderText="To Date"
                     className="custom--input w-full input--icon"
-                    minDate={subYears(new Date(), 20)}
+                    minDate={customFrom || subYears(new Date(), 20)}
                     maxDate={addYears(new Date(), 0)}
                     showMonthDropdown
                     showYearDropdown
                     dropdownMode="select"
-                    dateFormat="dd/MM/yyyy"
+                    dateFormat="dd-MM-yyyy"
+                    disabled={!customFrom}
                   />
                 </div>
               </>
@@ -267,7 +324,7 @@ const ProductsSold = () => {
             </div>
             <div>
               <p className="text-3xl font-bold p-2 text-center py-5">
-                08
+                {stats.serviceCounts.Membership}
               </p>
             </div>
           </div>
@@ -277,7 +334,7 @@ const ProductsSold = () => {
             </div>
             <div>
               <p className="text-3xl font-bold p-2 text-center py-5">
-                15
+                {stats.serviceCounts["Personal Training"]}
               </p>
             </div>
           </div>
@@ -287,7 +344,7 @@ const ProductsSold = () => {
             </div>
             <div>
               <p className="text-3xl font-bold p-2 text-center py-5">
-                15
+                {stats.serviceCounts.Pilates}
               </p>
             </div>
           </div>
@@ -297,7 +354,7 @@ const ProductsSold = () => {
             </div>
             <div>
               <p className="text-3xl font-bold p-2 text-center py-5">
-                05
+                {stats.serviceCounts.Recovery}
               </p>
             </div>
           </div>
@@ -307,19 +364,26 @@ const ProductsSold = () => {
             </div>
             <div>
               <p className="text-3xl font-bold p-2 text-center py-5">
-                25
+                {stats.serviceCounts.Cafe}
               </p>
             </div>
           </div>
         </div>
 
-        {/* Data Table */}
         <div className="w-full p-3 border bg-white shodow--box rounded-[10px]">
           <div className="flex items-start gap-3 justify-between w-full mb-3 border-b border-b-[#D4D4D4] pb-3">
             <div>
-              <TrialAppointmentPanel
-                itemStatus={itemStatus}
-                setItemStatus={setItemStatus}
+              <ProductSoldPanel
+                filterClub={formik.values.filterClub}
+                filterBillType={formik.values.filterBillType}
+                filterServiceType={formik.values.filterServiceType}
+                filterServiceName={formik.values.filterServiceName}
+                filterLeadSource={formik.values.filterLeadSource}
+                formik={formik}
+                setFilterValue={(field, value) =>
+                  formik.setFieldValue(field, value)
+                }
+                queryParams={queryParams}
               />
             </div>
           </div>
@@ -330,57 +394,52 @@ const ProductsSold = () => {
                 <thead className="text-xs text-gray-700 uppercase bg-gray-50">
                   <tr>
                     <th className="px-2 py-4 min-w-[50px]">S.No.</th>
-                    <th className="px-2 py-4 min-w-[120px] max-w-fit">
-                      Purchase date
-                    </th>
-                    <th className="px-2 py-4 min-w-[120px] max-w-fit">Bill Type</th>
-                    <th className="px-2 py-4 min-w-[120px] max-w-fit">
-                      Club Name
-                    </th>
-                    <th className="px-2 py-4 min-w-[120px] max-w-fit">Member ID</th>
-                    <th className="px-2 py-4 min-w-[120px] max-w-fit">
-                      Member Name
-                    </th>
-                    <th className="px-2 py-4 min-w-[120px] max-w-fit">
-                      Service Type
-                    </th>
-                    <th className="px-2 py-4 min-w-[150px] max-w-fit">
-                      Service Name
-                    </th>
-                    <th className="px-2 py-4 min-w-[130px] max-w-fit">
-                      Variation
-                    </th>
-                    <th className="px-2 py-4 min-w-[120px] max-w-fit">
-                      Start Date
-                    </th>
-                    <th className="px-2 py-4 min-w-[120px] max-w-fit">
-                      End Date
-                    </th>
-                    <th className="px-2 py-4 min-w-[120px] max-w-fit">
-                      Lead Owner
-                    </th>
+                    <th className="px-2 py-4 min-w-[120px]">Purchase date</th>
+                    <th className="px-2 py-4 min-w-[120px]">Bill Type</th>
+                    <th className="px-2 py-4 min-w-[120px]">Club Name</th>
+                    <th className="px-2 py-4 min-w-[120px]">Member ID</th>
+                    <th className="px-2 py-4 min-w-[120px]">Member Name</th>
+                    <th className="px-2 py-4 min-w-[120px]">Service Type</th>
+                    <th className="px-2 py-4 min-w-[150px]">Service Name</th>
+                    <th className="px-2 py-4 min-w-[130px]">Variation</th>
+                    <th className="px-2 py-4 min-w-[120px]">Start Date</th>
+                    <th className="px-2 py-4 min-w-[120px]">End Date</th>
+                    <th className="px-2 py-4 min-w-[120px]">Lead Source</th>
+                    <th className="px-2 py-4 min-w-[120px]">Lead Owner</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {data.map((row, idx) => (
-                    <tr
-                      key={row.serialNumber}
-                      className="bg-white border-b hover:bg-gray-50 border-gray-200"
-                    >
-                      <td className="px-2 py-4">{row?.serialNumber}</td>
-                      <td className="px-2 py-4">{row?.purchaseDate}</td>
-                      <td className="px-2 py-4">{row?.billType}</td>
-                      <td className="px-2 py-4">{row?.clubName}</td>
-                      <td className="px-2 py-4">{row?.memberId}</td>
-                      <td className="px-2 py-4">{row?.memberName}</td>
-                      <td className="px-2 py-4">{row?.serviceType}</td>
-                      <td className="px-2 py-4">{row?.servicesName}</td>
-                      <td className="px-2 py-4">{row?.variation}</td>
-                      <td className="px-2 py-4">{row?.startDate}</td>
-                      <td className="px-2 py-4">{row?.endDate}</td>
-                      <td className="px-2 py-4">{row?.leadOwner}</td>
+                  {filteredData.length > 0 ? (
+                    filteredData.map((row, idx) => (
+                      <tr
+                        key={row.serialNumber}
+                        className="bg-white border-b hover:bg-gray-50 border-gray-200"
+                      >
+                        <td className="px-2 py-4">{row?.serialNumber}</td>
+                        <td className="px-2 py-4">{row?.purchaseDate}</td>
+                        <td className="px-2 py-4">{row?.billType}</td>
+                        <td className="px-2 py-4">{row?.clubName}</td>
+                        <td className="px-2 py-4">{row?.memberId}</td>
+                        <td className="px-2 py-4">{row?.memberName}</td>
+                        <td className="px-2 py-4">{row?.serviceType}</td>
+                        <td className="px-2 py-4">{row?.servicesName}</td>
+                        <td className="px-2 py-4">{row?.variation}</td>
+                        <td className="px-2 py-4">{row?.startDate}</td>
+                        <td className="px-2 py-4">{row?.endDate}</td>
+                        <td className="px-2 py-4">{row?.lead_source}</td>
+                        <td className="px-2 py-4">{row?.leadOwner}</td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td
+                        colSpan="13"
+                        className="px-2 py-8 text-center text-gray-500"
+                      >
+                        No data found for the selected filters
+                      </td>
                     </tr>
-                  ))}
+                  )}
                 </tbody>
               </table>
             </div>

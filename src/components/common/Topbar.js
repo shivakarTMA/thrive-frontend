@@ -282,67 +282,72 @@ const Topbar = ({
 
           {/* Right Section */}
           <div className="top--bar--menu flex items-center gap-3">
-            <div className="relative">
-              <img
-                src={quickLinksImg}
-                className="cursor-pointer w-6"
-                onClick={() => toggleDropdown("quicklinks")}
-              />
+            {(user?.role === "CLUB_MANAGER" ||
+              user?.role === "GENERAL_MANAGER" ||
+              user?.role === "ADMIN") && (
+              <>
+                <div className="relative">
+                  <img
+                    src={quickLinksImg}
+                    className="cursor-pointer w-6"
+                    onClick={() => toggleDropdown("quicklinks")}
+                  />
 
-              <DropdownMenu
-                isOpen={activeDropdown === "quicklinks"}
-                onClose={() => setActiveDropdown(null)}
-              >
-                {leadModalPage === "ALLLEAD" ? (
-                  <div
-                    onClick={() => {
-                      setLeadModal(true);
-                      setSelectedLead(null);
-                    }}
-                    className="nav-link flex items-center gap-2 px-3 py-2 hover:bg-black hover:text-white transition border-b cursor-pointer"
+                  <DropdownMenu
+                    isOpen={activeDropdown === "quicklinks"}
+                    onClose={() => setActiveDropdown(null)}
                   >
-                    <IoBarChartOutline className="menu--icon" />
-                    <span className="nav-text">Add Lead</span>
-                  </div>
-                ) : (
-                  <div
-                    onClick={() => {
-                      setLeadTopModal(true);
-                    }}
-                    className="nav-link flex items-center gap-2 px-3 py-2 hover:bg-black hover:text-white transition border-b cursor-pointer"
-                  >
-                    <IoBarChartOutline className="menu--icon" />
-                    <span className="nav-text">Add Lead</span>
-                  </div>
-                )}
+                    {leadModalPage === "ALLLEAD" ? (
+                      <div
+                        onClick={() => {
+                          setLeadModal(true);
+                          setSelectedLead(null);
+                        }}
+                        className="nav-link flex items-center gap-2 px-3 py-2 hover:bg-black hover:text-white transition border-b cursor-pointer"
+                      >
+                        <IoBarChartOutline className="menu--icon" />
+                        <span className="nav-text">Add Lead</span>
+                      </div>
+                    ) : (
+                      <div
+                        onClick={() => {
+                          setLeadTopModal(true);
+                        }}
+                        className="nav-link flex items-center gap-2 px-3 py-2 hover:bg-black hover:text-white transition border-b cursor-pointer"
+                      >
+                        <IoBarChartOutline className="menu--icon" />
+                        <span className="nav-text">Add Lead</span>
+                      </div>
+                    )}
 
-                <div
-                  onClick={() => setMemberModal(true)}
-                  className="nav-link flex items-center gap-2 px-3 py-2 hover:bg-black hover:text-white transition border-b cursor-pointer"
-                >
-                  <FiUsers className="menu--icon" />
-                  <span className="nav-text">Create Member</span>
+                    <div
+                      onClick={() => setMemberModal(true)}
+                      className="nav-link flex items-center gap-2 px-3 py-2 hover:bg-black hover:text-white transition border-b cursor-pointer"
+                    >
+                      <FiUsers className="menu--icon" />
+                      <span className="nav-text">Create Member</span>
+                    </div>
+                    <div
+                      onClick={() => setInvoiceModal(true)}
+                      className="nav-link flex items-center gap-2 px-3 py-2 hover:bg-black hover:text-white transition border-b cursor-pointer"
+                    >
+                      <LiaFileInvoiceSolid className="menu--icon" />
+                      <span className="nav-text">Create Invoice</span>
+                    </div>
+                    <div
+                      {...getRootProps()}
+                      className="nav-link flex items-center gap-2 px-3 py-2 hover:bg-black hover:text-white transition border-b cursor-pointer"
+                    >
+                      <input {...getInputProps()} />
+                      <IoIosList className="menu--icon" />
+                      <span className="nav-text">Bulk Lead Upload</span>
+                    </div>
+                  </DropdownMenu>
                 </div>
-                <div
-                  onClick={() => setInvoiceModal(true)}
-                  className="nav-link flex items-center gap-2 px-3 py-2 hover:bg-black hover:text-white transition border-b cursor-pointer"
-                >
-                  <LiaFileInvoiceSolid className="menu--icon" />
-                  <span className="nav-text">Create Invoice</span>
-                </div>
-                <div
-                  {...getRootProps()}
-                  className="nav-link flex items-center gap-2 px-3 py-2 hover:bg-black hover:text-white transition border-b cursor-pointer"
-                >
-                  <input {...getInputProps()} />
-                  <IoIosList className="menu--icon" />
-                  <span className="nav-text">Bulk Lead Upload</span>
-                </div>
-              </DropdownMenu>
-            </div>
 
-            <img src={notificationBell} className="cursor-pointer w-6" />
-
+                <img src={notificationBell} className="cursor-pointer w-6" />
+              </>
+            )}
             <div className="relative">
               <div
                 className="flex items-center gap-1 cursor-pointer"

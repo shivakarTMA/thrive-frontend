@@ -711,7 +711,13 @@ const CreateCoupon = ({
                                 onChange={(option) =>
                                   handleApplicableTypeChange(index, option)
                                 }
-                                styles={selectIcon}
+                                styles={{
+                                  ...selectIcon,
+                                  menuPortal: (base) => ({
+                                    ...base,
+                                    zIndex: 9999,
+                                  }),
+                                }}
                                 className="!capitalize"
                                 placeholder="Select type..."
                                 isClearable
@@ -767,7 +773,13 @@ const CreateCoupon = ({
                                     ? "Choose type first"
                                     : "Select item..."
                                 }
-                                styles={selectIcon}
+                                styles={{
+                                  ...selectIcon,
+                                  menuPortal: (base) => ({
+                                    ...base,
+                                    zIndex: 9999,
+                                  }),
+                                }}
                                 className="!capitalize"
                                 isClearable
                               />

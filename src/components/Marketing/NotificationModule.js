@@ -1,8 +1,8 @@
 import React, { useState } from "react";
-import SmsCriteriaForm from "./SmsCriteriaForm";
+import NotificationCriteriaForm from "./NotificationCriteriaForm";
 import { toast } from "react-toastify";
 
-const SmsModule = () => {
+const NotificationModule = () => {
   const [activeTab, setActiveTab] = useState("Member");
   const [isFilterDirty, setIsFilterDirty] = useState(false);
 
@@ -20,8 +20,8 @@ const SmsModule = () => {
     <div className="page--content">
       <div className=" flex items-end justify-between gap-2 mb-0">
         <div className="title--breadcrumbs">
-          <p className="text-sm">{`Home > Marketing > Send SMS`}</p>
-          <h1 className="text-3xl font-semibold">Send SMS</h1>
+          <p className="text-sm">{`Home > Marketing > Send Notification`}</p>
+          <h1 className="text-3xl font-semibold">Send Notification</h1>
         </div>
       </div>
       <div className="flexs">
@@ -47,7 +47,7 @@ const SmsModule = () => {
         {/* Main Content */}
 
         <div className="mt-4 ">
-          <SmsCriteriaForm
+          <NotificationCriteriaForm
             activeTab={activeTab}
             onFilterDirtyChange={setIsFilterDirty}
           />
@@ -57,4 +57,4 @@ const SmsModule = () => {
   );
 };
 
-export default SmsModule;
+export default NotificationModule;

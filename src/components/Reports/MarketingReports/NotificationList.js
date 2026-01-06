@@ -4,16 +4,14 @@ import "react-datepicker/dist/react-datepicker.css";
 import { addYears, subYears } from "date-fns";
 import { FaCalendarDays } from "react-icons/fa6";
 import Select from "react-select";
-import {
-  customStyles,
-  filterActiveItems,
-  formatAutoDate,
-  formatIndianNumber,
-  formatText,
-} from "../../../Helper/helper";
+import { customStyles, filterActiveItems } from "../../../Helper/helper";
 import { authAxios } from "../../../config/config";
 import { toast } from "react-toastify";
-import { FaCircle } from "react-icons/fa";
+import { BsSend } from "react-icons/bs";
+import { Link } from "react-router-dom";
+import Tooltip from "../../common/Tooltip";
+import { IoEyeOutline } from "react-icons/io5";
+import { LiaEdit } from "react-icons/lia";
 
 const dateFilterOptions = [
   { value: "today", label: "Today" },
@@ -27,8 +25,32 @@ const formatDate = (date) => {
   return date.toISOString().split("T")[0]; // YYYY-MM-DD
 };
 
-const NewJoineesReport = () => {
-  const [leadSource, setLeadSource] = useState([]);
+const customerData = [
+  {
+    id: 1,
+    campaignName: "Referral Reward Notification",
+    emailsSent: "Ravi Sharma, Ankit Shukla, Gaurav Kapoor, Manoj........",
+    scheduled_on: "01/01/2026 12:30 pm",
+    status: "Sent",
+  },
+  {
+    id: 2,
+    campaignName: "Corporate Wellness Announcement",
+    emailsSent: "Summit Palza, Active Members, Male, 31-40",
+    scheduled_on: "06/01/2026 12:30 pm",
+    status: "Scheduled",
+  },
+  {
+    id: 3,
+    campaignName: "Festive Offer Promotion",
+    emailsSent: "Summit Palza, Active Members, Male, 31-40, Pilates",
+    scheduled_on: "09/01/2026 12:30 pm",
+    status: "Scheduled",
+  },
+];
+
+const NotificationList = () => {
+  const [leadSource, setLeadSource] = useState(customerData);
   const [clubList, setClubList] = useState([]);
   const [clubFilter, setClubFilter] = useState(null);
 
@@ -64,7 +86,7 @@ const NewJoineesReport = () => {
     value: item.id,
   }));
 
-  const fetchLeadSourcePerformance = async () => {
+  const fetchEmailAutomationReport = async () => {
     try {
       const params = {};
 
@@ -83,13 +105,14 @@ const NewJoineesReport = () => {
         params.dateFilter = dateFilter.value;
       }
 
-      const res = await authAxios().get("/marketing/report/newjoinee", {
-        params,
-      });
+      const res = await authAxios().get(
+        "/marketing/report/lead/source/performance",
+        { params }
+      );
       const responseData = res.data;
       const data = responseData?.data || [];
 
-      setLeadSource(data);
+      // setLeadSource(data);
     } catch (err) {
       console.error(err);
       toast.error("data not found");
@@ -99,13 +122,13 @@ const NewJoineesReport = () => {
     // If custom date is selected, wait for both dates
     if (dateFilter?.value === "custom") {
       if (customFrom && customTo) {
-        fetchLeadSourcePerformance();
+        fetchEmailAutomationReport();
       }
       return;
     }
 
     // For all non-custom filters
-    fetchLeadSourcePerformance();
+    fetchEmailAutomationReport();
   }, [dateFilter, customFrom, customTo, clubFilter]);
 
   return (
@@ -113,8 +136,18 @@ const NewJoineesReport = () => {
       {/* Header */}
       <div className="flex items-end justify-between gap-2 mb-5">
         <div className="title--breadcrumbs">
-          <p className="text-sm">{`Home >  Reports > Sales Reports > New Joinees Report`}</p>
-          <h1 className="text-3xl font-semibold">New Joinees Report</h1>
+          <p className="text-sm">
+            {`Home > Reports > Marketing Reports > Notification`}
+          </p>
+          <h1 className="text-3xl font-semibold">Notification</h1>
+        </div>
+        <div className="flex items-end gap-2">
+          <Link
+            to="/reports/marketing-reports/send-notification"
+            className="px-4 py-2 bg-black text-white rounded flex items-center gap-2"
+          >
+            <BsSend /> Send Notification
+          </Link>
         </div>
       </div>
 
@@ -199,65 +232,64 @@ const NewJoineesReport = () => {
           <table className="w-full text-sm text-left text-gray-500">
             <thead className="text-xs text-gray-700 uppercase bg-gray-50">
               <tr>
-                <th className="px-2 py-4 min-w-[50px]">S.no</th>
-                <th className="px-2 py-4 min-w-[150px]">Club Name</th>
-                <th className="px-2 py-4 min-w-[100px]">Member ID</th>
-                <th className="px-2 py-4 min-w-[150px]">Member Name</th>
-                <th className="px-2 py-4 min-w-[150px]">Service Type</th>
-                <th className="px-2 py-4 min-w-[130px]">Sevice Name</th>
-                <th className="px-2 py-4 min-w-[140px]">Invoice ID</th>
-                <th className="px-2 py-4 min-w-[130px]">Purchase Date</th>
-                <th className="px-2 py-4 min-w-[120px]">Start Date</th>
-                <th className="px-2 py-4 min-w-[120px]">End Date</th>
-                <th className="px-2 py-4 min-w-[120px]">Lead Source</th>
-                <th className="px-2 py-4 min-w-[150px]">Sales Rep Name</th>
-                <th className="px-2 py-4 min-w-[100px]">Bill Type</th>
-                <th className="px-2 py-4 min-w-[100px]">Bill Amount</th>
+                <th className="px-2 py-4">S.No</th>
+                <th className="px-2 py-4">Campaign Name</th>
+                <th className="px-2 py-4">Sent to</th>
+                <th className="px-2 py-4">Scheduled on</th>
                 <th className="px-2 py-4">Status</th>
+                <th className="px-2 py-4">Action</th>
               </tr>
             </thead>
 
             <tbody>
-              {leadSource.length ? (
-                leadSource.map((row, index) => (
+              {customerData.length ? (
+                customerData.map((item, index) => (
                   <tr
                     key={index}
                     className="bg-white border-b hover:bg-gray-50"
                   >
-                    <td className="px-2 py-4">{index + 1}</td>
-                    <td className="px-2 py-4">{row.club_name || "--"}</td>
-                    <td className="px-2 py-4">
-                      {row.membership_number || "--"}
-                    </td>
-                    <td className="px-2 py-4">{row.member_name || "--"}</td>
-                    <td className="px-2 py-4">
-                      {formatText(row.service_type) || "--"}
-                    </td>
-                    <td className="px-2 py-4">{row.service_name || "--"}</td>
-                    <td className="px-2 py-4">{row.invoice_id || "--"}</td>
-                    <td className="px-2 py-4">
-                      {formatAutoDate(row.purchase_date) || "--"}
-                    </td>
-                    <td className="px-2 py-4">
-                      {formatAutoDate(row.start_date) || "--"}
-                    </td>
-                    <td className="px-2 py-4">
-                      {formatAutoDate(row.end_date) || "--"}
-                    </td>
-                    <td className="px-2 py-4">{row.lead_source || "--"}</td>
-                    <td className="px-2 py-4">{row.sales_rep_name || "--"}</td>
-                    <td className="px-2 py-4">{row.bill_type || "--"}</td>
-                    <td className="px-2 py-4">₹{formatIndianNumber(row.booking_amount) || 0}</td>
-                    <td className="px-2 py-4">
-                      <span
-                        className={`flex items-center justify-between gap-1 rounded-full min-h-[30px] px-3 text-sm w-fit ${
-                          row?.status !== "ACTIVE"
-                            ? "bg-[#EEEEEE]"
-                            : "bg-[#E8FFE6] text-[#138808]"
-                        }`}
-                      >
-                        <FaCircle className="text-[10px]" /> {row?.status}
-                      </span>
+                    <td className="px-2 py-3">{index + 1}</td>
+                    <td className="px-2 py-3">{item.campaignName}</td>
+                    <td className="px-2 py-3">{item.emailsSent}</td>
+                    <td className="px-2 py-3">{item.scheduled_on}</td>
+                    <td className="px-2 py-3">{item.status}</td>
+                    <td className="px-2 py-3">
+                      <div className="flex items-center gap-1">
+                        <Tooltip
+                          id={`tooltip-edit-${item.id}`}
+                          content="View Notification"
+                          place="left"
+                        >
+                          <Link
+                            to={`/send-mail-list/${item.id}`}
+                            className={`p-1 cursor-pointer ${
+                              item?.status === "ONGOING" ||
+                              item?.status === "COMPLETED"
+                                ? ""
+                                : "opacity-[0.5] pointer-events-none"
+                            }`}
+                          >
+                            <IoEyeOutline className="text-[25px] text-black" />
+                          </Link>
+                        </Tooltip>
+
+                        <Tooltip
+                          id={`tooltip-edit-${item.id}`}
+                          content="Edit Notification"
+                          place="left"
+                        >
+                          <Link
+                            to={`/reports/marketing-reports/send-notification/${item.id}`}
+                            className={`p-1 cursor-pointer ${
+                              item?.status === "Scheduled"
+                                ? ""
+                                : "opacity-[0.5] pointer-events-none"
+                            }`}
+                          >
+                            <LiaEdit className="text-[25px] text-black" />
+                          </Link>
+                        </Tooltip>
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -276,4 +308,4 @@ const NewJoineesReport = () => {
   );
 };
 
-export default NewJoineesReport;
+export default NotificationList;

@@ -36,7 +36,7 @@ const validityEnquireOptions = [
   { value: "Lost Enquiries", label: "Lost Enquiries" },
 ];
 
-const MemberEmailFilterPanel = ({
+const NotificationFilterPanel = ({
   // ✅ Formik field values (each one is just a string or null)
   formik,
   filterClub,
@@ -44,9 +44,9 @@ const MemberEmailFilterPanel = ({
   filterLeadValidity,
   filterAgeGroup,
   filterGender,
+  filterLeadSource,
   filterServiceType,
   filterServiceName,
-  filterLeadSource,
   filterExpiryFrom,
   filterExpiryTo,
   // ✅ Callback to update Formik values
@@ -148,7 +148,6 @@ const MemberEmailFilterPanel = ({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // ✅ Apply current filters to chips
   // ✅ Apply current filters to chips
   const handleApply = () => {
     const newFilters = {
@@ -360,6 +359,31 @@ const MemberEmailFilterPanel = ({
                 />
               </div>
 
+              {/* Lead Source */}
+              {formik?.values?.module === "Enquiries" && (
+                <div>
+                  <label className="block mb-1 text-sm font-medium">
+                    Lead Source
+                  </label>
+                  <Select
+                    value={
+                      leadSourceOptions.find(
+                        (opt) => opt.value === filterLeadSource
+                      ) || null
+                    }
+                    onChange={(option) =>
+                      setFilterValue(
+                        "filterLeadSource",
+                        option ? option.value : null
+                      )
+                    }
+                    options={leadSourceOptions}
+                    placeholder="Select Lead Source"
+                    styles={customStyles}
+                  />
+                </div>
+              )}
+
               {formik?.values?.module === "Member" && (
                 <>
                   {/* Service */}
@@ -421,36 +445,7 @@ const MemberEmailFilterPanel = ({
                       isDisabled={!filterServiceType}
                     />
                   </div>
-                </>
-              )}
 
-              {/* Lead Source */}
-              {formik?.values?.module === "Enquiries" && (
-                <div>
-                  <label className="block mb-1 text-sm font-medium">
-                    Lead Source
-                  </label>
-                  <Select
-                    value={
-                      leadSourceOptions.find(
-                        (opt) => opt.value === filterLeadSource
-                      ) || null
-                    }
-                    onChange={(option) =>
-                      setFilterValue(
-                        "filterLeadSource",
-                        option ? option.value : null
-                      )
-                    }
-                    options={leadSourceOptions}
-                    placeholder="Select Lead Source"
-                    styles={customStyles}
-                  />
-                </div>
-              )}
-
-              {formik?.values?.module === "Member" && (
-                <>
                   {/* Membership Expiry */}
                   <div>
                     <label className="block mb-1 text-sm font-medium">
@@ -478,7 +473,7 @@ const MemberEmailFilterPanel = ({
                   {/* Expiry To */}
                   <div>
                     <label className="block mb-1 text-sm font-medium opacity-0">
-                      Membership Expiry<span className="text-red-500">*</span>
+                      Membership Expiry
                     </label>
                     <div className="custom--date relative">
                       <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
@@ -528,9 +523,9 @@ const MemberEmailFilterPanel = ({
             if (key === "lead_validity") options = validityEnquireOptions;
             if (key === "ageGroup") options = ageGroupOptions;
             if (key === "gender") options = genderOptions;
+            if (key === "leadSource") options = leadSourceOptions;
             if (key === "service_type") options = serviceOptions;
             if (key === "service_name") options = servicesType;
-            if (key === "leadSource") options = leadSourceOptions;
 
             // 🧠 Safely handle Dates and other types
             let displayValue = "";
@@ -562,4 +557,4 @@ const MemberEmailFilterPanel = ({
   );
 };
 
-export default MemberEmailFilterPanel;
+export default NotificationFilterPanel;

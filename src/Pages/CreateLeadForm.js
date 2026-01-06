@@ -122,7 +122,7 @@ const CreateLeadForm = ({
   const filteredLeadSources =
     selectedLead === "APP"
       ? leadsSources
-      : leadsSources.filter((item) => item.value !== "App");
+      : leadsSources.filter((item) => item.value !== "APP");
 
   useEffect(() => {
     if (selectedLead) {
@@ -1009,11 +1009,6 @@ const CreateLeadForm = ({
                             }
                             options={filteredLeadSources}
                             styles={selectIcon}
-                            isDisabled={
-                              String(
-                                formik.values.lead_source || ""
-                              ).toLowerCase() === "app"
-                            }
                           />
                         </div>
                       )}

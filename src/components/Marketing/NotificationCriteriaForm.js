@@ -1,21 +1,24 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
-import Select from "react-select";
-import MemberEmailFilterPanel from "../FilterPanel/MemberEmailFilterPanel";
-import { customStyles } from "../../Helper/helper";
-import RichTextEditor from "../common/RichTextEditor";
-import { emailTemplates } from "../../DummyData/DummyData";
+import NotificationFilterPanel from "../FilterPanel/NotificationFilterPanel";
 import { toast } from "react-toastify";
 import DatePicker from "react-datepicker";
 
-const EmailCriteriaForm = ({ activeTab, onFilterDirtyChange }) => {
-  // ✅ Define validation schema using Yup
+const NotificationCriteriaForm = ({ activeTab, onFilterDirtyChange }) => {
+  // ✅ Define validation schema
   const validationSchema = Yup.object({
-    // selectedTemplate: Yup.object().nullable().required("Template is required"),
-    subject: Yup.string().required("Subject is required"),
-    message: Yup.string().required("Message is required"),
+    heading: Yup.string()
+      .required("Heading is required")
+      .min(5, "Heading must be at least 5 characters")
+      .max(100, "Heading cannot exceed 100 characters"),
     campaign_name: Yup.string().required("Campaign Name is required"),
+
+    description: Yup.string()
+      .required("Description is required")
+      .min(10, "Description must be at least 10 characters")
+      .max(500, "Description cannot exceed 500 characters"),
+
     filterClub: Yup.string().nullable().required("Club is required"),
 
     filterMemberValidity: Yup.string().when("module", {
@@ -32,13 +35,11 @@ const EmailCriteriaForm = ({ activeTab, onFilterDirtyChange }) => {
 
     // filterAgeGroup: Yup.string().nullable().required("Age Group is required"),
     // filterGender: Yup.string().nullable().required("Gender is required"),
-
     // filterLeadSource: Yup.string().when("module", {
     //   is: "Enquiries",
     //   then: (schema) => schema.required("Lead Source is required"),
     //   otherwise: (schema) => schema.nullable(),
     // }),
-
     // filterServiceType: Yup.string().when("module", {
     //   is: "Member",
     //   then: (schema) => schema.required("Service Type is required"),
@@ -82,30 +83,30 @@ const EmailCriteriaForm = ({ activeTab, onFilterDirtyChange }) => {
     "filterLeadValidity",
     "filterAgeGroup",
     "filterGender",
+    "filterLeadSource",
     "filterServiceType",
     "filterServiceName",
-    "filterLeadSource",
     "filterExpiryFrom",
     "filterExpiryTo",
   ];
 
-  // ✅ Initialize Formik using the hook pattern
   const formik = useFormik({
     enableReinitialize: true,
     initialValues: {
       module: activeTab,
       selectedTemplate: null,
-      subject: "",
-      message: "",
-      campaign_name: "",
+      selectedGateway: null,
+      heading: "",
+       campaign_name: "",
+      description: "",
       filterClub: null,
       filterMemberValidity: null,
       filterLeadValidity: null,
       filterAgeGroup: null,
       filterGender: null,
+      filterLeadSource: null,
       filterServiceType: null,
       filterServiceName: null,
-      filterLeadSource: null,
       filterExpiryFrom: null,
       filterExpiryTo: null,
       sendType: "NOW", // NOW | SCHEDULED
@@ -161,32 +162,21 @@ const EmailCriteriaForm = ({ activeTab, onFilterDirtyChange }) => {
     onFilterDirtyChange(hasAnyFilterValue);
   }, [formik.values, onFilterDirtyChange]);
 
-  const handleTemplateSelect = (option) => {
-    formik.setFieldValue("selectedTemplate", option);
-
-    if (option?.value && emailTemplates[option.value]) {
-      const templateHtml = emailTemplates[option.value];
-
-      // Insert template into the editor
-      formik.setFieldValue("message", templateHtml);
-    }
-  };
-
   return (
     <div className="w-full p-3 border bg-white shadow-box rounded-[10px]">
       {/* ✅ Regular form tag using formik.handleSubmit */}
       <form onSubmit={formik.handleSubmit}>
         {/* --- FILTER PANEL SECTION --- */}
         <div className="flex items-start gap-3 justify-between w-full mb-3 border-b border-b-[#D4D4D4] pb-3">
-          <MemberEmailFilterPanel
+          <NotificationFilterPanel
             filterClub={formik.values.filterClub}
             filterMemberValidity={formik.values.filterMemberValidity}
             filterLeadValidity={formik.values.filterLeadValidity}
             filterAgeGroup={formik.values.filterAgeGroup}
             filterGender={formik.values.filterGender}
+            filterLeadSource={formik.values.filterLeadSource}
             filterServiceType={formik.values.filterServiceType}
             filterServiceName={formik.values.filterServiceName}
-            filterLeadSource={formik.values.filterLeadSource}
             filterExpiryFrom={formik.values.filterExpiryFrom}
             filterExpiryTo={formik.values.filterExpiryTo}
             formik={formik}
@@ -212,9 +202,9 @@ const EmailCriteriaForm = ({ activeTab, onFilterDirtyChange }) => {
           </div>
         )}
 
-        {/* --- EMAIL TEMPLATE SECTION --- */}
+        {/* --- Notification SECTION --- */}
         <div>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-2 gap-2">
             {/* campaign Input */}
             <div>
               <label className="mb-2 block">
@@ -236,65 +226,45 @@ const EmailCriteriaForm = ({ activeTab, onFilterDirtyChange }) => {
               )}
             </div>
 
-            {/* Select Template */}
-            <div>
-              <label className="mb-2 block">Select Email Template</label>
-              <Select
-                value={formik.values.selectedTemplate}
-                // onChange={(option) =>
-                //   formik.setFieldValue("selectedTemplate", option)
-                // }
-                onChange={handleTemplateSelect}
-                options={[
-                  { value: "welcome", label: "Welcome Template" },
-                  { value: "renewal", label: "Renewal Template" },
-                  { value: "promotion", label: "Promotion Template" },
-                ]}
-                placeholder="Select template"
-                styles={customStyles}
-              />
-              {formik.touched.selectedTemplate &&
-                formik.errors.selectedTemplate && (
-                  <p className="text-red-500 text-sm mt-1">
-                    {formik.errors.selectedTemplate}
-                  </p>
-                )}
-            </div>
-
-            {/* Subject Input */}
+            {/* Heading */}
             <div>
               <label className="mb-2 block">
-                Subject<span className="text-red-500">*</span>
+                Heading<span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
-                name="subject"
-                className="custom--input w-full"
-                value={formik.values.subject}
+                name="heading"
+                value={formik.values.heading ?? ""}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
-                placeholder="Enter subject"
+                className="custom--input w-full "
+                placeholder="Enter Heading"
               />
-              {formik.touched.subject && formik.errors.subject && (
+              {formik.touched.heading && formik.errors.heading && (
                 <p className="text-red-500 text-sm mt-1">
-                  {formik.errors.subject}
+                  {formik.errors.heading}
                 </p>
               )}
             </div>
           </div>
-
           {/* --- MESSAGE SECTION --- */}
           <div className="mt-4">
-            <RichTextEditor
-              value={formik.values.message}
-              label="Message"
-              onChange={(content) => formik.setFieldValue("message", content)}
-              placeholder="Enter your email message..."
+            <label className="block mb-2">
+              Description
+              <span className="text-red-500">*</span>
+            </label>
+            <textarea
+              className="custom--input w-full h-40"
+              value={formik.values.description}
+              placeholder="Enter Message"
+              onChange={(e) =>
+                formik.setFieldValue("description", e.target.value)
+              }
             />
 
-            {formik.touched.message && formik.errors.message && (
+            {formik.touched.description && formik.errors.description && (
               <p className="text-red-500 text-sm mt-1">
-                {formik.errors.message}
+                {formik.errors.description}
               </p>
             )}
           </div>
@@ -359,4 +329,4 @@ const EmailCriteriaForm = ({ activeTab, onFilterDirtyChange }) => {
   );
 };
 
-export default EmailCriteriaForm;
+export default NotificationCriteriaForm;

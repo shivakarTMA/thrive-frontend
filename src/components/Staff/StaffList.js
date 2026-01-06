@@ -164,7 +164,7 @@ const StaffList = () => {
     club_id: Yup.array()
       .min(1, "Please select at least one club")
       .required("Club selection is required"),
-  
+
     profile_image: Yup.string().when("show_on_app", {
       is: true,
       then: () => Yup.string().required("Image is required"),
@@ -474,18 +474,20 @@ const StaffList = () => {
                             <LiaEdit className="text-[25px] text-black" />
                           </div>
                         </Tooltip>
-                        <Tooltip
-                          id={`delete-staff-${row.id}`}
-                          content="Delete Staff"
-                          place="top"
-                        >
-                          <div
-                            onClick={() => handleDeleteClick(row)}
-                            className="p-1 cursor-pointer"
+                        {row?.role !== "ADMIN" && (
+                          <Tooltip
+                            id={`delete-staff-${row.id}`}
+                            content="Delete Staff"
+                            place="top"
                           >
-                            <RiDeleteBin6Fill className="text-[25px] text-black" />
-                          </div>
-                        </Tooltip>
+                            <div
+                              onClick={() => handleDeleteClick(row)}
+                              className="p-1 cursor-pointer"
+                            >
+                              <RiDeleteBin6Fill className="text-[25px] text-black" />
+                            </div>
+                          </Tooltip>
+                        )}
                       </div>
                     </td>
                   </tr>

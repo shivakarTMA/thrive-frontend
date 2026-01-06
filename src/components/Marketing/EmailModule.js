@@ -1,12 +1,18 @@
 import React, { useState } from "react";
 import EmailCriteriaForm from "./EmailCriteriaForm";
+import { toast } from "react-toastify";
 
 const EmailModule = () => {
   const [activeTab, setActiveTab] = useState("Member");
+  const [isFilterDirty, setIsFilterDirty] = useState(false);
 
   const tabs = ["Member", "Enquiries"];
 
   const handleTabClick = (tab) => {
+    if (isFilterDirty) {
+      toast.warning("Please clear filter criteria before switching tabs");
+      return;
+    }
     setActiveTab(tab);
   };
 
@@ -14,7 +20,7 @@ const EmailModule = () => {
     <div className="page--content">
       <div className=" flex items-end justify-between gap-2 mb-0">
         <div className="title--breadcrumbs">
-          <p className="text-sm">{`Home > Members > All Members > Send Email`}</p>
+          <p className="text-sm">{`Home > Marketing > Send Email`}</p>
           <h1 className="text-3xl font-semibold">Send Email</h1>
         </div>
       </div>
@@ -41,7 +47,10 @@ const EmailModule = () => {
         {/* Main Content */}
 
         <div className="mt-4 ">
-          <EmailCriteriaForm activeTab={activeTab} />
+          <EmailCriteriaForm
+            activeTab={activeTab}
+            onFilterDirtyChange={setIsFilterDirty}
+          />
         </div>
       </div>
     </div>

@@ -50,6 +50,9 @@ const GroupClassesUtilizationReport = () => {
       });
       const data = response.data?.data || [];
       const activeOnly = filterActiveItems(data);
+      if (activeOnly.length === 1) {
+        setClubFilter(activeOnly[0].id);
+      }
       setClubList(activeOnly);
     } catch (error) {
       toast.error("Failed to fetch clubs");
@@ -72,11 +75,9 @@ const GroupClassesUtilizationReport = () => {
       <div className="flex items-end justify-between gap-2 mb-5">
         <div className="title--breadcrumbs">
           <p className="text-sm">
-            {`Home > Reports > Sales Reports > Group Classes Utilization Report`}
+            {`Home > Reports > Sales Reports > Group Classes Report`}
           </p>
-          <h1 className="text-3xl font-semibold">
-            Group Classes Utilization Report
-          </h1>
+          <h1 className="text-3xl font-semibold">Group Classes Report</h1>
         </div>
       </div>
 
@@ -107,7 +108,10 @@ const GroupClassesUtilizationReport = () => {
                 </span>
                 <DatePicker
                   selected={customFrom}
-                  onChange={setCustomFrom}
+                  onChange={(date) => {
+                    setCustomFrom(date);
+                    setCustomTo(null); // ✅ reset To Date if From Date changes
+                  }}
                   placeholderText="From Date"
                   className="custom--input w-full input--icon"
                   minDate={subYears(new Date(), 20)}
@@ -118,34 +122,34 @@ const GroupClassesUtilizationReport = () => {
                   dropdownMode="select"
                 />
               </div>
-
               <div className="custom--date dob-format flex-1 max-w-[180px] w-full">
                 <span className="absolute z-[1] mt-[11px] ml-[15px]">
                   <FaCalendarDays />
                 </span>
                 <DatePicker
                   selected={customTo}
-                  onChange={setCustomTo}
+                  onChange={(date) => setCustomTo(date)}
                   placeholderText="To Date"
                   className="custom--input w-full input--icon"
-                  minDate={subYears(new Date(), 20)}
+                  minDate={customFrom || subYears(new Date(), 20)}
                   maxDate={addYears(new Date(), 0)}
-                  dateFormat="dd-MM-yyyy"
                   showMonthDropdown
                   showYearDropdown
                   dropdownMode="select"
+                  dateFormat="dd-MM-yyyy"
+                  disabled={!customFrom}
                 />
               </div>
             </>
           )}
 
-          <div className="w-full max-w-[200px]">
+          <div className="w-fit min-w-[200px]">
             <Select
               placeholder="Filter by club"
               value={clubOptions.find((o) => o.value === clubFilter) || null}
               options={clubOptions}
               onChange={(option) => setClubFilter(option?.value)}
-              isClearable
+              className="w-full"
               styles={customStyles}
             />
           </div>

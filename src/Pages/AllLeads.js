@@ -176,7 +176,9 @@ const AllLeads = () => {
         // const selLastCallType = overrideSelected.hasOwnProperty("last_call_status")
         //   ? overrideSelected.last_call_status
         //   : selectedLastCallType;
-        const selLastCallType = overrideSelected.hasOwnProperty("last_call_status")
+        const selLastCallType = overrideSelected.hasOwnProperty(
+          "last_call_status"
+        )
           ? overrideSelected.last_call_status
           : selectedLastCallType
           ? selectedLastCallType
@@ -793,6 +795,10 @@ const AllLeads = () => {
                                 {formatAutoDate(row?.updatedAt)}
                               </td>
 
+                              {(userRole === "CLUB_MANAGER" ||
+                        userRole === "GENERAL_MANAGER" ||
+                        userRole === "ADMIN") && (
+
                               <div className="absolute hidden group-hover:flex gap-2 right-0 h-full top-0 w-[50%] items-center justify-end bg-[linear-gradient(269deg,_#ffffff_30%,_transparent)] pr-5 transition duration-700">
                                 <Tooltip
                                   id={`tooltip-edit-${row.id}`}
@@ -885,6 +891,7 @@ const AllLeads = () => {
                                   </div>
                                 </Tooltip>
                               </div>
+                        )}
                             </tr>
                           ))
                         ) : (
@@ -911,6 +918,7 @@ const AllLeads = () => {
 
                       // Prepare overrideSelected for removed filters
                       const overrideSelected = {
+                        club_id: selectedClub || null,
                         lead_status: selectedLeadStatus || null,
                         lead_source: selectedLeadSource || null,
                         last_call_status: selectedLastCallType || null,

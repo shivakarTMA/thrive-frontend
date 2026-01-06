@@ -4,16 +4,9 @@ import "react-datepicker/dist/react-datepicker.css";
 import { addYears, subYears } from "date-fns";
 import { FaCalendarDays } from "react-icons/fa6";
 import Select from "react-select";
-import {
-  customStyles,
-  filterActiveItems,
-  formatAutoDate,
-  formatIndianNumber,
-  formatText,
-} from "../../../Helper/helper";
+import { customStyles, filterActiveItems } from "../../../Helper/helper";
 import { authAxios } from "../../../config/config";
 import { toast } from "react-toastify";
-import { FaCircle } from "react-icons/fa";
 
 const dateFilterOptions = [
   { value: "today", label: "Today" },
@@ -27,8 +20,107 @@ const formatDate = (date) => {
   return date.toISOString().split("T")[0]; // YYYY-MM-DD
 };
 
-const NewJoineesReport = () => {
-  const [leadSource, setLeadSource] = useState([]);
+const customerData = [
+  {
+    id: 1,
+    campaignName: "Trial Reminder – PT Session",
+    smsSent: 2400,
+    deliveryRate: "95.2%",
+    openRate: "82%",
+    clickedRate: "24%",
+    bounceRate: "1.8%",
+    optOutRate: "0.6%",
+    sentOn: "05-12-2025",
+    segment: "New",
+  },
+  {
+    id: 2,
+    campaignName: "Membership Expiry Alert",
+    smsSent: 1850,
+    deliveryRate: "96.5%",
+    openRate: "88%",
+    clickedRate: "28%",
+    bounceRate: "1.2%",
+    optOutRate: "0.9%",
+    sentOn: "10-12-2025",
+    segment: "Active",
+  },
+  {
+    id: 3,
+    campaignName: "Win-Back Offer – Inactive Members",
+    smsSent: 1120,
+    deliveryRate: "94.1%",
+    openRate: "76%",
+    clickedRate: "18%",
+    bounceRate: "2.1%",
+    optOutRate: "1.8%",
+    sentOn: "13-12-2026",
+    segment: "Inactive",
+  },
+  {
+    id: 4,
+    campaignName: "Referral Reward Notification",
+    smsSent: 980,
+    deliveryRate: "97.8%",
+    openRate: "91%",
+    clickedRate: "34%",
+    bounceRate: "0.9%",
+    optOutRate: "0.4%",
+    sentOn: "18-12-2026",
+    segment: "Active",
+  },
+  {
+    id: 5,
+    campaignName: "Corporate Wellness Announcement",
+    smsSent: 640,
+    deliveryRate: "98.4%",
+    openRate: "93%",
+    clickedRate: "36%",
+    bounceRate: "0.6%",
+    optOutRate: "0.3%",
+    sentOn: "23-12-2026",
+    segment: "Corporate",
+  },
+  {
+    id: 6,
+    campaignName: "Group Class Reminder",
+    smsSent: 2760,
+    deliveryRate: "96.9%",
+    openRate: "89%",
+    clickedRate: "31%",
+    bounceRate: "1.0%",
+    optOutRate: "0.7%",
+    sentOn: "28-12-2026",
+    segment: "Active",
+  },
+  {
+    id: 7,
+    campaignName: "Festive Offer Promotion",
+    smsSent: 3450,
+    deliveryRate: "93.6%",
+    openRate: "74%",
+    clickedRate: "16%",
+    bounceRate: "2.4%",
+    optOutRate: "2.2%",
+    sentOn: "02-01-2027",
+    segment: "All",
+  },
+  {
+    id: 8,
+    campaignName: "Payment Pending Reminder",
+    smsSent: 520,
+    deliveryRate: "97.1%",
+    openRate: "90%",
+    clickedRate: "27%",
+    bounceRate: "0.8%",
+    optOutRate: "0.5%",
+    sentOn: "04-01-2027",
+    segment: "Active",
+  },
+];
+
+const SMSDeliveryReport = () => {
+  const [leadSource, setLeadSource] = useState(customerData);
   const [clubList, setClubList] = useState([]);
   const [clubFilter, setClubFilter] = useState(null);
 
@@ -64,7 +156,7 @@ const NewJoineesReport = () => {
     value: item.id,
   }));
 
-  const fetchLeadSourcePerformance = async () => {
+  const fetchSMSDeliveryReport = async () => {
     try {
       const params = {};
 
@@ -83,13 +175,14 @@ const NewJoineesReport = () => {
         params.dateFilter = dateFilter.value;
       }
 
-      const res = await authAxios().get("/marketing/report/newjoinee", {
-        params,
-      });
+      const res = await authAxios().get(
+        "/marketing/report/lead/source/performance",
+        { params }
+      );
       const responseData = res.data;
       const data = responseData?.data || [];
 
-      setLeadSource(data);
+      // setLeadSource(data);
     } catch (err) {
       console.error(err);
       toast.error("data not found");
@@ -99,13 +192,13 @@ const NewJoineesReport = () => {
     // If custom date is selected, wait for both dates
     if (dateFilter?.value === "custom") {
       if (customFrom && customTo) {
-        fetchLeadSourcePerformance();
+        fetchSMSDeliveryReport();
       }
       return;
     }
 
     // For all non-custom filters
-    fetchLeadSourcePerformance();
+    fetchSMSDeliveryReport();
   }, [dateFilter, customFrom, customTo, clubFilter]);
 
   return (
@@ -113,8 +206,10 @@ const NewJoineesReport = () => {
       {/* Header */}
       <div className="flex items-end justify-between gap-2 mb-5">
         <div className="title--breadcrumbs">
-          <p className="text-sm">{`Home >  Reports > Sales Reports > New Joinees Report`}</p>
-          <h1 className="text-3xl font-semibold">New Joinees Report</h1>
+          <p className="text-sm">
+            {`Home > Reports > Marketing Reports > SMS Delivery Report`}
+          </p>
+          <h1 className="text-3xl font-semibold">SMS Delivery Report</h1>
         </div>
       </div>
 
@@ -199,71 +294,39 @@ const NewJoineesReport = () => {
           <table className="w-full text-sm text-left text-gray-500">
             <thead className="text-xs text-gray-700 uppercase bg-gray-50">
               <tr>
-                <th className="px-2 py-4 min-w-[50px]">S.no</th>
-                <th className="px-2 py-4 min-w-[150px]">Club Name</th>
-                <th className="px-2 py-4 min-w-[100px]">Member ID</th>
-                <th className="px-2 py-4 min-w-[150px]">Member Name</th>
-                <th className="px-2 py-4 min-w-[150px]">Service Type</th>
-                <th className="px-2 py-4 min-w-[130px]">Sevice Name</th>
-                <th className="px-2 py-4 min-w-[140px]">Invoice ID</th>
-                <th className="px-2 py-4 min-w-[130px]">Purchase Date</th>
-                <th className="px-2 py-4 min-w-[120px]">Start Date</th>
-                <th className="px-2 py-4 min-w-[120px]">End Date</th>
-                <th className="px-2 py-4 min-w-[120px]">Lead Source</th>
-                <th className="px-2 py-4 min-w-[150px]">Sales Rep Name</th>
-                <th className="px-2 py-4 min-w-[100px]">Bill Type</th>
-                <th className="px-2 py-4 min-w-[100px]">Bill Amount</th>
-                <th className="px-2 py-4">Status</th>
+                <th className="px-2 py-4">S.No</th>
+                <th className="px-2 py-4">Campaign</th>
+                <th className="px-2 py-4">SMS Sent</th>
+                <th className="px-2 py-4">Delivery Rate</th>
+                <th className="px-2 py-4">Open Rate</th>
+                <th className="px-2 py-4">Clicked Rate</th>
+                <th className="px-2 py-4">Bounce Rate</th>
+                <th className="px-2 py-4">Opt-Out Rate</th>
+                <th className="px-2 py-4">Segment</th>
               </tr>
             </thead>
 
             <tbody>
-              {leadSource.length ? (
-                leadSource.map((row, index) => (
+              {customerData.length ? (
+                customerData.map((item, index) => (
                   <tr
                     key={index}
                     className="bg-white border-b hover:bg-gray-50"
                   >
-                    <td className="px-2 py-4">{index + 1}</td>
-                    <td className="px-2 py-4">{row.club_name || "--"}</td>
-                    <td className="px-2 py-4">
-                      {row.membership_number || "--"}
-                    </td>
-                    <td className="px-2 py-4">{row.member_name || "--"}</td>
-                    <td className="px-2 py-4">
-                      {formatText(row.service_type) || "--"}
-                    </td>
-                    <td className="px-2 py-4">{row.service_name || "--"}</td>
-                    <td className="px-2 py-4">{row.invoice_id || "--"}</td>
-                    <td className="px-2 py-4">
-                      {formatAutoDate(row.purchase_date) || "--"}
-                    </td>
-                    <td className="px-2 py-4">
-                      {formatAutoDate(row.start_date) || "--"}
-                    </td>
-                    <td className="px-2 py-4">
-                      {formatAutoDate(row.end_date) || "--"}
-                    </td>
-                    <td className="px-2 py-4">{row.lead_source || "--"}</td>
-                    <td className="px-2 py-4">{row.sales_rep_name || "--"}</td>
-                    <td className="px-2 py-4">{row.bill_type || "--"}</td>
-                    <td className="px-2 py-4">₹{formatIndianNumber(row.booking_amount) || 0}</td>
-                    <td className="px-2 py-4">
-                      <span
-                        className={`flex items-center justify-between gap-1 rounded-full min-h-[30px] px-3 text-sm w-fit ${
-                          row?.status !== "ACTIVE"
-                            ? "bg-[#EEEEEE]"
-                            : "bg-[#E8FFE6] text-[#138808]"
-                        }`}
-                      >
-                        <FaCircle className="text-[10px]" /> {row?.status}
-                      </span>
-                    </td>
+                    <td className="px-2 py-3">{index + 1}</td>
+                    <td className="px-2 py-3">{item.campaignName}</td>
+                    <td className="px-2 py-3">{item.smsSent}</td>
+                    <td className="px-2 py-3">{item.deliveryRate}</td>
+                    <td className="px-2 py-3">{item.openRate}</td>
+                    <td className="px-2 py-3">{item.clickedRate}</td>
+                    <td className="px-2 py-3">{item.bounceRate}</td>
+                    <td className="px-2 py-3">{item.optOutRate}</td>
+                    <td className="px-2 py-3">{item.segment}</td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan={6} className="text-center py-4">
+                  <td colSpan={9} className="text-center py-4">
                     No data found
                   </td>
                 </tr>
@@ -276,4 +339,4 @@ const NewJoineesReport = () => {
   );
 };
 
-export default NewJoineesReport;
+export default SMSDeliveryReport;

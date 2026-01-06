@@ -201,7 +201,7 @@ export default function MemberFilterPanel({
         filterStatus !== null
           ? memberStatus.find((option) => option.value === filterStatus)
           : null,
-      serviceName: filterService,
+      service_name: filterService,
       service_variation: filterServiceVariation,
       ageGroup: filterAgeGroup,
       lead_source: filterLeadSource,
@@ -221,7 +221,7 @@ export default function MemberFilterPanel({
     const setterMap = {
       club_id: setSelectedClub,
       is_subscribed: setFilterStatus,
-      serviceName: setFilterService,
+      service_name: setFilterService,
       service_variation: setFilterServiceVariation,
       ageGroup: setFilterAgeGroup,
       lead_source: setFilterLeadSource,

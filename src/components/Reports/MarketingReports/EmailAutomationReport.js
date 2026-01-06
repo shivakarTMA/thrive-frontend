@@ -4,16 +4,9 @@ import "react-datepicker/dist/react-datepicker.css";
 import { addYears, subYears } from "date-fns";
 import { FaCalendarDays } from "react-icons/fa6";
 import Select from "react-select";
-import {
-  customStyles,
-  filterActiveItems,
-  formatAutoDate,
-  formatIndianNumber,
-  formatText,
-} from "../../../Helper/helper";
+import { customStyles, filterActiveItems } from "../../../Helper/helper";
 import { authAxios } from "../../../config/config";
 import { toast } from "react-toastify";
-import { FaCircle } from "react-icons/fa";
 
 const dateFilterOptions = [
   { value: "today", label: "Today" },
@@ -27,8 +20,91 @@ const formatDate = (date) => {
   return date.toISOString().split("T")[0]; // YYYY-MM-DD
 };
 
-const NewJoineesReport = () => {
-  const [leadSource, setLeadSource] = useState([]);
+const customerData = [
+  {
+    id: 1,
+    campaignName: "Welcome Series – New Members",
+    emailsSent: 3200,
+    openRate: "48%",
+    ctr: "12%",
+    responseRate: "6.5%",
+    unsubscribeRate: "0.8%",
+    bounceRate: "1.2%",
+  },
+  {
+    id: 2,
+    campaignName: "Trial Follow-up Reminder",
+    emailsSent: 2150,
+    openRate: "52%",
+    ctr: "15%",
+    responseRate: "8.1%",
+    unsubscribeRate: "0.6%",
+    bounceRate: "0.9%",
+  },
+  {
+    id: 3,
+    campaignName: "Membership Expiry Reminder",
+    emailsSent: 1480,
+    openRate: "58%",
+    ctr: "18%",
+    responseRate: "12.4%",
+    unsubscribeRate: "0.9%",
+    bounceRate: "0.7%",
+  },
+  {
+    id: 4,
+    campaignName: "Win-Back Campaign – Inactive Users",
+    emailsSent: 1120,
+    openRate: "41%",
+    ctr: "10%",
+    responseRate: "5.2%",
+    unsubscribeRate: "1.6%",
+    bounceRate: "1.4%",
+  },
+  {
+    id: 5,
+    campaignName: "Group Classes Weekly Newsletter",
+    emailsSent: 2760,
+    openRate: "36%",
+    ctr: "8%",
+    responseRate: "3.9%",
+    unsubscribeRate: "1.1%",
+    bounceRate: "1.0%",
+  },
+  {
+    id: 6,
+    campaignName: "PT Package Upsell",
+    emailsSent: 980,
+    openRate: "44%",
+    ctr: "14%",
+    responseRate: "7.6%",
+    unsubscribeRate: "0.7%",
+    bounceRate: "0.8%",
+  },
+  {
+    id: 7,
+    campaignName: "Corporate Wellness Update",
+    emailsSent: 640,
+    openRate: "61%",
+    ctr: "22%",
+    responseRate: "15.3%",
+    unsubscribeRate: "0.4%",
+    bounceRate: "0.5%",
+  },
+  {
+    id: 8,
+    campaignName: "Festive Offer Announcement",
+    emailsSent: 3450,
+    openRate: "39%",
+    ctr: "9%",
+    responseRate: "4.1%",
+    unsubscribeRate: "1.9%",
+    bounceRate: "1.6%",
+  },
+];
+
+const EmailAutomationReport = () => {
+  const [leadSource, setLeadSource] = useState(customerData);
   const [clubList, setClubList] = useState([]);
   const [clubFilter, setClubFilter] = useState(null);
 
@@ -64,7 +140,7 @@ const NewJoineesReport = () => {
     value: item.id,
   }));
 
-  const fetchLeadSourcePerformance = async () => {
+  const fetchEmailAutomationReport = async () => {
     try {
       const params = {};
 
@@ -83,13 +159,14 @@ const NewJoineesReport = () => {
         params.dateFilter = dateFilter.value;
       }
 
-      const res = await authAxios().get("/marketing/report/newjoinee", {
-        params,
-      });
+      const res = await authAxios().get(
+        "/marketing/report/lead/source/performance",
+        { params }
+      );
       const responseData = res.data;
       const data = responseData?.data || [];
 
-      setLeadSource(data);
+      // setLeadSource(data);
     } catch (err) {
       console.error(err);
       toast.error("data not found");
@@ -99,13 +176,13 @@ const NewJoineesReport = () => {
     // If custom date is selected, wait for both dates
     if (dateFilter?.value === "custom") {
       if (customFrom && customTo) {
-        fetchLeadSourcePerformance();
+        fetchEmailAutomationReport();
       }
       return;
     }
 
     // For all non-custom filters
-    fetchLeadSourcePerformance();
+    fetchEmailAutomationReport();
   }, [dateFilter, customFrom, customTo, clubFilter]);
 
   return (
@@ -113,8 +190,10 @@ const NewJoineesReport = () => {
       {/* Header */}
       <div className="flex items-end justify-between gap-2 mb-5">
         <div className="title--breadcrumbs">
-          <p className="text-sm">{`Home >  Reports > Sales Reports > New Joinees Report`}</p>
-          <h1 className="text-3xl font-semibold">New Joinees Report</h1>
+          <p className="text-sm">
+            {`Home > Reports > Marketing Reports > Email Delivery Report`}
+          </p>
+          <h1 className="text-3xl font-semibold">Email Delivery Report</h1>
         </div>
       </div>
 
@@ -199,71 +278,37 @@ const NewJoineesReport = () => {
           <table className="w-full text-sm text-left text-gray-500">
             <thead className="text-xs text-gray-700 uppercase bg-gray-50">
               <tr>
-                <th className="px-2 py-4 min-w-[50px]">S.no</th>
-                <th className="px-2 py-4 min-w-[150px]">Club Name</th>
-                <th className="px-2 py-4 min-w-[100px]">Member ID</th>
-                <th className="px-2 py-4 min-w-[150px]">Member Name</th>
-                <th className="px-2 py-4 min-w-[150px]">Service Type</th>
-                <th className="px-2 py-4 min-w-[130px]">Sevice Name</th>
-                <th className="px-2 py-4 min-w-[140px]">Invoice ID</th>
-                <th className="px-2 py-4 min-w-[130px]">Purchase Date</th>
-                <th className="px-2 py-4 min-w-[120px]">Start Date</th>
-                <th className="px-2 py-4 min-w-[120px]">End Date</th>
-                <th className="px-2 py-4 min-w-[120px]">Lead Source</th>
-                <th className="px-2 py-4 min-w-[150px]">Sales Rep Name</th>
-                <th className="px-2 py-4 min-w-[100px]">Bill Type</th>
-                <th className="px-2 py-4 min-w-[100px]">Bill Amount</th>
-                <th className="px-2 py-4">Status</th>
+                <th className="px-2 py-4">S.No</th>
+                <th className="px-2 py-4">Campaign Name</th>
+                <th className="px-2 py-4">Emails Sent</th>
+                <th className="px-2 py-4">Open Rate</th>
+                <th className="px-2 py-4">CTR</th>
+                <th className="px-2 py-4">Response Rate</th>
+                <th className="px-2 py-4">Unsubscribe Rate</th>
+                <th className="px-2 py-4">Bounce Rate</th>
               </tr>
             </thead>
 
             <tbody>
-              {leadSource.length ? (
-                leadSource.map((row, index) => (
+              {customerData.length ? (
+                customerData.map((item, index) => (
                   <tr
                     key={index}
                     className="bg-white border-b hover:bg-gray-50"
                   >
-                    <td className="px-2 py-4">{index + 1}</td>
-                    <td className="px-2 py-4">{row.club_name || "--"}</td>
-                    <td className="px-2 py-4">
-                      {row.membership_number || "--"}
-                    </td>
-                    <td className="px-2 py-4">{row.member_name || "--"}</td>
-                    <td className="px-2 py-4">
-                      {formatText(row.service_type) || "--"}
-                    </td>
-                    <td className="px-2 py-4">{row.service_name || "--"}</td>
-                    <td className="px-2 py-4">{row.invoice_id || "--"}</td>
-                    <td className="px-2 py-4">
-                      {formatAutoDate(row.purchase_date) || "--"}
-                    </td>
-                    <td className="px-2 py-4">
-                      {formatAutoDate(row.start_date) || "--"}
-                    </td>
-                    <td className="px-2 py-4">
-                      {formatAutoDate(row.end_date) || "--"}
-                    </td>
-                    <td className="px-2 py-4">{row.lead_source || "--"}</td>
-                    <td className="px-2 py-4">{row.sales_rep_name || "--"}</td>
-                    <td className="px-2 py-4">{row.bill_type || "--"}</td>
-                    <td className="px-2 py-4">₹{formatIndianNumber(row.booking_amount) || 0}</td>
-                    <td className="px-2 py-4">
-                      <span
-                        className={`flex items-center justify-between gap-1 rounded-full min-h-[30px] px-3 text-sm w-fit ${
-                          row?.status !== "ACTIVE"
-                            ? "bg-[#EEEEEE]"
-                            : "bg-[#E8FFE6] text-[#138808]"
-                        }`}
-                      >
-                        <FaCircle className="text-[10px]" /> {row?.status}
-                      </span>
-                    </td>
+                    <td className="px-2 py-3">{index + 1}</td>
+                    <td className="px-2 py-3">{item.campaignName}</td>
+                    <td className="px-2 py-3">{item.emailsSent}</td>
+                    <td className="px-2 py-3">{item.openRate}</td>
+                    <td className="px-2 py-3">{item.ctr}</td>
+                    <td className="px-2 py-3">{item.responseRate}</td>
+                    <td className="px-2 py-3">{item.unsubscribeRate}</td>
+                    <td className="px-2 py-3">{item.bounceRate}</td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan={6} className="text-center py-4">
+                  <td colSpan={8} className="text-center py-4">
                     No data found
                   </td>
                 </tr>
@@ -276,4 +321,4 @@ const NewJoineesReport = () => {
   );
 };
 
-export default NewJoineesReport;
+export default EmailAutomationReport;
