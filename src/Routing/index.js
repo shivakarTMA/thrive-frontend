@@ -75,7 +75,6 @@ import CancelledPaidInvioceReport from "../components/Reports/FinanceReports/Can
 import RefundReport from "../components/Reports/FinanceReports/RefundReport";
 import CollectionReport from "../components/Reports/FinanceReports/CollectionReport";
 import MemberCheckInsReport from "../components/Reports/OperationsReports/MemberCheckInsReport";
-import MembershipsReport from "../components/Reports/OperationsReports/MembershipsReport";
 import MembershipExpiryReport from "../components/Reports/OperationsReports/MembershipExpiryReport";
 import PtExpiryReport from "../components/Reports/OperationsReports/PtExpiryReport";
 import IrregularMembersReport from "../components/Reports/OperationsReports/IrregularMembersReport";
@@ -108,6 +107,11 @@ import EventCommunityEngagement from "../components/Reports/MarketingReports/Eve
 import EmailList from "../components/Reports/MarketingReports/EmailList";
 import SmsList from "../components/Reports/MarketingReports/SmsList";
 import NotificationList from "../components/Reports/MarketingReports/NotificationList";
+import FinanceManagerDashboard from "../Pages/FinanceManagerDashboard";
+import MonthlyTargetsReport from "../components/Reports/FinanceReports/MonthlyTargetsReport";
+import SetIncentivePolicy from "../components/Reports/FinanceReports/SetIncentivePolicy";
+import RefundRequests from "../components/Reports/FinanceReports/RefundRequests";
+import AllAppointments from "../Pages/Reports/Appointments/AllAppointments";
 
 
 const RoleBasedHome = () => {
@@ -118,6 +122,7 @@ const RoleBasedHome = () => {
   if (userType === "FOH") return <FohDashboard />;
   if (userType === "TRAINER") return <TrainerDashboard />;
   if (userType === "CLUB_MANAGER") return <ClubManagerDashboard />;
+  if (userType === "FINANCE_MANAGER") return <FinanceManagerDashboard />;
 
   return <Navigate to="/login" />; // or Unauthorized page
 };
@@ -562,12 +567,20 @@ export default function Routing() {
           path="/reports/appointments/all-appointments/"
           element={
             <PrivateRoute>
+              <AllAppointments />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/reports/appointments/all-trial-appointments/"
+          element={
+            <PrivateRoute>
               <TrialAppointments />
             </PrivateRoute>
           }
         />
         <Route
-          path="/reports/products-sold"
+          path="/reports/all-orders"
           element={
             <PrivateRoute>
               <ProductsSold />
@@ -690,6 +703,30 @@ export default function Routing() {
           }
         />
         <Route
+          path="/reports/finance-reports/monthly-targets-report"
+          element={
+            <PrivateRoute>
+              <MonthlyTargetsReport />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/reports/finance-reports/set-incentive-policy"
+          element={
+            <PrivateRoute>
+              <SetIncentivePolicy />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/reports/finance-reports/refund-requests"
+          element={
+            <PrivateRoute>
+              <RefundRequests />
+            </PrivateRoute>
+          }
+        />
+        <Route
           path="/reports/operations-reports/member-checkins-report"
           element={
             <PrivateRoute>
@@ -705,14 +742,7 @@ export default function Routing() {
             </PrivateRoute>
           }
         />
-        <Route
-          path="/reports/operations-reports/memberships-report"
-          element={
-            <PrivateRoute>
-              <MembershipsReport />
-            </PrivateRoute>
-          }
-        />
+     
         <Route
           path="/reports/operations-reports/membership-expiry-report"
           element={

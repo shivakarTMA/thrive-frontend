@@ -110,6 +110,26 @@ const CouponsList = () => {
 
         position: Yup.string().required("Position is required"),
       }),
+      applicable_rules: Yup.array()
+    .of(
+      Yup.object().shape({
+        applicable_type: Yup.string().required("Applicable Type is required"),
+        applicable_id: Yup.mixed().when("applicable_type", {
+          is: (type) => type && type !== "ALL",
+          then: (schema) =>
+            schema
+              .required("Applicable Item is required when type is not ALL")
+              .nullable()
+              .test(
+                "is-not-null",
+                "Applicable Item is required",
+                (value) => value !== null && value !== undefined
+              ),
+          otherwise: (schema) => schema.nullable(),
+        }),
+      })
+    )
+    .min(1, "At least one applicable rule is required"),
     }),
     onSubmit: async (values, { resetForm }) => {
       try {

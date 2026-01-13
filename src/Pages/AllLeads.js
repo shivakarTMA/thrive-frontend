@@ -47,6 +47,44 @@ const dateFilterOptions = [
   { value: "custom", label: "Custom Date" },
 ];
 
+const leadStatusStyles = {
+  New: {
+    bg: "bg-[#E4FCFF]",
+    text: "text-[#007A87]",
+    dot: "text-[#007A87]",
+  },
+  Lead: {
+    bg: "bg-[#FFF4E5]",
+    text: "text-[#B45309]",
+    dot: "text-[#B45309]",
+  },
+  Opportunity: {
+    bg: "bg-[#EEEEEE]",
+    text: "text-[#374151]",
+    dot: "text-[#374151]",
+  },
+  Lost: {
+    bg: "bg-[#FEE2E2]",
+    text: "text-[#B91C1C]",
+    dot: "text-[#B91C1C]",
+  },
+  Closed: {
+    bg: "bg-[#E0E7FF]",
+    text: "text-[#3730A3]",
+    dot: "text-[#3730A3]",
+  },
+  Won: {
+    bg: "bg-[#DCFCE7]",
+    text: "text-[#15803D]",
+    dot: "text-[#15803D]",
+  },
+  DEFAULT: {
+    bg: "bg-[#EEEEEE]",
+    text: "text-gray-500",
+    dot: "text-gray-400",
+  },
+};
+
 const AllLeads = () => {
   const navigate = useNavigate();
   const { id } = useParams();
@@ -63,7 +101,7 @@ const AllLeads = () => {
   const [selectedLeadMember, setSelectedLeadMember] = useState(null);
   const [sendPaymentModal, setSendPaymentModal] = useState(false);
   const [appointmentModal, setAppointmentModal] = useState(false);
-  const [leadPaymentSend, setLeadPaymentSend] = useState(null);
+
   const leadModalPage = "ALLLEAD";
   const [leadTopModal, setLeadTopModal] = useState(false);
 
@@ -271,7 +309,11 @@ const AllLeads = () => {
     try {
       const requests = [authAxios().get("/staff/list?role=FOH")];
 
-      if (userRole === "CLUB_MANAGER" || userRole === "ADMIN") {
+      if (
+        userRole === "CLUB_MANAGER" ||
+        userRole === "ADMIN" ||
+        userRole === "FOH"
+      ) {
         requests.push(authAxios().get("/staff/list?role=CLUB_MANAGER"));
       }
 
@@ -521,7 +563,10 @@ const AllLeads = () => {
                         </span>
                         <DatePicker
                           selected={customFrom}
-                          onChange={(date) => setCustomFrom(date)}
+                          onChange={(date) => {
+                            setCustomFrom(date);
+                            setCustomTo(null); // ✅ reset To Date if From Date changes
+                          }}
                           placeholderText="From Date"
                           className="custom--input w-full input--icon"
                           minDate={subYears(new Date(), 20)}
@@ -541,12 +586,13 @@ const AllLeads = () => {
                           onChange={(date) => setCustomTo(date)}
                           placeholderText="To Date"
                           className="custom--input w-full input--icon"
-                          minDate={subYears(new Date(), 20)}
+                          minDate={customFrom || subYears(new Date(), 20)}
                           maxDate={addYears(new Date(), 0)}
                           showMonthDropdown
                           showYearDropdown
                           dropdownMode="select"
                           dateFormat="dd-MM-yyyy"
+                          disabled={!customFrom}
                         />
                       </div>
                     </>
@@ -741,22 +787,25 @@ const AllLeads = () => {
                                   : row?.lead_source}
                               </td>
                               <td className="px-2 py-4">
-                                <span
-                                  className={`
-                            flex items-center justify-between gap-1 rounded-full bg-[#EEEEEE] min-h-[30px] px-3 text-sm w-fit
-                          ${
-                            row?.lead_status == "Opportunity"
-                              ? "bg-[#EEEEEE]"
-                              : ""
-                          }
-                          ${row?.lead_status == "New" ? "bg-[#E4FCFF]" : ""}
-                          `}
-                                >
-                                  <FaCircle className="text-[10px]" />
-                                  {row?.lead_status == null
-                                    ? "--"
-                                    : row?.lead_status}
-                                </span>
+                                {(() => {
+                                  const statusKey =
+                                    row?.lead_status || "DEFAULT";
+                                  const statusStyle =
+                                    leadStatusStyles[statusKey] ||
+                                    leadStatusStyles.DEFAULT;
+
+                                  return (
+                                    <span
+                                      className={`flex items-center gap-2 rounded-full min-h-[30px] px-3 text-sm w-fit
+                                        ${statusStyle.bg} ${statusStyle.text}`}
+                                    >
+                                      <FaCircle
+                                        className={`text-[10px] ${statusStyle.dot}`}
+                                      />
+                                      {row?.lead_status ?? "--"}
+                                    </span>
+                                  );
+                                })()}
                               </td>
                               <td className="px-2 py-4">
                                 {row?.last_call_status == null
@@ -777,7 +826,8 @@ const AllLeads = () => {
 
                               {(userRole === "CLUB_MANAGER" ||
                                 userRole === "GENERAL_MANAGER" ||
-                                userRole === "ADMIN") && (
+                                userRole === "ADMIN" ||
+                                userRole === "FOH") && (
                                 <div className="absolute hidden group-hover:flex gap-2 right-0 h-full top-0 w-[50%] items-center justify-end bg-[linear-gradient(269deg,_#ffffff_30%,_transparent)] pr-5 transition duration-700">
                                   <Tooltip
                                     id={`tooltip-edit-${row.id}`}
@@ -845,7 +895,7 @@ const AllLeads = () => {
                                   >
                                     <div
                                       onClick={() => {
-                                        setSelectedLead(row?.id);
+                                        setSelectedLeadMember(row?.id);
                                         setAppointmentModal(true);
                                       }}
                                       className="p-1 cursor-pointer"
@@ -861,7 +911,7 @@ const AllLeads = () => {
                                   >
                                     <div
                                       onClick={() => {
-                                        setLeadPaymentSend(row.id);
+                                        setSelectedLeadMember(row.id);
                                         setSendPaymentModal(true);
                                       }}
                                       className="p-1 cursor-pointer"
@@ -936,20 +986,20 @@ const AllLeads = () => {
       )}
       {invoiceModal && (
         <CreateInvoice
-          leadPaymentSend={leadPaymentSend}
+          selectedLeadMember={selectedLeadMember}
           setInvoiceModal={setInvoiceModal}
         />
       )}
       {sendPaymentModal && (
         <SendPaymentLink
-          leadPaymentSend={leadPaymentSend}
           setSendPaymentModal={setSendPaymentModal}
+          selectedLeadMember={selectedLeadMember}
         />
       )}
       {appointmentModal && (
         <CreateLeadAppointment
           setAppointmentModal={setAppointmentModal}
-          memberID={selectedLead}
+          memberID={selectedLeadMember}
           defaultCategory="complementary"
           memberType="LEAD"
           handleLeadUpdate={fetchLeadList}

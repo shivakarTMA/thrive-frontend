@@ -63,13 +63,13 @@ const PackageCategoryList = () => {
 
         if (editingOption && editingOption) {
           // Update
-          await authAxios().put(`/faqcategory/${editingOption}`, formData, {
+          await authAxios().put(`/package-category/${editingOption}`, formData, {
             headers: { "Content-Type": "multipart/form-data" },
           });
           toast.success("Updated Successfully");
         } else {
           // Create
-          await authAxios().post("/faqcategory/create", formData, {
+          await authAxios().post("/package-category/create", formData, {
             headers: { "Content-Type": "multipart/form-data" },
           });
           toast.success("Created Successfully");

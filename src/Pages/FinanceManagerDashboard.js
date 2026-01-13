@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import SalesSummary from "../components/common/SalesSummary";
 import totalSalesIcon from "../assets/images/icons/rupee-box.png";
 import newClientIcon from "../assets/images/icons/clients.png";
@@ -6,61 +6,28 @@ import renewalIcon from "../assets/images/icons/renewal.png";
 import enquiriesIcon from "../assets/images/icons/conversion.png";
 import trialIcon from "../assets/images/icons/trial.png";
 import checkInIcon from "../assets/images/icons/checkin.png";
-import eyeIcon from "../assets/images/icons/eye.svg";
-import PendingOrderTable from "../components/PendingOrderTable";
 import { FaCircle } from "react-icons/fa";
 import { FaCalendarDays } from "react-icons/fa6";
 import Select from "react-select";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { customStyles } from "../Helper/helper";
+import { customStyles, filterActiveItems } from "../Helper/helper";
 import { addYears, subYears } from "date-fns";
-import { useNavigate } from "react-router-dom";
 import HighchartsReact from "highcharts-react-official";
 import Highcharts from "highcharts";
-import { CiLocationOn } from "react-icons/ci";
-import SummaryDashboard from "../components/common/SummaryDashboard";
-import { LiaAngleLeftSolid, LiaAngleRightSolid } from "react-icons/lia";
 import SolidGaugeChart from "../components/ClubManagerChild/SolidGaugeChart";
+import { authAxios } from "../config/config";
+import { toast } from "react-toastify";
 
-const summaryData = {
-  Yesterday: {
-    FollowUps: "10/50",
-    Appointments: "0/0",
-    Classes: "4/5",
-    ServiceExpiry: 12,
-    PTExpiry: 3,
-    Upgrades: 2,
-    ClientBirthdays: 1,
-    ClientAnniversaries: 0,
-    StaffBirthdays: 0,
-    StaffAnniversaries: 0,
-  },
-  Today: {
-    FollowUps: "17/50",
-    Appointments: "0/0",
-    Classes: "5/5",
-    ServiceExpiry: 11,
-    PTExpiry: 2,
-    Upgrades: 5,
-    ClientBirthdays: 3,
-    ClientAnniversaries: 0,
-    StaffBirthdays: 0,
-    StaffAnniversaries: 0,
-  },
-  Tomorrow: {
-    FollowUps: "8/50",
-    Appointments: "1/2",
-    Classes: "2/5",
-    ServiceExpiry: 10,
-    PTExpiry: 1,
-    Upgrades: 0,
-    ClientBirthdays: 0,
-    ClientAnniversaries: 1,
-    StaffBirthdays: 0,
-    StaffAnniversaries: 0,
-  },
-};
+import {
+  parse,
+  isWithinInterval,
+  startOfDay,
+  endOfDay,
+  subDays,
+} from "date-fns";
+import { productsSold } from "../DummyData/DummyData";
+import { useNavigate } from "react-router-dom";
 
 const dateFilterOptions = [
   { value: "today", label: "Today" },
@@ -69,112 +36,47 @@ const dateFilterOptions = [
   { value: "custom", label: "Custom Date" },
 ];
 
-const classPerformance = [
-  {
-    id: 1,
-    classType: "Group Classes",
-    bookings: 4,
-    reservations: 95,
-    cancellations: 3,
-  },
-  {
-    id: 2,
-    classType: "Pilates",
-    bookings: 10,
-    reservations: 10,
-    cancellations: 0,
-  },
-  {
-    id: 3,
-    classType: "Recovery",
-    bookings: 5,
-    reservations: 5,
-    cancellations: 1,
-  },
-  {
-    id: 4,
-    classType: "Personal Training",
-    bookings: 8,
-    reservations: 8,
-    cancellations: 2,
-  },
-];
-
 const formatIndianNumber = (num) => new Intl.NumberFormat("en-IN").format(num);
 
-const FohDashboard = () => {
-  const navigate = useNavigate();
-  const days = ["Yesterday", "Today", "Tomorrow"];
-  const [currentDayIndex, setCurrentDayIndex] = useState(1); // Default to Today
+const FinanceManagerDashboard = () => {
   const [activeTab, setActiveTab] = useState("Snapshot");
   const [dateFilter, setDateFilter] = useState(dateFilterOptions[1]);
   const [customFrom, setCustomFrom] = useState(null);
   const [customTo, setCustomTo] = useState(null);
-  const [orders, setOrders] = useState([
-    {
-      id: "ORD001",
-      member_id: 1,
-      member_name: "John Doe",
-      category: "Product",
-      product_name: "Latte & Salad",
-      final_amount: 500,
-      stock_pending: 10,
-      placedOn: "2025-04-28",
-      isDone: false,
-    },
-    {
-      id: "ORD002",
-      member_id: 2,
-      member_name: "Jane Smith",
-      category: "Product",
-      product_name: "Black Coffice",
-      final_amount: 600,
-      stock_pending: 10,
-      placedOn: "2025-04-27",
-      isDone: false,
-    },
-    {
-      id: "ORD003",
-      member_id: 3,
-      member_name: "Jane Smith",
-      category: "Product",
-      product_name: "Espresso",
-      final_amount: 300,
-      stock_pending: 5,
-      placedOn: "2025-04-27",
-      isDone: false,
-    },
-    {
-      id: "ORD004",
-      member_id: 4,
-      member_name: "Jane Smith",
-      category: "Product",
-      product_name: "Americano",
-      final_amount: 250,
-      stock_pending: 2,
-      placedOn: "2025-04-27",
-      isDone: false,
-    },
-    {
-      id: "ORD005",
-      member_id: 5,
-      member_name: "Jane Smith",
-      category: "Product",
-      product_name: "Broccoli Soup",
-      final_amount: 350,
-      stock_pending: 2,
-      placedOn: "2025-04-27",
-      isDone: false,
-    },
-  ]);
 
-  const dataProductSeries = [5, 3, 4, 7, 2];
-  const totalProcutValue = dataProductSeries.reduce(
-    (sum, value) => sum + value,
-    0
-  );
+  const [club, setClub] = useState([]);
+  const [selectedClub, setSelectedClub] = useState(null);
 
-  const dataSeries = [5, 6, 2, 3, 1];
+  const navigate = useNavigate();
+
+  // Function to fetch club list
+  const fetchClub = async () => {
+    try {
+      const response = await authAxios().get("/club/list");
+      const data = response.data?.data || [];
+      const activeOnly = filterActiveItems(data);
+      setClub(activeOnly);
+
+      if (activeOnly.length === 1) {
+        setSelectedClub(activeOnly[0].id);
+      }
+    } catch (error) {
+      toast.error("Failed to fetch clubs");
+    }
+  };
+
+  useEffect(() => {
+    fetchClub();
+  }, []);
+
+  // Club dropdown options
+  const clubOptions =
+    club?.map((item) => ({
+      label: item.name,
+      value: item.id,
+    })) || [];
+
+  const dataSeries = [2, 1, 0, 0, 0];
   const totalValue = dataSeries.reduce((sum, value) => sum + value, 0);
 
   const leadsStatus = {
@@ -240,11 +142,11 @@ const FohDashboard = () => {
             click: function () {
               // Example: open a link based on category
               const linkMap = {
-                New: generateUrl(`/all-leads?leadStatus=New`),
-                Opportunity: generateUrl(`/all-leads?leadStatus=Opportunity`),
-                Lead: generateUrl(`/all-leads?leadStatus=Lead`),
-                Won: generateUrl(`/all-leads?leadStatus=Won`),
-                Lost: generateUrl(`/all-leads?leadStatus=Lost`),
+                New: generateUrl(`/all-leads?lead_status=New`),
+                Opportunity: generateUrl(`/all-leads?lead_status=Opportunity`),
+                Lead: generateUrl(`/all-leads?lead_status=Lead`),
+                Won: generateUrl(`/all-leads?lead_status=Won`),
+                Lost: generateUrl(`/all-leads?lead_status=Lost`),
               };
               const targetLink = linkMap[this.category];
               if (targetLink) {
@@ -266,6 +168,55 @@ const FohDashboard = () => {
       enabled: false,
     },
   };
+
+  // Calculate product counts for last 7 days
+  const dataProductSeries = useMemo(() => {
+    if (!productsSold.length) return [0, 0, 0, 0, 0];
+
+    // 🔑 Find latest date in data
+    const parsedDates = productsSold
+      .map((item) => parse(item.purchaseDate, "dd/MM/yyyy", new Date()))
+      .filter((d) => !isNaN(d));
+
+    const latestDate = new Date(Math.max(...parsedDates));
+
+    const from = startOfDay(subDays(latestDate, 6));
+    const to = endOfDay(latestDate);
+
+    const counts = {
+      Membership: 0,
+      "Personal Training": 0,
+      Pilates: 0,
+      Recovery: 0,
+      Cafe: 0,
+    };
+
+    productsSold.forEach((item) => {
+      const purchaseDate = parse(item.purchaseDate, "dd/MM/yyyy", new Date());
+
+      if (
+        !isNaN(purchaseDate) &&
+        isWithinInterval(purchaseDate, { start: from, end: to })
+      ) {
+        if (counts[item.servicesName] !== undefined) {
+          counts[item.servicesName]++;
+        }
+      }
+    });
+
+    return [
+      counts.Membership,
+      counts["Personal Training"],
+      counts.Pilates,
+      counts.Recovery,
+      counts.Cafe,
+    ];
+  }, [productsSold]);
+
+  const totalProcutValue = useMemo(
+    () => dataProductSeries.reduce((a, b) => a + b, 0),
+    [dataProductSeries]
+  );
 
   const productStatus = {
     chart: {
@@ -296,9 +247,8 @@ const FohDashboard = () => {
           fontWeight: "700",
           fontFamily: "Roboto, sans-serif",
         },
-        rotation: 0, // Prevent rotation even if text is long
+        rotation: 0,
         formatter: function () {
-          // Just add <br> for line break (manual)
           return this.value.replace(" ", "<br>");
         },
       },
@@ -309,7 +259,7 @@ const FohDashboard = () => {
       title: {
         text: null,
       },
-      maxPadding: 0.1, // adds space at the top
+      maxPadding: 0.1,
       tickInterval: 1,
     },
     legend: {
@@ -325,7 +275,6 @@ const FohDashboard = () => {
         pointPadding: 0.1,
         groupPadding: 0.05,
         borderWidth: 0,
-        width: 50,
         color: {
           linearGradient: { x1: 0, y1: 0, x2: 0, y2: 1 },
           stops: [
@@ -339,24 +288,17 @@ const FohDashboard = () => {
         point: {
           events: {
             click: function () {
-              // Example: open a link based on category
-              const linkMap = {
-                Membership: "/reports/all-orders/",
-                "Personal Training": "/reports/all-orders/",
-                Pilates: "/reports/all-orders/",
-                Recovery: "/reports/all-orders/",
-                Cafe: "/reports/all-orders/",
-              };
-              const targetLink = linkMap[this.category];
-              if (targetLink) {
-                window.location.href = targetLink; // navigate to link
-              }
+              // Navigate with date filter
+              navigate(
+                `/reports/all-orders?date=last_7_days&service_name=${encodeURIComponent(
+                  this.category
+                )}`
+              );
             },
           },
         },
       },
     },
-
     series: [
       {
         name: "Product",
@@ -368,26 +310,14 @@ const FohDashboard = () => {
     },
   };
 
-  // Handler to move to previous day
-  const handlePrevious = () => {
-    if (currentDayIndex > 0) {
-      setCurrentDayIndex(currentDayIndex - 1);
-    }
-  };
-
-  // Handler to move to next day
-  const handleNext = () => {
-    if (currentDayIndex < days.length - 1) {
-      setCurrentDayIndex(currentDayIndex + 1);
-    }
-  };
-
-  const currentDay = days[currentDayIndex];
-  const currentData = summaryData[currentDay];
-
   // Memoize the URL generation
   const generateUrl = (baseUrl) => {
     let url = `${baseUrl}&date=${encodeURIComponent(dateFilter?.value)}`;
+
+    // 👇 add club_id if selected
+    if (selectedClub) {
+      url += `&club_id=${encodeURIComponent(selectedClub)}`;
+    }
 
     // If custom dates are selected, append customFrom and customTo to the URL
     if (dateFilter?.value === "custom") {
@@ -401,54 +331,77 @@ const FohDashboard = () => {
 
   return (
     <div className="page--content">
-      <div className=" flex items-end justify-between gap-2 mb-5">
+      <div className=" flex items-start justify-between gap-2 mb-5">
         <div className="title--breadcrumbs">
           <p className="text-sm">{`Home > Dashboard`}</p>
           <h1 className="text-3xl font-semibold">Dashboard</h1>
         </div>
+        <div className="min-w-[180px] w-fit">
+          <Select
+            name="club_id"
+            value={
+              clubOptions.find((opt) => opt.value === selectedClub) || null
+            }
+            onChange={(option) => setSelectedClub(option ? option.value : null)}
+            options={clubOptions}
+            styles={customStyles}
+            placeholder="Choose Club"
+            className="w-full"
+          />
+        </div>
+      </div>
+      {/* end title */}
 
-        <div className="w-fit bg-white shodow--box rounded-[10px] px-5 py-2">
-          <div className="flex items-center">
-            <div className="w-fit flex items-center gap-2 border-r">
-              <div className="text-md font-medium text-gray-600 flex gap-2 items-center">
-                <FaCircle className="text-[10px] text-[#009EB2]" /> Total
-                Members
-              </div>
-              <div className="pr-2">
-                <span className="text-md font-semibold">2315</span>
-              </div>
+      <div className="w-full bg-white box--shadow rounded-[10px] px-3 py-3 flex gap-3 justify-between items-center mb-4">
+        <div className="flex gap-3">
+          <button
+            type="button"
+            className={`px-4 py-2 rounded ${
+              activeTab === "Snapshot" ? "bg--color text-white" : ""
+            }`}
+            onClick={() => setActiveTab("Snapshot")}
+          >
+            Snapshot
+          </button>
+        </div>
+        <div className="flex items-center">
+          <div className="w-fit flex items-center gap-2 border-r">
+            <div className="text-md font-medium text-gray-600 flex gap-2 items-center">
+              <FaCircle className="text-[10px] text-[#009EB2]" /> Total Members
             </div>
-            <div className="w-fit flex items-center gap-2 border-r pl-2">
-              <div className="text-md font-medium text-gray-600 flex gap-2 items-center">
-                <FaCircle className="text-[10px] text-[#1F9254]" />
-                Active Members
-              </div>
-              <div className="pr-2">
-                <span className="text-md font-semibold">590</span>
-              </div>
+            <div className="pr-2">
+              <span className="text-md font-semibold">2315</span>
             </div>
-            <div className="w-fit flex items-center gap-2 border-r pl-2">
-              <div className="text-md font-medium text-gray-600 flex gap-2 items-center">
-                <FaCircle className="text-[10px] text-[#ff9900]" />
-                Inactive Members
-              </div>
-              <div className="pr-2">
-                <span className="text-md font-semibold">800</span>
-              </div>
+          </div>
+          <div className="w-fit flex items-center gap-2 border-r pl-2">
+            <div className="text-md font-medium text-gray-600 flex gap-2 items-center">
+              <FaCircle className="text-[10px] text-[#1F9254]" />
+              Active Members
             </div>
-            <div className="w-fit flex items-center gap-2 pl-2">
-              <div className="text-md font-medium text-gray-600 flex gap-2 items-center">
-                <FaCircle className="text-[10px] text-[#FF0000]" />
-                Expired Members
-              </div>
-              <div>
-                <span className="text-md font-semibold">925</span>
-              </div>
+            <div className="pr-2">
+              <span className="text-md font-semibold">590</span>
+            </div>
+          </div>
+          <div className="w-fit flex items-center gap-2 border-r pl-2">
+            <div className="text-md font-medium text-gray-600 flex gap-2 items-center">
+              <FaCircle className="text-[10px] text-[#ff9900]" />
+              Inactive Members
+            </div>
+            <div className="pr-2">
+              <span className="text-md font-semibold">800</span>
+            </div>
+          </div>
+          <div className="w-fit flex items-center gap-2 pl-2">
+            <div className="text-md font-medium text-gray-600 flex gap-2 items-center">
+              <FaCircle className="text-[10px] text-[#FF0000]" />
+              Expired Members
+            </div>
+            <div>
+              <span className="text-md font-semibold">925</span>
             </div>
           </div>
         </div>
       </div>
-      {/* end title */}
 
       <div className="flex gap-3">
         <div className="rounded-[15px] p-4 box--shadow bg-white w-[75%]">
@@ -558,14 +511,14 @@ const FohDashboard = () => {
               items={[
                 {
                   label: "Memberships",
-                  value: "00",
+                  value: "01",
                   link: generateUrl(
                     `/reports/sales-reports/new-joinees-report?billType=New&serviceType=Membership`
                   ),
                 },
                 {
                   label: "Packages",
-                  value: "01",
+                  value: "00",
                   link: generateUrl(
                     `/reports/sales-reports/new-joinees-report?billType=New&serviceType=Package`
                   ),
@@ -589,14 +542,14 @@ const FohDashboard = () => {
               items={[
                 {
                   label: "Memberships",
-                  value: "01",
+                  value: "00",
                   link: generateUrl(
                     `/reports/sales-reports/new-joinees-report?billType=Renewal&serviceType=Membership`
                   ),
                 },
                 {
                   label: "Packages",
-                  value: "00",
+                  value: "01",
                   link: generateUrl(
                     `/reports/sales-reports/new-joinees-report?billType=Renewal&serviceType=Package`
                   ),
@@ -692,94 +645,15 @@ const FohDashboard = () => {
               <HighchartsReact highcharts={Highcharts} options={leadsStatus} />
             </div>
           </div>
-
-          <div className="border border-[#D4D4D4] rounded-[5px] bg-white p-2 pb-1 w-full relative mt-3">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="font-semibold">Session Performance</h2>
-            </div>
-            <div className="relative overflow-x-auto">
-              <table className="min-w-full text-sm text-left">
-                <thead className="bg-[#F1F1F1]">
-                  <tr>
-                    <th className="p-2">Class Type</th>
-                    <th className="p-2">Bookings</th>
-                    <th className="p-2">Reservations</th>
-                    <th className="p-2">Cancellations</th>
-                    <th className="p-2">Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {classPerformance.map((item, index) => (
-                    <tr key={item.id} className="border-t">
-                      <td className="p-2">{item.classType}</td>
-                      <td className="p-2">
-                        {String(item.bookings).padStart(2, "0")}
-                      </td>
-                      <td className="p-2">
-                        {String(item.reservations).padStart(2, "0")}
-                      </td>
-                      <td className="p-2">
-                        {String(item.cancellations).padStart(2, "0")}
-                      </td>
-                      <td className="p-2">
-                        <div className="bg-[#F1F1F1] border border-[#D4D4D4] rounded-[5px] w-[32px] h-[32px] flex items-center justify-center cursor-pointer">
-                          <img src={eyeIcon} />
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
         </div>
         <div className="w-[25%]">
           <div className="rounded-[15px] p-4 box--shadow bg-white">
-            <div>
-              <p className="text-lg font-[600] mb-3 text-center">Summary </p>
-              <div className="flex justify-between gap-3 items-center rounded-full bg-[#F1F1F1] px-3 py-2">
-                <button
-                  onClick={handlePrevious}
-                  disabled={currentDayIndex === 0}
-                  className={`${
-                    currentDayIndex === 0 ? "opacity-0 invisible" : ""
-                  }`}
-                >
-                  <LiaAngleLeftSolid />
-                </button>
-                <span>{currentDay}</span>
-                <button
-                  onClick={handleNext}
-                  disabled={currentDayIndex === days.length - 1}
-                  className={`${
-                    currentDayIndex === days.length - 1
-                      ? "opacity-0 invisible"
-                      : ""
-                  }`}
-                >
-                  <LiaAngleRightSolid />
-                </button>
-              </div>
-              <SummaryDashboard data={currentData} />
-            </div>
-          </div>
-          <div className="rounded-[15px] p-4 box--shadow bg-white mt-4">
             <SolidGaugeChart />
           </div>
         </div>
-      </div>
-
-      <div className="rounded-[15px] p-4 w-full mt-2 box--shadow bg-white">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="font-semibold">Pending Orders</h2>
-          <a href="#" className="text-[#009EB2] underline text-sm">
-            View All
-          </a>
-        </div>
-        <PendingOrderTable setOrders={setOrders} orders={orders} />
       </div>
     </div>
   );
 };
 
-export default FohDashboard;
+export default FinanceManagerDashboard;

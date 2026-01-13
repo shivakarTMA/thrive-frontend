@@ -33,7 +33,7 @@ import ProductModal from "../components/modal/ProductDetails";
 import { useDispatch, useSelector } from "react-redux";
 import ConfirmUnderAge from "../components/modal/ConfirmUnderAge";
 import { RiDiscountPercentFill } from "react-icons/ri";
-import { IoIosTime } from "react-icons/io";
+import { IoIosCloseCircle, IoIosTime } from "react-icons/io";
 import { LuIndianRupee } from "react-icons/lu";
 import { toast } from "react-toastify";
 import { authAxios, phoneAxios } from "../config/config";
@@ -84,7 +84,7 @@ const stepValidationSchemas = [
   }),
   Yup.object({
     company_name: Yup.string().required("Company is required"),
-    emergencyContacts: Yup.array()
+    member_emergency_contact: Yup.array()
       .of(
         Yup.object({
           name: Yup.string().required("Name is required"),
@@ -122,6 +122,10 @@ const ConvertMemberForm = ({
   const [companyOptions, setCompanyOptions] = useState([]);
   const [duplicateEmailError, setDuplicateEmailError] = useState("");
   const [showDuplicateEmailModal, setShowDuplicateEmailModal] = useState(false);
+
+  const [paymentModalOpen, setPaymentModalOpen] = useState(false);
+  const [paymentUrl, setPaymentUrl] = useState("");
+  const [orderNo, setOrderNo] = useState("");
 
   const [voucherInput, setVoucherInput] = useState("");
   const [voucherStatus, setVoucherStatus] = useState(null); // "success", "error", or null
@@ -178,12 +182,10 @@ const ConvertMemberForm = ({
     schedule_date_time: "",
     created_by: null,
     staff_name: "",
-    professionalInformation: {
-      designation: "",
-      companyName: "",
-      officialEmail: "",
-    },
-    emergencyContacts: [
+    company_name: "",
+    designation: "",
+    official_email: "",
+    member_emergency_contact: [
       {
         name: "",
         phone: "",
@@ -239,12 +241,11 @@ const ConvertMemberForm = ({
           );
 
           // // ✅ Get member_id from response (or use selectedLeadMember.id if API doesn't return)
-          const memberId =
-            memberResponse.data?.member_id || selectedLeadMember;
+          const memberId = memberResponse.data?.member_id || selectedLeadMember;
 
-          if (values.emergencyContacts?.length > 0) {
-            for (const contact of values.emergencyContacts) {
-              if (contact.name && contact.phone) {
+          if (values.member_emergency_contact?.length > 0) {
+            for (const contact of values.member_emergency_contact) {
+              if (!contact.id && contact.name && contact.phone) {
                 await authAxios().post("/member-emergency-contact/create", {
                   member_id: memberId,
                   name: contact.name,
@@ -254,6 +255,18 @@ const ConvertMemberForm = ({
                   email: contact.email || "",
                   address: contact.address || "",
                 });
+              }
+
+              // (Optional) UPDATE existing contacts
+              if (contact.id) {
+                await authAxios().put(
+                  `/member-emergency-contact/${contact.id}`,
+                  {
+                    name: contact.name,
+                    relationship: contact.relationship,
+                    phone: contact.phone,
+                  }
+                );
               }
             }
           }
@@ -274,14 +287,25 @@ const ConvertMemberForm = ({
 
             console.log("paymentPayload", paymentPayload);
 
-            await authAxios().post("/payment/proceed", paymentPayload);
-          }
+            const res = await authAxios().post(
+              "/payment/proceed",
+              paymentPayload
+            );
 
-          toast.success("Member created and payment initiated!");
+            if (res.data?.status) {
+              const { paymentUrl, order_no } = res.data.response;
+
+              setPaymentUrl(paymentUrl);
+              setOrderNo(order_no);
+              setPaymentModalOpen(true); // ✅ OPEN MODAL
+
+              toast.success("Member created and payment initiated!");
+            }
+          }
 
           // toast.success("Member created successfully!");
 
-          setMemberModal(false);
+          // setMemberModal(false);
           onLeadUpdate();
         } catch (error) {
           // toast.error("Failed to create member. Please try again.");
@@ -291,7 +315,7 @@ const ConvertMemberForm = ({
       } else {
         setStep(step + 1);
       }
-      setStep(step + 1);
+      // setStep(step + 1);
     },
   });
 
@@ -315,10 +339,12 @@ const ConvertMemberForm = ({
             : [];
 
           const emergencyContacts =
-            data.emergencyContacts && data.emergencyContacts.length > 0
-              ? data.emergencyContacts
+            data.member_emergency_contact &&
+            data.member_emergency_contact.length > 0
+              ? data.member_emergency_contact
               : [
                   {
+                    id: null,
                     name: "",
                     phone: "",
                     relationship: "",
@@ -328,7 +354,7 @@ const ConvertMemberForm = ({
           formik.setValues({
             id: data.id || "",
             club_id: data.club_id || null,
-            profile_pic: data.profile_pic || "",
+            profile_pic: "",
             full_name: data.full_name || "",
             mobile: data.country_code ? data.mobile : "",
             country_code: data.country_code || "",
@@ -342,6 +368,8 @@ const ConvertMemberForm = ({
             address: data.address || "",
             location: data.location || "",
             company_name: data.company_name || "",
+            designation: data.designation || "",
+            official_email: data.official_email || "",
             interested_in: interestedList.map((i) => i.value),
             lead_source: data.lead_source || "",
             lead_type: data.lead_type || "",
@@ -355,12 +383,16 @@ const ConvertMemberForm = ({
             start_date: new Date(),
             created_by: data.created_by || null,
             staff_name: data.staff_name || "",
-            emergencyContacts: emergencyContacts,
+
+            member_emergency_contact: emergencyContacts,
             lead_owner: data.lead_owner || "",
             club_data: data.club_data || { name: "", state: "", country: "" },
             productType: "MEMBERSHIP_PLAN",
           });
           setSelected(interestedList);
+          if (data.profile_pic) {
+            setProfileImage(data.profile_pic);
+          }
         }
       } catch (err) {
         console.error(err);
@@ -463,7 +495,7 @@ const ConvertMemberForm = ({
       if (step === stepValidationSchemas.length - 1) {
         formik.handleSubmit();
       } else {
-        setStep(step + 1);
+        setStep((prev) => prev + 1);
       }
     } else {
       // Mark all nested fields as touched
@@ -484,22 +516,6 @@ const ConvertMemberForm = ({
       return { errors, touched: touchedFields };
     }
   };
-
-  // const handleProductSubmit = (product) => {
-  //   formik.setFieldValue("productDetails.title", product.title);
-  //   formik.setFieldValue("productDetails.id", product.id);
-  //   formik.setFieldValue(
-  //     "productDetails.duration_value",
-  //     product.duration_value
-  //   );
-  //   formik.setFieldValue("productDetails.duration_type", product.duration_type);
-  //   formik.setFieldValue("productDetails.amount", product.amount);
-  //   formik.setFieldValue("productDetails.total_amount", product.total_amount);
-  //   formik.setFieldValue("productDetails.discount", product.discount);
-  //   formik.setFieldValue("productDetails.gst", product.gst);
-  //   formik.setFieldValue("productDetails.gst_amount", product.gst_amount);
-  //   formik.setFieldValue("productDetails.final_amount", product.final_amount);
-  // };
 
   const handleProductSubmit = (product) => {
     // Convert to numbers safely
@@ -609,23 +625,47 @@ const ConvertMemberForm = ({
   };
 
   const handleAddContact = () => {
-    const currentContacts = formik.values.emergencyContacts || [];
-    formik.setFieldValue("emergencyContacts", [
+    const currentContacts = formik.values.member_emergency_contact || [];
+    formik.setFieldValue("member_emergency_contact", [
       ...currentContacts,
-      { name: "", phone: "", relationship: "" },
+      { id: null, name: "", phone: "", relationship: "" },
     ]);
   };
 
-  const handleRemoveContact = (index) => {
-    const updated = [...formik.values.emergencyContacts];
-    updated.splice(index, 1);
-    formik.setFieldValue("emergencyContacts", updated);
+  const handleRemoveContact = async (contactId) => {
+    // Find the contact
+    const contact = formik.values.member_emergency_contact.find(
+      (c) => c.id === contactId
+    );
+
+    // Delete from DB if exists
+    if (contact?.id) {
+      try {
+        await authAxios().delete(`/member-emergency-contact/${contact.id}`);
+        toast.success("Emergency contact removed");
+      } catch (error) {
+        toast.error("Failed to delete contact");
+        return;
+      }
+    }
+
+    // Remove from Formik state (FILTER by id)
+    const updatedContacts = formik.values.member_emergency_contact.filter(
+      (c) => c.id !== contactId
+    );
+
+    formik.setFieldValue(
+      "member_emergency_contact",
+      updatedContacts.length > 0
+        ? updatedContacts
+        : [{ id: null, name: "", phone: "", relationship: "" }]
+    );
   };
 
   const handleEmergancyPhone = (value, index) => {
-    const updated = [...formik.values.emergencyContacts];
+    const updated = [...formik.values.member_emergency_contact];
     updated[index].phone = value;
-    formik.setFieldValue("emergencyContacts", updated);
+    formik.setFieldValue("member_emergency_contact", updated);
   };
 
   const handlePhoneChange = (value) => {
@@ -1152,23 +1192,16 @@ const ConvertMemberForm = ({
                             Lead Source<span className="text-red-500">*</span>
                           </label>
                           <div className="relative">
-                            <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
+                            <span className="absolute top-[50%] translate-y-[-50%] left-[15px]">
                               <FaListCheck />
                             </span>
-                            <Select
+                            <input
                               name="lead_source"
-                              value={leadsSources.find(
-                                (opt) => opt.value === formik.values.lead_source
-                              )}
-                              onChange={(option) =>
-                                formik.setFieldValue(
-                                  "lead_source",
-                                  option.value
-                                )
-                              }
-                              options={leadsSources}
-                              styles={selectIcon}
+                              value={formik.values.lead_source}
+                              // onChange={formik.handleChange}
+                              readOnly={true}
                               isDisabled={true}
+                              className="custom--input w-full input--icon  cursor-not-allowed pointer-events-none !bg-gray-100 !text-gray-500"
                             />
                           </div>
                           {formik.errors?.lead_source &&
@@ -1226,11 +1259,8 @@ const ConvertMemberForm = ({
                             </span>
                             <input
                               type="text"
-                              name="professionalInformation.designation"
-                              value={
-                                formik.values?.professionalInformation
-                                  ?.designation
-                              }
+                              name="designation"
+                              value={formik.values?.designation}
                               onChange={formik.handleChange}
                               className="custom--input w-full input--icon"
                             />
@@ -1286,11 +1316,8 @@ const ConvertMemberForm = ({
                             </span>
                             <input
                               type="email"
-                              name="professionalInformation.officialEmail"
-                              value={
-                                formik.values?.professionalInformation
-                                  ?.officialEmail
-                              }
+                              name="official_email"
+                              value={formik.values?.official_email}
                               onChange={formik.handleChange}
                               className="custom--input w-full input--icon"
                             />
@@ -1302,115 +1329,131 @@ const ConvertMemberForm = ({
                       <h3 className="text-2xl font-semibold mb-2">
                         Emergency Contact
                       </h3>
-                      {formik.values?.emergencyContacts?.map((phone, index) => (
-                        <div
-                          key={index}
-                          className="grid grid-cols-3 gap-4 mb-4 border p-4 rounded-lg"
-                        >
-                          {/* Name Field */}
-                          <div>
-                            <label className="mb-2 block">
-                              Name<span className="text-red-500">*</span>
-                            </label>
-                            <div className="custom--date dob-format relative">
-                              <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
-                                <FaUser />
-                              </span>
-                              <input
-                                type="text"
-                                name={`emergencyContacts.${index}.name`}
-                                value={phone?.name}
-                                onChange={formik.handleChange}
-                                className="custom--input w-full input--icon"
-                              />
-                            </div>
-                            {formik.errors?.emergencyContacts?.[index]?.name &&
-                              formik.touched?.emergencyContacts?.[index]
-                                ?.name && (
-                                <div className="text-red-500 text-sm">
-                                  {formik.errors.emergencyContacts[index].name}
-                                </div>
-                              )}
-                          </div>
-
-                          {/* Contact Number Field */}
-                          <div>
-                            <label className="mb-2 block">
-                              Number<span className="text-red-500">*</span>
-                            </label>
-                            <PhoneInput
-                              name={`emergencyContacts.${index}.phone`}
-                              value={phone?.phone}
-                              onChange={(value) =>
-                                handleEmergancyPhone(value, index)
-                              } // Ensure this function handles formik update
-                              international
-                              defaultCountry="IN"
-                              countryCallingCodeEditable={false}
-                              className="custom--input w-full custom--phone"
-                            />
-                            {formik.errors?.emergencyContacts?.[index]?.phone &&
-                              formik.touched?.emergencyContacts?.[index]
-                                ?.phone && (
-                                <div className="text-red-500 text-sm">
-                                  {formik.errors.emergencyContacts[index].phone}
-                                </div>
-                              )}
-                          </div>
-
-                          {/* Relationship Field */}
-                          <div>
-                            <label className="mb-2 block">
-                              Relationship
-                              <span className="text-red-500">*</span>
-                            </label>
-                            <div className="custom--date dob-format relative">
-                              <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
-                                <FaLink />
-                              </span>
-                              <Select
-                                name={`emergencyContacts.${index}.relationship`}
-                                value={relationList.find(
-                                  (opt) =>
-                                    opt.value === formik.values.lead_source
+                      {formik.values?.member_emergency_contact?.map(
+                        (phone, index) => (
+                          <div
+                            key={index}
+                            className="grid grid-cols-3 gap-4 mb-4 border p-4 rounded-lg relative"
+                          >
+                            {/* Name Field */}
+                            <div>
+                              <label className="mb-2 block">
+                                Name<span className="text-red-500">*</span>
+                              </label>
+                              <div className="custom--date dob-format relative">
+                                <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
+                                  <FaUser />
+                                </span>
+                                <input
+                                  type="text"
+                                  name={`member_emergency_contact.${index}.name`}
+                                  value={phone?.name}
+                                  onChange={formik.handleChange}
+                                  className="custom--input w-full input--icon"
+                                />
+                              </div>
+                              {formik.errors?.member_emergency_contact?.[index]
+                                ?.name &&
+                                formik.touched?.member_emergency_contact?.[
+                                  index
+                                ]?.name && (
+                                  <div className="text-red-500 text-sm">
+                                    {
+                                      formik.errors.member_emergency_contact[
+                                        index
+                                      ].name
+                                    }
+                                  </div>
                                 )}
-                                onChange={(option) =>
-                                  formik.setFieldValue(
-                                    `emergencyContacts.${index}.relationship`,
-                                    option.value
-                                  )
-                                }
-                                options={relationList}
-                                styles={selectIcon}
-                              />
                             </div>
-                            {formik.errors?.emergencyContacts?.[index]
-                              ?.relationship &&
-                              formik.touched?.emergencyContacts?.[index]
-                                ?.relationship && (
-                                <div className="text-red-500 text-sm">
-                                  {
-                                    formik.errors.emergencyContacts[index]
-                                      .relationship
-                                  }
-                                </div>
-                              )}
-                          </div>
 
-                          {/* Remove Button */}
-                          <div className="col-span-3 flex justify-end mt-2">
-                            {formik.values?.emergencyContacts?.length > 1 && (
-                              <button
-                                type="button"
-                                onClick={() => handleRemoveContact(index)}
-                                className="text-red-500"
-                              >
-                                Remove
-                              </button>
-                            )}
+                            {/* Contact Number Field */}
+                            <div>
+                              <label className="mb-2 block">
+                                Number<span className="text-red-500">*</span>
+                              </label>
+                              <PhoneInput
+                                name={`member_emergency_contact.${index}.phone`}
+                                value={phone?.phone}
+                                onChange={(value) =>
+                                  handleEmergancyPhone(value, index)
+                                } // Ensure this function handles formik update
+                                international
+                                defaultCountry="IN"
+                                countryCallingCodeEditable={false}
+                                className="custom--input w-full custom--phone"
+                              />
+                              {formik.errors?.member_emergency_contact?.[index]
+                                ?.phone &&
+                                formik.touched?.member_emergency_contact?.[
+                                  index
+                                ]?.phone && (
+                                  <div className="text-red-500 text-sm">
+                                    {
+                                      formik.errors.member_emergency_contact[
+                                        index
+                                      ].phone
+                                    }
+                                  </div>
+                                )}
+                            </div>
+
+                            {/* Relationship Field */}
+                            <div>
+                              <label className="mb-2 block">
+                                Relationship
+                                <span className="text-red-500">*</span>
+                              </label>
+                              <div className="custom--date dob-format relative">
+                                <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
+                                  <FaLink />
+                                </span>
+                                <Select
+                                  name={`member_emergency_contact.${index}.relationship`}
+                                  value={relationList.find(
+                                    (opt) => opt.value === phone.relationship
+                                  )}
+                                  onChange={(option) =>
+                                    formik.setFieldValue(
+                                      `member_emergency_contact.${index}.relationship`,
+                                      option.value
+                                    )
+                                  }
+                                  options={relationList}
+                                  styles={selectIcon}
+                                />
+                              </div>
+                              {formik.errors?.member_emergency_contact?.[index]
+                                ?.relationship &&
+                                formik.touched?.member_emergency_contact?.[
+                                  index
+                                ]?.relationship && (
+                                  <div className="text-red-500 text-sm">
+                                    {
+                                      formik.errors.member_emergency_contact[
+                                        index
+                                      ].relationship
+                                    }
+                                  </div>
+                                )}
+                            </div>
+
+                            {/* Remove Button */}
+                            <div className="absolute top-0 right-[10px]">
+                              {formik.values?.member_emergency_contact?.length >
+                                1 && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveContact(phone.id)}
+                                  className="text-black font-bold"
+                                >
+                                  <IoIosCloseCircle className="text-2xl mt-2" />
+                                </button>
+                              )}
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        )
+                      )}
 
                       <button
                         type="button"
@@ -1718,17 +1761,17 @@ const ConvertMemberForm = ({
                     onClick={handleNextStep}
                   >
                     {step === stepValidationSchemas.length - 1
-                      ? "Offline Payment"
+                      ? "Pay Now"
                       : "Next"}
                   </button>
-                  {step === stepValidationSchemas.length - 1 && (
+                  {/* {step === stepValidationSchemas.length - 1 && (
                     <button
                       type="button"
                       className="px-4 py-2 bg-black text-white font-semibold rounded max-w-[150px] w-full"
                     >
                       Online Payment
                     </button>
-                  )}
+                  )} */}
                 </div>
               </div>
             </form>
@@ -1770,6 +1813,49 @@ const ConvertMemberForm = ({
             >
               Close
             </button>
+          </div>
+        </div>
+      )}
+
+      {paymentModalOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]">
+          <div className="bg-white rounded-lg w-[500px] p-6">
+            <h2 className="text-lg font-semibold mb-2">
+              Complete Your Payment
+            </h2>
+
+            <p className="text-sm text-gray-600 mb-3">
+              Order No: <span className="font-medium">{orderNo}</span>
+            </p>
+
+            <textarea
+              readOnly
+              value={paymentUrl}
+              className="w-full h-[120px] border rounded p-2 text-sm"
+            />
+
+            <div className="flex justify-end gap-3 mt-4">
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(paymentUrl);
+                  toast.success("Payment URL copied");
+                }}
+                className="px-4 py-2 bg-black text-white rounded"
+              >
+                Copy URL
+              </button>
+
+              <button
+                onClick={() => {
+                  setPaymentModalOpen(false);
+                  setMemberModal(false)
+                  formik.resetForm(); // optional
+                }}
+                className="px-4 py-2 border rounded"
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}

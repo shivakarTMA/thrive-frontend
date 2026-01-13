@@ -329,8 +329,8 @@ export default function AllEnquiresFilterPanel({
                 />
               </div>
 
-              {/* Service Name */}
-              <div>
+              {/* Interested In */}
+              {/* <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Interested In
                 </label>
@@ -341,7 +341,7 @@ export default function AllEnquiresFilterPanel({
                   placeholder="Select Interested"
                   styles={customStyles}
                 />
-              </div>
+              </div> */}
 
               {/* Gender */}
               <div>

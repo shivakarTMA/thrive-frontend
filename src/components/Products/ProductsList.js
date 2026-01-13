@@ -22,6 +22,7 @@ const ProductsList = () => {
   const [productCategory, setProductCategory] = useState([]);
   const [productFilter, setProductFilter] = useState(null);
   const [club, setClub] = useState([]);
+  const [clubFilter, setClubFilter] = useState(null);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [page, setPage] = useState(1);
@@ -71,7 +72,6 @@ const ProductsList = () => {
       value: item.id,
     })) || [];
 
-
   const fetchProductCategory = async (search = "") => {
     try {
       const res = await authAxios().get("/product/category/list", {
@@ -109,6 +109,9 @@ const ProductsList = () => {
       if (search) params.search = search;
 
       if (category?.value) params.product_category_id = category.value;
+      if (clubFilter?.value) {
+        params.club_id = clubFilter.value;
+      }
 
       const res = await authAxios().get("/product/list", { params });
       const responseData = res.data;
@@ -128,12 +131,12 @@ const ProductsList = () => {
   // Fetch packages again when search or service filter changes
   useEffect(() => {
     const delayDebounce = setTimeout(() => {
-      fetchProductList(searchTerm, 1, productFilter);
+      fetchProductList(searchTerm, 1, productFilter, clubFilter);
       setPage(1);
     }, 300);
 
     return () => clearTimeout(delayDebounce);
-  }, [searchTerm, productFilter]);
+  }, [searchTerm, productFilter, clubFilter]);
 
   // Initial fetch
   useEffect(() => {
@@ -183,7 +186,7 @@ const ProductsList = () => {
   const initialValues = {
     image: "",
     // service_id: "",
-    club_id:"",
+    club_id: "",
     product_category_id: "",
     name: "",
     caption: "",
@@ -254,7 +257,6 @@ const ProductsList = () => {
     },
   });
 
-
   return (
     <div className="page--content">
       <div className="flex items-end justify-between gap-2 mb-5">
@@ -299,6 +301,16 @@ const ProductsList = () => {
             options={productCategoryOptions}
             value={productFilter}
             onChange={(option) => setProductFilter(option)}
+            isClearable
+            styles={customStyles}
+          />
+        </div>
+        <div className="w-fit min-w-[180px]">
+          <Select
+            placeholder="Filter by club"
+            options={clubOptions}
+            value={clubFilter}
+            onChange={(option) => setClubFilter(option)}
             isClearable
             styles={customStyles}
           />
@@ -399,18 +411,18 @@ const ProductsList = () => {
             </tbody>
           </table>
         </div>
-      {/* Pagination */}
-      <Pagination
-        page={page}
-        totalPages={totalPages}
-        rowsPerPage={rowsPerPage}
-        totalCount={totalCount}
-        currentDataLength={packages.length}
-        onPageChange={(newPage) => {
-          setPage(newPage);
-          fetchProductList(searchTerm, newPage);
-        }}
-      />
+        {/* Pagination */}
+        <Pagination
+          page={page}
+          totalPages={totalPages}
+          rowsPerPage={rowsPerPage}
+          totalCount={totalCount}
+          currentDataLength={packages.length}
+          onPageChange={(newPage) => {
+            setPage(newPage);
+            fetchProductList(searchTerm, newPage);
+          }}
+        />
       </div>
       {showModal && (
         <CreateProduct

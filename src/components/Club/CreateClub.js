@@ -23,12 +23,6 @@ import "react-datepicker/dist/react-datepicker.css";
 import { GoClock } from "react-icons/go";
 import { PiImageFill } from "react-icons/pi";
 
-const parseTime = (time) => {
-  const [hours, minutes] = time.split(":");
-  const date = new Date();
-  date.setHours(hours, minutes, 0, 0);
-  return date;
-};
 
 const CreateClub = ({
   setShowModal,

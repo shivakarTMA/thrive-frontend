@@ -245,7 +245,7 @@ export default function LostFoundPanel({
               </div>
 
               {/* Gym Floor */}
-              <div>
+              {/* <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Gym Floor
                 </label>
@@ -256,11 +256,11 @@ export default function LostFoundPanel({
                   placeholder="Select Floor"
                   styles={customStyles}
                 />
-              </div>
+              </div> */}
 
-              {itemStatus?.value === "AVAILABLE" && (
+              {/* {itemStatus?.value === "AVAILABLE" && (
                 <>
-                  {/* Found From Date */}
+                 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Found From
@@ -283,7 +283,7 @@ export default function LostFoundPanel({
                     </div>
                   </div>
 
-                  {/* Found To Date */}
+                
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Found To
@@ -306,7 +306,7 @@ export default function LostFoundPanel({
 
               {itemStatus?.value === "RETURNED" && (
                 <>
-                  {/* Returned From Date */}
+          
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Returned From
@@ -329,7 +329,7 @@ export default function LostFoundPanel({
                     </div>
                   </div>
 
-                  {/* Returned To Date */}
+              
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Returned To
@@ -348,7 +348,7 @@ export default function LostFoundPanel({
                     </div>
                   </div>
                 </>
-              )}
+              )} */}
             </div>
 
             {/* Apply Button */}

@@ -5,7 +5,7 @@ import { FaCirclePlus } from "react-icons/fa6";
 import DummyProfile from "../../assets/images/dummy-profile.png";
 import { customStyles } from "../../Helper/helper";
 import Select from "react-select";
-import CreateInvoice from "../../Pages/CreateInvoice";
+import RenewUpgradeService from "../../Pages/RenewUpgradeService";
 import AddCoins from "../CoinsList/AddCoins";
 import CreateMemberAppointment from "../Appointment/CreateMemberAppointment";
 import SuspendAndPause from "../common/SuspendAndPause";
@@ -19,17 +19,20 @@ const statusOptions = [
 
 const ServiceCard = ({ details }) => {
   console.log(details, "details");
-  const membershipData = {
-    membershipId: "TL317432",
-    relationshipSince: "19 Apr, 2024",
-    planStarted: "15 Jun, 2025",
-    expiryDate: "15 Nov, 2025",
-    nextBillingDate: "16 Nov, 2025",
-    daysRemaining: 120,
-    duration: "6 months",
-    status: "Active",
-    coins: 250,
-  };
+
+  const [membershipData, setMembershipData] = useState([]);
+
+  // const membershipData = {
+  //   membershipId: "TL317432",
+  //   relationshipSince: "19 Apr, 2024",
+  //   planStarted: "15 Jun, 2025",
+  //   expiryDate: "15 Nov, 2025",
+  //   nextBillingDate: "16 Nov, 2025",
+  //   daysRemaining: 120,
+  //   duration: "6 months",
+  //   status: "Active",
+  //   coins: 250,
+  // };
 
   const purchasedServices = [
     {
@@ -93,13 +96,12 @@ const ServiceCard = ({ details }) => {
   );
 
   // Fetch coins with filters applied
-  const fetchMemberCoins = async () => {
+  const fetchMemberServiceCard = async () => {
     try {
       // Make the API call with query parameters
-      const res = await authAxios().get(`/coin/transaction/list/${details?.id}`);
+      const res = await authAxios().get(`/member/service/card/${details?.id}`);
       const data = res.data?.data || [];
-      const total = data.reduce((sum, coin) => sum + coin.coins, 0);
-      setCoinsList(total);
+      setMembershipData(data);
     } catch (err) {
       console.error(err);
       toast.error("Failed to fetch coins");
@@ -107,15 +109,25 @@ const ServiceCard = ({ details }) => {
   };
 
   useEffect(() => {
-    fetchMemberCoins();
-  }, [coinsList]);
+    fetchMemberServiceCard();
+  }, []);
 
   // This will be passed to AddCoins to update the list
   const handleUpdateCoins = () => {
-    fetchMemberCoins(); // Refreshes the coins list
+    fetchMemberServiceCard(); // Refreshes the coins list
   };
 
-  console.log(coinsList, "coinsList");
+  const formatDate = (date) => {
+    if (!date) return "";
+
+    const d = new Date(date);
+
+    const day = String(d.getDate()).padStart(2, "0");
+    const month = d.toLocaleString("en-GB", { month: "short" });
+    const year = d.getFullYear();
+
+    return `${day} ${month}, ${year}`;
+  };
 
   return (
     <>
@@ -128,7 +140,8 @@ const ServiceCard = ({ details }) => {
                 Membership Plan
               </h1>
               <p className="text-lg text-[#6F6F6F] italic font-[300]">
-                Relationship since: {membershipData.relationshipSince}
+                Relationship since:{" "}
+                {formatDate(membershipData?.relationship_since)}
               </p>
             </div>
             <div
@@ -136,15 +149,17 @@ const ServiceCard = ({ details }) => {
               onClick={() => setCoinsModal(true)}
             >
               <img src={Coins} className="mr-1" />
-              <span className="text-xl font-medium text-black mr-3">{coinsList}</span>
+              <span className="text-xl font-medium text-black mr-3">
+                {membershipData?.earn_coins}
+              </span>
               <FaCirclePlus className="text-black text-2xl cursor-pointer" />
             </div>
           </div>
         </div>
 
         {/* Membership Card */}
-        {/* <div className="grid grid-cols-4 gap-3 border-b border-b-[#D4D4D4] pb-5 mb-5"> */}
-        <div className="grid grid-cols-4 gap-3 pb-5 mb-5">
+        <div className="grid grid-cols-4 gap-3 border-b border-b-[#D4D4D4] pb-5 mb-5">
+          {/* <div className="grid grid-cols-4 gap-3 pb-5 mb-5"> */}
           <div className="bg-white rounded-lg shadow-sm border col-span-2">
             {/* Header with gradient */}
             <div className="bg--color p-4 py-3 rounded-t-lg">
@@ -152,24 +167,24 @@ const ServiceCard = ({ details }) => {
                 <div className="flex items-center">
                   <div className="w-10 h-10 bg-white rounded-full mr-3 flex items-center justify-center overflow-hidden">
                     <img
-                      src={DummyProfile}
-                      className="object-cover object-center"
+                      src={membershipData?.profile_pic || DummyProfile}
+                      className="object-cover object-center h-full w-full"
                     />
                   </div>
                   <div>
                     <p className="text-white font-medium">
-                      Membership ID: {membershipData.membershipId}
+                      Membership ID: {membershipData.membership_number}
                     </p>
                   </div>
                 </div>
                 <div className="flex items-center space-x-2">
                   <span className="rounded-full text-white border border-white px-3 py-1 text-sm">
-                    {membershipData.duration}
+                    {membershipData?.membership_duration}
                   </span>
                   <div className="bg-[#E3F2E8] rounded-full text-white border border-[#E3F2E8] px-3 py-1 text-sm flex gap-1 items-center">
                     <div className="w-3 h-3 bg-[#498366] rounded-full mr-1"></div>
                     <span className="text-[#498366]">
-                      {membershipData.status}
+                      {membershipData?.booking_status}
                     </span>
                   </div>
                 </div>
@@ -182,12 +197,31 @@ const ServiceCard = ({ details }) => {
               <div className="flex items-end gap-2 justify-between flex-wrap">
                 <div>
                   <h3 className="text-2xl font-bold text-gray-900 mb-1">
-                    {membershipData.planStarted}
+                    {formatDate(membershipData?.start_date)}
                   </h3>
-                  <p className="text-sm text-gray-500">Plan started on</p>
+                  <p className="text-sm text-gray-500">Relationship since</p>
                 </div>
                 <div className="flex space-x-2">
                   <button
+                    className="px-4 py-2 bg-black text-white rounded flex items-center gap-2 border border-black text-sm"
+                    onClick={() => {
+                      setMembershipActionType("suspend");
+                      setSuspendPauseModal(true);
+                    }}
+                  >
+                    Suspend Membership
+                  </button>
+                  <button
+                    onClick={() => {
+                      setMembershipActionType("pause");
+                      setSuspendPauseModal(true);
+                    }}
+                    className="px-3 py-2 bg-white text-black rounded flex items-center gap-2 border border-black text-sm"
+                  >
+                    Pause Membership
+                  </button>
+
+                  {/* <button
                     className="px-4 py-2 bg-black text-white rounded flex items-center gap-2 border border-black text-sm"
                     onClick={() => {
                       setUpgradePlan(membershipData.membershipId);
@@ -195,7 +229,7 @@ const ServiceCard = ({ details }) => {
                     }}
                   >
                     UPGRADE PLAN
-                  </button>
+                  </button> */}
                 </div>
               </div>
             </div>
@@ -207,7 +241,7 @@ const ServiceCard = ({ details }) => {
               <p className="text-lg text-black font-[500]">Countdown</p>
               <div>
                 <p className="text-2xl font-bold text-gray-900">
-                  {membershipData.daysRemaining}
+                  {membershipData?.countdown}
                 </p>
                 <p className="text-md text-[#6F6F6F]">
                   Number of days remaining
@@ -222,18 +256,18 @@ const ServiceCard = ({ details }) => {
               <p className="text-lg text-black font-[500]">Expiry On</p>
               <div>
                 <p className="text-2xl font-bold text-gray-900">
-                  {membershipData.expiryDate}
+                  {formatDate(membershipData?.end_date)}
                 </p>
-                <p className="text-md text-[#6F6F6F]">
+                {/* <p className="text-md text-[#6F6F6F]">
                   Next Billing Date: 16 Nov, 2025
-                </p>
+                </p> */}
               </div>
             </div>
           </div>
         </div>
 
         {/* Purchased Services */}
-        {/* <div className="bg-white rounded-lg shadow-sm">
+        <div className="bg-white rounded-lg shadow-sm">
           <div className="p-4 px-0">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-bold text-gray-900">
@@ -269,7 +303,6 @@ const ServiceCard = ({ details }) => {
                 </div>
 
                 <div className="flex gap-4 p-4 justify-between">
-         
                   <div className="space-y-1">
                     <div>
                       <span className="text-sm text-black">Variation:</span>
@@ -292,44 +325,15 @@ const ServiceCard = ({ details }) => {
                     <div className="flex flex-wrap gap-2 pt-2">
                       {service.status === "active" ? (
                         <>
-                         
-                          <button
-                            className="px-3 py-2 bg-black text-white rounded flex items-center gap-2 border border-black text-sm"
-                            onClick={() => {
-                              setUpgradePlan(membershipData.membershipId);
-                              setInvoiceModal(true);
-                            }}
-                          >
-                            Upgrage
-                          </button>
                           <button
                             className="px-3 py-2 bg-white text-black rounded flex items-center gap-2 border border-black text-sm"
                             onClick={() => setAppointmentModal(true)}
                           >
                             Add Appontment
                           </button>
-                          <button
-                            className="px-3 py-2 bg-white text-black rounded flex items-center gap-2 border border-black text-sm"
-                            onClick={() => {
-                              setMembershipActionType("suspend");
-                              setSuspendPauseModal(true);
-                            }}
-                          >
-                            Suspend Membership
-                          </button>
-                          <button
-                            onClick={() => {
-                              setMembershipActionType("pause");
-                              setSuspendPauseModal(true);
-                            }}
-                            className="px-3 py-2 bg-white text-black rounded flex items-center gap-2 border border-black text-sm"
-                          >
-                            Pause Membership
-                          </button>
                         </>
                       ) : (
                         <>
-                        
                           <button
                             className="px-3 py-2 bg-black text-white rounded flex items-center gap-2 border border-black text-sm"
                             onClick={() => {
@@ -344,7 +348,6 @@ const ServiceCard = ({ details }) => {
                     </div>
                   </div>
 
-             
                   <div className="rounded-lg bg--color p-[2px]">
                     <div className="flex gap-0 h-full rounded-lg bg-white overflow-hidden">
                       <div className="text-center border-r">
@@ -395,10 +398,10 @@ const ServiceCard = ({ details }) => {
               </div>
             ))}
           </div>
-        </div> */}
+        </div>
       </div>
       {invoiceModal && (
-        <CreateInvoice
+        <RenewUpgradeService
           setInvoiceModal={setInvoiceModal}
           upgradePlan={upgradePlan}
           renewPlan={renewPlan}
@@ -412,7 +415,10 @@ const ServiceCard = ({ details }) => {
         />
       )}
       {appointmentModal && (
-        <CreateMemberAppointment setAppointmentModal={setAppointmentModal} memberID={details?.id} />
+        <CreateMemberAppointment
+          setAppointmentModal={setAppointmentModal}
+          memberID={details?.id}
+        />
       )}
       {suspendPauseModal && (
         <SuspendAndPause

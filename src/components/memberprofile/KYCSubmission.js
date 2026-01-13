@@ -3,10 +3,7 @@ import { authAxios } from "../../config/config";
 import { IoEyeOutline } from "react-icons/io5";
 import { RxUpdate } from "react-icons/rx";
 import { toast } from "react-toastify";
-
-import viewIcon from "../../assets/images/icons/eye.svg";
-import printIcon from "../../assets/images/icons/print-icon.svg";
-import mailIcon from "../../assets/images/icons/mail-icon.svg";
+import { FiUpload } from "react-icons/fi";
 
 const KYCSubmission = ({ details }) => {
   const memberId = details?.id;
@@ -54,7 +51,7 @@ const KYCSubmission = ({ details }) => {
           setDocuments({
             aadharFront: aadhar
               ? {
-                  preview: viewIcon,
+                  preview: aadhar.document_front_file,
                   name: "Aadhar Front (Uploaded)",
                   id: aadhar.id,
                   uploaded: true,
@@ -64,7 +61,7 @@ const KYCSubmission = ({ details }) => {
               : null,
             aadharBack: aadhar
               ? {
-                  preview: printIcon,
+                  preview: aadhar.document_back_file,
                   name: "Aadhar Back (Uploaded)",
                   id: aadhar.id,
                   uploaded: true,
@@ -74,7 +71,7 @@ const KYCSubmission = ({ details }) => {
               : null,
             corporateId: corp
               ? {
-                  preview: mailIcon,
+                  preview: corp.document_front_file,
                   name: "Corporate ID (Uploaded)",
                   id: corp.id,
                   uploaded: true,
@@ -114,95 +111,96 @@ const KYCSubmission = ({ details }) => {
   };
 
   // Handle submit for all documents
-  const handleSubmit = async () => {
-    let hasError = false;
-    const newErrors = {};
+const handleSubmit = async () => {
+  let hasError = false;
+  const newErrors = {};
 
-    // Validate Aadhar Front
-    if (
-      !documents.aadharFront?.file &&
-      !documents.aadharFront?.document_front_file
-    ) {
-      newErrors.aadharFront = "Please upload your Aadhar Front image.";
-      hasError = true;
-    }
+  // Validation for Aadhar Front and Back using uploaded flag or preview
+  if (
+    (!documents.aadharFront?.file && !documents.aadharFront?.uploaded) ||
+    !documents.aadharFront?.preview
+  ) {
+    newErrors.aadharFront = "Please upload your Aadhar Front image.";
+    hasError = true;
+  }
 
-    // Validate Aadhar Back
-    if (
-      !documents.aadharBack?.file &&
-      !documents.aadharBack?.document_back_file
-    ) {
-      newErrors.aadharBack = "Please upload your Aadhar Back image.";
-      hasError = true;
-    }
+  if (
+    (!documents.aadharBack?.file && !documents.aadharBack?.uploaded) ||
+    !documents.aadharBack?.preview
+  ) {
+    newErrors.aadharBack = "Please upload your Aadhar Back image.";
+    hasError = true;
+  }
 
-    // Validate Corporate ID
-    if (
-      !documents.corporateId?.file &&
-      !documents.corporateId?.document_front_file
-    ) {
-      newErrors.corporateId = "Please upload your Corporate ID image.";
-      hasError = true;
-    }
+  // Validation for Corporate ID
+  if (
+    (!documents.corporateId?.file && !documents.corporateId?.uploaded) ||
+    !documents.corporateId?.preview
+  ) {
+    newErrors.corporateId = "Please upload your Corporate ID image.";
+    hasError = true;
+  }
 
-    if (hasError) {
-      setErrors(newErrors);
-      return;
-    }
+  if (hasError) {
+    setErrors(newErrors);
+    return;
+  }
 
-    // Clear previous errors before upload
-    setErrors({});
+  setErrors({});
 
-    try {
-      // --- Aadhar (ID_PROOF) ---
-      if (documents.aadharFront || documents.aadharBack) {
-        const formData = new FormData();
-        formData.append("member_id", memberId);
-        formData.append("document_type", "ID_PROOF");
-        if (documents.aadharFront?.file)
-          formData.append("document_front_file", documents.aadharFront.file);
-        if (documents.aadharBack?.file)
-          formData.append("document_back_file", documents.aadharBack.file);
+  try {
+    // Upload or update Aadhar documents (ID_PROOF)
+    if (documents.aadharFront || documents.aadharBack) {
+      const formData = new FormData();
+      formData.append("member_id", memberId);
+      formData.append("document_type", "ID_PROOF");
 
-        const id = documents.aadharFront?.id || documents.aadharBack?.id;
-        if (id) {
-          await authAxios().put(`/kyc/document/${id}`, formData, {
-            headers: { "Content-Type": "multipart/form-data" },
-          });
-        } else {
-          await authAxios().post(`/kyc/document/create`, formData, {
-            headers: { "Content-Type": "multipart/form-data" },
-          });
-        }
+      if (documents.aadharFront?.file)
+        formData.append("document_front_file", documents.aadharFront.file);
+      if (documents.aadharBack?.file)
+        formData.append("document_back_file", documents.aadharBack.file);
+
+      // Use existing id if available (prefer aadharFront id first)
+      const id = documents.aadharFront?.id || documents.aadharBack?.id;
+
+      if (id) {
+        await authAxios().put(`/kyc/document/${id}`, formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+      } else {
+        await authAxios().post(`/kyc/document/create`, formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
       }
-
-      // --- Corporate ID (PHOTO) ---
-      if (documents.corporateId) {
-        const formData = new FormData();
-        formData.append("member_id", memberId);
-        formData.append("document_type", "PHOTO");
-        if (documents.corporateId?.file)
-          formData.append("document_front_file", documents.corporateId.file);
-
-        if (documents.corporateId?.id) {
-          await authAxios().put(
-            `/kyc/document/${documents.corporateId.id}`,
-            formData,
-            { headers: { "Content-Type": "multipart/form-data" } }
-          );
-        } else {
-          await authAxios().post(`/kyc/document/create`, formData, {
-            headers: { "Content-Type": "multipart/form-data" },
-          });
-        }
-      }
-
-      toast.success("Documents submitted successfully!");
-    } catch (error) {
-      console.error("Error uploading documents:", error);
-      toast.error("Upload failed. Check console for details.");
     }
-  };
+
+    // Upload or update Corporate ID (PHOTO)
+    if (documents.corporateId) {
+      const formData = new FormData();
+      formData.append("member_id", memberId);
+      formData.append("document_type", "PHOTO");
+
+      if (documents.corporateId?.file)
+        formData.append("document_front_file", documents.corporateId.file);
+
+      if (documents.corporateId?.id) {
+        await authAxios().put(`/kyc/document/${documents.corporateId.id}`, formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+      } else {
+        await authAxios().post(`/kyc/document/create`, formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+      }
+    }
+
+    toast.success("Documents submitted successfully!");
+  } catch (error) {
+    console.error("Error uploading documents:", error);
+    toast.error("Upload failed. Check console for details.");
+  }
+};
+
 
   const handleDrop = (event, documentType) => {
     event.preventDefault();
@@ -328,7 +326,7 @@ const KYCSubmission = ({ details }) => {
                             onClick={() => fileInputRefs[type].current.click()}
                             className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
                           >
-                            <RxUpdate />
+                            <FiUpload />
                           </button>
                           <input
                             ref={fileInputRefs[type]}
@@ -367,7 +365,7 @@ const KYCSubmission = ({ details }) => {
       {previewing && (
         <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg max-w-4xl max-h-[90vh] overflow-hidden">
-            <div className="flex items-center justify-between p-4 border-b">
+            <div className="flex gap-5 items-center justify-between p-4 border-b">
               <h3 className="text-lg font-semibold text-gray-900">
                 Document Preview
               </h3>

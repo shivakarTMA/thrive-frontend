@@ -11,11 +11,11 @@ if (typeof SolidGauge === "function") SolidGauge(Highcharts);
 
 // Sample monthly data
 const monthlyData = {
-  "2025-09": { overallTarget: 400000, achieved: 160000 },
+  "2026-01": { overallTarget: 400000, achieved: 160000 },
+  "2025-10": { overallTarget: 350000, achieved: 250000 },
+  "2025-09": { overallTarget: 200000, achieved: 100000 },
   "2025-08": { overallTarget: 350000, achieved: 250000 },
-  "2025-07": { overallTarget: 200000, achieved: 100000 },
-  "2025-06": { overallTarget: 350000, achieved: 250000 },
-  "2025-05": { overallTarget: 350000, achieved: 250000 },
+  "2025-07": { overallTarget: 350000, achieved: 250000 },
 };
 
 const formatMonth = (monthKey) => {

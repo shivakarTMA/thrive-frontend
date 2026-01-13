@@ -23,6 +23,7 @@ import AssignIcon from "../assets/images/icons/assign.png";
 import MemberFilterPanel from "../components/FilterPanel/MemberFilterPanel";
 import { useSelector } from "react-redux";
 import DummyProfile from "../assets/images/dummy-profile.png";
+import CreateNewInvoice from "./CreateNewInvoice";
 
 const MemberList = () => {
   const { id } = useParams();
@@ -30,6 +31,9 @@ const MemberList = () => {
   const { user } = useSelector((state) => state.auth);
   const userRole = user.role;
   const [staffList, setStaffList] = useState([]);
+
+  const [invoiceModal, setInvoiceModal] = useState(false);
+  const [selectedLeadMember, setSelectedLeadMember] = useState(null);
 
   const [memberList, setMemberList] = useState([]);
   const [memberModal, setMemberModal] = useState(false);
@@ -42,7 +46,7 @@ const MemberList = () => {
   const [selectedClub, setSelectedClub] = useState(null);
   const [filterStatus, setFilterStatus] = useState(null);
   const [filterService, setFilterService] = useState(null);
-  const [filterServiceVariation, setFilterServiceVariation] = useState(null);
+  // const [filterServiceVariation, setFilterServiceVariation] = useState(null);
   const [filterAgeGroup, setFilterAgeGroup] = useState(null);
   const [filterLeadSource, setFilterLeadSource] = useState(null);
   const [filterLeadOwner, setFilterLeadOwner] = useState(null);
@@ -82,22 +86,22 @@ const MemberList = () => {
           is_subscribed: overrideSelected.hasOwnProperty("is_subscribed")
             ? overrideSelected.is_subscribed
             : filterStatus,
-          service_name: overrideSelected.hasOwnProperty("service_name")
-            ? overrideSelected.service_name
+          service_id: overrideSelected.hasOwnProperty("service_id")
+            ? overrideSelected.service_id
             : filterService,
-          service_variation: overrideSelected.hasOwnProperty(
-            "service_variation"
-          )
-            ? overrideSelected.service_variation
-            : filterServiceVariation,
-          ageGroup: overrideSelected.hasOwnProperty("ageGroup")
-            ? overrideSelected.ageGroup
+          // service_variation: overrideSelected.hasOwnProperty(
+          //   "service_variation"
+          // )
+          //   ? overrideSelected.service_variation
+          //   : filterServiceVariation,
+          age_range: overrideSelected.hasOwnProperty("age_range")
+            ? overrideSelected.age_range
             : filterAgeGroup,
           lead_source: overrideSelected.hasOwnProperty("lead_source")
             ? overrideSelected.lead_source
             : filterLeadSource,
-          created_by: overrideSelected.hasOwnProperty("created_by")
-            ? overrideSelected.created_by
+          lead_owner: overrideSelected.hasOwnProperty("lead_owner")
+            ? overrideSelected.lead_owner
             : filterLeadOwner,
           staff: overrideSelected.hasOwnProperty("staff")
             ? overrideSelected.staff
@@ -188,7 +192,11 @@ const MemberList = () => {
     try {
       const requests = [authAxios().get("/staff/list?role=FOH")];
 
-      if (userRole === "CLUB_MANAGER" || userRole === "ADMIN") {
+      if (
+        userRole === "CLUB_MANAGER" ||
+        userRole === "ADMIN" ||
+        userRole === "FOH"
+      ) {
         requests.push(authAxios().get("/staff/list?role=CLUB_MANAGER"));
       }
 
@@ -331,11 +339,11 @@ const MemberList = () => {
     const setterMap = {
       club_id: setSelectedClub,
       is_subscribed: setFilterStatus,
-      service_name: setFilterService,
-      service_variation: setFilterServiceVariation,
-      ageGroup: setFilterAgeGroup,
+      service_id: setFilterService,
+      // service_variation: setFilterServiceVariation,
+      age_range: setFilterAgeGroup,
       lead_source: setFilterLeadSource,
-      created_by: setFilterLeadOwner,
+      lead_owner: setFilterLeadOwner,
       staff: setFilterTrainer,
       fitness: setFilterFitness,
       gender: setFilterGender,
@@ -363,8 +371,8 @@ const MemberList = () => {
           </div>
 
           <div className="w-fit bg-white shodow--box rounded-[10px] px-5 py-2">
-            <div className="grid grid-cols-3 gap-3">
-              <div className="flex items-center gap-5 border-r">
+            <div className="flex items-center">
+              <div className="w-fit flex items-center gap-2 border-r">
                 <div className="text-md font-medium text-gray-600 flex gap-2 items-center">
                   <FaCircle className="text-[10px] text-[#009EB2]" /> Total
                   Members
@@ -375,7 +383,7 @@ const MemberList = () => {
                   </span>
                 </div>
               </div>
-              <div className="flex items-center gap-5 border-r">
+              <div className="w-fit flex items-center gap-2 border-r pl-2">
                 <div className="text-md font-medium text-gray-600 flex gap-2 items-center">
                   <FaCircle className="text-[10px] text-[#1F9254]" />
                   Active Members
@@ -386,14 +394,25 @@ const MemberList = () => {
                   </span>
                 </div>
               </div>
-              <div className="flex items-center gap-5">
+              <div className="w-fit flex items-center gap-2 border-r pl-2">
                 <div className="text-md font-medium text-gray-600 flex gap-2 items-center">
-                  <FaCircle className="text-[10px] text-[#FF0000]" />
+                  <FaCircle className="text-[10px] text-[#ff9900]" />
                   Inactive Members
                 </div>
                 <div className="pr-2">
                   <span className="text-md font-semibold">
                     {stats?.inactive_members}
+                  </span>
+                </div>
+              </div>
+              <div className="w-fit flex items-center gap-2 pl-2">
+                <div className="text-md font-medium text-gray-600 flex gap-2 items-center">
+                  <FaCircle className="text-[10px] text-[#FF0000]" />
+                  Expired Members
+                </div>
+                <div>
+                  <span className="text-md font-semibold">
+                    {stats?.expired_members ? stats?.expired_members : 0}
                   </span>
                 </div>
               </div>
@@ -440,8 +459,8 @@ const MemberList = () => {
                 setFilterStatus={setFilterStatus}
                 filterService={filterService}
                 setFilterService={setFilterService}
-                filterServiceVariation={filterServiceVariation}
-                setFilterServiceVariation={setFilterServiceVariation}
+                // filterServiceVariation={filterServiceVariation}
+                // setFilterServiceVariation={setFilterServiceVariation}
                 filterAgeGroup={filterAgeGroup}
                 setFilterAgeGroup={setFilterAgeGroup}
                 filterLeadSource={filterLeadSource}
@@ -609,7 +628,9 @@ const MemberList = () => {
                         )}
                       </td>
                       <td className="px-2 py-4">
-                        {/* {formatAutoDate(member?.createdAt)} */}6 Months
+                        {member?.membership_duration
+                          ? member?.membership_duration
+                          : "--"}
                       </td>
                       <td className="px-2 py-4">
                         <span
@@ -654,7 +675,8 @@ const MemberList = () => {
                       </td>
                       {(userRole === "CLUB_MANAGER" ||
                         userRole === "GENERAL_MANAGER" ||
-                        userRole === "ADMIN") && (
+                        userRole === "ADMIN" ||
+                        userRole === "FOH") && (
                         <div className="absolute hidden group-hover:flex gap-2 right-0 h-full top-0 w-[50%] items-center justify-end bg-[linear-gradient(269deg,_#ffffff_30%,_transparent)] pr-5 transition duration-700">
                           <div className="flex gap-1">
                             <Tooltip
@@ -689,10 +711,16 @@ const MemberList = () => {
 
                             <Tooltip
                               id={`send-payment-${member?.id}`}
-                              content="Send Payment Link"
+                              content="Buy services"
                               place="top"
                             >
-                              <div className="p-1 cursor-pointer">
+                              <div
+                                className="p-1 cursor-pointer"
+                                onClick={() => {
+                                  setSelectedLeadMember(member.id);
+                                  setInvoiceModal(true);
+                                }}
+                              >
                                 <Link to="#" className="p-0">
                                   <IoIosAddCircleOutline className="text-[25px] text-black" />
                                 </Link>
@@ -731,6 +759,8 @@ const MemberList = () => {
           onMemberUpdate={handleMemberUpdate}
         />
       )}
+
+      {invoiceModal && <CreateNewInvoice setInvoiceModal={setInvoiceModal} selectedLeadMember={selectedLeadMember} />}
     </>
   );
 };

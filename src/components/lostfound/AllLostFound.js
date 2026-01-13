@@ -284,7 +284,10 @@ const AllLostFound = () => {
           </div>
           <div>
             <button
-              onClick={() => setModalOpen(true)}
+              onClick={() => {
+                setEditingOption(null);
+                setModalOpen(true);
+              }}
               type="button"
               className="px-4 py-2 bg-black text-white rounded flex items-center gap-2"
             >
@@ -305,6 +308,7 @@ const AllLostFound = () => {
                   <th className="px-2 py-4">Date & Time</th>
                   <th className="px-2 py-4">Status</th>
                   <th className="px-2 py-4">Logged By</th>
+                  <th className="px-2 py-4">Claimant Name</th>
                   <th className="px-2 py-4">Action</th>
                 </tr>
               </thead>
@@ -340,7 +344,10 @@ const AllLostFound = () => {
                         </span>
                       </td>
                       <td className="px-2 py-4">
-                        {row?.returned_by == null ? "--" : row?.returned_by}
+                        {row?.logged_by_name ? row?.logged_by_name : "--"}
+                      </td>
+                      <td className="px-2 py-4">
+                        {row?.claimant_name == null ? "--" : row?.claimant_name}
                       </td>
                       <td className="px-2 py-4">
                         <div className="flex">
@@ -415,6 +422,7 @@ const AllLostFound = () => {
           onClose={() => setModalOpen(false)}
           clubOptions={clubOptions}
           editingOption={editingOption}
+          fetchLostFoundList={fetchLostFoundList}
         />
       )}
 

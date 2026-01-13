@@ -3,34 +3,44 @@ import { IoCloseCircle } from "react-icons/io5";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import ProductModal from "../components/modal/ProductDetails";
-import { customStyles, formatText } from "../Helper/helper";
+import { customStyles, formatText, selectIcon } from "../Helper/helper";
 import Select from "react-select";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { toast } from "react-toastify";
 import { useSelector } from "react-redux";
+import { authAxios } from "../config/config";
+import { FaCalendarDays, FaListCheck } from "react-icons/fa6";
+import { RiDiscountPercentFill } from "react-icons/ri";
 
-const voucherList = [
-  { code: "FIT10", discount: 10 },
-  { code: "WELCOME20", discount: 20 },
-  { code: "SUMMER25", discount: 25 },
+const planTypeOption = [
+  { value: "DLF", label: "DLF" },
+  { value: "NONDLF", label: "NONDLF" },
 ];
 
 const validationSchema = Yup.object({
   productType: Yup.string().required("Product Type is required"),
 });
 
-const SendPaymentLink = ({ setSendPaymentModal, leadPaymentSend }) => {
+const SendPaymentLink = ({ setSendPaymentModal, selectedLeadMember }) => {
+
+  console.log(selectedLeadMember,'selectedLeadMember')
+
   const [showProductModal, setShowProductModal] = useState(false);
-  const [editingProductIndex, setEditingProductIndex] = useState(null);
-  const { user } = useSelector((state) => state.auth);
-  const selectedProductType = "Membership Plan";
+
+  const [voucherInput, setVoucherInput] = useState("");
+  const [voucherStatus, setVoucherStatus] = useState(null); // "success", "error", or null
+  const [selectedVoucher, setSelectedVoucher] = useState(null);
+  const [selected, setSelected] = useState([]);
 
   const leadBoxRef = useRef(null);
 
-  const formik = useFormik({
-    initialValues: {
-      productType: "MEMBERSHIP_PLAN",
+  const initialValues = {
+    id: "",
+    club_id: null,
+    productType: "MEMBERSHIP_PLAN",
+    productDetails: {
+      id: null,
       title: "",
       duration_value: 0,
       duration_type: "",
@@ -40,49 +50,48 @@ const SendPaymentLink = ({ setSendPaymentModal, leadPaymentSend }) => {
       gst: 0,
       gst_amount: 0,
       final_amount: 0,
-      startDate: "",
-      endDate: "",
     },
+    coupon: "",
+    discountAmount: 0,
+    final_amount: 0,
+    amount_pay: 0,
+  };
+
+  const formik = useFormik({
+    initialValues,
     validationSchema,
     onSubmit: (values) => {
       console.log("Submitting full form", values);
+      toast.success("Payment send successfully!")
+      setSendPaymentModal(false)
     },
   });
 
-  const addMonthsToDate = (date, months) => {
-    const newDate = new Date(date);
-    newDate.setMonth(newDate.getMonth() + months);
-    return newDate;
-  };
+  // ✅ Fetch lead details when selectedId changes
+  useEffect(() => {
+    if (!selectedLeadMember) return;
 
-  const handleStartDateChange = (date) => {
-    formik.setFieldValue("startDate", date);
-    if (formik.values.duration_value) {
-      const endDate = addMonthsToDate(
-        date,
-        parseInt(formik.values.duration_value)
-      );
-      formik.setFieldValue("endDate", endDate);
-    }
-  };
+    const fetchLeadById = async (id) => {
+      try {
+        const res = await authAxios().get(`/lead/${id}`);
+        const data = res.data?.data || res.data || null;
 
-  const handleVoucherApply = () => {
-    const voucher = voucherList.find(
-      (v) => v.code.toUpperCase() === formik.values.discountCode.toUpperCase()
-    );
-    if (voucher) {
-      formik.setFieldValue("discountAmount", voucher.discount);
-      formik.setFieldValue(
-        "totalAmount",
-        Math.max(formik.values.productAmount - voucher.discount, 0)
-      );
-      toast.success(`Voucher applied! You saved ₹${voucher.discount}`);
-    } else {
-      toast.error("Invalid voucher code");
-      formik.setFieldValue("discountAmount", 0);
-      formik.setFieldValue("totalAmount", formik.values.productAmount);
-    }
-  };
+        if (data) {
+          formik.setValues({
+            id: data.id || "",
+            club_id: data.club_id || null,
+
+            productType: "MEMBERSHIP_PLAN",
+          });
+        }
+      } catch (err) {
+        console.error(err);
+        toast.error("Failed to fetch module details");
+      }
+    };
+
+    fetchLeadById(selectedLeadMember);
+  }, [selectedLeadMember]);
 
   const handleOverlayClick = (e) => {
     if (leadBoxRef.current && !leadBoxRef.current.contains(e.target)) {
@@ -91,56 +100,140 @@ const SendPaymentLink = ({ setSendPaymentModal, leadPaymentSend }) => {
   };
 
   const handleProductSubmit = (product) => {
-    formik.setFieldValue("title", product.title);
-    formik.setFieldValue("duration_value", product.duration_value);
-    formik.setFieldValue("duration_type", product.duration_type);
-    formik.setFieldValue("amount", product.amount);
-    formik.setFieldValue("discount", product.discount);
-    formik.setFieldValue("total_amount", product.total_amount);
-    formik.setFieldValue("gst", product.gst);
-    formik.setFieldValue("gst_amount", product.gst_amount);
-    formik.setFieldValue("final_amount", product.final_amount);
+    // Convert to numbers safely
+    const amount = Number(product.amount) || 0;
+    const discount = Number(product.discount) || 0;
+    const gstPercent = Number(product.gst) || 0;
+
+    // Base calculation
+    const totalAmount = amount - discount;
+    const gstAmount = (totalAmount * gstPercent) / 100;
+    const finalAmount = totalAmount + gstAmount;
+
+    // 🔥 Reset coupon when product changes
+    setVoucherInput("");
+    setVoucherStatus(null);
+    setSelectedVoucher(null);
+
+    formik.setValues({
+      ...formik.values,
+      productDetails: {
+        id: product.id,
+        title: product.title,
+        duration_value: product.duration_value,
+        duration_type: product.duration_type,
+        amount,
+        discount,
+        total_amount: totalAmount,
+        gst: gstPercent,
+        gst_amount: gstAmount,
+        final_amount: finalAmount,
+      },
+      coupon: "",
+      discountAmount: 0,
+      final_amount: finalAmount,
+      amount_pay: finalAmount,
+    });
+  };
+
+  const applyCoupon = async () => {
+    if (!voucherInput.trim()) return;
+
+    if (!formik.values.productDetails?.id) {
+      toast.error("Please select a product before applying a coupon");
+      return;
+    }
+
+    try {
+      setVoucherStatus("loading");
+
+      const payload = {
+        coupon: voucherInput.trim(),
+        applicable_ids: [formik.values.productDetails?.id],
+        applicable_type: "SUBSCRIPTION",
+        amount: formik.values.productDetails?.total_amount,
+        club_id: formik.values.club_id,
+      };
+
+      const res = await authAxios().post("/coupon/applicable", payload);
+      const data = res.data?.data;
+
+      const couponDiscount = Number(data.discountAmount) || 0;
+
+      const totalAmount =
+        Number(formik.values.productDetails.total_amount) || 0;
+      const gstPercent = Number(formik.values.productDetails.gst) || 0;
+
+      const discountedTotal = totalAmount - couponDiscount;
+      const gstAmount = (discountedTotal * gstPercent) / 100;
+      const finalAmount = discountedTotal + gstAmount;
+
+      setSelectedVoucher(data);
+      setVoucherStatus("success");
+
+      formik.setValues({
+        ...formik.values,
+        coupon: voucherInput,
+        discountAmount: couponDiscount,
+        productDetails: {
+          ...formik.values.productDetails,
+          gst_amount: gstAmount,
+        },
+        final_amount: finalAmount,
+        amount_pay: finalAmount,
+      });
+    } catch (err) {
+      setSelectedVoucher(null);
+      setVoucherStatus("error");
+
+      // ✅ SAFE fallback
+      const originalFinal =
+        Number(formik.values.productDetails?.final_amount) || 0;
+
+      formik.setValues({
+        ...formik.values,
+        coupon: "",
+        discountAmount: 0,
+        final_amount: originalFinal,
+        amount_pay: originalFinal,
+      });
+
+      toast.error(err?.response?.data?.message || "Invalid or expired coupon");
+    }
+  };
+
+  const handleApplyVoucher = () => {
+    applyCoupon();
   };
 
   useEffect(() => {
-    if (leadPaymentSend && formik.values.productType !== "MEMBERSHIP_PLAN") {
-      formik.setFieldValue("productType", "MEMBERSHIP_PLAN");
-    }
-  }, [leadPaymentSend]);
+    if (!formik.values.plan_type) return;
 
-  const calculateEndDate = (startDate, durationValue, durationType) => {
-    if (!startDate || !durationValue || !durationType) return null;
+    formik.setValues({
+      ...formik.values,
+      productDetails: {
+        id: null,
+        title: "",
+        duration_value: 0,
+        duration_type: "",
+        amount: 0,
+        discount: 0,
+        total_amount: 0,
+        gst: 0,
+        gst_amount: 0,
+        final_amount: 0,
+      },
+      coupon: "",
+      discountAmount: 0,
+      final_amount: 0,
+      amount_pay: 0,
+    });
 
-    const newDate = new Date(startDate);
-
-    if (durationType === "MONTH") {
-      newDate.setMonth(newDate.getMonth() + parseInt(durationValue));
-    } else if (durationType === "DAY") {
-      newDate.setDate(newDate.getDate() + parseInt(durationValue));
-    }
-
-    return newDate;
-  };
-
-  useEffect(() => {
-    const { startDate, duration_value, duration_type } = formik.values;
-
-    if (startDate && duration_value && duration_type) {
-      const endDate = calculateEndDate(
-        startDate,
-        duration_value,
-        duration_type
-      );
-      formik.setFieldValue("endDate", endDate);
-    } else {
-      formik.setFieldValue("endDate", "");
-    }
-  }, [
-    formik.values.startDate,
-    formik.values.duration_value,
-    formik.values.duration_type,
-  ]);
-
+    // reset local UI state
+    setVoucherInput("");
+    setVoucherStatus(null);
+    setSelectedVoucher(null);
+  }, [formik.values.plan_type]);
   return (
     <>
       <div
@@ -165,120 +258,134 @@ const SendPaymentLink = ({ setSendPaymentModal, leadPaymentSend }) => {
           <form onSubmit={formik.handleSubmit}>
             <div className="flex bg-white rounded-b-[10px]">
               <div className="p-6 flex-1">
-                <div className="grid grid-cols-3 gap-4 mb-6 border pb-4 bg-gray-50 p-3 rounded mt-4">
-                  {/* Service Type */}
+                <h3 className="text-2xl font-semibold mb-2">
+                  Subscription plan
+                </h3>
+                <div className="grid grid-cols-3 gap-4">
                   <div>
-                    <label className="mb-2 block">Service Type</label>
-                    <input
-                      name="productType"
-                      value={formatText(formik.values?.productType)}
-                      // onChange={handleInput}
-                      readOnly={true}
-                      className="custom--input w-full capitalize !bg-gray-100 pointer-events-none"
-                      disabled={true}
-                    />
-                    {/* <Select
-                      name="productType"
-                      styles={customStyles}
-                      value={formatText(formik.values?.productType)}
-                      onChange={(option) =>
-                        formik.setFieldValue("productType", option.value)
-                      }
-                      options={[
-                        { value: "membership plan", label: "Membership Plan" },
-                      ]}
-                      isDisabled={true}
-                    /> */}
-                  </div>
+                    <label className="mb-2 block">
+                      Plan Type<span className="text-red-500">*</span>
+                    </label>
 
-                  {/* Variation */}
-                  <div>
-                    <label className="mb-2 block">Variation</label>
-                    <div onClick={() => setShowProductModal(true)}>
-                      <input
-                        name="title"
-                        value={formik.values.title}
-                        className="custom--input w-full"
-                        readOnly
+                    <div className="relative">
+                      <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
+                        <FaListCheck />
+                      </span>
+                      <Select
+                        name="plan_type"
+                        value={planTypeOption.find(
+                          (opt) => opt.value === formik.values.plan_type
+                        )}
+                        options={planTypeOption}
+                        onChange={(option) =>
+                          formik.setFieldValue("plan_type", option.value)
+                        }
+                        styles={selectIcon}
+                        className="!capitalize"
                       />
                     </div>
-                  </div>
-
-                  {/* Dates */}
-                  <div className="flex gap-3">
-                    <div>
-                      <label className="mb-2 block">Start date</label>
-                      <div className="custom--date">
-                        <DatePicker
-                          selected={formik.values.startDate}
-                          onChange={handleStartDateChange}
-                          dateFormat="dd MMM yyyy"
-                          placeholderText="Select date"
-                          readOnly={!formik.values.title}
-                          minDate={new Date()}
-                        />
+                    {formik.errors?.plan_type && formik.touched?.plan_type && (
+                      <div className="text-red-500 text-sm">
+                        {formik.errors?.plan_type}
                       </div>
-                    </div>
-
-                    <div>
-                      <label className="mb-2 block">Expiry date</label>
-                      <div className="custom--date">
-                        <DatePicker
-                          selected={formik.values.endDate}
-                          dateFormat="dd MMM yyyy"
-                          readOnly
-                          className="bg-[#fafafa] pointer-events-none"
-                        />
-                      </div>
-                    </div>
+                    )}
                   </div>
-
-                  {/* Duration */}
                   <div>
-                    <label className="mb-2 block">Duration</label>
-                    <input
-                      name="duration_value"
-                      value={formik.values?.duration_value ?? 0}
-                      // onChange={formik.handleChange}
-                      className="custom--input w-full !bg-gray-100 pointer-events-none"
-                      readOnly={true}
-                      disabled={true}
-                    />
+                    <label className="mb-2 block">
+                      Product Name<span className="text-red-500">*</span>
+                    </label>
+                    <div
+                      className="relative"
+                      onClick={() => {
+                        setShowProductModal(true);
+                        // setSelectedType(formik.values.productType);
+                      }}
+                    >
+                      <span className="absolute top-[50%] translate-y-[-50%] left-[15px]">
+                        <FaListCheck />
+                      </span>
+                      <input
+                        name="productDetails.title"
+                        value={formik.values?.productDetails?.title}
+                        onChange={formik.handleChange}
+                        className="custom--input w-full input--icon"
+                        readOnly={true}
+                      />
+                    </div>
+                    {formik.errors?.productDetails?.title &&
+                      formik.touched?.productDetails?.title && (
+                        <div className="text-red-500 text-sm">
+                          {formik.errors?.productDetails?.title}
+                        </div>
+                      )}
                   </div>
-
-                  {/* Amount */}
                   <div>
-                    <label className="mb-2 block">Amount</label>
-                    <input
-                      name="amount"
-                      value={formik.values?.amount ?? 0}
-                      // onChange={formik.handleChange}
-                      className="custom--input w-full !bg-gray-100 pointer-events-none"
-                      readOnly={true}
-                      disabled={true}
-                    />
+                    <label className="mb-2 block">Start Date</label>
+                    <div className="custom--date relative">
+                      <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
+                        <FaCalendarDays />
+                      </span>
+                      <DatePicker
+                        selected={
+                          formik.values.start_date
+                            ? new Date(formik.values.start_date)
+                            : new Date() // ✅ fallback to today
+                        }
+                        onChange={(date) =>
+                          formik.setFieldValue("start_date", date)
+                        }
+                        minDate={new Date()} // ❌ disables past dates
+                        dateFormat="dd MMM yyyy"
+                        yearDropdownItemNumber={100}
+                        placeholderText="Select date"
+                        className="input--icon"
+                      />
+                    </div>
+                    {formik.errors?.start_date &&
+                      formik.touched?.start_date && (
+                        <div className="text-red-500 text-sm">
+                          {formik.errors?.start_date}
+                        </div>
+                      )}
                   </div>
 
-                  {/* Voucher Code */}
                   <div>
                     <label className="mb-2 block">Voucher Code</label>
-                    <div className="flex gap-0">
+                    <div className="flex gap-0 relative">
+                      <span className="absolute top-[50%] translate-y-[-50%] left-[12px]">
+                        <RiDiscountPercentFill className="text-xl" />
+                      </span>
                       <input
-                        name="discountCode"
                         type="text"
-                        value={formik.values.discountCode}
-                        onChange={formik.handleChange}
+                        value={voucherInput}
+                        onChange={(e) => setVoucherInput(e.target.value)}
                         placeholder="Enter voucher code"
-                        className="!rounded-r-[0px] custom--input w-full"
+                        className={`input--icon !rounded-r-[0px] custom--input w-full ${
+                          voucherStatus === "success"
+                            ? "border-green-500"
+                            : voucherStatus === "error"
+                            ? "border-red-500"
+                            : ""
+                        }`}
                       />
                       <button
                         type="button"
-                        // onClick={handleVoucherApply}
+                        onClick={handleApplyVoucher}
                         className="px-4 py-2 bg-black text-white rounded-r-[10px]"
                       >
                         Apply
                       </button>
                     </div>
+                    {voucherStatus === "success" && (
+                      <p className="text-green-600 text-sm mt-1">
+                        Voucher applied successfully
+                      </p>
+                    )}
+                    {voucherStatus === "error" && (
+                      <p className="text-red-600 text-sm mt-1">
+                        Invalid voucher code.
+                      </p>
+                    )}
                   </div>
                 </div>
 
@@ -287,25 +394,32 @@ const SendPaymentLink = ({ setSendPaymentModal, leadPaymentSend }) => {
                   <div className="price--calculation2 my-5">
                     <div className="price--item">
                       <p className="flex items-center gap-2 justify-between mb-2 border-b pb-2">
-                        Amount:{" "}
+                        Duration:{" "}
                         <span className="font-bold">
-                          ₹{formik.values.amount ?? 0}
+                          {formik.values.productDetails?.duration_value ?? 0}{" "}
+                          {formik.values.productDetails?.duration_type}
                         </span>
                       </p>
                     </div>
                     <div className="price--item">
                       <p className="flex items-center gap-2 justify-between mb-2 border-b pb-2">
-                        Discount:{" "}
-                        <span className="font-bold">
-                          ₹{formik.values.discount ?? 0}
+                        Total:{" "}
+                        <span className="font-bold flex items-center gap-2">
+                          <del className="text-gray-500 text-sm">
+                            ₹{formik.values.productDetails?.amount ?? 0}
+                          </del>{" "}
+                          <span>
+                            {" "}
+                            ₹{formik.values.productDetails?.total_amount ?? 0}
+                          </span>
                         </span>
                       </p>
                     </div>
                     <div className="price--item">
                       <p className="flex items-center gap-2 justify-between mb-2 border-b pb-2">
-                        Total Amount:{" "}
+                        Discount Code Applied:{" "}
                         <span className="font-bold">
-                          ₹{formik.values.total_amount ?? 0}
+                          ₹{formik.values.discountAmount ?? 0}
                         </span>
                       </p>
                     </div>
@@ -313,16 +427,23 @@ const SendPaymentLink = ({ setSendPaymentModal, leadPaymentSend }) => {
                       <p className="flex items-center gap-2 justify-between mb-2 border-b pb-2">
                         GST:{" "}
                         <span className="font-bold">
-                          ({formik.values.gst ?? 0}%) ₹
-                          {formik.values.gst_amount ?? 0}
+                          ₹{formik.values.productDetails?.gst_amount ?? 0}
+                        </span>
+                      </p>
+                    </div>
+                    <div className="price--item">
+                      <p className="flex items-center gap-2 justify-between mb-2 border-b pb-2">
+                        Grand Total:{" "}
+                        <span className="font-bold">
+                          ₹{formik.values.final_amount ?? 0}
                         </span>
                       </p>
                     </div>
                   </div>
-                  <p className="text-1xl font-semibold flex items-center gap-2 justify-between pb-2">
-                    Final Amount:{" "}
+                  <p className="text-2xl font-semibold flex items-center gap-2 justify-between pb-2">
+                    To Pay:{" "}
                     <span className="font-bold">
-                      ₹{formik.values.final_amount ?? 0}
+                      ₹{formik.values.amount_pay ?? 0}
                     </span>
                   </p>
                 </div>
@@ -344,7 +465,7 @@ const SendPaymentLink = ({ setSendPaymentModal, leadPaymentSend }) => {
                 type="submit"
                 className="px-4 py-2 bg-white text-black font-semibold rounded max-w-[150px] w-full"
               >
-                Make Payment
+                Send Payment
               </button>
             </div>
           </form>
@@ -354,6 +475,7 @@ const SendPaymentLink = ({ setSendPaymentModal, leadPaymentSend }) => {
       {showProductModal && (
         <ProductModal
           selectedType={formik.values?.productType}
+          planType={formik.values?.plan_type}
           onClose={() => setShowProductModal(false)}
           onSubmit={handleProductSubmit}
         />

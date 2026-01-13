@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from "react";
 import Select from "react-select";
-import PhoneInput, { isValidPhoneNumber } from "react-phone-number-input";
+import PhoneInput, {
+  isValidPhoneNumber,
+  parsePhoneNumber,
+} from "react-phone-number-input";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import "react-phone-number-input/style.css";
-import "react-datepicker/dist/react-datepicker.css";
-import { FaListCheck } from "react-icons/fa6";
 import { IoCloseCircle } from "react-icons/io5";
 import { formatAutoDate, selectIcon } from "../../Helper/helper";
 import { FaEnvelope, FaUser } from "react-icons/fa";
@@ -16,16 +17,23 @@ import { toast } from "react-toastify";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchOptionList } from "../../Redux/Reducers/optionListSlice";
 
+/* ---------------- VALIDATION ---------------- */
+
 const validationSchema = Yup.object({
   full_name: Yup.string().required("Full Name is required"),
 
-  mobile: Yup.string()
-    .required("Contact number is required")
-    .test("is-valid-phone", "Invalid phone number", function (value) {
-      return isValidPhoneNumber(value || "");
-    }),
+  mobile: Yup.string().required("Contact number is required"),
+
+  country_code: Yup.string().required(),
+
   referrer_relationship: Yup.string().required("Relationship is required"),
+}).test("valid-phone", "Invalid phone number", function (values) {
+  const { mobile, country_code } = values || {};
+  if (!mobile || !country_code) return false;
+  return isValidPhoneNumber(`+${country_code}${mobile}`);
 });
+
+/* ---------------- COMPONENT ---------------- */
 
 const Relations = ({ details }) => {
   const [referredBy, setReferredBy] = useState([]);
@@ -34,28 +42,38 @@ const Relations = ({ details }) => {
   const dispatch = useDispatch();
   const { lists } = useSelector((state) => state.optionList);
 
+  /* -------- Fetch relationship options -------- */
   useEffect(() => {
     dispatch(fetchOptionList("RELATIONSHIP"));
-  }, []);
+  }, [dispatch]);
 
   const relationshipOptions = lists["RELATIONSHIP"] || [];
 
+  /* -------- Fetch referrals -------- */
   const fetchMemberReferrals = async () => {
+    if (!details?.id) return;
+
     try {
-      // Make the API call with query parameters
-      const res = await authAxios().get(`/member/referral/list/${details?.id}`);
-      const data = res.data?.data || [];
-      setReferredBy(data);
+      const res = await authAxios().get(`/member/referral/list/${details.id}`);
+      setReferredBy(res.data?.data || []);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch coins");
+      toast.error("Failed to fetch referrals");
     }
   };
 
+  useEffect(() => {
+    fetchMemberReferrals();
+  }, [details?.id]);
+
+  /* ---------------- FORMIK ---------------- */
+
   const formik = useFormik({
+    enableReinitialize: true,
     initialValues: {
       member_id: details?.id,
       full_name: "",
+      country_code: "",
       mobile: "",
       email: "",
       referrer_relationship: "",
@@ -63,41 +81,44 @@ const Relations = ({ details }) => {
     validationSchema,
     onSubmit: async (values, { resetForm }) => {
       try {
-        const res = await authAxios().post("/member/referral/create", values);
-        console.log(res?.data?.status, "res?.data?");
+        const payload = {
+          member_id: values.member_id,
+          full_name: values.full_name,
+          mobile: values.mobile,
+          country_code: values.country_code,
+          email: values.email,
+          referrer_relationship: values.referrer_relationship,
+        };
+
+        const res = await authAxios().post("/member/referral/create", payload);
 
         if (res?.data?.status === true) {
-          toast.success(res?.data?.message);
+          toast.success(res.data.message);
           resetForm();
           setIsModalOpen(false);
           fetchMemberReferrals();
         } else {
-          toast.error(res?.data?.message || "Something went wrong.");
+          toast.error(res?.data?.message || "Something went wrong");
         }
       } catch (error) {
-        const errorMessage =
+        toast.error(
           error?.response?.data?.message ||
-          "Something went wrong. Please try again.";
-        toast.error(errorMessage);
-        console.error("Error submitting form:", error);
+            "Something went wrong. Please try again."
+        );
       }
     },
   });
 
-  useEffect(() => {
-    fetchMemberReferrals();
-  }, []);
-
-
-  // const columns = ["Name", "Referred On", "Current Status"];
   const columns = ["Name", "Relationship", "Referred On", "Current Status"];
+
+  /* ---------------- UI ---------------- */
 
   return (
     <div className="p-4 bg-white rounded shadow">
       <div className="flex justify-end mb-3">
         <button
           onClick={() => setIsModalOpen(true)}
-          className="px-4 py-2 bg-black text-white rounded flex items-center gap-2 cursor-pointer"
+          className="px-4 py-2 bg-black text-white rounded flex items-center gap-2"
         >
           <FiPlus /> Add Referral
         </button>
@@ -105,24 +126,26 @@ const Relations = ({ details }) => {
 
       <div className="overflow-auto">
         <table className="min-w-full border border-gray-300 text-sm">
-          <thead className="bg-gray-100 text-left">
+          <thead className="bg-gray-100">
             <tr>
-              {columns.map((col, idx) => (
-                <th key={idx} className="border px-3 py-2">
+              {columns.map((col) => (
+                <th key={col} className="border px-3 py-2 text-left">
                   {col}
                 </th>
               ))}
             </tr>
           </thead>
           <tbody>
-            {referredBy.length > 0 ? (
+            {referredBy.length ? (
               referredBy.map((item, idx) => (
                 <tr key={idx}>
                   <td className="border px-3 py-2">{item.full_name}</td>
                   <td className="border px-3 py-2">
                     {item.referrer_relationship}
                   </td>
-                  <td className="border px-3 py-2">{formatAutoDate(item.createdAt)}</td>
+                  <td className="border px-3 py-2">
+                    {formatAutoDate(item.createdAt)}
+                  </td>
                   <td className="border px-3 py-2">{item.entity_type}</td>
                 </tr>
               ))
@@ -140,127 +163,128 @@ const Relations = ({ details }) => {
         </table>
       </div>
 
+      {/* ---------------- MODAL ---------------- */}
       {isModalOpen && (
-        <div className="fixed top-0 left-0 z-[999] w-full h-full bg-black bg-opacity-60 overflow-auto">
-          <div className="min-h-[70vh] w-[95%] max-w-sm mx-auto mt-[100px] mb-[100px] rounded-[10px] flex flex-col">
-            <div className="bg-white rounded-t-[10px] flex justify-between items-center py-4 px-4 border-b">
+        <div className="fixed inset-0 z-[999] bg-black bg-opacity-60 overflow-auto">
+          <div className="min-h-[70vh] w-[95%] max-w-sm mx-auto mt-[100px] mb-[100px] rounded-lg flex flex-col">
+            <div className="bg-white rounded-t-lg flex justify-between items-center py-4 px-4 border-b">
               <h2 className="text-xl font-semibold">Refer Someone</h2>
-              <div
-                className="cursor-pointer"
+              <IoCloseCircle
+                className="text-3xl cursor-pointer"
                 onClick={() => setIsModalOpen(false)}
-              >
-                <IoCloseCircle className="text-3xl" />
-              </div>
+              />
             </div>
 
             <form
               onSubmit={formik.handleSubmit}
-              className="bg-white rounded-b-[10px] p-6 space-y-4"
+              className="bg-white rounded-b-lg p-6 space-y-4"
             >
-              <div className="grid grid-cols-1 gap-4">
-                <div>
-                  <label className="mb-2 block">
-                    Name<span className="text-red-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <span className="absolute top-[50%] translate-y-[-50%] left-[15px]">
-                      <FaUser />
-                    </span>
-                    <input
-                      type="text"
-                      name="full_name"
-                      placeholder="Full Name"
-                      value={formik.values.full_name}
-                      onChange={formik.handleChange}
-                      className="custom--input w-full input--icon"
-                    />
-                    {formik.touched.full_name && formik.errors.full_name && (
-                      <p className="text-red-500 text-xs">
-                        {formik.errors.full_name}
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                <div>
-                  <label className="mb-2 block">
-                    Phone Number<span className="text-red-500">*</span>
-                  </label>
-                  <PhoneInput
-                    name="mobile"
-                    value={formik.values.mobile}
-                    onChange={(value) => formik.setFieldValue("mobile", value)}
-                    international
-                    defaultCountry="IN"
-                    className="custom--input w-full custom--phone"
-                    countryCallingCodeEditable={false}
+              {/* Name */}
+              <div>
+                <label>
+                  Name<span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <span className="absolute top-[50%] translate-y-[-50%] left-[15px]">
+                    <FaUser />
+                  </span>
+                  <input
+                    name="full_name"
+                    value={formik.values.full_name}
+                    onChange={formik.handleChange}
+                    className="custom--input w-full input--icon"
                   />
-                  {formik.touched.mobile && formik.errors.mobile && (
-                    <p className="text-red-500 text-xs">
-                      {formik.errors.mobile}
-                    </p>
-                  )}
                 </div>
+                {formik.errors.full_name && (
+                  <p className="text-red-500 text-xs">
+                    {formik.errors.full_name}
+                  </p>
+                )}
+              </div>
 
-                <div>
-                  <label className="mb-2 block">Email</label>
-                  <div className="relative">
-                    <span className="absolute top-[50%] translate-y-[-50%] left-[15px]">
-                      <FaEnvelope />
-                    </span>
-                    <input
-                      type="email"
-                      name="email"
-                      placeholder="Email"
-                      value={formik.values.email}
-                      onChange={formik.handleChange}
-                      className="custom--input w-full input--icon"
-                    />
-                    {formik.touched.email && formik.errors.email && (
-                      <p className="text-red-500 text-xs">
-                        {formik.errors.email}
-                      </p>
-                    )}
-                  </div>
-                </div>
+              {/* Phone */}
+              <div>
+                <label>
+                  Phone Number<span className="text-red-500">*</span>
+                </label>
+                <PhoneInput
+                  international
+                  defaultCountry="IN"
+                  countryCallingCodeEditable={false}
+                  value={
+                    formik.values.country_code && formik.values.mobile
+                      ? `+${formik.values.country_code}${formik.values.mobile}`
+                      : ""
+                  }
+                  onChange={(value) => {
+                    if (!value) {
+                      formik.setFieldValue("mobile", "");
+                      formik.setFieldValue("country_code", "");
+                      return;
+                    }
+                    const phone = parsePhoneNumber(value);
+                    if (phone) {
+                      formik.setFieldValue("mobile", phone.nationalNumber);
+                      formik.setFieldValue(
+                        "country_code",
+                        phone.countryCallingCode
+                      );
+                    }
+                  }}
+                  className="custom--input w-full custom--phone"
+                />
+                {formik.errors.mobile && (
+                  <p className="text-red-500 text-xs">{formik.errors.mobile}</p>
+                )}
+              </div>
 
-                <div>
-                  <label className="mb-2 block">
-                    Relationship<span className="text-red-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
-                      <MdOutlineFamilyRestroom />
-                    </span>
-                    <Select
-                      name="referrer_relationship"
-                      options={relationshipOptions}
-                      value={relationshipOptions.find(
-                        (option) =>
-                          option.value === formik.values.referrer_relationship
-                      )}
-                      onChange={(selected) =>
-                        formik.setFieldValue(
-                          "referrer_relationship",
-                          selected.value
-                        )
-                      }
-                      styles={selectIcon}
-                    />
-                  </div>
-                  {formik.touched.referrer_relationship &&
-                    formik.errors.referrer_relationship && (
-                      <p className="text-red-500 text-xs">
-                        {formik.errors.referrer_relationship}
-                      </p>
-                    )}
+              {/* Email */}
+              <div>
+                <label>Email</label>
+                <div className="relative">
+                  <span className="absolute top-[50%] translate-y-[-50%] left-[15px]">
+                    <FaEnvelope />
+                  </span>
+                  <input
+                    name="email"
+                    value={formik.values.email}
+                    onChange={formik.handleChange}
+                    className="custom--input w-full input--icon"
+                  />
                 </div>
+              </div>
+
+              {/* Relationship */}
+              <div>
+                <label>
+                  Relationship<span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
+                    <MdOutlineFamilyRestroom />
+                  </span>
+                  <Select
+                    options={relationshipOptions}
+                    value={relationshipOptions.find(
+                      (o) => o.value === formik.values.referrer_relationship
+                    )}
+                    onChange={(opt) =>
+                      formik.setFieldValue("referrer_relationship", opt.value)
+                    }
+                    styles={selectIcon}
+                  />
+                </div>
+                {formik.errors.referrer_relationship && (
+                  <p className="text-red-500 text-xs">
+                    {formik.errors.referrer_relationship}
+                  </p>
+                )}
               </div>
 
               <div className="flex justify-end">
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-black text-white rounded flex items-center gap-2"
+                  className="px-4 py-2 bg-black text-white rounded"
                 >
                   Submit Referral
                 </button>

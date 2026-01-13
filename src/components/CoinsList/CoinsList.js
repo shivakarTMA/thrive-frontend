@@ -7,12 +7,13 @@ import "react-datepicker/dist/react-datepicker.css";
 import { customStyles, formatAutoDate, formatText } from "../../Helper/helper";
 import { authAxios } from "../../config/config";
 import { toast } from "react-toastify";
+import { addYears, subYears } from "date-fns";
+import { FaCalendarDays } from "react-icons/fa6";
 
 const coinsTypeOptions = [
   { value: "All", label: "All" },
-  { value: "Referral", label: "Referral" },
-  { value: "Compensation", label: "Compensation" },
-  { value: "Challenges", label: "Challenges" },
+  { value: "Credit", label: "Credit" },
+  { value: "Debit", label: "Debit" },
 ];
 
 const CoinsList = ({ details }) => {
@@ -64,8 +65,7 @@ const CoinsList = ({ details }) => {
   return (
     <div className="p-4 bg-white rounded shadow">
       <div className="flex gap-3 justify-between mb-4">
-        {/* <div className="flex flex-wrap items-center gap-2">
-  
+        <div className="flex flex-wrap items-center gap-2">
           <Select
             options={coinsTypeOptions}
             value={coinsTypeFilter}
@@ -74,43 +74,47 @@ const CoinsList = ({ details }) => {
             styles={customStyles}
             className="w-40"
           />
-          
-    
-          <div className="custom--date dob-format">
+
+          {/* <div className="custom--date dob-format">
+            <span className="absolute z-[1] mt-[11px] ml-[15px]">
+              <FaCalendarDays />
+            </span>
             <DatePicker
+              isClearable
               selected={dateFrom}
               onChange={(date) => {
                 setDateFrom(date);
-                if (!date) setDateTo(null); // Reset 'To' date when 'From' is cleared
+                setDateTo(null);
               }}
-              isClearable
               showMonthDropdown
               showYearDropdown
               maxDate={new Date()}
               dateFormat="dd MMM yyyy"
               dropdownMode="select"
               placeholderText="From date"
-              className="custom--input w-full"
+              className="custom--input w-full input--icon"
             />
           </div>
-
-   
           <div className="custom--date dob-format">
+            <span className="absolute z-[1] mt-[11px] ml-[15px]">
+              <FaCalendarDays />
+            </span>
             <DatePicker
+              isClearable
               selected={dateTo}
               onChange={(date) => setDateTo(date)}
-              isClearable
-              minDate={dateFrom || null}
-              maxDate={new Date()}
               showMonthDropdown
               showYearDropdown
+              minDate={dateFrom || subYears(new Date(), 20)}
+              maxDate={addYears(new Date(), 0)}
               dateFormat="dd MMM yyyy"
               dropdownMode="select"
-              placeholderText="End date"
-              className="custom--input w-full"
+              placeholderText="To date"
+              className="custom--input w-full input--icon"
+              disabled={!dateFrom}
             />
-          </div>
-        </div> */}
+          </div> */}
+        </div>
 
         {/* Button to open the modal for adding coins */}
         <div>
@@ -155,7 +159,9 @@ const CoinsList = ({ details }) => {
                   </td>
                   <td className="border px-3 py-2">{item?.source}</td>
                   <td className="border px-3 py-2">{item?.remark}</td>
-                  <td className="border px-3 py-2">{formatText(item?.transaction_type)}</td>
+                  <td className="border px-3 py-2">
+                    {formatText(item?.transaction_type)}
+                  </td>
                 </tr>
               ))
             ) : (

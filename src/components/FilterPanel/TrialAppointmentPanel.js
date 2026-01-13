@@ -2,46 +2,54 @@ import React, { useState, useEffect, useRef } from "react";
 import Select from "react-select";
 import "react-datepicker/dist/react-datepicker.css";
 import { IoClose, IoTriangle } from "react-icons/io5";
-import { customStyles } from "../../Helper/helper";
+import { customStyles, filterActiveItems } from "../../Helper/helper";
 import { HiOutlineAdjustmentsHorizontal } from "react-icons/hi2";
+import { authAxios } from "../../config/config";
+import { toast } from "react-toastify";
 
 const BillTypeOptions = [
   { value: "New", label: "New" },
   { value: "Renewal", label: "Renewal" },
 ];
 
-const ServiceTypeOptions = [
-  { value: "Membership", label: "Membership" },
-  { value: "Package", label: "Package" },
-  { value: "Product", label: "Product" },
-];
-
 export default function TrialAppointmentPanel({
-  itemBillType,
-  setItemBillType,
-  itemServiceType,
-  setItemServiceType,
+
+  formik,
+  filterClub,
+  filterTrainer,
+  filterBookingStatus,
+  setFilterValue,
+  appliedFilters, // ✅ Receive from parent
+  setAppliedFilters, // ✅ Receive from parent
+  filteredStatusOptions,
 }) {
   const [showFilters, setShowFilters] = useState(false);
   const panelRef = useRef(null);
+  const [clubList, setClubList] = useState([]);
 
-  const [appliedFilters, setAppliedFilters] = useState({
-    bill_type: itemBillType,
-    service_type: itemServiceType,
-  });
+  const fetchClub = async () => {
+    try {
+      const response = await authAxios().get("/club/list");
+      const data = response.data?.data || [];
+      const activeOnly = filterActiveItems(data);
+      if (activeOnly.length === 1) {
+        setFilterValue("filterClub", activeOnly[0].id);
+      }
+      setClubList(activeOnly);
+    } catch (error) {
+      toast.error("Failed to fetch clubs");
+    }
+  };
+
+  const clubOptions =
+    clubList?.map((item) => ({
+      label: item.name,
+      value: item.id,
+    })) || [];
 
   useEffect(() => {
-    if (itemBillType || itemServiceType) {
-      setAppliedFilters({
-        bill_type: itemBillType,
-        service_type: itemServiceType,
-      });
-      console.log("✅ Auto-applied filters from URL:", {
-        bill_type: itemBillType,
-        service_type: itemServiceType,
-      });
-    }
-  }, [itemBillType, itemServiceType]);
+    fetchClub();
+  }, []);
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -61,24 +69,31 @@ export default function TrialAppointmentPanel({
     };
   }, [showFilters]);
 
-  const handleSubmitFilters = () => {
-    const filters = {
-      bill_type: itemBillType,
-      service_type: itemServiceType,
-    };
+  // ✅ Apply button - update parent's appliedFilters
+  const handleApply = () => {
+    setAppliedFilters({
+      club_id: formik.values.filterClub,
+      trainer_name: formik.values.filterTrainer,
+      booking_status: formik.values.filterBookingStatus,
+    });
 
-    setAppliedFilters(filters); // ✅ Only update on click
-    console.log(filters, "✅ Submitted Filters");
     setShowFilters(false);
   };
 
-  const removeFilter = (filter) => {
-    if (filter === "bill_type") {
-      setItemBillType(null);
-      setAppliedFilters((prev) => ({ ...prev, bill_type: null }));
-    } else if (filter === "service_type") {
-      setItemServiceType(null);
-      setAppliedFilters((prev) => ({ ...prev, service_type: null }));
+  // ✅ Remove filter chip - update both parent state and formik
+  const handleRemoveFilter = (key) => {
+    const keyMap = {
+      club_id: "filterClub",
+      trainer_name: "filterTrainer",
+      booking_status: "filterBookingStatus",
+    };
+
+    // Update parent's applied filters
+    setAppliedFilters((prev) => ({ ...prev, [key]: null }));
+
+    // Update formik
+    if (keyMap[key]) {
+      setFilterValue(keyMap[key], null);
     }
   };
 
@@ -102,28 +117,40 @@ export default function TrialAppointmentPanel({
           <div className="p-4">
             <div className="grid grid-cols-2 gap-4 min-w-[500px]">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Bill Type
-                </label>
+                <label className="block mb-1 text-sm font-medium">Club</label>
                 <Select
-                  value={itemBillType}
-                  onChange={setItemBillType}
-                  options={BillTypeOptions}
-                  placeholder="Select Type"
+                  value={
+                    clubOptions.find((opt) => opt.value === filterClub) || null
+                  }
+                  onChange={(option) =>
+                    setFilterValue("filterClub", option ? option.value : null)
+                  }
+                  options={clubOptions}
+                  placeholder="Select Club"
                   styles={customStyles}
+                  isClearable
                 />
               </div>
-              {/* Service Type */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Service Type
+                <label className="block mb-1 text-sm font-medium">
+                  Status
                 </label>
                 <Select
-                  value={itemServiceType}
-                  onChange={setItemServiceType}
-                  options={ServiceTypeOptions}
-                  placeholder="Select Type"
+                  value={
+                    filteredStatusOptions.find(
+                      (opt) => opt.value === filterBookingStatus
+                    ) || null
+                  }
+                  onChange={(option) =>
+                    setFilterValue(
+                      "filterBookingStatus",
+                      option ? option.value : null
+                    )
+                  }
+                  options={filteredStatusOptions}
+                  placeholder="Select Status"
                   styles={customStyles}
+                  isClearable
                 />
               </div>
             </div>
@@ -131,7 +158,7 @@ export default function TrialAppointmentPanel({
             {/* Reset */}
             <div className="flex justify-between pt-3">
               <button
-                onClick={handleSubmitFilters}
+                onClick={handleApply}
                 className="px-4 py-2 bg-black text-white rounded flex items-center gap-2 cursor-pointer ml-auto"
               >
                 Apply
@@ -140,29 +167,40 @@ export default function TrialAppointmentPanel({
           </div>
         </div>
       )}
-      {Object.keys(appliedFilters).length > 0 && (
-        <div
-          className={`gap-2 mt-4 ${
-            Object.keys(appliedFilters).some((key) => appliedFilters[key])
-              ? "flex"
-              : "hidden"
-          }`}
-        >
-          {Object.entries(appliedFilters).map(
-            ([key, value]) =>
-              value && (
-                <div
-                  key={key}
-                  className="flex items-center justify-between gap-1 border rounded-full bg-[#EEEEEE] min-h-[30px] px-3 text-sm"
-                >
-                  <span>{value.label || value}</span>
-                  <IoClose
-                    onClick={() => removeFilter(key)}
-                    className="cursor-pointer text-xl"
-                  />
-                </div>
-              )
-          )}
+      {Object.values(appliedFilters).some((v) => v) && (
+        <div className="flex flex-wrap gap-2 mt-4">
+          {Object.entries(appliedFilters).map(([key, value]) => {
+            if (!value) return null;
+
+            let options;
+            if (key === "club_id") options = clubOptions;
+            if (key === "trainer_name") options = BillTypeOptions;
+            if (key === "booking_status") options = filteredStatusOptions;
+      
+
+            let displayValue = "";
+            if (value instanceof Date) {
+              displayValue = value.toLocaleDateString();
+            } else if (options) {
+              const matched = options.find((opt) => opt.value === value);
+              displayValue = matched ? matched.label : String(value);
+            } else {
+              displayValue = String(value);
+            }
+
+            return (
+              <div
+                key={key}
+                className="flex items-center justify-between gap-1 border rounded-full bg-[#EEEEEE] min-h-[30px] px-3 text-sm"
+              >
+                <span>{displayValue}</span>
+                <IoClose
+                  onClick={() => handleRemoveFilter(key)}
+                  className="cursor-pointer text-xl"
+                />
+              </div>
+            );
+          })}
         </div>
       )}
     </div>

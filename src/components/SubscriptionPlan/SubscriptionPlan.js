@@ -16,6 +16,7 @@ const SubscriptionPlan = () => {
   const [showModal, setShowModal] = useState(false);
   const [module, setModule] = useState([]);
   const [club, setClub] = useState([]);
+  const [clubFilter, setClubFilter] = useState(null);
   const [editingOption, setEditingOption] = useState(null);
   const leadBoxRef = useRef(null);
 
@@ -48,6 +49,9 @@ const SubscriptionPlan = () => {
       if (statusFilter?.value) {
         data = data.filter((item) => item.status === statusFilter.value);
       }
+      if (clubFilter) {
+        data = data.filter((item) => item.club_id === clubFilter);
+      }
       setModule(data);
     } catch (err) {
       console.error(err);
@@ -72,7 +76,7 @@ const SubscriptionPlan = () => {
     }, 300);
 
     return () => clearTimeout(delayDebounce);
-  }, [searchTerm, statusFilter]);
+  }, [searchTerm, statusFilter, clubFilter]);
 
   const handleOverlayClick = (e) => {
     if (leadBoxRef.current && !leadBoxRef.current.contains(e.target)) {
@@ -119,10 +123,7 @@ const SubscriptionPlan = () => {
         const payload = { ...values };
 
         if (editingOption) {
-          await authAxios().put(
-            `/subscription-plan/${editingOption}`,
-            payload
-          );
+          await authAxios().put(`/subscription-plan/${editingOption}`, payload);
           toast.success("Updated Successfully");
         } else {
           await authAxios().post("/subscription-plan/create", payload);
@@ -190,6 +191,16 @@ const SubscriptionPlan = () => {
             ]}
             value={statusFilter}
             onChange={(option) => setStatusFilter(option)}
+            isClearable
+            styles={customStyles}
+          />
+        </div>
+        <div className="w-fit min-w-[180px]">
+          <Select
+            placeholder="Filter by club"
+            value={clubOptions.find((o) => o.value === clubFilter) || null}
+            options={clubOptions}
+            onChange={(option) => setClubFilter(option?.value)}
             isClearable
             styles={customStyles}
           />

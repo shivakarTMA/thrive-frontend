@@ -21,7 +21,6 @@ import { format, subDays, startOfToday, startOfMonth } from "date-fns";
 import { authAxios } from "../../../config/config";
 import { toast } from "react-toastify";
 import Pagination from "../../../components/common/Pagination";
-import { useFormik } from "formik";
 
 // Date filter dropdown options
 const dateFilterOptions = [
@@ -33,30 +32,26 @@ const dateFilterOptions = [
 
 const statusUpdateOptions = [
   { value: "ACTIVE", label: "Scheduled" },
+  // { value: "UPCOMING", label: "Upcoming" },
   { value: "COMPLETED", label: "Completed" },
   { value: "CANCELLED", label: "Cancelled" },
   { value: "NO_SHOW", label: "No Show" },
 ];
 
-const filterStatusOptions = [
-  { value: "ACTIVE", label: "Scheduled" },
-  { value: "UPCOMING", label: "Upcoming" },
-  { value: "COMPLETED", label: "Completed" },
-  { value: "CANCELLED", label: "Cancelled" },
-  { value: "NO_SHOW", label: "No Show" },
-];
-
-const TrialAppointments = () => {
+const AllAppointments = () => {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [pendingStatus, setPendingStatus] = useState(null);
   const [pendingId, setPendingId] = useState(null);
-
-  const [filtersInitialized, setFiltersInitialized] = useState(false);
 
   const location = useLocation();
 
   // New
   const [appointmentList, setAppointmentList] = useState([]);
+  const [clubList, setClubList] = useState([]);
+  const [clubFilter, setClubFilter] = useState(null);
+
+  const [itemStatus, setItemStatus] = useState(null);
+  const [appointmentType, setAppointmentType] = useState(null);
 
   const [dateFilter, setDateFilter] = useState(dateFilterOptions[1]);
   const [customFrom, setCustomFrom] = useState(null);
@@ -66,12 +61,6 @@ const TrialAppointments = () => {
   const [rowsPerPage] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
-  // ✅ Single source of truth for applied filters
-  const [appliedFilters, setAppliedFilters] = useState({
-    club_id: null,
-    trainer_id: null,
-    booking_status: null,
-  });
 
   const [stats, setStats] = useState({
     scheduled: 0,
@@ -85,71 +74,80 @@ const TrialAppointments = () => {
   const [isUrlFiltersReady, setIsUrlFiltersReady] = useState(false);
   // new
 
-  const formik = useFormik({
-    enableReinitialize: true,
-    initialValues: {
-      filterClub: null,
-      filterTrainer: null,
-      filterBookingStatus: null,
-    },
-    onSubmit: (values) => {
-      console.log(values);
-    },
-  });
+  // ---------------------------
+  // BUILD FINAL FILTER PARAMS
+  // ---------------------------
+  const buildFinalFilters = () => {
+    const filters = {};
 
-  const normalizeProductSold = (item, index) => ({
-    createdAt: item.createdAt,
-    club_name: item.club_name,
-    lead_name: item.lead_name,
-    start_date: item.start_date,
-    start_time: item.start_time,
-    assigned_staff_name: item.assigned_staff_name,
-    staff_name: item.staff_name,
-    booking_status: item.booking_status,
-  });
+    if (itemStatus?.value) {
+      filters.booking_status = itemStatus.value;
+    }
+
+    if (appointmentType?.value) {
+      filters.appointment_type = appointmentType.value;
+    }
+
+    if (clubFilter?.value) {
+      filters.club_id = clubFilter.value;
+    }
+
+    if (dateFilter?.value === "custom") {
+      if (!customFrom || !customTo) return null;
+
+      filters.startDate = format(customFrom, "yyyy-MM-dd");
+      filters.endDate = format(customTo, "yyyy-MM-dd");
+    } else {
+      filters.dateFilter = dateFilter?.value;
+    }
+
+    return filters;
+  };
+
+  // Function to fetch club list
+  const fetchClub = async (search = "") => {
+    try {
+      const response = await authAxios().get("/club/list", {
+        params: search ? { search } : {},
+      });
+      const data = response.data?.data || [];
+      const activeOnly = filterActiveItems(data);
+      setClubList(activeOnly);
+    } catch (error) {
+      toast.error("Failed to fetch clubs");
+    }
+  };
+  // Function to fetch role list
+
+  useEffect(() => {
+    fetchClub();
+  }, []);
+
+  const clubOptions = clubList.map((item) => ({
+    label: item.name,
+    value: item.id,
+  }));
 
   // ---------------------------
   // FETCH APPOINTMENTS
   // ---------------------------
   const fetchAppointments = async (currentPage = page) => {
+    const filters = buildFinalFilters();
+    if (!filters) return;
+
     try {
       const params = {
         page: currentPage,
         limit: rowsPerPage,
+        ...filters,
       };
 
-      // Date Filter
-      if (dateFilter?.value && dateFilter.value !== "custom") {
-        params.dateFilter = dateFilter.value;
-      }
-
-      if (dateFilter?.value === "custom" && customFrom && customTo) {
-        const formatDate = (d) => format(d, "yyyy-MM-dd");
-        params.startDate = formatDate(customFrom);
-        params.endDate = formatDate(customTo);
-      }
-
-      // ✅ Applied Filters
-      if (appliedFilters.club_id) params.club_id = appliedFilters.club_id;
-      if (appliedFilters.booking_status)
-        params.booking_status = appliedFilters.booking_status;
-      if (appliedFilters.trainer_id)
-        params.trainer_id = appliedFilters.trainer_id;
-
-      console.log("🔍 API Request Params:", params);
-      console.log("📊 Applied Filters:", appliedFilters);
-
-      const res = await authAxios().get(
-        "/appointment/fetch/list?appointment_type=CLUB",
-        { params }
-      );
+      const res = await authAxios().get("/appointment/fetch/list", { params });
 
       const responseData = res.data;
       const data = responseData?.data || [];
 
-      const normalizedData = responseData.data?.map(normalizeProductSold) || [];
-
-      setAppointmentList(normalizedData);
+      setAppointmentList(data);
       setPage(responseData?.currentPage || 1);
       setTotalPages(responseData?.totalPage || 1);
       setTotalCount(responseData?.totalCount || data.length);
@@ -174,7 +172,7 @@ const TrialAppointments = () => {
         params.dateFilter = dateFilter?.value || "last_7_days";
       }
 
-      const res = await authAxios().get("/appointment/trial/count?appointment_type=CLUB", { params });
+      const res = await authAxios().get("/appointment/trial/count", { params });
       const data = res.data?.data || {};
 
       setStats({
@@ -196,58 +194,68 @@ const TrialAppointments = () => {
   useEffect(() => {
     const params = new URLSearchParams(location.search);
 
-    if (!params.toString()) {
-      setFiltersInitialized(true);
-      return;
+    const bookingStatus = params.get("booking_status");
+    const appointmentTypeParam = params.get("appointment_type");
+    const dateFilterParam =  params.get("dateFilter") || params.get("date");
+    const startDate = params.get("startDate");
+    const endDate = params.get("endDate");
+    const clubId = params.get("club_id");
+
+    if (bookingStatus) {
+      setItemStatus({ value: bookingStatus, label: bookingStatus });
     }
 
-    // Date
-    const dateValue = params.get("date");
-    const matchedDate = dateFilterOptions.find(
-      (opt) => opt.value === dateValue
-    );
-    if (matchedDate) setDateFilter(matchedDate);
+    if (appointmentTypeParam) {
+      setAppointmentType({
+        value: appointmentTypeParam,
+        label: appointmentTypeParam,
+      });
+    }
 
-    if (params.get("customFrom"))
-      setCustomFrom(new Date(params.get("customFrom")));
-    if (params.get("customTo")) setCustomTo(new Date(params.get("customTo")));
+    if (dateFilterParam) {
+      const matched = dateFilterOptions.find(
+        (opt) => opt.value === dateFilterParam
+      );
 
-    // URL → appliedFilters
-    const urlFilters = {
-      club_id: params.get("club_id"),
-      booking_status: params.get("booking_status"),
-    };
+      if (matched) {
+        setDateFilter(matched);
+      }
+    }
 
-    setAppliedFilters(urlFilters);
+    if (startDate && endDate) {
+      setDateFilter({ value: "custom", label: "Custom" });
+      setCustomFrom(new Date(startDate));
+      setCustomTo(new Date(endDate));
+    }
 
-    // Sync Formik
-    formik.setValues({
-      filterClub: urlFilters.club_id,
-      filterBookingStatus: urlFilters.booking_status,
-    });
+    if (clubId) {
+      setClubFilter({ value: clubId, label: `Club ${clubId}` });
+    }
 
-    setFiltersInitialized(true);
+    // 🔑 IMPORTANT
+    setIsUrlFiltersReady(true);
   }, [location.search]);
 
   // ---------------------------
   // FETCH WHEN FILTERS CHANGE
   // ---------------------------
   useEffect(() => {
-    if (!filtersInitialized) return;
+    if (!isUrlFiltersReady) return;
 
     setPage(1);
     fetchAppointments(1);
     fetchAppointmentStats();
   }, [
-    filtersInitialized,
-    dateFilter?.value,
+    isUrlFiltersReady,
+    itemStatus,
+    appointmentType,
+    dateFilter,
     customFrom,
     customTo,
-    appliedFilters.club_id,
-    appliedFilters.booking_status,
+    clubFilter,
   ]);
 
-  const { scheduled, upcoming, completed, noShow, cancelled } = stats;
+  const { scheduled, upcoming , completed, noShow, cancelled } = stats;
 
   const updateAppointmentStatus = (id, newStatus) => {
     setPendingId(id);
@@ -286,8 +294,8 @@ const TrialAppointments = () => {
         {/* Page heading */}
         <div className="flex items-end justify-between gap-2 mb-5">
           <div className="title--breadcrumbs">
-            <p className="text-sm">{`Home > Trial Appointments`}</p>
-            <h1 className="text-3xl font-semibold">Trial Appointments</h1>
+            <p className="text-sm">{`Home > All Appointments`}</p>
+            <h1 className="text-3xl font-semibold">All Appointments</h1>
           </div>
         </div>
 
@@ -321,7 +329,6 @@ const TrialAppointments = () => {
                   </span>
                   <DatePicker
                     selected={customFrom}
-                   
                     onChange={(date) => {
                       setCustomFrom(date);
                       setCustomTo(null); // ✅ reset To Date if From Date changes
@@ -356,6 +363,16 @@ const TrialAppointments = () => {
                 </div>
               </>
             )}
+            <div className="w-fit min-w-[180px]">
+              <Select
+                placeholder="Filter by club"
+                value={clubFilter}
+                options={clubOptions}
+                onChange={(option) => setClubFilter(option)}
+                isClearable
+                styles={customStyles}
+              />
+            </div>
           </div>
         </div>
 
@@ -372,9 +389,7 @@ const TrialAppointments = () => {
             <div className="flex justify-center bg-[#F1F1F1] p-4 py-3">
               <div className="text-lg font-bold">Upcoming</div>
             </div>
-            <p className="text-3xl font-bold text-center py-5">
-              {scheduled}
-            </p>
+            <p className="text-3xl font-bold text-center py-5">{scheduled}</p>
           </div>
           <div className="border rounded-[5px] overflow-hidden w-full">
             <div className="flex justify-center bg-[#F1F1F1] p-4 py-3">
@@ -399,20 +414,12 @@ const TrialAppointments = () => {
 
         {/* Data Table */}
         <div className="w-full p-3 border bg-white shodow--box rounded-[10px]">
-          <div className="flex items-start gap-3 justify-between w-full mb-3 border-b border-b-[#D4D4D4] pb-3">
+          {/* <div className="flex items-start gap-3 justify-between w-full mb-3 border-b border-b-[#D4D4D4] pb-3">
             <TrialAppointmentPanel
-              formik={formik}
-              filterClub={formik.values.filterClub}
-              filterTrainer={formik.values.filterTrainer}
-              filterBookingStatus={formik.values.filterBookingStatus}
-              setFilterValue={(field, value) =>
-                formik.setFieldValue(field, value)
-              }
-              appliedFilters={appliedFilters}
-              setAppliedFilters={setAppliedFilters}
-              filteredStatusOptions={filterStatusOptions}
+              itemStatus={itemStatus}
+              setItemStatus={setItemStatus}
             />
-          </div>
+          </div> */}
 
           <div className="table--data--bottom w-full">
             <div className="relative overflow-x-auto">
@@ -421,22 +428,18 @@ const TrialAppointments = () => {
                   <tr>
                     <th className="px-2 py-4 min-w-[100px]">Created On</th>
                     <th className="px-2 py-4 min-w-[150px]">Club Name</th>
-                    <th className="px-2 py-4 min-w-[150px]">
-                      Appointment Name
-                    </th>
-                    <th className="px-2 py-4 min-w-[110px]">Enquiry Date</th>
-
+                    <th className="px-2 py-4 min-w-[150px]">Category</th>
+                    <th className="px-2 py-4 min-w-[150px]">Service Type</th>
+                    <th className="px-2 py-4 min-w-[150px]">Service Name</th>
+                    <th className="px-2 py-4 min-w-[150px]">Class Name</th>
                     <th className="px-2 py-4 min-w-[130px]">Name</th>
-
+                    <th className="px-2 py-4 min-w-[130px]">Lead Type</th>
                     <th className="px-2 py-4 min-w-[110px]">Scheduled At</th>
-                    <th className="px-2 py-4 min-w-[120px]">Trainer Name</th>
+                    <th className="px-2 py-4 min-w-[130px]">Trainer Name</th>
                     <th className="px-2 py-4 min-w-[130px]">Scheduled By</th>
-                    {/* <th className="px-2 py-4 min-w-[130px]">Previous Status</th> */}
-                    <th className="px-2 py-4 min-w-[150px]">
-                      Current Status/Action
-                    </th>
-                    <th className="px-2 py-4 min-w-[150px]">
-                      Remarks
+                    {/* <th className="px-2 py-4 min-w-[130px]">Status</th> */}
+                    <th className="px-2 py-4 text-center min-w-[150px]">
+                      Action
                     </th>
                   </tr>
                 </thead>
@@ -460,20 +463,30 @@ const TrialAppointments = () => {
                         <td className="px-2 py-4">
                           {row?.club_name ? row?.club_name : "--"}
                         </td>
-                        <td className="px-2 py-4">Trial/Tour</td>
-
-                        {/* <td className="px-2 py-4">
+                        <td className="px-2 py-4">
+                          {row?.appointment_category
+                            ? row?.appointment_category
+                            : "--"}
+                        </td>
+                        <td className="px-2 py-4">
                           {row?.appointment_type === "CLUB"
                             ? "Trial"
                             : formatText(row?.appointment_type)}
-                        </td> */}
+                        </td>
+                        <td className="px-2 py-4">
+                          {row?.appointment_type === "CLUB"
+                            ? "Trial/Tour"
+                            : row?.service_name}
+                        </td>
+                        <td className="px-2 py-4">
+                          {row?.package_name ? row?.package_name : "--"}
+                        </td>
 
-                        <td className="px-2 py-4">26/12/2025</td>
                         <td className="px-2 py-4">{row?.lead_name || "--"}</td>
+                        <td className="px-2 py-4">{row?.lead_type || "--"}</td>
 
                         <td className="px-2 py-4">
-                          {formatAutoDate(row?.start_date)}<br></br>
-                          {formatTimeAppointment(row?.start_time)}
+                          {formatAutoDate(row?.start_date)}<br></br> {formatTimeAppointment(row?.start_time)}
                         </td>
 
                         <td className="px-2 py-4">
@@ -482,9 +495,8 @@ const TrialAppointments = () => {
                         <td className="px-2 py-4">
                           {row?.staff_name || "Self"}
                         </td>
-                        {/* <td className="px-2 py-4">Rescheduled</td> */}
                         <td className="px-2 py-4">
-                          <div className="max-w-[130px] w-full">
+                          <div className="max-w-[130px] w-full mx-auto">
                             <Select
                               placeholder="Select"
                               options={filteredStatusOptions}
@@ -517,9 +529,6 @@ const TrialAppointments = () => {
                             <img src={mailIcon} />
                           </div>
                         </div> */}
-                        </td>
-                        <td className="px-2 py-4">
-                          {row?.remarks ? row?.remarks :  "--"}
                         </td>
                       </tr>
                     ))
@@ -577,4 +586,4 @@ const TrialAppointments = () => {
   );
 };
 
-export default TrialAppointments;
+export default AllAppointments;

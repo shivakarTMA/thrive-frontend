@@ -2,16 +2,17 @@ import React, { useEffect, useState } from "react";
 import Select from "react-select";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { customStyles, formatAutoDate, formatText } from "../../Helper/helper";
+import { customStyles, formatAutoDate, formatIndianNumber, formatText } from "../../Helper/helper";
 import { authAxios } from "../../config/config";
 import { toast } from "react-toastify";
+import { addYears, subYears } from "date-fns";
+import { FaCalendarDays } from "react-icons/fa6";
 
-const OrderHistory = ({details}) => {
+const OrderHistory = ({ details }) => {
   const [category, setCategory] = useState({ value: "All", label: "All" });
   const [dateFrom, setDateFrom] = useState(null);
   const [dateTo, setDateTo] = useState(null);
   const [ordersList, setOrdersList] = useState([]);
-
 
   const categoryOptions = [
     { value: "All", label: "All" },
@@ -24,7 +25,6 @@ const OrderHistory = ({details}) => {
     { value: "GX", label: "GX" },
     { value: "Sports", label: "Sports" },
   ];
-
 
   // Fetch coins with filters applied
   const fetchMemberOrders = async () => {
@@ -53,15 +53,18 @@ const OrderHistory = ({details}) => {
           onChange={setCategory}
           placeholder="Select Category"
           styles={customStyles}
-            className="w-40"
+          className="w-40"
         />
         <div className="custom--date dob-format">
+          <span className="absolute z-[1] mt-[11px] ml-[15px]">
+            <FaCalendarDays />
+          </span>
           <DatePicker
             isClearable
             selected={dateFrom}
             onChange={(date) => {
               setDateFrom(date);
-              if (!date) setDateTo(null);
+              setDateTo(null);
             }}
             showMonthDropdown
             showYearDropdown
@@ -69,21 +72,26 @@ const OrderHistory = ({details}) => {
             dateFormat="dd MMM yyyy"
             dropdownMode="select"
             placeholderText="From date"
-            className="custom--input w-full"
+            className="custom--input w-full input--icon"
           />
         </div>
         <div className="custom--date dob-format">
+          <span className="absolute z-[1] mt-[11px] ml-[15px]">
+            <FaCalendarDays />
+          </span>
           <DatePicker
             isClearable
             selected={dateTo}
             onChange={(date) => setDateTo(date)}
             showMonthDropdown
             showYearDropdown
-            maxDate={new Date()}
+            minDate={dateFrom || subYears(new Date(), 20)}
+            maxDate={addYears(new Date(), 0)}
             dateFormat="dd MMM yyyy"
             dropdownMode="select"
             placeholderText="To date"
-            className="custom--input w-full"
+            className="custom--input w-full input--icon"
+            disabled={!dateFrom}
           />
         </div>
       </div> */}
@@ -107,12 +115,22 @@ const OrderHistory = ({details}) => {
               ordersList.map((order) => (
                 <tr key={order.orderId} className="hover:bg-gray-50">
                   <td className="border px-3 py-2">{order?.order_no}</td>
-                  <td className="border px-3 py-2">{formatAutoDate(order?.order_date)}</td>
-                  <td className="border px-3 py-2">{formatText(order?.order_status)}</td>
-                  <td className="border px-3 py-2">{formatText(order?.order_type)}</td>
-                  <td className="border px-3 py-2">{formatText(order?.payment_method)}</td>
-                  <td className="border px-3 py-2">{formatText(order?.payment_status)}</td>
-                  <td className="border px-3 py-2">₹{order?.total_amount}</td>
+                  <td className="border px-3 py-2">
+                    {formatAutoDate(order?.order_date)}
+                  </td>
+                  <td className="border px-3 py-2">
+                    {formatText(order?.order_status)}
+                  </td>
+                  <td className="border px-3 py-2">
+                    {formatText(order?.order_type)}
+                  </td>
+                  <td className="border px-3 py-2">
+                    {order?.payment_method ? formatText(order?.payment_method) : "--"}
+                  </td>
+                  <td className="border px-3 py-2">
+                    {formatText(order?.payment_status)}
+                  </td>
+                  <td className="border px-3 py-2">₹{formatIndianNumber(order?.total_amount)}</td>
                 </tr>
               ))
             ) : (

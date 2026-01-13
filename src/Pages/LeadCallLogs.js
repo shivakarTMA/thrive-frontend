@@ -21,6 +21,7 @@ import { fetchOptionList } from "../Redux/Reducers/optionListSlice";
 import { FaCalendarDays } from "react-icons/fa6";
 import { LuIndianRupee } from "react-icons/lu";
 import { format } from "date-fns";
+import { addYears, subYears } from "date-fns";
 
 const validationSchema = Yup.object().shape({
   call_status: Yup.string().required("Call status is required"),
@@ -31,12 +32,30 @@ const validationSchema = Yup.object().shape({
       val !== "Not Interested" &&
       val !== "Not Relevant" &&
       val !== "Invalid number" &&
+      val !== "Lead follow-up" &&
+      val !== "Busy Tone" &&
+      val !== "Switched Off/ Out of Reach" &&
+      val !== "No answer" &&
+      val !== "Future Prospect" &&
       val !== "Won",
     then: (schema) => schema.required("Date & Time is required"),
     otherwise: (schema) => schema.notRequired(),
   }),
 
   // Staff Name — only when Trial/Tour Scheduled
+  follow_up_datetime: Yup.string().when("call_status", {
+
+
+    is: (val) =>
+      val !== "Trial/Tour Scheduled" &&
+      val !== "Not Interested" &&
+      val !== "Not Relevant" &&
+      val !== "Invalid number" &&
+      val !== "Won",
+
+    then: (schema) => schema.required("Date and time is required"),
+    otherwise: (schema) => schema.notRequired(),
+  }),
   schedule_for: Yup.string().when("call_status", {
     is: "Trial/Tour Scheduled",
     then: (schema) => schema.required("Staff Name is required"),
@@ -78,7 +97,7 @@ const validationSchema = Yup.object().shape({
 
 const LeadCallLogs = () => {
   const { id } = useParams();
-  console.log(id,'id')
+
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
   const action = queryParams.get("action");
@@ -176,6 +195,7 @@ const LeadCallLogs = () => {
     initialValues,
     validationSchema,
     onSubmit: async (values, { resetForm }) => {
+      // console.log(values, "values");
       try {
         if (values.id) {
           // UPDATE MODE
@@ -229,24 +249,6 @@ const LeadCallLogs = () => {
     formik.setFieldValue("schedule_for", selectedOption?.value ?? "");
   };
 
-  // const getAvailableTrainers = () => {
-  //   const dt = formik.values.follow_up_datetime;
-  //   if (!dt) return [];
-
-  //   const selected = new Date(dt);
-  //   if (isNaN(selected)) return [];
-
-  //   return assignTrainers.filter((trainer) => {
-  //     const trainerKey = trainerIdMap[trainer.value];
-  //     if (!trainerKey) return false;
-
-  //     return trainerAvailability[trainerKey]?.some((slot) => {
-  //       const slotDt = new Date(slot.date_time);
-  //       return slotDt.getTime() === selected.getTime();
-  //     });
-  //   });
-  // };
-
   const now = new Date();
   const minTime = new Date();
   minTime.setHours(6, 0, 0, 0);
@@ -263,17 +265,17 @@ const LeadCallLogs = () => {
   const getMinTime = (selectedDate) => {
     if (!selectedDate) return baseMinTime;
 
-    const isToday = selectedDate.toDateString() === now.toDateString();
+    const selected = new Date(selectedDate);
+    const today = new Date();
 
-    // If today → disable past times but still enforce 6 AM
+    const isToday = selected.toDateString() === today.toDateString();
+
     if (isToday) {
       const current = new Date();
-      const dynamicTime = current.getHours() < 6 ? baseMinTime : current;
-
-      return dynamicTime;
+      return current.getHours() < 6 ? baseMinTime : current;
     }
 
-    // For future dates → use normal 6 AM
+    // future dates → always 6 AM
     return baseMinTime;
   };
 
@@ -360,6 +362,12 @@ const LeadCallLogs = () => {
       label: item.name,
       value: item.id,
     })) || [];
+
+  useEffect(() => {
+    console.log("Formik Errors:", formik.errors);
+    console.log("Formik Touched:", formik.touched);
+    console.log("Formik Values:", formik.values);
+  }, [formik.errors, formik.touched, formik.values]);
 
   return (
     <div className="page--content">
@@ -457,7 +465,7 @@ const LeadCallLogs = () => {
                         placeholderText="Select date & time"
                         className="border px-3 py-2 w-full input--icon"
                         minDate={now} // Disable past dates
-                        minTime={getMinTime(new Date())} // Calculate minTime for selected date dynamically
+                        minTime={getMinTime(formik.values.follow_up_datetime)}
                         maxTime={baseMaxTime} // 10:00 PM limit
                         disabled={editLog ? true : false}
                       />
@@ -494,7 +502,7 @@ const LeadCallLogs = () => {
                         placeholderText="Select date & time"
                         className="border px-3 py-2 w-full input--icon"
                         minDate={now} // Disable past dates
-                        minTime={getMinTime(new Date())} // Calculate minTime for selected date dynamically
+                        minTime={getMinTime(formik.values.trial_tour_datetime)}
                         maxTime={baseMaxTime} // 10:00 PM limit
                         disabled={editLog ? true : false}
                       />
@@ -563,7 +571,7 @@ const LeadCallLogs = () => {
                             placeholderText="Select date & time"
                             className="border px-3 py-2 w-full input--icon"
                             minDate={now} // Disable past dates
-                            minTime={getMinTime(new Date())} // Calculate minTime for selected date dynamically
+                            minTime={getMinTime(formik.values.follow_up_datetime)}
                             maxTime={baseMaxTime} // 10:00 PM limit
                             disabled={editLog ? true : false}
                           />
@@ -771,7 +779,11 @@ const LeadCallLogs = () => {
                 </span>
                 <DatePicker
                   selected={startDate}
-                  onChange={setStartDate}
+                  onChange={(date) => {
+                    setStartDate(date);
+                    setEndDate(null);
+                  }}
+                  maxDate={new Date()}
                   placeholderText="Start Date"
                   className="border px-3 py-2 w-full input--icon"
                   isClearable
@@ -784,8 +796,13 @@ const LeadCallLogs = () => {
                 <DatePicker
                   selected={endDate}
                   onChange={setEndDate}
+                  minDate={startDate || subYears(new Date(), 20)}
+                  maxDate={addYears(new Date(), 0)}
+                  dateFormat="dd MMM yyyy"
+                  disabled={!startDate}
                   placeholderText="End Date"
                   className="border px-3 py-2 w-full input--icon"
+                  isClearable
                 />
               </div>
             </div>

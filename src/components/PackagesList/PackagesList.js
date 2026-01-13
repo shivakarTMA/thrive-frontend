@@ -12,7 +12,11 @@ import { IoIosSearch } from "react-icons/io";
 import Pagination from "../common/Pagination";
 import { IoSearchOutline } from "react-icons/io5";
 import Select from "react-select";
-import { customStyles, formatText } from "../../Helper/helper";
+import {
+  customStyles,
+  filterActiveItems,
+  formatText,
+} from "../../Helper/helper";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchOptionList } from "../../Redux/Reducers/optionListSlice";
 
@@ -22,6 +26,8 @@ const PackagesList = () => {
   const [editingOption, setEditingOption] = useState(null);
   const [service, setService] = useState([]);
   const [serviceFilter, setServiceFilter] = useState(null);
+  const [club, setClub] = useState([]);
+  const [clubFilter, setClubFilter] = useState(null);
 
   const [sessionLevelValue, setSessionLevelValue] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
@@ -39,8 +45,6 @@ const PackagesList = () => {
   }, [dispatch]);
 
   const sessionLevel = lists["SESSION_LEVEL"] || [];
-
-
 
   const fetchService = async (search = "") => {
     try {
@@ -66,6 +70,21 @@ const PackagesList = () => {
       }))
       .filter((item) => item.type !== "PRODUCT") || [];
 
+  const fetchClub = async (search = "") => {
+    try {
+      const res = await authAxios().get("/club/list", {
+        params: search ? { search } : {},
+      });
+      let data = res.data?.data || res.data || [];
+
+      const activeOnly = filterActiveItems(data);
+      setClub(activeOnly);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to fetch club");
+    }
+  };
+
   const fetchPackagesList = async (search = searchTerm, currentPage = page) => {
     try {
       const params = {
@@ -77,6 +96,9 @@ const PackagesList = () => {
 
       if (serviceFilter?.value) {
         params.service_id = serviceFilter.value;
+      }
+      if (clubFilter?.value) {
+        params.club_id = clubFilter.value;
       }
 
       const res = await authAxios().get("/package/list", { params });
@@ -94,6 +116,19 @@ const PackagesList = () => {
     }
   };
 
+  // Initial fetch
+  useEffect(() => {
+    fetchPackagesList();
+    fetchService();
+    fetchClub();
+  }, []);
+
+  const clubOptions =
+    club?.map((item) => ({
+      label: item.name, // Show club name
+      value: item.id, // Store club_id as ID
+    })) || [];
+
   // Fetch packages again when search or service filter changes
   useEffect(() => {
     const delayDebounce = setTimeout(() => {
@@ -102,13 +137,7 @@ const PackagesList = () => {
     }, 300);
 
     return () => clearTimeout(delayDebounce);
-  }, [searchTerm, serviceFilter]);
-
-  // Initial fetch
-  useEffect(() => {
-    fetchPackagesList();
-    fetchService();
-  }, []);
+  }, [searchTerm, serviceFilter, clubFilter]);
 
   const getServiceType = (service_id, serviceOptions) => {
     const service = serviceOptions.find((s) => s.value === service_id);
@@ -401,22 +430,21 @@ const PackagesList = () => {
     },
   });
 
-useEffect(() => {
-  if (sessionLevelValue === "GROUP_CLASS") {
+  useEffect(() => {
+    if (sessionLevelValue === "GROUP_CLASS") {
       formik.setFieldValue("caption", "");
-    if (!formik.values.session_level && sessionLevel.length > 0) {
-      formik.setFieldValue("session_level", sessionLevel[0].value);
+      if (!formik.values.session_level && sessionLevel.length > 0) {
+        formik.setFieldValue("session_level", sessionLevel[0].value);
+      }
+    } else {
+      // Only clear if the current value is the previously auto-set value
+      if (formik.values.session_level === sessionLevel[0]?.value) {
+        formik.setFieldValue("session_level", "");
+      }
     }
-  } else {
-    // Only clear if the current value is the previously auto-set value
-    if (formik.values.session_level === sessionLevel[0]?.value) {
-      formik.setFieldValue("session_level", "");
-    }
-  }
-}, [sessionLevelValue, sessionLevel]);
+  }, [sessionLevelValue, sessionLevel]);
 
-
-  console.log(formik.values?.session_level,'didijidj')
+  console.log(formik.values?.session_level, "didijidj");
 
   const createPackageVariation = async (packageId, variation) => {
     const fd = new FormData();
@@ -641,6 +669,16 @@ useEffect(() => {
             options={serviceOptions}
             value={serviceFilter}
             onChange={(option) => setServiceFilter(option)}
+            isClearable
+            styles={customStyles}
+          />
+        </div>
+        <div className="w-fit min-w-[180px]">
+          <Select
+            placeholder="Filter by club"
+            options={clubOptions}
+            value={clubFilter}
+            onChange={setClubFilter}
             isClearable
             styles={customStyles}
           />

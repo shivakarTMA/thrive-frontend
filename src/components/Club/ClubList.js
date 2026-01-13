@@ -70,6 +70,9 @@ const ClubList = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState(null);
 
+  const APP_URL =
+    typeof window !== "undefined" ? process.env.REACT_APP_BASEURL : "";
+
   const [page, setPage] = useState(1);
   const [rowsPerPage] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
@@ -260,22 +263,25 @@ const ClubList = () => {
     formik.setFieldValue("phone", value);
   };
 
+  const buildQrValue = (clubId) => {
+    if (!clubId || !APP_URL) return "";
+    return JSON.stringify({
+      type: "ATTENDANCE",
+      club_id: String(clubId),
+      source: "QR",
+      redirect: `${APP_URL}/attendance`,
+    });
+  };
+
   const downloadQRCode = (clubId) => {
     const canvas = document.getElementById(`qr-download-${clubId}`);
-
-    if (!canvas) {
-      toast.error("QR code not found");
-      return;
-    }
+    if (!canvas) return toast.error("QR not found");
 
     const pngUrl = canvas.toDataURL("image/png");
-
     const link = document.createElement("a");
     link.href = pngUrl;
     link.download = `club_${clubId}_qr.png`;
-    document.body.appendChild(link);
     link.click();
-    document.body.removeChild(link);
   };
 
   return (
@@ -358,112 +364,115 @@ const ClubList = () => {
                   </td>
                 </tr>
               ) : (
-                club.map((club, index) => (
-                  <tr
-                    key={club.id || index}
-                    className="group bg-white border-b hover:bg-gray-50 relative transition duration-700"
-                  >
-                    {/* <td className="px-2 py-4">{club?.id || "—"}</td> */}
-                    <td className="px-2 py-4">
-                      <div className="relative">
-                        <QRCodeCanvas
-                          id={`qr-view-${club.id}`}
-                          value={JSON.stringify({
-                            club_id: club.id,
-                            type: "ATTENDANCE",
-                          })}
-                          size={50}
-                          level="H"
-                        />
+                club.map((club, index) => {
+                  const qrValue = buildQrValue(club?.id);
+                  return (
+                    <tr
+                      key={club.id || index}
+                      className="group bg-white border-b hover:bg-gray-50 relative transition duration-700"
+                    >
+                      {/* <td className="px-2 py-4">{club?.id || "—"}</td> */}
+                      <td className="px-2 py-4">
+                        <div className="relative">
+                          {qrValue && (
+                            <>
+                              <QRCodeCanvas
+                                value={qrValue}
+                                size={60}
+                                level="H"
+                                includeMargin
+                              />
 
-                        <div className="w-full h-full absolute top-0 left-0">
-                          <Tooltip
-                            id={`tooltip-qr-${club.id || index}`}
-                            content="Download QR Code"
-                            place="top"
-                          >
-                            <button
-                              className="w-full h-full opacity-0"
-                              onClick={() => downloadQRCode(club.id)}
+                              <div style={{ display: "none" }}>
+                                <QRCodeCanvas
+                                  id={`qr-download-${club.id}`}
+                                  value={qrValue}
+                                  size={300}
+                                  level="H"
+                                  includeMargin
+                                />
+                              </div>
+                            </>
+                          )}
+
+                          <div className="w-full h-full absolute top-0 left-0">
+                            <Tooltip
+                              id={`tooltip-qr-${club.id || index}`}
+                              content="Download QR Code"
+                              place="top"
                             >
-                              QR
-                            </button>
-                          </Tooltip>
-
-                          {/* Hidden QR Code */}
-                          <div style={{ display: "none" }}>
-                            <QRCodeCanvas
-                              id={`qr-download-${club.id}`}
-                              value={JSON.stringify({
-                                club_id: club.id,
-                                type: "ATTENDANCE",
-                              })}
-                              size={250}
-                              level="H"
-                            />
+                              <button
+                                className="w-full h-full opacity-0"
+                                onClick={() => downloadQRCode(club.id)}
+                              >
+                                QR
+                              </button>
+                            </Tooltip>
                           </div>
                         </div>
-                      </div>
-                    </td>
-                    <td className="px-2 py-4">{club?.name}</td>
-                    <td className="px-2 py-4">{club?.email}</td>
-                    <td className="px-2 py-4">
-                      {club?.gstno ? club?.gstno : "--"}
-                    </td>
-                    <td className="px-2 py-4">{club?.city}</td>
-                    <td className="px-2 py-4">
-                      {club?.open_time ? formatTime(club?.open_time) : "--"}
-                    </td>
-                    <td className="px-2 py-4">
-                      {club?.close_time ? formatTime(club?.close_time) : "--"}
-                    </td>
-                    <td className="px-2 py-4">
-                      {club?.trial_duration
-                        ? club?.trial_duration + " Minutes"
-                        : "--"}
-                    </td>
-                    <td className="px-2 py-4 text-center">{club?.position}</td>
-                    <td className="px-2 py-4">
-                      <div
-                        className={`flex gap-1 items-center ${
-                          club?.status === "ACTIVE"
-                            ? "text-green-500"
-                            : "text-red-500"
-                        }`}
-                      >
-                        <FaCircle />
-                        {club?.status
-                          ? club.status.charAt(0) +
-                            club.status.slice(1).toLowerCase()
-                          : ""}
-                      </div>
-                    </td>
-                    <td className="px-2 py-4">
-                      <Tooltip
-                        id={`tooltip-edit-${club.id || index}`}
-                        content="Edit Club"
-                        place="top"
-                      >
+                      </td>
+                      <td className="px-2 py-4">{club?.name}</td>
+                      <td className="px-2 py-4">{club?.email}</td>
+                      <td className="px-2 py-4">
+                        {club?.gstno ? club?.gstno : "--"}
+                      </td>
+                      <td className="px-2 py-4">{club?.city}</td>
+                      <td className="px-2 py-4">
+                        {club?.open_time ? formatTime(club?.open_time) : "--"}
+                      </td>
+                      <td className="px-2 py-4">
+                        {club?.close_time ? formatTime(club?.close_time) : "--"}
+                      </td>
+                      <td className="px-2 py-4">
+                        {club?.trial_duration
+                          ? club?.trial_duration + " Minutes"
+                          : "--"}
+                      </td>
+                      <td className="px-2 py-4 text-center">
+                        {club?.position}
+                      </td>
+                      <td className="px-2 py-4">
                         <div
-                          className="p-1 cursor-pointer"
-                          onClick={() => {
-                            setEditingClub(club?.id);
-                            // formik.setValues({
-                            //   ...club,
-                            //   state:
-                            //     typeof club.state === "string"
-                            //       ? { label: club.state, value: club.state }
-                            //       : club.state,
-                            // });
-                            setShowModal(true);
-                          }}
+                          className={`flex gap-1 items-center ${
+                            club?.status === "ACTIVE"
+                              ? "text-green-500"
+                              : "text-red-500"
+                          }`}
                         >
-                          <LiaEdit className="text-[25px] text-black" />
+                          <FaCircle />
+                          {club?.status
+                            ? club.status.charAt(0) +
+                              club.status.slice(1).toLowerCase()
+                            : ""}
                         </div>
-                      </Tooltip>
-                    </td>
-                  </tr>
-                ))
+                      </td>
+                      <td className="px-2 py-4">
+                        <Tooltip
+                          id={`tooltip-edit-${club.id || index}`}
+                          content="Edit Club"
+                          place="top"
+                        >
+                          <div
+                            className="p-1 cursor-pointer"
+                            onClick={() => {
+                              setEditingClub(club?.id);
+                              // formik.setValues({
+                              //   ...club,
+                              //   state:
+                              //     typeof club.state === "string"
+                              //       ? { label: club.state, value: club.state }
+                              //       : club.state,
+                              // });
+                              setShowModal(true);
+                            }}
+                          >
+                            <LiaEdit className="text-[25px] text-black" />
+                          </div>
+                        </Tooltip>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>

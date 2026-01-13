@@ -321,11 +321,11 @@ const ClubManagerDashboard = () => {
             click: function () {
               // Example: open a link based on category
               const linkMap = {
-                Membership: "/reports/products-sold/",
-                "Personal Training": "/reports/products-sold/",
-                Pilates: "/reports/products-sold/",
-                Recovery: "/reports/products-sold/",
-                Cafe: "/reports/products-sold/",
+                Membership: "/reports/all-orders/",
+                "Personal Training": "/reports/all-orders/",
+                Pilates: "/reports/all-orders/",
+                Recovery: "/reports/all-orders/",
+                Cafe: "/reports/all-orders/",
               };
               const targetLink = linkMap[this.category];
               if (targetLink) {
@@ -599,7 +599,7 @@ const ClubManagerDashboard = () => {
               icon={trialIcon}
               title="Trials"
               titleLink={generateUrl(
-                `/reports/appointments/all-appointments?`
+                `/reports/appointments/all-trial-appointments?`
               )}
               totalSales="03"
               items={[
@@ -607,21 +607,21 @@ const ClubManagerDashboard = () => {
                   label: "Scheduled",
                   value: "01",
                   link: generateUrl(
-                    `/reports/appointments/all-appointments?status=Scheduled`
+                    `/reports/appointments/all-trial-appointments?status=Scheduled`
                   ),
                 },
                 {
                   label: "Completed",
                   value: "01",
                   link: generateUrl(
-                    `/reports/appointments/all-appointments?status=Completed`
+                    `/reports/appointments/all-trial-appointments?status=Completed`
                   ),
                 },
                 {
                   label: "No-Show",
                   value: "01",
                   link: generateUrl(
-                    `/reports/appointments/all-appointments?status=No-Show`
+                    `/reports/appointments/all-trial-appointments?status=No-Show`
                   ),
                 },
               ]}

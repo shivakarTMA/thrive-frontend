@@ -138,16 +138,19 @@ const WorkoutPlanList = () => {
                       {/* <td className="px-2 py-4">{row?.centerName}</td> */}
                       <td className="px-2 py-4">{row?.staff_name}</td>
                       <td className="px-2 py-4">
-                        <div
-                          className={`flex gap-1 items-center ${
-                            row?.status === "ACTIVE"
-                              ? "text-green-500"
-                              : "text-red-500"
-                          }`}
+                        <span
+                          className={`
+                                      flex items-center justify-between gap-1 rounded-full min-h-[30px] px-3 text-sm w-fit
+                                    ${
+                                      row?.status === "ACTIVE"
+                                        ? "bg-[#E8FFE6] text-[#138808]"
+                                        : "bg-[#FFE7E7] text-[#C80000]"
+                                    }
+                                    `}
                         >
-                          <FaCircle />
-                          {row?.status ? formatText(row?.status) : "--"}
-                        </div>
+                          <FaCircle className="text-[10px]" />
+                          {row?.status == null ? "--" : formatText(row?.status)}
+                        </span>
                       </td>
                       <td className="px-2 py-4">
                         <div className="flex gap-2 items-center">

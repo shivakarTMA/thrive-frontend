@@ -14,7 +14,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { logout } from "../../Redux/Reducers/authSlice";
 import DropdownMenu from "../DropdownMenu";
 import CreateLeadForm from "../../Pages/CreateLeadForm";
-import CreateInvoice from "../../Pages/CreateInvoice";
+import CreateNewInvoice from "../../Pages/CreateNewInvoice";
 import ProfileDetails from "../modal/ProfileDetails";
 import ToggleMenu from "../../assets/images/togglemenu.svg";
 import quickLinksImg from "../../assets/images/quicklinks.svg";
@@ -284,16 +284,38 @@ const Topbar = ({
           <div className="top--bar--menu flex items-center gap-3">
             {(user?.role === "CLUB_MANAGER" ||
               user?.role === "GENERAL_MANAGER" ||
-              user?.role === "ADMIN") && (
+              user?.role === "ADMIN" ||
+              user?.role === "FOH") && (
               <>
                 <div className="relative">
-                  <img
+                  {/* <img
                     src={quickLinksImg}
                     className="cursor-pointer w-6"
                     onClick={() => toggleDropdown("quicklinks")}
-                  />
+                  /> */}
 
-                  <DropdownMenu
+                  {leadModalPage === "ALLLEAD" ? (
+                    <div
+                      onClick={() => {
+                        setLeadModal(true);
+                        setSelectedLead(null);
+                      }}
+                      // className="nav-link flex items-center gap-2 px-3 py-2 hover:bg-black hover:text-white transition border-b cursor-pointer"
+                    >
+                      <img src={quickLinksImg} className="cursor-pointer w-6" />
+                    </div>
+                  ) : (
+                    <div
+                      onClick={() => {
+                        setLeadTopModal(true);
+                      }}
+                      // className="nav-link flex items-center gap-2 px-3 py-2 hover:bg-black hover:text-white transition border-b cursor-pointer"
+                    >
+                      <img src={quickLinksImg} className="cursor-pointer w-6" />
+                    </div>
+                  )}
+
+                  {/* <DropdownMenu
                     isOpen={activeDropdown === "quicklinks"}
                     onClose={() => setActiveDropdown(null)}
                   >
@@ -318,31 +340,31 @@ const Topbar = ({
                         <IoBarChartOutline className="menu--icon" />
                         <span className="nav-text">Add Lead</span>
                       </div>
-                    )}
+                    )} */}
 
-                    <div
+                  {/* <div
                       onClick={() => setMemberModal(true)}
                       className="nav-link flex items-center gap-2 px-3 py-2 hover:bg-black hover:text-white transition border-b cursor-pointer"
                     >
                       <FiUsers className="menu--icon" />
                       <span className="nav-text">Create Member</span>
-                    </div>
-                    <div
+                    </div> */}
+                  {/* <div
                       onClick={() => setInvoiceModal(true)}
                       className="nav-link flex items-center gap-2 px-3 py-2 hover:bg-black hover:text-white transition border-b cursor-pointer"
                     >
                       <LiaFileInvoiceSolid className="menu--icon" />
                       <span className="nav-text">Create Invoice</span>
-                    </div>
-                    <div
+                    </div> */}
+                  {/* <div
                       {...getRootProps()}
                       className="nav-link flex items-center gap-2 px-3 py-2 hover:bg-black hover:text-white transition border-b cursor-pointer"
                     >
                       <input {...getInputProps()} />
                       <IoIosList className="menu--icon" />
                       <span className="nav-text">Bulk Lead Upload</span>
-                    </div>
-                  </DropdownMenu>
+                    </div> */}
+                  {/* </DropdownMenu> */}
                 </div>
 
                 <img src={notificationBell} className="cursor-pointer w-6" />
@@ -390,7 +412,7 @@ const Topbar = ({
       </section>
       {leadTopModal && <CreateLeadForm setLeadModal={setLeadTopModal} />}
       {memberModal && <CreateMemberForm setMemberModal={setMemberModal} />}
-      {invoiceModal && <CreateInvoice setInvoiceModal={setInvoiceModal} />}
+      {invoiceModal && <CreateNewInvoice setInvoiceModal={setInvoiceModal} />}
       {profileModal && (
         <ProfileDetails setProfileModal={setProfileModal} staffID={user?.id} />
       )}

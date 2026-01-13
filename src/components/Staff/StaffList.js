@@ -332,46 +332,50 @@ const StaffList = () => {
       </div>
 
       {/* Filters */}
-      <div className="flex flex-wrap items-center gap-2 mb-4">
-        <input
-          type="text"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          placeholder="Search by name or mobile"
-          className="custom--input w-full max-w-[210px]"
-        />
-        <div className="w-full max-w-[200px]">
-          <Select
-            placeholder="Filter by status"
-            options={[
-              { label: "Active", value: "ACTIVE" },
-              { label: "Inactive", value: "INACTIVE" },
-            ]}
-            value={statusFilter}
-            onChange={(option) => setStatusFilter(option)}
-            isClearable
-            styles={customStyles}
+      <div className="flex gap-3 mb-4 items-center justify-between">
+        <div className="flex gap-2 w-full">
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Search by name or mobile"
+            className="custom--input w-full max-w-[210px]"
           />
-        </div>
-        <div className="w-full max-w-[200px]">
-          <Select
-            placeholder="Filter by club"
-            value={clubOptions.find((o) => o.value === clubFilter) || null}
-            options={clubOptions}
-            onChange={(option) => setClubFilter(option?.value)}
-            isClearable
-            styles={customStyles}
-          />
-        </div>
-        <div className="w-full max-w-[200px]">
-          <Select
-            placeholder="Filter by role"
-            value={roleOptions.find((o) => o.value === roleFilter) || null}
-            options={roleOptions}
-            onChange={(option) => setRoleFilter(option?.value)}
-            isClearable
-            styles={customStyles}
-          />
+          <div className="w-full max-w-[200px]">
+            <Select
+              placeholder="Filter by status"
+              options={[
+                { label: "Active", value: "ACTIVE" },
+                { label: "Inactive", value: "INACTIVE" },
+              ]}
+              value={statusFilter}
+              onChange={(option) => setStatusFilter(option)}
+              isClearable
+              styles={customStyles}
+            />
+          </div>
+          <div className="w-fit min-w-[200px]">
+            <Select
+              placeholder="Filter by club"
+              value={clubOptions.find((o) => o.value === clubFilter) || null}
+              options={clubOptions}
+              onChange={(option) => setClubFilter(option?.value)}
+              isClearable
+              styles={customStyles}
+              className="w-full"
+            />
+          </div>
+          <div className="w-fit min-w-[200px]">
+            <Select
+              placeholder="Filter by role"
+              value={roleOptions.find((o) => o.value === roleFilter) || null}
+              options={roleOptions}
+              onChange={(option) => setRoleFilter(option?.value)}
+              isClearable
+              styles={customStyles}
+              className="w-full"
+            />
+          </div>
         </div>
       </div>
 

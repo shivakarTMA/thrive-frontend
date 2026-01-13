@@ -2,18 +2,20 @@ import React, { useState, useEffect } from "react";
 import Select from "react-select";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { customStyles, formatAutoDate, formatText } from "../../Helper/helper";
+import { customStyles, formatAutoDate, formatIndianNumber, formatText } from "../../Helper/helper";
 import Tooltip from "../common/Tooltip";
 import { FaEye, FaPrint, FaShareSquare } from "react-icons/fa";
 import { authAxios } from "../../config/config";
 import { toast } from "react-toastify";
+import { addYears, subYears } from "date-fns";
+import { FaCalendarDays } from "react-icons/fa6";
 
 function toCapitalizedCase(inputString) {
   return inputString
-    .replace(/_/g, ' ')  // Replace underscores with spaces
-    .split(' ')          // Split string by spaces
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())  // Capitalize each word
-    .join(' ');          // Join words back into a single string with spaces
+    .replace(/_/g, " ") // Replace underscores with spaces
+    .split(" ") // Split string by spaces
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()) // Capitalize each word
+    .join(" "); // Join words back into a single string with spaces
 }
 
 const PaymentHistory = ({ details }) => {
@@ -52,7 +54,6 @@ const PaymentHistory = ({ details }) => {
     fetchMemberPayment();
   }, []);
 
-
   const handleViewInvoice = (order) => {
     setSelectedInvoice(order);
   };
@@ -78,7 +79,9 @@ const PaymentHistory = ({ details }) => {
           <p><strong>Tax:</strong> ₹${order?.tax}</p>
           <p><strong>Net:</strong> ₹${order?.net}</p>
           <p><strong>Paid:</strong> ₹${order?.total_amount}</p>
-          <p><strong>Payment Mode:</strong> ${order?.payment_mode ? toCapitalizedCase(order.payment_mode) : 'N/A'}</p>
+          <p><strong>Payment Mode:</strong> ${
+            order?.payment_mode ? toCapitalizedCase(order.payment_mode) : "N/A"
+          }</p>
         </body>
       </html>
     `;
@@ -108,32 +111,42 @@ const PaymentHistory = ({ details }) => {
           className="w-40"
         />
         <div className="custom--date dob-format">
+          <span className="absolute z-[1] mt-[11px] ml-[15px]">
+            <FaCalendarDays />
+          </span>
           <DatePicker
             isClearable
             selected={dateFrom}
             onChange={(date) => {
               setDateFrom(date);
-              if (!date) setDateTo(null);
+              setDateTo(null);
             }}
-            className="custom--input w-full"
-            placeholderText="From date"
-            dropdownMode="select"
-            dateFormat="dd MMM yyyy"
             showMonthDropdown
             showYearDropdown
+            maxDate={new Date()}
+            dateFormat="dd MMM yyyy"
+            dropdownMode="select"
+            placeholderText="From date"
+            className="custom--input w-full input--icon"
           />
         </div>
         <div className="custom--date dob-format">
+          <span className="absolute z-[1] mt-[11px] ml-[15px]">
+            <FaCalendarDays />
+          </span>
           <DatePicker
             isClearable
             selected={dateTo}
             onChange={(date) => setDateTo(date)}
-            placeholderText="To date"
             showMonthDropdown
             showYearDropdown
+            minDate={dateFrom || subYears(new Date(), 20)}
+            maxDate={addYears(new Date(), 0)}
             dateFormat="dd MMM yyyy"
             dropdownMode="select"
-            className="custom--input w-full"
+            placeholderText="To date"
+            className="custom--input w-full input--icon"
+            disabled={!dateFrom}
           />
         </div>
       </div> */}
@@ -156,14 +169,24 @@ const PaymentHistory = ({ details }) => {
             {paymentHistory.length > 0 ? (
               paymentHistory.map((order) => (
                 <tr key={order.orderId}>
-                  <td className="border px-3 py-2">{formatAutoDate(order?.transaction_date)}</td>
-                  <td className="border px-3 py-2">{order?.invoiceNumber}</td>
+                  <td className="border px-3 py-2">
+                    {formatAutoDate(order?.transaction_date)}
+                  </td>
+                  <td className="border px-3 py-2">{order?.invoice_no}</td>
                   <td className="border px-3 py-2">{order?.reference_no}</td>
-                  <td className="border px-3 py-2">₹{order?.transaction_amount ? order?.transaction_amount : 0}</td>
+                  <td className="border px-3 py-2">
+                    ₹{order?.transaction_amount ? formatIndianNumber(order?.transaction_amount) : 0}
+                  </td>
 
-                  <td className="border px-3 py-2">{order?.payment_mode ? formatText(order.payment_mode) : 'N/A'}</td>
-                  <td className="border px-3 py-2">{formatText(order?.payment_status)}</td>
-                 
+                  <td className="border px-3 py-2">
+                    {order?.payment_mode
+                      ? formatText(order.payment_mode)
+                      : "N/A"}
+                  </td>
+                  <td className="border px-3 py-2">
+                    {formatText(order?.payment_status)}
+                  </td>
+
                   <td className="border px-3 py-2">
                     <div className="flex items-center gap-2">
                       {/* <Tooltip content="View Invoice">
@@ -224,7 +247,10 @@ const PaymentHistory = ({ details }) => {
               <strong>Paid:</strong> ₹{selectedInvoice?.total_amount}
             </p>
             <p>
-              <strong>Payment Mode:</strong> {selectedInvoice?.payment_mode ? toCapitalizedCase(selectedInvoice?.payment_mode) : 'N/A'}
+              <strong>Payment Mode:</strong>{" "}
+              {selectedInvoice?.payment_mode
+                ? toCapitalizedCase(selectedInvoice?.payment_mode)
+                : "N/A"}
             </p>
             <div className="mt-4 text-right">
               <button

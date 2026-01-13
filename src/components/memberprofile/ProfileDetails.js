@@ -21,6 +21,7 @@ import ConfirmUnderAge from "../modal/ConfirmUnderAge";
 import { toast } from "react-toastify";
 import { IoIosAddCircle, IoIosCloseCircle } from "react-icons/io";
 import MultiSelect from "react-multi-select-component";
+import { useNavigate } from "react-router-dom";
 
 // Lead source types
 const genderOptions = [
@@ -49,11 +50,13 @@ const validationSchema = Yup.object({
     }),
   date_of_birth: Yup.date().required("Date of birth is required"),
   email: Yup.string().required("Email is required"),
-  company_name: Yup.string().required("Company is required"),
+  // company_name: Yup.string().required("Company is required"),
   location: Yup.string().required("Location is required"),
+  company_name: Yup.string().required("Company Name is required"),
 });
 
 const ProfileDetails = ({ member }) => {
+  const navigate = useNavigate();
   const [showModal, setShowModal] = useState(false);
   const [duplicateError, setDuplicateError] = useState("");
   const [duplicateEmailError, setDuplicateEmailError] = useState("");
@@ -78,12 +81,12 @@ const ProfileDetails = ({ member }) => {
     email: "",
     location: "",
     address: "",
-    created_by: "",
-    leadType: null,
-    leadSource: "",
+    lead_owner: "",
+    lead_type: null,
+    lead_source: "",
     company_name: "",
     designation: "",
-    officialEmail: "",
+    official_email: "",
     interested_in: [],
   });
 
@@ -238,12 +241,12 @@ const ProfileDetails = ({ member }) => {
           email: data?.email || "",
           location: data?.location || "",
           address: data?.address || "",
-          created_by: data?.created_by || "",
-          leadType: leadTypes.find((g) => g.value === data?.lead_type) || null,
-          leadSource: data?.lead_source || "",
+          lead_owner: data?.lead_owner || "",
+          lead_type: data?.lead_type || "",
+          lead_source: data?.lead_source || "",
           company_name: data?.company_name || "",
           designation: data?.designation || "",
-          officialEmail: data?.official_email || "",
+          official_email: data?.official_email || "",
           interested_in: Array.isArray(data?.interested_in)
             ? data.interested_in
             : [],
@@ -413,6 +416,7 @@ const ProfileDetails = ({ member }) => {
         await fetchEmergencyContacts();
         setNewEmergencies([]); // ✅ Clear new emergency forms after success
         setEmergencyErrors({}); // ✅ Clear validation errors
+        navigate("/all-members");
       } catch (error) {
         console.error("Error updating profile:", error);
         toast.error(
@@ -797,7 +801,7 @@ const ProfileDetails = ({ member }) => {
                     Name:
                   </span>
                   <span className="text-[#6F6F6F] font-[500] text-[15px]">
-                    {member?.referred_by_name || "N/A"}
+                    {member?.referrer_name || "N/A"}
                   </span>
                 </div>
                 <div className="flex justify-between">
@@ -805,7 +809,7 @@ const ProfileDetails = ({ member }) => {
                     Referrer ID:
                   </span>
                   <span className="text-[#6F6F6F] font-[500] text-[15px]">
-                    {member?.referred_by_id || "N/A"}
+                    {member?.referrer_id || "N/A"}
                   </span>
                 </div>
               </div>
@@ -970,19 +974,13 @@ const ProfileDetails = ({ member }) => {
                   <label className="block text-sm font-medium text-black mb-2">
                     Sales Rep
                   </label>
-                  <Select
-                    name="created_by"
-                    value={servicesName.find(
-                      (opt) => opt.value === formik.values?.created_by
-                    )}
-                    options={servicesName}
-                    onChange={(option) =>
-                      formik.setFieldValue("created_by", option.value)
-                    }
-                    styles={customStyles}
-                    isDisabled={true}
-                    className="!capitalize"
-                    placeholder=""
+                  <input
+                    type="text"
+                    name="lead_owner"
+                    value={formik.values?.lead_owner}
+                    onChange={formik.handleChange}
+                    className="custom--input w-full cursor-not-allowed pointer-events-none !bg-gray-100 !text-gray-500"
+                    disabled={true}
                   />
                 </div>
                 <div>
@@ -1046,37 +1044,30 @@ const ProfileDetails = ({ member }) => {
                   <label className="block text-sm font-medium text-black mb-2">
                     Lead Type
                   </label>
-                  <Select
-                    name="leadType"
-                    styles={customStyles}
-                    className="!capitalize"
-                    isDisabled={true}
-                    value={leadTypes.find(
-                      (opt) => opt.value === formik.values?.leadType
-                    )}
-                    options={leadTypes}
-                    onChange={(option) =>
-                      formik.setFieldValue("leadType", option.value)
-                    }
+                  <input
+                    type="text"
+                    name="lead_type"
+                    value={formik.values?.lead_type}
+                    onChange={formik.handleChange}
+                    className="custom--input w-full cursor-not-allowed pointer-events-none !bg-gray-100 !text-gray-500"
+                    disabled={true}
                   />
+
+                  
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-black mb-2">
                     Lead Source
                   </label>
-                  <Select
-                    name="leadSource"
-                    styles={customStyles}
-                    className="!capitalize"
-                    isDisabled={true}
-                    value={leadsSources.find(
-                      (opt) => opt.value === formik.values?.leadSource
-                    )}
-                    options={leadsSources}
-                    onChange={(option) =>
-                      formik.setFieldValue("leadSource", option.value)
-                    }
+                  <input
+                    type="text"
+                    name="lead_source"
+                    value={formik.values?.lead_source}
+                    onChange={formik.handleChange}
+                    className="custom--input w-full cursor-not-allowed pointer-events-none !bg-gray-100 !text-gray-500"
+                    disabled={true}
                   />
+                  
                 </div>
               </div>
             </div>
@@ -1110,6 +1101,7 @@ const ProfileDetails = ({ member }) => {
                     options={companyOptions}
                     isLoading={loading}
                     styles={customStyles}
+                    // isDisabled={true}
                   />
                   {formik.errors?.company_name &&
                     formik.touched?.company_name && (
@@ -1138,8 +1130,8 @@ const ProfileDetails = ({ member }) => {
                   </label>
                   <input
                     type="text"
-                    name="officialEmail"
-                    value={formik.values?.officialEmail}
+                    name="official_email"
+                    value={formik.values?.official_email}
                     onChange={formik.handleChange}
                     className="custom--input w-full"
                   />

@@ -10,45 +10,61 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchOptionList } from "../../Redux/Reducers/optionListSlice";
 
 const BillTypeOptions = [
-  { value: "NEW", label: "New" },
-  { value: "RENEWAL", label: "Renewal" },
+  { value: "New", label: "New" },
+  { value: "Renewal", label: "Renewal" },
 ];
 
 const ServiceTypeOptions = [
-  { value: "SUBSCRIPTION", label: "Membership" },
-  { value: "PACKAGE", label: "Package" },
-  { value: "PRODUCT", label: "Product" },
+  { value: "Membership", label: "Membership" },
+  { value: "Package", label: "Package" },
+  { value: "Product", label: "Product" },
 ];
+
+const getLabelByValue = (options, value) => {
+  const found = options?.find((opt) => opt.value === value);
+  return found ? found.label : value;
+};
 
 export default function ProductSoldPanel({
   filterClub,
   filterBillType,
   filterServiceType,
+  filterServiceName,
   filterLeadSource,
-  filterLeadOwner,
-  filterPayMode,
   formik,
   setFilterValue,
-  appliedFilters, // ✅ Receive from parent
-  setAppliedFilters, // ✅ Receive from parent
+  queryParams,
+  onApply,
 }) {
   const [showFilters, setShowFilters] = useState(false);
   const panelRef = useRef(null);
 
+  const [appliedFilters, setAppliedFilters] = useState({});
+  const [serviceList, setServiceList] = useState([]);
   const [servicesType, setServicesType] = useState([]);
   const [clubList, setClubList] = useState([]);
 
- 
+  const fetchService = async () => {
+    try {
+      const res = await authAxios().get("/service/list");
+      let data = res.data?.data || res?.data || [];
+      const activeOnly = filterActiveItems(data);
+      setServiceList(activeOnly);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to fetch services");
+    }
+  };
 
   const fetchServiceNames = async (serviceType) => {
     try {
       let endpoint = "";
 
-      if (serviceType === "SUBSCRIPTION") {
+      if (serviceType === "Membership") {
         endpoint = "/subscription-plan/list";
-      } else if (serviceType === "PACKAGE") {
+      } else if (serviceType === "Package") {
         endpoint = "/package/list";
-      } else if (serviceType === "PRODUCT") {
+      } else if (serviceType === "Product") {
         endpoint = "/product/list";
       }
 
@@ -60,8 +76,8 @@ export default function ProductSoldPanel({
       const activeOnly = filterActiveItems(data);
 
       const options = activeOnly.map((item) => ({
-        label: item.title || item.name,
-        value: item.title || item.name,
+        label: item.title || item.name, // ✅ FIX HERE
+        value: item.id,
       }));
 
       setServicesType(options);
@@ -75,9 +91,6 @@ export default function ProductSoldPanel({
       const response = await authAxios().get("/club/list");
       const data = response.data?.data || [];
       const activeOnly = filterActiveItems(data);
-      if (activeOnly.length === 1) {
-        setFilterValue("filterClub", activeOnly[0].id);
-      }
       setClubList(activeOnly);
     } catch (error) {
       toast.error("Failed to fetch clubs");
@@ -93,6 +106,14 @@ export default function ProductSoldPanel({
 
   const leadSourceOptions = lists["LEAD_SOURCE"] || [];
 
+  const serviceOptions = serviceList
+    ?.map((item) => ({
+      label: item.name,
+      value: item.id,
+      type: item.type,
+    }))
+    .filter((item) => item.type !== "PRODUCT");
+
   const clubOptions =
     clubList?.map((item) => ({
       label: item.name,
@@ -100,15 +121,27 @@ export default function ProductSoldPanel({
     })) || [];
 
   useEffect(() => {
+    fetchService();
     fetchClub();
   }, []);
 
-  // ✅ Load service names when applied service_type exists (for URL params)
+  // Auto-apply filters from URL params
   useEffect(() => {
-    if (appliedFilters?.service_type) {
-      fetchServiceNames(appliedFilters.service_type);
+    if (queryParams && Object.values(queryParams).some((v) => v)) {
+      const newFilters = {
+        club_id: queryParams.club_id,
+        bill_type: queryParams.bill_type,
+        service_type: queryParams.service_type,
+        service_name: queryParams.service_name,
+        lead_source: queryParams.lead_source,
+      };
+
+      // Only set applied filters if there are actual values
+      if (Object.values(newFilters).some((v) => v)) {
+        setAppliedFilters(newFilters);
+      }
     }
-  }, [appliedFilters?.service_type]);
+  }, [queryParams]);
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -128,50 +161,48 @@ export default function ProductSoldPanel({
     };
   }, [showFilters]);
 
-  // ✅ Apply button - update parent's appliedFilters
   const handleApply = () => {
+    onApply({
+      club_id: filterClub,
+      bill_type: filterBillType,
+      service_type: filterServiceType,
+      service_name: filterServiceName,
+      lead_source: filterLeadSource,
+    });
+
     setAppliedFilters({
-      club_id: formik.values.filterClub,
-      bill_type: formik.values.filterBillType,
-      service_type: formik.values.filterServiceType,
-      lead_source: formik.values.filterLeadSource,
-      lead_owner: formik.values.filterLeadOwner,
-      pay_mode: formik.values.filterPayMode
+      club_id: filterClub,
+      bill_type: filterBillType,
+      service_type: filterServiceType,
+      service_name: filterServiceName,
+      lead_source: filterLeadSource,
     });
 
     setShowFilters(false);
   };
 
-  // ✅ Remove filter chip - update both parent state and formik
   const handleRemoveFilter = (key) => {
     const keyMap = {
       club_id: "filterClub",
       bill_type: "filterBillType",
       service_type: "filterServiceType",
+      service_name: "filterServiceName",
       lead_source: "filterLeadSource",
-      lead_owner: "filterLeadOwner",
-      pay_mode: "filterPayMode",
     };
 
-    // If removing service_type, also remove service_name
-    if (key === "service_type") {
-      setAppliedFilters((prev) => ({
-        ...prev,
-        service_type: null,
-        service_name: null,
-      }));
-      setFilterValue("filterServiceType", null);
-      setServicesType([]);
-    } else {
-      // Update parent's applied filters
-      setAppliedFilters((prev) => ({ ...prev, [key]: null }));
+    setAppliedFilters((prev) => ({ ...prev, [key]: null }));
 
-      // Update formik
-      if (keyMap[key]) {
-        setFilterValue(keyMap[key], null);
-      }
+    if (keyMap[key]) {
+      setFilterValue(keyMap[key], null);
+      formik.setFieldTouched(keyMap[key], false);
     }
   };
+
+  useEffect(() => {
+    if (!queryParams?.service_type) return;
+
+    fetchServiceNames(queryParams.service_type);
+  }, [queryParams?.service_type]);
 
   return (
     <div className="relative max-w-fit w-full" ref={panelRef}>
@@ -205,7 +236,6 @@ export default function ProductSoldPanel({
                   options={clubOptions}
                   placeholder="Select Club"
                   styles={customStyles}
-                  isClearable
                 />
               </div>
 
@@ -228,7 +258,6 @@ export default function ProductSoldPanel({
                   options={BillTypeOptions}
                   placeholder="Select Type"
                   styles={customStyles}
-                  isClearable
                 />
               </div>
               <div>
@@ -244,12 +273,14 @@ export default function ProductSoldPanel({
                   onChange={(option) => {
                     const serviceType = option ? option.value : null;
 
-                    // Set service type
+                    // 1️⃣ Set service type
                     setFilterValue("filterServiceType", serviceType);
 
+                    // 2️⃣ Reset service name
+                    setFilterValue("filterServiceName", null);
                     setServicesType([]);
 
-                    // Load service names
+                    // 3️⃣ Load service names
                     if (serviceType) {
                       fetchServiceNames(serviceType);
                     }
@@ -257,10 +288,31 @@ export default function ProductSoldPanel({
                   options={ServiceTypeOptions}
                   placeholder="Select Service Type"
                   styles={customStyles}
-                  isClearable
                 />
               </div>
-              
+              {/* Service Name */}
+              <div>
+                <label className="block mb-1 text-sm font-medium">
+                  Service Name
+                </label>
+                <Select
+                  value={
+                    servicesType.find(
+                      (opt) => opt.value === filterServiceName
+                    ) || null
+                  }
+                  onChange={(option) =>
+                    setFilterValue(
+                      "filterServiceName",
+                      option ? option.value : null // 👈 CHANGE HERE
+                    )
+                  }
+                  options={servicesType}
+                  placeholder="Select Service Name"
+                  styles={customStyles}
+                  isDisabled={!filterServiceType}
+                />
+              </div>
 
               <div>
                 <label className="block mb-1 text-sm font-medium">
@@ -281,7 +333,6 @@ export default function ProductSoldPanel({
                   options={leadSourceOptions}
                   placeholder="Select Lead Source"
                   styles={customStyles}
-                  isClearable
                 />
               </div>
             </div>
@@ -298,20 +349,30 @@ export default function ProductSoldPanel({
         </div>
       )}
 
-      {/* ✅ Applied Filters Chips - using parent's appliedFilters */}
+      {/* Applied Filters Chips */}
       {Object.values(appliedFilters).some((v) => v) && (
         <div className="flex flex-wrap gap-2 mt-4">
           {Object.entries(appliedFilters).map(([key, value]) => {
             if (!value) return null;
 
             let options;
-            if (key === "club_id") options = clubOptions;
-            if (key === "bill_type") options = BillTypeOptions;
-            if (key === "service_type") options = ServiceTypeOptions;
-            if (key === "service_name") options = servicesType;
-            if (key === "lead_source") options = leadSourceOptions;
-
             let displayValue = "";
+            if (key === "club_id") {
+              displayValue = getLabelByValue(clubOptions, value);
+            }
+            if (key === "service_name") {
+              displayValue = getLabelByValue(servicesType, value);
+            }
+            if (key === "bill_type") {
+              displayValue = getLabelByValue(BillTypeOptions, value);
+            }
+            if (key === "service_type") {
+              displayValue = getLabelByValue(ServiceTypeOptions, value);
+            }
+            if (key === "lead_source") {
+              displayValue = getLabelByValue(leadSourceOptions, value);
+            }
+
             if (value instanceof Date) {
               displayValue = value.toLocaleDateString();
             } else if (options) {

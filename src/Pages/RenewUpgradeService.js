@@ -31,7 +31,7 @@ const validationSchema = Yup.object({
 
 const CreateInvoice = ({
   setInvoiceModal,
-  selectedLeadMember,
+  leadPaymentSend,
   upgradePlan,
   renewPlan,
 }) => {
@@ -112,20 +112,6 @@ const CreateInvoice = ({
     }
   }, [upgradePlan]);
 
-  console.log(formik.values, "initialValues");
-
-  useEffect(() => {
-    if (formik?.values?.memberDetails?.name) {
-      formik.setFieldValue(
-        "invoiceDetails.leadOwner",
-        formik?.values?.memberDetails?.name
-      );
-      formik.setFieldValue(
-        "invoiceDetails.memberName",
-        formik?.values?.memberDetails?.name
-      );
-    }
-  }, [formik?.values?.memberDetails?.name]);
 
   const handleProductSubmit = (product) => {
     const newItem = {
@@ -232,41 +218,6 @@ const CreateInvoice = ({
     formik.setFieldValue("productInfo", updatedList);
   };
 
-  const handleSearchInputChange = (e) => {
-    const inputValue = e.target.value;
-    formik.setFieldValue("invoiceDetails.memberName", inputValue);
-
-    const trimmedInput = inputValue.trim();
-    if (trimmedInput === "") {
-      setSearchResults([]);
-      setShowSuggestions(false);
-      return;
-    }
-
-    const isNumeric = /^\d+$/.test(trimmedInput);
-    const normalizedInput = trimmedInput.toLowerCase();
-
-    const filtered = mockData.filter((entry) => {
-      const name = entry.name.toLowerCase().trim();
-      const contact = entry.contact.replace(/\D/g, "");
-
-      if (isNumeric) {
-        return contact.includes(trimmedInput); // number match anywhere
-      } else {
-        return name.startsWith(normalizedInput); // name must start with input
-      }
-    });
-
-    setSearchResults(filtered);
-    setShowSuggestions(filtered.length > 0);
-  };
-
-  const handleSuggestionClick = (entry) => {
-    formik.setFieldValue("invoiceDetails.memberName", entry.name);
-    setSearchResults([]);
-    setShowSuggestions(false);
-  };
-
   const handleOverlayClick = (e) => {
     if (leadBoxRef.current && !leadBoxRef.current.contains(e.target)) {
       setInvoiceModal(false);
@@ -289,7 +240,9 @@ const CreateInvoice = ({
           onClick={(e) => e.stopPropagation()}
         >
           <div className="bg-white rounded-t-[10px] flex gap-3 items-center justify-between py-4 px-4 border-b">
-            <h2 className="text-xl font-semibold">Create a Invoice</h2>
+            <h2 className="text-xl font-semibold">
+              {upgradePlan ? "Upgrade Service": renewPlan ? "Renew Plan" : "" }
+            </h2>
             <div
               className="close--lead cursor-pointer"
               onClick={handleLeadModal}
@@ -302,76 +255,11 @@ const CreateInvoice = ({
             <form onSubmit={formik.handleSubmit}>
               <div className="flex bg-white rounded-b-[10px]">
                 <div className="p-6 flex-1">
-                  <h3 className="text-2xl font-semibold">Invoice Details</h3>
-
-                  <div className="grid grid-cols-3 gap-4">
-                    <div>
-                      <label className="mb-2 block">Invoice Date</label>
-                      <input
-                        name="invoiceDetails.invoiceDate"
-                        value={formik.values.invoiceDetails.invoiceDate}
-                        readOnly={true}
-                        className="custom--input w-full bg-[#fafafa] pointer-events-none"
-                      />
-                    </div>
-                    <div>
-                      <label className="mb-2 block">Lead Owner</label>
-                      <input
-                        name="invoiceDetails.leadOwner"
-                        value={formik.values.invoiceDetails.leadOwner}
-                        onChange={formik.handleChange}
-                        className="custom--input w-full"
-                        disabled={upgradePlan ? true : false}
-                        // readOnly={true}
-                      />
-                      {formik.errors.invoiceDetails?.leadOwner &&
-                        formik.touched.invoiceDetails?.leadOwner && (
-                          <div className="text-red-500 text-sm">
-                            {formik.errors.invoiceDetails?.leadOwner}
-                          </div>
-                        )}
-                    </div>
-
-                    <div className="relative">
-                      <label className="mb-2 block">Name/Mobile Number</label>
-                      <input
-                        name="invoiceDetails.memberName"
-                        value={formik.values.invoiceDetails.memberName}
-                        onChange={handleSearchInputChange}
-                        className="custom--input w-full"
-                        autoComplete="off"
-                        disabled={upgradePlan ? true : false}
-                      />
-                      {formik.errors.invoiceDetails?.memberName &&
-                        formik.touched.invoiceDetails?.memberName && (
-                          <div className="text-red-500 text-sm">
-                            {formik.errors.invoiceDetails?.memberName}
-                          </div>
-                        )}
-
-                      {showSuggestions && (
-                        <ul className="absolute z-10 bg-white border border-gray-300 mt-1 rounded shadow w-full max-h-60 overflow-auto">
-                          {searchResults.map((entry) => (
-                            <li
-                              key={entry.id}
-                              onClick={() => handleSuggestionClick(entry)}
-                              className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
-                            >
-                              <span className="font-medium">{entry.name}</span>
-                              {/* <span className="text-sm text-gray-500">
-                            {entry.contact}
-                          </span> */}
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-                    </div>
-                  </div>
 
                   {formik.values.productInfo.map((product, index) => (
                     <div
                       key={index}
-                      className="grid grid-cols-3 gap-4 mb-6 border pb-4 bg-gray-50 p-3 rounded mt-4"
+                      className="grid grid-cols-3 gap-4 mb-6 border pb-4 bg-gray-50 p-3 rounded"
                     >
                       {/* Product Type */}
                       <div>
@@ -395,7 +283,7 @@ const CreateInvoice = ({
                             )
                           }
                           options={
-                            selectedLeadMember
+                            leadPaymentSend
                               ? [
                                   {
                                     value: "membership plan",
@@ -450,7 +338,7 @@ const CreateInvoice = ({
                                 handleStartDateChange(date, index)
                               }
                               dateFormat="dd MMM yyyy"
-                              placeholderText="Select date"
+                              placeholderText="Start date"
                               readOnly={!product.serviceVariation}
                               isDisabled={upgradePlan && !renewPlan ? true : false}
                               className={`${
@@ -573,7 +461,7 @@ const CreateInvoice = ({
                     </div>
                   ))}
 
-                  {!selectedLeadMember && (
+                  {!leadPaymentSend && (
                     <button
                       type="button"
                       className={`px-5 py-3 text-sm rounded bg-black text-white items-center justify-center gap-2 ${

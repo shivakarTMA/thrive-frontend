@@ -22,7 +22,7 @@ const ageGroupOptions = [
   { value: "31-40", label: "31-40" },
   { value: "41-50", label: "41-50" },
   { value: "51+", label: "51+" },
-  { value: "Not Mentioned", label: "Not Mentioned" },
+  // { value: "Not Mentioned", label: "Not Mentioned" },
 ];
 
 export default function MemberFilterPanel({
@@ -32,8 +32,8 @@ export default function MemberFilterPanel({
   setFilterStatus,
   filterService,
   setFilterService,
-  filterServiceVariation,
-  setFilterServiceVariation,
+  // filterServiceVariation,
+  // setFilterServiceVariation,
   filterAgeGroup,
   setFilterAgeGroup,
   filterLeadSource,
@@ -239,11 +239,11 @@ export default function MemberFilterPanel({
         filterStatus !== null
           ? memberStatus.find((option) => option.value === filterStatus)
           : null,
-      service_name: filterService,
-      service_variation: filterServiceVariation,
-      ageGroup: filterAgeGroup,
+      service_id: filterService,
+      // service_variation: filterServiceVariation,
+      age_range: filterAgeGroup,
       lead_source: filterLeadSource,
-      created_by: filterLeadOwner,
+      lead_owner: filterLeadOwner,
       staff: filterTrainer,
       fitness: filterFitness,
       gender: filterGender,
@@ -259,11 +259,11 @@ export default function MemberFilterPanel({
     const setterMap = {
       club_id: setSelectedClub,
       is_subscribed: setFilterStatus,
-      service_name: setFilterService,
-      service_variation: setFilterServiceVariation,
-      ageGroup: setFilterAgeGroup,
+      service_id: setFilterService,
+      // service_variation: setFilterServiceVariation,
+      age_range: setFilterAgeGroup,
       lead_source: setFilterLeadSource,
-      created_by: setFilterLeadOwner,
+      lead_owner: setFilterLeadOwner,
       staff: setFilterTrainer,
       fitness: setFilterFitness,
       gender: setFilterGender,
@@ -331,7 +331,7 @@ export default function MemberFilterPanel({
                 />
               </div>
               {/* Service */}
-              <div>
+              {/* <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Service Name
                 </label>
@@ -343,7 +343,7 @@ export default function MemberFilterPanel({
                   placeholder="Select Service"
                   styles={customStyles}
                 />
-              </div>
+              </div> */}
               {/* Service Variations */}
               {/* <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">

@@ -145,18 +145,22 @@ const CreateCoupon = ({
     subscriptions?.map((item) => ({
       label: item.title || item.name || `${item.id}`,
       value: item.id,
+      plan_type: item.plan_type,
+      club_id: item.club_id,
     })) || [];
 
   const packageOptions =
     packages?.map((item) => ({
       label: item.name || `${item.id}`,
       value: item.id,
+      club_id: item.club_id,
     })) || [];
 
   const productOptions =
     products?.map((item) => ({
       label: item.name || `${item.id}`,
       value: item.id,
+      club_id: item.club_id,
     })) || [];
 
   useEffect(() => {
@@ -291,27 +295,84 @@ const CreateCoupon = ({
       .filter(Boolean);
   };
 
+  // Updated getApplicableOptions function
   const getApplicableOptions = (type, ruleIndex = null) => {
+    const clubId = formik.values?.coupon?.club_id; // Fixed: get club_id from coupon object
     let list = [];
 
     switch (type) {
       case "SUBSCRIPTION":
-        list = subscriptionOptions;
+        list = subscriptionOptions
+          .filter((opt) => {
+            // Only show items matching selected club_id
+            if (clubId) {
+              return opt.club_id === clubId;
+            }
+            // If no club selected, show all
+            return true;
+          })
+          .map((opt) => ({
+            ...opt,
+            label: `${opt.label} (${opt.plan_type})`,
+          }));
         break;
+
       case "PACKAGE":
-        list = packageOptions;
+        list = packageOptions.filter((opt) => {
+          if (clubId) {
+            return opt.club_id === clubId;
+          }
+          return true;
+        });
         break;
+
       case "PRODUCT":
-        list = productOptions;
+        list = productOptions.filter((opt) => {
+          if (clubId) {
+            return opt.club_id === clubId;
+          }
+          return true;
+        });
         break;
+
       default:
         return [];
     }
 
+    // Filter out already selected items
     const selectedIds = getSelectedApplicableIds(ruleIndex);
-
     return list.filter((opt) => !selectedIds.includes(opt.value));
   };
+  useEffect(() => {
+    // reset applicable_rules if club_id changes
+    const clubId = formik.values?.coupon?.club_id; // Fixed path
+    const currentRules = formik.values.applicable_rules || [];
+
+    // Only reset if club_id is set and rules have specific items selected
+    if (clubId) {
+      const hasSpecificItems = currentRules.some(
+        (rule) => rule.applicable_type !== "ALL" && rule.applicable_id !== null
+      );
+
+      if (hasSpecificItems) {
+        // Reset the field value
+        formik.setFieldValue("applicable_rules", [
+          { applicable_type: "ALL", applicable_id: null },
+        ]);
+
+        // Reset touched state for applicable_rules
+        formik.setFieldTouched("applicable_rules", false, false);
+
+        // Optionally clear errors
+        formik.setErrors({
+          ...formik.errors,
+          applicable_rules: undefined,
+        });
+      }
+    }
+  }, [formik.values?.coupon?.club_id]);
+
+  console.log(formik.values?.club_id, "formik.values?.club_id");
 
   return (
     <div
@@ -319,7 +380,7 @@ const CreateCoupon = ({
       onClick={handleOverlayClick}
     >
       <div
-        className="min-h-[70vh] w-[95%] max-w-4xl mx-auto mt-[100px] mb-[100px] container--leadbox rounded-[10px] flex flex-col"
+        className="hide--overflow w-[95%] max-w-4xl mx-auto mt-[100px] mb-[100px] container--leadbox rounded-[10px] flex flex-col"
         ref={leadBoxRef}
         onClick={(e) => e.stopPropagation()}
       >
@@ -338,7 +399,7 @@ const CreateCoupon = ({
           </div>
         </div>
 
-        <div className="flex-1 overflow-auto">
+        <div className="flex-1">
           <form onSubmit={formik.handleSubmit} className="p-0 space-y-0">
             <div className="bg-white rounded-b-[10px]">
               <div className="p-6">
@@ -696,6 +757,7 @@ const CreateCoupon = ({
                           <div>
                             <label className="mb-2 block text-sm">
                               Applicable Type
+                              <span className="text-red-500">*</span>
                             </label>
                             <div className="relative">
                               <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[10]">
@@ -723,12 +785,27 @@ const CreateCoupon = ({
                                 isClearable
                               />
                             </div>
+                            {formik.touched.applicable_rules?.[index]
+                              ?.applicable_type &&
+                              formik.errors.applicable_rules?.[index]
+                                ?.applicable_type && (
+                                <p className="text-red-500 text-sm mt-1">
+                                  {
+                                    formik.errors.applicable_rules[index]
+                                      .applicable_type
+                                  }
+                                </p>
+                              )}
                           </div>
 
                           {/* Applicable ID */}
                           <div>
                             <label className="mb-2 block text-sm">
                               Applicable Item
+                              {rule?.applicable_type &&
+                                rule?.applicable_type !== "ALL" && (
+                                  <span className="text-red-500">*</span>
+                                )}
                             </label>
                             <div className="relative">
                               <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[10]">
@@ -784,6 +861,17 @@ const CreateCoupon = ({
                                 isClearable
                               />
                             </div>
+                            {formik.touched.applicable_rules?.[index]
+                              ?.applicable_id &&
+                              formik.errors.applicable_rules?.[index]
+                                ?.applicable_id && (
+                                <p className="text-red-500 text-sm mt-1">
+                                  {
+                                    formik.errors.applicable_rules[index]
+                                      .applicable_id
+                                  }
+                                </p>
+                              )}
                           </div>
 
                           {/* Delete */}

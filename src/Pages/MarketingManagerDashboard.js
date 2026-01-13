@@ -300,7 +300,7 @@ const MarketingManagerDashboard = () => {
 
               // Navigate with date filter
               navigate(
-                `/reports/products-sold?date=last_7_days&service_name=${encodeURIComponent(
+                `/reports/all-orders?date=last_7_days&service_name=${encodeURIComponent(
                   this.category
                 )}`
               );
@@ -389,11 +389,22 @@ const MarketingManagerDashboard = () => {
           </div>
           <div className="flex items-center gap-5">
             <div className="text-md font-medium text-gray-600 flex gap-2 items-center">
-              <FaCircle className="text-[10px] text-[#FF0000]" />
+              <FaCircle className="text-[10px] text-[#ff9900]" />
               Inactive Members
             </div>
             <div className="flex flex-wrap items-center justify-between">
               <span className="text-md font-semibold">1725</span>
+            </div>
+          </div>
+          <div className="flex items-center gap-5 border-r">
+            <div className="text-md font-medium text-gray-600 flex gap-2 items-center">
+              <FaCircle className="text-[10px] text-[#FF0000]" />
+              Expired Members
+            </div>
+            <div className="pr-2">
+              <span className="text-md font-semibold">
+                0
+              </span>
             </div>
           </div>
         </div>
@@ -563,28 +574,28 @@ const MarketingManagerDashboard = () => {
             <SalesSummary
               icon={trialIcon}
               title="Trials"
-              titleLink={generateUrl(`/reports/appointments/all-appointments?`)}
+              titleLink={generateUrl(`/reports/appointments/all-trial-appointments?`)}
               totalSales="03"
               items={[
                 {
                   label: "Scheduled",
                   value: "01",
                   link: generateUrl(
-                    `/reports/appointments/all-appointments?status=Scheduled`
+                    `/reports/appointments/all-trial-appointments?status=Scheduled`
                   ),
                 },
                 {
                   label: "Completed",
                   value: "01",
                   link: generateUrl(
-                    `/reports/appointments/all-appointments?status=Completed`
+                    `/reports/appointments/all-trial-appointments?status=Completed`
                   ),
                 },
                 {
                   label: "No-Show",
                   value: "01",
                   link: generateUrl(
-                    `/reports/appointments/all-appointments?status=No-Show`
+                    `/reports/appointments/all-trial-appointments?status=No-Show`
                   ),
                 },
               ]}

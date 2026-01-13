@@ -12,6 +12,8 @@ import { FiPlus } from "react-icons/fi";
 import CreateMemberAppointment from "../Appointment/CreateMemberAppointment";
 import { toast } from "react-toastify";
 import { authAxios } from "../../config/config";
+import { addYears, subYears } from "date-fns";
+import { FaCalendarDays } from "react-icons/fa6";
 
 const Appointments = ({ details }) => {
   const [appointmentTypeFilter, setAppointmentTypeFilter] = useState({
@@ -23,9 +25,13 @@ const Appointments = ({ details }) => {
   const [appointmentModal, setAppointmentModal] = useState(false);
   const [appointmentList, setAppointmentList] = useState([]);
 
-  const fetchAppointmentsList = async (search = "") => {
+  const fetchAppointmentsList = async () => {
     try {
-      const res = await authAxios().get(`/appointment/list/${details?.id}`);
+      const res = await authAxios().get(`/appointment/fetch/list`, {
+        params: {
+          member_id: details?.id, // e.g. 5
+        },
+      });
       let data = res.data?.data || res?.data || [];
 
       setAppointmentList(data);
@@ -66,7 +72,7 @@ const Appointments = ({ details }) => {
   return (
     <div className="p-4 bg-white rounded shadow">
       <div className="flex gap-3 justify-between mb-4">
-        {/* <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Select
             options={appointmentTypeOptions}
             value={appointmentTypeFilter}
@@ -76,38 +82,45 @@ const Appointments = ({ details }) => {
             className="w-40"
           />
           <div className="custom--date dob-format">
+            <span className="absolute z-[1] mt-[11px] ml-[15px]">
+              <FaCalendarDays />
+            </span>
             <DatePicker
+              isClearable
               selected={dateFrom}
               onChange={(date) => {
                 setDateFrom(date);
-                if (!date) setDateTo(null);
+                setDateTo(null);
               }}
-              isClearable
               showMonthDropdown
               showYearDropdown
               maxDate={new Date()}
               dateFormat="dd MMM yyyy"
               dropdownMode="select"
               placeholderText="From date"
-              className="custom--input w-full"
+              className="custom--input w-full input--icon"
             />
           </div>
           <div className="custom--date dob-format">
+            <span className="absolute z-[1] mt-[11px] ml-[15px]">
+              <FaCalendarDays />
+            </span>
             <DatePicker
+              isClearable
               selected={dateTo}
               onChange={(date) => setDateTo(date)}
-              isClearable
-              minDate={dateFrom || null}
-              maxDate={new Date()}
               showMonthDropdown
               showYearDropdown
+              minDate={dateFrom || subYears(new Date(), 20)}
+              maxDate={addYears(new Date(), 0)}
               dateFormat="dd MMM yyyy"
               dropdownMode="select"
-              placeholderText="End date"
-              className="custom--input w-full"
+              placeholderText="To date"
+              className="custom--input w-full input--icon"
+              disabled={!dateFrom}
             />
           </div>
-        </div> */}
+        </div>
         <div>
           <div
             className="px-4 py-2 bg-black text-white rounded flex items-center gap-2 cursor-pointer"
@@ -132,7 +145,9 @@ const Appointments = ({ details }) => {
                 </th>
                 <th className="border px-3 py-2 min-w-[200px]">Name</th>
                 <th className="border px-3 py-2 min-w-[200px]">Service Name</th>
-                <th className="border px-3 py-2 min-w-[200px]">Service/Appointment Name</th>
+                {/* <th className="border px-3 py-2 min-w-[200px]">
+                  Service/Appointment Name
+                </th> */}
                 <th className="border px-3 py-2 min-w-[100px]">Type</th>
                 <th className="border px-3 py-2 min-w-[130px]">Trainer Name</th>
                 <th className="border px-3 py-2 min-w-[130px]">Scheduled By</th>
@@ -156,19 +171,34 @@ const Appointments = ({ details }) => {
                         : "--"}
                     </td>
                     <td className="border px-3 py-2">
-                      {appt?.package_name ? formatText(appt?.package_name) : "--"}
+                      {appt?.package_name
+                        ? formatText(appt?.package_name)
+                        : "--"}
                     </td>
                     <td className="border px-3 py-2">
-                      {appt?.service_name ? formatText(appt?.service_name) : "--"}
+                      {/* {appt?.service_name
+                        ? formatText(appt?.service_name)
+                        : "--"} */}
+                        {appt?.appointment_type === "CLUB" ? "Trial/test" : appt?.service_name}
+                    </td>
+                    {/* <td className="border px-3 py-2">
+                      {appt?.package_name
+                        ? formatText(appt?.package_name)
+                        : "--"}
+                    </td> */}
+                    <td className="border px-3 py-2">
+                      {appt?.appointment_type
+                        ? formatText(appt?.appointment_type)
+                        : "--"}
                     </td>
                     <td className="border px-3 py-2">
-                      {appt?.package_name ? formatText(appt?.package_name) : "--"}
+                      {appt.assigned_staff_name
+                        ? appt.assigned_staff_name
+                        : "--"}
                     </td>
                     <td className="border px-3 py-2">
-                      {appt?.package_type ? formatText(appt?.package_type) : "--"}
+                      {appt.staff_name ? appt.staff_name : "--"}
                     </td>
-                    <td className="border px-3 py-2">{appt.assigned_staff_name ? appt.assigned_staff_name : "--"}</td>
-                    <td className="border px-3 py-2">{appt.staff_name ? appt.staff_name : "--"}</td>
                     <td className="border px-3 py-2">
                       {formatText(appt?.booking_status)}
                     </td>

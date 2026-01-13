@@ -19,6 +19,7 @@ import { FaCalendarDays } from "react-icons/fa6";
 import { format } from "date-fns";
 import { BsExclamationCircle } from "react-icons/bs";
 import LeadContactHistory from "./LeadContactHistory";
+import { addYears, subYears } from "date-fns";
 
 // Validation schema with conditional required fields
 const validationSchema = Yup.object().shape({
@@ -650,28 +651,44 @@ const MemberCallLogs = () => {
                     styles={customStyles}
                     className="w-full"
                   />
-                  <div className="custom--date flex-1">
+                  <div className="custom--date  dob-format flex-1">
                     <span className="absolute z-[1] mt-[11px] ml-[15px]">
                       <FaCalendarDays />
                     </span>
+
                     <DatePicker
-                      selected={startDate}
-                      onChange={setStartDate}
-                      placeholderText="Start Date"
-                      className="border px-3 py-2 w-full input--icon"
                       isClearable
+                      selected={startDate}
+                      onChange={(date) => {
+                        setStartDate(date);
+                        setEndDate(null);
+                      }}
+                      showMonthDropdown
+                      showYearDropdown
+                      maxDate={new Date()}
+                      dateFormat="dd MMM yyyy"
+                      dropdownMode="select"
+                      placeholderText="From date"
+                      className="custom--input w-full input--icon"
                     />
                   </div>
-                  <div className="custom--date flex-1">
+                  <div className="custom--date  dob-format flex-1">
                     <span className="absolute z-[1] mt-[11px] ml-[15px]">
                       <FaCalendarDays />
                     </span>
                     <DatePicker
-                      selected={endDate}
-                      onChange={setEndDate}
-                      placeholderText="End Date"
-                      className="border px-3 py-2 w-full input--icon"
                       isClearable
+                      selected={endDate}
+                      onChange={(date) => setEndDate(date)}
+                      showMonthDropdown
+                      showYearDropdown
+                      minDate={startDate || subYears(new Date(), 20)}
+                      maxDate={addYears(new Date(), 0)}
+                      dateFormat="dd MMM yyyy"
+                      dropdownMode="select"
+                      placeholderText="To date"
+                      className="custom--input w-full input--icon"
+                      disabled={!startDate}
                     />
                   </div>
                 </div>
@@ -701,28 +718,44 @@ const MemberCallLogs = () => {
                     styles={customStyles}
                     className="w-full"
                   />
-                  <div className="custom--date flex-1">
+                  <div className="custom--date  dob-format flex-1">
                     <span className="absolute z-[1] mt-[11px] ml-[15px]">
                       <FaCalendarDays />
                     </span>
+
                     <DatePicker
-                      selected={startDate}
-                      onChange={setStartDate}
-                      placeholderText="Start Date"
-                      className="border px-3 py-2 w-full input--icon"
                       isClearable
+                      selected={startDate}
+                      onChange={(date) => {
+                        setStartDate(date);
+                        setEndDate(null);
+                      }}
+                      showMonthDropdown
+                      showYearDropdown
+                      maxDate={new Date()}
+                      dateFormat="dd MMM yyyy"
+                      dropdownMode="select"
+                      placeholderText="From date"
+                      className="custom--input w-full input--icon"
                     />
                   </div>
-                  <div className="custom--date flex-1">
+                  <div className="custom--date  dob-format flex-1">
                     <span className="absolute z-[1] mt-[11px] ml-[15px]">
                       <FaCalendarDays />
                     </span>
                     <DatePicker
-                      selected={endDate}
-                      onChange={setEndDate}
-                      placeholderText="End Date"
-                      className="border px-3 py-2 w-full input--icon"
                       isClearable
+                      selected={endDate}
+                      onChange={(date) => setEndDate(date)}
+                      showMonthDropdown
+                      showYearDropdown
+                      minDate={startDate || subYears(new Date(), 20)}
+                      maxDate={addYears(new Date(), 0)}
+                      dateFormat="dd MMM yyyy"
+                      dropdownMode="select"
+                      placeholderText="To date"
+                      className="custom--input w-full input--icon"
+                      disabled={!startDate}
                     />
                   </div>
                 </div>

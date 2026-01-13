@@ -143,6 +143,7 @@ const CreateLeadForm = ({
     date_of_birth: "",
     address: "",
     location: "",
+    company_id: null,
     company_name: "",
     otherCompanyName: "",
     interested_in: [],
@@ -159,6 +160,103 @@ const CreateLeadForm = ({
     initialValues,
     validationSchema,
     enableReinitialize: true, // 👈 ensures selectedLead values re-populate
+    // onSubmit: async (values) => {
+    //   if (duplicateError || duplicateEmailError) {
+    //     setShowDuplicateEmailModal(!!duplicateEmailError);
+    //     return;
+    //   }
+
+    //   try {
+    //     // ===============================
+    //     // ✅ COMPANY HANDLING (FINAL FIX)
+    //     // ===============================
+    //     let companyId = null;
+    //     let companyName = values.company_name?.trim() || "";
+
+    //     // Try to find existing company by NAME
+    //     const existingCompany = companyOptions.find(
+    //       (opt) => opt.label.toLowerCase() === companyName.toLowerCase()
+    //     );
+
+    //     // 👉 If existing company found, USE IT
+    //     if (existingCompany) {
+    //       companyId = existingCompany.value;
+    //       companyName = existingCompany.label;
+    //     }
+    //     // 👉 Create company ONLY if it truly doesn't exist
+    //     else if (companyName) {
+    //       const formData = new FormData();
+    //       formData.append("name", companyName);
+
+    //       const res = await authAxios().post("/company/create", formData, {
+    //         headers: { "Content-Type": "multipart/form-data" },
+    //       });
+
+    //       companyId = res.data.id; // ✅ ID is now correct
+    //       companyName = res.data.name;
+
+    //       // Add newly created company to dropdown
+    //       setCompanyOptions((prev) => [
+    //         ...prev,
+    //         { value: companyId, label: companyName },
+    //       ]);
+    //     }
+
+    //     // ===============================
+    //     // ✅ BUILD PAYLOAD (SAFE)
+    //     // ===============================
+    //     // const { company_id: _, company_name: __, ...rest } = values;
+
+    //     const payload = {
+    //       ...values,
+    //       company_id: companyId, // ✅ always numeric or null
+    //       company_name: companyName, // ✅ always string
+    //     };
+
+    //     // Remove interested_in if editing
+    //     if (selectedLead) {
+    //       delete payload.interested_in;
+    //     }
+
+    //     // ✅ Normalize dates
+    //     payload.date_of_birth = values.date_of_birth
+    //       ? new Date(values.date_of_birth).toISOString().split("T")[0]
+    //       : null;
+
+    //     payload.schedule_date_time = values.schedule_date_time
+    //       ? new Date(values.schedule_date_time).toISOString()
+    //       : null;
+
+    //     // ✅ Normalize phone
+    //     if (values.phoneFull) {
+    //       const phoneNumber = parsePhoneNumberFromString(values.phoneFull);
+    //       if (phoneNumber) {
+    //         payload.country_code = phoneNumber.countryCallingCode;
+    //         payload.mobile = phoneNumber.nationalNumber;
+    //       }
+    //     } else {
+    //       payload.country_code = null;
+    //       payload.mobile = null;
+    //     }
+
+    //     // ✅ Update or Create Lead
+    //     if (selectedLead) {
+    //       await authAxios().put(`/lead/${selectedLead}`, payload);
+    //       toast.success("Lead updated successfully!");
+    //     } else {
+    //       const res = await authAxios().post("/lead/create", payload);
+    //       toast.success("Lead created successfully!");
+    //     }
+
+    //     setLeadModal(false);
+    //     if (leadModalPage) {
+    //       handleLeadUpdate();
+    //     }
+    //   } catch (err) {
+    //     console.error("❌ API Error:", err.response?.data || err.message);
+    //     toast.error(err.response?.data?.message || err.message);
+    //   }
+    // },
     onSubmit: async (values) => {
       if (duplicateError || duplicateEmailError) {
         setShowDuplicateEmailModal(!!duplicateEmailError);
@@ -166,44 +264,47 @@ const CreateLeadForm = ({
       }
 
       try {
-        // ✅ Handle company name or ID properly
-        let companyName = "";
+        // ===============================
+        // ✅ COMPANY HANDLING (SOURCE OF TRUTH)
+        // ===============================
         let companyId = null;
+        let companyName = values.company_name?.trim() || "";
 
-        // ✅ Find existing company by ID or name
         const existingCompany = companyOptions.find(
-          (opt) =>
-            opt.value === values.company_name ||
-            opt.label === values.company_name
+          (opt) => opt.label.toLowerCase() === companyName.toLowerCase()
         );
 
-        // ✅ Create company only if not found
-        if (!existingCompany && values.company_name) {
+        if (existingCompany) {
+          companyId = existingCompany.value;
+          companyName = existingCompany.label;
+        } else if (companyName) {
           const formData = new FormData();
-          formData.append("name", values.company_name);
+          formData.append("name", companyName);
 
           const res = await authAxios().post("/company/create", formData, {
             headers: { "Content-Type": "multipart/form-data" },
           });
 
-          companyName = res.data?.name || values.company_name;
-          companyId = res.data?.id;
+          companyId = res.data.id;
 
-          // ✅ Add newly created company to dropdown
+          // ✅ IMPORTANT LINE
+          companyName = res.data.name || companyName;
+
           setCompanyOptions((prev) => [
             ...prev,
             { value: companyId, label: companyName },
           ]);
-        } else if (existingCompany) {
-          companyName = existingCompany.label;
-          companyId = existingCompany.value;
         }
 
-        // ✅ Build payload
+        // ===============================
+        // ✅ BUILD PAYLOAD (NO FORMik RACE)
+        // ===============================
         const payload = {
           ...values,
-          company_name: companyName,
+
+          // 🔒 OVERRIDE EXPLICITLY
           company_id: companyId,
+          company_name: companyName,
         };
 
         // Remove interested_in if editing
@@ -211,7 +312,7 @@ const CreateLeadForm = ({
           delete payload.interested_in;
         }
 
-        // ✅ Normalize dates
+        // Normalize dates
         payload.date_of_birth = values.date_of_birth
           ? new Date(values.date_of_birth).toISOString().split("T")[0]
           : null;
@@ -220,7 +321,7 @@ const CreateLeadForm = ({
           ? new Date(values.schedule_date_time).toISOString()
           : null;
 
-        // ✅ Normalize phone
+        // Normalize phone
         if (values.phoneFull) {
           const phoneNumber = parsePhoneNumberFromString(values.phoneFull);
           if (phoneNumber) {
@@ -232,19 +333,26 @@ const CreateLeadForm = ({
           payload.mobile = null;
         }
 
-        // ✅ Update or Create Lead
+        console.log("✅ FINAL PAYLOAD:", payload);
+
+        console.log({
+          typed: values.company_name,
+          final: companyName,
+        });
+
+        // ===============================
+        // ✅ API CALL
+        // ===============================
         if (selectedLead) {
           await authAxios().put(`/lead/${selectedLead}`, payload);
           toast.success("Lead updated successfully!");
         } else {
-          const res = await authAxios().post("/lead/create", payload);
+          await authAxios().post("/lead/create", payload);
           toast.success("Lead created successfully!");
         }
 
         setLeadModal(false);
-        if (leadModalPage) {
-          handleLeadUpdate();
-        }
+        leadModalPage && handleLeadUpdate();
       } catch (err) {
         console.error("❌ API Error:", err.response?.data || err.message);
         toast.error(err.response?.data?.message || err.message);
@@ -282,6 +390,8 @@ const CreateLeadForm = ({
               : null,
             address: data.address || "",
             location: data.location || "",
+            // ✅ VERY IMPORTANT
+            company_id: data.company_id || null,
             company_name: data.company_name || "",
             interested_in: interestedList.map((i) => i.value),
             lead_source: data.lead_source
@@ -331,7 +441,16 @@ const CreateLeadForm = ({
       }));
 
       // ✅ Update state
-      setCompanyOptions(options);
+
+      setCompanyOptions((prev) => {
+        const map = new Map();
+
+        [...prev, ...options].forEach((opt) => {
+          map.set(opt.value, opt);
+        });
+
+        return Array.from(map.values());
+      });
     } catch (err) {
       console.error("❌ Failed to fetch companies:", err);
       toast.error("Failed to fetch companies");
@@ -475,10 +594,6 @@ const CreateLeadForm = ({
   const handleDateTrainerChange = (val) => {
     if (!val) return;
     formik.setFieldValue("schedule_date_time", val.toISOString());
-  };
-  // Staff select -> just the value/id
-  const handleSelectSchedule = (_, selectedOption) => {
-    formik.setFieldValue("assigned_staff_id", selectedOption?.value ?? "");
   };
 
   const minTime = new Date();
@@ -823,47 +938,55 @@ const CreateLeadForm = ({
                           isClearable
                           isLoading={loading}
                           placeholder="Select or create a company"
+                          /* ✅ SINGLE SOURCE OF TRUTH */
                           value={
-                            formik.values.company_name
+                            formik.values.company_id
                               ? companyOptions.find(
                                   (opt) =>
-                                    opt.value === formik.values.company_name
-                                ) || {
+                                    opt.value === formik.values.company_id
+                                ) || null
+                              : formik.values.company_name
+                              ? {
                                   label: formik.values.company_name,
-                                  value: formik.values.company_name,
+                                  value: "__new__", // ✅ NEVER use string as ID
                                 }
                               : null
                           }
                           onChange={(option) => {
+                            // Clear
                             if (!option) {
+                              formik.setFieldValue("company_id", null);
                               formik.setFieldValue("company_name", "");
-
-                              // When user clears, refresh API companies
-                              fetchCompanies();
                               return;
                             }
 
-                            formik.setFieldValue("company_name", option.value);
+                            // ✅ Existing company (ID is number)
+                            if (typeof option.value === "number") {
+                              formik.setFieldValue("company_id", option.value);
+                              formik.setFieldValue(
+                                "company_name",
+                                option.label
+                              );
+                              return;
+                            }
+
+                            // ✅ Fallback safety (should not happen)
+                            formik.setFieldValue("company_id", null);
+                            formik.setFieldValue("company_name", option.label);
                           }}
                           onCreateOption={(newValue) => {
-                            const newOption = {
-                              label: newValue,
-                              value: newValue,
-                            };
+                            // ❌ DO NOT push fake value into options
+                            // ❌ DO NOT assign string to company_id
 
-                            // Add into react-select list
-                            setCompanyOptions((prev) => [...prev, newOption]);
-
-                            // Set into formik
+                            formik.setFieldValue("company_id", null);
                             formik.setFieldValue("company_name", newValue);
                           }}
                           onInputChange={(inputValue) => {
-                            // ✅ Fetch companies dynamically on search
                             if (inputValue.length >= 2) {
                               fetchCompanies(inputValue);
                             }
                           }}
-                          options={companyOptions}
+                          options={companyOptions} // must be [{ value: number, label: string }]
                           styles={selectIcon}
                         />
                       </div>
@@ -907,7 +1030,11 @@ const CreateLeadForm = ({
                       <label className="mb-2 block">
                         Interested In<span className="text-red-500">*</span>
                       </label>
-                      <div className="relative">
+                      <div
+                        className={`relative ${
+                          selectedLead ? "hide-clear-icon" : ""
+                        }`}
+                      >
                         <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
                           <FaListCheck />
                         </span>
@@ -929,7 +1056,7 @@ const CreateLeadForm = ({
                           }}
                           className={`custom--input w-full input--icon multi--select--new ${
                             selectedLead
-                              ? "cursor-not-allowed pointer-events-none !bg-gray-100"
+                              ? "cursor-not-allowed pointer-events-none !bg-gray-100 !text-gray-500"
                               : ""
                           }`}
                           disabled={!!selectedLead}
@@ -960,6 +1087,7 @@ const CreateLeadForm = ({
                           }
                           options={leadTypes}
                           styles={selectIcon}
+                          isDisabled={!!selectedLead}
                         />
                       </div>
                       {formik.errors?.lead_type &&
@@ -985,7 +1113,7 @@ const CreateLeadForm = ({
                             // onChange={formik.handleChange}
                             readOnly={true}
                             isDisabled={true}
-                            className="custom--input w-full input--icon  cursor-not-allowed pointer-events-none !bg-gray-100"
+                            className="custom--input w-full input--icon  cursor-not-allowed pointer-events-none !bg-gray-100 !text-gray-500"
                           />
                         </div>
                       ) : (

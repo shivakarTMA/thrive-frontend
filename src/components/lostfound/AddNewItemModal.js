@@ -17,6 +17,7 @@ const AddNewItemModal = ({
   onSuccess,
   clubOptions,
   editingOption,
+  fetchLostFoundList
 }) => {
   const leadBoxRef = useRef(null);
   const { user } = useSelector((state) => state.auth);
@@ -30,7 +31,7 @@ const AddNewItemModal = ({
       found_at_location: null,
       found_date_time: new Date(),
       loggedBy: user?.name,
-      notes: "",
+      verification_notes: "",
       status: "AVAILABLE",
     },
     validationSchema: Yup.object({
@@ -53,7 +54,7 @@ const AddNewItemModal = ({
         }
         // Close modal after refresh
         onClose();
-
+        fetchLostFoundList();
         // Trigger the parent component to fetch updated item list
         // handleUpdateCoins();
       } catch (error) {
@@ -78,7 +79,7 @@ const AddNewItemModal = ({
             found_at_location: data?.found_at_location || null,
             found_date_time: data?.found_date_time || new Date(),
             loggedBy: data?.loggedBy || user?.name,
-            notes: data?.notes || "",
+            verification_notes: data?.verification_notes || "",
             status: data?.status || "AVAILABLE",
           });
         }
@@ -297,45 +298,37 @@ const AddNewItemModal = ({
                   />
                 </div>
 
-                <div>
-                  <label className="mb-2 block">
-                    Description<span className="text-red-500">*</span>
-                  </label>
-
-                  <input
-                    name="description"
-                    value={formik.values.description}
-                    onChange={formik.handleChange}
-                    placeholder="Description"
-                    disabled={editingOption}
-                    className={`custom--input w-full ${
-                      editingOption
-                        ? "!bg-gray-100 pointer-events-none text-gray-500"
-                        : ""
-                    }`}
-                  />
-                  {formik.touched.description && formik.errors.description && (
-                    <div className="text-red-500 text-sm">
-                      {formik.errors.description}
-                    </div>
-                  )}
-                </div>
                 <div className="col-span-2">
-                  <label className="mb-2 block">Notes</label>
+                    <label className="mb-2 block">Description</label>
 
-                  <textarea
-                    name="notes"
-                    value={formik.values.notes}
-                    onChange={formik.handleChange}
-                    placeholder="Any additional remarks"
-                    className={`custom--input w-full ${
-                      editingOption
-                        ? "!bg-gray-100 pointer-events-none text-gray-500"
-                        : ""
-                    }`}
-                    disabled={editingOption}
-                  />
-                </div>
+                    <textarea
+                      name="description"
+                      value={formik.values.description}
+                      onChange={formik.handleChange}
+                      placeholder="Description"
+                      className={`custom--input w-full ${
+                        editingOption
+                          ? "!bg-gray-100 pointer-events-none text-gray-500"
+                          : ""
+                      }`}
+                      disabled={editingOption}
+                    />
+                  </div>
+
+               
+                {/* {editingOption && editingOption && (
+                  <div className="col-span-2">
+                    <label className="mb-2 block">Notes</label>
+
+                    <textarea
+                      name="verification_notes"
+                      value={formik.values.verification_notes}
+                      onChange={formik.handleChange}
+                      placeholder="Any additional remarks"
+                      className={`custom--input w-full`}
+                    />
+                  </div>
+                )} */}
               </div>
             </div>
             {!editingOption && (
