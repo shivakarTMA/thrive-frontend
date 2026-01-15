@@ -523,10 +523,13 @@ const TrialAppointments = () => {
                     <th className="px-2 py-4 min-w-[110px]">Scheduled At</th>
                     <th className="px-2 py-4 min-w-[120px]">Trainer Name</th>
                     <th className="px-2 py-4 min-w-[130px]">Scheduled By</th>
-                    <th className="px-2 py-4 min-w-[150px]">
+                    <th className="px-2 py-4 min-w-[130px]">
+                      Last Status
+                    </th>
+                    <th className="px-2 py-4 min-w-[180px]">
                       Current Status/Action
                     </th>
-                    <th className="px-2 py-4 min-w-[150px]">Remarks</th>
+                    <th className="px-2 py-4 min-w-[200px]">Remarks</th>
                   </tr>
                 </thead>
 
@@ -566,6 +569,9 @@ const TrialAppointments = () => {
                         </td>
                         <td className="px-2 py-4">
                           {row?.staff_name || "Self"}
+                        </td>
+                        <td className="px-2 py-4">
+                          {row?.last_call_status || "--"}
                         </td>
                         <td className="px-2 py-4">
                           <div className="max-w-[130px] w-full">

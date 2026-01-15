@@ -250,7 +250,7 @@ export default function LeadFilterPanel({
                   options={leadsSources}
                   placeholder="Select Lead Source"
                   styles={customStyles}
-                  isClearable
+                  // isClearable
                 />
               </div>
 
@@ -274,7 +274,7 @@ export default function LeadFilterPanel({
                   options={lead_statusOptions}
                   placeholder="Select Lead Status"
                   styles={customStyles}
-                  isClearable
+                  // isClearable
                 />
               </div>
 
@@ -298,7 +298,7 @@ export default function LeadFilterPanel({
                   options={lastCallStatusOptions}
                   placeholder="Select Last Call Type"
                   styles={customStyles}
-                  isClearable
+                  // isClearable
                 />
               </div>
 
@@ -323,7 +323,7 @@ export default function LeadFilterPanel({
                     options={leadOwnerOptions}
                     placeholder="Select Lead Owner"
                     styles={customStyles}
-                    isClearable
+                    // isClearable
                   />
                 </div>
               )}
@@ -348,7 +348,7 @@ export default function LeadFilterPanel({
                   options={leadServiceOptions}
                   placeholder="Select Interested"
                   styles={customStyles}
-                  isClearable
+                  // isClearable
                 />
               </div>
 
@@ -368,7 +368,7 @@ export default function LeadFilterPanel({
                   options={genderOptions}
                   placeholder="Select Gender"
                   styles={customStyles}
-                  isClearable
+                  // isClearable
                 />
               </div>
             </div>

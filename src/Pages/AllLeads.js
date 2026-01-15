@@ -12,6 +12,7 @@ import {
   dasboardStyles,
   filterActiveItems,
   formatAutoDate,
+  formatText,
 } from "../Helper/helper";
 import CreateLeadForm from "./CreateLeadForm";
 import { Link, useParams, useSearchParams } from "react-router-dom";
@@ -74,6 +75,10 @@ const AllLeads = () => {
   const [showOwnerDropdown, setShowOwnerDropdown] = useState(false);
 
   const [searchParams] = useSearchParams();
+  const leadIdFromSearch = searchParams.get("id");
+  
+  const [isSearchMode, setIsSearchMode] = useState(false);
+
   const [dateFilter, setDateFilter] = useState(dateFilterOptions[1]);
   const [customFrom, setCustomFrom] = useState(null);
   const [customTo, setCustomTo] = useState(null);
@@ -151,7 +156,7 @@ const AllLeads = () => {
   const updateURLParams = (filters) => {
     const params = new URLSearchParams();
 
-    // Date filter
+    // ❌ Remove id when filters change
     if (dateFilter?.value && dateFilter.value !== "custom") {
       params.set("dateFilter", dateFilter.value);
     }
@@ -161,30 +166,13 @@ const AllLeads = () => {
       params.set("endDate", format(customTo, "yyyy-MM-dd"));
     }
 
-    // Club filter
     if (clubFilter?.value) {
       params.set("club_id", clubFilter.value);
     }
 
-    // Applied filters (panel filters)
-    if (filters.lead_source) {
-      params.set("lead_source", filters.lead_source);
-    }
-    if (filters.lead_status) {
-      params.set("lead_status", filters.lead_status);
-    }
-    if (filters.last_call_status) {
-      params.set("last_call_status", filters.last_call_status);
-    }
-    if (filters.lead_owner) {
-      params.set("lead_owner", filters.lead_owner);
-    }
-    if (filters.interested_in) {
-      params.set("interested_in", filters.interested_in);
-    }
-    if (filters.gender) {
-      params.set("gender", filters.gender);
-    }
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value) params.set(key, value);
+    });
 
     navigate(`?${params.toString()}`, { replace: true });
   };
@@ -199,39 +187,25 @@ const AllLeads = () => {
         limit: rowsPerPage,
       };
 
-      // Date Filter
-      if (dateFilter?.value && dateFilter.value !== "custom") {
-        params.dateFilter = dateFilter.value;
-      }
+      if (isSearchMode && leadIdFromSearch) {
+        params.id = leadIdFromSearch;
+      } else {
+        if (dateFilter?.value && dateFilter.value !== "custom") {
+          params.dateFilter = dateFilter.value;
+        }
 
-      if (dateFilter?.value === "custom" && customFrom && customTo) {
-        params.startDate = format(customFrom, "yyyy-MM-dd");
-        params.endDate = format(customTo, "yyyy-MM-dd");
-      }
+        if (dateFilter?.value === "custom" && customFrom && customTo) {
+          params.startDate = format(customFrom, "yyyy-MM-dd");
+          params.endDate = format(customTo, "yyyy-MM-dd");
+        }
 
-      // Club filter
-      if (clubFilter?.value) {
-        params.club_id = clubFilter.value;
-      }
+        if (clubFilter?.value) {
+          params.club_id = clubFilter.value;
+        }
 
-      // Applied Filters (from panel)
-      if (appliedFilters.lead_source) {
-        params.lead_source = appliedFilters.lead_source;
-      }
-      if (appliedFilters.lead_status) {
-        params.lead_status = appliedFilters.lead_status;
-      }
-      if (appliedFilters.last_call_status) {
-        params.last_call_status = appliedFilters.last_call_status;
-      }
-      if (appliedFilters.lead_owner) {
-        params.lead_owner = appliedFilters.lead_owner;
-      }
-      if (appliedFilters.interested_in) {
-        params.interested_in = appliedFilters.interested_in;
-      }
-      if (appliedFilters.gender) {
-        params.gender = appliedFilters.gender;
+        Object.entries(appliedFilters).forEach(([key, value]) => {
+          if (value) params[key] = value;
+        });
       }
 
       console.log("🔍 API Request Params:", params);
@@ -337,79 +311,114 @@ const AllLeads = () => {
     },
   ].filter((group) => group.options.length > 0);
 
-  // ---------------------------
-  // INITIALIZE FROM URL (RUNS ONCE)
-  // ---------------------------
-  useEffect(() => {
-    // Wait for clubList to be loaded
-    if (clubList.length === 0) return;
 
-    // Only run initialization once
-    if (filtersInitialized) return;
+  // Add this useEffect to reset filtersInitialized when search params change
+useEffect(() => {
+  const params = new URLSearchParams(location.search);
+  const leadId = params.get("id");
+  
+  // Reset initialization flag when URL changes with 'id' parameter
+  if (leadId) {
+    setFiltersInitialized(false);
+  }
+}, [location.search]);
 
-    const params = new URLSearchParams(location.search);
+ // ---------------------------
+// INITIALIZE FROM URL (RUNS ONCE - but resets when search params change)
+// ---------------------------
+useEffect(() => {
+  if (clubList.length === 0) return;
+  if (filtersInitialized) return;
 
-    // Date filter
-    const dateFilterValue = params.get("dateFilter");
-    if (dateFilterValue) {
-      const matchedDate = dateFilterOptions.find(
-        (opt) => opt.value === dateFilterValue
-      );
-      if (matchedDate) {
-        setDateFilter(matchedDate);
-      }
-    }
+  const params = new URLSearchParams(location.search);
+  const leadId = params.get("id");
+  const clubId = params.get("club_id");
 
-    // Custom date filter
-    const startDate = params.get("startDate");
-    const endDate = params.get("endDate");
-    if (startDate && endDate) {
-      setDateFilter(dateFilterOptions.find((d) => d.value === "custom"));
-      setCustomFrom(new Date(startDate));
-      setCustomTo(new Date(endDate));
-    }
+  // 🔹 CASE 1: Search navigation (id exists)
+  if (leadId) {
+    setIsSearchMode(true);
+    // Reset filters
+    setDateFilter(null);
+    setCustomFrom(null);
+    setCustomTo(null);
 
-    // Club filter - only set from URL if present, otherwise default to first club
-    const clubId = params.get("club_id");
+    setAppliedFilters({
+      lead_source: null,
+      lead_status: null,
+      last_call_status: null,
+      lead_owner: null,
+      interested_in: null,
+      gender: null,
+    });
+
+    // Reset formik
+    formik.resetForm();
+
+    // Set club from URL
     if (clubId) {
       const club = clubList.find((c) => c.id === Number(clubId));
       if (club) {
         setClubFilter({ label: club.name, value: club.id });
       }
-    } else {
-      // Set default club only on initial load
-      setClubFilter({
-        label: clubList[0].name,
-        value: clubList[0].id,
-      });
     }
 
-    // Applied filters from URL
-    const urlFilters = {
-      lead_source: params.get("lead_source") || null,
-      lead_status: params.get("lead_status") || null,
-      last_call_status: params.get("last_call_status") || null,
-      lead_owner: params.get("lead_owner")
-        ? Number(params.get("lead_owner"))
-        : null,
-      interested_in: params.get("interested_in") || null,
-      gender: params.get("gender") || null,
-    };
-
-    setAppliedFilters(urlFilters);
-
-    // Sync with formik
-    formik.setValues({
-      filterLeadSource: urlFilters.lead_source,
-      filterLeadStatus: urlFilters.lead_status,
-      filterLastCallType: urlFilters.last_call_status,
-      filterCallTag: urlFilters.lead_owner,
-      filterServiceName: urlFilters.interested_in,
-      filterGender: urlFilters.gender,
-    });
-
     setFiltersInitialized(true);
-  }, [clubList]);
+    return;
+  }
+
+  // 🔹 CASE 2: Normal filter-based navigation
+  const dateFilterValue = params.get("dateFilter");
+  if (dateFilterValue) {
+    const matched = dateFilterOptions.find(
+      (opt) => opt.value === dateFilterValue
+    );
+    if (matched) setDateFilter(matched);
+  }
+
+  const startDate = params.get("startDate");
+  const endDate = params.get("endDate");
+  if (startDate && endDate) {
+    setDateFilter(dateFilterOptions.find((d) => d.value === "custom"));
+    setCustomFrom(new Date(startDate));
+    setCustomTo(new Date(endDate));
+  }
+
+  if (clubId) {
+    const club = clubList.find((c) => c.id === Number(clubId));
+    if (club) {
+      setClubFilter({ label: club.name, value: club.id });
+    }
+  } else {
+    setClubFilter({
+      label: clubList[0].name,
+      value: clubList[0].id,
+    });
+  }
+
+  const urlFilters = {
+    lead_source: params.get("lead_source") || null,
+    lead_status: params.get("lead_status") || null,
+    last_call_status: params.get("last_call_status") || null,
+    lead_owner: params.get("lead_owner")
+      ? Number(params.get("lead_owner"))
+      : null,
+    interested_in: params.get("interested_in") || null,
+    gender: params.get("gender") || null,
+  };
+
+  setAppliedFilters(urlFilters);
+
+  formik.setValues({
+    filterLeadSource: urlFilters.lead_source,
+    filterLeadStatus: urlFilters.lead_status,
+    filterLastCallType: urlFilters.last_call_status,
+    filterCallTag: urlFilters.lead_owner,
+    filterServiceName: urlFilters.interested_in,
+    filterGender: urlFilters.gender,
+  });
+
+  setFiltersInitialized(true);
+}, [clubList, filtersInitialized, location.search]);
 
   // ---------------------------
   // FETCH WHEN FILTERS CHANGE
@@ -419,19 +428,26 @@ const AllLeads = () => {
 
     setPage(1);
     fetchLeadList(1);
-    updateURLParams(appliedFilters);
+
+    if (!leadIdFromSearch) {
+      updateURLParams(appliedFilters);
+    }
+
+    if (isSearchMode) {
+      setIsSearchMode(false);
+
+      // 🔥 Remove id immediately from URL
+      const params = new URLSearchParams(location.search);
+      params.delete("id");
+
+      navigate(`?${params.toString()}`, { replace: true });
+    }
   }, [
-    filtersInitialized,
     dateFilter?.value,
     customFrom,
     customTo,
     clubFilter?.value,
-    appliedFilters.lead_source,
-    appliedFilters.lead_status,
-    appliedFilters.last_call_status,
-    appliedFilters.lead_owner,
-    appliedFilters.interested_in,
-    appliedFilters.gender,
+    appliedFilters,
   ]);
 
   const handleLeadUpdate = () => {
@@ -715,8 +731,9 @@ const AllLeads = () => {
                           <th className="px-2 py-4">#</th>
                           {/* <th className="px-2 py-4">S.No</th> */}
                           <th className="px-2 py-4 min-w-[130px]">Name</th>
-                          <th className="px-2 py-4 min-w-[150px]">Club Name</th>
-                          <th className="px-2 py-4 min-w-[150px]">
+                          <th className="px-2 py-4 min-w-[90px]">Gender</th>
+                          <th className="px-2 py-4 min-w-[140px]">Club Name</th>
+                          <th className="px-2 py-4 min-w-[140px]">
                             Interested In
                           </th>
                           <th className="px-2 py-4 min-w-[90px]">Lead Type</th>
@@ -764,6 +781,9 @@ const AllLeads = () => {
 
                               <td className="px-2 py-4">
                                 {row?.full_name ? row?.full_name : "--"}
+                              </td>
+                              <td className="px-2 py-4">
+                                {row?.gender ? formatText(row?.gender) : "--"}
                               </td>
                               <td className="px-2 py-4">
                                 {row?.club_name ? row?.club_name : "--"}
@@ -923,7 +943,6 @@ const AllLeads = () => {
                     currentDataLength={allLeads.length}
                     onPageChange={(newPage) => {
                       setPage(newPage);
-
 
                       fetchLeadList(newPage);
                     }}

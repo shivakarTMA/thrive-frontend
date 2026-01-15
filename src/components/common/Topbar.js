@@ -238,7 +238,7 @@ const Topbar = ({
                       {filteredUsers.members.map((member) => (
                         <Link
                           key={member.id}
-                          to={`/all-members/${member.id}`}
+                          to={`/all-members?id=${member.id}&club_id=${member.club_id}`}
                           className="block w-full py-2 px-3  text-sm [&:not(:last-child)]:border-b hover:bg-black hover:text-white cursor-pointer"
                         >
                           <p>
@@ -257,7 +257,7 @@ const Topbar = ({
                       {filteredUsers.leads.map((lead) => (
                         <Link
                           key={lead.id}
-                          to={`/all-leads/${lead.id}`}
+                          to={`/all-leads?id=${lead.id}&club_id=${lead.club_id}`}
                           className="block w-full py-2 px-3 [&:not(:last-child)]:border-b text-sm hover:bg-black hover:text-white cursor-pointer"
                         >
                           <p>

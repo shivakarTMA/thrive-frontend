@@ -289,11 +289,11 @@ const Home = () => {
             click: function () {
               // Example: open a link based on category
               const linkMap = {
-                Lead: generateUrl(`/all-leads?leadStatus=Lead`),
-                Opportunity: generateUrl(`/all-leads?leadStatus=Opportunity`),
-                New: generateUrl(`/all-leads?leadStatus=New`),
-                Won: generateUrl(`/all-leads?leadStatus=Won`),
-                Lost: generateUrl(`/all-leads?leadStatus=Lost`),
+                Lead: generateUrl(`/all-leads?lead_status=Lead`),
+                Opportunity: generateUrl(`/all-leads?lead_status=Opportunity`),
+                New: generateUrl(`/all-leads?lead_status=New`),
+                Won: generateUrl(`/all-leads?lead_status=Won`),
+                Lost: generateUrl(`/all-leads?lead_status=Lost`),
               };
               const targetLink = linkMap[this.category];
               if (targetLink) {

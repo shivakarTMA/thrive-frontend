@@ -352,19 +352,21 @@ export default function MemberFilterPanel({
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Lead Owner
-                </label>
-                <Select
-                  value={filterLeadOwner}
-                  onChange={setFilterLeadOwner}
-                  options={leadOwnerOptions}
-                  // isClearable
-                  placeholder="Select Lead Owner"
-                  styles={customStyles}
-                />
-              </div>
+              {userRole === "ADMIN" && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Lead Owner
+                  </label>
+                  <Select
+                    value={filterLeadOwner}
+                    onChange={setFilterLeadOwner}
+                    options={leadOwnerOptions}
+                    // isClearable
+                    placeholder="Select Lead Owner"
+                    styles={customStyles}
+                  />
+                </div>
+              )}
 
               {/* Trainer Name */}
               <div>

@@ -8,7 +8,7 @@ import {
   formatAutoDate,
   formatText,
 } from "../Helper/helper";
-import { Link, useParams, useLocation } from "react-router-dom";
+import { Link, useParams, useLocation, useNavigate } from "react-router-dom";
 import { IoIosAddCircleOutline } from "react-icons/io";
 import { MdCall } from "react-icons/md";
 import "react-datepicker/dist/react-datepicker.css";
@@ -29,6 +29,8 @@ import CreateNewInvoice from "./CreateNewInvoice";
 const MemberList = () => {
   const { id } = useParams();
   const location = useLocation();
+  const navigate = useNavigate();
+
   const { user } = useSelector((state) => state.auth);
   const userRole = user.role;
   const [staffList, setStaffList] = useState([]);
@@ -47,10 +49,8 @@ const MemberList = () => {
     inactive_members: 0,
   });
 
-  const [selectedClub, setSelectedClub] = useState(null);
   const [filterStatus, setFilterStatus] = useState(null);
   const [filterService, setFilterService] = useState(null);
-  // const [filterServiceVariation, setFilterServiceVariation] = useState(null);
   const [filterAgeGroup, setFilterAgeGroup] = useState(null);
   const [filterLeadSource, setFilterLeadSource] = useState(null);
   const [filterLeadOwner, setFilterLeadOwner] = useState(null);
@@ -69,7 +69,14 @@ const MemberList = () => {
   const [showConfirm, setShowConfirm] = useState(false);
   const [showOwnerDropdown, setShowOwnerDropdown] = useState(false);
 
-  const [searchTerm, setSearchTerm] = useState("");
+  /* ---------------- URL PARAMS ---------------- */
+  const searchParams = new URLSearchParams(location.search);
+  const memberIdFromUrl = searchParams.get("id");
+  const clubIdFromUrl = searchParams.get("club_id");
+
+  const isSearchMode = Boolean(memberIdFromUrl);
+
+  const [initialized, setInitialized] = useState(false);
 
   // Function to fetch club list
   const fetchClub = async (search = "") => {
@@ -80,12 +87,6 @@ const MemberList = () => {
       const data = response.data?.data || [];
       const activeOnly = filterActiveItems(data);
       setClubList(activeOnly);
-      if (activeOnly.length > 0 && !clubFilter) {
-        setClubFilter({
-          label: activeOnly[0].name,
-          value: activeOnly[0].id,
-        });
-      }
     } catch (error) {
       toast.error("Failed to fetch clubs");
     }
@@ -97,7 +98,6 @@ const MemberList = () => {
   }));
 
   const fetchMemberList = async (
-    search = searchTerm,
     currentPage = page,
     overrideSelected = {}
   ) => {
@@ -106,11 +106,14 @@ const MemberList = () => {
         page: currentPage,
         limit: rowsPerPage,
       };
-      // Search param
-      if (id) {
-        params.id = id;
+
+      // 🔹 Check if we're in search mode (id exists in URL)
+      if (memberIdFromUrl) {
+        // ✅ SEARCH MODE (ID + CLUB)
+        params.id = memberIdFromUrl;
+        if (clubIdFromUrl) params.club_id = clubIdFromUrl;
       } else {
-        if (search) params.search = search;
+
         const filters = {
           is_subscribed: overrideSelected.hasOwnProperty("is_subscribed")
             ? overrideSelected.is_subscribed
@@ -118,11 +121,6 @@ const MemberList = () => {
           service_id: overrideSelected.hasOwnProperty("service_id")
             ? overrideSelected.service_id
             : filterService,
-          // service_variation: overrideSelected.hasOwnProperty(
-          //   "service_variation"
-          // )
-          //   ? overrideSelected.service_variation
-          //   : filterServiceVariation,
           age_range: overrideSelected.hasOwnProperty("age_range")
             ? overrideSelected.age_range
             : filterAgeGroup,
@@ -154,6 +152,8 @@ const MemberList = () => {
         });
       }
 
+      console.log("🔍 API Request Params:", params);
+
       const res = await authAxios().get("/member/list", { params });
 
       const responseData = res.data;
@@ -169,11 +169,9 @@ const MemberList = () => {
     }
   };
 
-  console.log("check status", filterStatus);
-
   const fetchMemberStats = async () => {
     try {
-      const response = await authAxios().get("/member/stats/count"); // Update with your actual endpoint
+      const response = await authAxios().get("/member/stats/count");
       if (response.data.status) {
         setStats(response.data.data);
       } else {
@@ -186,34 +184,73 @@ const MemberList = () => {
 
   useEffect(() => {
     fetchMemberStats();
+  }, []);
+
+  /* ---------------- INIT FROM URL ---------------- */
+useEffect(() => {
+  if (!clubList.length) return;
+
+  if (clubIdFromUrl) {
+    const club = clubList.find((c) => c.id === Number(clubIdFromUrl));
+    if (club) {
+      setClubFilter({ label: club.name, value: club.id });
+    }
+  } else if (!initialized) {
+    setClubFilter({
+      label: clubList[0].name,
+      value: clubList[0].id,
+    });
+  }
+
+  if (!initialized) {
+    setInitialized(true);
+  }
+}, [clubList, clubIdFromUrl]);
+
+
+useEffect(() => {
+  if (!initialized) return;
+
+  fetchMemberList(1);
+  setPage(1);
+}, [location.search, initialized]);
+
+  
+
+  /* ---------------- 🔥 MAIN FIX ---------------- */
+  useEffect(() => {
+    if (!initialized) return;
+
+    fetchMemberList(1);
+    setPage(1);
+  }, [location.search, initialized]);
+
+  // 🔹 Handle club filter change - clear URL id parameter
+  const handleClubFilterChange = (option) => {
+    setClubFilter(option);
+
+    navigate("/all-members", { replace: true });
+  };
+
+  // -------------------------------
+  // INITIAL LOAD
+  // -------------------------------
+  useEffect(() => {
     fetchClub();
   }, []);
 
+  // -------------------------------
+  // FETCH WHEN CLUB CHANGES (NORMAL MODE)
+  // -------------------------------
   useEffect(() => {
-    // When 'id' changes, fetch data based on the new 'id'
-    if (id) {
-      fetchMemberList("", 1, { id });
-    } else {
-      fetchMemberList();
-    }
-  }, [id]);
-
-  useEffect(() => {
-    fetchMemberList("", 1);
+    if (!initialized || isSearchMode) return;
+    fetchMemberList(1);
+    setPage(1);
   }, [clubFilter]);
 
   const handleMemberUpdate = () => {
     fetchMemberList();
   };
-
-  useEffect(() => {
-    const delayDebounce = setTimeout(() => {
-      fetchMemberList(searchTerm, 1);
-      setPage(1);
-    }, 300);
-
-    return () => clearTimeout(delayDebounce);
-  }, [searchTerm]);
 
   const handleCheckboxChange = (id) => {
     setSelectedUserId((prev) =>
@@ -285,14 +322,14 @@ const MemberList = () => {
           label: user.name,
         })),
     },
-  ].filter((group) => group.options.length > 0); // remove empty groups
+  ].filter((group) => group.options.length > 0);
 
   // Handle bulk assigning owner to selected leads only
   const handleBulkAssign = (selectedOption) => {
-    setBulkOwner(selectedOption); // Store selected option
+    setBulkOwner(selectedOption);
     const updatedAssignments = { ...assignedOwners };
     selectedUserId.forEach((id) => {
-      updatedAssignments[id] = selectedOption; // Assign same owner to all selected leads
+      updatedAssignments[id] = selectedOption;
     });
     setAssignedOwners(updatedAssignments);
   };
@@ -300,11 +337,9 @@ const MemberList = () => {
   // Handle submit bulk assignment (Assign Icon click logic)
   const handleSubmitAssign = () => {
     if (selectedUserId.length === 0) {
-      // If no leads are selected, show an alert
       toast.error("Please select the Member to change the Owner.");
       setShowOwnerDropdown(false);
     } else {
-      // If there are selected leads, show the dropdown to select an owner
       setShowOwnerDropdown((prev) => !prev);
     }
   };
@@ -316,10 +351,9 @@ const MemberList = () => {
       return;
     }
 
-    // FINAL RESULT OBJECT
     const bulkAssignmentData = {
-      member_ids: selectedUserId, // selected lead/user IDs
-      owner_id: bulkOwner.value, // owner id from dropdown
+      member_ids: selectedUserId,
+      owner_id: bulkOwner.value,
     };
 
     try {
@@ -330,12 +364,10 @@ const MemberList = () => {
 
       toast.success("Owner assigned successfully!");
 
-      // Reset after success
       setShowOwnerDropdown(false);
       setSelectedUserId([]);
       setBulkOwner(null);
 
-      // Optional: refresh list
       fetchMemberList();
     } catch (err) {
       console.error(err);
@@ -370,10 +402,14 @@ const MemberList = () => {
   };
 
   const handleRemoveFilter = (filterKey) => {
+    // Exit search mode when removing filters
+    if (isSearchMode) {
+      navigate("/all-members/", { replace: true });
+    }
+
     const setterMap = {
       is_subscribed: setFilterStatus,
       service_id: setFilterService,
-      // service_variation: setFilterServiceVariation,
       age_range: setFilterAgeGroup,
       lead_source: setFilterLeadSource,
       lead_owner: setFilterLeadOwner,
@@ -382,15 +418,29 @@ const MemberList = () => {
       gender: setFilterGender,
     };
 
-    // Clear that specific filter state
     setterMap[filterKey]?.(null);
 
-    // Pass null to force API refresh excluding that filter
-    const overrideSelected = { [filterKey]: null };
-    fetchMemberList("", 1, overrideSelected);
+const overrideSelected = {
+  is_subscribed: filterKey === "is_subscribed" ? null : filterStatus,
+  service_id: filterKey === "service_id" ? null : filterService,
+  age_range: filterKey === "age_range" ? null : filterAgeGroup,
+  lead_source: filterKey === "lead_source" ? null : filterLeadSource,
+  lead_owner: filterKey === "lead_owner" ? null : filterLeadOwner,
+  staff: filterKey === "staff" ? null : filterTrainer,
+  fitness: filterKey === "fitness" ? null : filterFitness,
+  gender: filterKey === "gender" ? null : filterGender,
+  club_id: clubFilter,
+};
+
+fetchMemberList(1, overrideSelected);
   };
 
   const handleApplyFiltersFromChild = () => {
+    // Exit search mode when applying filters
+    if (isSearchMode) {
+      navigate("/all-members/", { replace: true });
+    }
+
     fetchMemberList("", 1);
   };
 
@@ -460,15 +510,13 @@ const MemberList = () => {
                 placeholder="Filter by club"
                 value={clubFilter}
                 options={clubOptions}
-                onChange={(option) => setClubFilter(option)}
+                onChange={handleClubFilterChange}
                 isClearable={userRole === "ADMIN" ? true : false}
                 styles={customStyles}
               />
             </div>
           </div>
         </div>
-
-        {/* )} */}
 
         {showConfirm && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -496,6 +544,7 @@ const MemberList = () => {
             </div>
           </div>
         )}
+
         <div className="w-full p-3 border bg-white shodow--box rounded-[10px]">
           <div className="flex items-start gap-3 justify-between w-full mb-3 border-b border-b-[#D4D4D4] pb-3">
             <div>
@@ -506,8 +555,6 @@ const MemberList = () => {
                 setFilterStatus={setFilterStatus}
                 filterService={filterService}
                 setFilterService={setFilterService}
-                // filterServiceVariation={filterServiceVariation}
-                // setFilterServiceVariation={setFilterServiceVariation}
                 filterAgeGroup={filterAgeGroup}
                 setFilterAgeGroup={setFilterAgeGroup}
                 filterLeadSource={filterLeadSource}
@@ -520,7 +567,7 @@ const MemberList = () => {
                 setFilterFitness={setFilterFitness}
                 filterGender={filterGender}
                 setFilterGender={setFilterGender}
-                onApplyFilters={handleApplyFiltersFromChild} // child "Apply" -> parent fetch
+                onApplyFilters={handleApplyFiltersFromChild}
                 onRemoveFilter={handleRemoveFilter}
               />
             </div>
@@ -793,7 +840,7 @@ const MemberList = () => {
               currentDataLength={memberList.length}
               onPageChange={(newPage) => {
                 setPage(newPage);
-                fetchMemberList(searchTerm, newPage);
+                fetchMemberList(newPage);
               }}
             />
           </div>
