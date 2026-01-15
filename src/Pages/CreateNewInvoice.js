@@ -230,12 +230,21 @@ const CreateNewInvoice = ({ setInvoiceModal, selectedLeadMember }) => {
         if (res.data?.status) {
           const { paymentUrl, order_no } = res.data.response;
 
-          setPaymentUrl(paymentUrl);
-          setOrderNo(order_no);
-          setPaymentModalOpen(true); // ✅ OPEN MODAL
-
-          toast.success("Payment initiated successfully");
-        }
+          if (paymentUrl && order_no) {
+            setPaymentUrl(paymentUrl);
+            setOrderNo(order_no);
+            setPaymentModalOpen(true); // ✅ OPEN PAYMENT MODAL
+            toast.success("Payment initiated successfully");
+          } else {
+            // ❌ Status true but required data missing
+            setInvoiceModal(false);
+            toast.success("Service booked successfully");
+          }
+        } else {
+        // ❌ API status false
+        setInvoiceModal(false);
+        toast.success("Service booked successfully");
+      }
 
         // if (res.data?.status) {
         //   toast.success("Payment initiated successfully");
@@ -243,6 +252,7 @@ const CreateNewInvoice = ({ setInvoiceModal, selectedLeadMember }) => {
         //   setInvoiceModal(false);
         // }
       } catch (err) {
+        setInvoiceModal(false);
         toast.error(err?.response?.data?.message);
       }
     },

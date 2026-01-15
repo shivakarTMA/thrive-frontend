@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import SalesSummary from "../components/common/SalesSummary";
 import totalSalesIcon from "../assets/images/icons/rupee-box.png";
 import newClientIcon from "../assets/images/icons/clients.png";
@@ -13,8 +13,12 @@ import { FaCalendarDays } from "react-icons/fa6";
 import Select from "react-select";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { customStyles, formatIndianNumber } from "../Helper/helper";
-import { addYears, subYears } from "date-fns";
+import {
+  customStyles,
+  filterActiveItems,
+  formatIndianNumber,
+} from "../Helper/helper";
+import { addYears, format, subYears } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import HighchartsReact from "highcharts-react-official";
 import Highcharts from "highcharts";
@@ -105,6 +109,8 @@ const Home = () => {
   const [dateFilter, setDateFilter] = useState(dateFilterOptions[1]);
   const [customFrom, setCustomFrom] = useState(null);
   const [customTo, setCustomTo] = useState(null);
+  const [clubList, setClubList] = useState([]);
+  const [clubFilter, setClubFilter] = useState(null);
   const [orders, setOrders] = useState([
     {
       id: "ORD001",
@@ -143,9 +149,26 @@ const Home = () => {
     },
   ]);
 
-  const fetchDashboardData = async (search = "") => {
+  const fetchDashboardData = async () => {
     try {
-      const res = await authAxios().get("/dashboard/overview");
+      const params = {};
+      // Date filter (non-custom)
+      if (dateFilter?.value && dateFilter.value !== "custom") {
+        params.dateFilter = dateFilter.value;
+      }
+
+      // Custom date filter
+      if (dateFilter?.value === "custom" && customFrom && customTo) {
+        params.startDate = format(customFrom, "yyyy-MM-dd");
+        params.endDate = format(customTo, "yyyy-MM-dd");
+      }
+
+      // Club filter
+      if (clubFilter?.value) {
+        params.club_id = clubFilter.value;
+      }
+
+      const res = await authAxios().get("/dashboard/overview", { params });
       let data = res.data?.data || res.data || [];
 
       setDashboardData(data);
@@ -155,9 +178,44 @@ const Home = () => {
     }
   };
 
+  // Function to fetch club list
+  const fetchClub = async () => {
+    try {
+      const response = await authAxios().get("/club/list");
+      const data = response.data?.data || [];
+      const activeOnly = filterActiveItems(data);
+      setClubList(activeOnly);
+
+      if (activeOnly.length > 0) {
+        setClubFilter({
+          label: activeOnly[0].name,
+          value: activeOnly[0].id,
+        });
+      }
+    } catch (error) {
+      toast.error("Failed to fetch clubs");
+    }
+  };
+  // Function to fetch role list
+
   useEffect(() => {
     fetchDashboardData();
+  }, [dateFilter, customFrom, customTo, clubFilter]);
+
+  useEffect(() => {
+    fetchClub();
   }, []);
+
+  useEffect(() => {
+    if (dateFilter?.value !== "custom" || (customFrom && customTo)) {
+      fetchDashboardData();
+    }
+  }, [dateFilter, customFrom, customTo, clubFilter]);
+
+  const clubOptions = clubList.map((item) => ({
+    label: item.name,
+    value: item.id,
+  }));
 
   const dataProductSeries = [5, 3, 7, 2, 4];
   const totalProcutValue = dataProductSeries.reduce(
@@ -377,20 +435,47 @@ const Home = () => {
   const currentData = summaryData[currentDay];
 
   // Memoize the URL generation
-  const generateUrl = (baseUrl) => {
-    let url = `${baseUrl}&date=${encodeURIComponent(dateFilter?.value)}`;
+  // const generateUrl = (baseUrl) => {
+  //   let url = `${baseUrl}&date=${encodeURIComponent(dateFilter?.value)}`;
 
-    // If custom dates are selected, append customFrom and customTo to the URL
-    if (dateFilter?.value === "custom") {
-      url += `&customFrom=${encodeURIComponent(
-        customFrom
-      )}&customTo=${encodeURIComponent(customTo)}`;
-    }
+  //   // If custom dates are selected, append customFrom and customTo to the URL
+  //   if (dateFilter?.value === "custom") {
+  //     url += `&customFrom=${encodeURIComponent(
+  //       customFrom
+  //     )}&customTo=${encodeURIComponent(customTo)}`;
+  //   }
 
-    return url;
-  };
+  //   return url;
+  // };
 
-  console.log(dashboardData, "dashboardData");
+  const generateUrl = useCallback(
+    (baseUrl) => {
+      const params = new URLSearchParams();
+
+      // Club filter
+      if (clubFilter?.value) {
+        params.append("club_id", clubFilter.value);
+      }
+
+      // Date filter (non-custom)
+      if (dateFilter?.value && dateFilter.value !== "custom") {
+        params.append("dateFilter", dateFilter.value);
+      }
+
+      // Custom date filter
+      if (dateFilter?.value === "custom" && customFrom && customTo) {
+        params.append("startDate", format(customFrom, "yyyy-MM-dd"));
+        params.append("endDate", format(customTo, "yyyy-MM-dd"));
+      }
+
+      const separator = baseUrl.includes("?") ? "&" : "?";
+
+      return params.toString()
+        ? `${baseUrl}${separator}${params.toString()}`
+        : baseUrl;
+    },
+    [clubFilter, dateFilter, customFrom, customTo]
+  );
 
   return (
     <div className="page--content">
@@ -399,7 +484,20 @@ const Home = () => {
           <p className="text-sm">{`Home > Dashboard`}</p>
           <h1 className="text-3xl font-semibold">Dashboard</h1>
         </div>
+        <div className="flex gap-3 items-center justify-between">
+          <div className="w-fit min-w-[180px]">
+            <Select
+              placeholder="Filter by club"
+              value={clubFilter}
+              options={clubOptions}
+              onChange={(option) => setClubFilter(option)}
+              // isClearable
+              styles={customStyles}
+            />
+          </div>
+        </div>
       </div>
+
       {/* end title */}
 
       <div className="w-full bg-white box--shadow rounded-[10px] px-3 py-3 flex gap-3 justify-between items-center mb-4">
@@ -551,7 +649,7 @@ const Home = () => {
                       ?.memberships
                   )}`,
                   link: generateUrl(
-                    `/reports/all-orders?service_type=SUBSCRIPTION`
+                    `/reports/all-orders?package_type=SUBSCRIPTION`
                   ),
                 },
                 {
@@ -559,21 +657,21 @@ const Home = () => {
                   value: `₹${formatIndianNumber(
                     dashboardData?.summary_cards?.total_sales?.breakup?.packages
                   )}`,
-                  link: generateUrl(`/reports/all-orders?service_type=PACKAGE`),
+                  link: generateUrl(`/reports/all-orders?package_type=PACKAGE`),
                 },
                 {
                   label: "Products",
                   value: `₹${formatIndianNumber(
                     dashboardData?.summary_cards?.total_sales?.breakup?.products
                   )}`,
-                  link: generateUrl(`/reports/all-orders?service_type=PRODUCT`),
+                  link: generateUrl(`/reports/all-orders?package_type=PRODUCT`),
                 },
               ]}
             />
 
             <SalesSummary
               icon={newClientIcon}
-              title="New Clients"
+              title="New Sales"
               titleLink={generateUrl(`/reports/all-orders?bill_type=NEW`)}
               totalSales={dashboardData?.summary_cards?.new_clients?.total}
               items={[
@@ -583,7 +681,7 @@ const Home = () => {
                     dashboardData?.summary_cards?.new_clients?.breakup
                       ?.memberships,
                   link: generateUrl(
-                    `/reports/all-orders?bill_type=NEW&service_type=SUBSCRIPTION`
+                    `/reports/all-orders?bill_type=NEW&package_type=SUBSCRIPTION`
                   ),
                 },
                 {
@@ -592,7 +690,7 @@ const Home = () => {
                     dashboardData?.summary_cards?.new_clients?.breakup
                       ?.packages,
                   link: generateUrl(
-                    `/reports/all-orders?bill_type=NEW&service_type=PACKAGE`
+                    `/reports/all-orders?bill_type=NEW&package_type=PACKAGE`
                   ),
                 },
                 {
@@ -601,7 +699,7 @@ const Home = () => {
                     dashboardData?.summary_cards?.new_clients?.breakup
                       ?.products,
                   link: generateUrl(
-                    `/reports/all-orders?bill_type=NEW&service_type=PRODUCT`
+                    `/reports/all-orders?bill_type=NEW&package_type=PRODUCT`
                   ),
                 },
               ]}
@@ -618,7 +716,7 @@ const Home = () => {
                     dashboardData?.summary_cards?.renewals?.breakup
                       ?.memberships,
                   link: generateUrl(
-                    `/reports/all-orders?bill_type=RENEWAL&service_type=SUBSCRIPTION`
+                    `/reports/all-orders?bill_type=RENEWAL&package_type=SUBSCRIPTION`
                   ),
                 },
                 {
@@ -626,7 +724,7 @@ const Home = () => {
                   value:
                     dashboardData?.summary_cards?.renewals?.breakup?.packages,
                   link: generateUrl(
-                    `/reports/all-orders?bill_type=RENEWAL&service_type=PACKAGE`
+                    `/reports/all-orders?bill_type=RENEWAL&package_type=PACKAGE`
                   ),
                 },
                 {
@@ -634,7 +732,7 @@ const Home = () => {
                   value:
                     dashboardData?.summary_cards?.renewals?.breakup?.products,
                   link: generateUrl(
-                    `/reports/all-orders?bill_type=RENEWAL&service_type=PRODUCT`
+                    `/reports/all-orders?bill_type=RENEWAL&package_type=PRODUCT`
                   ),
                 },
               ]}
@@ -672,6 +770,24 @@ const Home = () => {
               ]}
             />
             <SalesSummary
+              icon={enquiriesIcon}
+              title="Conversion"
+              titleLink="#"
+              totalSales={`${dashboardData?.summary_cards?.conversion?.overall_percentage}%`}
+              items={[
+                {
+                  label: "Lead To Trial",
+                  value: `${dashboardData?.summary_cards?.conversion?.lead_to_trial_percentage}%`,
+                  link: "#",
+                },
+                {
+                  label: "Trial To Membership",
+                  value: `${dashboardData?.summary_cards?.conversion?.trial_to_membership_percentage}%`,
+                  link: "#",
+                },
+              ]}
+            />
+            <SalesSummary
               icon={checkInIcon}
               title="Check-ins"
               titleLink={generateUrl(
@@ -694,24 +810,6 @@ const Home = () => {
                   link: generateUrl(
                     `/reports/operations-reports/member-checkins-report?checkin-type=unique-members`
                   ),
-                },
-              ]}
-            />
-            <SalesSummary
-              icon={enquiriesIcon}
-              title="Conversion"
-              titleLink="/reports/sales-reports/new-joinees-report?data=memberships"
-              totalSales={`${dashboardData?.summary_cards?.conversion?.overall_percentage}%`}
-              items={[
-                {
-                  label: "Lead To Trial",
-                  value: `${dashboardData?.summary_cards?.conversion?.lead_to_trial_percentage}%`,
-                  link: "#",
-                },
-                {
-                  label: "Trial To Membership",
-                  value: `${dashboardData?.summary_cards?.conversion?.trial_to_membership_percentage}%`,
-                  link: "#",
                 },
               ]}
             />

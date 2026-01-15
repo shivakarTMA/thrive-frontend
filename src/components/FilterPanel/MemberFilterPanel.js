@@ -26,8 +26,7 @@ const ageGroupOptions = [
 ];
 
 export default function MemberFilterPanel({
-  selectedClub,
-  setSelectedClub,
+  clubFilter,
   filterStatus,
   setFilterStatus,
   filterService,
@@ -60,9 +59,14 @@ export default function MemberFilterPanel({
 
   const [appliedFilters, setAppliedFilters] = useState({});
 
-  const fetchTrainer = async () => {
+  const fetchTrainer = async (clubId) => {
     try {
-      const res = await authAxios().get("/staff/list?role=TRAINER");
+      const res = await authAxios().get("/staff/list", {
+        params: {
+          role: "TRAINER",
+          club_id: clubId,
+        },
+      });
       const data = res.data?.data || [];
       const activeStaff = data.filter((item) => item.status === "ACTIVE");
       setTrainerList(activeStaff);
@@ -72,12 +76,20 @@ export default function MemberFilterPanel({
     }
   };
 
-  const fetchStaffList = async () => {
+  const fetchStaffList = async (clubId) => {
     try {
-      const requests = [authAxios().get("/staff/list?role=FOH")];
+      const requests = [
+        authAxios().get("/staff/list", {
+          params: { role: "FOH", club_id: clubId },
+        }),
+      ];
 
       if (userRole === "CLUB_MANAGER" || userRole === "ADMIN") {
-        requests.push(authAxios().get("/staff/list?role=CLUB_MANAGER"));
+        requests.push(
+          authAxios().get("/staff/list", {
+            params: { role: "CLUB_MANAGER", club_id: clubId },
+          })
+        );
       }
 
       const responses = await Promise.all(requests);
@@ -85,7 +97,7 @@ export default function MemberFilterPanel({
       let mergedData = [];
 
       responses.forEach((res) => {
-        const role = res.config.url.includes("FOH") ? "FOH" : "CLUB_MANAGER";
+        const role = res.config.params.role;
 
         const users = (res.data?.data || []).map((user) => ({
           ...user,
@@ -107,45 +119,18 @@ export default function MemberFilterPanel({
     }
   };
 
-  const fetchService = async (search = "") => {
-    try {
-      const res = await authAxios().get("/service/list", {
-        params: search ? { search } : {},
-      });
-      let data = res.data?.data || res?.data || [];
-      const activeService = data?.filter((item) => item?.status === "ACTIVE");
-      setServiceList(activeService);
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to fetch club");
-    }
-  };
-
-  // Function to fetch club list
-  const fetchClub = async () => {
-    try {
-      const response = await authAxios().get("/club/list");
-      const data = response.data?.data || [];
-      const activeOnly = filterActiveItems(data);
-      setClubList(activeOnly);
-    } catch (error) {
-      toast.error("Failed to fetch clubs");
-    }
-  };
-
   useEffect(() => {
-    fetchTrainer();
-    fetchStaffList();
-    fetchService();
-    fetchClub();
-  }, []);
+    const clubId = clubFilter?.value || null;
 
-  // Club dropdown options
-  const clubOptions =
-    clubList?.map((item) => ({
-      label: item.name,
-      value: item.id,
-    })) || [];
+    if (clubId) {
+      fetchTrainer(clubId);
+      fetchStaffList(clubId);
+
+      // Reset dependent filters
+      setFilterTrainer(null);
+      setFilterLeadOwner(null);
+    }
+  }, [clubFilter]);
 
   // Redux state
   const dispatch = useDispatch();
@@ -185,18 +170,13 @@ export default function MemberFilterPanel({
           label: user.name,
         })),
     },
-  ].filter((group) => group.options.length > 0); // remove empty groups
+  ];
 
-  const trainerOptions =
-    trainerList?.map((item) => ({
-      label: item.name,
-      value: item.id,
-    })) || [];
-  const serviceOptions =
-    serviceList?.map((item) => ({
-      label: item.name,
-      value: item.id,
-    })) || [];
+  const trainerOptions = trainerList.map((item) => ({
+    label: item.name,
+    value: item.id,
+  }));
+
   const genderOptions = [
     { value: "MALE", label: "Male" },
     { value: "FEMALE", label: "Female" },
@@ -234,7 +214,6 @@ export default function MemberFilterPanel({
   // Handle Submit (apply filters)
   const handleSubmitFilters = () => {
     setAppliedFilters({
-      club_id: selectedClub,
       is_subscribed:
         filterStatus !== null
           ? memberStatus.find((option) => option.value === filterStatus)
@@ -257,7 +236,6 @@ export default function MemberFilterPanel({
   // Handle remove filter chip
   const removeFilter = (filterKey) => {
     const setterMap = {
-      club_id: setSelectedClub,
       is_subscribed: setFilterStatus,
       service_id: setFilterService,
       // service_variation: setFilterServiceVariation,
@@ -298,19 +276,6 @@ export default function MemberFilterPanel({
           </div>
           <div className="p-4">
             <div className="grid grid-cols-2 gap-4 min-w-[500px]">
-              {/* Club */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Club
-                </label>
-                <Select
-                  value={selectedClub}
-                  onChange={setSelectedClub}
-                  options={clubOptions}
-                  placeholder="Select Club"
-                  styles={customStyles}
-                />
-              </div>
               {/* Status */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">

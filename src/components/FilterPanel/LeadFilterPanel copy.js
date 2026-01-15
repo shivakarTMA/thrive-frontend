@@ -7,43 +7,56 @@ import { toast } from "react-toastify";
 import { authAxios } from "../../config/config";
 import { fetchOptionList } from "../../Redux/Reducers/optionListSlice";
 import { customStyles, filterActiveItems } from "../../Helper/helper";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 export default function LeadFilterPanel({
-  formik,
-  filterLeadSource,
-  filterLeadStatus,
-  filterLastCallType,
-  filterCallTag,
-  filterServiceName,
-  filterGender,
-  setFilterValue,
-  appliedFilters,
-  setAppliedFilters,
+  selectedClub,
+  setSelectedClub,
+  selectedLeadSource,
+  setSelectedLeadSource,
+  selectedLastCallType,
+  selectedLeadStatus,
+  setSelectedLeadStatus,
+  selectedCallTag,
+  setSelectedCallTag,
+  setSelectedLastCallType,
+  selectedGender,
+  setSelectedGender,
+  selectedServiceName,
+  setSelectedServiceName,
+  onApplyFilters,
+  onRemoveFilter,
   userRole,
-  clubId,
 }) {
+  const [searchParams] = useSearchParams();
   const [showFilters, setShowFilters] = useState(false);
   const panelRef = useRef(null);
   const [staffList, setStaffList] = useState([]);
-  console.log(clubId,'SELECTED CLUB')
+  const [clubList, setClubList] = useState([]);
+  const navigate = useNavigate();
 
-  const dispatch = useDispatch();
-  const { lists, loading } = useSelector((state) => state.optionList);
+  // Only update appliedFilters when user clicks Apply
+  const [appliedFilters, setAppliedFilters] = useState({});
 
-  // Fetch dropdown options from Redux
-  useEffect(() => {
-    dispatch(fetchOptionList("LEAD_SOURCE"));
-    dispatch(fetchOptionList("LEAD_CALL_STATUS"));
-    dispatch(fetchOptionList("GOAL"));
-  }, [dispatch]);
+  // const fetchStaff = async () => {
+  //   try {
+  //     const res = await authAxios().get("/staff/list?role=FOH");
+  //     const data = res.data?.data || [];
+  //     const activeStaff = data.filter((item) => item.status === "ACTIVE");
+  //     setStaffList(activeStaff);
+  //   } catch (err) {
+  //     console.error(err);
+  //     toast.error("Failed to fetch staff");
+  //   }
+  // };
 
-  // Fetch staff list from API
+  // 🚀 Fetch staff list from API
   const fetchStaff = async () => {
     try {
-      const requests = [authAxios().get(`/staff/list?role=FOH&club_id${clubId}`)];
+      const requests = [authAxios().get("/staff/list?role=FOH")];
 
       if (userRole === "CLUB_MANAGER" || userRole === "ADMIN") {
-        requests.push(authAxios().get(`/staff/list?role=CLUB_MANAGER&club_id${clubId}`));
+        requests.push(authAxios().get("/staff/list?role=CLUB_MANAGER"));
       }
 
       const responses = await Promise.all(requests);
@@ -73,13 +86,45 @@ export default function LeadFilterPanel({
     }
   };
 
+  // Function to fetch club list
+  const fetchClub = async () => {
+    try {
+      const response = await authAxios().get("/club/list");
+      const data = response.data?.data || [];
+      const activeOnly = filterActiveItems(data);
+      setClubList(activeOnly);
+    } catch (error) {
+      toast.error("Failed to fetch clubs");
+    }
+  };
+
   useEffect(() => {
     fetchStaff();
+    fetchClub();
   }, []);
+
+  // Club dropdown options
+  const clubOptions =
+    clubList?.map((item) => ({
+      label: item.name,
+      value: item.id,
+    })) || [];
+
+  const dispatch = useDispatch();
+  const { lists, loading } = useSelector((state) => state.optionList);
+
+  // Fetch dropdown options from Redux
+  useEffect(() => {
+    dispatch(fetchOptionList("LEAD_SOURCE"));
+    dispatch(fetchOptionList("LEAD_CALL_STATUS"));
+    dispatch(fetchOptionList("GOAL"));
+  }, [dispatch]);
 
   const leadsSources = lists["LEAD_SOURCE"] || [];
   const lastCallStatusOptions = lists["LEAD_CALL_STATUS"] || [];
   const leadServiceOptions = lists["GOAL"] || [];
+  // const leadOwnerOptions =
+  //   staffList.map((item) => ({ label: item.name, value: item.id })) || [];
 
   const leadOwnerOptions = [
     {
@@ -100,14 +145,13 @@ export default function LeadFilterPanel({
           label: user.name,
         })),
     },
-  ].filter((group) => group.options.length > 0);
+  ].filter((group) => group.options.length > 0); // remove empty groups
 
   const genderOptions = [
     { value: "MALE", label: "Male" },
     { value: "FEMALE", label: "Female" },
     { value: "NOTDISCLOSE", label: "Prefer Not To Say" },
   ];
-
   const lead_statusOptions = [
     { value: "new", label: "New" },
     { value: "lead", label: "Lead" },
@@ -118,80 +162,46 @@ export default function LeadFilterPanel({
     { value: "future prospect", label: "Future Prospect" },
   ];
 
-  // Apply button - update parent's appliedFilters
-  const handleApply = () => {
+  // Handle Apply click
+  const handleSubmitFilters = () => {
     setAppliedFilters({
-      ...appliedFilters,
-      lead_source: formik.values.filterLeadSource,
-      lead_status: formik.values.filterLeadStatus,
-      last_call_status: formik.values.filterLastCallType,
-      lead_owner: formik.values.filterCallTag,
-      interested_in: formik.values.filterServiceName,
-      gender: formik.values.filterGender,
+      club_id: selectedClub,
+      lead_source: selectedLeadSource,
+      last_call_status: selectedLastCallType,
+      lead_status: selectedLeadStatus,
+      created_by: selectedCallTag,
+      gender: selectedGender,
+      interested_in: selectedServiceName,
     });
 
     setShowFilters(false);
+    if (onApplyFilters) onApplyFilters();
+    navigate(`/all-leads`);
   };
 
-  // Remove filter chip - update both parent state and formik
-  const handleRemoveFilter = (key) => {
-    const keyMap = {
-      lead_source: "filterLeadSource",
-      lead_status: "filterLeadStatus",
-      last_call_status: "filterLastCallType",
-      lead_owner: "filterCallTag",
-      interested_in: "filterServiceName",
-      gender: "filterGender",
+  console.log("appliedFilters", appliedFilters);
+
+  // Handle remove filter chip
+  const removeFilter = (filterKey) => {
+    const setterMap = {
+      club_id: setSelectedClub,
+      lead_source: setSelectedLeadSource,
+      last_call_status: setSelectedLastCallType,
+      lead_status: setSelectedLeadStatus,
+      created_by: setSelectedCallTag,
+      gender: setSelectedGender,
+      interested_in: setSelectedServiceName,
     };
 
-    // Update parent's applied filters
-    setAppliedFilters((prev) => ({ ...prev, [key]: null }));
+    // Clear parent state
+    setterMap[filterKey]?.(null);
 
-    // Update formik
-    if (keyMap[key]) {
-      setFilterValue(keyMap[key], null);
-    }
-  };
+    // Remove from appliedFilters for UI
+    setAppliedFilters((prev) => ({ ...prev, [filterKey]: null }));
 
-  // Get display labels for filter chips
-  const getFilterLabel = (key, value) => {
-    if (!value) return "";
-
-    if (key === "lead_source") {
-      const source = leadsSources.find((opt) => opt.value === value);
-      return source ? source.label : value;
-    }
-
-    if (key === "lead_status") {
-      const status = lead_statusOptions.find((opt) => opt.value === value);
-      return status ? status.label : value;
-    }
-
-    if (key === "last_call_status") {
-      const callStatus = lastCallStatusOptions.find(
-        (opt) => opt.value === value
-      );
-      return callStatus ? callStatus.label : value;
-    }
-
-    if (key === "lead_owner") {
-      // Flatten grouped options
-      const allOwners = leadOwnerOptions.flatMap((group) => group.options);
-      const owner = allOwners.find((opt) => opt.value === value);
-      return owner ? owner.label : value;
-    }
-
-    if (key === "interested_in") {
-      const service = leadServiceOptions.find((opt) => opt.value === value);
-      return service ? service.label : value;
-    }
-
-    if (key === "gender") {
-      const gender = genderOptions.find((opt) => opt.value === value);
-      return gender ? gender.label : value;
-    }
-
-    return String(value);
+    // Call parent API for updated data
+    if (onRemoveFilter) onRemoveFilter(filterKey);
+    // else if (onApplyFilters) onApplyFilters(); // fallback
   };
 
   // Close filter panel if clicked outside
@@ -210,6 +220,38 @@ export default function LeadFilterPanel({
 
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [showFilters]);
+
+  useEffect(() => {
+    const urlLeadStatus = searchParams.get("lead_status");
+    const urlLastCallType = searchParams.get("last_call_status");
+
+    const initialFilters = {};
+
+    if (urlLeadStatus) {
+      const decodedStatus = decodeURIComponent(urlLeadStatus);
+      initialFilters.lead_status = {
+        label: decodedStatus,
+        value: decodedStatus,
+      };
+      setSelectedLeadStatus({ label: decodedStatus, value: decodedStatus });
+    }
+
+    if (urlLastCallType) {
+      const decodedLastCall = decodeURIComponent(urlLastCallType);
+      initialFilters.last_call_status = {
+        label: decodedLastCall,
+        value: decodedLastCall,
+      };
+      setSelectedLastCallType({
+        label: decodedLastCall,
+        value: decodedLastCall,
+      });
+    }
+
+    // Add other filters if needed (e.g., lead_source, dateFilter)
+
+    setAppliedFilters(initialFilters);
+  }, []);
 
   return (
     <div className="relative max-w-fit w-full" ref={panelRef}>
@@ -230,27 +272,30 @@ export default function LeadFilterPanel({
           </div>
           <div className="p-4">
             <div className="grid grid-cols-2 gap-4 min-w-[500px]">
+              {/* Club */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Club
+                </label>
+                <Select
+                  value={selectedClub}
+                  onChange={setSelectedClub}
+                  options={clubOptions}
+                  placeholder="Select Club"
+                  styles={customStyles}
+                />
+              </div>
               {/* Lead Source */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Lead Source
                 </label>
                 <Select
-                  value={
-                    leadsSources.find(
-                      (opt) => opt.value === filterLeadSource
-                    ) || null
-                  }
-                  onChange={(option) =>
-                    setFilterValue(
-                      "filterLeadSource",
-                      option ? option.value : null
-                    )
-                  }
+                  value={selectedLeadSource}
+                  onChange={setSelectedLeadSource}
                   options={leadsSources}
                   placeholder="Select Lead Source"
                   styles={customStyles}
-                  isClearable
                 />
               </div>
 
@@ -260,21 +305,11 @@ export default function LeadFilterPanel({
                   Lead Status
                 </label>
                 <Select
-                  value={
-                    lead_statusOptions.find(
-                      (opt) => opt.value === filterLeadStatus
-                    ) || null
-                  }
-                  onChange={(option) =>
-                    setFilterValue(
-                      "filterLeadStatus",
-                      option ? option.value : null
-                    )
-                  }
+                  value={selectedLeadStatus}
+                  onChange={setSelectedLeadStatus}
                   options={lead_statusOptions}
                   placeholder="Select Lead Status"
                   styles={customStyles}
-                  isClearable
                 />
               </div>
 
@@ -284,49 +319,27 @@ export default function LeadFilterPanel({
                   Last Call Status
                 </label>
                 <Select
-                  value={
-                    lastCallStatusOptions.find(
-                      (opt) => opt.value === filterLastCallType
-                    ) || null
-                  }
-                  onChange={(option) =>
-                    setFilterValue(
-                      "filterLastCallType",
-                      option ? option.value : null
-                    )
-                  }
+                  value={selectedLastCallType}
+                  onChange={setSelectedLastCallType}
                   options={lastCallStatusOptions}
                   placeholder="Select Last Call Type"
                   styles={customStyles}
-                  isClearable
                 />
               </div>
 
               {/* Lead Owner */}
-              {userRole === "FOH" ? null : (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Lead Owner
-                  </label>
-                  <Select
-                    value={
-                      leadOwnerOptions
-                        .flatMap((group) => group.options)
-                        .find((opt) => opt.value === filterCallTag) || null
-                    }
-                    onChange={(option) =>
-                      setFilterValue(
-                        "filterCallTag",
-                        option ? option.value : null
-                      )
-                    }
-                    options={leadOwnerOptions}
-                    placeholder="Select Lead Owner"
-                    styles={customStyles}
-                    isClearable
-                  />
-                </div>
-              )}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Lead Owner
+                </label>
+                <Select
+                  value={selectedCallTag}
+                  onChange={setSelectedCallTag}
+                  options={leadOwnerOptions}
+                  placeholder="Select Lead Owner"
+                  styles={customStyles}
+                />
+              </div>
 
               {/* Service Name */}
               <div>
@@ -334,21 +347,11 @@ export default function LeadFilterPanel({
                   Interested In
                 </label>
                 <Select
-                  value={
-                    leadServiceOptions.find(
-                      (opt) => opt.value === filterServiceName
-                    ) || null
-                  }
-                  onChange={(option) =>
-                    setFilterValue(
-                      "filterServiceName",
-                      option ? option.value : null
-                    )
-                  }
+                  value={selectedServiceName}
+                  onChange={setSelectedServiceName}
                   options={leadServiceOptions}
                   placeholder="Select Interested"
                   styles={customStyles}
-                  isClearable
                 />
               </div>
 
@@ -358,17 +361,11 @@ export default function LeadFilterPanel({
                   Gender
                 </label>
                 <Select
-                  value={
-                    genderOptions.find((opt) => opt.value === filterGender) ||
-                    null
-                  }
-                  onChange={(option) =>
-                    setFilterValue("filterGender", option ? option.value : null)
-                  }
+                  value={selectedGender}
+                  onChange={setSelectedGender}
                   options={genderOptions}
                   placeholder="Select Gender"
                   styles={customStyles}
-                  isClearable
                 />
               </div>
             </div>
@@ -376,7 +373,7 @@ export default function LeadFilterPanel({
             {/* Apply Button */}
             <div className="flex justify-end pt-3">
               <button
-                onClick={handleApply}
+                onClick={handleSubmitFilters}
                 className="px-4 py-2 bg-black text-white rounded flex items-center gap-2 cursor-pointer"
               >
                 Apply
@@ -386,22 +383,19 @@ export default function LeadFilterPanel({
         </div>
       )}
 
-      {/* Filter Chips */}
-      {Object.values(appliedFilters).some((v) => v) && (
-        <div className="flex flex-wrap gap-2 mt-4">
+      {/* Applied Filter Chips */}
+      {Object.values(appliedFilters).some((value) => value) && (
+        <div className="flex gap-2 mt-4">
           {Object.entries(appliedFilters).map(([key, value]) => {
-            if (!value || key === "club_id") return null;
-
-            const displayValue = getFilterLabel(key, value);
-
+            if (!value) return null;
             return (
               <div
                 key={key}
                 className="flex items-center justify-between gap-1 border rounded-full bg-[#EEEEEE] min-h-[30px] px-3 text-sm"
               >
-                <span>{displayValue}</span>
+                <span>{value.label || value}</span>
                 <IoClose
-                  onClick={() => handleRemoveFilter(key)}
+                  onClick={() => removeFilter(key)}
                   className="cursor-pointer text-xl"
                 />
               </div>

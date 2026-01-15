@@ -9,10 +9,12 @@ import { toast } from "react-toastify";
 import DatePicker from "react-datepicker";
 import { FaCalendarDays } from "react-icons/fa6";
 
-export default function TrialAppointmentPanel({
+export default function AllAppointmentPanel({
   formik,
   filterTrainer,
   filterBookingStatus,
+  filterServiceType,
+  filterServiceName,
   filterAppointmentDate,
   setFilterValue,
   appliedFilters,
@@ -23,6 +25,9 @@ export default function TrialAppointmentPanel({
   const [showFilters, setShowFilters] = useState(false);
   const panelRef = useRef(null);
   const [trainerList, setTrainerList] = useState([]);
+
+  const [serviceList, setServiceList] = useState([]);
+  const [packageList, setPackageList] = useState([]);
 
   const minTime = new Date();
   minTime.setHours(6, 0, 0, 0);
@@ -50,21 +55,83 @@ export default function TrialAppointmentPanel({
     }
   };
 
+  const fetchService = async (club_id = null) => {
+    try {
+      const params = {};
+      if (club_id) {
+        params.club_id = club_id;
+      }
+      const res = await authAxios().get("/service/list", { params });
+
+      const data = res.data?.data || [];
+
+      // ✅ Only ACTIVE + PRODUCT services
+      const activeProductServices = data.filter(
+        (item) => item.status === "ACTIVE" && item.service_type !== "PRODUCT"
+      );
+
+      setServiceList(activeProductServices);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to fetch services");
+    }
+  };
+
+  const fetchPackages = async (serviceId) => {
+    if (!serviceId) {
+      setPackageList([]);
+      return;
+    }
+
+    try {
+      const response = await authAxios().get("/package/list", {
+        params: { service_id: serviceId },
+      });
+
+      const data = response.data?.data || [];
+
+      // ✅ ACTIVE packages only
+      const activePackages = data.filter((item) => item.status === "ACTIVE");
+
+      setPackageList(activePackages);
+    } catch (err) {
+      toast.error("Failed to fetch packages");
+      setPackageList([]);
+    }
+  };
+
   // ✅ Refetch trainers when clubId changes
   useEffect(() => {
     fetchTrainer(clubId);
+    fetchService(clubId);
 
-    // ✅ Reset trainer filter if club changes
-    if (filterTrainer) {
-      setFilterValue("filterTrainer", null);
-    }
+    setFilterValue("filterTrainer", null);
+    setFilterValue("filterServiceType", null);
+    setFilterValue("filterServiceName", null);
   }, [clubId]);
+
+  useEffect(() => {
+    fetchPackages(filterServiceType);
+
+    // ✅ Correct way to reset package
+    setFilterValue("filterServiceName", null);
+  }, [filterServiceType]);
 
   const trainerOptions =
     trainerList?.map((item) => ({
       label: item.name,
       value: item.id,
     })) || [];
+
+  const serviceOptions = serviceList.map((item) => ({
+    label: item.name,
+    value: item.id,
+  }));
+
+  const packageOptions = packageList.map((item) => ({
+    label: item.name,
+    value: item.id,
+  }));
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -99,6 +166,8 @@ export default function TrialAppointmentPanel({
     setAppliedFilters({
       ...appliedFilters,
       assigned_staff_id: formik.values.filterTrainer,
+      service_type: formik.values.filterServiceType,
+      service_name: formik.values.filterServiceName,
       booking_status: formik.values.filterBookingStatus,
       appointment_date: formatDateForApi(formik.values.filterAppointmentDate),
     });
@@ -110,17 +179,19 @@ export default function TrialAppointmentPanel({
   const handleRemoveFilter = (key) => {
     const keyMap = {
       assigned_staff_id: "filterTrainer",
+      service_type: "filterServiceType",
+      service_name: "filterServiceName",
       booking_status: "filterBookingStatus",
       appointment_date: "filterAppointmentDate",
     };
 
-    // Update parent's applied filters
-    setAppliedFilters((prev) => ({ ...prev, [key]: null }));
+      // Update parent's applied filters
+      setAppliedFilters((prev) => ({ ...prev, [key]: null }));
 
-    // Update formik
-    if (keyMap[key]) {
-      setFilterValue(keyMap[key], null);
-    }
+      // Update formik
+      if (keyMap[key]) {
+        setFilterValue(keyMap[key], null);
+      }
   };
 
   // ✅ Get display labels for filter chips
@@ -132,13 +203,22 @@ export default function TrialAppointmentPanel({
       return trainer ? trainer.label : value;
     }
 
+    if (key === "service_type") {
+      const service = serviceOptions.find((opt) => opt.value === value);
+      return service ? service.label : value;
+    }
+
+    if (key === "service_name") {
+      const pkg = packageOptions.find((opt) => opt.value === value);
+      return pkg ? pkg.label : value;
+    }
+
     if (key === "booking_status") {
       const status = filteredStatusOptions.find((opt) => opt.value === value);
       return status ? status.label : value;
     }
 
     if (key === "appointment_date") {
-      // value = "2026-01-02 15:10:00"
       const date = new Date(value.replace(" ", "T"));
 
       return date.toLocaleString("en-GB", {
@@ -173,6 +253,49 @@ export default function TrialAppointmentPanel({
           </div>
           <div className="p-4">
             <div className="grid grid-cols-2 gap-4 min-w-[500px]">
+              <div>
+                <label className="block mb-1 text-sm font-medium">
+                  Service Type
+                </label>
+                <Select
+                  options={serviceOptions}
+                  value={
+                    serviceOptions.find(
+                      (opt) => opt.value === filterServiceType
+                    ) || null
+                  }
+                  onChange={(option) =>
+                    setFilterValue(
+                      "filterServiceType",
+                      option ? option.value : null
+                    )
+                  }
+                  placeholder="Select Service"
+                  styles={customStyles}
+                />
+              </div>
+              <div>
+                <label className="block mb-1 text-sm font-medium">
+                  Service Name
+                </label>
+                <Select
+                  options={packageOptions}
+                  value={
+                    packageOptions.find(
+                      (opt) => opt.value === filterServiceName
+                    ) || null
+                  }
+                  onChange={(option) =>
+                    setFilterValue(
+                      "filterServiceName",
+                      option ? option.value : null
+                    )
+                  }
+                  placeholder="Select Package"
+                  styles={customStyles}
+                  isDisabled={!filterServiceType}
+                />
+              </div>
               <div>
                 <label className="block mb-1 text-sm font-medium">
                   Trainer Name

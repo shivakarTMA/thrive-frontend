@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { FaCircle } from "react-icons/fa";
 import Select from "react-select";
 import {
+  customStyles,
   dasboardStyles,
   filterActiveItems,
   formatAutoDate,
@@ -31,6 +32,9 @@ const MemberList = () => {
   const { user } = useSelector((state) => state.auth);
   const userRole = user.role;
   const [staffList, setStaffList] = useState([]);
+
+  const [clubList, setClubList] = useState([]);
+  const [clubFilter, setClubFilter] = useState(null);
 
   const [invoiceModal, setInvoiceModal] = useState(false);
   const [selectedLeadMember, setSelectedLeadMember] = useState(null);
@@ -66,6 +70,31 @@ const MemberList = () => {
   const [showOwnerDropdown, setShowOwnerDropdown] = useState(false);
 
   const [searchTerm, setSearchTerm] = useState("");
+
+  // Function to fetch club list
+  const fetchClub = async (search = "") => {
+    try {
+      const response = await authAxios().get("/club/list", {
+        params: search ? { search } : {},
+      });
+      const data = response.data?.data || [];
+      const activeOnly = filterActiveItems(data);
+      setClubList(activeOnly);
+      if (activeOnly.length > 0 && !clubFilter) {
+        setClubFilter({
+          label: activeOnly[0].name,
+          value: activeOnly[0].id,
+        });
+      }
+    } catch (error) {
+      toast.error("Failed to fetch clubs");
+    }
+  };
+
+  const clubOptions = clubList.map((item) => ({
+    label: item.name,
+    value: item.id,
+  }));
 
   const fetchMemberList = async (
     search = searchTerm,
@@ -114,7 +143,7 @@ const MemberList = () => {
             : filterGender,
           club_id: overrideSelected.hasOwnProperty("club_id")
             ? overrideSelected.club_id
-            : selectedClub,
+            : clubFilter,
         };
 
         // Add filters to API params
@@ -157,6 +186,7 @@ const MemberList = () => {
 
   useEffect(() => {
     fetchMemberStats();
+    fetchClub();
   }, []);
 
   useEffect(() => {
@@ -167,6 +197,10 @@ const MemberList = () => {
       fetchMemberList();
     }
   }, [id]);
+
+  useEffect(() => {
+    fetchMemberList("", 1);
+  }, [clubFilter]);
 
   const handleMemberUpdate = () => {
     fetchMemberList();
@@ -337,7 +371,6 @@ const MemberList = () => {
 
   const handleRemoveFilter = (filterKey) => {
     const setterMap = {
-      club_id: setSelectedClub,
       is_subscribed: setFilterStatus,
       service_id: setFilterService,
       // service_variation: setFilterServiceVariation,
@@ -420,6 +453,21 @@ const MemberList = () => {
           </div>
         </div>
 
+        <div className="flex gap-3 mb-4 items-center justify-between">
+          <div className="flex gap-2 w-full">
+            <div className="w-fit min-w-[180px]">
+              <Select
+                placeholder="Filter by club"
+                value={clubFilter}
+                options={clubOptions}
+                onChange={(option) => setClubFilter(option)}
+                isClearable={userRole === "ADMIN" ? true : false}
+                styles={customStyles}
+              />
+            </div>
+          </div>
+        </div>
+
         {/* )} */}
 
         {showConfirm && (
@@ -453,8 +501,7 @@ const MemberList = () => {
             <div>
               <MemberFilterPanel
                 userRole={userRole}
-                selectedClub={selectedClub}
-                setSelectedClub={setSelectedClub}
+                clubFilter={clubFilter}
                 filterStatus={filterStatus}
                 setFilterStatus={setFilterStatus}
                 filterService={filterService}
@@ -760,7 +807,12 @@ const MemberList = () => {
         />
       )}
 
-      {invoiceModal && <CreateNewInvoice setInvoiceModal={setInvoiceModal} selectedLeadMember={selectedLeadMember} />}
+      {invoiceModal && (
+        <CreateNewInvoice
+          setInvoiceModal={setInvoiceModal}
+          selectedLeadMember={selectedLeadMember}
+        />
+      )}
     </>
   );
 };

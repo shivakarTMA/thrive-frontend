@@ -20,7 +20,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import MailIcon from "../assets/images/icons/mail.png";
 import SmsIcon from "../assets/images/icons/sms.png";
 import AssignIcon from "../assets/images/icons/assign.png";
-import { addYears, format, subYears } from "date-fns";
+import { addYears, subYears } from "date-fns";
 import { useLocation } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import { RiCalendarScheduleLine } from "react-icons/ri";
@@ -39,7 +39,6 @@ import LeadFilterPanel from "../components/FilterPanel/LeadFilterPanel";
 import { useSelector } from "react-redux";
 import Sidebar from "../components/common/Sidebar";
 import Topbar from "../components/common/Topbar";
-import { useFormik } from "formik";
 
 const dateFilterOptions = [
   { value: "today", label: "Today" },
@@ -47,6 +46,44 @@ const dateFilterOptions = [
   { value: "month_till_date", label: "Month Till Date" },
   { value: "custom", label: "Custom Date" },
 ];
+
+const leadStatusStyles = {
+  New: {
+    bg: "bg-[#E4FCFF]",
+    text: "text-[#007A87]",
+    dot: "text-[#007A87]",
+  },
+  Lead: {
+    bg: "bg-[#FFF4E5]",
+    text: "text-[#B45309]",
+    dot: "text-[#B45309]",
+  },
+  Opportunity: {
+    bg: "bg-[#EEEEEE]",
+    text: "text-[#374151]",
+    dot: "text-[#374151]",
+  },
+  Lost: {
+    bg: "bg-[#FEE2E2]",
+    text: "text-[#B91C1C]",
+    dot: "text-[#B91C1C]",
+  },
+  Closed: {
+    bg: "bg-[#E0E7FF]",
+    text: "text-[#3730A3]",
+    dot: "text-[#3730A3]",
+  },
+  Won: {
+    bg: "bg-[#DCFCE7]",
+    text: "text-[#15803D]",
+    dot: "text-[#15803D]",
+  },
+  DEFAULT: {
+    bg: "bg-[#EEEEEE]",
+    text: "text-gray-500",
+    dot: "text-gray-400",
+  },
+};
 
 const AllLeads = () => {
   const navigate = useNavigate();
@@ -73,12 +110,18 @@ const AllLeads = () => {
   const [bulkOwner, setBulkOwner] = useState(null);
   const [showOwnerDropdown, setShowOwnerDropdown] = useState(false);
 
+  const [selectedClub, setSelectedClub] = useState(null);
+  const [selectedLeadSource, setSelectedLeadSource] = useState(null);
+  const [selectedLeadStatus, setSelectedLeadStatus] = useState(null);
+  const [selectedLastCallType, setSelectedLastCallType] = useState(null);
+  const [selectedCallTag, setSelectedCallTag] = useState(null);
+  const [selectedServiceName, setSelectedServiceName] = useState(null);
+  const [selectedGender, setSelectedGender] = useState(null);
+
   const [searchParams] = useSearchParams();
   const [dateFilter, setDateFilter] = useState(dateFilterOptions[1]);
   const [customFrom, setCustomFrom] = useState(null);
   const [customTo, setCustomTo] = useState(null);
-  const [clubList, setClubList] = useState([]);
-  const [clubFilter, setClubFilter] = useState(null);
 
   const [allLeads, setAllLeads] = useState([]);
 
@@ -88,17 +131,6 @@ const AllLeads = () => {
   const [totalCount, setTotalCount] = useState(0);
 
   const [staffList, setStaffList] = useState([]);
-  const [filtersInitialized, setFiltersInitialized] = useState(false);
-
-  // Applied filters state (like TrialAppointments)
-  const [appliedFilters, setAppliedFilters] = useState({
-    lead_source: null,
-    lead_status: null,
-    last_call_status: null,
-    lead_owner: null,
-    interested_in: null,
-    gender: null,
-  });
 
   const handleCommunicate = (type) => {
     if (selectedUserId.length === 0) {
@@ -124,117 +156,138 @@ const AllLeads = () => {
     }
   };
 
-  // Formik for panel filters (like TrialAppointments)
-  const formik = useFormik({
-    enableReinitialize: true,
-    initialValues: {
-      filterLeadSource: null,
-      filterLastCallType: null,
-      filterLeadStatus: null,
-      filterCallTag: null,
-      filterGender: null,
-      filterServiceName: null,
-    },
-    onSubmit: (values) => {
-      console.log(values);
-    },
-  });
+  useEffect(() => {
+    const dateParam = searchParams.get("date");
+    const customFromParam = searchParams.get("customFrom");
+    const customToParam = searchParams.get("customTo");
 
-  // Helper to set formik values
-  const setFilterValue = (key, value) => {
-    formik.setFieldValue(key, value);
-  };
+    if (dateParam) {
+      // Find the matching option from your dropdown
+      const foundOption =
+        dateFilterOptions.find((opt) => opt.value === dateParam) ||
+        dateFilterOptions[1];
+      setDateFilter(foundOption);
 
-  // ---------------------------
-  // UPDATE URL WITH PARAMS
-  // ---------------------------
-  const updateURLParams = (filters) => {
-    const params = new URLSearchParams();
+      if (dateParam === "custom" && customFromParam && customToParam) {
+        // Decode and convert to JS Date
+        const fromDate = new Date(decodeURIComponent(customFromParam));
+        const toDate = new Date(decodeURIComponent(customToParam));
 
-    // Date filter
-    if (dateFilter?.value && dateFilter.value !== "custom") {
-      params.set("dateFilter", dateFilter.value);
+        setCustomFrom(fromDate);
+        setCustomTo(toDate);
+      }
     }
+  }, []);
 
-    if (dateFilter?.value === "custom" && customFrom && customTo) {
-      params.set("startDate", format(customFrom, "yyyy-MM-dd"));
-      params.set("endDate", format(customTo, "yyyy-MM-dd"));
-    }
+  const urlLastCallType = searchParams.get("last_call_status");
+  const last_call_status = urlLastCallType
+    ? decodeURIComponent(urlLastCallType)
+    : null;
 
-    // Club filter
-    if (clubFilter?.value) {
-      params.set("club_id", clubFilter.value);
-    }
-
-    // Applied filters (panel filters)
-    if (filters.lead_source) {
-      params.set("lead_source", filters.lead_source);
-    }
-    if (filters.lead_status) {
-      params.set("lead_status", filters.lead_status);
-    }
-    if (filters.last_call_status) {
-      params.set("last_call_status", filters.last_call_status);
-    }
-    if (filters.lead_owner) {
-      params.set("lead_owner", filters.lead_owner);
-    }
-    if (filters.interested_in) {
-      params.set("interested_in", filters.interested_in);
-    }
-    if (filters.gender) {
-      params.set("gender", filters.gender);
-    }
-
-    navigate(`?${params.toString()}`, { replace: true });
-  };
-
-  // ---------------------------
-  // FETCH LEADS
-  // ---------------------------
-  const fetchLeadList = async (currentPage = page) => {
+  const fetchLeadList = async (currentPage = page, overrideSelected = {}) => {
     try {
       const params = {
         page: currentPage,
         limit: rowsPerPage,
       };
 
-      // Date Filter
-      if (dateFilter?.value && dateFilter.value !== "custom") {
-        params.dateFilter = dateFilter.value;
-      }
+      if (id) {
+        params.id = id;
+        setDateFilter("");
+      } else {
+        const urlLeadStatus = searchParams.get("lead_status");
+        const urlDate = searchParams.get("date");
+        const urlCustomFrom = searchParams.get("customFrom");
+        const urlCustomTo = searchParams.get("customTo");
 
-      if (dateFilter?.value === "custom" && customFrom && customTo) {
-        params.startDate = format(customFrom, "yyyy-MM-dd");
-        params.endDate = format(customTo, "yyyy-MM-dd");
-      }
+        // ✅ Use overrideSelected first, then selected state, then URL, otherwise null
+        const selLeadSource = overrideSelected.hasOwnProperty("lead_source")
+          ? overrideSelected.lead_source
+          : selectedLeadSource;
+        const selLeadStatus = overrideSelected.hasOwnProperty("lead_status")
+          ? overrideSelected.lead_status
+          : selectedLeadStatus
+          ? selectedLeadStatus
+          : urlLeadStatus
+          ? { label: urlLeadStatus, value: urlLeadStatus }
+          : null;
+        // const selLastCallType = overrideSelected.hasOwnProperty("last_call_status")
+        //   ? overrideSelected.last_call_status
+        //   : selectedLastCallType;
+        const selLastCallType = overrideSelected.hasOwnProperty(
+          "last_call_status"
+        )
+          ? overrideSelected.last_call_status
+          : selectedLastCallType
+          ? selectedLastCallType
+          : last_call_status
+          ? { label: last_call_status, value: last_call_status }
+          : null;
+        const selCallTag = overrideSelected.hasOwnProperty("created_by")
+          ? overrideSelected.created_by
+          : selectedCallTag;
+        const selServiceName = overrideSelected.hasOwnProperty("interested_in")
+          ? overrideSelected.interested_in
+          : selectedServiceName;
+        const selGender = overrideSelected.hasOwnProperty("gender")
+          ? overrideSelected.gender
+          : selectedGender;
+        const selClub = overrideSelected.hasOwnProperty("club_id")
+          ? overrideSelected.club_id
+          : selectedClub;
 
-      // Club filter
-      if (clubFilter?.value) {
-        params.club_id = clubFilter.value;
-      }
+        let selDateFilter =
+          overrideSelected.dateFilter?.value || dateFilter?.value || urlDate;
 
-      // Applied Filters (from panel)
-      if (appliedFilters.lead_source) {
-        params.lead_source = appliedFilters.lead_source;
-      }
-      if (appliedFilters.lead_status) {
-        params.lead_status = appliedFilters.lead_status;
-      }
-      if (appliedFilters.last_call_status) {
-        params.last_call_status = appliedFilters.last_call_status;
-      }
-      if (appliedFilters.lead_owner) {
-        params.lead_owner = appliedFilters.lead_owner;
-      }
-      if (appliedFilters.interested_in) {
-        params.interested_in = appliedFilters.interested_in;
-      }
-      if (appliedFilters.gender) {
-        params.gender = appliedFilters.gender;
-      }
+        let selCustomFrom =
+          overrideSelected.customFrom ||
+          customFrom ||
+          (urlCustomFrom ? new Date(decodeURIComponent(urlCustomFrom)) : null);
+        let selCustomTo =
+          overrideSelected.customTo ||
+          customTo ||
+          (urlCustomTo ? new Date(decodeURIComponent(urlCustomTo)) : null);
 
-      console.log("🔍 API Request Params:", params);
+        // 🚫 Only use URL custom range if no manual override
+        if (
+          !overrideSelected.dateFilter &&
+          !customFrom &&
+          !customTo &&
+          urlDate === "custom" &&
+          urlCustomFrom &&
+          urlCustomTo
+        ) {
+          selDateFilter = "custom";
+          selCustomFrom = new Date(decodeURIComponent(urlCustomFrom));
+          selCustomTo = new Date(decodeURIComponent(urlCustomTo));
+        }
+
+        // ✅ Build query params (only if value exists)
+
+        if (selLeadSource?.value) params.lead_source = selLeadSource.value;
+        if (selLeadStatus?.value) params.lead_status = selLeadStatus.value;
+        if (selLastCallType?.value)
+          params.last_call_status = selLastCallType.value;
+        if (selCallTag?.value) params.created_by = selCallTag.value;
+        if (selServiceName?.value) params.interested_in = selServiceName.value;
+        if (selGender?.value) params.gender = selGender.value;
+        if (selClub?.value) params.club_id = selClub.value;
+
+        // ✅ Date filter
+        if (selDateFilter && selDateFilter !== "custom") {
+          params.dateFilter = selDateFilter;
+        } else if (selDateFilter === "custom" && selCustomFrom && selCustomTo) {
+          const formatDate = (date) => {
+            const d = new Date(date);
+            const month = String(d.getMonth() + 1).padStart(2, "0");
+            const day = String(d.getDate()).padStart(2, "0");
+            return `${d.getFullYear()}-${month}-${day}`;
+          };
+
+          params.startDate = formatDate(selCustomFrom);
+          params.endDate = formatDate(selCustomTo);
+        }
+      }
 
       const res = await authAxios().get("/lead/list", { params });
 
@@ -251,7 +304,7 @@ const AllLeads = () => {
     }
   };
 
-  // Fetch staff list from API
+  // 🚀 Fetch staff list from API
   const fetchStaff = async () => {
     try {
       const requests = [authAxios().get("/staff/list?role=FOH")];
@@ -291,29 +344,9 @@ const AllLeads = () => {
     }
   };
 
-  // Function to fetch club list
-  const fetchClub = async (search = "") => {
-    try {
-      const response = await authAxios().get("/club/list", {
-        params: search ? { search } : {},
-      });
-      const data = response.data?.data || [];
-      const activeOnly = filterActiveItems(data);
-      setClubList(activeOnly);
-    } catch (error) {
-      toast.error("Failed to fetch clubs");
-    }
-  };
-
-  const clubOptions = clubList.map((item) => ({
-    label: item.name,
-    value: item.id,
-  }));
-
   // Initial load effect
   useEffect(() => {
     fetchStaff();
-    fetchClub();
   }, []);
 
   const staffOptions = [
@@ -335,107 +368,79 @@ const AllLeads = () => {
           label: user.name,
         })),
     },
-  ].filter((group) => group.options.length > 0);
+  ].filter((group) => group.options.length > 0); // remove empty groups
 
-  // ---------------------------
-  // INITIALIZE FROM URL (RUNS ONCE)
-  // ---------------------------
   useEffect(() => {
-    // Wait for clubList to be loaded
-    if (clubList.length === 0) return;
+    const searchParams = new URLSearchParams(location.search);
+    const urlDateFilter = searchParams.get("date");
 
-    // Only run initialization once
-    if (filtersInitialized) return;
+    const foundDateOption = dateFilterOptions.find(
+      (option) => option.value === urlDateFilter
+    );
 
-    const params = new URLSearchParams(location.search);
-
-    // Date filter
-    const dateFilterValue = params.get("dateFilter");
-    if (dateFilterValue) {
-      const matchedDate = dateFilterOptions.find(
-        (opt) => opt.value === dateFilterValue
-      );
-      if (matchedDate) {
-        setDateFilter(matchedDate);
-      }
-    }
-
-    // Custom date filter
-    const startDate = params.get("startDate");
-    const endDate = params.get("endDate");
-    if (startDate && endDate) {
-      setDateFilter(dateFilterOptions.find((d) => d.value === "custom"));
-      setCustomFrom(new Date(startDate));
-      setCustomTo(new Date(endDate));
-    }
-
-    // Club filter - only set from URL if present, otherwise default to first club
-    const clubId = params.get("club_id");
-    if (clubId) {
-      const club = clubList.find((c) => c.id === Number(clubId));
-      if (club) {
-        setClubFilter({ label: club.name, value: club.id });
-      }
+    if (id) {
+      // If id exists, fetch by id, but also include URL date filter if any
+      fetchLeadList(1, { id, dateFilter: foundDateOption });
+    } else if (foundDateOption) {
+      // If no id, but date filter exists in URL
+      setDateFilter(foundDateOption);
+      fetchLeadList(1, { dateFilter: foundDateOption });
     } else {
-      // Set default club only on initial load
-      setClubFilter({
-        label: clubList[0].name,
-        value: clubList[0].id,
-      });
+      // Default fetch without id or URL date filter
+      fetchLeadList();
     }
+  }, [id, location.search]);
 
-    // Applied filters from URL
-    const urlFilters = {
-      lead_source: params.get("lead_source") || null,
-      lead_status: params.get("lead_status") || null,
-      last_call_status: params.get("last_call_status") || null,
-      lead_owner: params.get("lead_owner")
-        ? Number(params.get("lead_owner"))
-        : null,
-      interested_in: params.get("interested_in") || null,
-      gender: params.get("gender") || null,
-    };
+  const handleDateFilterChange = (selected) => {
+    setDateFilter(selected);
 
-    setAppliedFilters(urlFilters);
+    // If custom date filter is selected, handle the logic for custom dates
+    if (selected?.value !== "custom") {
+      setCustomFrom(null);
+      setCustomTo(null);
+      // Navigate to /all-leads, setting the new date filter in the URL
+      navigate(`/all-leads?date=${selected.value}`, { replace: true });
 
-    // Sync with formik
-    formik.setValues({
-      filterLeadSource: urlFilters.lead_source,
-      filterLeadStatus: urlFilters.lead_status,
-      filterLastCallType: urlFilters.last_call_status,
-      filterCallTag: urlFilters.lead_owner,
-      filterServiceName: urlFilters.interested_in,
-      filterGender: urlFilters.gender,
-    });
+      // Re-fetch the lead list based on the selected filter
+      fetchLeadList(1, { dateFilter: selected });
+    } else {
+      // Handle custom date filter logic here (e.g., open a date picker)
+      // You may need to update the URL with a custom date range
+    }
+  };
 
-    setFiltersInitialized(true);
-  }, [clubList]);
-
-  // ---------------------------
-  // FETCH WHEN FILTERS CHANGE
-  // ---------------------------
+  // Trigger only for custom range once both dates selected
   useEffect(() => {
-    if (!filtersInitialized) return;
-
-    setPage(1);
-    fetchLeadList(1);
-    updateURLParams(appliedFilters);
-  }, [
-    filtersInitialized,
-    dateFilter?.value,
-    customFrom,
-    customTo,
-    clubFilter?.value,
-    appliedFilters.lead_source,
-    appliedFilters.lead_status,
-    appliedFilters.last_call_status,
-    appliedFilters.lead_owner,
-    appliedFilters.interested_in,
-    appliedFilters.gender,
-  ]);
+    if (dateFilter?.value === "custom" && customFrom && customTo) {
+      fetchLeadList(1, { dateFilter, customFrom, customTo });
+    }
+  }, [dateFilter, customFrom, customTo]);
 
   const handleLeadUpdate = () => {
     fetchLeadList();
+  };
+
+  const handleRemoveFilter = (filterKey) => {
+    const setterMap = {
+      club_id: setSelectedClub,
+      lead_source: setSelectedLeadSource,
+      last_call_status: setSelectedLastCallType,
+      lead_status: setSelectedLeadStatus,
+      created_by: setSelectedCallTag,
+      interested_in: setSelectedServiceName,
+      gender: setSelectedGender,
+    };
+
+    // Clear state
+    setterMap[filterKey]?.(null);
+
+    // Pass explicit null in overrideSelected so fetchLeadList knows to skip it
+    const overrideSelected = { [filterKey]: null };
+    fetchLeadList(1, overrideSelected);
+  };
+
+  const handleApplyFiltersFromChild = () => {
+    fetchLeadList(1);
   };
 
   const handleCheckboxChange = (id) => {
@@ -444,33 +449,39 @@ const AllLeads = () => {
     );
   };
 
+  // Handle bulk assigning owner to selected leads only
   const handleBulkAssign = (selectedOption) => {
-    setBulkOwner(selectedOption);
+    setBulkOwner(selectedOption); // Store selected option
     const updatedAssignments = { ...assignedOwners };
     selectedUserId.forEach((id) => {
-      updatedAssignments[id] = selectedOption;
+      updatedAssignments[id] = selectedOption; // Assign same owner to all selected leads
     });
     setAssignedOwners(updatedAssignments);
   };
 
+  // Handle submit bulk assignment (Assign Icon click logic)
   const handleSubmitAssign = () => {
     if (selectedUserId.length === 0) {
+      // If no leads are selected, show an alert
       toast.error("Please select the Lead to assign owners.");
       setShowOwnerDropdown(false);
     } else {
+      // If there are selected leads, show the dropdown to select an owner
       setShowOwnerDropdown((prev) => !prev);
     }
   };
 
+  // Confirm assignment
   const confirmAssign = async () => {
     if (!bulkOwner) {
       toast.error("Please select an owner.");
       return;
     }
 
+    // FINAL RESULT OBJECT
     const bulkAssignmentData = {
-      member_ids: selectedUserId,
-      owner_id: bulkOwner.value,
+      member_ids: selectedUserId, // selected lead/user IDs
+      owner_id: bulkOwner.value, // owner id from dropdown
     };
 
     try {
@@ -481,10 +492,12 @@ const AllLeads = () => {
 
       toast.success("Owner assigned successfully!");
 
+      // Reset after success
       setShowOwnerDropdown(false);
       setSelectedUserId([]);
       setBulkOwner(null);
 
+      // Optional: refresh list
       fetchLeadList();
     } catch (err) {
       console.error(err);
@@ -535,13 +548,8 @@ const AllLeads = () => {
                       placeholder="Select Date"
                       options={dateFilterOptions}
                       value={dateFilter}
-                      onChange={(selected) => {
-                        setDateFilter(selected);
-                        if (selected?.value !== "custom") {
-                          setCustomFrom(null);
-                          setCustomTo(null);
-                        }
-                      }}
+                      onChange={handleDateFilterChange}
+                      // isClearable
                       styles={customStyles}
                       className="w-full"
                     />
@@ -557,7 +565,7 @@ const AllLeads = () => {
                           selected={customFrom}
                           onChange={(date) => {
                             setCustomFrom(date);
-                            setCustomTo(null);
+                            setCustomTo(null); // ✅ reset To Date if From Date changes
                           }}
                           placeholderText="From Date"
                           className="custom--input w-full input--icon"
@@ -589,16 +597,6 @@ const AllLeads = () => {
                       </div>
                     </>
                   )}
-                  <div className="w-fit min-w-[180px]">
-                    <Select
-                      placeholder="Filter by club"
-                      value={clubFilter}
-                      options={clubOptions}
-                      onChange={(option) => setClubFilter(option)}
-                      isClearable={userRole === "ADMIN" ? true : false}
-                      styles={customStyles}
-                    />
-                  </div>
                 </div>
               </div>
 
@@ -606,18 +604,23 @@ const AllLeads = () => {
                 <div className="flex items-start gap-3 justify-between w-full mb-3 border-b border-b-[#D4D4D4] pb-3">
                   <div>
                     <LeadFilterPanel
-                      formik={formik}
-                      filterLeadSource={formik.values.filterLeadSource}
-                      filterLeadStatus={formik.values.filterLeadStatus}
-                      filterLastCallType={formik.values.filterLastCallType}
-                      filterCallTag={formik.values.filterCallTag}
-                      filterServiceName={formik.values.filterServiceName}
-                      filterGender={formik.values.filterGender}
-                      setFilterValue={setFilterValue}
-                      appliedFilters={appliedFilters}
-                      setAppliedFilters={setAppliedFilters}
                       userRole={userRole}
-                      clubId={clubFilter?.value}
+                      selectedClub={selectedClub}
+                      setSelectedClub={setSelectedClub}
+                      selectedLeadSource={selectedLeadSource}
+                      setSelectedLeadSource={setSelectedLeadSource}
+                      selectedLastCallType={selectedLastCallType}
+                      selectedLeadStatus={selectedLeadStatus}
+                      setSelectedLeadStatus={setSelectedLeadStatus}
+                      selectedCallTag={selectedCallTag}
+                      setSelectedCallTag={setSelectedCallTag}
+                      setSelectedLastCallType={setSelectedLastCallType}
+                      selectedGender={selectedGender}
+                      setSelectedGender={setSelectedGender}
+                      selectedServiceName={selectedServiceName}
+                      setSelectedServiceName={setSelectedServiceName}
+                      onApplyFilters={handleApplyFiltersFromChild} // child "Apply" -> parent fetch
+                      onRemoveFilter={handleRemoveFilter}
                     />
                   </div>
                   <div>
@@ -924,8 +927,18 @@ const AllLeads = () => {
                     onPageChange={(newPage) => {
                       setPage(newPage);
 
+                      // Prepare overrideSelected for removed filters
+                      const overrideSelected = {
+                        club_id: selectedClub || null,
+                        lead_status: selectedLeadStatus || null,
+                        lead_source: selectedLeadSource || null,
+                        last_call_status: selectedLastCallType || null,
+                        created_by: selectedCallTag || null,
+                        interested_in: selectedServiceName || null,
+                        gender: selectedGender || null,
+                      };
 
-                      fetchLeadList(newPage);
+                      fetchLeadList(newPage, overrideSelected);
                     }}
                   />
                 </div>

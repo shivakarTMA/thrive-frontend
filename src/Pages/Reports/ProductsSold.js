@@ -3,10 +3,15 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { addYears, subYears } from "date-fns";
 import { FaCalendarDays, FaEye, FaPrint } from "react-icons/fa6";
-import { customStyles, formatAutoDate, formatText } from "../../Helper/helper";
+import {
+  customStyles,
+  filterActiveItems,
+  formatAutoDate,
+  formatText,
+} from "../../Helper/helper";
 import Select from "react-select";
 import ProductSoldPanel from "../../components/FilterPanel/ProductSoldPanel";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useFormik } from "formik";
 import { authAxios } from "../../config/config";
 import { toast } from "react-toastify";
@@ -14,6 +19,7 @@ import Pagination from "../../components/common/Pagination";
 import { format } from "date-fns";
 import { FaShareSquare } from "react-icons/fa";
 import Tooltip from "../../components/common/Tooltip";
+import { useSelector } from "react-redux";
 
 const dateFilterOptions = [
   { value: "today", label: "Today" },
@@ -24,14 +30,18 @@ const dateFilterOptions = [
 
 const ProductsSold = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const [productSoldData, setProductSoldData] = useState([]);
   const [dateFilter, setDateFilter] = useState(dateFilterOptions[1]);
   const [customFrom, setCustomFrom] = useState(null);
   const [customTo, setCustomTo] = useState(null);
+  const { user } = useSelector((state) => state.auth);
+  const userRole = user.role;
+
+  const [clubList, setClubList] = useState([]);
+  const [clubFilter, setClubFilter] = useState(null);
 
   const [sendModalOrder, setSendModalOrder] = useState(null);
-
-  const [filtersInitialized, setFiltersInitialized] = useState(false);
 
   const [page, setPage] = useState(1);
   const [rowsPerPage] = useState(10);
@@ -47,11 +57,13 @@ const ProductsSold = () => {
     pilates: 0,
   });
 
+  const [filtersInitialized, setFiltersInitialized] = useState(false);
+
   // ✅ Single source of truth for applied filters
   const [appliedFilters, setAppliedFilters] = useState({
-    club_id: null,
     bill_type: null,
     service_type: null,
+    package_type: null,
     lead_source: null,
     lead_owner: null,
     pay_mode: null,
@@ -60,9 +72,9 @@ const ProductsSold = () => {
   const formik = useFormik({
     enableReinitialize: true,
     initialValues: {
-      filterClub: null,
       filterBillType: null,
       filterServiceType: null,
+      filterPackageType: null,
       filterLeadSource: null,
       filterLeadOwner: null,
       filterPayMode: null,
@@ -72,21 +84,67 @@ const ProductsSold = () => {
     },
   });
 
-  const normalizeProductSold = (item, index) => ({
-    serialNumber: (page - 1) * rowsPerPage + index + 1,
-    purchaseDate: item.purchase_date,
-    clubName: item.club_name,
-    memberId: item.membership_number,
-    memberName: item.member_name,
-    serviceType: item.service_type,
-    service_name: item.service_name,
-    variation_name: item.variation_name,
-    startDate: item.start_date,
-    endDate: item.end_date,
-    billType: item.bill_type,
-    lead_source: item.lead_source,
-    lead_owner: item.lead_owner,
-  });
+  // Function to fetch club list
+  const fetchClub = async (search = "") => {
+    try {
+      const response = await authAxios().get("/club/list", {
+        params: search ? { search } : {},
+      });
+      const data = response.data?.data || [];
+      const activeOnly = filterActiveItems(data);
+      setClubList(activeOnly);
+    } catch (error) {
+      toast.error("Failed to fetch clubs");
+    }
+  };
+  // Function to fetch role list
+
+  useEffect(() => {
+    fetchClub();
+  }, []);
+
+  const clubOptions = clubList.map((item) => ({
+    label: item.name,
+    value: item.id,
+  }));
+
+  // ---------------------------
+  // UPDATE URL WITH PARAMS
+  // ---------------------------
+  const updateURLParams = (filters) => {
+    const params = new URLSearchParams();
+
+    // Date filter
+    if (dateFilter?.value && dateFilter.value !== "custom") {
+      params.set("dateFilter", dateFilter.value);
+    }
+
+    if (dateFilter?.value === "custom" && customFrom && customTo) {
+      params.set("startDate", format(customFrom, "yyyy-MM-dd"));
+      params.set("endDate", format(customTo, "yyyy-MM-dd"));
+    }
+
+    // Club filter
+    if (clubFilter?.value) {
+      params.set("club_id", clubFilter.value);
+    }
+
+    // Applied filters
+    if (filters.service_type) {
+      params.set("service_type", filters.service_type);
+    }
+    if (filters.package_type) {
+      params.set("package_type", filters.package_type);
+    }
+    if (filters.bill_type) {
+      params.set("bill_type", filters.bill_type);
+    }
+    // if (filters.service_name) {
+    //   params.set("service_name", filters.service_name);
+    // }
+
+    navigate(`?${params.toString()}`, { replace: true });
+  };
 
   const fetchProductSold = async (currentPage = page) => {
     try {
@@ -106,30 +164,31 @@ const ProductsSold = () => {
         params.endDate = formatDate(customTo);
       }
 
+        // Club filter
+      if (clubFilter?.value) {
+        params.club_id = clubFilter.value;
+      }
+
       // ✅ Applied Filters
-      if (appliedFilters.club_id) params.club_id = appliedFilters.club_id;
+    
       if (appliedFilters.bill_type) params.bill_type = appliedFilters.bill_type;
       if (appliedFilters.service_type)
         params.service_type = appliedFilters.service_type;
+      if (appliedFilters.package_type)
+        params.package_type = appliedFilters.package_type;
       if (appliedFilters.lead_source)
         params.lead_source = appliedFilters.lead_source;
 
       console.log("🔍 API Request Params:", params);
-      console.log("📊 Applied Filters:", appliedFilters);
 
       const res = await authAxios().get("/report/product/sold", { params });
 
       const responseData = res.data;
       const data = responseData?.data || [];
 
-      console.log("✅ API Response:", {
-        totalCount: responseData.totalCount,
-        dataLength: responseData.data?.length,
-      });
+      console.log(data,'product sold data')
 
-      const normalizedData = responseData.data?.map(normalizeProductSold) || [];
-
-      setProductSoldData(normalizedData);
+      setProductSoldData(data);
       setPage(responseData?.currentPage || 1);
       setTotalPages(responseData?.totalPage || 1);
       setTotalCount(responseData?.totalCount || data.length);
@@ -139,99 +198,97 @@ const ProductsSold = () => {
     }
   };
 
-  const fetchProductSoldStats = async () => {
-    try {
-      let params = {};
+  // ---------------------------
+  // INITIALIZE FROM URL
+  // ---------------------------
 
-      if (dateFilter?.value === "custom") {
-        if (customFrom && customTo) {
-          params.startDate = format(customFrom, "yyyy-MM-dd");
-          params.endDate = format(customTo, "yyyy-MM-dd");
-        } else {
-          return; // don't fetch until both dates selected
-        }
-      } else {
-        params.dateFilter = dateFilter?.value || "last_7_days";
-      }
-
-      const res = await authAxios().get("/report/product/sold/count", {
-        params,
-      });
-      const data = res.data?.data || {};
-
-      setStats({
-        memberships: Number(data.memberships) || 0,
-        products: Number(data.products) || 0,
-        group_class_count: Number(data.group_class_count) || 0,
-        recovery: Number(data.recovery) || 0,
-        personal_training: Number(data.personal_training) || 0,
-        pilates: Number(data.pilates) || 0,
-      });
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to fetch appointment stats");
-    }
-  };
-
-  // ✅ Fetch data when filters change
   useEffect(() => {
-    if (!filtersInitialized) return;
+    // Wait for clubList to be loaded
+    if (clubList.length === 0) return;
 
-    fetchProductSold(1);
-    fetchProductSoldStats();
-  }, [
-    filtersInitialized,
-    dateFilter?.value,
-    customFrom,
-    customTo,
-    appliedFilters.club_id,
-    appliedFilters.bill_type,
-    appliedFilters.service_type,
-    appliedFilters.lead_source,
-  ]);
+    // Only run initialization once
+    if (filtersInitialized) return;
 
-  // ✅ Apply URL params on mount (automatic filtering)
-  useEffect(() => {
     const params = new URLSearchParams(location.search);
 
-    if (!params.toString()) {
-      setFiltersInitialized(true);
-      return;
+    // Date filter
+    const dateFilterValue = params.get("dateFilter");
+    if (dateFilterValue) {
+      const matchedDate = dateFilterOptions.find(
+        (opt) => opt.value === dateFilterValue
+      );
+      if (matchedDate) {
+        setDateFilter(matchedDate);
+      }
     }
 
-    // Date
-    const dateValue = params.get("date");
-    const matchedDate = dateFilterOptions.find(
-      (opt) => opt.value === dateValue
-    );
-    if (matchedDate) setDateFilter(matchedDate);
+    // Custom date filter
+    const startDate = params.get("startDate");
+    const endDate = params.get("endDate");
+    if (startDate && endDate) {
+      setDateFilter(dateFilterOptions.find((d) => d.value === "custom"));
+      setCustomFrom(new Date(startDate));
+      setCustomTo(new Date(endDate));
+    }
 
-    if (params.get("customFrom"))
-      setCustomFrom(new Date(params.get("customFrom")));
-    if (params.get("customTo")) setCustomTo(new Date(params.get("customTo")));
+    // Club filter - only set from URL if present, otherwise default to first club
+    const clubId = params.get("club_id");
+    if (clubId) {
+      const club = clubList.find((c) => c.id === Number(clubId));
+      if (club) {
+        setClubFilter({ label: club.name, value: club.id });
+      }
+    } else {
+      // Set default club only on initial load
+      setClubFilter({
+        label: clubList[0].name,
+        value: clubList[0].id,
+      });
+    }
 
-    // URL → appliedFilters
+    // Applied filters from URL
     const urlFilters = {
-      club_id: params.get("club_id"),
-      bill_type: params.get("bill_type"),
-      service_type: params.get("service_type"),
-      lead_source: params.get("lead_source"),
+      bill_type: params.get("bill_type") || null,
+      service_type: params.get("service_type") || null,
+      package_type: params.get("package_type") || null,
     };
 
     setAppliedFilters(urlFilters);
 
-    // Sync Formik
+    // Sync with formik
     formik.setValues({
-      filterClub: urlFilters.club_id,
       filterBillType: urlFilters.bill_type,
       filterServiceType: urlFilters.service_type,
+      filterPackageType: urlFilters.package_type,
       filterLeadSource: urlFilters.lead_source,
       filterLeadOwner: urlFilters.lead_owner,
       filterPayMode: urlFilters.pay_mode,
     });
 
     setFiltersInitialized(true);
-  }, [location.search]);
+  }, [clubList]);
+
+  // ---------------------------
+  // FETCH WHEN FILTERS CHANGE
+  // ---------------------------
+  useEffect(() => {
+    if (!filtersInitialized) return;
+
+    setPage(1);
+    fetchProductSold(1);
+    updateURLParams(appliedFilters);
+  }, [
+    filtersInitialized,
+    dateFilter?.value,
+    customFrom,
+    customTo,
+    clubFilter?.value,
+    appliedFilters.bill_type,
+    appliedFilters.service_type,
+    appliedFilters.package_type,
+    appliedFilters.lead_owner,
+    appliedFilters.pay_mode,
+  ]);
 
   const handleSendInvoice = (order) => {
     setSendModalOrder(order);
@@ -313,6 +370,17 @@ const ProductsSold = () => {
                 </div>
               </>
             )}
+
+            <div className="w-fit min-w-[180px]">
+              <Select
+                placeholder="Filter by club"
+                value={clubFilter}
+                options={clubOptions}
+                onChange={(option) => setClubFilter(option)}
+                isClearable={userRole === "ADMIN" ? true : false}
+                styles={customStyles}
+              />
+            </div>
           </div>
         </div>
 
@@ -385,9 +453,11 @@ const ProductsSold = () => {
             <div>
               {/* ✅ Pass both appliedFilters and setAppliedFilters */}
               <ProductSoldPanel
-                filterClub={formik.values.filterClub}
+                userRole={userRole}
+                clubId={clubFilter?.value}
                 filterBillType={formik.values.filterBillType}
                 filterServiceType={formik.values.filterServiceType}
+                filterPackageType={formik.values.filterPackageType}
                 filterLeadSource={formik.values.filterLeadSource}
                 filterLeadOwner={formik.values.filterLeadOwner}
                 filterPayMode={formik.values.filterPayMode}
@@ -413,6 +483,7 @@ const ProductsSold = () => {
                     <th className="px-2 py-4 min-w-[120px]">Member ID</th>
                     <th className="px-2 py-4 min-w-[120px]">Member Name</th>
                     <th className="px-2 py-4 min-w-[120px]">Invoice No</th>
+                    <th className="px-2 py-4 min-w-[120px]">Package Type</th>
                     <th className="px-2 py-4 min-w-[120px]">Service Type</th>
                     <th className="px-2 py-4 min-w-[120px]">Plan Type</th>
                     <th className="px-2 py-4 min-w-[150px]">Service Name</th>
@@ -440,25 +511,30 @@ const ProductsSold = () => {
                       >
                         {/* <td className="px-2 py-4">{row?.serialNumber}</td> */}
                         <td className="px-2 py-4">
-                          {formatAutoDate(row?.purchaseDate)}
+                          {formatAutoDate(row?.purchase_date)}
                         </td>
                         <td className="px-2 py-4">
-                          {row?.billType ? row?.billType : "--"}
+                          {row?.bill_type ? formatText(row?.bill_type) : "--"}
                         </td>
                         <td className="px-2 py-4">
-                          {row?.clubName ? row?.clubName : "--"}
+                          {row?.club_name ? row?.club_name : "--"}
                         </td>
                         <td className="px-2 py-4">
-                          {row?.memberId ? row?.memberId : "--"}
+                          {row?.membership_number ? row?.membership_number : "--"}
                         </td>
-                        <td className="px-2 py-4">{row?.memberName}</td>
+                        <td className="px-2 py-4">{row?.member_name}</td>
                         <td className="px-2 py-4">
                           {row?.invoice_number ? row?.invoice_number : "--"}
                         </td>
                         <td className="px-2 py-4">
-                          {row?.serviceType === "SUBSCRIPTION"
+                          {row?.package_type === "SUBSCRIPTION"
                             ? "Membership"
-                            : formatText(row?.serviceType)}
+                            : formatText(row?.package_type)}
+                        </td>
+                        <td className="px-2 py-4">
+                          {row?.service_type === "SUBSCRIPTION"
+                            ? "Membership"
+                            : formatText(row?.service_type)}
                         </td>
                         <td className="px-2 py-4">
                           {row?.plan_type ? row?.plan_type : "--"}
@@ -467,13 +543,15 @@ const ProductsSold = () => {
                           {row?.service_name ? row?.service_name : "--"}
                         </td>
                         <td className="px-2 py-4">
-                          {row?.variation_name ? formatText(row?.variation_name) : "--"}
+                          {row?.variation_name
+                            ? formatText(row?.variation_name)
+                            : "--"}
                         </td>
                         <td className="px-2 py-4">
-                          {formatAutoDate(row?.startDate)}
+                          {formatAutoDate(row?.start_date)}
                         </td>
                         <td className="px-2 py-4">
-                          {formatAutoDate(row?.endDate)}
+                          {formatAutoDate(row?.end_date)}
                         </td>
                         <td className="px-2 py-4">{row?.lead_source}</td>
                         <td className="px-2 py-4">

@@ -10,10 +10,71 @@ import {
   formatAutoDate,
   formatIndianNumber,
   formatText,
-} from "../../../Helper/helper";
-import { authAxios } from "../../../config/config";
+} from "../Helper/helper";
+import { authAxios } from "../config/config";
 import { toast } from "react-toastify";
 import { FaCircle } from "react-icons/fa";
+import Tooltip from "../components/common/Tooltip";
+import { LiaEdit } from "react-icons/lia";
+import { Link } from "react-router-dom";
+
+const callsData = [
+  {
+    id: 1,
+    clubName: "DLF Summit Plaza",
+    scheduledDate: "15/01/2026",
+    scheduledTime: "3:00 pm",
+    callType: "Enquiry Call",
+    name: "Shreya Agarwal",
+    callStatus: "Upcoming",
+    staffName: "Prerna",
+    action: "Update",
+  },
+  {
+    id: 2,
+    clubName: "DLF Summit Plaza",
+    scheduledDate: "15/01/2026",
+    scheduledTime: "4:30 pm",
+    callType: "Renewal Call",
+    name: "Divya",
+    callStatus: "Upcoming",
+    staffName: "Prerna",
+    action: "Update",
+  },
+  {
+    id: 3,
+    clubName: "DLF Summit Plaza",
+    scheduledDate: "12/01/2026",
+    scheduledTime: "9:45 am",
+    callType: "Birthday Call",
+    name: "Ajeet Kumar",
+    callStatus: "Missed",
+    staffName: "Shivakar",
+    action: "Update",
+  },
+  {
+    id: 4,
+    clubName: "DLF Summit Plaza",
+    scheduledDate: "12/01/2026",
+    scheduledTime: "2:00 pm",
+    callType: "Renewal Call",
+    name: "Abu Bakar",
+    callStatus: "Missed",
+    staffName: "Prerna",
+    action: "Update",
+  },
+  {
+    id: 5,
+    clubName: "DLF Summit Plaza",
+    scheduledDate: "10/01/2026",
+    scheduledTime: "5:00 pm",
+    callType: "Enquiry Call",
+    name: "Nitin Sehgal",
+    callStatus: "Contacted",
+    staffName: "Prerna",
+    action: "Update",
+  },
+];
 
 const dateFilterOptions = [
   { value: "today", label: "Today" },
@@ -27,8 +88,8 @@ const formatDate = (date) => {
   return date.toISOString().split("T")[0]; // YYYY-MM-DD
 };
 
-const NewJoineesReport = () => {
-  const [leadSource, setLeadSource] = useState([]);
+const MyFollowUps = () => {
+  const [leadSource, setLeadSource] = useState(callsData);
   const [clubList, setClubList] = useState([]);
   const [clubFilter, setClubFilter] = useState(null);
 
@@ -64,57 +125,57 @@ const NewJoineesReport = () => {
     value: item.id,
   }));
 
-  const fetchLeadSourcePerformance = async () => {
-    try {
-      const params = {};
+//   const fetchLeadSourcePerformance = async () => {
+//     try {
+//       const params = {};
 
-      // Club filter
-      if (clubFilter) {
-        params.club_id = clubFilter;
-      }
+//       // Club filter
+//       if (clubFilter) {
+//         params.club_id = clubFilter;
+//       }
 
-      // Date filter
-      if (dateFilter?.value === "custom") {
-        if (customFrom && customTo) {
-          params.startDate = formatDate(customFrom);
-          params.endDate = formatDate(customTo);
-        }
-      } else if (dateFilter?.value) {
-        params.dateFilter = dateFilter.value;
-      }
+//       // Date filter
+//       if (dateFilter?.value === "custom") {
+//         if (customFrom && customTo) {
+//           params.startDate = formatDate(customFrom);
+//           params.endDate = formatDate(customTo);
+//         }
+//       } else if (dateFilter?.value) {
+//         params.dateFilter = dateFilter.value;
+//       }
 
-      const res = await authAxios().get("/marketing/report/newjoinee", {
-        params,
-      });
-      const responseData = res.data;
-      const data = responseData?.data || [];
+//       const res = await authAxios().get("/marketing/report/newjoinee", {
+//         params,
+//       });
+//       const responseData = res.data;
+//       const data = responseData?.data || [];
 
-      setLeadSource(data);
-    } catch (err) {
-      console.error(err);
-      toast.error("data not found");
-    }
-  };
-  useEffect(() => {
-    // If custom date is selected, wait for both dates
-    if (dateFilter?.value === "custom") {
-      if (customFrom && customTo) {
-        fetchLeadSourcePerformance();
-      }
-      return;
-    }
+//       //   setLeadSource(data);
+//     } catch (err) {
+//       console.error(err);
+//       toast.error("data not found");
+//     }
+//   };
+//   useEffect(() => {
+//     // If custom date is selected, wait for both dates
+//     if (dateFilter?.value === "custom") {
+//       if (customFrom && customTo) {
+//         fetchLeadSourcePerformance();
+//       }
+//       return;
+//     }
 
-    // For all non-custom filters
-    fetchLeadSourcePerformance();
-  }, [dateFilter, customFrom, customTo, clubFilter]);
+//     // For all non-custom filters
+//     fetchLeadSourcePerformance();
+//   }, [dateFilter, customFrom, customTo, clubFilter]);
 
   return (
     <div className="page--content">
       {/* Header */}
       <div className="flex items-end justify-between gap-2 mb-5">
         <div className="title--breadcrumbs">
-          <p className="text-sm">{`Home >  Reports > Sales Reports > Membership Sales Report`}</p>
-          <h1 className="text-3xl font-semibold">Membership Sales Report</h1>
+          <p className="text-sm">{`Home > My Follow Up`}</p>
+          <h1 className="text-3xl font-semibold">My Follow Up</h1>
         </div>
       </div>
 
@@ -201,28 +262,13 @@ const NewJoineesReport = () => {
               <tr>
                 <th className="px-2 py-4 min-w-[50px]">S.no</th>
                 <th className="px-2 py-4 min-w-[150px]">Club Name</th>
-                <th className="px-2 py-4 min-w-[100px]">Bill Type</th>
-                <th className="px-2 py-4 min-w-[100px]">Member ID</th>
-                <th className="px-2 py-4 min-w-[150px]">Member Name</th>
-                <th className="px-2 py-4 min-w-[130px]">Service Type</th>
-                <th className="px-2 py-4 min-w-[110px]">Plan Type</th>
-                <th className="px-2 py-4 min-w-[130px]">Sevice Name</th>
-                <th className="px-2 py-4 min-w-[140px]">Invoice ID</th>
-                <th className="px-2 py-4 min-w-[130px]">Enquiry Date</th>
-                <th className="px-2 py-4 min-w-[130px]">Purchase Date</th>
-                <th className="px-2 py-4 min-w-[120px]">Start Date</th>
-                <th className="px-2 py-4 min-w-[120px]">End Date</th>
-                <th className="px-2 py-4 min-w-[120px]">Lead Source</th>
-                <th className="px-2 py-4 min-w-[150px]">Lead Owner</th>
-                
-                <th className="px-2 py-4 min-w-[100px]">Amount</th>
-                <th className="px-2 py-4 min-w-[100px]">CGST</th>
-                <th className="px-2 py-4 min-w-[100px]">SGST</th>
-                <th className="px-2 py-4 min-w-[100px]">IGST</th>
-                <th className="px-2 py-4 min-w-[110px]">Final Amount</th>
-                <th className="px-2 py-4 min-w-[110px]">Paid Amount</th>
-                <th className="px-2 py-4 min-w-[100px]">Pay Mode</th>
-                <th className="px-2 py-4">Status</th>
+                <th className="px-2 py-4 min-w-[100px]">Scheduled Date</th>
+                <th className="px-2 py-4 min-w-[150px]">Scheduled Time</th>
+                <th className="px-2 py-4 min-w-[150px]">Call Type</th>
+                <th className="px-2 py-4 min-w-[130px]">Name</th>
+                <th className="px-2 py-4 min-w-[140px]">Call Status</th>
+                <th className="px-2 py-4 min-w-[130px]">Staff Name</th>
+                <th className="px-2 py-4">Action</th>
               </tr>
             </thead>
 
@@ -234,52 +280,25 @@ const NewJoineesReport = () => {
                     className="bg-white border-b hover:bg-gray-50"
                   >
                     <td className="px-2 py-4">{index + 1}</td>
-                    <td className="px-2 py-4">{row.club_name || "--"}</td>
-                    <td className="px-2 py-4">{row.bill_type || "--"}</td>
+                    <td className="px-2 py-4">{row.clubName}</td>
+                    <td className="px-2 py-4">{row.scheduledDate}</td>
+                    <td className="px-2 py-4">{row.scheduledTime}</td>
+                    <td className="px-2 py-4">{row.callType}</td>
+                    <td className="px-2 py-4">{row.name}</td>
+                    <td className="px-2 py-4">{row.callStatus}</td>
+                    <td className="px-2 py-4">{row.staffName}</td>
                     <td className="px-2 py-4">
-                      {row.membership_number || "--"}
-                    </td>
-                    <td className="px-2 py-4">{row.member_name || "--"}</td>
-                    <td className="px-2 py-4">
-                      {formatText(row.service_type) || "--"}
-                    </td>
-                    <td className="px-2 py-4">
-                      {formatText(row.plan_type) || "--"}
-                    </td>
-                    <td className="px-2 py-4">{row.service_name || "--"}</td>
-                    <td className="px-2 py-4">{row.invoice_id || "--"}</td>
-                    <td className="px-2 py-4">
-                      {formatAutoDate(row.enquiry_date) || "--"}
-                    </td>
-                    <td className="px-2 py-4">
-                      {formatAutoDate(row.purchase_date) || "--"}
-                    </td>
-                    <td className="px-2 py-4">
-                      {formatAutoDate(row.start_date) || "--"}
-                    </td>
-                    <td className="px-2 py-4">
-                      {formatAutoDate(row.end_date) || "--"}
-                    </td>
-                    <td className="px-2 py-4">{row.lead_source || "--"}</td>
-                    <td className="px-2 py-4">{row.sales_rep_name || "--"}</td>
-                    
-                    <td className="px-2 py-4">₹{formatIndianNumber(row.booking_amount) || 0}</td>
-                    <td className="px-2 py-4">₹{formatIndianNumber(row.cgst) || 0}</td>
-                    <td className="px-2 py-4">₹{formatIndianNumber(row.sgst) || 0}</td>
-                    <td className="px-2 py-4">₹{formatIndianNumber(row.igst) || 0}</td>
-                    <td className="px-2 py-4">₹{formatIndianNumber(row.final_amount) || 0}</td>
-                    <td className="px-2 py-4">₹{formatIndianNumber(row.paid_amount) || 0}</td>
-                    <td className="px-2 py-4">{row.pay_mode || "--"}</td>
-                    <td className="px-2 py-4">
-                      <span
-                        className={`flex items-center justify-between gap-1 rounded-full min-h-[30px] px-3 text-sm w-fit ${
-                          row?.status !== "ACTIVE"
-                            ? "bg-[#EEEEEE]"
-                            : "bg-[#E8FFE6] text-[#138808]"
-                        }`}
+                      <div className="flex">
+                        <Tooltip
+                        id={`tooltip-update-${row.id}`}
+                        content="Update Follow Up"
+                        place="top"
                       >
-                        <FaCircle className="text-[10px]" /> {row?.status}
-                      </span>
+                        <Link to="/lead-follow-up/18" className="p-1 block cursor-pointer">
+                          <LiaEdit className="text-[25px] text-black" />
+                        </Link>
+                      </Tooltip>
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -298,4 +317,4 @@ const NewJoineesReport = () => {
   );
 };
 
-export default NewJoineesReport;
+export default MyFollowUps;

@@ -1,23 +1,26 @@
 // Import required libraries and components
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { addYears, subYears, format } from "date-fns";
-import { FaCalendarDays } from "react-icons/fa6";
+import { addYears, subYears } from "date-fns";
+import { FaCalendarDays, FaCircle } from "react-icons/fa6";
 import {
   customStyles,
   filterActiveItems,
   formatAutoDate,
+  formatText,
   formatTimeAppointment,
 } from "../../../Helper/helper";
 import Select from "react-select";
 import TrialAppointmentPanel from "../../../components/FilterPanel/TrialAppointmentPanel";
-import { useLocation, useNavigate } from "react-router-dom";
+import viewIcon from "../../../assets/images/icons/eye.svg";
+import printIcon from "../../../assets/images/icons/print-icon.svg";
+import mailIcon from "../../../assets/images/icons/mail-icon.svg";
+import { useLocation } from "react-router-dom";
+import { format, subDays, startOfToday, startOfMonth } from "date-fns";
 import { authAxios } from "../../../config/config";
 import { toast } from "react-toastify";
 import Pagination from "../../../components/common/Pagination";
-import { useFormik } from "formik";
-import { useSelector } from "react-redux";
 
 // Date filter dropdown options
 const dateFilterOptions = [
@@ -28,34 +31,27 @@ const dateFilterOptions = [
 ];
 
 const statusUpdateOptions = [
-  { value: "COMPLETED", label: "Completed" },
-  { value: "CANCELLED", label: "Cancelled" },
-  { value: "NO_SHOW", label: "No Show" },
-];
-
-const filterStatusOptions = [
   { value: "ACTIVE", label: "Scheduled" },
-  { value: "UPCOMING", label: "Upcoming" },
+  // { value: "UPCOMING", label: "Upcoming" },
   { value: "COMPLETED", label: "Completed" },
   { value: "CANCELLED", label: "Cancelled" },
   { value: "NO_SHOW", label: "No Show" },
 ];
 
-const TrialAppointments = () => {
+const AllAppointments = () => {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [pendingStatus, setPendingStatus] = useState(null);
   const [pendingId, setPendingId] = useState(null);
-  const [remarks, setRemarks] = useState("");
-  const { user } = useSelector((state) => state.auth);
-  const userRole = user.role;
 
   const location = useLocation();
-  const navigate = useNavigate();
 
-  // State variables
+  // New
   const [appointmentList, setAppointmentList] = useState([]);
   const [clubList, setClubList] = useState([]);
   const [clubFilter, setClubFilter] = useState(null);
+
+  const [itemStatus, setItemStatus] = useState(null);
+  const [appointmentType, setAppointmentType] = useState(null);
 
   const [dateFilter, setDateFilter] = useState(dateFilterOptions[1]);
   const [customFrom, setCustomFrom] = useState(null);
@@ -66,13 +62,6 @@ const TrialAppointments = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
 
-  // Applied filters state
-  const [appliedFilters, setAppliedFilters] = useState({
-    assigned_staff_id: null,
-    booking_status: null,
-    appointment_date: null,
-  });
-
   const [stats, setStats] = useState({
     scheduled: 0,
     upcoming: 0,
@@ -81,20 +70,39 @@ const TrialAppointments = () => {
     cancelled: 0,
   });
 
-  const [filtersInitialized, setFiltersInitialized] = useState(false);
+  // 🔑 CRITICAL FLAG (fixes glitch)
+  const [isUrlFiltersReady, setIsUrlFiltersReady] = useState(false);
+  // new
 
-  // Formik for panel filters
-  const formik = useFormik({
-    enableReinitialize: true,
-    initialValues: {
-      filterTrainer: null,
-      filterBookingStatus: null,
-      filterAppointmentDate: null,
-    },
-    onSubmit: (values) => {
-      console.log(values);
-    },
-  });
+  // ---------------------------
+  // BUILD FINAL FILTER PARAMS
+  // ---------------------------
+  const buildFinalFilters = () => {
+    const filters = {};
+
+    if (itemStatus?.value) {
+      filters.booking_status = itemStatus.value;
+    }
+
+    if (appointmentType?.value) {
+      filters.appointment_type = appointmentType.value;
+    }
+
+    if (clubFilter?.value) {
+      filters.club_id = clubFilter.value;
+    }
+
+    if (dateFilter?.value === "custom") {
+      if (!customFrom || !customTo) return null;
+
+      filters.startDate = format(customFrom, "yyyy-MM-dd");
+      filters.endDate = format(customTo, "yyyy-MM-dd");
+    } else {
+      filters.dateFilter = dateFilter?.value;
+    }
+
+    return filters;
+  };
 
   // Function to fetch club list
   const fetchClub = async (search = "") => {
@@ -109,6 +117,7 @@ const TrialAppointments = () => {
       toast.error("Failed to fetch clubs");
     }
   };
+  // Function to fetch role list
 
   useEffect(() => {
     fetchClub();
@@ -120,72 +129,18 @@ const TrialAppointments = () => {
   }));
 
   // ---------------------------
-  // UPDATE URL WITH PARAMS
-  // ---------------------------
-  const updateURLParams = (filters) => {
-    const params = new URLSearchParams();
-
-    // Date filter
-    if (dateFilter?.value && dateFilter.value !== "custom") {
-      params.set("dateFilter", dateFilter.value);
-    }
-
-    if (dateFilter?.value === "custom" && customFrom && customTo) {
-      params.set("startDate", format(customFrom, "yyyy-MM-dd"));
-      params.set("endDate", format(customTo, "yyyy-MM-dd"));
-    }
-
-    // Club filter
-    if (clubFilter?.value) {
-      params.set("club_id", clubFilter.value);
-    }
-
-    // Applied filters
-    if (filters.assigned_staff_id) {
-      params.set("assigned_staff_id", filters.assigned_staff_id);
-    }
-    if (filters.booking_status) {
-      params.set("booking_status", filters.booking_status);
-    }
-
-    navigate(`?${params.toString()}`, { replace: true });
-  };
-
-  // ---------------------------
   // FETCH APPOINTMENTS
   // ---------------------------
   const fetchAppointments = async (currentPage = page) => {
+    const filters = buildFinalFilters();
+    if (!filters) return;
+
     try {
       const params = {
         page: currentPage,
         limit: rowsPerPage,
-        appointment_type: "CLUB",
+        ...filters,
       };
-
-      // Date Filter
-      if (dateFilter?.value && dateFilter.value !== "custom") {
-        params.dateFilter = dateFilter.value;
-      }
-
-      if (dateFilter?.value === "custom" && customFrom && customTo) {
-        params.startDate = format(customFrom, "yyyy-MM-dd");
-        params.endDate = format(customTo, "yyyy-MM-dd");
-      }
-
-      // Club filter
-      if (clubFilter?.value) {
-        params.club_id = clubFilter.value;
-      }
-
-      // Applied Filters
-      if (appliedFilters.assigned_staff_id) {
-        params.assigned_staff_id = appliedFilters.assigned_staff_id;
-      }
-      if (appliedFilters.booking_status) {
-        params.booking_status = appliedFilters.booking_status;
-      }
-
-      console.log("🔍 API Request Params:", params);
 
       const res = await authAxios().get("/appointment/fetch/list", { params });
 
@@ -196,175 +151,142 @@ const TrialAppointments = () => {
       setPage(responseData?.currentPage || 1);
       setTotalPages(responseData?.totalPage || 1);
       setTotalCount(responseData?.totalCount || data.length);
-
-      // Update stats
-      const statusCount = responseData?.appointment_status_count || {};
-      setStats({
-        scheduled: statusCount.scheduled_count || 0,
-        upcoming: statusCount.upcoming_count || 0,
-        completed: statusCount.completed_count || 0,
-        noShow: statusCount.no_show_count || 0,
-        cancelled: statusCount.cancelled_count || 0,
-      });
     } catch (err) {
       console.error(err);
       toast.error("Failed to fetch appointments");
     }
   };
 
-  // ---------------------------
-  // INITIALIZE FROM URL
-  // ---------------------------
+  const fetchAppointmentStats = async () => {
+    try {
+      let params = {};
 
+      if (dateFilter?.value === "custom") {
+        if (customFrom && customTo) {
+          params.startDate = format(customFrom, "yyyy-MM-dd");
+          params.endDate = format(customTo, "yyyy-MM-dd");
+        } else {
+          return; // don't fetch until both dates selected
+        }
+      } else {
+        params.dateFilter = dateFilter?.value || "last_7_days";
+      }
+
+      const res = await authAxios().get("/appointment/trial/count", { params });
+      const data = res.data?.data || {};
+
+      setStats({
+        scheduled: Number(data.scheduled_count) || 0,
+        upcoming: Number(data.upcoming_count) || 0,
+        completed: Number(data.completed_count) || 0,
+        noShow: Number(data.no_show_count) || 0,
+        cancelled: Number(data.cancelled_count) || 0,
+      });
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to fetch appointment stats");
+    }
+  };
+
+  // ---------------------------
+  // URL → STATE (RUN FIRST)
+  // ---------------------------
   useEffect(() => {
-    // Wait for clubList to be loaded
-    if (clubList.length === 0) return;
-
-    // Only run initialization once
-    if (filtersInitialized) return;
-
     const params = new URLSearchParams(location.search);
 
-    // Date filter
-    const dateFilterValue = params.get("dateFilter");
-    if (dateFilterValue) {
-      const matchedDate = dateFilterOptions.find(
-        (opt) => opt.value === dateFilterValue
+    const bookingStatus = params.get("booking_status");
+    const appointmentTypeParam = params.get("appointment_type");
+    const dateFilterParam =  params.get("dateFilter") || params.get("date");
+    const startDate = params.get("startDate");
+    const endDate = params.get("endDate");
+    const clubId = params.get("club_id");
+
+    if (bookingStatus) {
+      setItemStatus({ value: bookingStatus, label: bookingStatus });
+    }
+
+    if (appointmentTypeParam) {
+      setAppointmentType({
+        value: appointmentTypeParam,
+        label: appointmentTypeParam,
+      });
+    }
+
+    if (dateFilterParam) {
+      const matched = dateFilterOptions.find(
+        (opt) => opt.value === dateFilterParam
       );
-      if (matchedDate) {
-        setDateFilter(matchedDate);
+
+      if (matched) {
+        setDateFilter(matched);
       }
     }
 
-    // Custom date filter
-    const startDate = params.get("startDate");
-    const endDate = params.get("endDate");
     if (startDate && endDate) {
-      setDateFilter(dateFilterOptions.find((d) => d.value === "custom"));
+      setDateFilter({ value: "custom", label: "Custom" });
       setCustomFrom(new Date(startDate));
       setCustomTo(new Date(endDate));
     }
 
-    // Club filter - only set from URL if present, otherwise default to first club
-    const clubId = params.get("club_id");
     if (clubId) {
-      const club = clubList.find((c) => c.id === Number(clubId));
-      if (club) {
-        setClubFilter({ label: club.name, value: club.id });
-      }
-    } else {
-      // Set default club only on initial load
-      setClubFilter({
-        label: clubList[0].name,
-        value: clubList[0].id,
-      });
+      setClubFilter({ value: clubId, label: `Club ${clubId}` });
     }
 
-    // Applied filters from URL
-    const urlFilters = {
-      assigned_staff_id: params.get("assigned_staff_id")
-        ? Number(params.get("assigned_staff_id"))
-        : null,
-      booking_status: params.get("booking_status") || null,
-    };
-
-    setAppliedFilters(urlFilters);
-
-    // Sync with formik
-    formik.setValues({
-      filterTrainer: urlFilters.assigned_staff_id,
-      filterBookingStatus: urlFilters.booking_status,
-    });
-
-    setFiltersInitialized(true);
-  }, [clubList]);
+    // 🔑 IMPORTANT
+    setIsUrlFiltersReady(true);
+  }, [location.search]);
 
   // ---------------------------
   // FETCH WHEN FILTERS CHANGE
   // ---------------------------
   useEffect(() => {
-    if (!filtersInitialized) return;
+    if (!isUrlFiltersReady) return;
 
     setPage(1);
     fetchAppointments(1);
-    updateURLParams(appliedFilters);
+    fetchAppointmentStats();
   }, [
-    filtersInitialized,
-    dateFilter?.value,
+    isUrlFiltersReady,
+    itemStatus,
+    appointmentType,
+    dateFilter,
     customFrom,
     customTo,
-    clubFilter?.value,
-    appliedFilters.assigned_staff_id,
-    appliedFilters.booking_status,
-    appliedFilters.appointment_date,
+    clubFilter,
   ]);
 
-  const { scheduled, upcoming, completed, noShow, cancelled } = stats;
+  const { scheduled, upcoming , completed, noShow, cancelled } = stats;
 
   const updateAppointmentStatus = (id, newStatus) => {
     setPendingId(id);
     setPendingStatus(newStatus);
-    setRemarks("");
     setShowConfirmModal(true);
   };
 
   const confirmStatusUpdate = async () => {
     try {
-      const body = {
-        booking_status: pendingStatus,
-        remarks: remarks.trim() || undefined,
-      };
+      const body = { booking_status: pendingStatus };
 
       await authAxios().put(`/appointment/${pendingId}`, body);
+
       toast.success("Status updated successfully");
+
       setShowConfirmModal(false);
-      setRemarks("");
       fetchAppointments(page);
+      fetchAppointmentStats();
     } catch (err) {
       console.error(err);
-      toast.error("Please update remarks");
+      toast.error("Failed to update status");
     }
   };
 
-  // ✅ UPDATED: Fixed function to show proper labels for ACTIVE and UPCOMING
   const getSelectedStatusOption = (status) => {
-    if (!status) return null;
-
-    // For ACTIVE status, display as "Scheduled"
-    if (status === "ACTIVE") {
-      return { value: status, label: "Scheduled" };
-    }
-
-    // For UPCOMING status, display as "Upcoming"
-    if (status === "UPCOMING") {
-      return { value: status, label: "Upcoming" };
-    }
-
-    // For other statuses (COMPLETED, CANCELLED, NO_SHOW), find in statusUpdateOptions
     return statusUpdateOptions.find((opt) => opt.value === status) || null;
   };
 
-  const getAllowedStatusOptions = (currentStatus) => {
-    switch (currentStatus) {
-      case "ACTIVE":
-        return [
-          { value: "CANCELLED", label: "Cancelled" },
-          { value: "COMPLETED", label: "Completed" },
-          { value: "NO_SHOW", label: "No Show" },
-        ];
-
-      case "COMPLETED":
-        return [{ value: "NO_SHOW", label: "No Show" }];
-
-      default:
-        // CANCELLED, NO_SHOW
-        return [];
-    }
-  };
-
-  const canUpdateStatus = (status) => {
-    return status === "ACTIVE" || status === "COMPLETED";
-  };
+  const filteredStatusOptions = statusUpdateOptions.filter(
+    (opt) => opt.value !== "ACTIVE"
+  );
 
   return (
     <>
@@ -372,8 +294,8 @@ const TrialAppointments = () => {
         {/* Page heading */}
         <div className="flex items-end justify-between gap-2 mb-5">
           <div className="title--breadcrumbs">
-            <p className="text-sm">{`Home > Trial Appointments`}</p>
-            <h1 className="text-3xl font-semibold">Trial Appointments</h1>
+            <p className="text-sm">{`Home > All Appointments`}</p>
+            <h1 className="text-3xl font-semibold">All Appointments</h1>
           </div>
         </div>
 
@@ -409,7 +331,7 @@ const TrialAppointments = () => {
                     selected={customFrom}
                     onChange={(date) => {
                       setCustomFrom(date);
-                      setCustomTo(null);
+                      setCustomTo(null); // ✅ reset To Date if From Date changes
                     }}
                     placeholderText="From Date"
                     className="custom--input w-full input--icon"
@@ -447,7 +369,7 @@ const TrialAppointments = () => {
                 value={clubFilter}
                 options={clubOptions}
                 onChange={(option) => setClubFilter(option)}
-                isClearable={userRole === "ADMIN" ? true : false}
+                isClearable
                 styles={customStyles}
               />
             </div>
@@ -467,7 +389,7 @@ const TrialAppointments = () => {
             <div className="flex justify-center bg-[#F1F1F1] p-4 py-3">
               <div className="text-lg font-bold">Upcoming</div>
             </div>
-            <p className="text-3xl font-bold text-center py-5">{upcoming}</p>
+            <p className="text-3xl font-bold text-center py-5">{scheduled}</p>
           </div>
           <div className="border rounded-[5px] overflow-hidden w-full">
             <div className="flex justify-center bg-[#F1F1F1] p-4 py-3">
@@ -492,21 +414,12 @@ const TrialAppointments = () => {
 
         {/* Data Table */}
         <div className="w-full p-3 border bg-white shodow--box rounded-[10px]">
-          <div className="flex items-start gap-3 justify-between w-full mb-3 border-b border-b-[#D4D4D4] pb-3">
+          {/* <div className="flex items-start gap-3 justify-between w-full mb-3 border-b border-b-[#D4D4D4] pb-3">
             <TrialAppointmentPanel
-              formik={formik}
-              filterTrainer={formik.values.filterTrainer}
-              filterBookingStatus={formik.values.filterBookingStatus}
-              filterAppointmentDate={formik.values.filterAppointmentDate}
-              setFilterValue={(field, value) =>
-                formik.setFieldValue(field, value)
-              }
-              appliedFilters={appliedFilters}
-              setAppliedFilters={setAppliedFilters}
-              filteredStatusOptions={filterStatusOptions}
-              clubId={clubFilter?.value}
+              itemStatus={itemStatus}
+              setItemStatus={setItemStatus}
             />
-          </div>
+          </div> */}
 
           <div className="table--data--bottom w-full">
             <div className="relative overflow-x-auto">
@@ -515,25 +428,26 @@ const TrialAppointments = () => {
                   <tr>
                     <th className="px-2 py-4 min-w-[100px]">Created On</th>
                     <th className="px-2 py-4 min-w-[150px]">Club Name</th>
-                    <th className="px-2 py-4 min-w-[150px]">
-                      Appointment Name
-                    </th>
-                    <th className="px-2 py-4 min-w-[110px]">Enquiry Date</th>
+                    <th className="px-2 py-4 min-w-[150px]">Category</th>
+                    <th className="px-2 py-4 min-w-[150px]">Service Type</th>
+                    <th className="px-2 py-4 min-w-[150px]">Service Name</th>
+                    <th className="px-2 py-4 min-w-[150px]">Class Name</th>
                     <th className="px-2 py-4 min-w-[130px]">Name</th>
+                    <th className="px-2 py-4 min-w-[130px]">Lead Type</th>
                     <th className="px-2 py-4 min-w-[110px]">Scheduled At</th>
-                    <th className="px-2 py-4 min-w-[120px]">Trainer Name</th>
+                    <th className="px-2 py-4 min-w-[130px]">Trainer Name</th>
                     <th className="px-2 py-4 min-w-[130px]">Scheduled By</th>
-                    <th className="px-2 py-4 min-w-[150px]">
-                      Current Status/Action
+                    {/* <th className="px-2 py-4 min-w-[130px]">Status</th> */}
+                    <th className="px-2 py-4 text-center min-w-[150px]">
+                      Action
                     </th>
-                    <th className="px-2 py-4 min-w-[150px]">Remarks</th>
                   </tr>
                 </thead>
 
                 <tbody>
                   {appointmentList.length === 0 ? (
                     <tr>
-                      <td colSpan="10" className="text-center py-4">
+                      <td colSpan="12" className="text-center py-4">
                         No data found.
                       </td>
                     </tr>
@@ -549,18 +463,32 @@ const TrialAppointments = () => {
                         <td className="px-2 py-4">
                           {row?.club_name ? row?.club_name : "--"}
                         </td>
-                        <td className="px-2 py-4">Trial/Tour</td>
                         <td className="px-2 py-4">
-                          {row?.appointment_date
-                            ? formatAutoDate(row.appointment_date)
+                          {row?.appointment_category
+                            ? row?.appointment_category
                             : "--"}
                         </td>
-                        <td className="px-2 py-4">{row?.lead_name || "--"}</td>
                         <td className="px-2 py-4">
-                          {formatAutoDate(row?.start_date)}
-                          <br />
-                          {formatTimeAppointment(row?.start_time)}
+                          {row?.appointment_type === "CLUB"
+                            ? "Trial"
+                            : formatText(row?.appointment_type)}
                         </td>
+                        <td className="px-2 py-4">
+                          {row?.appointment_type === "CLUB"
+                            ? "Trial/Tour"
+                            : row?.service_name}
+                        </td>
+                        <td className="px-2 py-4">
+                          {row?.package_name ? row?.package_name : "--"}
+                        </td>
+
+                        <td className="px-2 py-4">{row?.lead_name || "--"}</td>
+                        <td className="px-2 py-4">{row?.lead_type || "--"}</td>
+
+                        <td className="px-2 py-4">
+                          {formatAutoDate(row?.start_date)}<br></br> {formatTimeAppointment(row?.start_time)}
+                        </td>
+
                         <td className="px-2 py-4">
                           {row?.assigned_staff_name || "--"}
                         </td>
@@ -568,20 +496,14 @@ const TrialAppointments = () => {
                           {row?.staff_name || "Self"}
                         </td>
                         <td className="px-2 py-4">
-                          <div className="max-w-[130px] w-full">
+                          <div className="max-w-[130px] w-full mx-auto">
                             <Select
                               placeholder="Select"
-                              options={getAllowedStatusOptions(
-                                row?.booking_status
-                              )}
+                              options={filteredStatusOptions}
                               value={getSelectedStatusOption(
                                 row?.booking_status
                               )}
-                              isDisabled={
-                                !canUpdateStatus(row?.booking_status) ||
-                                getAllowedStatusOptions(row?.booking_status)
-                                  .length === 0
-                              }
+                              isDisabled={row?.booking_status !== "ACTIVE"}
                               onChange={(selected) => {
                                 if (!selected) return;
                                 updateAppointmentStatus(
@@ -592,12 +514,21 @@ const TrialAppointments = () => {
                               styles={customStyles}
                             />
                           </div>
-                        </td>
-                        <td className="px-2 py-4">
-                          {/* ✅ UPDATED: Only show remarks for CANCELLED status */}
-                          {row?.booking_status === "CANCELLED" && row?.remarks
-                            ? row?.remarks
-                            : "--"}
+                          {/* <div className="flex">
+                          <div className="bg-[#F1F1F1] border border-[#D4D4D4] rounded-l-[5px] w-[32px] h-[32px] flex items-center justify-center cursor-pointer">
+                            <img src={viewIcon} />
+                          </div>
+                          <div
+                            className={`bg-[#F1F1F1] border border-[#D4D4D4] rounded-[0px] w-[32px] h-[32px] flex items-center justify-center`}
+                          >
+                            <img src={printIcon} />
+                          </div>
+                          <div
+                            className={`bg-[#F1F1F1] border border-[#D4D4D4] rounded-r-[5px] w-[32px] h-[32px] flex items-center justify-center`}
+                          >
+                            <img src={mailIcon} />
+                          </div>
+                        </div> */}
                         </td>
                       </tr>
                     ))
@@ -623,45 +554,27 @@ const TrialAppointments = () => {
 
       {showConfirmModal && (
         <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-[10px] w-[400px] shadow-lg">
+          <div className="bg-white p-6 rounded-[10px] w-[350px] shadow-lg">
             <h3 className="text-lg font-semibold mb-4 text-center">
               Confirm Status Update
             </h3>
 
-            <p className="text-center mb-4">
+            <p className="text-center mb-6">
               Are you sure you want to mark this appointment as
               <span className="font-bold ml-1">{pendingStatus}</span>?
             </p>
 
-            {pendingStatus === "CANCELLED" && (
-              <div className="mb-4">
-                <label className="block text-sm font-medium mb-2">
-                  Remarks <span className="text-red-500">*</span>
-                </label>
-                <textarea
-                  value={remarks}
-                  onChange={(e) => setRemarks(e.target.value)}
-                  placeholder="Enter cancellation reason"
-                  rows="4"
-                  className="w-full border border-gray-300 rounded-[5px] p-2 text-sm focus:outline-none focus:ring-2 focus:ring-black resize-none"
-                />
-              </div>
-            )}
-
             <div className="flex justify-between gap-3">
               <button
-                onClick={() => {
-                  setShowConfirmModal(false);
-                  setRemarks("");
-                }}
-                className="w-1/2 border border-gray-400 rounded py-2 hover:bg-gray-50"
+                onClick={() => setShowConfirmModal(false)}
+                className="w-1/2 border border-gray-400 rounded py-2"
               >
                 Cancel
               </button>
 
               <button
                 onClick={confirmStatusUpdate}
-                className="w-1/2 bg-black text-white rounded py-2 hover:bg-gray-800"
+                className="w-1/2 bg-black text-white rounded py-2"
               >
                 Confirm
               </button>
@@ -673,4 +586,4 @@ const TrialAppointments = () => {
   );
 };
 
-export default TrialAppointments;
+export default AllAppointments;

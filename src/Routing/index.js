@@ -112,6 +112,7 @@ import MonthlyTargetsReport from "../components/Reports/FinanceReports/MonthlyTa
 import SetIncentivePolicy from "../components/Reports/FinanceReports/SetIncentivePolicy";
 import RefundRequests from "../components/Reports/FinanceReports/RefundRequests";
 import AllAppointments from "../Pages/Reports/Appointments/AllAppointments";
+import MyFollowUps from "../Pages/MyFollowUps";
 
 
 const RoleBasedHome = () => {
@@ -564,7 +565,7 @@ export default function Routing() {
           }
         />
         <Route
-          path="/reports/appointments/all-appointments/"
+          path="/reports/all-bookings/"
           element={
             <PrivateRoute>
               <AllAppointments />
@@ -589,7 +590,7 @@ export default function Routing() {
         />
 
         <Route
-          path="/reports/sales-reports/new-joinees-report"
+          path="/reports/sales-reports/membership-sales-report"
           element={
             <PrivateRoute>
               <NewJoineesReport />
@@ -602,6 +603,14 @@ export default function Routing() {
           element={
             <PrivateRoute>
               <AllEnquiriesReport />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/my-follow-ups"
+          element={
+            <PrivateRoute>
+              <MyFollowUps />
             </PrivateRoute>
           }
         />

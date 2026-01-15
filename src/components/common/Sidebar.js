@@ -192,24 +192,30 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
             </Link>
 
             <Link
-              to="/reports/appointments/all-appointments"
-              className={`nav-link mb-2 ${
-                location.pathname === "/reports/appointments/all-appointments" ? "active" : ""
-              }`}
-            >
-              <SlCalender className="menu--icon" />
-              <span className="nav-text">All Appointments</span>
-            </Link>
-            <Link
               to="/reports/appointments/all-trial-appointments"
               className={`nav-link mb-2 ${
-                location.pathname === "/reports/appointments/all-trial-appointments" ? "active" : ""
+                location.pathname ===
+                "/reports/appointments/all-trial-appointments"
+                  ? "active"
+                  : ""
               }`}
             >
               <SlCalender className="menu--icon" />
               <span className="nav-text">Trial Appointments</span>
             </Link>
-            
+
+            <Link
+              to="/reports/all-bookings"
+              className={`nav-link mb-2 ${
+                location.pathname === "/reports/all-bookings"
+                  ? "active"
+                  : ""
+              }`}
+            >
+              <SlCalender className="menu--icon" />
+              <span className="nav-text">All Bookings</span>
+            </Link>
+
             <Link
               to="/reports/all-orders"
               className={`nav-link mb-2 ${
@@ -219,7 +225,6 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
               <AiOutlineProduct className="menu--icon" />
               <span className="nav-text">All Orders</span>
             </Link>
-
 
             <div
               className="nav-link d-flex justify-between align-items-center mb-2"
@@ -292,7 +297,7 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
               </div>
             )}
 
-                <div
+            <div
               className="nav-link d-flex justify-between align-items-center mb-2"
               onClick={() => toggleMenu("finance")}
               style={{ cursor: "pointer" }}
@@ -374,10 +379,10 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                 {salesReportsOpen && (
                   <div className="pl-[5px] flex flex-col gap-1 mb-3">
                     <Link
-                      to="/reports/sales-reports/new-joinees-report"
+                      to="/reports/sales-reports/membership-sales-report"
                       className="submenu-link text-white text-sm"
                     >
-                      New Joinees Report
+                      Membership Sales Report
                     </Link>
                     <Link
                       to="/reports/sales-reports/all-enquiries-report"
@@ -385,7 +390,7 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                     >
                       All Enquiries Report
                     </Link>
-                    
+
                     <Link
                       to="/reports/sales-reports/active-member-report"
                       className="submenu-link text-white text-sm"
@@ -498,7 +503,7 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                       to="/reports/operations-reports/member-checkins-report"
                       className="submenu-link text-white text-sm"
                     >
-                      Member Check-ins
+                      Member Checkins
                     </Link>
                     <Link
                       to="/reports/operations-reports/membership-expiry-report"
@@ -805,11 +810,11 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                 </Link>
 
                 <Link
-                  to="/reports/sales-reports/new-joinees-report"
+                  to="/reports/sales-reports/membership-sales-report"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
                 >
                   <FaCircle className="menu--icon !text-[10px]" />
-                  <span className="nav-text">New Joinees Report</span>
+                  <span className="nav-text">Membership Sales Report</span>
                 </Link>
                 <Link
                   to="/reports/sales-reports/all-enquiries-report"
@@ -1011,11 +1016,11 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                 </Link>
 
                 <Link
-                  to="/reports/sales-reports/new-joinees-report"
+                  to="/reports/sales-reports/membership-sales-report"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
                 >
                   <FaCircle className="menu--icon !text-[10px]" />
-                  <span className="nav-text">New Joinees Report</span>
+                  <span className="nav-text">Membership Sales Report</span>
                 </Link>
                 <Link
                   to="/reports/sales-reports/pt-revenue-report"
@@ -1119,6 +1124,15 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
               <span className="nav-text">My Leads</span>
             </Link>
             <Link
+              to="/my-follow-ups"
+              className={`nav-link mb-2 ${
+                location.pathname === "/my-follow-ups" ? "active" : ""
+              }`}
+            >
+              <MdFollowTheSigns className="menu--icon" />
+              <span className="nav-text">My Followups</span>
+            </Link>
+            <Link
               to="/all-members"
               className={`nav-link mb-2 ${
                 location.pathname === "/all-members" ? "active" : ""
@@ -1126,6 +1140,38 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
             >
               <FiUsers className="menu--icon" />
               <span className="nav-text">All Members</span>
+            </Link>
+            <Link
+              to="/reports/appointments/all-trial-appointments"
+              className={`nav-link mb-2 ${
+                location.pathname ===
+                "/reports/appointments/all-trial-appointments"
+                  ? "active"
+                  : ""
+              }`}
+            >
+              <SlCalender className="menu--icon" />
+              <span className="nav-text">Trial Appointments</span>
+            </Link>
+            <Link
+              to="/reports/all-bookings"
+              className={`nav-link mb-2 ${
+                location.pathname === "/reports/all-bookings"
+                  ? "active"
+                  : ""
+              }`}
+            >
+              <SlCalender className="menu--icon" />
+              <span className="nav-text">All Bookings</span>
+            </Link>
+            <Link
+              to="/reports/all-orders"
+              className={`nav-link mb-2 ${
+                location.pathname === "/reports/all-orders" ? "active" : ""
+              }`}
+            >
+              <AiOutlineProduct className="menu--icon" />
+              <span className="nav-text">All Orders</span>
             </Link>
             <Link
               to="/lost-found"
@@ -1136,65 +1182,7 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
               <GoTools className="menu--icon" />
               <span className="nav-text">Lost & Found</span>
             </Link>
-            <Link
-              to="#"
-              className={`nav-link mb-2 ${
-                location.pathname === "#" ? "active" : ""
-              }`}
-            >
-              <MdPendingActions className="menu--icon" />
-              <span className="nav-text">Pending Orders</span>
-            </Link>
 
-            <Link
-              to="#"
-              className={`nav-link mb-2 ${
-                location.pathname === "#" ? "active" : ""
-              }`}
-            >
-              <MdAssessment className="menu--icon" />
-              <span className="nav-text">Session Performance</span>
-            </Link>
-
-            <Link
-              to="#"
-              className={`nav-link mb-2 ${
-                location.pathname === "#" ? "active" : ""
-              }`}
-            >
-              <MdFollowTheSigns className="menu--icon" />
-              <span className="nav-text">My Follow-ups</span>
-            </Link>
-
-            <Link
-              to="#"
-              className={`nav-link mb-2 ${
-                location.pathname === "#" ? "active" : ""
-              }`}
-            >
-              <MdUpgrade className="menu--icon" />
-              <span className="nav-text">Upgrades</span>
-            </Link>
-
-            <Link
-              to="#"
-              className={`nav-link mb-2 ${
-                location.pathname === "#" ? "active" : ""
-              }`}
-            >
-              <MdCake className="menu--icon" />
-              <span className="nav-text">Client Birthdays</span>
-            </Link>
-
-            <Link
-              to="#"
-              className={`nav-link mb-2 ${
-                location.pathname === "#" ? "active" : ""
-              }`}
-            >
-              <MdCelebration className="menu--icon" />
-              <span className="nav-text">Client Anniversary</span>
-            </Link>
             <div
               className="nav-link d-flex justify-between align-items-center mb-2"
               onClick={() => toggleMenu("fohreports")}
@@ -1216,27 +1204,13 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                 <div className="absolute h-[calc(100%-15px)] w-[2px] bg-white left-[23px] top-[8px]"></div>
 
                 <Link
-                  to="/reports/all-orders"
+                  to="/reports/sales-reports/membership-sales-report"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
                 >
                   <FaCircle className="menu--icon !text-[10px]" />
-                  <span className="nav-text">Products Sold</span>
+                  <span className="nav-text">Membership Sales Report</span>
                 </Link>
 
-                <Link
-                  to="/reports/sales-reports/new-joinees-report"
-                  className="text-white flex items-center gap-[5px] mb-2 text-sm"
-                >
-                  <FaCircle className="menu--icon !text-[10px]" />
-                  <span className="nav-text">New Joinees Report</span>
-                </Link>
-                <Link
-                  to="/reports/appointments/all-appointments"
-                  className="text-white flex items-center gap-[5px] mb-2 text-sm"
-                >
-                  <FaCircle className="menu--icon !text-[10px]" />
-                  <span className="nav-text">Appointments Report</span>
-                </Link>
                 <Link
                   to="/reports/operations-reports/active-client-summary-report"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
@@ -1244,34 +1218,13 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                   <FaCircle className="menu--icon !text-[10px]" />
                   <span className="nav-text">Active Client Report</span>
                 </Link>
-                <Link
-                  to="/reports/operations-reports/inactive-client-summary-report"
-                  className="text-white flex items-center gap-[5px] mb-2 text-sm"
-                >
-                  <FaCircle className="menu--icon !text-[10px]" />
-                  <span className="nav-text">Inactive Client Report</span>
-                </Link>
 
                 <Link
-                  to="/reports/operations-reports/attendance-heatmap-report"
+                  to="/reports/operations-reports/member-checkins-report"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
                 >
                   <FaCircle className="menu--icon !text-[10px]" />
-                  Attendance Heatmap Report
-                </Link>
-                <Link
-                  to="/reports/operations-reports/referral-report"
-                  className="text-white flex items-center gap-[5px] mb-2 text-sm"
-                >
-                  <FaCircle className="menu--icon !text-[10px]" />
-                  Referral Report
-                </Link>
-                <Link
-                  to="/reports/operations-reports/pt-expiry-report"
-                  className="text-white flex items-center gap-[5px] mb-2 text-sm"
-                >
-                  <FaCircle className="menu--icon !text-[10px]" />
-                  PT Expiry Report
+                  Member Checkins
                 </Link>
                 <Link
                   to="/reports/operations-reports/membership-expiry-report"

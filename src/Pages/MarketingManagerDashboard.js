@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import SalesSummary from "../components/common/SalesSummary";
 import totalSalesIcon from "../assets/images/icons/rupee-box.png";
 import newClientIcon from "../assets/images/icons/clients.png";
@@ -6,28 +6,61 @@ import renewalIcon from "../assets/images/icons/renewal.png";
 import enquiriesIcon from "../assets/images/icons/conversion.png";
 import trialIcon from "../assets/images/icons/trial.png";
 import checkInIcon from "../assets/images/icons/checkin.png";
+import eyeIcon from "../assets/images/icons/eye.svg";
+import PendingOrderTable from "../components/PendingOrderTable";
 import { FaCircle } from "react-icons/fa";
 import { FaCalendarDays } from "react-icons/fa6";
 import Select from "react-select";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { customStyles, filterActiveItems } from "../Helper/helper";
-import { addYears, subYears } from "date-fns";
+import {
+  customStyles,
+  filterActiveItems,
+  formatIndianNumber,
+} from "../Helper/helper";
+import { addYears, format, subYears } from "date-fns";
+import { useNavigate } from "react-router-dom";
 import HighchartsReact from "highcharts-react-official";
 import Highcharts from "highcharts";
+import { CiLocationOn } from "react-icons/ci";
+import SummaryDashboard from "../components/common/SummaryDashboard";
+import { LiaAngleLeftSolid, LiaAngleRightSolid } from "react-icons/lia";
 import SolidGaugeChart from "../components/ClubManagerChild/SolidGaugeChart";
 import { authAxios } from "../config/config";
 import { toast } from "react-toastify";
 
-import {
-  parse,
-  isWithinInterval,
-  startOfDay,
-  endOfDay,
-  subDays,
-} from "date-fns";
-import { productsSold } from "../DummyData/DummyData";
-import { useNavigate } from "react-router-dom";
+const summaryData = {
+  Yesterday: {
+    FollowUps: "10/50",
+    Appointments: "0/0",
+    Classes: "4/5",
+    MembershipExpiry: 12,
+    ServiceExpiry: 3,
+
+    ClientBirthdays: 1,
+    ClientAnniversaries: 0,
+  },
+  Today: {
+    FollowUps: "17/50",
+    Appointments: "0/0",
+    Classes: "5/5",
+    MembershipExpiry: 11,
+    ServiceExpiry: 2,
+
+    ClientBirthdays: 3,
+    ClientAnniversaries: 0,
+  },
+  Tomorrow: {
+    FollowUps: "8/50",
+    Appointments: "1/2",
+    Classes: "2/5",
+    MembershipExpiry: 10,
+    ServiceExpiry: 1,
+
+    ClientBirthdays: 0,
+    ClientAnniversaries: 1,
+  },
+};
 
 const dateFilterOptions = [
   { value: "today", label: "Today" },
@@ -36,18 +69,114 @@ const dateFilterOptions = [
   { value: "custom", label: "Custom Date" },
 ];
 
-const formatIndianNumber = (num) => new Intl.NumberFormat("en-IN").format(num);
+const classPerformance = [
+  {
+    id: 1,
+    classType: "Group Classes",
+    bookings: 4,
+    reservations: 95,
+    cancellations: 3,
+  },
+  {
+    id: 2,
+    classType: "Pilates",
+    bookings: 10,
+    reservations: 10,
+    cancellations: 0,
+  },
+  {
+    id: 3,
+    classType: "Recovery",
+    bookings: 5,
+    reservations: 5,
+    cancellations: 1,
+  },
+  {
+    id: 4,
+    classType: "Personal Training",
+    bookings: 8,
+    reservations: 8,
+    cancellations: 2,
+  },
+];
 
 const MarketingManagerDashboard = () => {
+  const navigate = useNavigate();
+  const days = ["Yesterday", "Today", "Tomorrow"];
+  const [dashboardData, setDashboardData] = useState([]);
+  const [currentDayIndex, setCurrentDayIndex] = useState(1); // Default to Today
   const [activeTab, setActiveTab] = useState("Snapshot");
   const [dateFilter, setDateFilter] = useState(dateFilterOptions[1]);
   const [customFrom, setCustomFrom] = useState(null);
   const [customTo, setCustomTo] = useState(null);
+  const [clubList, setClubList] = useState([]);
+  const [clubFilter, setClubFilter] = useState(null);
+  const [orders, setOrders] = useState([
+    {
+      id: "ORD001",
+      member: "John Doe",
+      items: "Latte & Salad",
+      placedOn: "2025-04-28",
+      isDone: false,
+    },
+    {
+      id: "ORD002",
+      member: "Jane Smith",
+      items: "Black Coffice",
+      placedOn: "2025-04-27",
+      isDone: false,
+    },
+    {
+      id: "ORD003",
+      member: "Jane Smith",
+      items: "Espresso",
+      placedOn: "2025-04-27",
+      isDone: false,
+    },
+    {
+      id: "ORD004",
+      member: "Jane Smith",
+      items: "Americano",
+      placedOn: "2025-04-27",
+      isDone: false,
+    },
+    {
+      id: "ORD005",
+      member: "Jane Smith",
+      items: "Broccoli Soup",
+      placedOn: "2025-04-27",
+      isDone: false,
+    },
+  ]);
 
-  const [club, setClub] = useState([]);
-  const [selectedClub, setSelectedClub] = useState(null);
+  const fetchDashboardData = async () => {
+    try {
+      const params = {};
+      // Date filter (non-custom)
+      if (dateFilter?.value && dateFilter.value !== "custom") {
+        params.dateFilter = dateFilter.value;
+      }
 
-  const navigate = useNavigate();
+      // Custom date filter
+      if (dateFilter?.value === "custom" && customFrom && customTo) {
+        params.startDate = format(customFrom, "yyyy-MM-dd");
+        params.endDate = format(customTo, "yyyy-MM-dd");
+      }
+
+      // Club filter
+      if (clubFilter?.value) {
+        params.club_id = clubFilter.value;
+      }
+
+      const res = await authAxios().get("/dashboard/overview", { params });
+      let data = res.data?.data || res.data || [];
+
+      setDashboardData(data);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to fetch companies");
+    }
+  };
 
   // Function to fetch club list
   const fetchClub = async () => {
@@ -55,28 +184,46 @@ const MarketingManagerDashboard = () => {
       const response = await authAxios().get("/club/list");
       const data = response.data?.data || [];
       const activeOnly = filterActiveItems(data);
-      setClub(activeOnly);
+      setClubList(activeOnly);
 
-      if (activeOnly.length === 1) {
-        setSelectedClub(activeOnly[0].id);
+      if (activeOnly.length > 0) {
+        setClubFilter({
+          label: activeOnly[0].name,
+          value: activeOnly[0].id,
+        });
       }
     } catch (error) {
       toast.error("Failed to fetch clubs");
     }
   };
+  // Function to fetch role list
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, [dateFilter, customFrom, customTo, clubFilter]);
 
   useEffect(() => {
     fetchClub();
   }, []);
 
-  // Club dropdown options
-  const clubOptions =
-    club?.map((item) => ({
-      label: item.name,
-      value: item.id,
-    })) || [];
+  useEffect(() => {
+    if (dateFilter?.value !== "custom" || (customFrom && customTo)) {
+      fetchDashboardData();
+    }
+  }, [dateFilter, customFrom, customTo, clubFilter]);
 
-  const dataSeries = [2, 1, 0, 0, 0];
+  const clubOptions = clubList.map((item) => ({
+    label: item.name,
+    value: item.id,
+  }));
+
+  const dataProductSeries = [5, 3, 7, 2, 4];
+  const totalProcutValue = dataProductSeries.reduce(
+    (sum, value) => sum + value,
+    0
+  );
+
+  const dataSeries = [5, 6, 2, 3, 1];
   const totalValue = dataSeries.reduce((sum, value) => sum + value, 0);
 
   const leadsStatus = {
@@ -95,7 +242,7 @@ const MarketingManagerDashboard = () => {
       },
     },
     xAxis: {
-      categories: ["New", "Opportunity", "Lead", "Won", "Lost"],
+      categories: ["Lead", "Opportunity", "New", "Won", "Lost"],
       labels: {
         style: {
           fontSize: "13px",
@@ -142,11 +289,11 @@ const MarketingManagerDashboard = () => {
             click: function () {
               // Example: open a link based on category
               const linkMap = {
-                New: generateUrl(`/all-leads?lead_status=New`),
-                Opportunity: generateUrl(`/all-leads?lead_status=Opportunity`),
-                Lead: generateUrl(`/all-leads?lead_status=Lead`),
-                Won: generateUrl(`/all-leads?lead_status=Won`),
-                Lost: generateUrl(`/all-leads?lead_status=Lost`),
+                Lead: generateUrl(`/all-leads?leadStatus=Lead`),
+                Opportunity: generateUrl(`/all-leads?leadStatus=Opportunity`),
+                New: generateUrl(`/all-leads?leadStatus=New`),
+                Won: generateUrl(`/all-leads?leadStatus=Won`),
+                Lost: generateUrl(`/all-leads?leadStatus=Lost`),
               };
               const targetLink = linkMap[this.category];
               if (targetLink) {
@@ -169,55 +316,6 @@ const MarketingManagerDashboard = () => {
     },
   };
 
-  // Calculate product counts for last 7 days
-  const dataProductSeries = useMemo(() => {
-    if (!productsSold.length) return [0, 0, 0, 0, 0];
-
-    // 🔑 Find latest date in data
-    const parsedDates = productsSold
-      .map((item) => parse(item.purchaseDate, "dd/MM/yyyy", new Date()))
-      .filter((d) => !isNaN(d));
-
-    const latestDate = new Date(Math.max(...parsedDates));
-
-    const from = startOfDay(subDays(latestDate, 6));
-    const to = endOfDay(latestDate);
-
-    const counts = {
-      Membership: 0,
-      "Personal Training": 0,
-      Pilates: 0,
-      Recovery: 0,
-      Cafe: 0,
-    };
-
-    productsSold.forEach((item) => {
-      const purchaseDate = parse(item.purchaseDate, "dd/MM/yyyy", new Date());
-
-      if (
-        !isNaN(purchaseDate) &&
-        isWithinInterval(purchaseDate, { start: from, end: to })
-      ) {
-        if (counts[item.servicesName] !== undefined) {
-          counts[item.servicesName]++;
-        }
-      }
-    });
-
-    return [
-      counts.Membership,
-      counts["Personal Training"],
-      counts.Pilates,
-      counts.Recovery,
-      counts.Cafe,
-    ];
-  }, [productsSold]);
-
-  const totalProcutValue = useMemo(
-    () => dataProductSeries.reduce((a, b) => a + b, 0),
-    [dataProductSeries]
-  );
-
   const productStatus = {
     chart: {
       type: "column",
@@ -237,9 +335,9 @@ const MarketingManagerDashboard = () => {
       categories: [
         "Membership",
         "Personal Training",
-        "Pilates",
         "Recovery",
-        "Cafe",
+        "Nourish",
+        "Pilates",
       ],
       labels: {
         style: {
@@ -247,8 +345,9 @@ const MarketingManagerDashboard = () => {
           fontWeight: "700",
           fontFamily: "Roboto, sans-serif",
         },
-        rotation: 0,
+        rotation: 0, // Prevent rotation even if text is long
         formatter: function () {
+          // Just add <br> for line break (manual)
           return this.value.replace(" ", "<br>");
         },
       },
@@ -259,7 +358,7 @@ const MarketingManagerDashboard = () => {
       title: {
         text: null,
       },
-      maxPadding: 0.1,
+      maxPadding: 0.1, // adds space at the top
       tickInterval: 1,
     },
     legend: {
@@ -275,6 +374,7 @@ const MarketingManagerDashboard = () => {
         pointPadding: 0.1,
         groupPadding: 0.05,
         borderWidth: 0,
+        width: 50,
         color: {
           linearGradient: { x1: 0, y1: 0, x2: 0, y2: 1 },
           stops: [
@@ -288,27 +388,24 @@ const MarketingManagerDashboard = () => {
         point: {
           events: {
             click: function () {
-              const serviceTypeMap = {
-                Membership: "Membership",
-                "Personal Training": "Package",
-                Pilates: "Package",
-                Recovery: "Package",
-                Cafe: "Product",
+              // Example: open a link based on category
+              const linkMap = {
+                Membership: "/reports/all-orders/",
+                "Personal Training": "/reports/all-orders/",
+                Recovery: "/reports/all-orders/",
+                Nourish: "/reports/all-orders/",
+                Pilates: "/reports/all-orders/",
               };
-
-              const serviceType = serviceTypeMap[this.category];
-
-              // Navigate with date filter
-              navigate(
-                `/reports/all-orders?date=last_7_days&service_name=${encodeURIComponent(
-                  this.category
-                )}`
-              );
+              const targetLink = linkMap[this.category];
+              if (targetLink) {
+                window.location.href = targetLink; // navigate to link
+              }
             },
           },
         },
       },
     },
+
     series: [
       {
         name: "Product",
@@ -320,90 +417,151 @@ const MarketingManagerDashboard = () => {
     },
   };
 
-  // Memoize the URL generation
-  const generateUrl = (baseUrl) => {
-    let url = `${baseUrl}&date=${encodeURIComponent(dateFilter?.value)}`;
-
-    // If custom dates are selected, append customFrom and customTo to the URL
-    if (dateFilter?.value === "custom") {
-      url += `&customFrom=${encodeURIComponent(
-        customFrom
-      )}&customTo=${encodeURIComponent(customTo)}`;
+  // Handler to move to previous day
+  const handlePrevious = () => {
+    if (currentDayIndex > 0) {
+      setCurrentDayIndex(currentDayIndex - 1);
     }
-
-    return url;
   };
+
+  // Handler to move to next day
+  const handleNext = () => {
+    if (currentDayIndex < days.length - 1) {
+      setCurrentDayIndex(currentDayIndex + 1);
+    }
+  };
+
+  const currentDay = days[currentDayIndex];
+  const currentData = summaryData[currentDay];
+
+  // Memoize the URL generation
+  // const generateUrl = (baseUrl) => {
+  //   let url = `${baseUrl}&date=${encodeURIComponent(dateFilter?.value)}`;
+
+  //   // If custom dates are selected, append customFrom and customTo to the URL
+  //   if (dateFilter?.value === "custom") {
+  //     url += `&customFrom=${encodeURIComponent(
+  //       customFrom
+  //     )}&customTo=${encodeURIComponent(customTo)}`;
+  //   }
+
+  //   return url;
+  // };
+
+  const generateUrl = useCallback(
+    (baseUrl) => {
+      const params = new URLSearchParams();
+
+      // Club filter
+      if (clubFilter?.value) {
+        params.append("club_id", clubFilter.value);
+      }
+
+      // Date filter (non-custom)
+      if (dateFilter?.value && dateFilter.value !== "custom") {
+        params.append("dateFilter", dateFilter.value);
+      }
+
+      // Custom date filter
+      if (dateFilter?.value === "custom" && customFrom && customTo) {
+        params.append("startDate", format(customFrom, "yyyy-MM-dd"));
+        params.append("endDate", format(customTo, "yyyy-MM-dd"));
+      }
+
+      const separator = baseUrl.includes("?") ? "&" : "?";
+
+      return params.toString()
+        ? `${baseUrl}${separator}${params.toString()}`
+        : baseUrl;
+    },
+    [clubFilter, dateFilter, customFrom, customTo]
+  );
 
   return (
     <div className="page--content">
-      <div className=" flex items-start justify-between gap-2 mb-5">
+      <div className=" flex items-end justify-between gap-2 mb-5">
         <div className="title--breadcrumbs">
           <p className="text-sm">{`Home > Dashboard`}</p>
           <h1 className="text-3xl font-semibold">Dashboard</h1>
         </div>
-        <div className="min-w-[180px] w-fit">
-          <Select
-            name="club_id"
-            value={
-              clubOptions.find((opt) => opt.value === selectedClub) || null
-            }
-            onChange={(option) => setSelectedClub(option ? option.value : null)}
-            options={clubOptions}
-            styles={customStyles}
-            placeholder="Choose Club"
-            className="w-full"
-          />
+        <div className="flex gap-3 items-center justify-between">
+          <div className="w-fit min-w-[180px]">
+            <Select
+              placeholder="Filter by club"
+              value={clubFilter}
+              options={clubOptions}
+              onChange={(option) => setClubFilter(option)}
+              // isClearable
+              styles={customStyles}
+            />
+          </div>
         </div>
       </div>
+
       {/* end title */}
 
       <div className="w-full bg-white box--shadow rounded-[10px] px-3 py-3 flex gap-3 justify-between items-center mb-4">
         <div className="flex gap-3">
-          <button
-            type="button"
+          <div
+            // type="button"
             className={`px-4 py-2 rounded ${
               activeTab === "Snapshot" ? "bg--color text-white" : ""
             }`}
             onClick={() => setActiveTab("Snapshot")}
           >
             Snapshot
-          </button>
+          </div>
+          {/* <button
+            type="button"
+            className={`px-4 py-2 rounded ${
+              activeTab === "Leaderboard" ? "bg--color text-white" : ""
+            }`}
+            onClick={() => setActiveTab("Leaderboard")}
+          >
+            Leaderboard
+          </button> */}
         </div>
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-5 border-r pr-3">
+        <div className="flex items-center">
+          <div className="w-fit flex items-center gap-2 border-r">
             <div className="text-md font-medium text-gray-600 flex gap-2 items-center">
               <FaCircle className="text-[10px] text-[#009EB2]" /> Total Members
             </div>
-            <div className="flex flex-wrap items-center justify-between">
-              <span className="text-md font-semibold">2315</span>
+            <div className="pr-2">
+              <span className="text-md font-semibold">
+                {dashboardData?.snapshot?.total_members}
+              </span>
             </div>
           </div>
-          <div className="flex items-center gap-5 border-r pr-3">
+          <div className="w-fit flex items-center gap-2 border-r pl-2">
             <div className="text-md font-medium text-gray-600 flex gap-2 items-center">
               <FaCircle className="text-[10px] text-[#1F9254]" />
               Active Members
             </div>
-            <div className="flex flex-wrap items-center justify-between">
-              <span className="text-md font-semibold">590</span>
+            <div className="pr-2">
+              <span className="text-md font-semibold">
+                {dashboardData?.snapshot?.active_members}
+              </span>
             </div>
           </div>
-          <div className="flex items-center gap-5">
+          <div className="w-fit flex items-center gap-2 border-r pl-2">
             <div className="text-md font-medium text-gray-600 flex gap-2 items-center">
               <FaCircle className="text-[10px] text-[#ff9900]" />
               Inactive Members
             </div>
-            <div className="flex flex-wrap items-center justify-between">
-              <span className="text-md font-semibold">1725</span>
+            <div className="pr-2">
+              <span className="text-md font-semibold">
+                {dashboardData?.snapshot?.inactive_members}
+              </span>
             </div>
           </div>
-          <div className="flex items-center gap-5 border-r">
+          <div className="w-fit flex items-center gap-2 pl-2">
             <div className="text-md font-medium text-gray-600 flex gap-2 items-center">
               <FaCircle className="text-[10px] text-[#FF0000]" />
               Expired Members
             </div>
-            <div className="pr-2">
+            <div>
               <span className="text-md font-semibold">
-                0
+                {dashboardData?.snapshot?.expired_members}
               </span>
             </div>
           </div>
@@ -479,62 +637,69 @@ const MarketingManagerDashboard = () => {
             <SalesSummary
               icon={totalSalesIcon}
               title="Total Sales"
-              titleLink={generateUrl(
-                `/reports/sales-reports/new-joinees-report?`
-              )}
-              totalSales={`₹${formatIndianNumber(20900)}`}
+              titleLink={generateUrl(`/reports/all-orders?`)}
+              totalSales={`₹${formatIndianNumber(
+                dashboardData?.summary_cards?.total_sales?.amount
+              )}`}
               items={[
                 {
                   label: "Memberships",
-                  value: `₹${formatIndianNumber(5700)}`,
+                  value: `₹${formatIndianNumber(
+                    dashboardData?.summary_cards?.total_sales?.breakup
+                      ?.memberships
+                  )}`,
                   link: generateUrl(
-                    `/reports/sales-reports/new-joinees-report?serviceType=Membership`
+                    `/reports/all-orders?package_type=SUBSCRIPTION`
                   ),
                 },
                 {
                   label: "Packages",
-                  value: `₹${formatIndianNumber(12000)}`,
-                  link: generateUrl(
-                    `/reports/sales-reports/new-joinees-report?serviceType=Package`
-                  ),
+                  value: `₹${formatIndianNumber(
+                    dashboardData?.summary_cards?.total_sales?.breakup?.packages
+                  )}`,
+                  link: generateUrl(`/reports/all-orders?package_type=PACKAGE`),
                 },
                 {
                   label: "Products",
-                  value: `₹${formatIndianNumber(3200)}`,
-                  link: generateUrl(
-                    `/reports/sales-reports/new-joinees-report?serviceType=Product`
-                  ),
+                  value: `₹${formatIndianNumber(
+                    dashboardData?.summary_cards?.total_sales?.breakup?.products
+                  )}`,
+                  link: generateUrl(`/reports/all-orders?package_type=PRODUCT`),
                 },
               ]}
             />
 
             <SalesSummary
               icon={newClientIcon}
-              title="New Clients"
-              titleLink={generateUrl(
-                `/reports/sales-reports/new-joinees-report?billType=New`
-              )}
-              totalSales="02"
+              title="New Sales"
+              titleLink={generateUrl(`/reports/all-orders?bill_type=NEW`)}
+              totalSales={dashboardData?.summary_cards?.new_clients?.total}
               items={[
                 {
                   label: "Memberships",
-                  value: "01",
+                  value:
+                    dashboardData?.summary_cards?.new_clients?.breakup
+                      ?.memberships,
                   link: generateUrl(
-                    `/reports/sales-reports/new-joinees-report?billType=New&serviceType=Membership`
+                    `/reports/all-orders?bill_type=NEW&package_type=SUBSCRIPTION`
                   ),
                 },
                 {
                   label: "Packages",
-                  value: "00",
+                  value:
+                    dashboardData?.summary_cards?.new_clients?.breakup
+                      ?.packages,
                   link: generateUrl(
-                    `/reports/sales-reports/new-joinees-report?billType=New&serviceType=Package`
+                    `/reports/all-orders?bill_type=NEW&package_type=PACKAGE`
                   ),
                 },
                 {
                   label: "Products",
-                  value: "01",
+                  value:
+                    dashboardData?.summary_cards?.new_clients?.breakup
+                      ?.products,
                   link: generateUrl(
-                    `/reports/sales-reports/new-joinees-report?billType=New&serviceType=Product`
+                    `/reports/all-orders?bill_type=NEW&package_type=PRODUCT`
                   ),
                 },
               ]}
@@ -542,30 +707,32 @@ const MarketingManagerDashboard = () => {
             <SalesSummary
               icon={renewalIcon}
               title="Renewal"
-              titleLink={generateUrl(
-                `/reports/sales-reports/new-joinees-report?billType=Renewal`
-              )}
-              totalSales="01"
+              titleLink={generateUrl(`/reports/all-orders?bill_type=RENEWAL`)}
+              totalSales={dashboardData?.summary_cards?.renewals?.total}
               items={[
                 {
                   label: "Memberships",
-                  value: "00",
+                  value:
+                    dashboardData?.summary_cards?.renewals?.breakup
+                      ?.memberships,
                   link: generateUrl(
-                    `/reports/sales-reports/new-joinees-report?billType=Renewal&serviceType=Membership`
+                    `/reports/all-orders?bill_type=RENEWAL&package_type=SUBSCRIPTION`
                   ),
                 },
                 {
                   label: "Packages",
-                  value: "01",
+                  value:
+                    dashboardData?.summary_cards?.renewals?.breakup?.packages,
                   link: generateUrl(
-                    `/reports/sales-reports/new-joinees-report?billType=Renewal&serviceType=Package`
+                    `/reports/all-orders?bill_type=RENEWAL&package_type=PACKAGE`
                   ),
                 },
                 {
                   label: "Products",
-                  value: "00",
+                  value:
+                    dashboardData?.summary_cards?.renewals?.breakup?.products,
                   link: generateUrl(
-                    `/reports/sales-reports/new-joinees-report?billType=Renewal&serviceType=Product`
+                    `/reports/all-orders?bill_type=RENEWAL&package_type=PRODUCT`
                   ),
                 },
               ]}
@@ -574,29 +741,49 @@ const MarketingManagerDashboard = () => {
             <SalesSummary
               icon={trialIcon}
               title="Trials"
-              titleLink={generateUrl(`/reports/appointments/all-trial-appointments?`)}
-              totalSales="03"
+              titleLink={generateUrl(
+                `/reports/appointments/all-trial-appointments?`
+              )}
+              totalSales={dashboardData?.summary_cards?.trials?.total}
               items={[
                 {
                   label: "Scheduled",
-                  value: "01",
+                  value: dashboardData?.summary_cards?.trials?.scheduled,
                   link: generateUrl(
-                    `/reports/appointments/all-trial-appointments?status=Scheduled`
+                    `/reports/appointments/all-trial-appointments?booking_status=ACTIVE`
                   ),
                 },
                 {
                   label: "Completed",
-                  value: "01",
+                  value: dashboardData?.summary_cards?.trials?.completed,
                   link: generateUrl(
-                    `/reports/appointments/all-trial-appointments?status=Completed`
+                    `/reports/appointments/all-trial-appointments?booking_status=COMPLETED`
                   ),
                 },
                 {
                   label: "No-Show",
-                  value: "01",
+                  value: dashboardData?.summary_cards?.trials?.no_show,
                   link: generateUrl(
-                    `/reports/appointments/all-trial-appointments?status=No-Show`
+                    `/reports/appointments/all-trial-appointments?booking_status=NO_SHOW`
                   ),
+                },
+              ]}
+            />
+            <SalesSummary
+              icon={enquiriesIcon}
+              title="Conversion"
+              titleLink="#"
+              totalSales={`${dashboardData?.summary_cards?.conversion?.overall_percentage}%`}
+              items={[
+                {
+                  label: "Lead To Trial",
+                  value: `${dashboardData?.summary_cards?.conversion?.lead_to_trial_percentage}%`,
+                  link: "#",
+                },
+                {
+                  label: "Trial To Membership",
+                  value: `${dashboardData?.summary_cards?.conversion?.trial_to_membership_percentage}%`,
+                  link: "#",
                 },
               ]}
             />
@@ -606,32 +793,24 @@ const MarketingManagerDashboard = () => {
               titleLink={generateUrl(
                 `/reports/operations-reports/member-checkins-report?`
               )}
-              totalSales="09"
+              totalSales={dashboardData?.summary_cards?.check_ins?.total}
               items={[
                 {
                   label: "Unique Check-ins",
-                  value: "03",
+                  value:
+                    dashboardData?.summary_cards?.check_ins?.unique_check_ins,
                   link: generateUrl(
                     `/reports/operations-reports/member-checkins-report?checkin-type=unique-check-in`
                   ),
                 },
                 {
                   label: "Unique Members",
-                  value: "03",
+                  value:
+                    dashboardData?.summary_cards?.check_ins?.unique_members,
                   link: generateUrl(
                     `/reports/operations-reports/member-checkins-report?checkin-type=unique-members`
                   ),
                 },
-              ]}
-            />
-            <SalesSummary
-              icon={enquiriesIcon}
-              title="Conversion"
-              titleLink="/reports/sales-reports/new-joinees-report?data=memberships"
-              totalSales="2%"
-              items={[
-                { label: "Lead To Trial", value: "13%", link: "#" },
-                { label: "Trial To Membership", value: "18%", link: "#" },
               ]}
             />
           </div>
@@ -652,13 +831,54 @@ const MarketingManagerDashboard = () => {
               <HighchartsReact highcharts={Highcharts} options={leadsStatus} />
             </div>
           </div>
+
+  
         </div>
         <div className="w-[25%]">
           <div className="rounded-[15px] p-4 box--shadow bg-white">
+            <div>
+              <p className="text-lg font-[600] mb-3 text-center">Summary </p>
+              {/* <div className="flex justify-between gap-3 items-center rounded-full bg-[#F1F1F1] px-3 py-2">
+                <button
+                  onClick={handlePrevious}
+                  disabled={currentDayIndex === 0}
+                  className={`${
+                    currentDayIndex === 0 ? "opacity-0 invisible" : ""
+                  }`}
+                >
+                  <LiaAngleLeftSolid />
+                </button>
+                <span>{currentDay}</span>
+                <button
+                  onClick={handleNext}
+                  disabled={currentDayIndex === days.length - 1}
+                  className={`${
+                    currentDayIndex === days.length - 1
+                      ? "opacity-0 invisible"
+                      : ""
+                  }`}
+                >
+                  <LiaAngleRightSolid />
+                </button>
+              </div> */}
+              <SummaryDashboard data={currentData} />
+            </div>
+          </div>
+          <div className="rounded-[15px] p-4 box--shadow bg-white mt-4">
             <SolidGaugeChart />
           </div>
         </div>
       </div>
+
+      {/* <div className="rounded-[15px] p-4 w-full mt-2 box--shadow bg-white">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="font-semibold">Pending Orders</h2>
+          <a href="#" className="text-[#009EB2] underline text-sm">
+            View All
+          </a>
+        </div>
+        <PendingOrderTable setOrders={setOrders} orders={orders} />
+      </div> */}
     </div>
   );
 };

@@ -1,13 +1,13 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { addYears, subYears } from "date-fns";
+import { addYears, format, subYears } from "date-fns";
 import { FaCalendarDays } from "react-icons/fa6";
 import { customStyles, filterActiveItems } from "../../../Helper/helper";
 import Select from "react-select";
 import { authAxios } from "../../../config/config";
 import { toast } from "react-toastify";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 
 // Date filter dropdown options
 const dateFilterOptions = [
@@ -17,107 +17,193 @@ const dateFilterOptions = [
   { value: "custom", label: "Custom Date" },
 ];
 
-const formatDate = (date) => {
-  if (!date) return null;
-  return date.toISOString().split("T")[0]; // YYYY-MM-DD
-};
+const formatDate = (date) => format(date, "yyyy-MM-dd");
 
 const MemberCheckInsReport = () => {
- const { id } = useParams();
- 
-   const [data, setData] = useState([]);
-   const [summaryData, setSummaryData] = useState({});
-   const [dateFilter, setDateFilter] = useState(dateFilterOptions[1]);
-   const [customFrom, setCustomFrom] = useState(null);
-   const [customTo, setCustomTo] = useState(null);
- 
-   const [clubList, setClubList] = useState([]);
-   const [clubFilter, setClubFilter] = useState(null);
- 
-   const [memberSearch, setMemberSearch] = useState("");
-   const [memberResults, setMemberResults] = useState([]);
-   const [memberFilter, setMemberFilter] = useState(null);
-   const [memberLoading, setMemberLoading] = useState(false);
-   const [selectedMemberName, setSelectedMemberName] = useState("");
-   const memberSearchRef = useRef(null);
+  const { id } = useParams();
+  const location = useLocation();
+  const navigate = useNavigate();
 
-   const pageTitle = useMemo(() => {
+  const [data, setData] = useState([]);
+  const [summaryData, setSummaryData] = useState({});
+
+  const [dateFilter, setDateFilter] = useState(dateFilterOptions[1]);
+  const [customFrom, setCustomFrom] = useState(null);
+  const [customTo, setCustomTo] = useState(null);
+
+  const [clubList, setClubList] = useState([]);
+  const [clubFilter, setClubFilter] = useState(null);
+
+  const [memberSearch, setMemberSearch] = useState("");
+  const [memberResults, setMemberResults] = useState([]);
+  const [memberFilter, setMemberFilter] = useState(null);
+  const [memberLoading, setMemberLoading] = useState(false);
+  const [selectedMemberName, setSelectedMemberName] = useState("");
+  const memberSearchRef = useRef(null);
+
+  const [filtersInitialized, setFiltersInitialized] = useState(false);
+
+  /* ------------------ PAGE TITLE ------------------ */
+
+  const pageTitle = useMemo(() => {
     if (memberFilter || id)
       return `Member Check-ins (${selectedMemberName || "Selected Member"})`;
     return "Member Check-ins";
   }, [memberFilter, id, selectedMemberName]);
- 
-   const fetchMembers = async (search) => {
-     if (!search || search.length < 2 || memberFilter) return;
- 
-     try {
-       setMemberLoading(true);
-       const res = await authAxios().get("/member/list", {
-         params: { search },
-       });
-       setMemberResults(res.data?.data || []);
-     } catch {
-       toast.error("Failed to fetch members");
-     } finally {
-       setMemberLoading(false);
-     }
-   };
- 
-   useEffect(() => {
-     const delay = setTimeout(() => {
-       fetchMembers(memberSearch);
-     }, 400);
-     return () => clearTimeout(delay);
-   }, [memberSearch, memberFilter]);
- 
-   const fetchClub = async () => {
-     try {
-       const res = await authAxios().get("/club/list");
-       setClubList(filterActiveItems(res.data?.data || []));
-     } catch {
-       toast.error("Failed to fetch clubs");
-     }
-   };
- 
-   useEffect(() => {
-     fetchClub();
-   }, []);
- 
-   const clubOptions = clubList.map((c) => ({
-     label: c.name,
-     value: c.id,
-   }));
- 
-   const fetchReport = async () => {
-     try {
-       const params = {};
- 
-       if (clubFilter) params.club_id = clubFilter;
-       if (memberFilter) params.member_id = memberFilter;
-       else if (id) params.member_id = Number(id);
- 
-       if (dateFilter.value === "custom") {
-         if (customFrom && customTo) {
-           params.startDate = formatDate(customFrom);
-           params.endDate = formatDate(customTo);
-         }
-       } else {
-         params.dateFilter = dateFilter.value;
-       }
- 
-       const res = await authAxios().get("/report/attendance", { params });
-       setData(res.data?.data || []);
-       setSummaryData(res.data?.summary || {});
-     } catch {
-       toast.error("Data not found");
-     }
-   };
- 
-   useEffect(() => {
-     if (dateFilter.value === "custom" && (!customFrom || !customTo)) return;
-     fetchReport();
-   }, [dateFilter, customFrom, customTo, clubFilter, memberFilter, id]);
- 
+
+  /* ------------------ FETCH MEMBERS ------------------ */
+
+  const fetchMembers = async (search) => {
+    if (!search || search.length < 2 || memberFilter) return;
+
+    try {
+      setMemberLoading(true);
+      const res = await authAxios().get("/member/list", {
+        params: { search },
+      });
+      setMemberResults(res.data?.data || []);
+    } catch {
+      toast.error("Failed to fetch members");
+    } finally {
+      setMemberLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const delay = setTimeout(() => {
+      fetchMembers(memberSearch);
+    }, 400);
+    return () => clearTimeout(delay);
+  }, [memberSearch, memberFilter]);
+
+  /* ------------------ FETCH CLUBS ------------------ */
+
+  const fetchClub = async () => {
+    try {
+      const res = await authAxios().get("/club/list");
+      setClubList(filterActiveItems(res.data?.data || []));
+    } catch {
+      toast.error("Failed to fetch clubs");
+    }
+  };
+
+  useEffect(() => {
+    fetchClub();
+  }, []);
+
+  const clubOptions = clubList.map((c) => ({
+    label: c.name,
+    value: c.id,
+  }));
+
+  /* ------------------ FETCH REPORT ------------------ */
+
+  const fetchReport = async () => {
+    try {
+      const params = {};
+
+      if (clubFilter) params.club_id = clubFilter;
+      if (memberFilter) params.member_id = memberFilter;
+      else if (id) params.member_id = Number(id);
+
+      if (dateFilter.value === "custom") {
+        if (customFrom && customTo) {
+          params.startDate = formatDate(customFrom);
+          params.endDate = formatDate(customTo);
+        }
+      } else {
+        params.dateFilter = dateFilter.value;
+      }
+
+      const res = await authAxios().get("/report/attendance", { params });
+      setData(res.data?.data || []);
+      setSummaryData(res.data?.summary || {});
+    } catch {
+      toast.error("Data not found");
+    }
+  };
+
+  /* ------------------ URL → STATE ------------------ */
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+
+    const dateFilterValue = params.get("dateFilter");
+    const startDate = params.get("startDate");
+    const endDate = params.get("endDate");
+    const clubId = params.get("club_id");
+    const memberId = params.get("member_id");
+
+    // DATE
+    if (startDate && endDate) {
+      setDateFilter(dateFilterOptions.find((d) => d.value === "custom"));
+      setCustomFrom(new Date(startDate));
+      setCustomTo(new Date(endDate));
+    } else if (dateFilterValue) {
+      const matched = dateFilterOptions.find(
+        (opt) => opt.value === dateFilterValue
+      );
+      if (matched) setDateFilter(matched);
+    }
+
+    // CLUB
+    if (clubId) setClubFilter(Number(clubId));
+
+    // MEMBER (URL first, route fallback)
+    if (memberId) {
+      setMemberFilter(Number(memberId));
+    } else if (id) {
+      setMemberFilter(Number(id));
+    }
+
+    setFiltersInitialized(true);
+  }, [location.search, id]);
+
+  /* ------------------ STATE → URL ------------------ */
+
+  useEffect(() => {
+    if (!filtersInitialized) return;
+
+    const params = new URLSearchParams();
+
+    if (dateFilter?.value === "custom" && customFrom && customTo) {
+      params.set("startDate", formatDate(customFrom));
+      params.set("endDate", formatDate(customTo));
+    } else if (dateFilter?.value) {
+      params.set("dateFilter", dateFilter.value);
+    }
+
+    if (clubFilter) params.set("club_id", clubFilter);
+    if (memberFilter) params.set("member_id", memberFilter);
+
+    navigate({ search: params.toString() }, { replace: true });
+  }, [
+    dateFilter,
+    customFrom,
+    customTo,
+    clubFilter,
+    memberFilter,
+    filtersInitialized,
+    navigate,
+  ]);
+
+  /* ------------------ FETCH DATA ------------------ */
+
+  useEffect(() => {
+    if (!filtersInitialized) return;
+    fetchReport();
+  }, [
+    filtersInitialized,
+    dateFilter?.value,
+    customFrom,
+    customTo,
+    clubFilter,
+    memberFilter,
+    id,
+  ]);
+
+  /* ------------------ RENDER ------------------ */
+
   return (
     <>
       <div className="page--content">
@@ -194,11 +280,12 @@ const MemberCheckInsReport = () => {
             <div className="w-fit min-w-[200px]">
               <Select
                 placeholder="Filter by club"
-                  options={clubOptions}
-                          styles={customStyles}
-                          value={clubOptions.find((o) => o.value === clubFilter) || null}
-                          onChange={(o) => setClubFilter(o?.value || null)}
+                options={clubOptions}
+                styles={customStyles}
+                value={clubOptions.find((o) => o.value === clubFilter) || null}
+                onChange={(o) => setClubFilter(o?.value || null)}
                 className="w-full"
+                isClearable
               />
             </div>
             <div className="relative max-w-[250px] w-full">
@@ -206,42 +293,42 @@ const MemberCheckInsReport = () => {
                 ref={memberSearchRef}
                 type="text"
                 placeholder="Filter by name or mobile"
-               value={memberSearch}
-            onChange={(e) => {
-              setMemberSearch(e.target.value);
-              setMemberFilter(null);
-              setSelectedMemberName("");
-            }}
+                value={memberSearch}
+                onChange={(e) => {
+                  setMemberSearch(e.target.value);
+                  setMemberFilter(null);
+                  setSelectedMemberName("");
+                }}
                 onFocus={() => memberFilter && setMemberResults([])}
                 className="custom--input w-full"
               />
 
               {/* Loader */}
               {memberLoading && (
-            <div className="absolute w-full bg-white border p-2 text-sm z-10">
-              Searching...
-            </div>
-          )}
+                <div className="absolute w-full bg-white border p-2 text-sm z-10">
+                  Searching...
+                </div>
+              )}
 
               {/* Dropdown Results */}
               {!memberLoading && memberResults.length > 0 && (
-            <ul className="absolute w-full bg-white border z-10 max-h-[200px] overflow-auto">
-              {memberResults.map((m) => (
-                <li
-                  key={m.id}
-                  className="p-2 hover:bg-gray-100 cursor-pointer"
-                  onClick={() => {
-                    setMemberFilter(m.id);
-                    setMemberSearch(m.full_name);
-                    setSelectedMemberName(m.full_name);
-                    setMemberResults([]);
-                  }}
-                >
-                  {m.full_name}
-                </li>
-              ))}
-            </ul>
-          )}
+                <ul className="absolute w-full bg-white border z-10 max-h-[200px] overflow-auto">
+                  {memberResults.map((m) => (
+                    <li
+                      key={m.id}
+                      className="p-2 hover:bg-gray-100 cursor-pointer"
+                      onClick={() => {
+                        setMemberFilter(m.id);
+                        setMemberSearch(m.full_name);
+                        setSelectedMemberName(m.full_name);
+                        setMemberResults([]);
+                      }}
+                    >
+                      {m.full_name}
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
           </div>
         </div>
@@ -290,7 +377,10 @@ const MemberCheckInsReport = () => {
                 <tbody>
                   {data.length ? (
                     data.map((r, i) => (
-                      <tr key={i} className="bg-white border-b hover:bg-gray-50 relative transition duration-700">
+                      <tr
+                        key={i}
+                        className="bg-white border-b hover:bg-gray-50 relative transition duration-700"
+                      >
                         <td className="px-2 py-4">{i + 1}</td>
                         <td className="px-2 py-4">{r.club_name}</td>
                         <td className="px-2 py-4">{r.membership_number}</td>

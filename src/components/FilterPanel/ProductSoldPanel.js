@@ -14,16 +14,22 @@ const BillTypeOptions = [
   { value: "RENEWAL", label: "Renewal" },
 ];
 
-const ServiceTypeOptions = [
+const packageTypeOptions = [
   { value: "SUBSCRIPTION", label: "Membership" },
   { value: "PACKAGE", label: "Package" },
   { value: "PRODUCT", label: "Product" },
 ];
 
+const payModeTypeOptions = [
+  { value: "UPI", label: "UPI" },
+  { value: "Credit Card", label: "Credit Card" },
+  { value: "Net Banking", label: "Net Banking" },
+];
+
 export default function ProductSoldPanel({
-  filterClub,
   filterBillType,
   filterServiceType,
+  filterPackageType,
   filterLeadSource,
   filterLeadOwner,
   filterPayMode,
@@ -31,58 +37,90 @@ export default function ProductSoldPanel({
   setFilterValue,
   appliedFilters, // ✅ Receive from parent
   setAppliedFilters, // ✅ Receive from parent
+  userRole,
+  clubId,
 }) {
   const [showFilters, setShowFilters] = useState(false);
   const panelRef = useRef(null);
+  const [staffList, setStaffList] = useState([]);
+  const [serviceList, setServiceList] = useState([]);
 
-  const [servicesType, setServicesType] = useState([]);
-  const [clubList, setClubList] = useState([]);
-
- 
-
-  const fetchServiceNames = async (serviceType) => {
+  // Fetch staff list from API
+  const fetchStaffList = async (clubId) => {
     try {
-      let endpoint = "";
+      const requests = [
+        authAxios().get("/staff/list", {
+          params: { role: "FOH", club_id: clubId },
+        }),
+      ];
 
-      if (serviceType === "SUBSCRIPTION") {
-        endpoint = "/subscription-plan/list";
-      } else if (serviceType === "PACKAGE") {
-        endpoint = "/package/list";
-      } else if (serviceType === "PRODUCT") {
-        endpoint = "/product/list";
+      if (userRole === "CLUB_MANAGER" || userRole === "ADMIN") {
+        requests.push(
+          authAxios().get("/staff/list", {
+            params: { role: "CLUB_MANAGER", club_id: clubId },
+          })
+        );
       }
 
-      if (!endpoint) return;
+      const responses = await Promise.all(requests);
 
-      const res = await authAxios().get(endpoint);
+      let mergedData = [];
+
+      responses.forEach((res) => {
+        const role = res.config.params.role;
+
+        const users = (res.data?.data || []).map((user) => ({
+          ...user,
+          role,
+        }));
+
+        mergedData.push(...users);
+      });
+
+      const uniqueData = Array.from(
+        new Map(mergedData.map((user) => [user.id, user])).values()
+      );
+
+      const activeOnly = filterActiveItems(uniqueData);
+      setStaffList(activeOnly);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to fetch staff");
+    }
+  };
+
+  const fetchService = async (club_id = null) => {
+    try {
+      const params = {};
+      if (club_id) {
+        params.club_id = club_id;
+      }
+      const res = await authAxios().get("/service/list", { params });
+
       const data = res.data?.data || [];
 
-      const activeOnly = filterActiveItems(data);
+      // ✅ Only ACTIVE + PRODUCT services
+      const activeProductServices = data.filter(
+        (item) => item.status === "ACTIVE" && item.service_type !== "PRODUCT"
+      );
 
-      const options = activeOnly.map((item) => ({
-        label: item.title || item.name,
-        value: item.title || item.name,
-      }));
-
-      setServicesType(options);
-    } catch (error) {
-      toast.error("Failed to fetch service names");
+      setServiceList(activeProductServices);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to fetch services");
     }
   };
 
-  const fetchClub = async () => {
-    try {
-      const response = await authAxios().get("/club/list");
-      const data = response.data?.data || [];
-      const activeOnly = filterActiveItems(data);
-      if (activeOnly.length === 1) {
-        setFilterValue("filterClub", activeOnly[0].id);
-      }
-      setClubList(activeOnly);
-    } catch (error) {
-      toast.error("Failed to fetch clubs");
+  useEffect(() => {
+    if (clubId) {
+      fetchStaffList(clubId);
+      fetchService(clubId);
+
+      // Reset dependent filters
+      setFilterValue("filterServiceType", null);
+      setFilterValue("filterLeadOwner", null);
     }
-  };
+  }, [clubId]);
 
   const dispatch = useDispatch();
   const { lists, loading } = useSelector((state) => state.optionList);
@@ -92,23 +130,31 @@ export default function ProductSoldPanel({
   }, [dispatch]);
 
   const leadSourceOptions = lists["LEAD_SOURCE"] || [];
+  const leadOwnerOptions = [
+    {
+      label: "FOH",
+      options: staffList
+        .filter((user) => user.role === "FOH")
+        .map((user) => ({
+          value: user.id,
+          label: user.name,
+        })),
+    },
+    {
+      label: "CLUB MANAGER",
+      options: staffList
+        .filter((user) => user.role === "CLUB_MANAGER")
+        .map((user) => ({
+          value: user.id,
+          label: user.name,
+        })),
+    },
+  ].filter((group) => group.options.length > 0);
 
-  const clubOptions =
-    clubList?.map((item) => ({
-      label: item.name,
-      value: item.id,
-    })) || [];
-
-  useEffect(() => {
-    fetchClub();
-  }, []);
-
-  // ✅ Load service names when applied service_type exists (for URL params)
-  useEffect(() => {
-    if (appliedFilters?.service_type) {
-      fetchServiceNames(appliedFilters.service_type);
-    }
-  }, [appliedFilters?.service_type]);
+  const serviceOptions = serviceList.map((item) => ({
+    label: item.name,
+    value: item.id,
+  }));
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -128,15 +174,22 @@ export default function ProductSoldPanel({
     };
   }, [showFilters]);
 
+  useEffect(() => {
+    if (filterPackageType !== "PACKAGE") {
+      // Clear service type if package type is not PACKAGE
+      setFilterValue("filterServiceType", null);
+    }
+  }, [filterPackageType]);
+
   // ✅ Apply button - update parent's appliedFilters
   const handleApply = () => {
     setAppliedFilters({
-      club_id: formik.values.filterClub,
       bill_type: formik.values.filterBillType,
       service_type: formik.values.filterServiceType,
+      package_type: formik.values.filterPackageType,
       lead_source: formik.values.filterLeadSource,
       lead_owner: formik.values.filterLeadOwner,
-      pay_mode: formik.values.filterPayMode
+      pay_mode: formik.values.filterPayMode,
     });
 
     setShowFilters(false);
@@ -145,32 +198,57 @@ export default function ProductSoldPanel({
   // ✅ Remove filter chip - update both parent state and formik
   const handleRemoveFilter = (key) => {
     const keyMap = {
-      club_id: "filterClub",
       bill_type: "filterBillType",
       service_type: "filterServiceType",
+      package_type: "filterPackageType",
       lead_source: "filterLeadSource",
       lead_owner: "filterLeadOwner",
       pay_mode: "filterPayMode",
     };
 
-    // If removing service_type, also remove service_name
-    if (key === "service_type") {
-      setAppliedFilters((prev) => ({
-        ...prev,
-        service_type: null,
-        service_name: null,
-      }));
-      setFilterValue("filterServiceType", null);
-      setServicesType([]);
-    } else {
-      // Update parent's applied filters
-      setAppliedFilters((prev) => ({ ...prev, [key]: null }));
+    // Update parent's applied filters
+    setAppliedFilters((prev) => ({ ...prev, [key]: null }));
 
-      // Update formik
-      if (keyMap[key]) {
-        setFilterValue(keyMap[key], null);
-      }
+    // Update formik
+    if (keyMap[key]) {
+      setFilterValue(keyMap[key], null);
     }
+  };
+
+  // ✅ Get display labels for filter chips
+  const getFilterLabel = (key, value) => {
+    if (!value) return "";
+
+    if (key === "bill_type") {
+      const billType = BillTypeOptions.find((opt) => opt.value === value);
+      return billType ? billType.label : value;
+    }
+
+    if (key === "service_type") {
+      const service = serviceOptions.find((opt) => opt.value === value);
+      return service ? service.label : value;
+    }
+    if (key === "package_type") {
+      const packageType = packageTypeOptions.find((opt) => opt.value === value);
+      return packageType ? packageType.label : value;
+    }
+
+    if (key === "lead_source") {
+      const leadSource = leadSourceOptions.find((opt) => opt.value === value);
+      return leadSource ? leadSource.label : value;
+    }
+
+    if (key === "lead_owner") {
+      const leadOwner = leadOwnerOptions.find((opt) => opt.value === value);
+      return leadOwner ? leadOwner.label : value;
+    }
+
+    if (key === "pay_mode") {
+      const payMode = payModeTypeOptions.find((opt) => opt.value === value);
+      return payMode ? payMode.label : value;
+    }
+
+    return String(value);
   };
 
   return (
@@ -192,23 +270,6 @@ export default function ProductSoldPanel({
           </div>
           <div className="p-4">
             <div className="grid grid-cols-2 gap-4 min-w-[500px]">
-              {/* Club */}
-              <div>
-                <label className="block mb-1 text-sm font-medium">Club</label>
-                <Select
-                  value={
-                    clubOptions.find((opt) => opt.value === filterClub) || null
-                  }
-                  onChange={(option) =>
-                    setFilterValue("filterClub", option ? option.value : null)
-                  }
-                  options={clubOptions}
-                  placeholder="Select Club"
-                  styles={customStyles}
-                  isClearable
-                />
-              </div>
-
               <div>
                 <label className="block mb-1 text-sm font-medium">
                   Bill Type
@@ -226,41 +287,56 @@ export default function ProductSoldPanel({
                     )
                   }
                   options={BillTypeOptions}
-                  placeholder="Select Type"
+                  placeholder="Select Bill"
                   styles={customStyles}
-                  isClearable
+                  // isClearable
                 />
               </div>
               <div>
                 <label className="block mb-1 text-sm font-medium">
-                  Service Type
+                  Package Type
                 </label>
                 <Select
                   value={
-                    ServiceTypeOptions.find(
-                      (opt) => opt.value === filterServiceType
+                    packageTypeOptions.find(
+                      (opt) => opt.value === filterPackageType
                     ) || null
                   }
                   onChange={(option) => {
                     const serviceType = option ? option.value : null;
-
                     // Set service type
-                    setFilterValue("filterServiceType", serviceType);
-
-                    setServicesType([]);
-
-                    // Load service names
-                    if (serviceType) {
-                      fetchServiceNames(serviceType);
-                    }
+                    setFilterValue("filterPackageType", serviceType);
                   }}
-                  options={ServiceTypeOptions}
-                  placeholder="Select Service Type"
+                  options={packageTypeOptions}
+                  placeholder="Select Package"
                   styles={customStyles}
-                  isClearable
+                  // isClearable
                 />
               </div>
-              
+
+              {filterPackageType === "PACKAGE" && (
+                <div>
+                  <label className="block mb-1 text-sm font-medium">
+                    Service Type
+                  </label>
+                  <Select
+                    options={serviceOptions}
+                    value={
+                      serviceOptions.find(
+                        (opt) => opt.value === filterServiceType
+                      ) || null
+                    }
+                    onChange={(option) =>
+                      setFilterValue(
+                        "filterServiceType",
+                        option ? option.value : null
+                      )
+                    }
+                    placeholder="Select Service Type"
+                    styles={customStyles}
+                  />
+                </div>
+              )}
 
               <div>
                 <label className="block mb-1 text-sm font-medium">
@@ -281,7 +357,54 @@ export default function ProductSoldPanel({
                   options={leadSourceOptions}
                   placeholder="Select Lead Source"
                   styles={customStyles}
-                  isClearable
+                  // isClearable
+                />
+              </div>
+
+              {userRole === "FOH" ? null : (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Lead Owner
+                  </label>
+                  <Select
+                    value={
+                      leadOwnerOptions
+                        .flatMap((group) => group.options)
+                        .find((opt) => opt.value === filterLeadOwner) || null
+                    }
+                    onChange={(option) =>
+                      setFilterValue(
+                        "filterLeadOwner",
+                        option ? option.value : null
+                      )
+                    }
+                    options={leadOwnerOptions}
+                    placeholder="Select Lead Owner"
+                    styles={customStyles}
+                    // isClearable
+                  />
+                </div>
+              )}
+              <div>
+                <label className="block mb-1 text-sm font-medium">
+                  Pay Mode
+                </label>
+                <Select
+                  value={
+                    payModeTypeOptions.find(
+                      (opt) => opt.value === filterPayMode
+                    ) || null
+                  }
+                  onChange={(option) =>
+                    setFilterValue(
+                      "filterPayMode",
+                      option ? option.value : null
+                    )
+                  }
+                  options={payModeTypeOptions}
+                  placeholder="Select Pay Mode"
+                  styles={customStyles}
+                  // isClearable
                 />
               </div>
             </div>
@@ -302,24 +425,9 @@ export default function ProductSoldPanel({
       {Object.values(appliedFilters).some((v) => v) && (
         <div className="flex flex-wrap gap-2 mt-4">
           {Object.entries(appliedFilters).map(([key, value]) => {
-            if (!value) return null;
+            if (!value || key === "club_id") return null;
 
-            let options;
-            if (key === "club_id") options = clubOptions;
-            if (key === "bill_type") options = BillTypeOptions;
-            if (key === "service_type") options = ServiceTypeOptions;
-            if (key === "service_name") options = servicesType;
-            if (key === "lead_source") options = leadSourceOptions;
-
-            let displayValue = "";
-            if (value instanceof Date) {
-              displayValue = value.toLocaleDateString();
-            } else if (options) {
-              const matched = options.find((opt) => opt.value === value);
-              displayValue = matched ? matched.label : String(value);
-            } else {
-              displayValue = String(value);
-            }
+            const displayValue = getFilterLabel(key, value);
 
             return (
               <div
