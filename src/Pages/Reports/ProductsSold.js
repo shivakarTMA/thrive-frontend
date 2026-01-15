@@ -178,6 +178,11 @@ const ProductsSold = () => {
         params.package_type = appliedFilters.package_type;
       if (appliedFilters.lead_source)
         params.lead_source = appliedFilters.lead_source;
+      if (appliedFilters.lead_owner)
+        params.lead_owner = appliedFilters.lead_owner;
+      if (appliedFilters.pay_mode)
+        params.pay_mode = appliedFilters.pay_mode;
+
 
       console.log("🔍 API Request Params:", params);
 

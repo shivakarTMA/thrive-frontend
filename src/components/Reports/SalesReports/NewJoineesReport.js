@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { addYears, subYears } from "date-fns";
+import { addYears, format, subYears } from "date-fns";
 import { FaCalendarDays } from "react-icons/fa6";
 import Select from "react-select";
 import {
@@ -14,6 +14,11 @@ import {
 import { authAxios } from "../../../config/config";
 import { toast } from "react-toastify";
 import { FaCircle } from "react-icons/fa";
+import { Link, useLocation } from "react-router-dom";
+import { useFormik } from "formik";
+import { useSelector } from "react-redux";
+import Pagination from "../../common/Pagination";
+import MembershipSalesPanel from "../../FilterPanel/MembershipSalesPanel";
 
 const dateFilterOptions = [
   { value: "today", label: "Today" },
@@ -22,19 +27,47 @@ const dateFilterOptions = [
   { value: "custom", label: "Custom Date" },
 ];
 
-const formatDate = (date) => {
-  if (!date) return null;
-  return date.toISOString().split("T")[0]; // YYYY-MM-DD
-};
-
 const NewJoineesReport = () => {
-  const [leadSource, setLeadSource] = useState([]);
+  const location = useLocation();
+  const [newJoineesList, setNewJoineesList] = useState([]);
   const [clubList, setClubList] = useState([]);
   const [clubFilter, setClubFilter] = useState(null);
+  const { user } = useSelector((state) => state.auth);
+  const userRole = user.role;
 
   const [dateFilter, setDateFilter] = useState(dateFilterOptions[1]);
   const [customFrom, setCustomFrom] = useState(null);
   const [customTo, setCustomTo] = useState(null);
+
+  const [page, setPage] = useState(1);
+  const [rowsPerPage] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+
+  // ✅ Single source of truth for applied filters
+  const [appliedFilters, setAppliedFilters] = useState({
+    bill_type: null,
+    plan_type: null,
+    service_name: null,
+    lead_source: null,
+    lead_owner: null,
+    pay_mode: null,
+  });
+
+  const formik = useFormik({
+    enableReinitialize: true,
+    initialValues: {
+      filterBillType: null,
+      filterPlanType: null,
+      filterServiceName: null,
+      filterLeadSource: null,
+      filterLeadOwner: null,
+      filterPayMode: null,
+    },
+    onSubmit: (values) => {
+      console.log(values);
+    },
+  });
 
   // Function to fetch club list
   const fetchClub = async (search = "") => {
@@ -45,10 +78,6 @@ const NewJoineesReport = () => {
       const data = response.data?.data || [];
       const activeOnly = filterActiveItems(data);
       setClubList(activeOnly);
-
-      if (activeOnly.length === 1) {
-        setClubFilter(activeOnly[0].id);
-      }
     } catch (error) {
       toast.error("Failed to fetch clubs");
     }
@@ -64,24 +93,38 @@ const NewJoineesReport = () => {
     value: item.id,
   }));
 
-  const fetchLeadSourcePerformance = async () => {
+  const fetchNewJoinessReport = async (currentPage = page) => {
     try {
-      const params = {};
+      const params = {
+        page: currentPage,
+        limit: rowsPerPage,
+      };
 
-      // Club filter
-      if (clubFilter) {
-        params.club_id = clubFilter;
-      }
-
-      // Date filter
-      if (dateFilter?.value === "custom") {
-        if (customFrom && customTo) {
-          params.startDate = formatDate(customFrom);
-          params.endDate = formatDate(customTo);
-        }
-      } else if (dateFilter?.value) {
+      // Date Filter
+      if (dateFilter?.value && dateFilter.value !== "custom") {
         params.dateFilter = dateFilter.value;
       }
+
+      if (dateFilter?.value === "custom" && customFrom && customTo) {
+        const formatDate = (d) => format(d, "yyyy-MM-dd");
+        params.startDate = formatDate(customFrom);
+        params.endDate = formatDate(customTo);
+      }
+
+      // Club filter
+      if (clubFilter?.value) {
+        params.club_id = clubFilter.value;
+      }
+
+      if (appliedFilters.bill_type) params.bill_type = appliedFilters.bill_type;
+      if (appliedFilters.plan_type) params.plan_type = appliedFilters.plan_type;
+      if (appliedFilters.service_name)
+        params.service_name = appliedFilters.service_name;
+      if (appliedFilters.lead_source)
+        params.lead_source = appliedFilters.lead_source;
+      if (appliedFilters.lead_owner)
+        params.lead_owner = appliedFilters.lead_owner;
+      if (appliedFilters.pay_mode) params.pay_mode = appliedFilters.pay_mode;
 
       const res = await authAxios().get("/marketing/report/newjoinee", {
         params,
@@ -89,24 +132,47 @@ const NewJoineesReport = () => {
       const responseData = res.data;
       const data = responseData?.data || [];
 
-      setLeadSource(data);
+      setNewJoineesList(data);
+      setPage(responseData?.currentPage || 1);
+      setTotalPages(responseData?.totalPage || 1);
+      setTotalCount(responseData?.totalCount || data.length);
     } catch (err) {
       console.error(err);
       toast.error("data not found");
     }
   };
-  useEffect(() => {
-    // If custom date is selected, wait for both dates
-    if (dateFilter?.value === "custom") {
-      if (customFrom && customTo) {
-        fetchLeadSourcePerformance();
-      }
-      return;
+  
+useEffect(() => {
+  if (dateFilter?.value === "custom") {
+    if (customFrom && customTo) {
+      fetchNewJoinessReport(1);
     }
+    return;
+  }
 
-    // For all non-custom filters
-    fetchLeadSourcePerformance();
-  }, [dateFilter, customFrom, customTo, clubFilter]);
+  fetchNewJoinessReport(1);
+}, [dateFilter, customFrom, customTo, clubFilter, appliedFilters]);
+
+  useEffect(() => {
+    // Wait for clubList to be loaded
+    if (clubList.length === 0) return;
+
+    const params = new URLSearchParams(location.search);
+
+    const clubId = params.get("club_id");
+    if (clubId) {
+      const club = clubList.find((c) => c.id === Number(clubId));
+      if (club) {
+        setClubFilter({ label: club.name, value: club.id });
+      }
+    } else {
+      // Set default club only on initial load
+      setClubFilter({
+        label: clubList[0].name,
+        value: clubList[0].id,
+      });
+    }
+  }, [clubList]);
 
   return (
     <div className="page--content">
@@ -183,11 +249,11 @@ const NewJoineesReport = () => {
           <div className="w-fit min-w-[200px]">
             <Select
               placeholder="Filter by club"
-              value={clubOptions.find((o) => o.value === clubFilter) || null}
+              value={clubFilter}
               options={clubOptions}
-              onChange={(option) => setClubFilter(option?.value)}
+              onChange={(option) => setClubFilter(option)}
+              isClearable={userRole === "ADMIN" ? true : false}
               styles={customStyles}
-              className="w-full"
             />
           </div>
         </div>
@@ -195,8 +261,30 @@ const NewJoineesReport = () => {
 
       {/* Table */}
       <div className="w-full p-3 border bg-white shodow--box rounded-[10px]">
+        <div className="flex items-start gap-3 justify-between w-full mb-3 border-b border-b-[#D4D4D4] pb-3">
+          <div>
+            {/* ✅ Pass both appliedFilters and setAppliedFilters */}
+            <MembershipSalesPanel
+              userRole={userRole}
+              clubId={clubFilter?.value}
+              filterBillType={formik.values.filterBillType}
+              filterPlanType={formik.values.filterPlanType}
+              filterServiceName={formik.values.filterServiceName}
+              filterLeadSource={formik.values.filterLeadSource}
+              filterLeadOwner={formik.values.filterLeadOwner}
+              filterPayMode={formik.values.filterPayMode}
+              formik={formik}
+              setFilterValue={(field, value) =>
+                formik.setFieldValue(field, value)
+              }
+              appliedFilters={appliedFilters}
+              setAppliedFilters={setAppliedFilters}
+            />
+          </div>
+        </div>
+
         <div className="relative overflow-x-auto">
-          <table className="w-full text-sm text-left text-gray-500">
+          <table className="w-full text-sm text-left ">
             <thead className="text-xs text-gray-700 uppercase bg-gray-50">
               <tr>
                 <th className="px-2 py-4 min-w-[50px]">S.no</th>
@@ -214,7 +302,7 @@ const NewJoineesReport = () => {
                 <th className="px-2 py-4 min-w-[120px]">End Date</th>
                 <th className="px-2 py-4 min-w-[120px]">Lead Source</th>
                 <th className="px-2 py-4 min-w-[150px]">Lead Owner</th>
-                
+
                 <th className="px-2 py-4 min-w-[100px]">Amount</th>
                 <th className="px-2 py-4 min-w-[100px]">CGST</th>
                 <th className="px-2 py-4 min-w-[100px]">SGST</th>
@@ -227,8 +315,8 @@ const NewJoineesReport = () => {
             </thead>
 
             <tbody>
-              {leadSource.length ? (
-                leadSource.map((row, index) => (
+              {newJoineesList.length ? (
+                newJoineesList.map((row, index) => (
                   <tr
                     key={index}
                     className="bg-white border-b hover:bg-gray-50"
@@ -239,7 +327,13 @@ const NewJoineesReport = () => {
                     <td className="px-2 py-4">
                       {row.membership_number || "--"}
                     </td>
-                    <td className="px-2 py-4">{row.member_name || "--"}</td>
+                    <td className="px-2 py-4">
+                      <Link to={`/member/${row.member_id}`}>
+                        <span className="text-[#009EB2] font-medium">
+                          {row.member_name || "--"}
+                        </span>
+                      </Link>
+                    </td>
                     <td className="px-2 py-4">
                       {formatText(row.service_type) || "--"}
                     </td>
@@ -262,13 +356,25 @@ const NewJoineesReport = () => {
                     </td>
                     <td className="px-2 py-4">{row.lead_source || "--"}</td>
                     <td className="px-2 py-4">{row.sales_rep_name || "--"}</td>
-                    
-                    <td className="px-2 py-4">₹{formatIndianNumber(row.booking_amount) || 0}</td>
-                    <td className="px-2 py-4">₹{formatIndianNumber(row.cgst) || 0}</td>
-                    <td className="px-2 py-4">₹{formatIndianNumber(row.sgst) || 0}</td>
-                    <td className="px-2 py-4">₹{formatIndianNumber(row.igst) || 0}</td>
-                    <td className="px-2 py-4">₹{formatIndianNumber(row.final_amount) || 0}</td>
-                    <td className="px-2 py-4">₹{formatIndianNumber(row.paid_amount) || 0}</td>
+
+                    <td className="px-2 py-4">
+                      ₹{formatIndianNumber(row.booking_amount) || 0}
+                    </td>
+                    <td className="px-2 py-4">
+                      ₹{formatIndianNumber(row.cgst) || 0}
+                    </td>
+                    <td className="px-2 py-4">
+                      ₹{formatIndianNumber(row.sgst) || 0}
+                    </td>
+                    <td className="px-2 py-4">
+                      ₹{formatIndianNumber(row.igst) || 0}
+                    </td>
+                    <td className="px-2 py-4">
+                      ₹{formatIndianNumber(row.final_amount) || 0}
+                    </td>
+                    <td className="px-2 py-4">
+                      ₹{formatIndianNumber(row.paid_amount) || 0}
+                    </td>
                     <td className="px-2 py-4">{row.pay_mode || "--"}</td>
                     <td className="px-2 py-4">
                       <span
@@ -293,6 +399,16 @@ const NewJoineesReport = () => {
             </tbody>
           </table>
         </div>
+        <Pagination
+          page={page}
+          totalPages={totalPages}
+          rowsPerPage={rowsPerPage}
+          totalCount={totalCount}
+          currentDataLength={newJoineesList.length}
+          onPageChange={(newPage) => {
+            fetchNewJoinessReport(newPage);
+          }}
+        />
       </div>
     </div>
   );

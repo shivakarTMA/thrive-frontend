@@ -14,7 +14,12 @@ const BillTypeOptions = [
   { value: "RENEWAL", label: "Renewal" },
 ];
 
-const ServiceTypeOptions = [
+const PlanTypeOptions = [
+  { value: "DLF", label: "DLF" },
+  { value: "NONDLF", label: "Non-DLF" },
+];
+
+const packageTypeOptions = [
   { value: "SUBSCRIPTION", label: "Membership" },
   { value: "PACKAGE", label: "Package" },
   { value: "PRODUCT", label: "Product" },
@@ -26,9 +31,10 @@ const payModeTypeOptions = [
   { value: "Net Banking", label: "Net Banking" },
 ];
 
-export default function ProductSoldPanel({
+export default function MembershipSalesPanel({
   filterBillType,
-  filterServiceType,
+  filterPlanType,
+  filterServiceName,
   filterLeadSource,
   filterLeadOwner,
   filterPayMode,
@@ -42,6 +48,7 @@ export default function ProductSoldPanel({
   const [showFilters, setShowFilters] = useState(false);
   const panelRef = useRef(null);
   const [staffList, setStaffList] = useState([]);
+  const [serviceList, setServiceList] = useState([]);
 
   // Fetch staff list from API
   const fetchStaffList = async (clubId) => {
@@ -87,11 +94,35 @@ export default function ProductSoldPanel({
     }
   };
 
+  const fetchSubscriptionPlan = async (club_id = null) => {
+    try {
+      const params = {};
+      if (club_id) {
+        params.club_id = club_id;
+      }
+      const res = await authAxios().get("/subscription-plan/list", { params });
+
+      const data = res.data?.data || [];
+
+      // ✅ Only ACTIVE + PRODUCT services
+      const activeProductServices = data.filter(
+        (item) => item.status === "ACTIVE"
+      );
+
+      setServiceList(activeProductServices);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to fetch services");
+    }
+  };
+
   useEffect(() => {
     if (clubId) {
       fetchStaffList(clubId);
+      fetchSubscriptionPlan(clubId);
 
       // Reset dependent filters
+      setFilterValue("filterServiceName", null);
       setFilterValue("filterLeadOwner", null);
     }
   }, [clubId]);
@@ -125,6 +156,11 @@ export default function ProductSoldPanel({
     },
   ].filter((group) => group.options.length > 0);
 
+  const serviceOptions = serviceList.map((item) => ({
+    label: item.title,
+    value: item.id,
+  }));
+
   useEffect(() => {
     function handleClickOutside(event) {
       if (panelRef.current && !panelRef.current.contains(event.target)) {
@@ -143,11 +179,13 @@ export default function ProductSoldPanel({
     };
   }, [showFilters]);
 
+
   // ✅ Apply button - update parent's appliedFilters
   const handleApply = () => {
     setAppliedFilters({
       bill_type: formik.values.filterBillType,
-      service_type: formik.values.filterServiceType,
+      plan_type: formik.values.filterPlanType,
+      service_name: formik.values.filterServiceName,
       lead_source: formik.values.filterLeadSource,
       lead_owner: formik.values.filterLeadOwner,
       pay_mode: formik.values.filterPayMode,
@@ -160,7 +198,8 @@ export default function ProductSoldPanel({
   const handleRemoveFilter = (key) => {
     const keyMap = {
       bill_type: "filterBillType",
-      service_type: "filterServiceType",
+      plan_type: "filterPlanType",
+      service_name: "filterServiceName",
       lead_source: "filterLeadSource",
       lead_owner: "filterLeadOwner",
       pay_mode: "filterPayMode",
@@ -183,10 +222,18 @@ export default function ProductSoldPanel({
       const billType = BillTypeOptions.find((opt) => opt.value === value);
       return billType ? billType.label : value;
     }
+    if (key === "plan_type") {
+      const planType = PlanTypeOptions.find((opt) => opt.value === value);
+      return planType ? planType.label : value;
+    }
 
-    if (key === "service_type") {
-      const service = ServiceTypeOptions.find((opt) => opt.value === value);
+    if (key === "service_name") {
+      const service = serviceOptions.find((opt) => opt.value === value);
       return service ? service.label : value;
+    }
+    if (key === "package_type") {
+      const packageType = packageTypeOptions.find((opt) => opt.value === value);
+      return packageType ? packageType.label : value;
     }
 
     if (key === "lead_source") {
@@ -243,36 +290,54 @@ export default function ProductSoldPanel({
                     )
                   }
                   options={BillTypeOptions}
-                  placeholder="Select Type"
+                  placeholder="Select Bill Type"
                   styles={customStyles}
-                  isClearable
+                  // isClearable
                 />
               </div>
+
               <div>
                 <label className="block mb-1 text-sm font-medium">
-                  Service Type
+                  Plan Type
                 </label>
                 <Select
                   value={
-                    ServiceTypeOptions.find(
-                      (opt) => opt.value === filterServiceType
+                    PlanTypeOptions.find(
+                      (opt) => opt.value === filterPlanType
                     ) || null
                   }
-                  onChange={(option) => {
-                    const serviceType = option ? option.value : null;
-
-                    // Set service type
-                    setFilterValue("filterServiceType", serviceType);
-
-                    // Load service names
-                    if (serviceType) {
-                      fetchServiceNames(serviceType);
-                    }
-                  }}
-                  options={ServiceTypeOptions}
-                  placeholder="Select Service Type"
+                  onChange={(option) =>
+                    setFilterValue(
+                      "filterPlanType",
+                      option ? option.value : null
+                    )
+                  }
+                  options={PlanTypeOptions}
+                  placeholder="Select Plan Type"
                   styles={customStyles}
-                  isClearable
+                  // isClearable
+                />
+              </div>
+
+              <div>
+                <label className="block mb-1 text-sm font-medium">
+                  Service Name
+                </label>
+                <Select
+                  options={serviceOptions}
+                  value={
+                    serviceOptions.find(
+                      (opt) => opt.value === filterServiceName
+                    ) || null
+                  }
+                  onChange={(option) =>
+                    setFilterValue(
+                      "filterServiceName",
+                      option ? option.value : null
+                    )
+                  }
+                  placeholder="Select Service Name"
+                  styles={customStyles}
                 />
               </div>
 
@@ -295,9 +360,10 @@ export default function ProductSoldPanel({
                   options={leadSourceOptions}
                   placeholder="Select Lead Source"
                   styles={customStyles}
-                  isClearable
+                  // isClearable
                 />
               </div>
+
               {userRole === "FOH" ? null : (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -318,7 +384,7 @@ export default function ProductSoldPanel({
                     options={leadOwnerOptions}
                     placeholder="Select Lead Owner"
                     styles={customStyles}
-                    isClearable
+                    // isClearable
                   />
                 </div>
               )}
@@ -339,9 +405,9 @@ export default function ProductSoldPanel({
                     )
                   }
                   options={payModeTypeOptions}
-                  placeholder="Select Type"
+                  placeholder="Select Pay Mode"
                   styles={customStyles}
-                  isClearable
+                  // isClearable
                 />
               </div>
             </div>
