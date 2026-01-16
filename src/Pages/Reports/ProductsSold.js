@@ -203,6 +203,40 @@ const ProductsSold = () => {
     }
   };
 
+  const fetchProductSoldStats = async () => {
+    try {
+      let params = {};
+
+      if (dateFilter?.value === "custom") {
+        if (customFrom && customTo) {
+          params.startDate = format(customFrom, "yyyy-MM-dd");
+          params.endDate = format(customTo, "yyyy-MM-dd");
+        } else {
+          return; // don't fetch until both dates selected
+        }
+      } else {
+        params.dateFilter = dateFilter?.value || "last_7_days";
+      }
+
+      const res = await authAxios().get("/report/product/sold/count", {
+        params,
+      });
+      const data = res.data?.data || {};
+
+      setStats({
+        memberships: Number(data.memberships) || 0,
+        products: Number(data.products) || 0,
+        group_class_count: Number(data.group_class_count) || 0,
+        recovery: Number(data.recovery) || 0,
+        personal_training: Number(data.personal_training) || 0,
+        pilates: Number(data.pilates) || 0,
+      });
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to fetch appointment stats");
+    }
+  };
+
   // ---------------------------
   // INITIALIZE FROM URL
   // ---------------------------
@@ -281,6 +315,7 @@ const ProductsSold = () => {
 
     setPage(1);
     fetchProductSold(1);
+    fetchProductSoldStats();
     updateURLParams(appliedFilters);
   }, [
     filtersInitialized,
@@ -493,6 +528,7 @@ const ProductsSold = () => {
                     <th className="px-2 py-4 min-w-[120px]">Plan Type</th>
                     <th className="px-2 py-4 min-w-[150px]">Service Name</th>
                     <th className="px-2 py-4 min-w-[130px]">Variation</th>
+                    <th className="px-2 py-4 min-w-[130px]">Trainer Name</th>
                     <th className="px-2 py-4 min-w-[120px]">Start Date</th>
                     <th className="px-2 py-4 min-w-[120px]">End Date</th>
                     <th className="px-2 py-4 min-w-[120px]">Lead Source</th>
@@ -550,6 +586,11 @@ const ProductsSold = () => {
                         <td className="px-2 py-4">
                           {row?.variation_name
                             ? formatText(row?.variation_name)
+                            : "--"}
+                        </td>
+                        <td className="px-2 py-4">
+                          {row?.assigned_staff_name
+                            ? formatText(row?.assigned_staff_name)
                             : "--"}
                         </td>
                         <td className="px-2 py-4">

@@ -680,3 +680,18 @@ border-radius: 5px !important;
 .hide-clear-icon .clear-selected-button {
   display: none !important;
 }
+
+// /* 🔴 REMOVE CURRENT TIME GREEN LINE COMPLETELY */
+.rbc-current-time-indicator{
+  display: none !important;
+}
+
+// /* 🔴 REMOVE TODAY HIGHLIGHT LINE */
+.rbc-today::before {
+  display: none !important;
+}
+
+// /* 🔴 REMOVE ANY SLOT SELECTION LINE */
+// .rbc-slot-selection {
+//   display: none !important;
+// }

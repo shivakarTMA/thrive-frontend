@@ -25,6 +25,7 @@ import MemberFilterPanel from "../components/FilterPanel/MemberFilterPanel";
 import { useSelector } from "react-redux";
 import DummyProfile from "../assets/images/dummy-profile.png";
 import CreateNewInvoice from "./CreateNewInvoice";
+import { IoEyeOutline } from "react-icons/io5";
 
 const MemberList = () => {
   const { id } = useParams();
@@ -97,10 +98,7 @@ const MemberList = () => {
     value: item.id,
   }));
 
-  const fetchMemberList = async (
-    currentPage = page,
-    overrideSelected = {}
-  ) => {
+  const fetchMemberList = async (currentPage = page, overrideSelected = {}) => {
     try {
       const params = {
         page: currentPage,
@@ -113,7 +111,6 @@ const MemberList = () => {
         params.id = memberIdFromUrl;
         if (clubIdFromUrl) params.club_id = clubIdFromUrl;
       } else {
-
         const filters = {
           is_subscribed: overrideSelected.hasOwnProperty("is_subscribed")
             ? overrideSelected.is_subscribed
@@ -187,35 +184,32 @@ const MemberList = () => {
   }, []);
 
   /* ---------------- INIT FROM URL ---------------- */
-useEffect(() => {
-  if (!clubList.length) return;
+  useEffect(() => {
+    if (!clubList.length) return;
 
-  if (clubIdFromUrl) {
-    const club = clubList.find((c) => c.id === Number(clubIdFromUrl));
-    if (club) {
-      setClubFilter({ label: club.name, value: club.id });
+    if (clubIdFromUrl) {
+      const club = clubList.find((c) => c.id === Number(clubIdFromUrl));
+      if (club) {
+        setClubFilter({ label: club.name, value: club.id });
+      }
+    } else if (!initialized) {
+      setClubFilter({
+        label: clubList[0].name,
+        value: clubList[0].id,
+      });
     }
-  } else if (!initialized) {
-    setClubFilter({
-      label: clubList[0].name,
-      value: clubList[0].id,
-    });
-  }
 
-  if (!initialized) {
-    setInitialized(true);
-  }
-}, [clubList, clubIdFromUrl]);
+    if (!initialized) {
+      setInitialized(true);
+    }
+  }, [clubList, clubIdFromUrl]);
 
+  useEffect(() => {
+    if (!initialized) return;
 
-useEffect(() => {
-  if (!initialized) return;
-
-  fetchMemberList(1);
-  setPage(1);
-}, [location.search, initialized]);
-
-  
+    fetchMemberList(1);
+    setPage(1);
+  }, [location.search, initialized]);
 
   /* ---------------- 🔥 MAIN FIX ---------------- */
   useEffect(() => {
@@ -420,19 +414,19 @@ useEffect(() => {
 
     setterMap[filterKey]?.(null);
 
-const overrideSelected = {
-  is_subscribed: filterKey === "is_subscribed" ? null : filterStatus,
-  service_id: filterKey === "service_id" ? null : filterService,
-  age_range: filterKey === "age_range" ? null : filterAgeGroup,
-  lead_source: filterKey === "lead_source" ? null : filterLeadSource,
-  lead_owner: filterKey === "lead_owner" ? null : filterLeadOwner,
-  staff: filterKey === "staff" ? null : filterTrainer,
-  fitness: filterKey === "fitness" ? null : filterFitness,
-  gender: filterKey === "gender" ? null : filterGender,
-  club_id: clubFilter,
-};
+    const overrideSelected = {
+      is_subscribed: filterKey === "is_subscribed" ? null : filterStatus,
+      service_id: filterKey === "service_id" ? null : filterService,
+      age_range: filterKey === "age_range" ? null : filterAgeGroup,
+      lead_source: filterKey === "lead_source" ? null : filterLeadSource,
+      lead_owner: filterKey === "lead_owner" ? null : filterLeadOwner,
+      staff: filterKey === "staff" ? null : filterTrainer,
+      fitness: filterKey === "fitness" ? null : filterFitness,
+      gender: filterKey === "gender" ? null : filterGender,
+      club_id: clubFilter,
+    };
 
-fetchMemberList(1, overrideSelected);
+    fetchMemberList(1, overrideSelected);
   };
 
   const handleApplyFiltersFromChild = () => {
@@ -817,6 +811,41 @@ fetchMemberList(1, overrideSelected);
                               >
                                 <Link to="#" className="p-0">
                                   <IoIosAddCircleOutline className="text-[25px] text-black" />
+                                </Link>
+                              </div>
+                            </Tooltip>
+                          </div>
+                        </div>
+                      )}
+                      {userRole === "TRAINER" && (
+                        <div className="absolute hidden group-hover:flex gap-2 right-0 h-full top-0 w-[50%] items-center justify-end bg-[linear-gradient(269deg,_#ffffff_30%,_transparent)] pr-5 transition duration-700">
+                          <div className="flex gap-1">
+                            <Tooltip
+                              id={`edit-member-${member?.id}`}
+                              content="View Profile"
+                              place="top"
+                            >
+                              <div className="p-1 cursor-pointer">
+                                <Link
+                                  to={`/member/${member?.id}`}
+                                  className="p-0"
+                                >
+                                  <IoEyeOutline className="text-[25px] text-black" />
+                                </Link>
+                              </div>
+                            </Tooltip>
+
+                            <Tooltip
+                              id={`member-call-${member?.id}`}
+                              content="Call Logs"
+                              place="top"
+                            >
+                              <div className="p-1 cursor-pointer">
+                                <Link
+                                  to={`/member/${member?.id}?view=call-logs`}
+                                  className="p-0"
+                                >
+                                  <MdCall className="text-[25px] text-black" />
                                 </Link>
                               </div>
                             </Tooltip>

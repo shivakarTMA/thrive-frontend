@@ -1,49 +1,69 @@
 import React, { useState, useEffect, useRef } from "react";
 import Select from "react-select";
+import "react-datepicker/dist/react-datepicker.css";
 import { IoClose, IoTriangle } from "react-icons/io5";
-import { HiOutlineAdjustmentsHorizontal } from "react-icons/hi2";
-import { useDispatch, useSelector } from "react-redux";
-import { toast } from "react-toastify";
-import { authAxios } from "../../config/config";
-import { fetchOptionList } from "../../Redux/Reducers/optionListSlice";
 import { customStyles, filterActiveItems } from "../../Helper/helper";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { HiOutlineAdjustmentsHorizontal } from "react-icons/hi2";
+import { authAxios } from "../../config/config";
+import { toast } from "react-toastify";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchOptionList } from "../../Redux/Reducers/optionListSlice";
+
+const callTagOptions = [
+  { value: "Warm", label: "Warm" },
+  { value: "Hot", label: "Hot" },
+  { value: "Cold", label: "Cold" },
+];
+
+const genderOptions = [
+  { value: "MALE", label: "Male" },
+  { value: "FEMALE", label: "Female" },
+  { value: "NOTDISCLOSE", label: "Prefer Not To Say" },
+];
+
+const leadStatusOptions = [
+  { value: "new", label: "New" },
+  { value: "lead", label: "Lead" },
+  { value: "opportunity", label: "Opportunity" },
+  { value: "won", label: "Won" },
+  { value: "closed", label: "Closed" },
+  { value: "lost", label: "Lost" },
+  { value: "future prospect", label: "Future Prospect" },
+];
 
 export default function AllEnquiresFilterPanel({
-  selectedClub,
-  setSelectedClub,
-  selectedLeadSource,
-  setSelectedLeadSource,
-  selectedLastCallType,
-  selectedLeadStatus,
-  setSelectedLeadStatus,
-  selectedCallTag,
-  setSelectedCallTag,
-  setSelectedLastCallType,
-  selectedGender,
-  setSelectedGender,
-  selectedServiceName,
-  setSelectedServiceName,
-  onApplyFilters,
-  onRemoveFilter,
+  filterGender,
+  filterEnquiryType,
+  filterLeadSource,
+  filterLeadStatus,
+  filterCallTag,
+  filterLeadOwner,
+  formik,
+  setFilterValue,
+  appliedFilters, // ✅ Receive from parent
+  setAppliedFilters, // ✅ Receive from parent
   userRole,
+  clubId,
 }) {
-  const [searchParams] = useSearchParams();
   const [showFilters, setShowFilters] = useState(false);
   const panelRef = useRef(null);
   const [staffList, setStaffList] = useState([]);
-  const [clubList, setClubList] = useState([]);
-  const navigate = useNavigate();
 
-  // Only update appliedFilters when user clicks Apply
-  const [appliedFilters, setAppliedFilters] = useState({});
-
-  const fetchStaff = async () => {
+  // Fetch staff list from API
+  const fetchStaffList = async (clubId) => {
     try {
-      const requests = [authAxios().get("/staff/list?role=FOH")];
+      const requests = [
+        authAxios().get("/staff/list", {
+          params: { role: "FOH", club_id: clubId },
+        }),
+      ];
 
       if (userRole === "CLUB_MANAGER" || userRole === "ADMIN") {
-        requests.push(authAxios().get("/staff/list?role=CLUB_MANAGER"));
+        requests.push(
+          authAxios().get("/staff/list", {
+            params: { role: "CLUB_MANAGER", club_id: clubId },
+          })
+        );
       }
 
       const responses = await Promise.all(requests);
@@ -51,7 +71,7 @@ export default function AllEnquiresFilterPanel({
       let mergedData = [];
 
       responses.forEach((res) => {
-        const role = res.config.url.includes("FOH") ? "FOH" : "CLUB_MANAGER";
+        const role = res.config.params.role;
 
         const users = (res.data?.data || []).map((user) => ({
           ...user,
@@ -66,9 +86,6 @@ export default function AllEnquiresFilterPanel({
       );
 
       const activeOnly = filterActiveItems(uniqueData);
-
-      console.log(activeOnly,'activeOnly')
-
       setStaffList(activeOnly);
     } catch (err) {
       console.error(err);
@@ -76,45 +93,24 @@ export default function AllEnquiresFilterPanel({
     }
   };
 
-  // Function to fetch club list
-  const fetchClub = async () => {
-    try {
-      const response = await authAxios().get("/club/list");
-      const data = response.data?.data || [];
-      const activeOnly = filterActiveItems(data);
-      setClubList(activeOnly);
-    } catch (error) {
-      toast.error("Failed to fetch clubs");
-    }
-  };
-
   useEffect(() => {
-    fetchStaff();
-    fetchClub();
-  }, []);
+    if (clubId) {
+      fetchStaffList(clubId);
 
-  // Club dropdown options
-  const clubOptions =
-    clubList?.map((item) => ({
-      label: item.name,
-      value: item.id,
-    })) || [];
+      setFilterValue("filterLeadOwner", null);
+    }
+  }, [clubId]);
 
   const dispatch = useDispatch();
   const { lists, loading } = useSelector((state) => state.optionList);
 
-  // Fetch dropdown options from Redux
   useEffect(() => {
     dispatch(fetchOptionList("LEAD_SOURCE"));
-    dispatch(fetchOptionList("LEAD_CALL_STATUS"));
-    dispatch(fetchOptionList("GOAL"));
+    dispatch(fetchOptionList("LEAD_TYPE"));
   }, [dispatch]);
 
-  const leadsSources = lists["LEAD_SOURCE"] || [];
-  const lastCallStatusOptions = lists["LEAD_CALL_STATUS"] || [];
-  const leadServiceOptions = lists["GOAL"] || [];
-  // const leadOwnerOptions =
-  //   staffList.map((item) => ({ label: item.name, value: item.id })) || [];
+  const leadSourceOptions = lists["LEAD_SOURCE"] || [];
+  const leadTypeOptions = lists["LEAD_TYPE"] || [];
   const leadOwnerOptions = [
     {
       label: "FOH",
@@ -134,65 +130,8 @@ export default function AllEnquiresFilterPanel({
           label: user.name,
         })),
     },
-  ].filter((group) => group.options.length > 0); // remove empty groups
-  const genderOptions = [
-    { value: "MALE", label: "Male" },
-    { value: "FEMALE", label: "Female" },
-    { value: "NOTDISCLOSE", label: "Prefer Not To Say" },
-  ];
-  const lead_statusOptions = [
-    { value: "new", label: "New" },
-    { value: "lead", label: "Lead" },
-    { value: "opportunity", label: "Opportunity" },
-    { value: "won", label: "Won" },
-    { value: "closed", label: "Closed" },
-    { value: "lost", label: "Lost" },
-    { value: "future prospect", label: "Future Prospect" },
-  ];
+  ].filter((group) => group.options.length > 0);
 
-  // Handle Apply click
-  const handleSubmitFilters = () => {
-    setAppliedFilters({
-      club_id: selectedClub,
-      lead_source: selectedLeadSource,
-      last_call_status: selectedLastCallType,
-      lead_status: selectedLeadStatus,
-      created_by: selectedCallTag,
-      gender: selectedGender,
-      interested_in: selectedServiceName,
-    });
-
-    setShowFilters(false);
-    if (onApplyFilters) onApplyFilters();
-    navigate(`/reports/sales-reports/all-enquiries-report`);
-  };
-
-  console.log("appliedFilters", appliedFilters);
-
-  // Handle remove filter chip
-  const removeFilter = (filterKey) => {
-    const setterMap = {
-      club_id: setSelectedClub,
-      lead_source: setSelectedLeadSource,
-      last_call_status: setSelectedLastCallType,
-      lead_status: setSelectedLeadStatus,
-      created_by: setSelectedCallTag,
-      gender: setSelectedGender,
-      interested_in: setSelectedServiceName,
-    };
-
-    // Clear parent state
-    setterMap[filterKey]?.(null);
-
-    // Remove from appliedFilters for UI
-    setAppliedFilters((prev) => ({ ...prev, [filterKey]: null }));
-
-    // Call parent API for updated data
-    if (onRemoveFilter) onRemoveFilter(filterKey);
-    // else if (onApplyFilters) onApplyFilters(); // fallback
-  };
-
-  // Close filter panel if clicked outside
   useEffect(() => {
     function handleClickOutside(event) {
       if (panelRef.current && !panelRef.current.contains(event.target)) {
@@ -206,40 +145,81 @@ export default function AllEnquiresFilterPanel({
       document.removeEventListener("mousedown", handleClickOutside);
     }
 
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
   }, [showFilters]);
 
-  useEffect(() => {
-    const urlLeadStatus = searchParams.get("lead_status");
-    const urlLastCallType = searchParams.get("last_call_status");
+  // ✅ Apply button - update parent's appliedFilters
+  const handleApply = () => {
+    setAppliedFilters({
+      gender: formik.values.filterGender,
+      enquiry_type: formik.values.filterEnquiryType,
+      lead_status: formik.values.filterLeadStatus,
+      lead_source: formik.values.filterLeadSource,
+      lead_owner: formik.values.filterLeadOwner,
+      call_tag: formik.values.filterCallTag,
+    });
 
-    const initialFilters = {};
+    setShowFilters(false);
+  };
 
-    if (urlLeadStatus) {
-      const decodedStatus = decodeURIComponent(urlLeadStatus);
-      initialFilters.lead_status = {
-        label: decodedStatus,
-        value: decodedStatus,
-      };
-      setSelectedLeadStatus({ label: decodedStatus, value: decodedStatus });
+  // ✅ Remove filter chip - update both parent state and formik
+  const handleRemoveFilter = (key) => {
+    const keyMap = {
+      gender: "filterGender",
+      enquiry_type: "filterEnquiryType",
+      lead_status: "filterLeadStatus",
+      lead_source: "filterLeadSource",
+      lead_owner: "filterLeadOwner",
+      call_tag: "filterCallTag",
+    };
+
+    // Update parent's applied filters
+    setAppliedFilters((prev) => ({ ...prev, [key]: null }));
+
+    // Update formik
+    if (keyMap[key]) {
+      setFilterValue(keyMap[key], null);
+    }
+  };
+
+  // ✅ Get display labels for filter chips
+  const getFilterLabel = (key, value) => {
+    if (!value) return "";
+
+    if (key === "gender") {
+      const billType = genderOptions.find((opt) => opt.value === value);
+      return billType ? billType.label : value;
+    }
+    if (key === "enquiry_type") {
+      const planType = leadTypeOptions.find((opt) => opt.value === value);
+      return planType ? planType.label : value;
     }
 
-    if (urlLastCallType) {
-      const decodedLastCall = decodeURIComponent(urlLastCallType);
-      initialFilters.last_call_status = {
-        label: decodedLastCall,
-        value: decodedLastCall,
-      };
-      setSelectedLastCallType({
-        label: decodedLastCall,
-        value: decodedLastCall,
-      });
+    if (key === "lead_status") {
+      const service = leadStatusOptions.find((opt) => opt.value === value);
+      return service ? service.label : value;
     }
 
-    // Add other filters if needed (e.g., lead_source, dateFilter)
+    if (key === "lead_source") {
+      const leadSource = leadSourceOptions.find((opt) => opt.value === value);
+      return leadSource ? leadSource.label : value;
+    }
 
-    setAppliedFilters(initialFilters);
-  }, []);
+    if (key === "lead_owner") {
+      const allOwners = leadOwnerOptions.flatMap((group) => group.options);
+      const owner = allOwners.find((opt) => opt.value === value);
+      return owner ? owner.label : value;
+    }
+
+    if (key === "call_tag") {
+      const payMode = callTagOptions.find((opt) => opt.value === value);
+      return payMode ? payMode.label : value;
+    }
+
+    return String(value);
+  };
 
   return (
     <div className="relative max-w-fit w-full" ref={panelRef}>
@@ -260,109 +240,143 @@ export default function AllEnquiresFilterPanel({
           </div>
           <div className="p-4">
             <div className="grid grid-cols-2 gap-4 min-w-[500px]">
-              {/* Club */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Club
-                </label>
+                <label className="block mb-1 text-sm font-medium">Gender</label>
                 <Select
-                  value={selectedClub}
-                  onChange={setSelectedClub}
-                  options={clubOptions}
-                  placeholder="Select Club"
+                  value={
+                    genderOptions.find((opt) => opt.value === filterGender) ||
+                    null
+                  }
+                  onChange={(option) =>
+                    setFilterValue("filterGender", option ? option.value : null)
+                  }
+                  options={genderOptions}
+                  placeholder="Select Gender"
                   styles={customStyles}
-                />
-              </div>
-              {/* Lead Source */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Lead Source
-                </label>
-                <Select
-                  value={selectedLeadSource}
-                  onChange={setSelectedLeadSource}
-                  options={leadsSources}
-                  placeholder="Select Lead Source"
-                  styles={customStyles}
+                  // isClearable
                 />
               </div>
 
-              {/* Lead Status */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block mb-1 text-sm font-medium">
+                  Enquiry Type
+                </label>
+                <Select
+                  value={
+                    leadTypeOptions.find(
+                      (opt) => opt.value === filterEnquiryType
+                    ) || null
+                  }
+                  onChange={(option) =>
+                    setFilterValue(
+                      "filterEnquiryType",
+                      option ? option.value : null
+                    )
+                  }
+                  options={leadTypeOptions}
+                  placeholder="Select Enquiry Type"
+                  styles={customStyles}
+                  // isClearable
+                />
+              </div>
+
+              <div>
+                <label className="block mb-1 text-sm font-medium">
+                  Lead Source
+                </label>
+                <Select
+                  value={
+                    leadSourceOptions.find(
+                      (opt) => opt.value === filterLeadSource
+                    ) || null
+                  }
+                  onChange={(option) =>
+                    setFilterValue(
+                      "filterLeadSource",
+                      option ? option.value : null
+                    )
+                  }
+                  options={leadSourceOptions}
+                  placeholder="Select Lead Source"
+                  styles={customStyles}
+                  // isClearable
+                />
+              </div>
+
+              <div>
+                <label className="block mb-1 text-sm font-medium">
                   Lead Status
                 </label>
                 <Select
-                  value={selectedLeadStatus}
-                  onChange={setSelectedLeadStatus}
-                  options={lead_statusOptions}
+                  options={leadStatusOptions}
+                  value={
+                    leadStatusOptions.find(
+                      (opt) => opt.value === filterLeadStatus
+                    ) || null
+                  }
+                  onChange={(option) =>
+                    setFilterValue(
+                      "filterLeadStatus",
+                      option ? option.value : null
+                    )
+                  }
                   placeholder="Select Lead Status"
                   styles={customStyles}
                 />
               </div>
 
-              {/* Last Call Status */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Last Call Status
+                <label className="block mb-1 text-sm font-medium">
+                  Call Tag
                 </label>
                 <Select
-                  value={selectedLastCallType}
-                  onChange={setSelectedLastCallType}
-                  options={lastCallStatusOptions}
-                  placeholder="Select Last Call Type"
+                  value={
+                    callTagOptions.find((opt) => opt.value === filterCallTag) ||
+                    null
+                  }
+                  onChange={(option) =>
+                    setFilterValue(
+                      "filterCallTag",
+                      option ? option.value : null
+                    )
+                  }
+                  options={callTagOptions}
+                  placeholder="Select Pay Mode"
                   styles={customStyles}
+                  // isClearable
                 />
               </div>
 
-              {/* Lead Owner */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Lead Owner
-                </label>
-                <Select
-                  value={selectedCallTag}
-                  onChange={setSelectedCallTag}
-                  options={leadOwnerOptions}
-                  placeholder="Select Lead Owner"
-                  styles={customStyles}
-                />
-              </div>
-
-              {/* Interested In */}
-              {/* <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Interested In
-                </label>
-                <Select
-                  value={selectedServiceName}
-                  onChange={setSelectedServiceName}
-                  options={leadServiceOptions}
-                  placeholder="Select Interested"
-                  styles={customStyles}
-                />
-              </div> */}
-
-              {/* Gender */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Gender
-                </label>
-                <Select
-                  value={selectedGender}
-                  onChange={setSelectedGender}
-                  options={genderOptions}
-                  placeholder="Select Gender"
-                  styles={customStyles}
-                />
-              </div>
+              {userRole === "FOH" ? null : (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Lead Owner
+                  </label>
+                  <Select
+                    value={
+                      leadOwnerOptions
+                        .flatMap((group) => group.options)
+                        .find((opt) => opt.value === filterLeadOwner) || null
+                    }
+                    onChange={(option) =>
+                      setFilterValue(
+                        "filterLeadOwner",
+                        option ? option.value : null
+                      )
+                    }
+                    options={leadOwnerOptions}
+                    placeholder="Select Lead Owner"
+                    styles={customStyles}
+                    // isClearable
+                  />
+                </div>
+              )}
             </div>
 
-            {/* Apply Button */}
-            <div className="flex justify-end pt-3">
+            <div className="flex justify-between pt-3">
               <button
-                onClick={handleSubmitFilters}
-                className="px-4 py-2 bg-black text-white rounded flex items-center gap-2 cursor-pointer"
+                onClick={handleApply}
+                className="px-4 py-2 bg-black text-white rounded flex items-center gap-2 cursor-pointer ml-auto"
               >
                 Apply
               </button>
@@ -371,19 +385,22 @@ export default function AllEnquiresFilterPanel({
         </div>
       )}
 
-      {/* Applied Filter Chips */}
-      {Object.values(appliedFilters).some((value) => value) && (
-        <div className="flex gap-2 mt-4">
+      {/* ✅ Applied Filters Chips - using parent's appliedFilters */}
+      {Object.values(appliedFilters).some((v) => v) && (
+        <div className="flex flex-wrap gap-2 mt-4">
           {Object.entries(appliedFilters).map(([key, value]) => {
-            if (!value) return null;
+            if (!value || key === "club_id") return null;
+
+            const displayValue = getFilterLabel(key, value);
+
             return (
               <div
                 key={key}
                 className="flex items-center justify-between gap-1 border rounded-full bg-[#EEEEEE] min-h-[30px] px-3 text-sm"
               >
-                <span>{value.label || value}</span>
+                <span>{displayValue}</span>
                 <IoClose
-                  onClick={() => removeFilter(key)}
+                  onClick={() => handleRemoveFilter(key)}
                   className="cursor-pointer text-xl"
                 />
               </div>

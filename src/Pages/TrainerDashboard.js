@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import SalesSummary from "../components/common/SalesSummary";
 import totalSalesIcon from "../assets/images/icons/rupee-box.png";
 import newClientIcon from "../assets/images/icons/clients.png";
@@ -13,50 +13,46 @@ import { FaCalendarDays } from "react-icons/fa6";
 import Select from "react-select";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { customStyles } from "../Helper/helper";
-import { addYears, subYears } from "date-fns";
+import { customStyles, filterActiveItems } from "../Helper/helper";
+import { addYears, format, subYears } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import SummaryDashboard from "../components/common/SummaryDashboard";
 import { LiaAngleLeftSolid, LiaAngleRightSolid } from "react-icons/lia";
 import SolidGaugeChart from "../components/ClubManagerChild/SolidGaugeChart";
 import CalendarView from "../components/TrainerDashboardChild/CalendarView";
+import { authAxios } from "../config/config";
+import { toast } from "react-toastify";
 
 const summaryData = {
   Yesterday: {
     FollowUps: "10/50",
     Appointments: "0/0",
     Classes: "4/5",
-    ServiceExpiry: 12,
-    PTExpiry: 3,
-    Upgrades: 2,
+    MembershipExpiry: 12,
+    ServiceExpiry: 3,
+
     ClientBirthdays: 1,
     ClientAnniversaries: 0,
-    StaffBirthdays: 0,
-    StaffAnniversaries: 0,
   },
   Today: {
     FollowUps: "17/50",
     Appointments: "0/0",
     Classes: "5/5",
-    ServiceExpiry: 11,
-    PTExpiry: 2,
-    Upgrades: 5,
+    MembershipExpiry: 11,
+    ServiceExpiry: 2,
+
     ClientBirthdays: 3,
     ClientAnniversaries: 0,
-    StaffBirthdays: 0,
-    StaffAnniversaries: 0,
   },
   Tomorrow: {
     FollowUps: "8/50",
     Appointments: "1/2",
     Classes: "2/5",
-    ServiceExpiry: 10,
-    PTExpiry: 1,
-    Upgrades: 0,
+    MembershipExpiry: 10,
+    ServiceExpiry: 1,
+
     ClientBirthdays: 0,
     ClientAnniversaries: 1,
-    StaffBirthdays: 0,
-    StaffAnniversaries: 0,
   },
 };
 
@@ -101,11 +97,14 @@ const classPerformance = [
 const TrainerDashboard = () => {
   const navigate = useNavigate();
   const days = ["Yesterday", "Today", "Tomorrow"];
+  const [dashboardData, setDashboardData] = useState([]);
   const [currentDayIndex, setCurrentDayIndex] = useState(1); // Default to Today
   const [activeTab, setActiveTab] = useState("Snapshot");
   const [dateFilter, setDateFilter] = useState(dateFilterOptions[1]);
   const [customFrom, setCustomFrom] = useState(null);
   const [customTo, setCustomTo] = useState(null);
+  const [clubList, setClubList] = useState([]);
+  const [clubFilter, setClubFilter] = useState(null);
   const [orders, setOrders] = useState([
     {
       id: "ORD001",
@@ -144,6 +143,73 @@ const TrainerDashboard = () => {
     },
   ]);
 
+  const fetchDashboardData = async () => {
+    try {
+      const params = {};
+      // Date filter (non-custom)
+      if (dateFilter?.value && dateFilter.value !== "custom") {
+        params.dateFilter = dateFilter.value;
+      }
+
+      // Custom date filter
+      if (dateFilter?.value === "custom" && customFrom && customTo) {
+        params.startDate = format(customFrom, "yyyy-MM-dd");
+        params.endDate = format(customTo, "yyyy-MM-dd");
+      }
+
+      // Club filter
+      if (clubFilter?.value) {
+        params.club_id = clubFilter.value;
+      }
+
+      const res = await authAxios().get("/dashboard/overview", { params });
+      let data = res.data?.data || res.data || [];
+
+      setDashboardData(data);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to fetch companies");
+    }
+  };
+
+  // Function to fetch club list
+  const fetchClub = async () => {
+    try {
+      const response = await authAxios().get("/club/list");
+      const data = response.data?.data || [];
+      const activeOnly = filterActiveItems(data);
+      setClubList(activeOnly);
+
+      if (activeOnly.length > 0) {
+        setClubFilter({
+          label: activeOnly[0].name,
+          value: activeOnly[0].id,
+        });
+      }
+    } catch (error) {
+      toast.error("Failed to fetch clubs");
+    }
+  };
+  // Function to fetch role list
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, [dateFilter, customFrom, customTo, clubFilter]);
+
+  useEffect(() => {
+    fetchClub();
+  }, []);
+
+  useEffect(() => {
+    if (dateFilter?.value !== "custom" || (customFrom && customTo)) {
+      fetchDashboardData();
+    }
+  }, [dateFilter, customFrom, customTo, clubFilter]);
+
+  const clubOptions = clubList.map((item) => ({
+    label: item.name,
+    value: item.id,
+  }));
 
   // Handler to move to previous day
   const handlePrevious = () => {
@@ -169,6 +235,18 @@ const TrainerDashboard = () => {
           <p className="text-sm">{`Home > Dashboard`}</p>
           <h1 className="text-3xl font-semibold">Dashboard</h1>
         </div>
+        <div className="flex gap-3 items-center justify-between">
+          <div className="w-fit min-w-[180px]">
+            <Select
+              placeholder="Filter by club"
+              value={clubFilter}
+              options={clubOptions}
+              onChange={(option) => setClubFilter(option)}
+              // isClearable
+              styles={customStyles}
+            />
+          </div>
+        </div>
       </div>
       {/* end title */}
 
@@ -184,31 +262,48 @@ const TrainerDashboard = () => {
             Snapshot
           </button>
         </div>
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-5 border-r pr-3">
+        <div className="flex items-center">
+          <div className="w-fit flex items-center gap-2 border-r">
             <div className="text-md font-medium text-gray-600 flex gap-2 items-center">
-              <FaCircle className="text-[10px] text-[#009EB2]" /> Total Clients
+              <FaCircle className="text-[10px] text-[#009EB2]" /> Total Members
             </div>
-            <div className="flex flex-wrap items-center justify-between">
-              <span className="text-md font-semibold">71</span>
+            <div className="pr-2">
+              <span className="text-md font-semibold">
+                {dashboardData?.snapshot?.total_members}
+              </span>
             </div>
           </div>
-          <div className="flex items-center gap-5 border-r pr-3">
+          <div className="w-fit flex items-center gap-2 border-r pl-2">
             <div className="text-md font-medium text-gray-600 flex gap-2 items-center">
               <FaCircle className="text-[10px] text-[#1F9254]" />
-              Active Clients
+              Active Members
             </div>
-            <div className="flex flex-wrap items-center justify-between">
-              <span className="text-md font-semibold">54</span>
+            <div className="pr-2">
+              <span className="text-md font-semibold">
+                {dashboardData?.snapshot?.active_members}
+              </span>
             </div>
           </div>
-          <div className="flex items-center gap-5">
+          <div className="w-fit flex items-center gap-2 border-r pl-2">
+            <div className="text-md font-medium text-gray-600 flex gap-2 items-center">
+              <FaCircle className="text-[10px] text-[#ff9900]" />
+              Inactive Members
+            </div>
+            <div className="pr-2">
+              <span className="text-md font-semibold">
+                {dashboardData?.snapshot?.inactive_members}
+              </span>
+            </div>
+          </div>
+          <div className="w-fit flex items-center gap-2 pl-2">
             <div className="text-md font-medium text-gray-600 flex gap-2 items-center">
               <FaCircle className="text-[10px] text-[#FF0000]" />
-              Inactive Clients
+              Expired Members
             </div>
-            <div className="flex flex-wrap items-center justify-between">
-              <span className="text-md font-semibold">17</span>
+            <div>
+              <span className="text-md font-semibold">
+                {dashboardData?.snapshot?.expired_members}
+              </span>
             </div>
           </div>
         </div>
@@ -244,7 +339,10 @@ const TrainerDashboard = () => {
                     </span>
                     <DatePicker
                       selected={customFrom}
-                      onChange={(date) => setCustomFrom(date)}
+                      onChange={(date) => {
+                        setCustomFrom(date);
+                        setCustomTo(null); // ✅ reset To Date if From Date changes
+                      }}
                       placeholderText="From Date"
                       className="custom--input w-full input--icon"
                       minDate={subYears(new Date(), 20)}
@@ -264,12 +362,13 @@ const TrainerDashboard = () => {
                       onChange={(date) => setCustomTo(date)}
                       placeholderText="To Date"
                       className="custom--input w-full input--icon"
-                      minDate={subYears(new Date(), 20)}
+                      minDate={customFrom || subYears(new Date(), 20)}
                       maxDate={addYears(new Date(), 0)}
                       showMonthDropdown
                       showYearDropdown
                       dropdownMode="select"
                       dateFormat="dd-MM-yyyy"
+                      disabled={!customFrom}
                     />
                   </div>
                 </>
@@ -324,7 +423,7 @@ const TrainerDashboard = () => {
                       <th className="p-2">No of Classes</th>
                       <th className="p-2">Reservations</th>
                       <th className="p-2">Cancellations</th>
-                      <th className="p-2">Action</th>
+                      {/* <th className="p-2">Action</th> */}
                     </tr>
                   </thead>
                   <tbody>
@@ -340,11 +439,11 @@ const TrainerDashboard = () => {
                         <td className="p-2">
                           {String(item.cancellations).padStart(2, "0")}
                         </td>
-                        <td className="p-2">
+                        {/* <td className="p-2">
                           <div className="bg-[#F1F1F1] border border-[#D4D4D4] rounded-[5px] w-[32px] h-[32px] flex items-center justify-center cursor-pointer">
                             <img src={eyeIcon} />
                           </div>
-                        </td>
+                        </td> */}
                       </tr>
                     ))}
                   </tbody>
@@ -389,14 +488,18 @@ const TrainerDashboard = () => {
             <SolidGaugeChart />
           </div>
           <div className="rounded-[15px] p-4 box--shadow bg-white mt-4">
-            <p className="text-lg font-[600] mb-3 text-center mt-3">My Roster </p>
+            <p className="text-lg font-[600] mb-3 text-center mt-3">
+              My Roster{" "}
+            </p>
 
             <div className="flex border border-[#D4D4D4] rounded-[5px] py-2 px-5 gap-3 items-center mb-3">
               <div>
                 <img src={dutyIcon} className="w-6" />
               </div>
               <div>
-                <h2 className="text-[#000000] text-md font-bold">Duty Timings</h2>
+                <h2 className="text-[#000000] text-md font-bold">
+                  Duty Timings
+                </h2>
                 <p className="text-[#6F6F6F] text-md">09:00AM - 06:00AM</p>
               </div>
             </div>
@@ -405,7 +508,9 @@ const TrainerDashboard = () => {
                 <img src={lunchIcon} className="w-6" />
               </div>
               <div>
-                <h2 className="text-[#000000] text-md font-bold">Lunch Break</h2>
+                <h2 className="text-[#000000] text-md font-bold">
+                  Lunch Break
+                </h2>
                 <p className="text-[#6F6F6F] text-md">01:00AM - 02:00PM</p>
               </div>
             </div>
@@ -418,11 +523,9 @@ const TrainerDashboard = () => {
                 <p className="text-[#6F6F6F] text-md">Saturday & Sunday</p>
               </div>
             </div>
-
           </div>
         </div>
       </div>
-
     </div>
   );
 };

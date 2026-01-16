@@ -777,7 +777,7 @@ export default function Routing() {
           }
         />
         <Route
-          path="/reports/operations-reports/active-client-summary-report"
+          path="/reports/operations-reports/active-client-report"
           element={
             <PrivateRoute>
               <ActiveClientSummaryReport />
@@ -785,7 +785,7 @@ export default function Routing() {
           }
         />
         <Route
-          path="/reports/operations-reports/inactive-client-summary-report"
+          path="/reports/operations-reports/inactive-client-report"
           element={
             <PrivateRoute>
               <InactiveClientSummaryReport />

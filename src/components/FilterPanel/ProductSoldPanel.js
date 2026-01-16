@@ -239,8 +239,9 @@ export default function ProductSoldPanel({
     }
 
     if (key === "lead_owner") {
-      const leadOwner = leadOwnerOptions.find((opt) => opt.value === value);
-      return leadOwner ? leadOwner.label : value;
+      const allOwners = leadOwnerOptions.flatMap((group) => group.options);
+      const owner = allOwners.find((opt) => opt.value === value);
+      return owner ? owner.label : value;
     }
 
     if (key === "pay_mode") {

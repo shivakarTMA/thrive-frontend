@@ -102,10 +102,10 @@ const ActiveClientSummaryReport = () => {
       <div className="flex items-end justify-between gap-2 mb-5">
         <div className="title--breadcrumbs">
           <p className="text-sm">
-            {`Home > Reports > Operations Reports > Active Client Summary Report`}
+            {`Home > Reports > Operations Reports > Active Client Report`}
           </p>
           <h1 className="text-3xl font-semibold">
-            Active Client Summary Report
+            Active Client Report
           </h1>
         </div>
       </div>

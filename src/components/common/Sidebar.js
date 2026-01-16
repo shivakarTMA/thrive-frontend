@@ -11,7 +11,7 @@ import {
   IoSettingsOutline,
 } from "react-icons/io5";
 import { GoTools } from "react-icons/go";
-import { LuChartLine, LuList } from "react-icons/lu";
+import { LuCalendarCheck, LuChartLine, LuList } from "react-icons/lu";
 import { CgGym } from "react-icons/cg";
 import { useSelector } from "react-redux";
 import { TbGymnastics } from "react-icons/tb";
@@ -207,12 +207,10 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
             <Link
               to="/reports/all-bookings"
               className={`nav-link mb-2 ${
-                location.pathname === "/reports/all-bookings"
-                  ? "active"
-                  : ""
+                location.pathname === "/reports/all-bookings" ? "active" : ""
               }`}
             >
-              <SlCalender className="menu--icon" />
+              <LuCalendarCheck className="menu--icon" />
               <span className="nav-text">All Bookings</span>
             </Link>
 
@@ -524,13 +522,13 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                       Irregular Members Report
                     </Link>
                     <Link
-                      to="/reports/operations-reports/active-client-summary-report"
+                      to="/reports/operations-reports/active-client-report"
                       className="submenu-link text-white text-sm"
                     >
                       Active Client Report
                     </Link>
                     <Link
-                      to="/reports/operations-reports/inactive-client-summary-report"
+                      to="/reports/operations-reports/inactive-client-report"
                       className="submenu-link text-white text-sm"
                     >
                       Inactive Client Report
@@ -1156,12 +1154,10 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
             <Link
               to="/reports/all-bookings"
               className={`nav-link mb-2 ${
-                location.pathname === "/reports/all-bookings"
-                  ? "active"
-                  : ""
+                location.pathname === "/reports/all-bookings" ? "active" : ""
               }`}
             >
-              <SlCalender className="menu--icon" />
+              <LuCalendarCheck className="menu--icon" />
               <span className="nav-text">All Bookings</span>
             </Link>
             <Link
@@ -1212,7 +1208,7 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                 </Link>
 
                 <Link
-                  to="/reports/operations-reports/active-client-summary-report"
+                  to="/reports/operations-reports/active-client-report"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
                 >
                   <FaCircle className="menu--icon !text-[10px]" />
@@ -1233,6 +1229,124 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                   <FaCircle className="menu--icon !text-[10px]" />
                   Membership Expiry Report
                 </Link>
+              </div>
+            )}
+          </>
+        )}
+
+        {accessToken && userType === "TRAINER" && (
+          <>
+            <Link
+              to="/all-members"
+              className={`nav-link mb-2 ${
+                location.pathname === "/all-members" ? "active" : ""
+              }`}
+            >
+              <FiUsers className="menu--icon" />
+              <span className="nav-text">All Members</span>
+            </Link>
+
+            <Link
+              to="/reports/appointments/all-trial-appointments"
+              className={`nav-link mb-2 ${
+                location.pathname ===
+                "/reports/appointments/all-trial-appointments"
+                  ? "active"
+                  : ""
+              }`}
+            >
+              <SlCalender className="menu--icon" />
+              <span className="nav-text">Trial Appointments</span>
+            </Link>
+
+            <Link
+              to="/reports/all-bookings"
+              className={`nav-link mb-2 ${
+                location.pathname === "/reports/all-bookings" ? "active" : ""
+              }`}
+            >
+              <LuCalendarCheck className="menu--icon" />
+              <span className="nav-text">All Bookings</span>
+            </Link>
+
+            <Link
+              to="/workout-plans"
+              className={`nav-link mb-2 ${
+                location.pathname === "/workout-plans" ? "active" : ""
+              }`}
+            >
+              <TbGymnastics className="menu--icon" />
+              <span className="nav-text">Workout Plans</span>
+            </Link>
+
+            <Link
+              to="/reports/all-orders"
+              className={`nav-link mb-2 ${
+                location.pathname === "/reports/all-orders" ? "active" : ""
+              }`}
+            >
+              <AiOutlineProduct className="menu--icon" />
+              <span className="nav-text">All Orders</span>
+            </Link>
+
+            <div
+              className="nav-link d-flex justify-between align-items-center mb-2"
+              onClick={() => toggleMenu("trainerreports")}
+              style={{ cursor: "pointer" }}
+            >
+              <div className="flex items-center">
+                <IoDocumentTextOutline className="menu--icon" />
+                <span className="nav-text">Reports</span>
+              </div>
+              <FaAngleDown
+                className={`downmenu transition ${
+                  dropdownToggles["trainerreports"] ? "rotate-[180deg]" : ""
+                }`}
+              />
+            </div>
+
+            {dropdownToggles["trainerreports"] && (
+              <div className="mt-2 pl-5 relative">
+                <div className="absolute h-[calc(100%-15px)] w-[2px] bg-white left-[23px] top-[8px]"></div>
+
+                <Link
+                  to="/reports/sales-reports/pt-revenue-report"
+                  className="text-white flex items-center gap-[5px] mb-2 text-sm"
+                >
+                  <FaCircle className="menu--icon !text-[10px]" />
+                  <span className="nav-text">PT Revenue Report</span>
+                </Link>
+                <Link
+                  to="/reports/operations-reports/pt-expiry-report"
+                  className="text-white flex items-center gap-[5px] mb-2 text-sm"
+                >
+                  <FaCircle className="menu--icon !text-[10px]" />
+                  <span className="nav-text">PT Expiry Report</span>
+                </Link>
+
+                <Link
+                  to="/reports/operations-reports/member-checkins-report"
+                  className="text-white flex items-center gap-[5px] mb-2 text-sm"
+                >
+                  <FaCircle className="menu--icon !text-[10px]" />
+                  Member Checkins
+                </Link>
+                <Link
+                  to="/reports/operations-reports/active-client-report"
+                  className="text-white flex items-center gap-[5px] mb-2 text-sm"
+                >
+                  <FaCircle className="menu--icon !text-[10px]" />
+                  Active Client Report
+                </Link>
+                <Link
+                  to="/reports/operations-reports/inactive-client-report"
+                  className="text-white flex items-center gap-[5px] mb-2 text-sm"
+                >
+                  <FaCircle className="menu--icon !text-[10px]" />
+                  Inactive Client Report
+                </Link>
+
+                
               </div>
             )}
           </>

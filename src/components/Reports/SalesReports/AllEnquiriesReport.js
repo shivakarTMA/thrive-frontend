@@ -3,6 +3,7 @@ import { FaCircle } from "react-icons/fa";
 import Select from "react-select";
 import {
   customStyles,
+  filterActiveItems,
   formatAutoDate,
   formatText,
 } from "../../../Helper/helper";
@@ -10,7 +11,7 @@ import {
 import { useParams, useSearchParams } from "react-router-dom";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { addYears, subYears } from "date-fns";
+import { addYears, format, subYears } from "date-fns";
 import { useLocation } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
@@ -19,6 +20,7 @@ import Pagination from "../../../components/common/Pagination";
 import { FaCalendarDays } from "react-icons/fa6";
 import AllEnquiresFilterPanel from "../../../components/FilterPanel/AllEnquiresFilterPanel";
 import { useSelector } from "react-redux";
+import { useFormik } from "formik";
 
 const dateFilterOptions = [
   { value: "today", label: "Today" },
@@ -28,8 +30,6 @@ const dateFilterOptions = [
 ];
 
 const AllEnquiriesReport = () => {
-  const navigate = useNavigate();
-  const { id } = useParams();
   const location = useLocation();
   const { user } = useSelector((state) => state.auth);
   const userRole = user.role;
@@ -47,12 +47,40 @@ const AllEnquiriesReport = () => {
   const [customFrom, setCustomFrom] = useState(null);
   const [customTo, setCustomTo] = useState(null);
 
+  const [clubList, setClubList] = useState([]);
+  const [clubFilter, setClubFilter] = useState(null);
+
   const [allLeads, setAllLeads] = useState([]);
 
   const [page, setPage] = useState(1);
   const [rowsPerPage] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
+
+  // ✅ Single source of truth for applied filters
+  const [appliedFilters, setAppliedFilters] = useState({
+    gender: null,
+    enquiry_type: null,
+    lead_source: null,
+    lead_status: null,
+    call_tag: null,
+    lead_owner: null,
+  });
+
+  const formik = useFormik({
+    enableReinitialize: true,
+    initialValues: {
+      filterGender: null,
+      filterEnquiryType: null,
+      filterLeadSource: null,
+      filterLeadStatus: null,
+      filterCallTag: null,
+      filterLeadOwner: null,
+    },
+    onSubmit: (values) => {
+      console.log(values);
+    },
+  });
 
   useEffect(() => {
     const dateParam = searchParams.get("date");
@@ -82,112 +110,63 @@ const AllEnquiriesReport = () => {
     ? decodeURIComponent(urlLastCallType)
     : null;
 
-  const fetchEnquiriesList = async (
-    currentPage = page,
-    overrideSelected = {}
-  ) => {
+  // Function to fetch club list
+  const fetchClub = async (search = "") => {
+    try {
+      const response = await authAxios().get("/club/list", {
+        params: search ? { search } : {},
+      });
+      const data = response.data?.data || [];
+      const activeOnly = filterActiveItems(data);
+      setClubList(activeOnly);
+    } catch (error) {
+      toast.error("Failed to fetch clubs");
+    }
+  };
+  // Function to fetch role list
+
+  useEffect(() => {
+    fetchClub();
+  }, []);
+
+  const clubOptions = clubList.map((item) => ({
+    label: item.name,
+    value: item.id,
+  }));
+
+  const fetchEnquiriesList = async (currentPage = page) => {
     try {
       const params = {
         page: currentPage,
         limit: rowsPerPage,
       };
 
-      if (id) {
-        params.id = id;
-        setDateFilter("");
-      } else {
-        const urlLeadStatus = searchParams.get("lead_status");
-        const urlDate = searchParams.get("date");
-        const urlCustomFrom = searchParams.get("customFrom");
-        const urlCustomTo = searchParams.get("customTo");
-
-        // ✅ Use overrideSelected first, then selected state, then URL, otherwise null
-        const selLeadSource = overrideSelected.hasOwnProperty("lead_source")
-          ? overrideSelected.lead_source
-          : selectedLeadSource;
-        const selLeadStatus = overrideSelected.hasOwnProperty("lead_status")
-          ? overrideSelected.lead_status
-          : selectedLeadStatus
-          ? selectedLeadStatus
-          : urlLeadStatus
-          ? { label: urlLeadStatus, value: urlLeadStatus }
-          : null;
-
-        const selLastCallType = overrideSelected.hasOwnProperty(
-          "last_call_status"
-        )
-          ? overrideSelected.last_call_status
-          : selectedLastCallType
-          ? selectedLastCallType
-          : last_call_status
-          ? { label: last_call_status, value: last_call_status }
-          : null;
-
-        const selCallTag = overrideSelected.hasOwnProperty("created_by")
-          ? overrideSelected.created_by
-          : selectedCallTag;
-        const selServiceName = overrideSelected.hasOwnProperty("interested_in")
-          ? overrideSelected.interested_in
-          : selectedServiceName;
-        const selGender = overrideSelected.hasOwnProperty("gender")
-          ? overrideSelected.gender
-          : selectedGender;
-        const selClub = overrideSelected.hasOwnProperty("club_id")
-          ? overrideSelected.club_id
-          : selectedClub;
-
-        let selDateFilter =
-          overrideSelected.dateFilter?.value || dateFilter?.value || urlDate;
-
-        let selCustomFrom =
-          overrideSelected.customFrom ||
-          customFrom ||
-          (urlCustomFrom ? new Date(decodeURIComponent(urlCustomFrom)) : null);
-        let selCustomTo =
-          overrideSelected.customTo ||
-          customTo ||
-          (urlCustomTo ? new Date(decodeURIComponent(urlCustomTo)) : null);
-
-        // 🚫 Only use URL custom range if no manual override
-        if (
-          !overrideSelected.dateFilter &&
-          !customFrom &&
-          !customTo &&
-          urlDate === "custom" &&
-          urlCustomFrom &&
-          urlCustomTo
-        ) {
-          selDateFilter = "custom";
-          selCustomFrom = new Date(decodeURIComponent(urlCustomFrom));
-          selCustomTo = new Date(decodeURIComponent(urlCustomTo));
-        }
-
-        // ✅ Build query params (only if value exists)
-
-        if (selLeadSource?.value) params.lead_source = selLeadSource.value;
-        if (selLeadStatus?.value) params.lead_status = selLeadStatus.value;
-        if (selLastCallType?.value)
-          params.last_call_status = selLastCallType.value;
-        if (selCallTag?.value) params.created_by = selCallTag.value;
-        if (selServiceName?.value) params.interested_in = selServiceName.value;
-        if (selGender?.value) params.gender = selGender.value;
-        if (selClub?.value) params.club_id = selClub.value;
-
-        // ✅ Date filter
-        if (selDateFilter && selDateFilter !== "custom") {
-          params.dateFilter = selDateFilter;
-        } else if (selDateFilter === "custom" && selCustomFrom && selCustomTo) {
-          const formatDate = (date) => {
-            const d = new Date(date);
-            const month = String(d.getMonth() + 1).padStart(2, "0");
-            const day = String(d.getDate()).padStart(2, "0");
-            return `${d.getFullYear()}-${month}-${day}`;
-          };
-
-          params.startDate = formatDate(selCustomFrom);
-          params.endDate = formatDate(selCustomTo);
-        }
+      // Date Filter
+      if (dateFilter?.value && dateFilter.value !== "custom") {
+        params.dateFilter = dateFilter.value;
       }
+
+      if (dateFilter?.value === "custom" && customFrom && customTo) {
+        const formatDate = (d) => format(d, "yyyy-MM-dd");
+        params.startDate = formatDate(customFrom);
+        params.endDate = formatDate(customTo);
+      }
+
+      // Club filter
+      if (clubFilter?.value) {
+        params.club_id = clubFilter.value;
+      }
+
+      if (appliedFilters.gender) params.gender = appliedFilters.gender;
+      if (appliedFilters.enquiry_type)
+        params.enquiry_type = appliedFilters.enquiry_type;
+      if (appliedFilters.lead_source)
+        params.lead_source = appliedFilters.lead_source;
+      if (appliedFilters.lead_status)
+        params.lead_status = appliedFilters.lead_status;
+      if (appliedFilters.call_tag) params.call_tag = appliedFilters.call_tag;
+      if (appliedFilters.lead_owner)
+        params.lead_owner = appliedFilters.lead_owner;
 
       const res = await authAxios().get("/marketing/report/enquiry", {
         params,
@@ -207,80 +186,36 @@ const AllEnquiriesReport = () => {
   };
 
   useEffect(() => {
-    const searchParams = new URLSearchParams(location.search);
-    const urlDateFilter = searchParams.get("date");
-
-    const foundDateOption = dateFilterOptions.find(
-      (option) => option.value === urlDateFilter
-    );
-
-    if (id) {
-      // If id exists, fetch by id, but also include URL date filter if any
-      fetchEnquiriesList(1, { id, dateFilter: foundDateOption });
-    } else if (foundDateOption) {
-      // If no id, but date filter exists in URL
-      setDateFilter(foundDateOption);
-      fetchEnquiriesList(1, { dateFilter: foundDateOption });
-    } else {
-      // Default fetch without id or URL date filter
-      fetchEnquiriesList();
+    if (dateFilter?.value === "custom") {
+      if (customFrom && customTo) {
+        fetchEnquiriesList(1);
+      }
+      return;
     }
-  }, [id, location.search]);
 
-  const handleDateFilterChange = (selected) => {
-    setDateFilter(selected);
-
-    // If custom date filter is selected, handle the logic for custom dates
-    if (selected?.value !== "custom") {
-      setCustomFrom(null);
-      setCustomTo(null);
-      // Navigate to /reports/sales-reports/all-enquiries-report, setting the new date filter in the URL
-      navigate(
-        `/reports/sales-reports/all-enquiries-report?date=${selected.value}`,
-        { replace: true }
-      );
-
-      // Re-fetch the lead list based on the selected filter
-      fetchEnquiriesList(1, { dateFilter: selected });
-    } else {
-      // Handle custom date filter logic here (e.g., open a date picker)
-      // You may need to update the URL with a custom date range
-    }
-  };
-
-  // Trigger only for custom range once both dates selected
-  useEffect(() => {
-    if (dateFilter?.value === "custom" && customFrom && customTo) {
-      fetchEnquiriesList(1, { dateFilter, customFrom, customTo });
-    }
-  }, [dateFilter, customFrom, customTo]);
-
-  const handleLeadUpdate = () => {
-    fetchEnquiriesList();
-  };
-
-  const handleRemoveFilter = (filterKey) => {
-    const setterMap = {
-      club_id: setSelectedClub,
-      lead_source: setSelectedLeadSource,
-      last_call_status: setSelectedLastCallType,
-      lead_status: setSelectedLeadStatus,
-      created_by: setSelectedCallTag,
-      interested_in: setSelectedServiceName,
-      gender: setSelectedGender,
-    };
-
-    // Clear state
-    setterMap[filterKey]?.(null);
-
-    // Pass explicit null in overrideSelected so fetchEnquiriesList knows to skip it
-    const overrideSelected = { [filterKey]: null };
-    fetchEnquiriesList(1, overrideSelected);
-  };
-
-  const handleApplyFiltersFromChild = () => {
     fetchEnquiriesList(1);
-  };
+  }, [dateFilter, customFrom, customTo, clubFilter, appliedFilters]);
+
+  useEffect(() => {
+    // Wait for clubList to be loaded
+    if (clubList.length === 0) return;
+
+    const params = new URLSearchParams(location.search);
+
+    const clubId = params.get("club_id");
+    if (clubId) {
+      const club = clubList.find((c) => c.id === Number(clubId));
+      if (club) {
+        setClubFilter({ label: club.name, value: club.id });
+      }
+    } else {
+      // Set default club only on initial load
+      setClubFilter({
+        label: clubList[0].name,
+        value: clubList[0].id,
+      });
+    }
+  }, [clubList]);
 
   return (
     <>
@@ -289,9 +224,7 @@ const AllEnquiriesReport = () => {
           <div className="flex items-end justify-between gap-2 mb-5">
             <div className="title--breadcrumbs">
               <p className="text-sm">{`Home > Sales Reports > All Enquiries Report`}</p>
-              <h1 className="text-3xl font-semibold" onClick={handleLeadUpdate}>
-                All Enquiries Report
-              </h1>
+              <h1 className="text-3xl font-semibold">All Enquiries Report</h1>
             </div>
           </div>
 
@@ -300,13 +233,17 @@ const AllEnquiriesReport = () => {
             <div className="flex gap-2 w-full">
               <div className="max-w-[180px] w-full">
                 <Select
-                  placeholder="Select Date"
+                  placeholder="Date Filter"
                   options={dateFilterOptions}
                   value={dateFilter}
-                  onChange={handleDateFilterChange}
-                  // isClearable
+                  onChange={(selected) => {
+                    setDateFilter(selected);
+                    if (selected?.value !== "custom") {
+                      setCustomFrom(null);
+                      setCustomTo(null);
+                    }
+                  }}
                   styles={customStyles}
-                  className="w-full"
                 />
               </div>
 
@@ -352,6 +289,17 @@ const AllEnquiriesReport = () => {
                   </div>
                 </>
               )}
+
+              <div className="w-fit min-w-[200px]">
+                <Select
+                  placeholder="Filter by club"
+                  value={clubFilter}
+                  options={clubOptions}
+                  onChange={(option) => setClubFilter(option)}
+                  isClearable={userRole === "ADMIN" ? true : false}
+                  styles={customStyles}
+                />
+              </div>
             </div>
           </div>
 
@@ -360,22 +308,19 @@ const AllEnquiriesReport = () => {
               <div>
                 <AllEnquiresFilterPanel
                   userRole={userRole}
-                  selectedClub={selectedClub}
-                  setSelectedClub={setSelectedClub}
-                  selectedLeadSource={selectedLeadSource}
-                  setSelectedLeadSource={setSelectedLeadSource}
-                  selectedLastCallType={selectedLastCallType}
-                  selectedLeadStatus={selectedLeadStatus}
-                  setSelectedLeadStatus={setSelectedLeadStatus}
-                  selectedCallTag={selectedCallTag}
-                  setSelectedCallTag={setSelectedCallTag}
-                  setSelectedLastCallType={setSelectedLastCallType}
-                  selectedGender={selectedGender}
-                  setSelectedGender={setSelectedGender}
-                  selectedServiceName={selectedServiceName}
-                  setSelectedServiceName={setSelectedServiceName}
-                  onApplyFilters={handleApplyFiltersFromChild} // child "Apply" -> parent fetch
-                  onRemoveFilter={handleRemoveFilter}
+                  clubId={clubFilter?.value}
+                  filterGender={formik.values.filterGender}
+                  filterEnquiryType={formik.values.filterEnquiryType}
+                  filterLeadSource={formik.values.filterLeadSource}
+                  filterLeadStatus={formik.values.filterLeadStatus}
+                  filterCallTag={formik.values.filterCallTag}
+                  filterLeadOwner={formik.values.filterLeadOwner}
+                  formik={formik}
+                  setFilterValue={(field, value) =>
+                    formik.setFieldValue(field, value)
+                  }
+                  appliedFilters={appliedFilters}
+                  setAppliedFilters={setAppliedFilters}
                 />
               </div>
             </div>
@@ -390,11 +335,12 @@ const AllEnquiriesReport = () => {
                       <th className="px-2 py-4 min-w-[140px]">Name</th>
                       <th className="px-2 py-4 min-w-[120px]">Location</th>
                       <th className="px-2 py-4 min-w-[100px]">Gender</th>
-                      <th className="px-2 py-4 min-w-[150px]">Lead Owner </th>
-                      <th className="px-2 py-4 min-w-[120px]">Lead Source</th>
+                      <th className="px-2 py-4 min-w-[150px]">Interested In </th>
                       <th className="px-2 py-4 min-w-[120px]">Enquiry Type</th>
+                      
+                      <th className="px-2 py-4 min-w-[120px]">Lead Source</th>
                       <th className="px-2 py-4 min-w-[120px]">Lead Status </th>
-                      <th className="px-2 py-4 min-w-[100px]">Status</th>
+                      <th className="px-2 py-4 min-w-[100px]">Call Tag</th>
                       <th className="px-2 py-4 min-w-[150px]">
                         Last Communication
                       </th>
@@ -404,6 +350,7 @@ const AllEnquiriesReport = () => {
                       <th className="px-2 py-4 min-w-[150px]">
                         Next Follow-Up
                       </th>
+                      <th className="px-2 py-4 min-w-[150px]">Lead Owner </th>
                     </tr>
                   </thead>
 
@@ -428,28 +375,32 @@ const AllEnquiriesReport = () => {
                             {formatText(row.gender)}
                           </td>
                           <td className="px-2 py-4">
-                            {row.lead_owner ? row.lead_owner : "--"}
-                          </td>
-                          <td className="px-2 py-4">
-                            {row.lead_source ? row.lead_source : "--"}
+                            {row.interested_in ? row.interested_in : "--"}
                           </td>
                           <td className="px-2 py-4">
                             {row.enquiry_type ? row.enquiry_type : "--"}
+                          </td>
+                          
+                          <td className="px-2 py-4">
+                            {row.lead_source ? row.lead_source : "--"}
                           </td>
                           <td className="px-2 py-4">
                             {row.lead_status ? row.lead_status : "--"}
                           </td>
                           <td className="px-2 py-4">
-                            {row.status ? formatText(row.status) : "--"}
+                            {row.call_tag ? formatText(row.call_tag) : "--"}
                           </td>
                           <td className="px-2 py-4">
-                            {formatAutoDate(row.last_communication_date)}
+                            {row.last_communication_date ? formatAutoDate(row.last_communication_date) : "--"}
                           </td>
-                          <td className="px-2 py-4">{row.last_call_status}</td>
+                          <td className="px-2 py-4">{row.last_call_status ? row.last_call_status :"--"}</td>
                           <td className="px-2 py-4">
                             {row.next_follow_up
                               ? formatAutoDate(row.next_follow_up)
                               : "--"}
+                          </td>
+                          <td className="px-2 py-4">
+                            {row.lead_owner ? row.lead_owner : "--"}
                           </td>
                         </tr>
                       ))
@@ -471,20 +422,7 @@ const AllEnquiriesReport = () => {
                 totalCount={totalCount}
                 currentDataLength={allLeads.length}
                 onPageChange={(newPage) => {
-                  setPage(newPage);
-
-                  // Prepare overrideSelected for removed filters
-                  const overrideSelected = {
-                    club_id: selectedClub || null,
-                    lead_status: selectedLeadStatus || null,
-                    lead_source: selectedLeadSource || null,
-                    last_call_status: selectedLastCallType || null,
-                    created_by: selectedCallTag || null,
-                    interested_in: selectedServiceName || null,
-                    gender: selectedGender || null,
-                  };
-
-                  fetchEnquiriesList(newPage, overrideSelected);
+                  fetchEnquiriesList(newPage);
                 }}
               />
             </div>
