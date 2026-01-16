@@ -11,13 +11,17 @@ import { authAxios } from "../../config/config";
 import { IoSearchOutline } from "react-icons/io5";
 import Select from "react-select";
 import { customStyles } from "../../Helper/helper";
+import { useSelector } from "react-redux";
 
 const Studio = () => {
   const [showModal, setShowModal] = useState(false);
   const [module, setModule] = useState([]);
-  const [club, setClub] = useState([]);
   const [editingOption, setEditingOption] = useState(null);
   const leadBoxRef = useRef(null);
+  const [club, setClub] = useState([]);
+  const [clubFilter, setClubFilter] = useState(null);
+  const { user } = useSelector((state) => state.auth);
+  const userRole = user.role;
 
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState(null);
@@ -43,13 +47,18 @@ const Studio = () => {
 
   const fetchStudio = async (search = "") => {
     try {
-      const res = await authAxios().get("/studio/list", {
-        params: search ? { search } : {},
-      });
-      let data = res.data?.data || res.data || [];
-      if (statusFilter?.value) {
-        data = data.filter((item) => item.status === statusFilter.value);
+      const params = {};
+
+      // Search param
+      if (search) params.search = search;
+
+      if (clubFilter?.value) {
+        params.club_id = clubFilter.value;
       }
+
+      const res = await authAxios().get("/studio/list", { params });
+      let data = res.data?.data || res.data || [];
+
       setModule(data);
     } catch (err) {
       console.error(err);
@@ -58,7 +67,6 @@ const Studio = () => {
   };
 
   useEffect(() => {
-    fetchStudio();
     fetchClub();
   }, []);
 
@@ -76,7 +84,7 @@ const Studio = () => {
     }, 300);
 
     return () => clearTimeout(delayDebounce);
-  }, [searchTerm, statusFilter]);
+  }, [searchTerm, clubFilter]);
 
   const handleOverlayClick = (e) => {
     if (leadBoxRef.current && !leadBoxRef.current.contains(e.target)) {
@@ -123,6 +131,15 @@ const Studio = () => {
     },
   });
 
+  useEffect(() => {
+    if (club.length > 0 && !clubFilter) {
+      setClubFilter({
+        label: club[0].name,
+        value: club[0].id,
+      });
+    }
+  }, [club]);
+
   return (
     <div className="page--content">
       <div className="flex items-end justify-between gap-2 mb-5">
@@ -161,7 +178,17 @@ const Studio = () => {
             />
           </div>
         </div>
-        <div className="w-full max-w-[200px]">
+        <div className="w-fit min-w-[180px]">
+          <Select
+            placeholder="Filter by club"
+            options={clubOptions}
+            value={clubFilter}
+            onChange={setClubFilter}
+            isClearable={userRole === "ADMIN" ? true : false}
+            styles={customStyles}
+          />
+        </div>
+        {/* <div className="w-full max-w-[200px]">
           <Select
             placeholder="Filter by Status"
             options={[
@@ -173,7 +200,7 @@ const Studio = () => {
             isClearable
             styles={customStyles}
           />
-        </div>
+        </div> */}
       </div>
       <div className="box--shadow bg-white rounded-[15px] p-4">
         <div className="relative overflow-x-auto">

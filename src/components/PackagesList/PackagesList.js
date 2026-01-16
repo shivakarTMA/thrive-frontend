@@ -28,6 +28,8 @@ const PackagesList = () => {
   const [serviceFilter, setServiceFilter] = useState(null);
   const [club, setClub] = useState([]);
   const [clubFilter, setClubFilter] = useState(null);
+    const { user } = useSelector((state) => state.auth);
+    const userRole = user.role;
 
   const [sessionLevelValue, setSessionLevelValue] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
@@ -46,11 +48,11 @@ const PackagesList = () => {
 
   const sessionLevel = lists["SESSION_LEVEL"] || [];
 
-  const fetchService = async (search = "") => {
+  const fetchService = async (clubId = null) => {
     try {
-      const res = await authAxios().get("/service/list", {
-        params: search ? { search } : {},
-      });
+      const params = {};
+      if (clubId) params.club_id = clubId;
+      const res = await authAxios().get("/service/list", { params });
       let data = res.data?.data || res.data || [];
       const activeService = data.filter((item) => item.status === "ACTIVE");
       console.log(activeService, "activeService");
@@ -119,7 +121,6 @@ const PackagesList = () => {
   // Initial fetch
   useEffect(() => {
     fetchPackagesList();
-    fetchService();
     fetchClub();
   }, []);
 
@@ -161,13 +162,15 @@ const PackagesList = () => {
         club_id: Yup.number().required("Club is required"),
         session_level: Yup.string().required("Level is required"),
         name: Yup.string().required("Name is required"),
-        caption:
-          formik.values.service_id === 1
+        caption: service_type === "GROUP_CLASS"
             ? Yup.string() // not required if editing
             : Yup.string().required("Caption is required"),
         tags: Yup.string().required("Tags is required"),
 
         // trainer_id: Yup.string().required("Staff is required"),
+        trainer_id: service_type !== "GROUP_CLASS"
+            ? Yup.string() // not required if editing
+            : Yup.string().required("Trainer Name is required"),
         position: Yup.string().required("Position is required"),
         // status: editingOption
         //   ? Yup.string() // not required if editing
@@ -308,6 +311,7 @@ const PackagesList = () => {
   const initialValues = {
     name: "",
     service_id: "",
+    trainer_id: "",
     buddy_pt: "",
     club_id: null,
     studio_id: null,
@@ -506,6 +510,7 @@ const PackagesList = () => {
       formik.setValues({
         ...formik.values,
         buddy_pt: "",
+        trainer_id: "",
         no_of_sessions: "",
         session_duration: "",
         session_validity: "",
@@ -547,6 +552,7 @@ const PackagesList = () => {
       formik.setValues({
         ...formik.values,
         studio_id: "",
+        trainer_id: "",
         package_category_id: "",
         start_date: "",
         start_time: "",
@@ -622,7 +628,21 @@ const PackagesList = () => {
     formik.validateForm();
   }, [formik.values.service_id]);
 
-  // console.log(formik.values, "SHIVAKAR values");
+  useEffect(() => {
+    if (club.length > 0 && !clubFilter) {
+      setClubFilter({
+        label: club[0].name,
+        value: club[0].id,
+      });
+    }
+  }, [club]);
+
+  useEffect(() => {
+    fetchService(clubFilter?.value || null); // Fetch services for selected club
+    setServiceFilter(null); // Reset selected service when club changes
+  }, [clubFilter]);
+
+    // console.log(formik.values, "SHIVAKAR values");
   console.log(formik.errors, "SHIVAKAR ERRORS");
   // console.log(formik.values, "SHIVAKAR values");
 
@@ -663,22 +683,22 @@ const PackagesList = () => {
             />
           </div>
         </div>
-        <div className="w-full max-w-[200px]">
-          <Select
-            placeholder="Filter by Service"
-            options={serviceOptions}
-            value={serviceFilter}
-            onChange={(option) => setServiceFilter(option)}
-            isClearable
-            styles={customStyles}
-          />
-        </div>
         <div className="w-fit min-w-[180px]">
           <Select
             placeholder="Filter by club"
             options={clubOptions}
             value={clubFilter}
             onChange={setClubFilter}
+            isClearable={userRole === "ADMIN" ? true : false}
+            styles={customStyles}
+          />
+        </div>
+        <div className="w-full max-w-[200px]">
+          <Select
+            placeholder="Filter by Service"
+            options={serviceOptions}
+            value={serviceFilter}
+            onChange={(option) => setServiceFilter(option)}
             isClearable
             styles={customStyles}
           />
@@ -788,7 +808,7 @@ const PackagesList = () => {
         <CreatePackage
           setShowModal={setShowModal}
           editingOption={editingOption}
-          serviceOptions={serviceOptions}
+          
           formik={formik}
           setSessionLevelValue={setSessionLevelValue}
           sessionLevel={sessionLevel}

@@ -37,7 +37,7 @@ const CreatePackage = ({
   setShowModal,
   editingOption,
   formik,
-  serviceOptions,
+
   setSessionLevelValue,
   sessionLevel,
   sessionLevelValue,
@@ -45,6 +45,9 @@ const CreatePackage = ({
   const leadBoxRef = useRef(null);
   const [studio, setStudio] = useState([]);
   const [club, setClub] = useState([]);
+  const [service, setService] = useState([]);
+  const [staffList, setStaffList] = useState([]);
+
   const [packageCategory, setPackageCategory] = useState([]);
   const getServiceType = (service_id, serviceOptions) => {
     const found = serviceOptions.find((s) => s.value === service_id);
@@ -70,11 +73,41 @@ const CreatePackage = ({
     }
   };
 
-  const fetchStudio = async (search = "") => {
+  const fetchService = async (clubId = null) => {
     try {
-      const res = await authAxios().get("/studio/list", {
-        params: search ? { search } : {},
-      });
+      const params = {};
+      if (clubId) params.club_id = clubId;
+      const res = await authAxios().get("/service/list", { params });
+      let data = res.data?.data || res.data || [];
+      const activeService = data.filter((item) => item.status === "ACTIVE");
+      console.log(activeService, "activeService");
+      setService(activeService);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to fetch service");
+    }
+  };
+
+  const fetchStaff = async (clubId = null) => {
+    try {
+      const params = {};
+      if (clubId) params.club_id = clubId;
+      const res = await authAxios().get("/staff/list?role=TRAINER", {params});
+      let data = res.data?.data || res.data || [];
+      const activeService = data.filter((item) => item.status === "ACTIVE");
+      console.log(activeService, "activeService");
+      setStaffList(activeService);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to fetch service");
+    }
+  };
+
+  const fetchStudio = async (clubId = null) => {
+    try {
+      const params = {};
+      if (clubId) params.club_id = clubId;
+      const res = await authAxios().get("/studio/list", { params });
       let data = res.data?.data || res.data || [];
       const activeService = data.filter((item) => item.status === "ACTIVE");
       setStudio(activeService);
@@ -100,10 +133,30 @@ const CreatePackage = ({
   };
 
   useEffect(() => {
-    fetchStudio();
     fetchClub();
     fetchPackageCategory();
   }, []);
+
+  useEffect(() => {
+    if (formik.values.club_id) {
+      fetchService(formik.values.club_id);
+      fetchStudio(formik.values.club_id);
+      fetchStaff(formik.values.club_id);
+
+      // reset dependent fields
+      formik.setFieldValue("service_id", "");
+      formik.setFieldValue("studio_id", "");
+      formik.setFieldValue("trainer_id", "");
+    } else {
+      setService([]);
+    }
+  }, [formik.values.club_id]);
+
+  const trainerOptions =
+    staffList?.map((item) => ({
+      label: item.name,
+      value: item.id,
+    })) || [];
 
   const clubOptions =
     club?.map((item) => ({
@@ -111,15 +164,26 @@ const CreatePackage = ({
       value: item.id,
     })) || [];
 
-  const filteredStudioOptions = studio.filter(
-    (item) => item.club_id === formik.values.club_id
-  );
+  const filteredStudioOptions =
+    studio?.map((item) => ({
+      label: item.name,
+      value: item.id,
+    })) || [];
 
   const studioOptions =
     filteredStudioOptions?.map((item) => ({
       label: item.name,
       value: item.id,
     })) || [];
+
+  const serviceOptions =
+    service
+      ?.map((item) => ({
+        label: item.name,
+        value: item.id,
+        type: item.type,
+      }))
+      .filter((item) => item.type !== "PRODUCT") || [];
 
   const packageCategoryOptions =
     packageCategory?.map((item) => ({
@@ -175,14 +239,13 @@ const CreatePackage = ({
           formik.setValues({
             name: data?.name || "",
             service_id: data?.service_id || "",
+            trainer_id: data?.trainer_id || "",
             club_id: data?.club_id || "",
             buddy_pt: data?.buddy_pt || "",
             studio_id: data?.studio_id || null,
             package_category_id: data?.package_category_id || "",
             caption:
-              sessionLevelValue === "GROUP_CLASS"
-                ? ""
-                : data?.caption || "",
+              sessionLevelValue === "GROUP_CLASS" ? "" : data?.caption || "",
             description: data?.description || "",
             image: data?.image || null,
             session_level:
@@ -433,6 +496,36 @@ const CreatePackage = ({
                         </div>
                       )}
                     </div>
+                    {/* Club Dropdown */}
+                    <div>
+                      <label className="mb-2 block">
+                        Club<span className="text-red-500">*</span>
+                      </label>
+                      <div className="relative">
+                        <Select
+                          name="club_id"
+                          value={
+                            clubOptions.find(
+                              (option) =>
+                                option.value.toString() ===
+                                formik.values.club_id?.toString()
+                            ) || null
+                          }
+                          options={clubOptions}
+                          onChange={(option) =>
+                            formik.setFieldValue("club_id", option.value)
+                          }
+                          onBlur={() => formik.setFieldTouched("club_id", true)}
+                          styles={customStyles}
+                          className="!capitalize"
+                        />
+                      </div>
+                      {formik.touched.club_id && formik.errors.club_id && (
+                        <p className="text-red-500 text-sm mt-1">
+                          {formik.errors.club_id}
+                        </p>
+                      )}
+                    </div>
                     {/* Service ID */}
                     <div>
                       <label className="mb-2 block">
@@ -496,6 +589,7 @@ const CreatePackage = ({
 
                     {service_type_check &&
                       service_type_check === "GROUP_CLASS" && (
+                        <>
                         <div>
                           <label className="mb-2 block">
                             Category<span className="text-red-500">*</span>
@@ -533,6 +627,44 @@ const CreatePackage = ({
                               </div>
                             )}
                         </div>
+                        <div>
+                          <label className="mb-2 block">
+                            Trainer Name<span className="text-red-500">*</span>
+                          </label>
+
+                          <Select
+                            name="trainer_id"
+                            value={
+                              trainerOptions.find(
+                                (opt) =>
+                                  opt.value ===
+                                  formik.values.trainer_id
+                              ) || null
+                            }
+                            options={trainerOptions}
+                            onChange={(option) =>
+                              formik.setFieldValue(
+                                "trainer_id",
+                                option.value
+                              )
+                            }
+                            onBlur={() =>
+                              formik.setFieldTouched(
+                                "trainer_id",
+                                true
+                              )
+                            }
+                            styles={customStyles}
+                          />
+
+                          {formik.touched.trainer_id &&
+                            formik.errors.trainer_id && (
+                              <div className="text-red-500 text-sm">
+                                {formik.errors.trainer_id}
+                              </div>
+                            )}
+                        </div>
+                        </>
                       )}
 
                     {/* Name */}
@@ -607,37 +739,6 @@ const CreatePackage = ({
                         <div className="text-red-500 text-sm">
                           {formik.errors.tags}
                         </div>
-                      )}
-                    </div>
-
-                    {/* Club Dropdown */}
-                    <div>
-                      <label className="mb-2 block">
-                        Club<span className="text-red-500">*</span>
-                      </label>
-                      <div className="relative">
-                        <Select
-                          name="club_id"
-                          value={
-                            clubOptions.find(
-                              (option) =>
-                                option.value.toString() ===
-                                formik.values.club_id?.toString()
-                            ) || null
-                          }
-                          options={clubOptions}
-                          onChange={(option) =>
-                            formik.setFieldValue("club_id", option.value)
-                          }
-                          onBlur={() => formik.setFieldTouched("club_id", true)}
-                          styles={customStyles}
-                          className="!capitalize"
-                        />
-                      </div>
-                      {formik.touched.club_id && formik.errors.club_id && (
-                        <p className="text-red-500 text-sm mt-1">
-                          {formik.errors.club_id}
-                        </p>
                       )}
                     </div>
 
