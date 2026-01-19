@@ -153,9 +153,9 @@ const MonthlyTargetsReport = () => {
       <div className="flex items-end justify-between gap-2 mb-5">
         <div className="title--breadcrumbs">
           <p className="text-sm">
-            {`Home > Reports > Finance Reports > Monthly Targets`}
+            {`Home > Reports > Finance Reports > Set Monthly Targets`}
           </p>
-          <h1 className="text-3xl font-semibold">Monthly Targets</h1>
+          <h1 className="text-3xl font-semibold">Set Monthly Targets</h1>
         </div>
         <div className="flex items-end gap-2">
           <button

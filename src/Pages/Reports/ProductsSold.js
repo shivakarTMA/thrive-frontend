@@ -65,8 +65,8 @@ const ProductsSold = () => {
     service_type: null,
     package_type: null,
     lead_source: null,
-    lead_owner: null,
-    pay_mode: null,
+    lead_owner_id: null,
+    payment_method: null,
   });
 
   const formik = useFormik({
@@ -178,10 +178,10 @@ const ProductsSold = () => {
         params.package_type = appliedFilters.package_type;
       if (appliedFilters.lead_source)
         params.lead_source = appliedFilters.lead_source;
-      if (appliedFilters.lead_owner)
-        params.lead_owner = appliedFilters.lead_owner;
-      if (appliedFilters.pay_mode)
-        params.pay_mode = appliedFilters.pay_mode;
+      if (appliedFilters.lead_owner_id)
+        params.lead_owner_id = appliedFilters.lead_owner_id;
+      if (appliedFilters.payment_method)
+        params.payment_method = appliedFilters.payment_method;
 
 
       console.log("🔍 API Request Params:", params);
@@ -197,45 +197,23 @@ const ProductsSold = () => {
       setPage(responseData?.currentPage || 1);
       setTotalPages(responseData?.totalPage || 1);
       setTotalCount(responseData?.totalCount || data.length);
+
+      // Update stats
+      const statusCount = responseData?.counts || {};
+      setStats({
+        memberships: statusCount.membership_count || 0,
+        group_class_count: statusCount.group_class_count || 0,
+        personal_training: statusCount.pt_count || 0,
+        recovery: statusCount.recovery_count || 0,
+        pilates: statusCount.pilates_count || 0,
+        products: statusCount.products_count || 0,
+      });
     } catch (err) {
       console.error("❌ API Error:", err);
       toast.error("Failed to fetch product sold report");
     }
   };
 
-  const fetchProductSoldStats = async () => {
-    try {
-      let params = {};
-
-      if (dateFilter?.value === "custom") {
-        if (customFrom && customTo) {
-          params.startDate = format(customFrom, "yyyy-MM-dd");
-          params.endDate = format(customTo, "yyyy-MM-dd");
-        } else {
-          return; // don't fetch until both dates selected
-        }
-      } else {
-        params.dateFilter = dateFilter?.value || "last_7_days";
-      }
-
-      const res = await authAxios().get("/report/product/sold/count", {
-        params,
-      });
-      const data = res.data?.data || {};
-
-      setStats({
-        memberships: Number(data.memberships) || 0,
-        products: Number(data.products) || 0,
-        group_class_count: Number(data.group_class_count) || 0,
-        recovery: Number(data.recovery) || 0,
-        personal_training: Number(data.personal_training) || 0,
-        pilates: Number(data.pilates) || 0,
-      });
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to fetch appointment stats");
-    }
-  };
 
   // ---------------------------
   // INITIALIZE FROM URL
@@ -300,8 +278,8 @@ const ProductsSold = () => {
       filterServiceType: urlFilters.service_type,
       filterPackageType: urlFilters.package_type,
       filterLeadSource: urlFilters.lead_source,
-      filterLeadOwner: urlFilters.lead_owner,
-      filterPayMode: urlFilters.pay_mode,
+      filterLeadOwner: urlFilters.lead_owner_id,
+      filterPayMode: urlFilters.payment_method,
     });
 
     setFiltersInitialized(true);
@@ -315,7 +293,6 @@ const ProductsSold = () => {
 
     setPage(1);
     fetchProductSold(1);
-    fetchProductSoldStats();
     updateURLParams(appliedFilters);
   }, [
     filtersInitialized,
@@ -326,8 +303,9 @@ const ProductsSold = () => {
     appliedFilters.bill_type,
     appliedFilters.service_type,
     appliedFilters.package_type,
-    appliedFilters.lead_owner,
-    appliedFilters.pay_mode,
+    appliedFilters.lead_owner_id,
+    appliedFilters.lead_source,
+    appliedFilters.payment_method,
   ]);
 
   const handleSendInvoice = (order) => {
@@ -518,13 +496,13 @@ const ProductsSold = () => {
                   <tr>
                     {/* <th className="px-2 py-4 min-w-[50px]">S.No.</th> */}
                     <th className="px-2 py-4 min-w-[120px]">Purchase date</th>
-                    <th className="px-2 py-4 min-w-[120px]">Bill Type</th>
+                    <th className="px-2 py-4 min-w-[90px]">Bill Type</th>
                     <th className="px-2 py-4 min-w-[150px]">Club Name</th>
                     <th className="px-2 py-4 min-w-[120px]">Member ID</th>
                     <th className="px-2 py-4 min-w-[120px]">Member Name</th>
-                    <th className="px-2 py-4 min-w-[120px]">Invoice No</th>
+                    <th className="px-2 py-4 min-w-[130px]">Invoice No</th>
                     <th className="px-2 py-4 min-w-[120px]">Package Type</th>
-                    <th className="px-2 py-4 min-w-[120px]">Service Type</th>
+                    <th className="px-2 py-4 min-w-[150px]">Service Type</th>
                     <th className="px-2 py-4 min-w-[120px]">Plan Type</th>
                     <th className="px-2 py-4 min-w-[150px]">Service Name</th>
                     <th className="px-2 py-4 min-w-[130px]">Variation</th>
@@ -537,9 +515,9 @@ const ProductsSold = () => {
                     <th className="px-2 py-4 min-w-[100px]">CGST</th>
                     <th className="px-2 py-4 min-w-[100px]">SGST</th>
                     <th className="px-2 py-4 min-w-[100px]">IGST</th>
-                    <th className="px-2 py-4 min-w-[110px]">Final Amount</th>
-                    <th className="px-2 py-4 min-w-[80px]">Paid</th>
-                    <th className="px-2 py-4 min-w-[100px]">Pay Mode</th>
+                    <th className="px-2 py-4 min-w-[130px]">Booking Amount</th>
+                    <th className="px-2 py-4 min-w-[120px]">Paid Amount</th>
+                    <th className="px-2 py-4 min-w-[120px]">Pay Mode</th>
                     <th className="px-2 py-4 min-w-[120px]">Invoice Details</th>
                   </tr>
                 </thead>
@@ -563,9 +541,9 @@ const ProductsSold = () => {
                         <td className="px-2 py-4">
                           {row?.membership_number ? row?.membership_number : "--"}
                         </td>
-                        <td className="px-2 py-4">{row?.member_name}</td>
+                        <td className="px-2 py-4">{row?.member_name ? row?.member_name : "--"}</td>
                         <td className="px-2 py-4">
-                          {row?.invoice_number ? row?.invoice_number : "--"}
+                          {row?.invoice_no ? row?.invoice_no : "--"}
                         </td>
                         <td className="px-2 py-4">
                           {row?.package_type === "SUBSCRIPTION"
@@ -589,8 +567,8 @@ const ProductsSold = () => {
                             : "--"}
                         </td>
                         <td className="px-2 py-4">
-                          {row?.assigned_staff_name
-                            ? formatText(row?.assigned_staff_name)
+                          {row?.trainer_name
+                            ? row?.trainer_name
                             : "--"}
                         </td>
                         <td className="px-2 py-4">
@@ -607,22 +585,22 @@ const ProductsSold = () => {
                           ₹{row?.amount ? row?.amount : 0}
                         </td>
                         <td className="px-2 py-4">
-                          ₹{row?.cgst ? row?.cgst : 0}
+                          ₹{row?.cgst_amount ? row?.cgst_amount : 0}
                         </td>
                         <td className="px-2 py-4">
-                          ₹{row?.sgst ? row?.sgst : 0}
+                          ₹{row?.sgst_amount ? row?.sgst_amount : 0}
                         </td>
                         <td className="px-2 py-4">
-                          ₹{row?.igst ? row?.igst : 0}
+                          ₹{row?.igst_amount ? row?.igst_amount : 0}
                         </td>
                         <td className="px-2 py-4">
-                          ₹{row?.final_amount ? row?.final_amount : 0}
+                          ₹{row?.booking_amount ? row?.booking_amount : 0}
                         </td>
                         <td className="px-2 py-4">
-                          ₹{row?.paid ? row?.paid : 0}
+                          ₹{row?.paid_amount ? row?.paid_amount : 0}
                         </td>
                         <td className="px-2 py-4">
-                          {row?.payment_mode ? row?.payment_mode : "--"}
+                          {row?.payment_method ? formatText(row?.payment_method) : "--"}
                         </td>
                         <td className="px-2 py-4">
                           <div className="flex items-center gap-2">

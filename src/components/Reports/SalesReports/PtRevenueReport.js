@@ -119,9 +119,9 @@ const PtRevenueReport = () => {
       <div className="flex items-end justify-between gap-2 mb-5">
         <div className="title--breadcrumbs">
           <p className="text-sm">
-            {`Home > Reports > Sales Reports > PT Revenue Report`}
+            {`Home > Reports > Sales Reports > Sales Leaderboard`}
           </p>
-          <h1 className="text-3xl font-semibold">PT Revenue Report</h1>
+          <h1 className="text-3xl font-semibold">Sales Leaderboard</h1>
         </div>
       </div>
 

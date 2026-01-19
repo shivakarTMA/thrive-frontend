@@ -9,6 +9,7 @@ import { useSelector } from "react-redux";
 
 import Login from "../components/common/Login";
 import PrivateRoute from "./PrivateRoute";
+import { getAllowedRoles } from "./RolePermissions";
 
 // FOH Pages
 import Home from "../Pages/Home";
@@ -66,7 +67,6 @@ import BulkSmsCriteriaForm from "../components/Marketing/BulkSmsCriteriaForm";
 import MarketingBanner from "../components/MarketingBanner/MarketingBanner";
 import RecoveryServicesList from "../components/RecoveryServices/RecoveryServicesList";
 import NewJoineesReport from "../components/Reports/SalesReports/NewJoineesReport";
-
 import AllEnquiriesReport from "../components/Reports/SalesReports/AllEnquiriesReport";
 import ActiveMemberReport from "../components/Reports/SalesReports/ActiveMemberReport";
 import AllInvoiceReport from "../components/Reports/FinanceReports/AllInvoiceReport";
@@ -114,6 +114,41 @@ import RefundRequests from "../components/Reports/FinanceReports/RefundRequests"
 import AllAppointments from "../Pages/Reports/Appointments/AllAppointments";
 import MyFollowUps from "../Pages/MyFollowUps";
 
+// Role-based route wrapper component
+const RoleProtectedRoute = ({ children, path, skipPrivateRoute = false }) => {
+  const userRole = useSelector((state) => state.auth?.user?.role);
+  const allowedRoles = getAllowedRoles(path);
+  
+  if (!allowedRoles.includes(userRole)) {
+    const dashboardMap = {
+      ADMIN: '/',
+      MARKETING_MANAGER: '/',
+      FINANCE_MANAGER: '/',
+      FOH: '/',
+      TRAINER: '/',
+      CLUB_MANAGER: '/',
+    };
+
+    // const dashboardMap = {
+    //   ADMIN: '/',
+    //   MARKETING_MANAGER: '/marketing-manager',
+    //   FINANCE_MANAGER: '/',
+    //   FOH: '/foh-dashboard',
+    //   TRAINER: '/trainer-dashboard',
+    //   CLUB_MANAGER: '/club-manager',
+    // };
+    
+    
+    return <Navigate to={dashboardMap[userRole] || '/'} replace />;
+  }
+  
+  // If skipPrivateRoute is true, return children directly without PrivateRoute wrapper
+  if (skipPrivateRoute) {
+    return children;
+  }
+  
+  return <PrivateRoute>{children}</PrivateRoute>;
+};
 
 const RoleBasedHome = () => {
   const userType = useSelector((state) => state.auth?.user?.role);
@@ -125,12 +160,11 @@ const RoleBasedHome = () => {
   if (userType === "CLUB_MANAGER") return <ClubManagerDashboard />;
   if (userType === "FINANCE_MANAGER") return <FinanceManagerDashboard />;
 
-  return <Navigate to="/login" />; // or Unauthorized page
+  return <Navigate to="/login" />;
 };
 
 export default function Routing() {
   const { accessToken } = useSelector((state) => state.auth);
-
 
   if (!accessToken) {
     return (
@@ -148,12 +182,12 @@ export default function Routing() {
   return (
     <Router>
       <Routes>
-        {/* Common Login Route */}
+        {/* Common Login Routes */}
         <Route path="/login" element={<Login />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/set-password" element={<SetPassword />} />
 
-        
+        {/* Dashboard Route */}
         <Route
           path="/"
           element={
@@ -163,789 +197,127 @@ export default function Routing() {
           }
         />
 
-        <Route
-          path="/all-leads"
-          element={
-            // <PrivateRoute>
-            <AllLeads />
-            // </PrivateRoute>
-          }
-        />
-        <Route
-          path="/all-leads/:id"
-          element={
-            // <PrivateRoute>
-            <AllLeads />
-            // </PrivateRoute>
-          }
-        />
-        <Route
-          path="/edit-lead-details/:id"
-          element={
-            <PrivateRoute>
-              <EditLeadDetails />
-            </PrivateRoute>
-          }
-        />
+        {/* Lead Management Routes */}
+        <Route path="/all-leads" element={<RoleProtectedRoute path="/all-leads" skipPrivateRoute={true}><AllLeads /></RoleProtectedRoute>} />
+        <Route path="/all-leads/:id" element={<RoleProtectedRoute path="/all-leads/:id" skipPrivateRoute={true}><AllLeads /></RoleProtectedRoute>} />
+        <Route path="/edit-lead-details/:id" element={<RoleProtectedRoute path="/edit-lead-details/:id"><EditLeadDetails /></RoleProtectedRoute>} />
+        <Route path="/lead-follow-up/:id" element={<RoleProtectedRoute path="/lead-follow-up/:id"><LeadCallLogs /></RoleProtectedRoute>} />
+        <Route path="/my-follow-ups" element={<RoleProtectedRoute path="/my-follow-ups"><MyFollowUps /></RoleProtectedRoute>} />
 
-        <Route
-          path="/all-members"
-          element={
-            <PrivateRoute>
-              <MemberList />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/all-members/:id"
-          element={
-            <PrivateRoute>
-              <MemberList />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/member/:id"
-          element={
-            <PrivateRoute>
-              <MemberProfile />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/lost-found"
-          element={
-            <PrivateRoute>
-              <AllLostFound />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/lead-follow-up/:id"
-          element={
-            <PrivateRoute>
-              <LeadCallLogs />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/member-follow-up/:id"
-          element={
-            <PrivateRoute>
-              <MemberCallLogs />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/book-service/:id"
-          element={
-            <PrivateRoute>
-              <BookingService />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/products"
-          element={
-            <PrivateRoute>
-              <ProductsList />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/companies"
-          element={
-            <PrivateRoute>
-              <CompanyList />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/club"
-          element={
-            <PrivateRoute>
-              <ClubList />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/option-list"
-          element={
-            <PrivateRoute>
-              <OptionList />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/role-list"
-          element={
-            <PrivateRoute>
-              <RoleList />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/module-list"
-          element={
-            <PrivateRoute>
-              <ModuleList />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/challenge-list"
-          element={
-            <PrivateRoute>
-              <ChallengeList />
-            </PrivateRoute>
-          }
-        />
-        {/* <Route
-          path="/challenge-participants-list"
-          element={
-            <PrivateRoute>
-              <ChallengeParticipantsList />
-            </PrivateRoute>
-          }
-        /> */}
-        <Route
-          path="/challenge-participants-list/:id"
-          element={
-            <PrivateRoute>
-              <ChallengeParticipantsList />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/on-boarding-list"
-          element={
-            <PrivateRoute>
-              <OnBoardingScreen />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/splash-screen"
-          element={
-            <PrivateRoute>
-              <SplashScreen />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/studio"
-          element={
-            <PrivateRoute>
-              <Studio />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/services"
-          element={
-            <PrivateRoute>
-              <Services />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/recovery-services"
-          element={
-            <PrivateRoute>
-              <RecoveryServicesList />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/package-category"
-          element={
-            <PrivateRoute>
-              <PackageCategoryList />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/packages"
-          element={
-            <PrivateRoute>
-              <PackagesList />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/product-category"
-          element={
-            <PrivateRoute>
-              <ProductCategoryList />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/subscription-plan"
-          element={
-            <PrivateRoute>
-              <SubscriptionPlan />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/staff"
-          element={
-            <PrivateRoute>
-              <StaffList />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/exercises"
-          element={
-            <PrivateRoute>
-              <ExercisesList />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/workout-plans"
-          element={
-            <PrivateRoute>
-              <WorkoutPlanList />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/create-workout-plan"
-          element={
-            <PrivateRoute>
-              <CreateWorkoutplan />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/create-workout-plan/:id"
-          element={
-            <PrivateRoute>
-              <CreateWorkoutplan />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/send-mail/"
-          element={
-            <PrivateRoute>
-              <BulkEmailCriteriaForm />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/send-mail-list/"
-          element={
-            <PrivateRoute>
-              <EmailModule />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/send-mail-list/:id"
-          element={
-            <PrivateRoute>
-              <EmailModule />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/email-template-list/"
-          element={
-            <PrivateRoute>
-              <EmailTemplateList />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/email-template/"
-          element={
-            <PrivateRoute>
-              <CreateEmailTemplate />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/email-template/:id"
-          element={
-            <PrivateRoute>
-              <CreateEmailTemplate />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/send-sms/"
-          element={
-            <PrivateRoute>
-              <BulkSmsCriteriaForm />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/reports/marketing-reports/send-sms-list/"
-          element={
-            <PrivateRoute>
-              <SmsModule />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/reports/marketing-reports/send-sms-list/:id"
-          element={
-            <PrivateRoute>
-              <SmsModule />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/reports/marketing-reports/notification-list/"
-          element={
-            <PrivateRoute>
-              <NotificationList />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/reports/marketing-reports/send-notification/"
-          element={
-            <PrivateRoute>
-              <NotificationModule />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/reports/marketing-reports/send-notification/:id"
-          element={
-            <PrivateRoute>
-              <NotificationModule />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/marketing-banner/"
-          element={
-            <PrivateRoute>
-              <MarketingBanner />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/send-whatsapp-list/"
-          element={
-            <PrivateRoute>
-              <WhatsappModule />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/club-manager/"
-          element={
-            <PrivateRoute>
-              <ClubManagerDashboard />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/marketing-manager/"
-          element={
-            <PrivateRoute>
-              <MarketingManagerDashboard />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/foh-dashboard/"
-          element={
-            <PrivateRoute>
-              <FohDashboard />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/reports/all-bookings/"
-          element={
-            <PrivateRoute>
-              <AllAppointments />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/reports/appointments/all-trial-appointments/"
-          element={
-            <PrivateRoute>
-              <TrialAppointments />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/reports/all-orders"
-          element={
-            <PrivateRoute>
-              <ProductsSold />
-            </PrivateRoute>
-          }
-        />
+        {/* Member Management Routes */}
+        <Route path="/all-members" element={<RoleProtectedRoute path="/all-members"><MemberList /></RoleProtectedRoute>} />
+        <Route path="/all-members/:id" element={<RoleProtectedRoute path="/all-members/:id"><MemberList /></RoleProtectedRoute>} />
+        <Route path="/member/:id" element={<RoleProtectedRoute path="/member/:id"><MemberProfile /></RoleProtectedRoute>} />
+        <Route path="/member-follow-up/:id" element={<RoleProtectedRoute path="/member-follow-up/:id"><MemberCallLogs /></RoleProtectedRoute>} />
+        <Route path="/book-service/:id" element={<RoleProtectedRoute path="/book-service/:id"><BookingService /></RoleProtectedRoute>} />
 
-        <Route
-          path="/reports/sales-reports/membership-sales-report"
-          element={
-            <PrivateRoute>
-              <NewJoineesReport />
-            </PrivateRoute>
-          }
-        />
+        {/* Lost & Found */}
+        <Route path="/lost-found" element={<RoleProtectedRoute path="/lost-found"><AllLostFound /></RoleProtectedRoute>} />
 
-        <Route
-          path="/reports/sales-reports/all-enquiries-report"
-          element={
-            <PrivateRoute>
-              <AllEnquiriesReport />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/my-follow-ups"
-          element={
-            <PrivateRoute>
-              <MyFollowUps />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/reports/sales-reports/active-member-report"
-          element={
-            <PrivateRoute>
-              <ActiveMemberReport />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/reports/sales-reports/pt-revenue-report"
-          element={
-            <PrivateRoute>
-              <PtRevenueReport />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/reports/sales-reports/pt-revenue-report-list/:id"
-          element={
-            <PrivateRoute>
-              <PtRevenueListReport />
-            </PrivateRoute>
-          }
-        />
-       
-        <Route
-          path="/reports/sales-reports/lead-source-report/"
-          element={
-            <PrivateRoute>
-              <LeadSourceReport />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/reports/sales-reports/group-classes-report/"
-          element={
-            <PrivateRoute>
-              <GroupClassesUtilizationReport />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/reports/finance-reports/all-invoice-report"
-          element={
-            <PrivateRoute>
-              <AllInvoiceReport />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/reports/finance-reports/pending-collection"
-          element={
-            <PrivateRoute>
-              <PendingCollectionReport />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/reports/finance-reports/cancelled-paid-invoice"
-          element={
-            <PrivateRoute>
-              <CancelledPaidInvioceReport />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/reports/finance-reports/refund-report"
-          element={
-            <PrivateRoute>
-              <RefundReport />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/reports/finance-reports/collection-report"
-          element={
-            <PrivateRoute>
-              <CollectionReport />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/reports/finance-reports/tds-report"
-          element={
-            <PrivateRoute>
-              <TDSReport />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/reports/finance-reports/advance-payments-report"
-          element={
-            <PrivateRoute>
-              <AdvancePaymentsReport />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/reports/finance-reports/monthly-targets-report"
-          element={
-            <PrivateRoute>
-              <MonthlyTargetsReport />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/reports/finance-reports/set-incentive-policy"
-          element={
-            <PrivateRoute>
-              <SetIncentivePolicy />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/reports/finance-reports/refund-requests"
-          element={
-            <PrivateRoute>
-              <RefundRequests />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/reports/operations-reports/member-checkins-report"
-          element={
-            <PrivateRoute>
-              <MemberCheckInsReport />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/reports/operations-reports/member-checkins-report/:id"
-          element={
-            <PrivateRoute>
-              <MemberCheckInsReport />
-            </PrivateRoute>
-          }
-        />
-     
-        <Route
-          path="/reports/operations-reports/membership-expiry-report"
-          element={
-            <PrivateRoute>
-              <MembershipExpiryReport />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/reports/operations-reports/pt-expiry-report"
-          element={
-            <PrivateRoute>
-              <PtExpiryReport />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/reports/operations-reports/irregular-members-report"
-          element={
-            <PrivateRoute>
-              <IrregularMembersReport />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/reports/operations-reports/active-client-report"
-          element={
-            <PrivateRoute>
-              <ActiveClientSummaryReport />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/reports/operations-reports/inactive-client-report"
-          element={
-            <PrivateRoute>
-              <InactiveClientSummaryReport />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/reports/operations-reports/membership-frozen-report"
-          element={
-            <PrivateRoute>
-              <MembershipFrozenReport />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/reports/operations-reports/attendance-heatmap-report"
-          element={
-            <PrivateRoute>
-              <AttendanceHeatmapReport />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/reports/operations-reports/referral-report"
-          element={
-            <PrivateRoute>
-              <ReferralReport />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/reports/operations-reports/renewal-report"
-          element={
-            <PrivateRoute>
-              <RenewalReport />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/reports/marketing-reports/lead-source-performance"
-          element={
-            <PrivateRoute>
-              <LeadSourcePerformance />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/reports/marketing-reports/thrive-coins-usage"
-          element={
-            <PrivateRoute>
-              <ThriveCoinsUsage />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/reports/marketing-reports/customer-segmentation-report"
-          element={
-            <PrivateRoute>
-              <CustomerSegmentationReport />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/reports/marketing-reports/discount-codes-performance"
-          element={
-            <PrivateRoute>
-              <DiscountCodesPerformance />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/reports/marketing-reports/engagement-tracking-report"
-          element={
-            <PrivateRoute>
-              <EngagementTrackingReport />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/reports/marketing-reports/email-list"
-          element={
-            <PrivateRoute>
-              <EmailList />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/reports/marketing-reports/email-automation-report"
-          element={
-            <PrivateRoute>
-              <EmailAutomationReport />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/reports/marketing-reports/sms-delivery-report"
-          element={
-            <PrivateRoute>
-              <SMSDeliveryReport />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/reports/marketing-reports/sms-list"
-          element={
-            <PrivateRoute>
-              <SmsList />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/reports/marketing-reports/event-community-engagement"
-          element={
-            <PrivateRoute>
-              <EventCommunityEngagement />
-            </PrivateRoute>
-          }
-        />
+        {/* Appointments & Bookings */}
+        <Route path="/reports/appointments/all-trial-appointments" element={<RoleProtectedRoute path="/reports/appointments/all-trial-appointments"><TrialAppointments /></RoleProtectedRoute>} />
+        <Route path="/reports/all-bookings" element={<RoleProtectedRoute path="/reports/all-bookings"><AllAppointments /></RoleProtectedRoute>} />
+        <Route path="/reports/all-orders" element={<RoleProtectedRoute path="/reports/all-orders"><ProductsSold /></RoleProtectedRoute>} />
 
-        <Route
-          path="/trainer-dashboard/"
-          element={
-            <PrivateRoute>
-              <TrainerDashboard />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/club-gallery"
-          element={
-            <PrivateRoute>
-              <GalleryList />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/coupons/"
-          element={
-            <PrivateRoute>
-              <CouponsList />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/faq-category"
-          element={
-            <PrivateRoute>
-              <FaqCategoryList />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/faq-list"
-          element={
-            <PrivateRoute>
-              <FaqsList />
-            </PrivateRoute>
-          }
-        />
+        {/* Products & Companies */}
+        <Route path="/products" element={<RoleProtectedRoute path="/products"><ProductsList /></RoleProtectedRoute>} />
+        <Route path="/companies" element={<RoleProtectedRoute path="/companies"><CompanyList /></RoleProtectedRoute>} />
+        <Route path="/club" element={<RoleProtectedRoute path="/club"><ClubList /></RoleProtectedRoute>} />
+        <Route path="/option-list" element={<RoleProtectedRoute path="/option-list"><OptionList /></RoleProtectedRoute>} />
+        <Route path="/role-list" element={<RoleProtectedRoute path="/role-list"><RoleList /></RoleProtectedRoute>} />
+        <Route path="/module-list" element={<RoleProtectedRoute path="/module-list"><ModuleList /></RoleProtectedRoute>} />
 
+        {/* Marketing Routes */}
+        <Route path="/challenge-list" element={<RoleProtectedRoute path="/challenge-list"><ChallengeList /></RoleProtectedRoute>} />
+        <Route path="/challenge-participants-list/:id" element={<RoleProtectedRoute path="/challenge-participants-list/:id"><ChallengeParticipantsList /></RoleProtectedRoute>} />
+        <Route path="/send-mail" element={<RoleProtectedRoute path="/send-mail"><BulkEmailCriteriaForm /></RoleProtectedRoute>} />
+        <Route path="/send-mail-list" element={<RoleProtectedRoute path="/send-mail-list"><EmailModule /></RoleProtectedRoute>} />
+        <Route path="/send-mail-list/:id" element={<RoleProtectedRoute path="/send-mail-list/:id"><EmailModule /></RoleProtectedRoute>} />
+        <Route path="/email-template-list" element={<RoleProtectedRoute path="/email-template-list"><EmailTemplateList /></RoleProtectedRoute>} />
+        <Route path="/email-template" element={<RoleProtectedRoute path="/email-template"><CreateEmailTemplate /></RoleProtectedRoute>} />
+        <Route path="/email-template/:id" element={<RoleProtectedRoute path="/email-template/:id"><CreateEmailTemplate /></RoleProtectedRoute>} />
+        <Route path="/send-sms" element={<RoleProtectedRoute path="/send-sms"><BulkSmsCriteriaForm /></RoleProtectedRoute>} />
+        <Route path="/reports/marketing-reports/send-sms-list" element={<RoleProtectedRoute path="/reports/marketing-reports/send-sms-list"><SmsModule /></RoleProtectedRoute>} />
+        <Route path="/reports/marketing-reports/send-sms-list/:id" element={<RoleProtectedRoute path="/reports/marketing-reports/send-sms-list/:id"><SmsModule /></RoleProtectedRoute>} />
+        <Route path="/reports/marketing-reports/notification-list" element={<RoleProtectedRoute path="/reports/marketing-reports/notification-list"><NotificationList /></RoleProtectedRoute>} />
+        <Route path="/reports/marketing-reports/send-notification" element={<RoleProtectedRoute path="/reports/marketing-reports/send-notification"><NotificationModule /></RoleProtectedRoute>} />
+        <Route path="/reports/marketing-reports/send-notification/:id" element={<RoleProtectedRoute path="/reports/marketing-reports/send-notification/:id"><NotificationModule /></RoleProtectedRoute>} />
+        <Route path="/marketing-banner" element={<RoleProtectedRoute path="/marketing-banner"><MarketingBanner /></RoleProtectedRoute>} />
+        <Route path="/send-whatsapp-list" element={<RoleProtectedRoute path="/send-whatsapp-list"><WhatsappModule /></RoleProtectedRoute>} />
+        <Route path="/coupons" element={<RoleProtectedRoute path="/coupons"><CouponsList /></RoleProtectedRoute>} />
+        <Route path="/reports/marketing-reports/email-list" element={<RoleProtectedRoute path="/reports/marketing-reports/email-list"><EmailList /></RoleProtectedRoute>} />
+        <Route path="/reports/marketing-reports/sms-list" element={<RoleProtectedRoute path="/reports/marketing-reports/sms-list"><SmsList /></RoleProtectedRoute>} />
+
+        {/* Configuration Routes */}
+        <Route path="/on-boarding-list" element={<RoleProtectedRoute path="/on-boarding-list"><OnBoardingScreen /></RoleProtectedRoute>} />
+        <Route path="/splash-screen" element={<RoleProtectedRoute path="/splash-screen"><SplashScreen /></RoleProtectedRoute>} />
+        <Route path="/studio" element={<RoleProtectedRoute path="/studio"><Studio /></RoleProtectedRoute>} />
+        <Route path="/services" element={<RoleProtectedRoute path="/services"><Services /></RoleProtectedRoute>} />
+        <Route path="/recovery-services" element={<RoleProtectedRoute path="/recovery-services"><RecoveryServicesList /></RoleProtectedRoute>} />
+        <Route path="/package-category" element={<RoleProtectedRoute path="/package-category"><PackageCategoryList /></RoleProtectedRoute>} />
+        <Route path="/packages" element={<RoleProtectedRoute path="/packages"><PackagesList /></RoleProtectedRoute>} />
+        <Route path="/product-category" element={<RoleProtectedRoute path="/product-category"><ProductCategoryList /></RoleProtectedRoute>} />
+        <Route path="/subscription-plan" element={<RoleProtectedRoute path="/subscription-plan"><SubscriptionPlan /></RoleProtectedRoute>} />
+        <Route path="/staff" element={<RoleProtectedRoute path="/staff"><StaffList /></RoleProtectedRoute>} />
+        <Route path="/exercises" element={<RoleProtectedRoute path="/exercises"><ExercisesList /></RoleProtectedRoute>} />
+        <Route path="/workout-plans" element={<RoleProtectedRoute path="/workout-plans"><WorkoutPlanList /></RoleProtectedRoute>} />
+        <Route path="/create-workout-plan" element={<RoleProtectedRoute path="/create-workout-plan"><CreateWorkoutplan /></RoleProtectedRoute>} />
+        <Route path="/create-workout-plan/:id" element={<RoleProtectedRoute path="/create-workout-plan/:id"><CreateWorkoutplan /></RoleProtectedRoute>} />
+        <Route path="/club-gallery" element={<RoleProtectedRoute path="/club-gallery"><GalleryList /></RoleProtectedRoute>} />
+        <Route path="/faq-category" element={<RoleProtectedRoute path="/faq-category"><FaqCategoryList /></RoleProtectedRoute>} />
+        <Route path="/faq-list" element={<RoleProtectedRoute path="/faq-list"><FaqsList /></RoleProtectedRoute>} />
+
+        {/* Dashboard Routes */}
+        {/* <Route path="/club-manager" element={<RoleProtectedRoute path="/club-manager"><ClubManagerDashboard /></RoleProtectedRoute>} />
+        <Route path="/marketing-manager" element={<RoleProtectedRoute path="/marketing-manager"><MarketingManagerDashboard /></RoleProtectedRoute>} />
+        <Route path="/foh-dashboard" element={<RoleProtectedRoute path="/foh-dashboard"><FohDashboard /></RoleProtectedRoute>} />
+        <Route path="/trainer-dashboard" element={<RoleProtectedRoute path="/trainer-dashboard"><TrainerDashboard /></RoleProtectedRoute>} /> */}
+
+        {/* Sales Reports */}
+        <Route path="/reports/sales-reports/membership-sales-report" element={<RoleProtectedRoute path="/reports/sales-reports/membership-sales-report"><NewJoineesReport /></RoleProtectedRoute>} />
+        <Route path="/reports/sales-reports/all-enquiries-report" element={<RoleProtectedRoute path="/reports/sales-reports/all-enquiries-report"><AllEnquiriesReport /></RoleProtectedRoute>} />
+        <Route path="/reports/sales-reports/active-member-report" element={<RoleProtectedRoute path="/reports/sales-reports/active-member-report"><ActiveMemberReport /></RoleProtectedRoute>} />
+        <Route path="/reports/sales-reports/pt-revenue-report" element={<RoleProtectedRoute path="/reports/sales-reports/pt-revenue-report"><PtRevenueReport /></RoleProtectedRoute>} />
+        <Route path="/reports/sales-reports/pt-revenue-report-list/:id" element={<RoleProtectedRoute path="/reports/sales-reports/pt-revenue-report-list/:id"><PtRevenueListReport /></RoleProtectedRoute>} />
+        <Route path="/reports/sales-reports/lead-source-report" element={<RoleProtectedRoute path="/reports/sales-reports/lead-source-report"><LeadSourceReport /></RoleProtectedRoute>} />
+        <Route path="/reports/sales-reports/group-classes-report" element={<RoleProtectedRoute path="/reports/sales-reports/group-classes-report"><GroupClassesUtilizationReport /></RoleProtectedRoute>} />
+
+        {/* Finance Reports */}
+        <Route path="/reports/finance-reports/all-invoice-report" element={<RoleProtectedRoute path="/reports/finance-reports/all-invoice-report"><AllInvoiceReport /></RoleProtectedRoute>} />
+        <Route path="/reports/finance-reports/pending-collection" element={<RoleProtectedRoute path="/reports/finance-reports/pending-collection"><PendingCollectionReport /></RoleProtectedRoute>} />
+        <Route path="/reports/finance-reports/cancelled-paid-invoice" element={<RoleProtectedRoute path="/reports/finance-reports/cancelled-paid-invoice"><CancelledPaidInvioceReport /></RoleProtectedRoute>} />
+        <Route path="/reports/finance-reports/refund-report" element={<RoleProtectedRoute path="/reports/finance-reports/refund-report"><RefundReport /></RoleProtectedRoute>} />
+        <Route path="/reports/finance-reports/collection-report" element={<RoleProtectedRoute path="/reports/finance-reports/collection-report"><CollectionReport /></RoleProtectedRoute>} />
+        <Route path="/reports/finance-reports/tds-report" element={<RoleProtectedRoute path="/reports/finance-reports/tds-report"><TDSReport /></RoleProtectedRoute>} />
+        <Route path="/reports/finance-reports/advance-payments-report" element={<RoleProtectedRoute path="/reports/finance-reports/advance-payments-report"><AdvancePaymentsReport /></RoleProtectedRoute>} />
+        <Route path="/reports/finance-reports/monthly-targets-report" element={<RoleProtectedRoute path="/reports/finance-reports/monthly-targets-report"><MonthlyTargetsReport /></RoleProtectedRoute>} />
+        <Route path="/reports/finance-reports/set-incentive-policy" element={<RoleProtectedRoute path="/reports/finance-reports/set-incentive-policy"><SetIncentivePolicy /></RoleProtectedRoute>} />
+        <Route path="/reports/finance-reports/refund-requests" element={<RoleProtectedRoute path="/reports/finance-reports/refund-requests"><RefundRequests /></RoleProtectedRoute>} />
+
+        {/* Operations Reports */}
+        <Route path="/reports/operations-reports/member-checkins-report" element={<RoleProtectedRoute path="/reports/operations-reports/member-checkins-report"><MemberCheckInsReport /></RoleProtectedRoute>} />
+        <Route path="/reports/operations-reports/member-checkins-report/:id" element={<RoleProtectedRoute path="/reports/operations-reports/member-checkins-report/:id"><MemberCheckInsReport /></RoleProtectedRoute>} />
+        <Route path="/reports/operations-reports/membership-expiry-report" element={<RoleProtectedRoute path="/reports/operations-reports/membership-expiry-report"><MembershipExpiryReport /></RoleProtectedRoute>} />
+        <Route path="/reports/operations-reports/pt-expiry-report" element={<RoleProtectedRoute path="/reports/operations-reports/pt-expiry-report"><PtExpiryReport /></RoleProtectedRoute>} />
+        <Route path="/reports/operations-reports/irregular-members-report" element={<RoleProtectedRoute path="/reports/operations-reports/irregular-members-report"><IrregularMembersReport /></RoleProtectedRoute>} />
+        <Route path="/reports/operations-reports/active-client-report" element={<RoleProtectedRoute path="/reports/operations-reports/active-client-report"><ActiveClientSummaryReport /></RoleProtectedRoute>} />
+        <Route path="/reports/operations-reports/inactive-client-report" element={<RoleProtectedRoute path="/reports/operations-reports/inactive-client-report"><InactiveClientSummaryReport /></RoleProtectedRoute>} />
+        <Route path="/reports/operations-reports/membership-frozen-report" element={<RoleProtectedRoute path="/reports/operations-reports/membership-frozen-report"><MembershipFrozenReport /></RoleProtectedRoute>} />
+        <Route path="/reports/operations-reports/attendance-heatmap-report" element={<RoleProtectedRoute path="/reports/operations-reports/attendance-heatmap-report"><AttendanceHeatmapReport /></RoleProtectedRoute>} />
+        <Route path="/reports/operations-reports/referral-report" element={<RoleProtectedRoute path="/reports/operations-reports/referral-report"><ReferralReport /></RoleProtectedRoute>} />
+        <Route path="/reports/operations-reports/renewal-report" element={<RoleProtectedRoute path="/reports/operations-reports/renewal-report"><RenewalReport /></RoleProtectedRoute>} />
+
+        {/* Marketing Reports */}
+        <Route path="/reports/marketing-reports/lead-source-performance" element={<RoleProtectedRoute path="/reports/marketing-reports/lead-source-performance"><LeadSourcePerformance /></RoleProtectedRoute>} />
+        <Route path="/reports/marketing-reports/thrive-coins-usage" element={<RoleProtectedRoute path="/reports/marketing-reports/thrive-coins-usage"><ThriveCoinsUsage /></RoleProtectedRoute>} />
+        <Route path="/reports/marketing-reports/customer-segmentation-report" element={<RoleProtectedRoute path="/reports/marketing-reports/customer-segmentation-report"><CustomerSegmentationReport /></RoleProtectedRoute>} />
+        <Route path="/reports/marketing-reports/discount-codes-performance" element={<RoleProtectedRoute path="/reports/marketing-reports/discount-codes-performance"><DiscountCodesPerformance /></RoleProtectedRoute>} />
+        <Route path="/reports/marketing-reports/engagement-tracking-report" element={<RoleProtectedRoute path="/reports/marketing-reports/engagement-tracking-report"><EngagementTrackingReport /></RoleProtectedRoute>} />
+        <Route path="/reports/marketing-reports/email-automation-report" element={<RoleProtectedRoute path="/reports/marketing-reports/email-automation-report"><EmailAutomationReport /></RoleProtectedRoute>} />
+        <Route path="/reports/marketing-reports/sms-delivery-report" element={<RoleProtectedRoute path="/reports/marketing-reports/sms-delivery-report"><SMSDeliveryReport /></RoleProtectedRoute>} />
+        <Route path="/reports/marketing-reports/event-community-engagement" element={<RoleProtectedRoute path="/reports/marketing-reports/event-community-engagement"><EventCommunityEngagement /></RoleProtectedRoute>} />
+
+        {/* Catch all route */}
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </Router>

@@ -21,10 +21,16 @@ const packageTypeOptions = [
 ];
 
 const payModeTypeOptions = [
+  { value: "CASH", label: "Cash" },
+  { value: "CARD", label: "Card" },
   { value: "UPI", label: "UPI" },
-  { value: "Credit Card", label: "Credit Card" },
-  { value: "Net Banking", label: "Net Banking" },
+  { value: "WALLET", label: "Wallet" },
+  { value: "NET_BANKING", label: "Net Banking" },
+  { value: "COIN", label: "Coin" },
+  { value: "OTHER", label: "Other" },
 ];
+
+//  'CASH','CARD','UPI','WALLET','NET_BANKING','OTHER','COIN'
 
 export default function ProductSoldPanel({
   filterBillType,
@@ -153,7 +159,7 @@ export default function ProductSoldPanel({
 
   const serviceOptions = serviceList.map((item) => ({
     label: item.name,
-    value: item.id,
+    value: item.name,
   }));
 
   useEffect(() => {
@@ -188,8 +194,8 @@ export default function ProductSoldPanel({
       service_type: formik.values.filterServiceType,
       package_type: formik.values.filterPackageType,
       lead_source: formik.values.filterLeadSource,
-      lead_owner: formik.values.filterLeadOwner,
-      pay_mode: formik.values.filterPayMode,
+      lead_owner_id: formik.values.filterLeadOwner,
+      payment_method: formik.values.filterPayMode,
     });
 
     setShowFilters(false);
@@ -202,8 +208,8 @@ export default function ProductSoldPanel({
       service_type: "filterServiceType",
       package_type: "filterPackageType",
       lead_source: "filterLeadSource",
-      lead_owner: "filterLeadOwner",
-      pay_mode: "filterPayMode",
+      lead_owner_id: "filterLeadOwner",
+      payment_method: "filterPayMode",
     };
 
     // Update parent's applied filters
@@ -238,13 +244,13 @@ export default function ProductSoldPanel({
       return leadSource ? leadSource.label : value;
     }
 
-    if (key === "lead_owner") {
+    if (key === "lead_owner_id") {
       const allOwners = leadOwnerOptions.flatMap((group) => group.options);
       const owner = allOwners.find((opt) => opt.value === value);
       return owner ? owner.label : value;
     }
 
-    if (key === "pay_mode") {
+    if (key === "payment_method") {
       const payMode = payModeTypeOptions.find((opt) => opt.value === value);
       return payMode ? payMode.label : value;
     }
