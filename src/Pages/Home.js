@@ -223,7 +223,15 @@ const Home = () => {
     0
   );
 
-  const dataSeries = [5, 6, 2, 3, 1];
+  const dataSeries = [
+    2, // New
+    5, // Lead
+    6, // Opportunity
+    3, // Won
+    0, // Closed
+    1, // Lost
+    0, // Future Prospect
+  ];
   const totalValue = dataSeries.reduce((sum, value) => sum + value, 0);
 
   const leadsStatus = {
@@ -242,7 +250,15 @@ const Home = () => {
       },
     },
     xAxis: {
-      categories: ["Lead", "Opportunity", "New", "Won", "Lost"],
+      categories: [
+        "New",
+        "Lead",
+        "Opportunity",
+        "Won",
+        "Closed",
+        "Lost",
+        "Future Prospect",
+      ],
       labels: {
         style: {
           fontSize: "13px",
@@ -288,12 +304,21 @@ const Home = () => {
           events: {
             click: function () {
               // Example: open a link based on category
-              const linkMap = {
-                Lead: generateUrl(`/all-leads?lead_status=Lead`),
-                Opportunity: generateUrl(`/all-leads?lead_status=Opportunity`),
-                New: generateUrl(`/all-leads?lead_status=New`),
-                Won: generateUrl(`/all-leads?lead_status=Won`),
-                Lost: generateUrl(`/all-leads?lead_status=Lost`),
+              // const linkMap = {
+              //   Lead: generateUrl(`/all-leads?lead_status=Lead`),
+              //   Opportunity: generateUrl(`/all-leads?lead_status=Opportunity`),
+              //   New: generateUrl(`/all-leads?lead_status=New`),
+              //   Won: generateUrl(`/all-leads?lead_status=Won`),
+              //   Lost: generateUrl(`/all-leads?lead_status=Lost`),
+              // };
+               const linkMap = {
+                New: generateUrl(`/reports/sales-reports/all-enquiries-report?lead_status=New`),
+                Lead: generateUrl(`/reports/sales-reports/all-enquiries-report?lead_status=Lead`),
+                Opportunity: generateUrl(`/reports/sales-reports/all-enquiries-report?lead_status=Opportunity`),
+                Won: generateUrl(`/reports/sales-reports/all-enquiries-report?lead_status=Won`),
+                Closed: generateUrl(`/reports/sales-reports/all-enquiries-report?lead_status=Closed`),
+                Lost: generateUrl(`/reports/sales-reports/all-enquiries-report?lead_status=Lost`),
+                "Future Prospect": generateUrl(`/reports/sales-reports/all-enquiries-report?lead_status=Future Prospect`),
               };
               const targetLink = linkMap[this.category];
               if (targetLink) {
@@ -390,11 +415,21 @@ const Home = () => {
             click: function () {
               // Example: open a link based on category
               const linkMap = {
-                Membership: "/reports/all-orders/",
-                "Personal Training": "/reports/all-orders/",
-                Recovery: "/reports/all-orders/",
-                Nourish: "/reports/all-orders/",
-                Pilates: "/reports/all-orders/",
+                Membership: generateUrl(
+                  `/reports/all-orders?service_type=SUBSCRIPTION`
+                ),
+                "Personal Training": generateUrl(
+                  `/reports/all-orders?service_type=Personal Training`
+                ),
+                Recovery: generateUrl(
+                  `/reports/all-orders?service_type=Recovery`
+                ),
+                Nourish: generateUrl(
+                  `/reports/all-orders?service_type=PRODUCT`
+                ),
+                Pilates: generateUrl(
+                  `/reports/all-orders?service_type=Pilates`
+                ),
               };
               const targetLink = linkMap[this.category];
               if (targetLink) {
@@ -778,7 +813,9 @@ const Home = () => {
                 {
                   label: "Lead To Trial",
                   value: `${dashboardData?.summary_cards?.conversion?.lead_to_trial_percentage}%`,
-                  link: "#",
+                  link: generateUrl(
+                    `/reports/appointments/all-trial-appointments?`
+                  ),
                 },
                 {
                   label: "Trial To Membership",

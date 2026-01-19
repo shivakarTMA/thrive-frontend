@@ -31,16 +31,9 @@ const dateFilterOptions = [
 
 const AllEnquiriesReport = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const { user } = useSelector((state) => state.auth);
   const userRole = user.role;
-
-  const [selectedClub, setSelectedClub] = useState(null);
-  const [selectedLeadSource, setSelectedLeadSource] = useState(null);
-  const [selectedLeadStatus, setSelectedLeadStatus] = useState(null);
-  const [selectedLastCallType, setSelectedLastCallType] = useState(null);
-  const [selectedCallTag, setSelectedCallTag] = useState(null);
-  const [selectedServiceName, setSelectedServiceName] = useState(null);
-  const [selectedGender, setSelectedGender] = useState(null);
 
   const [searchParams] = useSearchParams();
   const [dateFilter, setDateFilter] = useState(dateFilterOptions[1]);
@@ -51,6 +44,7 @@ const AllEnquiriesReport = () => {
   const [clubFilter, setClubFilter] = useState(null);
 
   const [allLeads, setAllLeads] = useState([]);
+  const [filtersInitialized, setFiltersInitialized] = useState(false);
 
   const [page, setPage] = useState(1);
   const [rowsPerPage] = useState(10);
@@ -82,34 +76,6 @@ const AllEnquiriesReport = () => {
     },
   });
 
-  useEffect(() => {
-    const dateParam = searchParams.get("date");
-    const customFromParam = searchParams.get("customFrom");
-    const customToParam = searchParams.get("customTo");
-
-    if (dateParam) {
-      // Find the matching option from your dropdown
-      const foundOption =
-        dateFilterOptions.find((opt) => opt.value === dateParam) ||
-        dateFilterOptions[1];
-      setDateFilter(foundOption);
-
-      if (dateParam === "custom" && customFromParam && customToParam) {
-        // Decode and convert to JS Date
-        const fromDate = new Date(decodeURIComponent(customFromParam));
-        const toDate = new Date(decodeURIComponent(customToParam));
-
-        setCustomFrom(fromDate);
-        setCustomTo(toDate);
-      }
-    }
-  }, []);
-
-  const urlLastCallType = searchParams.get("last_call_status");
-  const last_call_status = urlLastCallType
-    ? decodeURIComponent(urlLastCallType)
-    : null;
-
   // Function to fetch club list
   const fetchClub = async (search = "") => {
     try {
@@ -133,6 +99,35 @@ const AllEnquiriesReport = () => {
     label: item.name,
     value: item.id,
   }));
+
+  // ---------------------------
+  // UPDATE URL WITH PARAMS
+  // ---------------------------
+  const updateURLParams = (filters) => {
+    const params = new URLSearchParams();
+
+    // Date filter
+    if (dateFilter?.value && dateFilter.value !== "custom") {
+      params.set("dateFilter", dateFilter.value);
+    }
+
+    if (dateFilter?.value === "custom" && customFrom && customTo) {
+      params.set("startDate", format(customFrom, "yyyy-MM-dd"));
+      params.set("endDate", format(customTo, "yyyy-MM-dd"));
+    }
+
+    // Club filter
+    if (clubFilter?.value) {
+      params.set("club_id", clubFilter.value);
+    }
+
+    // Applied filters
+    if (filters.lead_status) {
+      params.set("lead_status", filters.lead_status);
+    }
+
+    navigate(`?${params.toString()}`, { replace: true });
+  };
 
   const fetchEnquiriesList = async (currentPage = page) => {
     try {
@@ -185,23 +180,40 @@ const AllEnquiriesReport = () => {
     }
   };
 
-  useEffect(() => {
-    if (dateFilter?.value === "custom") {
-      if (customFrom && customTo) {
-        fetchEnquiriesList(1);
-      }
-      return;
-    }
-
-    fetchEnquiriesList(1);
-  }, [dateFilter, customFrom, customTo, clubFilter, appliedFilters]);
+  // ---------------------------
+  // INITIALIZE FROM URL
+  // ---------------------------
 
   useEffect(() => {
     // Wait for clubList to be loaded
     if (clubList.length === 0) return;
 
+    // Only run initialization once
+    if (filtersInitialized) return;
+
     const params = new URLSearchParams(location.search);
 
+    // Date filter
+    const dateFilterValue = params.get("dateFilter");
+    if (dateFilterValue) {
+      const matchedDate = dateFilterOptions.find(
+        (opt) => opt.value === dateFilterValue
+      );
+      if (matchedDate) {
+        setDateFilter(matchedDate);
+      }
+    }
+
+    // Custom date filter
+    const startDate = params.get("startDate");
+    const endDate = params.get("endDate");
+    if (startDate && endDate) {
+      setDateFilter(dateFilterOptions.find((d) => d.value === "custom"));
+      setCustomFrom(new Date(startDate));
+      setCustomTo(new Date(endDate));
+    }
+
+    // Club filter - only set from URL if present, otherwise default to first club
     const clubId = params.get("club_id");
     if (clubId) {
       const club = clubList.find((c) => c.id === Number(clubId));
@@ -215,7 +227,49 @@ const AllEnquiriesReport = () => {
         value: clubList[0].id,
       });
     }
+
+    // Applied filters from URL
+    const urlFilters = {
+      lead_status: params.get("lead_status") || null,
+    };
+
+    setAppliedFilters(urlFilters);
+
+    // Sync with formik
+    formik.setValues({
+      filterGender: urlFilters.gender,
+      filterEnquiryType: urlFilters.enquiry_type,
+      filterLeadSource: urlFilters.lead_source,
+      filterLeadStatus: urlFilters.lead_status,
+      filterCallTag: urlFilters.call_tag,
+      filterLeadOwner: urlFilters.lead_owner,
+    });
+
+    setFiltersInitialized(true);
   }, [clubList]);
+
+  // ---------------------------
+  // FETCH WHEN FILTERS CHANGE
+  // ---------------------------
+  useEffect(() => {
+    if (!filtersInitialized) return;
+
+    setPage(1);
+    fetchEnquiriesList(1);
+    updateURLParams(appliedFilters);
+  }, [
+    filtersInitialized,
+    dateFilter?.value,
+    customFrom,
+    customTo,
+    clubFilter?.value,
+    appliedFilters.gender,
+    appliedFilters.enquiry_type,
+    appliedFilters.lead_source,
+    appliedFilters.lead_status,
+    appliedFilters.call_tag,
+    appliedFilters.lead_owner,
+  ]);
 
   return (
     <>
@@ -335,9 +389,11 @@ const AllEnquiriesReport = () => {
                       <th className="px-2 py-4 min-w-[140px]">Name</th>
                       <th className="px-2 py-4 min-w-[120px]">Location</th>
                       <th className="px-2 py-4 min-w-[100px]">Gender</th>
-                      <th className="px-2 py-4 min-w-[150px]">Interested In </th>
+                      <th className="px-2 py-4 min-w-[150px]">
+                        Interested In{" "}
+                      </th>
                       <th className="px-2 py-4 min-w-[120px]">Enquiry Type</th>
-                      
+
                       <th className="px-2 py-4 min-w-[120px]">Lead Source</th>
                       <th className="px-2 py-4 min-w-[120px]">Lead Status </th>
                       <th className="px-2 py-4 min-w-[100px]">Call Tag</th>
@@ -380,7 +436,7 @@ const AllEnquiriesReport = () => {
                           <td className="px-2 py-4">
                             {row.enquiry_type ? row.enquiry_type : "--"}
                           </td>
-                          
+
                           <td className="px-2 py-4">
                             {row.lead_source ? row.lead_source : "--"}
                           </td>
@@ -391,9 +447,13 @@ const AllEnquiriesReport = () => {
                             {row.call_tag ? formatText(row.call_tag) : "--"}
                           </td>
                           <td className="px-2 py-4">
-                            {row.last_communication_date ? formatAutoDate(row.last_communication_date) : "--"}
+                            {row.last_communication_date
+                              ? formatAutoDate(row.last_communication_date)
+                              : "--"}
                           </td>
-                          <td className="px-2 py-4">{row.last_call_status ? row.last_call_status :"--"}</td>
+                          <td className="px-2 py-4">
+                            {row.last_call_status ? row.last_call_status : "--"}
+                          </td>
                           <td className="px-2 py-4">
                             {row.next_follow_up
                               ? formatAutoDate(row.next_follow_up)

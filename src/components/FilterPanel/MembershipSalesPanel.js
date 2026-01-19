@@ -26,9 +26,13 @@ const packageTypeOptions = [
 ];
 
 const payModeTypeOptions = [
+  { value: "CASH", label: "Cash" },
+  { value: "CARD", label: "Card" },
   { value: "UPI", label: "UPI" },
-  { value: "Credit Card", label: "Credit Card" },
-  { value: "Net Banking", label: "Net Banking" },
+  { value: "WALLET", label: "Wallet" },
+  { value: "NET_BANKING", label: "Net Banking" },
+  { value: "COIN", label: "Coin" },
+  { value: "OTHER", label: "Other" },
 ];
 
 export default function MembershipSalesPanel({

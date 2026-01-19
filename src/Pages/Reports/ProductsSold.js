@@ -48,14 +48,16 @@ const ProductsSold = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
 
-  const [stats, setStats] = useState({
-    memberships: 0,
-    products: 0,
-    group_class_count: 0,
-    recovery: 0,
-    personal_training: 0,
-    pilates: 0,
-  });
+  // const [stats, setStats] = useState({
+  //   memberships: 0,
+  //   products: 0,
+  //   group_class_count: 0,
+  //   recovery: 0,
+  //   personal_training: 0,
+  //   pilates: 0,
+  // });
+
+  const [stats, setStats] = useState({});
 
   const [filtersInitialized, setFiltersInitialized] = useState(false);
 
@@ -164,13 +166,13 @@ const ProductsSold = () => {
         params.endDate = formatDate(customTo);
       }
 
-        // Club filter
+      // Club filter
       if (clubFilter?.value) {
         params.club_id = clubFilter.value;
       }
 
       // ✅ Applied Filters
-    
+
       if (appliedFilters.bill_type) params.bill_type = appliedFilters.bill_type;
       if (appliedFilters.service_type)
         params.service_type = appliedFilters.service_type;
@@ -183,7 +185,6 @@ const ProductsSold = () => {
       if (appliedFilters.payment_method)
         params.payment_method = appliedFilters.payment_method;
 
-
       console.log("🔍 API Request Params:", params);
 
       const res = await authAxios().get("/report/product/sold", { params });
@@ -191,7 +192,6 @@ const ProductsSold = () => {
       const responseData = res.data;
       const data = responseData?.data || [];
 
-      console.log(data,'product sold data')
 
       setProductSoldData(data);
       setPage(responseData?.currentPage || 1);
@@ -201,19 +201,18 @@ const ProductsSold = () => {
       // Update stats
       const statusCount = responseData?.counts || {};
       setStats({
-        memberships: statusCount.membership_count || 0,
-        group_class_count: statusCount.group_class_count || 0,
-        personal_training: statusCount.pt_count || 0,
-        recovery: statusCount.recovery_count || 0,
-        pilates: statusCount.pilates_count || 0,
-        products: statusCount.products_count || 0,
+        memberships: statusCount.membership_count,
+        group_class_count: statusCount.group_class_count,
+        personal_training: statusCount.pt_count,
+        recovery: statusCount.recovery_count,
+        pilates: statusCount.pilates_count,
+        products: statusCount.products_count,
       });
     } catch (err) {
       console.error("❌ API Error:", err);
       toast.error("Failed to fetch product sold report");
     }
   };
-
 
   // ---------------------------
   // INITIALIZE FROM URL
@@ -404,66 +403,78 @@ const ProductsSold = () => {
 
         {/* Dynamic Statistics */}
         <div className="grid grid-cols-6 gap-3 mb-5 p-3 border bg-white shodow--box rounded-[10px]">
-          <div className="border rounded-[5px] overflow-hidden w-full">
-            <div className="flex gap-1 justify-center bg-[#F1F1F1] p-4 py-3">
-              <div className="text-lg font-bold">Memberships</div>
+          {stats?.memberships !== undefined && (
+            <div className="border rounded-[5px] overflow-hidden w-full">
+              <div className="flex gap-1 justify-center bg-[#F1F1F1] p-4 py-3">
+                <div className="text-lg font-bold">Memberships</div>
+              </div>
+              <div>
+                <p className="text-3xl font-bold p-2 text-center py-5">
+                  {stats?.memberships}
+                </p>
+              </div>
             </div>
-            <div>
-              <p className="text-3xl font-bold p-2 text-center py-5">
-                {stats?.memberships}
-              </p>
+          )}
+          {stats?.personal_training !== undefined && (
+            <div className="border rounded-[5px] overflow-hidden w-full">
+              <div className="flex gap-1 justify-center bg-[#F1F1F1] p-4 py-3">
+                <div className="text-lg font-bold">Personal Training</div>
+              </div>
+              <div>
+                <p className="text-3xl font-bold p-2 text-center py-5">
+                  {stats?.personal_training}
+                </p>
+              </div>
             </div>
-          </div>
-          <div className="border rounded-[5px] overflow-hidden w-full">
-            <div className="flex gap-1 justify-center bg-[#F1F1F1] p-4 py-3">
-              <div className="text-lg font-bold">Personal Training</div>
+          )}
+          {stats?.recovery !== undefined && (
+            <div className="border rounded-[5px] overflow-hidden w-full">
+              <div className="flex gap-1 justify-center bg-[#F1F1F1] p-4 py-3">
+                <div className="text-lg font-bold">Recovery</div>
+              </div>
+              <div>
+                <p className="text-3xl font-bold p-2 text-center py-5">
+                  {stats?.recovery}
+                </p>
+              </div>
             </div>
-            <div>
-              <p className="text-3xl font-bold p-2 text-center py-5">
-                {stats?.personal_training}
-              </p>
+          )}
+          {stats?.products !== undefined && (
+            <div className="border rounded-[5px] overflow-hidden w-full">
+              <div className="flex gap-1 justify-center bg-[#F1F1F1] p-4 py-3">
+                <div className="text-lg font-bold">Nourish</div>
+              </div>
+              <div>
+                <p className="text-3xl font-bold p-2 text-center py-5">
+                  {stats?.products}
+                </p>
+              </div>
             </div>
-          </div>
-          <div className="border rounded-[5px] overflow-hidden w-full">
-            <div className="flex gap-1 justify-center bg-[#F1F1F1] p-4 py-3">
-              <div className="text-lg font-bold">Recovery</div>
+          )}
+          {stats?.pilates !== undefined && (
+            <div className="border rounded-[5px] overflow-hidden w-full">
+              <div className="flex gap-1 justify-center bg-[#F1F1F1] p-4 py-3">
+                <div className="text-lg font-bold">Pilates</div>
+              </div>
+              <div>
+                <p className="text-3xl font-bold p-2 text-center py-5">
+                  {stats?.pilates}
+                </p>
+              </div>
             </div>
-            <div>
-              <p className="text-3xl font-bold p-2 text-center py-5">
-                {stats?.recovery}
-              </p>
+          )}
+          {stats?.group_class_count !== undefined && (
+            <div className="border rounded-[5px] overflow-hidden w-full">
+              <div className="flex gap-1 justify-center bg-[#F1F1F1] p-4 py-3">
+                <div className="text-lg font-bold">Group Classes</div>
+              </div>
+              <div>
+                <p className="text-3xl font-bold p-2 text-center py-5">
+                  {stats?.group_class_count}
+                </p>
+              </div>
             </div>
-          </div>
-          <div className="border rounded-[5px] overflow-hidden w-full">
-            <div className="flex gap-1 justify-center bg-[#F1F1F1] p-4 py-3">
-              <div className="text-lg font-bold">Nourish</div>
-            </div>
-            <div>
-              <p className="text-3xl font-bold p-2 text-center py-5">
-                {stats?.products}
-              </p>
-            </div>
-          </div>
-          <div className="border rounded-[5px] overflow-hidden w-full">
-            <div className="flex gap-1 justify-center bg-[#F1F1F1] p-4 py-3">
-              <div className="text-lg font-bold">Pilates</div>
-            </div>
-            <div>
-              <p className="text-3xl font-bold p-2 text-center py-5">
-                {stats?.pilates}
-              </p>
-            </div>
-          </div>
-          <div className="border rounded-[5px] overflow-hidden w-full">
-            <div className="flex gap-1 justify-center bg-[#F1F1F1] p-4 py-3">
-              <div className="text-lg font-bold">Group Classes</div>
-            </div>
-            <div>
-              <p className="text-3xl font-bold p-2 text-center py-5">
-                {stats?.group_class_count}
-              </p>
-            </div>
-          </div>
+          )}
         </div>
 
         <div className="w-full p-3 border bg-white shodow--box rounded-[10px]">
@@ -504,7 +515,7 @@ const ProductsSold = () => {
                     <th className="px-2 py-4 min-w-[120px]">Package Type</th>
                     <th className="px-2 py-4 min-w-[150px]">Service Type</th>
                     <th className="px-2 py-4 min-w-[120px]">Plan Type</th>
-                    <th className="px-2 py-4 min-w-[150px]">Service Name</th>
+                    <th className="px-2 py-4 min-w-[200px]">Service Name</th>
                     <th className="px-2 py-4 min-w-[130px]">Variation</th>
                     <th className="px-2 py-4 min-w-[130px]">Trainer Name</th>
                     <th className="px-2 py-4 min-w-[120px]">Start Date</th>
@@ -539,9 +550,13 @@ const ProductsSold = () => {
                           {row?.club_name ? row?.club_name : "--"}
                         </td>
                         <td className="px-2 py-4">
-                          {row?.membership_number ? row?.membership_number : "--"}
+                          {row?.membership_number
+                            ? row?.membership_number
+                            : "--"}
                         </td>
-                        <td className="px-2 py-4">{row?.member_name ? row?.member_name : "--"}</td>
+                        <td className="px-2 py-4">
+                          {row?.member_name ? row?.member_name : "--"}
+                        </td>
                         <td className="px-2 py-4">
                           {row?.invoice_no ? row?.invoice_no : "--"}
                         </td>
@@ -567,9 +582,7 @@ const ProductsSold = () => {
                             : "--"}
                         </td>
                         <td className="px-2 py-4">
-                          {row?.trainer_name
-                            ? row?.trainer_name
-                            : "--"}
+                          {row?.trainer_name ? row?.trainer_name : "--"}
                         </td>
                         <td className="px-2 py-4">
                           {formatAutoDate(row?.start_date)}
@@ -600,7 +613,9 @@ const ProductsSold = () => {
                           ₹{row?.paid_amount ? row?.paid_amount : 0}
                         </td>
                         <td className="px-2 py-4">
-                          {row?.payment_method ? formatText(row?.payment_method) : "--"}
+                          {row?.payment_method
+                            ? formatText(row?.payment_method)
+                            : "--"}
                         </td>
                         <td className="px-2 py-4">
                           <div className="flex items-center gap-2">

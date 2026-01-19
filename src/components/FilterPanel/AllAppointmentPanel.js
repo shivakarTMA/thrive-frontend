@@ -67,7 +67,7 @@ export default function AllAppointmentPanel({
 
       // ✅ Only ACTIVE + PRODUCT services
       const activeProductServices = data.filter(
-        (item) => item.status === "ACTIVE" && item.service_type !== "PRODUCT"
+        (item) => item.status === "ACTIVE" && item.type !== "PRODUCT" && item.type !== "GROUP_CLASS"
       );
 
       setServiceList(activeProductServices);
