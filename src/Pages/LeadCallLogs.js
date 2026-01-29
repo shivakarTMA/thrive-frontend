@@ -370,14 +370,12 @@ const LeadCallLogs = () => {
   // }, [formik.errors, formik.touched, formik.values]);
 
   useEffect(() => {
-    const logToEdit = callLogs.find(
-      (log) => String(log.id) === String(logId),
-    );
-  
+    const logToEdit = callLogs.find((log) => String(log.id) === String(logId));
+
     if (logId) {
       setEditLog(logToEdit);
-    } else{
-      setEditLog(null)
+    } else {
+      setEditLog(null);
     }
   }, [logId, callLogs]);
 
@@ -743,6 +741,7 @@ const LeadCallLogs = () => {
                   onClick={() => {
                     formik.resetForm();
                     setEditLog(null);
+                    navigate(`/lead-follow-up/${leadId}`);
                   }}
                 >
                   Clear
