@@ -191,6 +191,10 @@ const MemberCheckInsReport = () => {
 
   useEffect(() => {
     if (!filtersInitialized) return;
+        // 🚫 Prevent API call until both dates are selected
+    if (dateFilter?.value === "custom" && (!customFrom || !customTo)) {
+      return;
+    }
     fetchReport();
   }, [
     filtersInitialized,

@@ -1,37 +1,35 @@
 import React, { useEffect, useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { addYears, subYears } from "date-fns";
+import { addYears, format, subYears } from "date-fns";
 import { FaCalendarDays } from "react-icons/fa6";
 import Select from "react-select";
-import { customStyles, filterActiveItems, formatAutoDate, formatTimeAppointment, formatText } from "../Helper/helper";
-import { authAxios } from "../config/config";
+import {
+  customStyles,
+  filterActiveItems,
+  formatAutoDate,
+  formatIndianNumber,
+} from "../../Helper/helper";
+import { authAxios } from "../../config/config";
 import { toast } from "react-toastify";
-import Tooltip from "../components/common/Tooltip";
-import { LiaEdit } from "react-icons/lia";
-import { Link } from "react-router-dom";
-import Pagination from "../components/common/Pagination";
 import { useSelector } from "react-redux";
+import { useLocation } from "react-router-dom";
+import Pagination from "../../components/common/Pagination";
 
 const dateFilterOptions = [
   { value: "today", label: "Today" },
-  { value: "last_7_days", label: "Last 7 Days" },
-  { value: "month_till_date", label: "Month Till Date" },
+  { value: "next_7_days", label: "Next 7 Days" },
+  { value: "month_remaining", label: "Month Remaining" },
   { value: "custom", label: "Custom Date" },
 ];
 
-const formatDate = (date) => {
-  if (!date) return null;
-  return date.toISOString().split("T")[0]; // YYYY-MM-DD
-};
-
-const MyFollowUps = () => {
-  const [myFollowUps, setMyFollowUps] = useState([]);
-  const [clubList, setClubList] = useState([]);
-  const [clubFilter, setClubFilter] = useState(null);
-
+const AnniversaryReport = () => {
+  const location = useLocation();
   const { user } = useSelector((state) => state.auth);
   const userRole = user.role;
+  const [anniversaryList, setAnniversaryList] = useState([]);
+  const [clubList, setClubList] = useState([]);
+  const [clubFilter, setClubFilter] = useState(null);
 
   const [dateFilter, setDateFilter] = useState(dateFilterOptions[1]);
   const [customFrom, setCustomFrom] = useState(null);
@@ -51,13 +49,6 @@ const MyFollowUps = () => {
       const data = response.data?.data || [];
       const activeOnly = filterActiveItems(data);
       setClubList(activeOnly);
-
-      if (activeOnly.length > 0) {
-        setClubFilter({
-          label: activeOnly[0].name,
-          value: activeOnly[0].id,
-        });
-      }
     } catch (error) {
       toast.error("Failed to fetch clubs");
     }
@@ -73,7 +64,7 @@ const MyFollowUps = () => {
     value: item.id,
   }));
 
-  const fetchMyFollowups = async () => {
+  const fetchMemberAnniversaryReport = async () => {
     try {
       const params = {};
 
@@ -85,20 +76,18 @@ const MyFollowUps = () => {
       // Date filter
       if (dateFilter?.value === "custom") {
         if (customFrom && customTo) {
-          params.startDate = formatDate(customFrom);
-          params.endDate = formatDate(customTo);
+          params.startDate = format(customFrom, "yyyy-MM-dd");
+          params.endDate = format(customTo, "yyyy-MM-dd");
         }
       } else if (dateFilter?.value) {
         params.dateFilter = dateFilter.value;
       }
 
-      const res = await authAxios().get("/report/myfollowup", {
-        params,
-      });
+      const res = await authAxios().get("/report/anniversary", { params });
       const responseData = res.data;
       const data = responseData?.data || [];
 
-      setMyFollowUps(data);
+      setAnniversaryList(data);
       setPage(responseData?.currentPage || 1);
       setTotalPages(responseData?.totalPage || 1);
       setTotalCount(responseData?.totalCount || data.length);
@@ -108,33 +97,51 @@ const MyFollowUps = () => {
     }
   };
   useEffect(() => {
-    // If custom date is selected, wait for both dates
     if (dateFilter?.value === "custom") {
       if (customFrom && customTo) {
-        fetchMyFollowups();
-        setPage(1);
+        fetchMemberAnniversaryReport(1);
       }
       return;
     }
 
-    // For all non-custom filters
-    fetchMyFollowups();
+    fetchMemberAnniversaryReport(1);
   }, [dateFilter, customFrom, customTo, clubFilter]);
+
+  useEffect(() => {
+    // Wait for clubList to be loaded
+    if (clubList.length === 0) return;
+
+    const params = new URLSearchParams(location.search);
+
+    const clubId = params.get("club_id");
+    if (clubId) {
+      const club = clubList.find((c) => c.id === Number(clubId));
+      if (club) {
+        setClubFilter({ label: club.name, value: club.id });
+      }
+    } else {
+      // Set default club only on initial load
+      setClubFilter({
+        label: clubList[0].name,
+        value: clubList[0].id,
+      });
+    }
+  }, [clubList]);
 
   return (
     <div className="page--content">
       {/* Header */}
       <div className="flex items-end justify-between gap-2 mb-5">
         <div className="title--breadcrumbs">
-          <p className="text-sm">{`Home > My Follow Up`}</p>
-          <h1 className="text-3xl font-semibold">My Follow Up</h1>
+          <p className="text-sm">{`Home > Client Anniversary`}</p>
+          <h1 className="text-3xl font-semibold">Client Anniversary</h1>
         </div>
       </div>
 
       {/* Filters */}
       <div className="flex gap-3 mb-4 items-center justify-between">
         <div className="flex gap-2 w-full">
-          <div className="max-w-[180px] w-full">
+          <div className="w-fit min-w-[180px]">
             <Select
               placeholder="Date Filter"
               options={dateFilterOptions}
@@ -164,8 +171,7 @@ const MyFollowUps = () => {
                   }}
                   placeholderText="From Date"
                   className="custom--input w-full input--icon"
-                  minDate={subYears(new Date(), 20)}
-                  maxDate={addYears(new Date(), 0)}
+                  minDate={new Date()}
                   dateFormat="dd-MM-yyyy"
                   showMonthDropdown
                   showYearDropdown
@@ -181,8 +187,7 @@ const MyFollowUps = () => {
                   onChange={(date) => setCustomTo(date)}
                   placeholderText="To Date"
                   className="custom--input w-full input--icon"
-                  minDate={customFrom || subYears(new Date(), 20)}
-                  maxDate={addYears(new Date(), 0)}
+                  minDate={customFrom || new Date()}
                   showMonthDropdown
                   showYearDropdown
                   dropdownMode="select"
@@ -199,9 +204,8 @@ const MyFollowUps = () => {
               value={clubFilter}
               options={clubOptions}
               onChange={(option) => setClubFilter(option)}
-              styles={customStyles}
               isClearable={userRole === "ADMIN" ? true : false}
-              className="w-full"
+              styles={customStyles}
             />
           </div>
         </div>
@@ -213,78 +217,37 @@ const MyFollowUps = () => {
           <table className="w-full text-sm text-left text-gray-500">
             <thead className="text-xs text-gray-700 uppercase bg-gray-50">
               <tr>
-                <th className="px-2 py-4 min-w-[50px]">S.no</th>
-                <th className="px-2 py-4 min-w-[130px]">Club Name</th>
-                <th className="px-2 py-4 min-w-[100px]">Scheduled Date</th>
-                <th className="px-2 py-4 min-w-[100px]">Scheduled Time</th>
-                <th className="px-2 py-4 min-w-[100px]">Call Type</th>
-                <th className="px-2 py-4 min-w-[100px]">Member Type</th>
-                <th className="px-2 py-4 min-w-[130px]">Name</th>
-                <th className="px-2 py-4 min-w-[140px]">Call Status</th>
-                <th className="px-2 py-4 min-w-[130px]">Staff Name</th>
-                <th className="px-2 py-4">Action</th>
+                <th className="px-2 py-4 min-w-[30px]">S.No</th>
+                <th className="px-2 py-4 min-w-[120px]">Member ID</th>
+                <th className="px-2 py-4 min-w-[120px]">Member Name</th>
+                <th className="px-2 py-4 min-w-[120px]">Member Since</th>
+                <th className="px-2 py-4 min-w-[120px]">
+                  Membership Expired On
+                </th>
               </tr>
             </thead>
 
             <tbody>
-              {myFollowUps.length ? (
-                myFollowUps.map((row, index) => (
+              {anniversaryList.length ? (
+                anniversaryList.map((row, index) => (
                   <tr
                     key={index}
                     className="bg-white border-b hover:bg-gray-50"
                   >
                     <td className="px-2 py-4">{index + 1}</td>
-                    <td className="px-2 py-4">{row.club_name}</td>
-                    <td className="px-2 py-4">{formatAutoDate(row.schedule_date)}</td>
-                    <td className="px-2 py-4">{formatTimeAppointment(row.schedule_time)}</td>
-                    <td className="px-2 py-4">
-                      {row.call_type ? row.call_type : "--"}
+                    <td className="px-2 py-2">{row?.membership_number}</td>
+                    <td className="px-2 py-2">{row?.full_name}</td>
+                    <td className="px-2 py-2">
+                      {formatAutoDate(row?.first_time_subscription)}
                     </td>
-                    <td className="px-2 py-4">{formatText(row.entity_type)}</td>
-                    <td className="px-2 py-4">
-                      {row.member_name ? row.member_name : "--"}
-                    </td>
-                    <td className="px-2 py-4">{row.call_status}</td>
-                    <td className="px-2 py-4">
-                      {row.staff_name ? row.staff_name : "--"}
-                    </td>
-                    <td className="px-2 py-4">
-                      <div className="flex">
-                        {!(row.entity_type === "LEAD" && row.is_subscribed) ? (
-                          <Tooltip
-                            id={`tooltip-update-${row.id}`}
-                            content="Update Follow Up"
-                            place="top"
-                          >
-                            <Link
-                              to={
-                                row.entity_type === "LEAD"
-                                  ? `/lead-follow-up/${row.member_id}?logId=${row.id}`
-                                  : `/member/${row.member_id}?view=call-logs&logId=${row.id}`
-                              }
-                              className="p-1 block cursor-pointer"
-                            >
-                              <LiaEdit className="text-[25px] text-black" />
-                            </Link>
-                          </Tooltip>
-                        ) : (
-                          <Tooltip
-                            id={`tooltip-disabled-${row.id}`}
-                            content="Subscribed leads cannot be edited"
-                            place="top"
-                          >
-                            <span className="p-1 block cursor-not-allowed opacity-50">
-                              <LiaEdit className="text-[25px] text-gray-400" />
-                            </span>
-                          </Tooltip>
-                        )}
-                      </div>
+                    <td className="px-2 py-2">
+                      {formatAutoDate(row?.subscription_expiry_date)}
                     </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan={10} className="text-center py-4">
+                  <td colSpan={5} className="text-center py-4">
                     No data found
                   </td>
                 </tr>
@@ -292,17 +255,14 @@ const MyFollowUps = () => {
             </tbody>
           </table>
         </div>
-
-        {/* Pagination */}
         <Pagination
           page={page}
           totalPages={totalPages}
           rowsPerPage={rowsPerPage}
           totalCount={totalCount}
-          currentDataLength={myFollowUps.length}
+          currentDataLength={anniversaryList.length}
           onPageChange={(newPage) => {
-            setPage(newPage);
-            fetchMyFollowups(newPage);
+            fetchMemberAnniversaryReport(newPage);
           }}
         />
       </div>
@@ -310,4 +270,4 @@ const MyFollowUps = () => {
   );
 };
 
-export default MyFollowUps;
+export default AnniversaryReport;

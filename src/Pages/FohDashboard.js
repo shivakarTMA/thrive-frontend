@@ -19,7 +19,7 @@ import {
   formatIndianNumber,
 } from "../Helper/helper";
 import { addYears, format, subYears } from "date-fns";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import HighchartsReact from "highcharts-react-official";
 import Highcharts from "highcharts";
 import { CiLocationOn } from "react-icons/ci";
@@ -76,27 +76,15 @@ const classPerformance = [
     bookings: 4,
     reservations: 95,
     cancellations: 3,
+    url: "/group-class",
   },
   {
     id: 2,
-    classType: "Pilates",
+    classType: "Sessions",
     bookings: 10,
     reservations: 10,
     cancellations: 0,
-  },
-  {
-    id: 3,
-    classType: "Recovery",
-    bookings: 5,
-    reservations: 5,
-    cancellations: 1,
-  },
-  {
-    id: 4,
-    classType: "Personal Training",
-    bookings: 8,
-    reservations: 8,
-    cancellations: 2,
+    url: "/reports/all-bookings",
   },
 ];
 
@@ -111,43 +99,53 @@ const FohDashboard = () => {
   const [customTo, setCustomTo] = useState(null);
   const [clubList, setClubList] = useState([]);
   const [clubFilter, setClubFilter] = useState(null);
+
+  // Product Sold
+  const [productSeries, setProductSeries] = useState([]);
+  const [productCategories, setProductCategories] = useState([]);
+  const [totalProductValue, setTotalProductValue] = useState(0);
+
+  // Enquiry
+  const [leadCategories, setLeadCategories] = useState([]);
+  const [leadSeries, setLeadSeries] = useState([]);
+  const [totalLeads, setTotalLeads] = useState(0);
+
   const [orders, setOrders] = useState([
-    {
-      id: "ORD001",
-      member: "John Doe",
-      items: "Latte & Salad",
-      placedOn: "2025-04-28",
-      isDone: false,
-    },
-    {
-      id: "ORD002",
-      member: "Jane Smith",
-      items: "Black Coffice",
-      placedOn: "2025-04-27",
-      isDone: false,
-    },
-    {
-      id: "ORD003",
-      member: "Jane Smith",
-      items: "Espresso",
-      placedOn: "2025-04-27",
-      isDone: false,
-    },
-    {
-      id: "ORD004",
-      member: "Jane Smith",
-      items: "Americano",
-      placedOn: "2025-04-27",
-      isDone: false,
-    },
-    {
-      id: "ORD005",
-      member: "Jane Smith",
-      items: "Broccoli Soup",
-      placedOn: "2025-04-27",
-      isDone: false,
-    },
-  ]);
+  {
+    id: "ORD001",
+    member_id: "MEM001",
+    member_name: "John Doe",
+    category: "Beverage",
+    product_name: "Latte",
+    final_amount: 180,
+    stock_pending: "No",
+    placedOn: "2025-04-28",
+    isDone: false,
+  },
+  {
+    id: "ORD002",
+    member_id: "MEM002",
+    member_name: "Jane Smith",
+    category: "Beverage",
+    product_name: "Black Coffee",
+    final_amount: 120,
+    stock_pending: "Yes",
+    placedOn: "2025-04-27",
+    isDone: false,
+  },
+  {
+    id: "ORD003",
+    member_id: "MEM003",
+    member_name: "Alex Brown",
+    category: "Food",
+    product_name: "Broccoli Soup",
+    final_amount: 200,
+    stock_pending: "No",
+    placedOn: "2025-04-26",
+    isDone: false,
+  },
+]);
+
 
   const fetchDashboardData = async () => {
     try {
@@ -175,6 +173,89 @@ const FohDashboard = () => {
     } catch (err) {
       console.error(err);
       toast.error("Failed to fetch companies");
+    }
+  };
+
+  const fetchProductStatus = async () => {
+    try {
+      const params = {};
+
+      // Date filter
+      if (dateFilter?.value && dateFilter.value !== "custom") {
+        params.dateFilter = dateFilter.value;
+      }
+
+      // Custom date filter
+      if (dateFilter?.value === "custom" && customFrom && customTo) {
+        params.startDate = format(customFrom, "yyyy-MM-dd");
+        params.endDate = format(customTo, "yyyy-MM-dd");
+      }
+
+      // Club filter
+      if (clubFilter?.value) {
+        params.club_id = clubFilter.value;
+      }
+
+      const res = await authAxios().get("/dashboard/service/count", { params });
+
+      const apiData = res.data?.data || {};
+      const services = apiData.service_wise_count || [];
+
+      setTotalProductValue(apiData.total_count || 0);
+
+      // 🟢 Fully dynamic
+      const categories = services.map((item) => item.service_name);
+      const seriesData = services.map((item) => item.count);
+
+      setProductCategories(categories);
+      setProductSeries(seriesData);
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to fetch product status");
+    }
+  };
+
+  const fetchLeadStatus = async () => {
+    try {
+      const params = {};
+
+      // Date filter
+      if (dateFilter?.value && dateFilter.value !== "custom") {
+        params.dateFilter = dateFilter.value;
+      }
+
+      // Custom date filter
+      if (dateFilter?.value === "custom" && customFrom && customTo) {
+        params.startDate = format(customFrom, "yyyy-MM-dd");
+        params.endDate = format(customTo, "yyyy-MM-dd");
+      }
+
+      // Club filter
+      if (clubFilter?.value) {
+        params.club_id = clubFilter.value;
+      }
+
+      const res = await authAxios().get("/dashboard/enquiry/count", { params });
+
+      const apiData = res.data?.data || {};
+      const statuses = apiData.lead_status_count || [];
+
+      setTotalLeads(apiData.total_count || 0);
+
+      // Optional: Friendly names (capitalize first letter)
+      const categories = statuses.map((item) =>
+        item.lead_status
+          .split(" ")
+          .map((w) => w[0].toUpperCase() + w.slice(1))
+          .join(" "),
+      );
+      const seriesData = statuses.map((item) => item.count);
+
+      setLeadCategories(categories);
+      setLeadSeries(seriesData);
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to fetch enquiry status");
     }
   };
 
@@ -212,25 +293,28 @@ const FohDashboard = () => {
     }
   }, [dateFilter, customFrom, customTo, clubFilter]);
 
+  useEffect(() => {
+    if (dateFilter?.value !== "custom" || (customFrom && customTo)) {
+      fetchProductStatus();
+    }
+  }, [dateFilter, customFrom, customTo, clubFilter]);
+
+  useEffect(() => {
+    if (dateFilter?.value !== "custom" || (customFrom && customTo)) {
+      fetchLeadStatus();
+    }
+  }, [dateFilter, customFrom, customTo, clubFilter]);
+
   const clubOptions = clubList.map((item) => ({
     label: item.name,
     value: item.id,
   }));
 
-  const dataProductSeries = [5, 3, 7, 2, 4];
-  const totalProcutValue = dataProductSeries.reduce(
-    (sum, value) => sum + value,
-    0
-  );
-
-  const dataSeries = [5, 6, 2, 3, 1];
-  const totalValue = dataSeries.reduce((sum, value) => sum + value, 0);
+  // Enquiry line chart
+  const maxValueLeads = Math.max(...leadSeries, 0);
 
   const leadsStatus = {
-    chart: {
-      type: "column",
-      height: 300,
-    },
+    chart: { type: "column", height: 300 },
     title: {
       text: "Enquiries",
       align: "left",
@@ -242,7 +326,7 @@ const FohDashboard = () => {
       },
     },
     xAxis: {
-      categories: ["Lead", "Opportunity", "New", "Won", "Lost"],
+      categories: leadCategories,
       labels: {
         style: {
           fontSize: "13px",
@@ -253,26 +337,25 @@ const FohDashboard = () => {
     },
     yAxis: {
       min: 0,
-      gridLineColor: "#e5e5e5",
-      title: {
-        text: null,
-      },
-      maxPadding: 0.1, // adds space at the top
-      tickInterval: 1,
+      tickInterval: Math.max(1, Math.ceil(maxValueLeads / 5)),
+      title: { text: null },
     },
-    legend: {
-      enabled: false,
-    },
+    legend: { enabled: false },
     tooltip: {
-      pointFormat: "Count: <b>{point.y}</b>",
+      useHTML: true, // ✅ allows HTML tags like <b>
+      formatter: function () {
+        const label = this.point.category; // dynamic label
+        const value = this.y; // count
+
+        return `<b>${label}</b><br/>Count: <b>${value}</b>`;
+      },
     },
     plotOptions: {
       column: {
         pointWidth: 40,
-        borderRadius: 0,
+        borderWidth: 0,
         pointPadding: 0.1,
         groupPadding: 0.05,
-        borderWidth: 0,
         width: 50,
         color: {
           linearGradient: { x1: 0, y1: 0, x2: 0, y2: 1 },
@@ -287,34 +370,33 @@ const FohDashboard = () => {
         point: {
           events: {
             click: function () {
-              // Example: open a link based on category
-              const linkMap = {
-                Lead: generateUrl(`/all-leads?leadStatus=Lead`),
-                Opportunity: generateUrl(`/all-leads?leadStatus=Opportunity`),
-                New: generateUrl(`/all-leads?leadStatus=New`),
-                Won: generateUrl(`/all-leads?leadStatus=Won`),
-                Lost: generateUrl(`/all-leads?leadStatus=Lost`),
-              };
-              const targetLink = linkMap[this.category];
-              if (targetLink) {
-                window.location.href = targetLink; // navigate to link
+              const category = this.category;
+
+              let target;
+
+              if (category.toLowerCase() === "won") {
+                // 👑 Special case for Won
+                target = generateUrl(
+                  "/reports/sales-reports/membership-sales-report",
+                );
+              } else {
+                // 🔁 Default for all other statuses
+                target = generateUrl(
+                  `/reports/sales-reports/all-enquiries-report?lead_status=${category}`,
+                );
               }
+              window.location.href = target;
             },
           },
         },
       },
     },
-
-    series: [
-      {
-        name: "Leads",
-        data: dataSeries,
-      },
-    ],
-    credits: {
-      enabled: false,
-    },
+    series: [{ name: "Leads", data: leadSeries }],
+    credits: { enabled: false },
   };
+
+  // Product Sold Chart
+  const maxValue = Math.max(...productSeries, 0);
 
   const productStatus = {
     chart: {
@@ -332,49 +414,43 @@ const FohDashboard = () => {
       },
     },
     xAxis: {
-      categories: [
-        "Membership",
-        "Personal Training",
-        "Recovery",
-        "Nourish",
-        "Pilates",
-      ],
+      categories: productCategories,
       labels: {
         style: {
           fontSize: "13px",
           fontWeight: "700",
           fontFamily: "Roboto, sans-serif",
         },
-        rotation: 0, // Prevent rotation even if text is long
         formatter: function () {
-          // Just add <br> for line break (manual)
-          return this.value.replace(" ", "<br>");
+          if (this.value === "SUBSCRIPTION") return "Membership";
+          if (this.value === "PRODUCT") return "Nourish";
+          return this.value; // everything else stays dynamic
         },
       },
     },
     yAxis: {
       min: 0,
-      gridLineColor: "#e5e5e5",
-      title: {
-        text: null,
-      },
-      maxPadding: 0.1, // adds space at the top
-      tickInterval: 1,
+      tickInterval: Math.max(1, Math.ceil(maxValue / 5)),
+      title: { text: null },
     },
-    legend: {
-      enabled: false,
-    },
+    legend: { enabled: false },
     tooltip: {
-      pointFormat: "Count: <b>{point.y}</b>",
+      formatter: function () {
+        let label = this.point.category;
+
+        console.log(label, "map label");
+
+        if (label === "SUBSCRIPTION") label = "Membership";
+        if (label === "PRODUCT") label = "Nourish";
+
+        return `<b>${label}</b><br/>Count: <b>${this.y}</b>`;
+      },
     },
+
     plotOptions: {
       column: {
         pointWidth: 40,
-        borderRadius: 0,
-        pointPadding: 0.1,
-        groupPadding: 0.05,
         borderWidth: 0,
-        width: 50,
         color: {
           linearGradient: { x1: 0, y1: 0, x2: 0, y2: 1 },
           stops: [
@@ -388,34 +464,30 @@ const FohDashboard = () => {
         point: {
           events: {
             click: function () {
-              // Example: open a link based on category
-              const linkMap = {
-                Membership: "/reports/all-orders/",
-                "Personal Training": "/reports/all-orders/",
-                Recovery: "/reports/all-orders/",
-                Nourish: "/reports/all-orders/",
-                Pilates: "/reports/all-orders/",
-              };
-              const targetLink = linkMap[this.category];
-              if (targetLink) {
-                window.location.href = targetLink; // navigate to link
-              }
+              const value = this.category;
+              const isPackageType =
+                value === "SUBSCRIPTION" || value === "PRODUCT";
+
+              const paramKey = isPackageType ? "package_type" : "service_type";
+              const target = generateUrl(
+                `/reports/all-orders?${paramKey}=${value}`,
+              );
+              window.location.href = target;
             },
           },
         },
       },
     },
-
     series: [
       {
-        name: "Product",
-        data: dataProductSeries,
+        name: "Service",
+        data: productSeries,
       },
     ],
-    credits: {
-      enabled: false,
-    },
+    credits: { enabled: false },
   };
+
+  // End Product Sold Chart
 
   // Handler to move to previous day
   const handlePrevious = () => {
@@ -474,7 +546,7 @@ const FohDashboard = () => {
         ? `${baseUrl}${separator}${params.toString()}`
         : baseUrl;
     },
-    [clubFilter, dateFilter, customFrom, customTo]
+    [clubFilter, dateFilter, customFrom, customTo],
   );
 
   return (
@@ -639,30 +711,32 @@ const FohDashboard = () => {
               title="Total Sales"
               titleLink={generateUrl(`/reports/all-orders?`)}
               totalSales={`₹${formatIndianNumber(
-                dashboardData?.summary_cards?.total_sales?.amount
+                dashboardData?.summary_cards?.total_sales?.amount,
               )}`}
               items={[
                 {
                   label: "Memberships",
                   value: `₹${formatIndianNumber(
                     dashboardData?.summary_cards?.total_sales?.breakup
-                      ?.memberships
+                      ?.memberships,
                   )}`,
                   link: generateUrl(
-                    `/reports/all-orders?package_type=SUBSCRIPTION`
+                    `/reports/all-orders?package_type=SUBSCRIPTION`,
                   ),
                 },
                 {
                   label: "Packages",
                   value: `₹${formatIndianNumber(
-                    dashboardData?.summary_cards?.total_sales?.breakup?.packages
+                    dashboardData?.summary_cards?.total_sales?.breakup
+                      ?.packages,
                   )}`,
                   link: generateUrl(`/reports/all-orders?package_type=PACKAGE`),
                 },
                 {
-                  label: "Products",
+                  label: "Nourish",
                   value: `₹${formatIndianNumber(
-                    dashboardData?.summary_cards?.total_sales?.breakup?.products
+                    dashboardData?.summary_cards?.total_sales?.breakup
+                      ?.products,
                   )}`,
                   link: generateUrl(`/reports/all-orders?package_type=PRODUCT`),
                 },
@@ -681,7 +755,7 @@ const FohDashboard = () => {
                     dashboardData?.summary_cards?.new_clients?.breakup
                       ?.memberships,
                   link: generateUrl(
-                    `/reports/all-orders?bill_type=NEW&package_type=SUBSCRIPTION`
+                    `/reports/all-orders?bill_type=NEW&package_type=SUBSCRIPTION`,
                   ),
                 },
                 {
@@ -690,16 +764,16 @@ const FohDashboard = () => {
                     dashboardData?.summary_cards?.new_clients?.breakup
                       ?.packages,
                   link: generateUrl(
-                    `/reports/all-orders?bill_type=NEW&package_type=PACKAGE`
+                    `/reports/all-orders?bill_type=NEW&package_type=PACKAGE`,
                   ),
                 },
                 {
-                  label: "Products",
+                  label: "Nourish",
                   value:
                     dashboardData?.summary_cards?.new_clients?.breakup
                       ?.products,
                   link: generateUrl(
-                    `/reports/all-orders?bill_type=NEW&package_type=PRODUCT`
+                    `/reports/all-orders?bill_type=NEW&package_type=PRODUCT`,
                   ),
                 },
               ]}
@@ -716,7 +790,7 @@ const FohDashboard = () => {
                     dashboardData?.summary_cards?.renewals?.breakup
                       ?.memberships,
                   link: generateUrl(
-                    `/reports/all-orders?bill_type=RENEWAL&package_type=SUBSCRIPTION`
+                    `/reports/all-orders?bill_type=RENEWAL&package_type=SUBSCRIPTION`,
                   ),
                 },
                 {
@@ -724,15 +798,15 @@ const FohDashboard = () => {
                   value:
                     dashboardData?.summary_cards?.renewals?.breakup?.packages,
                   link: generateUrl(
-                    `/reports/all-orders?bill_type=RENEWAL&package_type=PACKAGE`
+                    `/reports/all-orders?bill_type=RENEWAL&package_type=PACKAGE`,
                   ),
                 },
                 {
-                  label: "Products",
+                  label: "Nourish",
                   value:
                     dashboardData?.summary_cards?.renewals?.breakup?.products,
                   link: generateUrl(
-                    `/reports/all-orders?bill_type=RENEWAL&package_type=PRODUCT`
+                    `/reports/all-orders?bill_type=RENEWAL&package_type=PRODUCT`,
                   ),
                 },
               ]}
@@ -742,7 +816,7 @@ const FohDashboard = () => {
               icon={trialIcon}
               title="Trials"
               titleLink={generateUrl(
-                `/reports/appointments/all-trial-appointments?`
+                `/reports/appointments/all-trial-appointments?`,
               )}
               totalSales={dashboardData?.summary_cards?.trials?.total}
               items={[
@@ -750,21 +824,21 @@ const FohDashboard = () => {
                   label: "Scheduled",
                   value: dashboardData?.summary_cards?.trials?.scheduled,
                   link: generateUrl(
-                    `/reports/appointments/all-trial-appointments?booking_status=ACTIVE`
+                    `/reports/appointments/all-trial-appointments?`,
                   ),
                 },
                 {
                   label: "Completed",
                   value: dashboardData?.summary_cards?.trials?.completed,
                   link: generateUrl(
-                    `/reports/appointments/all-trial-appointments?booking_status=COMPLETED`
+                    `/reports/appointments/all-trial-appointments?booking_status=COMPLETED`,
                   ),
                 },
                 {
                   label: "No-Show",
                   value: dashboardData?.summary_cards?.trials?.no_show,
                   link: generateUrl(
-                    `/reports/appointments/all-trial-appointments?booking_status=NO_SHOW`
+                    `/reports/appointments/all-trial-appointments?booking_status=NO_SHOW`,
                   ),
                 },
               ]}
@@ -772,18 +846,24 @@ const FohDashboard = () => {
             <SalesSummary
               icon={enquiriesIcon}
               title="Conversion"
-              titleLink="#"
+              titleLink={generateUrl(
+                `/reports/sales-reports/membership-sales-report`,
+              )}
               totalSales={`${dashboardData?.summary_cards?.conversion?.overall_percentage}%`}
               items={[
                 {
                   label: "Lead To Trial",
                   value: `${dashboardData?.summary_cards?.conversion?.lead_to_trial_percentage}%`,
-                  link: "#",
+                  link: generateUrl(
+                    `/reports/appointments/all-trial-appointments`,
+                  ),
                 },
                 {
                   label: "Trial To Membership",
                   value: `${dashboardData?.summary_cards?.conversion?.trial_to_membership_percentage}%`,
-                  link: "#",
+                  link: generateUrl(
+                    `/reports/sales-reports/membership-sales-report?trial_type=TRIAL`,
+                  ),
                 },
               ]}
             />
@@ -791,7 +871,7 @@ const FohDashboard = () => {
               icon={checkInIcon}
               title="Check-ins"
               titleLink={generateUrl(
-                `/reports/operations-reports/member-checkins-report?`
+                `/reports/operations-reports/member-checkins-report?`,
               )}
               totalSales={dashboardData?.summary_cards?.check_ins?.total}
               items={[
@@ -800,7 +880,7 @@ const FohDashboard = () => {
                   value:
                     dashboardData?.summary_cards?.check_ins?.unique_check_ins,
                   link: generateUrl(
-                    `/reports/operations-reports/member-checkins-report?checkin-type=unique-check-in`
+                    `/reports/operations-reports/member-checkins-report?checkin-type=unique-check-in`,
                   ),
                 },
                 {
@@ -808,7 +888,7 @@ const FohDashboard = () => {
                   value:
                     dashboardData?.summary_cards?.check_ins?.unique_members,
                   link: generateUrl(
-                    `/reports/operations-reports/member-checkins-report?checkin-type=unique-members`
+                    `/reports/operations-reports/member-checkins-report?checkin-type=unique-members`,
                   ),
                 },
               ]}
@@ -817,7 +897,7 @@ const FohDashboard = () => {
           <div className="mt-3 w-full grid grid-cols-8 gap-3">
             <div className="border border-[#D4D4D4] rounded-[5px] bg-white p-2 pb-1 w-full relative col-span-4">
               <span className="absolute top-[10px] right-[20px] z-[2] text-lg font-bold">
-                {totalProcutValue}
+                {totalProductValue}
               </span>
               <HighchartsReact
                 highcharts={Highcharts}
@@ -826,7 +906,7 @@ const FohDashboard = () => {
             </div>
             <div className="border border-[#D4D4D4] rounded-[5px] bg-white p-2 pb-1 w-full relative col-span-4">
               <span className="absolute top-[10px] right-[20px] z-[2] text-lg font-bold">
-                {totalValue}
+                {totalLeads}
               </span>
               <HighchartsReact highcharts={Highcharts} options={leadsStatus} />
             </div>
@@ -841,8 +921,8 @@ const FohDashboard = () => {
                 <thead className="bg-[#F1F1F1]">
                   <tr>
                     <th className="p-2">Class Type</th>
+                    <th className="p-2">Scheduled</th>
                     <th className="p-2">Bookings</th>
-                    <th className="p-2">Reservations</th>
                     <th className="p-2">Cancellations</th>
                     {/* <th className="p-2">Action</th> */}
                   </tr>
@@ -861,9 +941,12 @@ const FohDashboard = () => {
                         {String(item.cancellations).padStart(2, "0")}
                       </td>
                       {/* <td className="p-2">
-                        <div className="bg-[#F1F1F1] border border-[#D4D4D4] rounded-[5px] w-[32px] h-[32px] flex items-center justify-center cursor-pointer">
+                        <Link
+                          to={generateUrl(item.url)}
+                          className="bg-[#F1F1F1] border border-[#D4D4D4] rounded-[5px] w-[32px] h-[32px] flex items-center justify-center cursor-pointer"
+                        >
                           <img src={eyeIcon} />
-                        </div>
+                        </Link>
                       </td> */}
                     </tr>
                   ))}

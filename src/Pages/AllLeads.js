@@ -76,7 +76,7 @@ const AllLeads = () => {
 
   const [searchParams] = useSearchParams();
   const leadIdFromSearch = searchParams.get("id");
-  
+
   const [isSearchMode, setIsSearchMode] = useState(false);
 
   const [dateFilter, setDateFilter] = useState(dateFilterOptions[1]);
@@ -99,6 +99,7 @@ const AllLeads = () => {
   const [appliedFilters, setAppliedFilters] = useState({
     lead_source: null,
     lead_status: null,
+    lead_type: null,
     last_call_status: null,
     lead_owner: null,
     interested_in: null,
@@ -134,6 +135,7 @@ const AllLeads = () => {
     enableReinitialize: true,
     initialValues: {
       filterLeadSource: null,
+      filterLeadType: null,
       filterLastCallType: null,
       filterLeadStatus: null,
       filterCallTag: null,
@@ -254,7 +256,7 @@ const AllLeads = () => {
       });
 
       const uniqueData = Array.from(
-        new Map(mergedData.map((user) => [user.id, user])).values()
+        new Map(mergedData.map((user) => [user.id, user])).values(),
       );
 
       const activeOnly = filterActiveItems(uniqueData);
@@ -311,120 +313,127 @@ const AllLeads = () => {
     },
   ].filter((group) => group.options.length > 0);
 
-
   // Add this useEffect to reset filtersInitialized when search params change
-useEffect(() => {
-  const params = new URLSearchParams(location.search);
-  const leadId = params.get("id");
-  
-  // Reset initialization flag when URL changes with 'id' parameter
-  if (leadId) {
-    setFiltersInitialized(false);
-  }
-}, [location.search]);
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const leadId = params.get("id");
 
- // ---------------------------
-// INITIALIZE FROM URL (RUNS ONCE - but resets when search params change)
-// ---------------------------
-useEffect(() => {
-  if (clubList.length === 0) return;
-  if (filtersInitialized) return;
+    // Reset initialization flag when URL changes with 'id' parameter
+    if (leadId) {
+      setFiltersInitialized(false);
+    }
+  }, [location.search]);
 
-  const params = new URLSearchParams(location.search);
-  const leadId = params.get("id");
-  const clubId = params.get("club_id");
+  // ---------------------------
+  // INITIALIZE FROM URL (RUNS ONCE - but resets when search params change)
+  // ---------------------------
+  useEffect(() => {
+    if (clubList.length === 0) return;
+    if (filtersInitialized) return;
 
-  // 🔹 CASE 1: Search navigation (id exists)
-  if (leadId) {
-    setIsSearchMode(true);
-    // Reset filters
-    setDateFilter(null);
-    setCustomFrom(null);
-    setCustomTo(null);
+    const params = new URLSearchParams(location.search);
+    const leadId = params.get("id");
+    const clubId = params.get("club_id");
 
-    setAppliedFilters({
-      lead_source: null,
-      lead_status: null,
-      last_call_status: null,
-      lead_owner: null,
-      interested_in: null,
-      gender: null,
-    });
+    // 🔹 CASE 1: Search navigation (id exists)
+    if (leadId) {
+      setIsSearchMode(true);
+      // Reset filters
+      setDateFilter(null);
+      setCustomFrom(null);
+      setCustomTo(null);
 
-    // Reset formik
-    formik.resetForm();
+      setAppliedFilters({
+        lead_source: null,
+        lead_status: null,
+        lead_type: null,
+        last_call_status: null,
+        lead_owner: null,
+        interested_in: null,
+        gender: null,
+      });
 
-    // Set club from URL
+      // Reset formik
+      formik.resetForm();
+
+      // Set club from URL
+      if (clubId) {
+        const club = clubList.find((c) => c.id === Number(clubId));
+        if (club) {
+          setClubFilter({ label: club.name, value: club.id });
+        }
+      }
+
+      setFiltersInitialized(true);
+      return;
+    }
+
+    // 🔹 CASE 2: Normal filter-based navigation
+    const dateFilterValue = params.get("dateFilter");
+    if (dateFilterValue) {
+      const matched = dateFilterOptions.find(
+        (opt) => opt.value === dateFilterValue,
+      );
+      if (matched) setDateFilter(matched);
+    }
+
+    const startDate = params.get("startDate");
+    const endDate = params.get("endDate");
+    if (startDate && endDate) {
+      setDateFilter(dateFilterOptions.find((d) => d.value === "custom"));
+      setCustomFrom(new Date(startDate));
+      setCustomTo(new Date(endDate));
+    }
+
     if (clubId) {
       const club = clubList.find((c) => c.id === Number(clubId));
       if (club) {
         setClubFilter({ label: club.name, value: club.id });
       }
+    } else {
+      setClubFilter({
+        label: clubList[0].name,
+        value: clubList[0].id,
+      });
     }
+
+    const urlFilters = {
+      lead_source: params.get("lead_source") || null,
+      lead_status: params.get("lead_status") || null,
+      lead_type: params.get("lead_type") || null,
+      last_call_status: params.get("last_call_status") || null,
+      lead_owner: params.get("lead_owner")
+        ? Number(params.get("lead_owner"))
+        : null,
+      interested_in: params.get("interested_in") || null,
+      gender: params.get("gender") || null,
+    };
+
+    setAppliedFilters(urlFilters);
+
+    formik.setValues({
+      filterLeadSource: urlFilters.lead_source,
+      filterLeadType: urlFilters.lead_type,
+      filterLeadStatus: urlFilters.lead_status,
+      filterLastCallType: urlFilters.last_call_status,
+      filterCallTag: urlFilters.lead_owner,
+      filterServiceName: urlFilters.interested_in,
+      filterGender: urlFilters.gender,
+    });
 
     setFiltersInitialized(true);
-    return;
-  }
-
-  // 🔹 CASE 2: Normal filter-based navigation
-  const dateFilterValue = params.get("dateFilter");
-  if (dateFilterValue) {
-    const matched = dateFilterOptions.find(
-      (opt) => opt.value === dateFilterValue
-    );
-    if (matched) setDateFilter(matched);
-  }
-
-  const startDate = params.get("startDate");
-  const endDate = params.get("endDate");
-  if (startDate && endDate) {
-    setDateFilter(dateFilterOptions.find((d) => d.value === "custom"));
-    setCustomFrom(new Date(startDate));
-    setCustomTo(new Date(endDate));
-  }
-
-  if (clubId) {
-    const club = clubList.find((c) => c.id === Number(clubId));
-    if (club) {
-      setClubFilter({ label: club.name, value: club.id });
-    }
-  } else {
-    setClubFilter({
-      label: clubList[0].name,
-      value: clubList[0].id,
-    });
-  }
-
-  const urlFilters = {
-    lead_source: params.get("lead_source") || null,
-    lead_status: params.get("lead_status") || null,
-    last_call_status: params.get("last_call_status") || null,
-    lead_owner: params.get("lead_owner")
-      ? Number(params.get("lead_owner"))
-      : null,
-    interested_in: params.get("interested_in") || null,
-    gender: params.get("gender") || null,
-  };
-
-  setAppliedFilters(urlFilters);
-
-  formik.setValues({
-    filterLeadSource: urlFilters.lead_source,
-    filterLeadStatus: urlFilters.lead_status,
-    filterLastCallType: urlFilters.last_call_status,
-    filterCallTag: urlFilters.lead_owner,
-    filterServiceName: urlFilters.interested_in,
-    filterGender: urlFilters.gender,
-  });
-
-  setFiltersInitialized(true);
-}, [clubList, filtersInitialized, location.search]);
+  }, [clubList, filtersInitialized, location.search]);
 
   // ---------------------------
   // FETCH WHEN FILTERS CHANGE
   // ---------------------------
   useEffect(() => {
     if (!filtersInitialized) return;
+
+    // 🚫 Prevent API call until both dates are selected
+    if (dateFilter?.value === "custom" && (!customFrom || !customTo)) {
+      return;
+    }
 
     setPage(1);
     fetchLeadList(1);
@@ -456,7 +465,7 @@ useEffect(() => {
 
   const handleCheckboxChange = (id) => {
     setSelectedUserId((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
     );
   };
 
@@ -492,7 +501,7 @@ useEffect(() => {
     try {
       const res = await authAxios().put(
         "/lead/assign/owner",
-        bulkAssignmentData
+        bulkAssignmentData,
       );
 
       toast.success("Owner assigned successfully!");
@@ -505,7 +514,7 @@ useEffect(() => {
     } catch (err) {
       console.error(err);
       toast.error(
-        err?.response?.data?.message || "Failed to assign owner. Try again."
+        err?.response?.data?.message || "Failed to assign owner. Try again.",
       );
     }
   };
@@ -625,6 +634,7 @@ useEffect(() => {
                       formik={formik}
                       filterLeadSource={formik.values.filterLeadSource}
                       filterLeadStatus={formik.values.filterLeadStatus}
+                      filterLeadType={formik.values.filterLeadType}
                       filterLastCallType={formik.values.filterLastCallType}
                       filterCallTag={formik.values.filterCallTag}
                       filterServiceName={formik.values.filterServiceName}
@@ -665,30 +675,30 @@ useEffect(() => {
                               alt="assign"
                             />
                           </Tooltip>
+                          <Tooltip
+                            id={`tooltip-send-sms`}
+                            content="Bulk Send SMS"
+                            place="top"
+                          >
+                            <img
+                              src={SmsIcon}
+                              className="w-8 cursor-pointer"
+                              onClick={() => handleCommunicate("sms")}
+                            />
+                          </Tooltip>
+                          <Tooltip
+                            id={`tooltip-send-mail`}
+                            content="Bulk Send Mail"
+                            place="top"
+                          >
+                            <img
+                              src={MailIcon}
+                              className="w-8 cursor-pointer"
+                              onClick={() => handleCommunicate("email")}
+                            />
+                          </Tooltip>
                         </>
                       )}
-                      <Tooltip
-                        id={`tooltip-send-sms`}
-                        content="Bulk Send SMS"
-                        place="top"
-                      >
-                        <img
-                          src={SmsIcon}
-                          className="w-8 cursor-pointer"
-                          onClick={() => handleCommunicate("sms")}
-                        />
-                      </Tooltip>
-                      <Tooltip
-                        id={`tooltip-send-mail`}
-                        content="Bulk Send Mail"
-                        place="top"
-                      >
-                        <img
-                          src={MailIcon}
-                          className="w-8 cursor-pointer"
-                          onClick={() => handleCommunicate("email")}
-                        />
-                      </Tooltip>
 
                       {/* Show confirm button after selecting an owner */}
                       {bulkOwner && (
@@ -728,7 +738,11 @@ useEffect(() => {
                     <table className="w-full text-sm text-left text-gray-500">
                       <thead className="text-xs text-gray-700 uppercase bg-gray-50">
                         <tr>
-                          <th className="px-2 py-4">#</th>
+                          {(userRole === "CLUB_MANAGER" ||
+                            userRole === "GENERAL_MANAGER" ||
+                            userRole === "ADMIN") && (
+                            <th className="px-2 py-4">#</th>
+                          )}
                           {/* <th className="px-2 py-4">S.No</th> */}
                           <th className="px-2 py-4 min-w-[130px]">Name</th>
                           <th className="px-2 py-4 min-w-[90px]">Gender</th>
@@ -764,19 +778,23 @@ useEffect(() => {
                               key={row.id}
                               className="group bg-white border-b hover:bg-gray-50 relative transition duration-700"
                             >
-                              <td className="px-2 py-4">
-                                <div className="flex items-center custom--checkbox--2">
-                                  <input
-                                    type="checkbox"
-                                    className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
-                                    checked={selectedUserId.includes(row.id)}
-                                    onChange={() =>
-                                      handleCheckboxChange(row.id)
-                                    }
-                                  />
-                                  <span className="checkmark--custom"></span>
-                                </div>
-                              </td>
+                              {(userRole === "CLUB_MANAGER" ||
+                                userRole === "GENERAL_MANAGER" ||
+                                userRole === "ADMIN") && (
+                                <td className="px-2 py-4">
+                                  <div className="flex items-center custom--checkbox--2">
+                                    <input
+                                      type="checkbox"
+                                      className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                                      checked={selectedUserId.includes(row.id)}
+                                      onChange={() =>
+                                        handleCheckboxChange(row.id)
+                                      }
+                                    />
+                                    <span className="checkmark--custom"></span>
+                                  </div>
+                                </td>
+                              )}
                               {/* <td className="px-2 py-4">{row?.id}</td> */}
 
                               <td className="px-2 py-4">

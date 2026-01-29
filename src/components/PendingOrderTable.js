@@ -2,10 +2,10 @@ import React, { useState } from "react";
 import Switch from "react-switch";
 import ConfirmPopup from "./common/ConfirmPopup";
 
-const PendingOrderTable = ({orders, setOrders}) => {
-    const [showConfirmPopup, setShowConfirmPopup] = useState(false);
+const PendingOrderTable = ({ orders, setOrders }) => {
+  const [showConfirmPopup, setShowConfirmPopup] = useState(false);
   const [selectedOrderIndex, setSelectedOrderIndex] = useState(null);
-  const [transactionId, setTransactionId] = useState('');
+  const [transactionId, setTransactionId] = useState("");
 
   // Handle toggle for marking the order as done
   const handleToggleAttempt = (index) => {
@@ -20,13 +20,13 @@ const PendingOrderTable = ({orders, setOrders}) => {
     updatedOrders[selectedOrderIndex].transactionId = transactionId; // Store the transaction ID
     setOrders(updatedOrders); // Update the orders in the parent component
     setShowConfirmPopup(false); // Close the confirmation popup
-    setTransactionId(''); // Reset the transaction ID field
+    setTransactionId(""); // Reset the transaction ID field
   };
 
   // Handle cancel action for the confirmation
   const handleCancel = () => {
     setShowConfirmPopup(false); // Close the popup without updating
-    setTransactionId(''); // Reset transaction ID if user cancels
+    setTransactionId(""); // Reset transaction ID if user cancels
   };
 
   return (
@@ -45,16 +45,17 @@ const PendingOrderTable = ({orders, setOrders}) => {
             <th className="p-2">Action</th>
           </tr>
         </thead>
+
         <tbody>
           {orders.map((order, index) => (
             <tr key={order.id} className="border-t">
               <td className="p-2">{order.id}</td>
-              <td className="p-2">{order.member_id}</td>
-              <td className="p-2">{order.member_name}</td>
-              <td className="p-2">{order.category}</td>
-              <td className="p-2">{order.product_name}</td>
-              <td className="p-2">₹{order.final_amount}</td>
-              <td className="p-2">{order.stock_pending}</td>
+              <td className="p-2">{order.member_id || "-"}</td>
+              <td className="p-2">{order.member_name || "-"}</td>
+              <td className="p-2">{order.category || "-"}</td>
+              <td className="p-2">{order.product_name || "-"}</td>
+              <td className="p-2">₹{order.final_amount ?? 0}</td>
+              <td className="p-2">{order.stock_pending || "No"}</td>
               <td className="p-2">{order.placedOn}</td>
               <td className="p-2">
                 <div className="flex items-center gap-2">
@@ -78,10 +79,12 @@ const PendingOrderTable = ({orders, setOrders}) => {
         </tbody>
       </table>
 
-       {showConfirmPopup && (
+      {showConfirmPopup && (
         <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex justify-center items-center z-50">
           <div className="bg-white p-6 rounded shadow-lg w-full max-w-[350px]">
-            <h3 className="text-lg mb-4 text-center">Have you received the payment?</h3>
+            <h3 className="text-lg mb-4 text-center">
+              Have you received the payment?
+            </h3>
             <input
               type="text"
               placeholder="Enter Transaction ID"
@@ -107,8 +110,6 @@ const PendingOrderTable = ({orders, setOrders}) => {
           </div>
         </div>
       )}
-
-      
     </div>
   );
 };

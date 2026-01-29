@@ -8,6 +8,11 @@ import { toast } from "react-toastify";
 import { authAxios } from "../../config/config";
 import { MdOutlineContentPasteSearch } from "react-icons/md";
 
+const topSearchOptions = [
+  { label: "Active", value: true },
+  { label: "Inactive", value: false },
+];
+
 const CreateFaqs = ({
   setShowModal,
   editingOption,
@@ -16,7 +21,6 @@ const CreateFaqs = ({
   leadBoxRef,
   productCategoryOptions,
 }) => {
-
   // ✅ Fetch role details when selectedId changes
   useEffect(() => {
     if (!editingOption) return;
@@ -32,7 +36,8 @@ const CreateFaqs = ({
             faqcategory_id: data.faqcategory_id || null,
             question: data.question || "",
             answer: data.answer || "",
-            top_search: typeof data.top_search === "boolean" ? data.top_search : null,
+            top_search:
+              typeof data.top_search === "boolean" ? data.top_search : null,
             position: data.position || null,
             status: data.status || "ACTIVE",
           });
@@ -77,7 +82,9 @@ const CreateFaqs = ({
               <div className="p-6 flex-1">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="mb-2 block">Category<span className="text-red-500">*</span></label>
+                    <label className="mb-2 block">
+                      Category<span className="text-red-500">*</span>
+                    </label>
                     <div className="relative">
                       <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[10]">
                         <LuPlug />
@@ -87,7 +94,7 @@ const CreateFaqs = ({
                         options={productCategoryOptions}
                         value={productCategoryOptions.find(
                           (option) =>
-                            option.value === formik.values.faqcategory_id
+                            option.value === formik.values.faqcategory_id,
                         )}
                         onChange={(option) =>
                           formik.setFieldValue("faqcategory_id", option?.value)
@@ -155,31 +162,28 @@ const CreateFaqs = ({
                   </div>
 
                   <div>
-                    <label className="mb-2 block">Top Search<span className="text-red-500">*</span></label>
+                    <label className="mb-2 block">
+                      Top Search<span className="text-red-500">*</span>
+                    </label>
                     <div className="relative">
                       <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[10]">
                         <MdOutlineContentPasteSearch />
                       </span>
                       <Select
                         name="top_search"
-                        value={{
-                          label: formik.values.top_search
-                            ? "ACTIVE"
-                            : "INACTIVE", // Handling label based on boolean value
-                          value: formik.values.top_search,
-                        }}
-                        options={[
-                          { label: "Active", value: true },
-                          { label: "Inactive", value: false },
-                        ]}
-                        onChange={(option) =>
-                          formik.setFieldValue("top_search", option.value)
+                        value={topSearchOptions.find(
+                          (opt) => opt.value === formik.values.top_search,
+                        )}
+                        options={topSearchOptions}
+                        onChange={
+                          (option) =>
+                            formik.setFieldValue("top_search", option.value) // ✅ boolean
                         }
                         onBlur={() =>
                           formik.setFieldTouched("top_search", true)
                         }
                         styles={selectIcon}
-                        className="!capitalize"
+                        placeholder="Select Status"
                       />
                     </div>
                     {formik.touched.top_search && formik.errors.top_search && (

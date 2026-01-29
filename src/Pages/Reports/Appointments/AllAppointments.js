@@ -19,6 +19,7 @@ import { toast } from "react-toastify";
 import Pagination from "../../../components/common/Pagination";
 import { useFormik } from "formik";
 import { useSelector } from "react-redux";
+import { FiClock } from "react-icons/fi";
 
 // Date filter dropdown options
 const dateFilterOptions = [
@@ -35,12 +36,22 @@ const statusUpdateOptions = [
 ];
 
 const filterStatusOptions = [
-  { value: "ACTIVE", label: "Scheduled" },
-  { value: "UPCOMING", label: "Upcoming" },
+  { value: "ACTIVE", label: "Upcoming" },
   { value: "COMPLETED", label: "Completed" },
   { value: "CANCELLED", label: "Cancelled" },
   { value: "NO_SHOW", label: "No Show" },
 ];
+
+const isToday = (date) => {
+  if (!date) return false;
+
+  const today = new Date();
+  return (
+    date.getDate() === today.getDate() &&
+    date.getMonth() === today.getMonth() &&
+    date.getFullYear() === today.getFullYear()
+  );
+};
 
 const AllAppointments = () => {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
@@ -49,6 +60,9 @@ const AllAppointments = () => {
   const [remarks, setRemarks] = useState("");
   const { user } = useSelector((state) => state.auth);
   const userRole = user.role;
+
+  const [rescheduleDate, setRescheduleDate] = useState(null);
+  const [rescheduleTime, setRescheduleTime] = useState(null);
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -72,8 +86,8 @@ const AllAppointments = () => {
     assigned_staff_id: null,
     booking_status: null,
     appointment_date: null,
-    service_type: null,
-    service_name: null,
+    service_id: null,
+    package_id: null,
   });
 
   const [stats, setStats] = useState({
@@ -152,8 +166,8 @@ const AllAppointments = () => {
     // if (filters.assigned_staff_id) {
     //   params.set("assigned_staff_id", filters.assigned_staff_id);
     // }
-    // if (filters.service_type) {
-    //   params.set("service_type", filters.service_type);
+    // if (filters.service_id) {
+    //   params.set("service_id", filters.service_id);
     // }
     // if (filters.service_name) {
     //   params.set("service_name", filters.service_name);
@@ -194,16 +208,19 @@ const AllAppointments = () => {
       if (appliedFilters.booking_status) {
         params.booking_status = appliedFilters.booking_status;
       }
-      if (appliedFilters.service_type) {
-        params.service_type = appliedFilters.service_type;
+      if (appliedFilters.service_id) {
+        params.service_id = appliedFilters.service_id;
       }
-      if (appliedFilters.service_name) {
-        params.service_name = appliedFilters.service_name;
+      if (appliedFilters.package_id) {
+        params.package_id = appliedFilters.package_id;
       }
 
       console.log("🔍 API Request Params:", params);
 
-      const res = await authAxios().get("/appointment/fetch/list", { params });
+      const res = await authAxios().get(
+        "/appointment/fetch/list?appointment_type=SESSION",
+        { params },
+      );
 
       const responseData = res.data;
       const data = responseData?.data || [];
@@ -245,7 +262,7 @@ const AllAppointments = () => {
     const dateFilterValue = params.get("dateFilter");
     if (dateFilterValue) {
       const matchedDate = dateFilterOptions.find(
-        (opt) => opt.value === dateFilterValue
+        (opt) => opt.value === dateFilterValue,
       );
       if (matchedDate) {
         setDateFilter(matchedDate);
@@ -282,7 +299,7 @@ const AllAppointments = () => {
       // assigned_staff_id: params.get("assigned_staff_id")
       //   ? Number(params.get("assigned_staff_id"))
       //   : null,
-      // service_type: params.get("service_type") || null,
+      // service_id: params.get("service_id") || null,
       // service_name: params.get("service_name") || null,
     };
 
@@ -292,8 +309,8 @@ const AllAppointments = () => {
     formik.setValues({
       filterTrainer: urlFilters.assigned_staff_id,
       filterBookingStatus: urlFilters.booking_status,
-      filterServiceType: urlFilters.service_type,
-      filterServiceName: urlFilters.service_name,
+      filterServiceType: urlFilters.service_id,
+      filterServiceName: urlFilters.package_id,
     });
 
     setFiltersInitialized(true);
@@ -304,6 +321,11 @@ const AllAppointments = () => {
   // ---------------------------
   useEffect(() => {
     if (!filtersInitialized) return;
+
+    // 🚫 Prevent API call until both dates are selected
+    if (dateFilter?.value === "custom" && (!customFrom || !customTo)) {
+      return;
+    }
 
     setPage(1);
     fetchAppointments(1);
@@ -317,34 +339,82 @@ const AllAppointments = () => {
     appliedFilters.assigned_staff_id,
     appliedFilters.booking_status,
     appliedFilters.appointment_date,
-    appliedFilters.service_type,
-    appliedFilters.service_name,
+    appliedFilters.service_id,
+    appliedFilters.package_id,
   ]);
 
   const { scheduled, upcoming, completed, noShow, cancelled } = stats;
 
-  const updateAppointmentStatus = (id, newStatus) => {
-    setPendingId(id);
+  const updateAppointmentStatus = (row, newStatus) => {
+    setPendingId(row.id);
     setPendingStatus(newStatus);
     setRemarks("");
+
+    // ✅ Prefill previous date & time for reschedule
+    if (newStatus === "RESCHEDULED") {
+      setRescheduleDate(row.start_date ? new Date(row.start_date) : null);
+
+      if (row.start_time) {
+        const [hours, minutes] = row.start_time.split(":");
+        const time = new Date();
+        time.setHours(hours);
+        time.setMinutes(minutes);
+        setRescheduleTime(time);
+      }
+    }
+
     setShowConfirmModal(true);
   };
 
   const confirmStatusUpdate = async () => {
     try {
-      const body = {
-        booking_status: pendingStatus,
-        remarks: remarks.trim() || undefined,
-      };
+      // ✅ Validation for RESCHEDULED
+      if (pendingStatus === "RESCHEDULED") {
+        if (!rescheduleDate || !rescheduleTime || !remarks.trim()) {
+          toast.error("Please select date, time and enter remarks");
+          return;
+        }
+      }
+
+      let body = {};
+
+      if (pendingStatus === "RESCHEDULED") {
+        // ✅ Combine date + time into one Date object
+        const combinedDateTime = new Date(rescheduleDate);
+        combinedDateTime.setHours(
+          rescheduleTime.getHours(),
+          rescheduleTime.getMinutes(),
+          0,
+          0,
+        );
+
+        body = {
+          start_date: format(combinedDateTime, "yyyy-MM-dd HH:mm:ss"),
+          last_status: "RESCHEDULED",
+          remarks: remarks.trim(),
+        };
+      } else {
+        // ✅ Other statuses
+        body = {
+          booking_status: pendingStatus,
+          remarks: remarks.trim() || undefined,
+        };
+      }
 
       await authAxios().put(`/appointment/${pendingId}`, body);
+
       toast.success("Status updated successfully");
+
+      // ✅ Reset modal state
       setShowConfirmModal(false);
       setRemarks("");
+      setRescheduleDate(null);
+      setRescheduleTime(null);
+
       fetchAppointments(page);
     } catch (err) {
       console.error(err);
-      toast.error("Please update remarks");
+      toast.error("Failed to update appointment");
     }
   };
 
@@ -352,15 +422,15 @@ const AllAppointments = () => {
   const getSelectedStatusOption = (status) => {
     if (!status) return null;
 
-    // For ACTIVE status, display as "Scheduled"
+    // For ACTIVE status, display as "Upcoming"
     if (status === "ACTIVE") {
-      return { value: status, label: "Scheduled" };
+      return { value: status, label: "Upcoming" };
     }
 
     // For UPCOMING status, display as "Upcoming"
-    if (status === "UPCOMING") {
-      return { value: status, label: "Upcoming" };
-    }
+    // if (status === "UPCOMING") {
+    //   return { value: status, label: "Upcoming" };
+    // }
 
     // For other statuses (COMPLETED, CANCELLED, NO_SHOW), find in statusUpdateOptions
     return statusUpdateOptions.find((opt) => opt.value === status) || null;
@@ -370,6 +440,7 @@ const AllAppointments = () => {
     switch (currentStatus) {
       case "ACTIVE":
         return [
+          { value: "RESCHEDULED", label: "Rescheduled" },
           { value: "CANCELLED", label: "Cancelled" },
           { value: "COMPLETED", label: "Completed" },
           { value: "NO_SHOW", label: "No Show" },
@@ -386,6 +457,23 @@ const AllAppointments = () => {
 
   const canUpdateStatus = (status) => {
     return status === "ACTIVE" || status === "COMPLETED";
+  };
+
+  const getMinTime = () => {
+    if (isToday(rescheduleDate)) {
+      return new Date(); // current time
+    }
+
+    // allow full day for future dates
+    const time = new Date();
+    time.setHours(0, 0, 0, 0);
+    return time;
+  };
+
+  const getMaxTime = () => {
+    const time = new Date();
+    time.setHours(23, 45, 0, 0);
+    return time;
   };
 
   return (
@@ -547,6 +635,7 @@ const AllAppointments = () => {
                     <th className="px-2 py-4 min-w-[110px]">Scheduled At</th>
                     <th className="px-2 py-4 min-w-[130px]">Member Name</th>
                     <th className="px-2 py-4 min-w-[120px]">Trainer Name</th>
+                    <th className="px-2 py-4 min-w-[130px]">Last Status</th>
 
                     {/*                
                     <th className="px-2 py-4 min-w-[130px]">Scheduled By</th> */}
@@ -582,14 +671,10 @@ const AllAppointments = () => {
                             : "--"}
                         </td>
                         <td className="px-2 py-4">
-                          {row?.appointment_type === "CLUB"
-                            ? "Trial"
-                            : formatText(row?.appointment_type)}
+                          {formatText(row?.service_type)}
                         </td>
                         <td className="px-2 py-4">
-                          {row?.appointment_type === "CLUB"
-                            ? "Trial/Tour"
-                            : row?.service_name}
+                          {formatText(row?.package_name)}
                         </td>
                         <td className="px-2 py-4">
                           {row?.variation_name ? row?.variation_name : "--"}
@@ -611,14 +696,17 @@ const AllAppointments = () => {
                           {row?.staff_name || "Self"}
                         </td> */}
                         <td className="px-2 py-4">
+                          {formatText(row?.last_status) || "--"}
+                        </td>
+                        <td className="px-2 py-4">
                           <div className="max-w-[130px] w-full">
                             <Select
                               placeholder="Select"
                               options={getAllowedStatusOptions(
-                                row?.booking_status
+                                row?.booking_status,
                               )}
                               value={getSelectedStatusOption(
-                                row?.booking_status
+                                row?.booking_status,
                               )}
                               isDisabled={
                                 !canUpdateStatus(row?.booking_status) ||
@@ -627,10 +715,7 @@ const AllAppointments = () => {
                               }
                               onChange={(selected) => {
                                 if (!selected) return;
-                                updateAppointmentStatus(
-                                  row?.id,
-                                  selected.value
-                                );
+                                updateAppointmentStatus(row, selected.value);
                               }}
                               styles={customStyles}
                             />
@@ -638,9 +723,10 @@ const AllAppointments = () => {
                         </td>
                         <td className="px-2 py-4">
                           {/* ✅ UPDATED: Only show remarks for CANCELLED status */}
-                          {row?.booking_status === "CANCELLED" && row?.remarks
+                          {/* {row?.booking_status === "CANCELLED" && row?.remarks
                             ? row?.remarks
-                            : "--"}
+                            : "--"} */}
+                            {row?.remarks ? row?.remarks : "--"}
                         </td>
                       </tr>
                     ))
@@ -673,7 +759,10 @@ const AllAppointments = () => {
 
             <p className="text-center mb-4">
               Are you sure you want to mark this appointment as
-              <span className="font-bold ml-1">{pendingStatus}</span>?
+              <span className="font-bold ml-1">
+                {formatText(pendingStatus)}
+              </span>
+              ?
             </p>
 
             {pendingStatus === "CANCELLED" && (
@@ -688,6 +777,72 @@ const AllAppointments = () => {
                   rows="4"
                   className="w-full border border-gray-300 rounded-[5px] p-2 text-sm focus:outline-none focus:ring-2 focus:ring-black resize-none"
                 />
+              </div>
+            )}
+
+            {pendingStatus === "RESCHEDULED" && (
+              <div className="mb-4 space-y-3">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1">
+                      New Date <span className="text-red-500">*</span>
+                    </label>
+                    <div className="custom--date relative">
+                      {/* Calendar Icon */}
+                      <span className="absolute z-[1] mt-[11px] ml-[15px]">
+                        <FaCalendarDays />
+                      </span>
+
+                      <DatePicker
+                        selected={rescheduleDate}
+                        onChange={(date) => {
+                          setRescheduleDate(date);
+                          setRescheduleTime(null); // ✅ reset time
+                        }}
+                        className="custom--input w-full input--icon"
+                        dateFormat="dd-MM-yyyy"
+                        minDate={new Date()}
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-1">
+                      New Time <span className="text-red-500">*</span>
+                    </label>
+                    <div className="custom--date relative">
+                      {/* Clock Icon */}
+                      <span className="absolute z-[1] mt-[11px] ml-[15px]">
+                        <FiClock />
+                      </span>
+                      <DatePicker
+                        selected={rescheduleTime}
+                        onChange={(time) => setRescheduleTime(time)}
+                        showTimeSelect
+                        showTimeSelectOnly
+                        timeIntervals={15}
+                        timeCaption="Time"
+                        dateFormat="hh:mm aa"
+                        className="custom--input w-full input--icon"
+                        minTime={getMinTime()}
+                        maxTime={getMaxTime()}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    Remarks <span className="text-red-500">*</span>
+                  </label>
+                  <textarea
+                    value={remarks}
+                    onChange={(e) => setRemarks(e.target.value)}
+                    rows="3"
+                    className="w-full border rounded p-2"
+                    placeholder="Reason for rescheduling"
+                  />
+                </div>
               </div>
             )}
 

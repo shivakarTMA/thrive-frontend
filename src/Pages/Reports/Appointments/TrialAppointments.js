@@ -8,6 +8,7 @@ import {
   customStyles,
   filterActiveItems,
   formatAutoDate,
+  formatText,
   formatTimeAppointment,
 } from "../../../Helper/helper";
 import Select from "react-select";
@@ -18,6 +19,7 @@ import { toast } from "react-toastify";
 import Pagination from "../../../components/common/Pagination";
 import { useFormik } from "formik";
 import { useSelector } from "react-redux";
+import { FiClock } from "react-icons/fi";
 
 // Date filter dropdown options
 const dateFilterOptions = [
@@ -28,18 +30,29 @@ const dateFilterOptions = [
 ];
 
 const statusUpdateOptions = [
+  { value: "RESCHEDULED", label: "Rescheduled" },
   { value: "COMPLETED", label: "Completed" },
   { value: "CANCELLED", label: "Cancelled" },
   { value: "NO_SHOW", label: "No Show" },
 ];
 
 const filterStatusOptions = [
-  { value: "ACTIVE", label: "Scheduled" },
-  { value: "UPCOMING", label: "Upcoming" },
+  { value: "ACTIVE", label: "Upcoming" },
   { value: "COMPLETED", label: "Completed" },
   { value: "CANCELLED", label: "Cancelled" },
   { value: "NO_SHOW", label: "No Show" },
 ];
+
+const isToday = (date) => {
+  if (!date) return false;
+
+  const today = new Date();
+  return (
+    date.getDate() === today.getDate() &&
+    date.getMonth() === today.getMonth() &&
+    date.getFullYear() === today.getFullYear()
+  );
+};
 
 const TrialAppointments = () => {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
@@ -48,6 +61,9 @@ const TrialAppointments = () => {
   const [remarks, setRemarks] = useState("");
   const { user } = useSelector((state) => state.auth);
   const userRole = user.role;
+
+  const [rescheduleDate, setRescheduleDate] = useState(null);
+  const [rescheduleTime, setRescheduleTime] = useState(null);
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -229,7 +245,7 @@ const TrialAppointments = () => {
     const dateFilterValue = params.get("dateFilter");
     if (dateFilterValue) {
       const matchedDate = dateFilterOptions.find(
-        (opt) => opt.value === dateFilterValue
+        (opt) => opt.value === dateFilterValue,
       );
       if (matchedDate) {
         setDateFilter(matchedDate);
@@ -285,6 +301,11 @@ const TrialAppointments = () => {
   useEffect(() => {
     if (!filtersInitialized) return;
 
+    // 🚫 Prevent API call until both dates are selected
+    if (dateFilter?.value === "custom" && (!customFrom || !customTo)) {
+      return;
+    }
+
     setPage(1);
     fetchAppointments(1);
     updateURLParams(appliedFilters);
@@ -301,28 +322,76 @@ const TrialAppointments = () => {
 
   const { scheduled, upcoming, completed, noShow, cancelled } = stats;
 
-  const updateAppointmentStatus = (id, newStatus) => {
-    setPendingId(id);
+  const updateAppointmentStatus = (row, newStatus) => {
+    setPendingId(row.id);
     setPendingStatus(newStatus);
     setRemarks("");
+
+    // ✅ Prefill previous date & time for reschedule
+    if (newStatus === "RESCHEDULED") {
+      setRescheduleDate(row.start_date ? new Date(row.start_date) : null);
+
+      if (row.start_time) {
+        const [hours, minutes] = row.start_time.split(":");
+        const time = new Date();
+        time.setHours(hours);
+        time.setMinutes(minutes);
+        setRescheduleTime(time);
+      }
+    }
+
     setShowConfirmModal(true);
   };
 
   const confirmStatusUpdate = async () => {
     try {
-      const body = {
-        booking_status: pendingStatus,
-        remarks: remarks.trim() || undefined,
-      };
+      // ✅ Validation for RESCHEDULED
+      if (pendingStatus === "RESCHEDULED") {
+        if (!rescheduleDate || !rescheduleTime || !remarks.trim()) {
+          toast.error("Please select date, time and enter remarks");
+          return;
+        }
+      }
+
+      let body = {};
+
+      if (pendingStatus === "RESCHEDULED") {
+        // ✅ Combine date + time into one Date object
+        const combinedDateTime = new Date(rescheduleDate);
+        combinedDateTime.setHours(
+          rescheduleTime.getHours(),
+          rescheduleTime.getMinutes(),
+          0,
+          0,
+        );
+
+        body = {
+          start_date: format(combinedDateTime, "yyyy-MM-dd HH:mm:ss"),
+          last_status: "RESCHEDULED",
+          remarks: remarks.trim(),
+        };
+      } else {
+        // ✅ Other statuses
+        body = {
+          booking_status: pendingStatus,
+          remarks: remarks.trim() || undefined,
+        };
+      }
 
       await authAxios().put(`/appointment/${pendingId}`, body);
+
       toast.success("Status updated successfully");
+
+      // ✅ Reset modal state
       setShowConfirmModal(false);
       setRemarks("");
+      setRescheduleDate(null);
+      setRescheduleTime(null);
+
       fetchAppointments(page);
     } catch (err) {
       console.error(err);
-      toast.error("Please update remarks");
+      toast.error("Failed to update appointment");
     }
   };
 
@@ -330,15 +399,15 @@ const TrialAppointments = () => {
   const getSelectedStatusOption = (status) => {
     if (!status) return null;
 
-    // For ACTIVE status, display as "Scheduled"
+    // For ACTIVE status, display as "Upcoming"
     if (status === "ACTIVE") {
-      return { value: status, label: "Scheduled" };
+      return { value: status, label: "Upcoming" };
     }
 
     // For UPCOMING status, display as "Upcoming"
-    if (status === "UPCOMING") {
-      return { value: status, label: "Upcoming" };
-    }
+    // if (status === "UPCOMING") {
+    //   return { value: status, label: "Upcoming" };
+    // }
 
     // For other statuses (COMPLETED, CANCELLED, NO_SHOW), find in statusUpdateOptions
     return statusUpdateOptions.find((opt) => opt.value === status) || null;
@@ -348,6 +417,7 @@ const TrialAppointments = () => {
     switch (currentStatus) {
       case "ACTIVE":
         return [
+          { value: "RESCHEDULED", label: "Rescheduled" },
           { value: "CANCELLED", label: "Cancelled" },
           { value: "COMPLETED", label: "Completed" },
           { value: "NO_SHOW", label: "No Show" },
@@ -364,6 +434,23 @@ const TrialAppointments = () => {
 
   const canUpdateStatus = (status) => {
     return status === "ACTIVE" || status === "COMPLETED";
+  };
+
+  const getMinTime = () => {
+    if (isToday(rescheduleDate)) {
+      return new Date(); // current time
+    }
+
+    // allow full day for future dates
+    const time = new Date();
+    time.setHours(0, 0, 0, 0);
+    return time;
+  };
+
+  const getMaxTime = () => {
+    const time = new Date();
+    time.setHours(23, 45, 0, 0);
+    return time;
   };
 
   return (
@@ -523,9 +610,7 @@ const TrialAppointments = () => {
                     <th className="px-2 py-4 min-w-[110px]">Scheduled At</th>
                     <th className="px-2 py-4 min-w-[120px]">Trainer Name</th>
                     <th className="px-2 py-4 min-w-[130px]">Scheduled By</th>
-                    <th className="px-2 py-4 min-w-[130px]">
-                      Last Status
-                    </th>
+                    <th className="px-2 py-4 min-w-[130px]">Last Status</th>
                     <th className="px-2 py-4 min-w-[180px]">
                       Current Status/Action
                     </th>
@@ -571,17 +656,17 @@ const TrialAppointments = () => {
                           {row?.staff_name || "Self"}
                         </td>
                         <td className="px-2 py-4">
-                          {row?.last_call_status || "--"}
+                          {formatText(row?.last_status) || "--"}
                         </td>
                         <td className="px-2 py-4">
                           <div className="max-w-[130px] w-full">
                             <Select
                               placeholder="Select"
                               options={getAllowedStatusOptions(
-                                row?.booking_status
+                                row?.booking_status,
                               )}
                               value={getSelectedStatusOption(
-                                row?.booking_status
+                                row?.booking_status,
                               )}
                               isDisabled={
                                 !canUpdateStatus(row?.booking_status) ||
@@ -590,20 +675,14 @@ const TrialAppointments = () => {
                               }
                               onChange={(selected) => {
                                 if (!selected) return;
-                                updateAppointmentStatus(
-                                  row?.id,
-                                  selected.value
-                                );
+                                updateAppointmentStatus(row, selected.value);
                               }}
                               styles={customStyles}
                             />
                           </div>
                         </td>
                         <td className="px-2 py-4">
-                          {/* ✅ UPDATED: Only show remarks for CANCELLED status */}
-                          {row?.booking_status === "CANCELLED" && row?.remarks
-                            ? row?.remarks
-                            : "--"}
+                          {row?.remarks ? row?.remarks : "--"}
                         </td>
                       </tr>
                     ))
@@ -636,7 +715,10 @@ const TrialAppointments = () => {
 
             <p className="text-center mb-4">
               Are you sure you want to mark this appointment as
-              <span className="font-bold ml-1">{pendingStatus}</span>?
+              <span className="font-bold ml-1">
+                {formatText(pendingStatus)}
+              </span>
+              ?
             </p>
 
             {pendingStatus === "CANCELLED" && (
@@ -651,6 +733,72 @@ const TrialAppointments = () => {
                   rows="4"
                   className="w-full border border-gray-300 rounded-[5px] p-2 text-sm focus:outline-none focus:ring-2 focus:ring-black resize-none"
                 />
+              </div>
+            )}
+
+            {pendingStatus === "RESCHEDULED" && (
+              <div className="mb-4 space-y-3">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1">
+                      New Date <span className="text-red-500">*</span>
+                    </label>
+                    <div className="custom--date relative">
+                      {/* Calendar Icon */}
+                      <span className="absolute z-[1] mt-[11px] ml-[15px]">
+                        <FaCalendarDays />
+                      </span>
+
+                      <DatePicker
+                        selected={rescheduleDate}
+                        onChange={(date) => {
+                          setRescheduleDate(date);
+                          setRescheduleTime(null); // ✅ reset time
+                        }}
+                        className="custom--input w-full input--icon"
+                        dateFormat="dd-MM-yyyy"
+                        minDate={new Date()}
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-1">
+                      New Time <span className="text-red-500">*</span>
+                    </label>
+                    <div className="custom--date relative">
+                      {/* Clock Icon */}
+                      <span className="absolute z-[1] mt-[11px] ml-[15px]">
+                        <FiClock />
+                      </span>
+                      <DatePicker
+                        selected={rescheduleTime}
+                        onChange={(time) => setRescheduleTime(time)}
+                        showTimeSelect
+                        showTimeSelectOnly
+                        timeIntervals={15}
+                        timeCaption="Time"
+                        dateFormat="hh:mm aa"
+                        className="custom--input w-full input--icon"
+                        minTime={getMinTime()}
+                        maxTime={getMaxTime()}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    Remarks <span className="text-red-500">*</span>
+                  </label>
+                  <textarea
+                    value={remarks}
+                    onChange={(e) => setRemarks(e.target.value)}
+                    rows="3"
+                    className="w-full border rounded p-2"
+                    placeholder="Reason for rescheduling"
+                  />
+                </div>
               </div>
             )}
 

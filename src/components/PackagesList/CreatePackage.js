@@ -92,7 +92,7 @@ const CreatePackage = ({
     try {
       const params = {};
       if (clubId) params.club_id = clubId;
-      const res = await authAxios().get("/staff/list?role=TRAINER", {params});
+      const res = await authAxios().get("/staff/list?role=TRAINER", { params });
       let data = res.data?.data || res.data || [];
       const activeService = data.filter((item) => item.status === "ACTIVE");
       console.log(activeService, "activeService");
@@ -164,14 +164,8 @@ const CreatePackage = ({
       value: item.id,
     })) || [];
 
-  const filteredStudioOptions =
-    studio?.map((item) => ({
-      label: item.name,
-      value: item.id,
-    })) || [];
-
   const studioOptions =
-    filteredStudioOptions?.map((item) => ({
+    studio?.map((item) => ({
       label: item.name,
       value: item.id,
     })) || [];
@@ -220,7 +214,7 @@ const CreatePackage = ({
                 earn_coin: "",
                 position: "",
               },
-            ]
+            ],
       );
     } catch (err) {
       console.error(err);
@@ -274,9 +268,15 @@ const CreatePackage = ({
             gst: data?.gst !== undefined ? data.gst : "",
             position: data?.position !== undefined ? data.position : "",
             hsn_sac_code: data?.hsn_sac_code || "",
-            is_featured: data?.is_featured || "",
+            is_featured:
+              data?.is_featured === true
+                ? true
+                : data?.is_featured === false
+                  ? false
+                  : null,
+
             equipment: data?.equipment || "",
-            earn_coin: data?.earn_coin || "",
+            earn_coin: data?.earn_coin !== undefined ? data.earn_coin : "",
             status: data?.status || "",
             variation: [],
           });
@@ -321,7 +321,7 @@ const CreatePackage = ({
 
   const service_type_check = getServiceType(
     formik.values?.service_id,
-    serviceOptions
+    serviceOptions,
   );
 
   console.log("service_type_check", service_type_check);
@@ -421,6 +421,16 @@ const CreatePackage = ({
     }
   };
 
+  useEffect(() => {
+    if (
+      formik.values.start_time &&
+      formik.values.end_time &&
+      parseTime(formik.values.end_time) < parseTime(formik.values.start_time)
+    ) {
+      formik.setFieldValue("end_time", "");
+    }
+  }, [formik.values.start_time]);
+
   return (
     <>
       <div
@@ -508,7 +518,7 @@ const CreatePackage = ({
                             clubOptions.find(
                               (option) =>
                                 option.value.toString() ===
-                                formik.values.club_id?.toString()
+                                formik.values.club_id?.toString(),
                             ) || null
                           }
                           options={clubOptions}
@@ -535,7 +545,7 @@ const CreatePackage = ({
                         name="service_id"
                         value={
                           serviceOptions.find(
-                            (opt) => opt.value === formik.values.service_id
+                            (opt) => opt.value === formik.values.service_id,
                           ) || null
                         }
                         options={serviceOptions}
@@ -566,7 +576,7 @@ const CreatePackage = ({
                             name="buddy_pt"
                             value={
                               ptType.find(
-                                (opt) => opt.value === formik.values.buddy_pt
+                                (opt) => opt.value === formik.values.buddy_pt,
                               ) || null
                             }
                             options={ptType}
@@ -590,80 +600,74 @@ const CreatePackage = ({
                     {service_type_check &&
                       service_type_check === "GROUP_CLASS" && (
                         <>
-                        <div>
-                          <label className="mb-2 block">
-                            Category<span className="text-red-500">*</span>
-                          </label>
+                          <div>
+                            <label className="mb-2 block">
+                              Category<span className="text-red-500">*</span>
+                            </label>
 
-                          <Select
-                            name="package_category_id"
-                            value={
-                              packageCategoryOptions.find(
-                                (opt) =>
-                                  opt.value ===
-                                  formik.values.package_category_id
-                              ) || null
-                            }
-                            options={packageCategoryOptions}
-                            onChange={(option) =>
-                              formik.setFieldValue(
-                                "package_category_id",
-                                option.value
-                              )
-                            }
-                            onBlur={() =>
-                              formik.setFieldTouched(
-                                "package_category_id",
-                                true
-                              )
-                            }
-                            styles={customStyles}
-                          />
+                            <Select
+                              name="package_category_id"
+                              value={
+                                packageCategoryOptions.find(
+                                  (opt) =>
+                                    opt.value ===
+                                    formik.values.package_category_id,
+                                ) || null
+                              }
+                              options={packageCategoryOptions}
+                              onChange={(option) =>
+                                formik.setFieldValue(
+                                  "package_category_id",
+                                  option.value,
+                                )
+                              }
+                              onBlur={() =>
+                                formik.setFieldTouched(
+                                  "package_category_id",
+                                  true,
+                                )
+                              }
+                              styles={customStyles}
+                            />
 
-                          {formik.touched.package_category_id &&
-                            formik.errors.package_category_id && (
-                              <div className="text-red-500 text-sm">
-                                {formik.errors.package_category_id}
-                              </div>
-                            )}
-                        </div>
-                        <div>
-                          <label className="mb-2 block">
-                            Trainer Name<span className="text-red-500">*</span>
-                          </label>
+                            {formik.touched.package_category_id &&
+                              formik.errors.package_category_id && (
+                                <div className="text-red-500 text-sm">
+                                  {formik.errors.package_category_id}
+                                </div>
+                              )}
+                          </div>
+                          <div>
+                            <label className="mb-2 block">
+                              Trainer Name
+                              <span className="text-red-500">*</span>
+                            </label>
 
-                          <Select
-                            name="trainer_id"
-                            value={
-                              trainerOptions.find(
-                                (opt) =>
-                                  opt.value ===
-                                  formik.values.trainer_id
-                              ) || null
-                            }
-                            options={trainerOptions}
-                            onChange={(option) =>
-                              formik.setFieldValue(
-                                "trainer_id",
-                                option.value
-                              )
-                            }
-                            onBlur={() =>
-                              formik.setFieldTouched(
-                                "trainer_id",
-                                true
-                              )
-                            }
-                            styles={customStyles}
-                          />
+                            <Select
+                              name="trainer_id"
+                              value={
+                                trainerOptions.find(
+                                  (opt) =>
+                                    opt.value === formik.values.trainer_id,
+                                ) || null
+                              }
+                              options={trainerOptions}
+                              onChange={(option) =>
+                                formik.setFieldValue("trainer_id", option.value)
+                              }
+                              onBlur={() =>
+                                formik.setFieldTouched("trainer_id", true)
+                              }
+                              styles={customStyles}
+                            />
 
-                          {formik.touched.trainer_id &&
-                            formik.errors.trainer_id && (
-                              <div className="text-red-500 text-sm">
-                                {formik.errors.trainer_id}
-                              </div>
-                            )}
-                        </div>
+                            {formik.touched.trainer_id &&
+                              formik.errors.trainer_id && (
+                                <div className="text-red-500 text-sm">
+                                  {formik.errors.trainer_id}
+                                </div>
+                              )}
+                          </div>
                         </>
                       )}
 
@@ -753,7 +757,7 @@ const CreatePackage = ({
                           name="studio_id"
                           value={
                             studioOptions.find(
-                              (opt) => opt.value === formik.values.studio_id
+                              (opt) => opt.value === formik.values.studio_id,
                             ) || null
                           }
                           options={studioOptions}
@@ -872,14 +876,14 @@ const CreatePackage = ({
                               value={
                                 sessionLevel.find(
                                   (opt) =>
-                                    opt.value === formik.values.session_level
+                                    opt.value === formik.values.session_level,
                                 ) || null
                               }
                               options={sessionLevel}
                               onChange={(option) =>
                                 formik.setFieldValue(
                                   "session_level",
-                                  option.value
+                                  option.value,
                                 )
                               }
                               onBlur={() =>
@@ -921,7 +925,7 @@ const CreatePackage = ({
                                   formik.setFieldValue(
                                     "start_date",
                                     // date.toISOString().split("T")[0]
-                                    date.toLocaleDateString("en-CA")
+                                    date.toLocaleDateString("en-CA"),
                                   ) // ✅ Save as YYYY-MM-DD
                               }
                               onBlur={() =>
@@ -964,22 +968,18 @@ const CreatePackage = ({
                                     hour: "2-digit",
                                     minute: "2-digit",
                                     hour12: false,
-                                  })
+                                  }),
                                 )
-                              }
-                              onBlur={() =>
-                                formik.setFieldTouched("start_time", true)
                               }
                               showTimeSelect
                               showTimeSelectOnly
                               timeIntervals={30}
-                              timeCaption="Time"
                               dateFormat="hh:mm aa"
                               className="custom--input w-full input--icon"
                               minTime={
                                 formik.values.start_date &&
                                 new Date(
-                                  formik.values.start_date
+                                  formik.values.start_date,
                                 ).toDateString() === new Date().toDateString()
                                   ? new Date()
                                   : new Date(0, 0, 0, 0, 0)
@@ -1019,7 +1019,7 @@ const CreatePackage = ({
                                     hour: "2-digit",
                                     minute: "2-digit",
                                     hour12: false,
-                                  })
+                                  }),
                                 )
                               }
                               onBlur={() =>
@@ -1032,11 +1032,8 @@ const CreatePackage = ({
                               dateFormat="hh:mm aa"
                               className="custom--input w-full input--icon"
                               minTime={
-                                formik.values.start_date &&
-                                new Date(
-                                  formik.values.start_date
-                                ).toDateString() === new Date().toDateString()
-                                  ? new Date()
+                                formik.values.start_time
+                                  ? parseTime(formik.values.start_time)
                                   : new Date(0, 0, 0, 0, 0)
                               }
                               maxTime={new Date(0, 0, 0, 23, 59)}
@@ -1119,7 +1116,7 @@ const CreatePackage = ({
                             value={
                               bookingType.find(
                                 (opt) =>
-                                  opt.value === formik.values?.booking_type
+                                  opt.value === formik.values?.booking_type,
                               ) || null
                             }
                             options={bookingType}
@@ -1241,17 +1238,15 @@ const CreatePackage = ({
                           <div className="relative">
                             <Select
                               name="is_featured"
-                              value={
-                                featureType.find(
-                                  (opt) =>
-                                    opt.value === formik.values?.is_featured
-                                ) || null
-                              }
+                              value={featureType.find(
+                                (opt) =>
+                                  opt.value === formik.values.is_featured,
+                              )}
                               options={featureType}
                               onChange={(option) =>
                                 formik.setFieldValue(
                                   "is_featured",
-                                  option.value
+                                  option?.value ?? null,
                                 )
                               }
                               onBlur={() =>
@@ -1353,14 +1348,14 @@ const CreatePackage = ({
                             name="status"
                             value={
                               statusType.find(
-                                (opt) => opt.value === formik.values.status
+                                (opt) => opt.value === formik.values.status,
                               ) || null
                             }
                             options={statusType}
                             onChange={(option) =>
                               formik.setFieldValue(
                                 "status",
-                                option ? option.value : ""
+                                option ? option.value : "",
                               )
                             }
                             onBlur={() =>
@@ -1422,18 +1417,18 @@ const CreatePackage = ({
 
                                     formik.setFieldValue(
                                       `variation[${index}].image`,
-                                      previewURL
+                                      previewURL,
                                     ); // preview
                                     formik.setFieldValue(
                                       `variation[${index}].imageFile`,
-                                      file
+                                      file,
                                     ); // actual file
                                   }
                                 }}
                                 onBlur={() =>
                                   formik.setFieldTouched(
                                     `variation[${index}].image`,
-                                    true
+                                    true,
                                   )
                                 }
                                 className="custom--input w-full"

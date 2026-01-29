@@ -204,13 +204,6 @@ const MemberList = () => {
     }
   }, [clubList, clubIdFromUrl]);
 
-  useEffect(() => {
-    if (!initialized) return;
-
-    fetchMemberList(1);
-    setPage(1);
-  }, [location.search, initialized]);
-
   /* ---------------- 🔥 MAIN FIX ---------------- */
   useEffect(() => {
     if (!initialized) return;
@@ -248,7 +241,7 @@ const MemberList = () => {
 
   const handleCheckboxChange = (id) => {
     setSelectedUserId((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
     );
   };
 
@@ -281,7 +274,7 @@ const MemberList = () => {
       });
 
       const uniqueData = Array.from(
-        new Map(mergedData.map((user) => [user.id, user])).values()
+        new Map(mergedData.map((user) => [user.id, user])).values(),
       );
 
       const activeOnly = filterActiveItems(uniqueData);
@@ -353,7 +346,7 @@ const MemberList = () => {
     try {
       const res = await authAxios().put(
         "/lead/assign/owner",
-        bulkAssignmentData
+        bulkAssignmentData,
       );
 
       toast.success("Owner assigned successfully!");
@@ -366,7 +359,7 @@ const MemberList = () => {
     } catch (err) {
       console.error(err);
       toast.error(
-        err?.response?.data?.message || "Failed to assign owner. Try again."
+        err?.response?.data?.message || "Failed to assign owner. Try again.",
       );
     }
   };
@@ -594,30 +587,30 @@ const MemberList = () => {
                         alt="assign"
                       />
                     </Tooltip>
+                    <Tooltip
+                      id={`tooltip-send-sms`}
+                      content="Bulk Send SMS"
+                      place="top"
+                    >
+                      <img
+                        src={SmsIcon}
+                        className="w-8 cursor-pointer"
+                        onClick={() => handleCommunicate("sms")}
+                      />
+                    </Tooltip>
+                    <Tooltip
+                      id={`tooltip-send-mail`}
+                      content="Bulk Send Mail"
+                      place="top"
+                    >
+                      <img
+                        src={MailIcon}
+                        className="w-8 cursor-pointer"
+                        onClick={() => handleCommunicate("email")}
+                      />
+                    </Tooltip>
                   </>
                 )}
-                <Tooltip
-                  id={`tooltip-send-sms`}
-                  content="Bulk Send SMS"
-                  place="top"
-                >
-                  <img
-                    src={SmsIcon}
-                    className="w-8 cursor-pointer"
-                    onClick={() => handleCommunicate("sms")}
-                  />
-                </Tooltip>
-                <Tooltip
-                  id={`tooltip-send-mail`}
-                  content="Bulk Send Mail"
-                  place="top"
-                >
-                  <img
-                    src={MailIcon}
-                    className="w-8 cursor-pointer"
-                    onClick={() => handleCommunicate("email")}
-                  />
-                </Tooltip>
 
                 {/* Show confirm button after selecting an owner */}
 
@@ -658,7 +651,9 @@ const MemberList = () => {
               <table className="w-full text-sm text-left text-gray-500">
                 <thead className="text-xs text-gray-700 uppercase bg-gray-50">
                   <tr>
-                    <th className="px-2 py-4">#</th>
+                    {(userRole === "CLUB_MANAGER" ||
+                      userRole === "GENERAL_MANAGER" ||
+                      userRole === "ADMIN") && <th className="px-2 py-4">#</th>}
                     <th className="px-2 py-4">Profile Image</th>
                     <th className="px-2 py-4">Name</th>
                     <th className="px-2 py-4">Club Name</th>
@@ -667,6 +662,7 @@ const MemberList = () => {
                     <th className="px-2 py-4">Status</th>
                     <th className="px-2 py-4">Expired On</th>
                     <th className="px-2 py-4">Trainer Name</th>
+                    <th className="px-2 py-4">App Downloaded</th>
                     <th className="px-2 py-4">Profile Completion</th>
                   </tr>
                 </thead>
@@ -676,17 +672,21 @@ const MemberList = () => {
                       key={member.id}
                       className="group bg-white border-b relative hover:bg-gray-50"
                     >
-                      <td className="px-2 py-4">
-                        <div className="flex items-center custom--checkbox--2">
-                          <input
-                            type="checkbox"
-                            className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
-                            checked={selectedUserId.includes(member.id)}
-                            onChange={() => handleCheckboxChange(member.id)}
-                          />
-                          <span className="checkmark--custom"></span>
-                        </div>
-                      </td>
+                      {(userRole === "CLUB_MANAGER" ||
+                        userRole === "GENERAL_MANAGER" ||
+                        userRole === "ADMIN") && (
+                        <td className="px-2 py-4">
+                          <div className="flex items-center custom--checkbox--2">
+                            <input
+                              type="checkbox"
+                              className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                              checked={selectedUserId.includes(member.id)}
+                              onChange={() => handleCheckboxChange(member.id)}
+                            />
+                            <span className="checkmark--custom"></span>
+                          </div>
+                        </td>
+                      )}
                       <td className="px-2 py-4">
                         <div className="bg-gray-100 rounded-lg w-14 h-14 overflow-hidden">
                           {member?.profile_pic ? (
@@ -712,7 +712,7 @@ const MemberList = () => {
                         {formatText(
                           member?.gender === "NOTDISCLOSE"
                             ? "Prefer Not To Say"
-                            : member?.gender
+                            : member?.gender,
                         )}
                       </td>
                       <td className="px-2 py-4">
@@ -744,6 +744,9 @@ const MemberList = () => {
                       </td>
                       <td className="px-2 py-4">
                         {member?.trainer ? member?.trainer : "--"}
+                      </td>
+                      <td className="px-2 py-4">
+                        {member?.app_downloaded ? member?.app_downloaded : "--"}
                       </td>
                       <td className="px-2 py-4">
                         <div className="flex flex-col gap-1">

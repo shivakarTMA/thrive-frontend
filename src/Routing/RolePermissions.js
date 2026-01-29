@@ -79,12 +79,17 @@ export const ROUTE_PERMISSIONS = {
   '/recovery-services': ['ADMIN', 'CLUB_MANAGER'],
   '/package-category': ['ADMIN', 'CLUB_MANAGER'],
   '/packages': ['ADMIN', 'FINANCE_MANAGER', 'CLUB_MANAGER'],
+  '/group-class': ['ADMIN', 'FINANCE_MANAGER', 'CLUB_MANAGER'],
+  '/group-class/:id': ['ADMIN', 'FINANCE_MANAGER', 'CLUB_MANAGER'],
   '/product-category': ['ADMIN', 'FINANCE_MANAGER', 'CLUB_MANAGER'],
   '/subscription-plan': ['ADMIN', 'FINANCE_MANAGER', 'CLUB_MANAGER'],
   '/staff': ['ADMIN', 'CLUB_MANAGER'],
   '/club-gallery': ['ADMIN'],
   '/faq-category': ['ADMIN'],
   '/faq-list': ['ADMIN'],
+  '/birthday-report': ['ADMIN','FOH', 'MARKETING_MANAGER', 'FINANCE_MANAGER', 'TRAINER', 'CLUB_MANAGER'],
+  '/anniversary-report': ['ADMIN','FOH', 'MARKETING_MANAGER', 'FINANCE_MANAGER', 'TRAINER', 'CLUB_MANAGER'],
+
   
   // Dashboards
 //   '/club-manager': ['ADMIN', 'CLUB_MANAGER'],

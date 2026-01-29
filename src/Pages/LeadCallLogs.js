@@ -2,14 +2,13 @@ import React, { useEffect, useState } from "react";
 import Select from "react-select";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { useLocation, useParams } from "react-router-dom";
 import {
-  assignedLeadsData,
-  mockData,
-  trainerAvailability,
-} from "../DummyData/DummyData";
-
-import { customStyles, filterActiveItems, selectIcon } from "../Helper/helper";
+  useLocation,
+  useNavigate,
+  useParams,
+  useSearchParams,
+} from "react-router-dom";
+import { customStyles, filterActiveItems } from "../Helper/helper";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { authAxios } from "../config/config";
@@ -44,8 +43,6 @@ const validationSchema = Yup.object().shape({
 
   // Staff Name — only when Trial/Tour Scheduled
   follow_up_datetime: Yup.string().when("call_status", {
-
-
     is: (val) =>
       val !== "Trial/Tour Scheduled" &&
       val !== "Not Interested" &&
@@ -96,7 +93,11 @@ const validationSchema = Yup.object().shape({
 });
 
 const LeadCallLogs = () => {
-  const { id } = useParams();
+  const { id: leadId } = useParams();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
+
+  const logId = searchParams.get("logId");
 
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
@@ -105,8 +106,6 @@ const LeadCallLogs = () => {
   const [trainerList, setTrainerList] = useState([]);
   const [staffList, setStaffList] = useState([]);
   const [editLog, setEditLog] = useState(null);
-
-  const dataSource = action === "add-follow-up" ? assignedLeadsData : mockData;
 
   // Redux state
   const dispatch = useDispatch();
@@ -140,7 +139,7 @@ const LeadCallLogs = () => {
       // ✅ Correct way to send params — DO NOT add them inside the URL string
       const res = await authAxios().get(
         `/lead/call/log/list/${leadId}`,
-        { params } // Axios will automatically append ?call_type=...&startDate=... etc.
+        { params }, // Axios will automatically append ?call_type=...&startDate=... etc.
       );
 
       // console.log(res.request.responseURL, "Final Request URL"); // 🔍 This will show full correct URL
@@ -165,9 +164,9 @@ const LeadCallLogs = () => {
   };
 
   useEffect(() => {
-    if (!id) return;
+    if (!leadId) return;
 
-    fetchLeadById(id);
+    fetchLeadById(leadId);
 
     const filters = {
       call_status: filterStatus?.value || "",
@@ -175,11 +174,11 @@ const LeadCallLogs = () => {
       endDate,
     };
 
-    fetchLeadCallLogs(id, filters);
-  }, [id, filterStatus, startDate, endDate]);
+    fetchLeadCallLogs(leadId, filters);
+  }, [leadId, filterStatus, startDate, endDate]);
 
   const initialValues = {
-    member_id: id,
+    member_id: leadId,
     call_status: "",
     follow_up_datetime: "",
     schedule_for: null,
@@ -206,10 +205,11 @@ const LeadCallLogs = () => {
           await authAxios().post("/lead/call/log/create", values);
           toast.success("Call created successfully!");
         }
-
-        resetForm();
+        // ✅ 1. CLEAN URL FIRST (kills logId)
+        navigate(`/lead-follow-up/${leadId}`, { replace: true });
         setEditLog(null); // Exit edit mode
-        fetchLeadCallLogs(id);
+        resetForm();
+        fetchLeadCallLogs(leadId);
       } catch (error) {
         toast.error("Something went wrong. Please try again.");
         console.error("Error submitting form:", error);
@@ -288,7 +288,7 @@ const LeadCallLogs = () => {
   useEffect(() => {
     if (editLog) {
       formik.setValues({
-        member_id: id,
+        member_id: leadId,
         call_status: editLog.call_status,
         follow_up_datetime: editLog.follow_up_datetime || "",
         schedule_for: editLog.schedule_for || "",
@@ -363,11 +363,23 @@ const LeadCallLogs = () => {
       value: item.id,
     })) || [];
 
+  // useEffect(() => {
+  //   console.log("Formik Errors:", formik.errors);
+  //   console.log("Formik Touched:", formik.touched);
+  //   console.log("Formik Values:", formik.values);
+  // }, [formik.errors, formik.touched, formik.values]);
+
   useEffect(() => {
-    console.log("Formik Errors:", formik.errors);
-    console.log("Formik Touched:", formik.touched);
-    console.log("Formik Values:", formik.values);
-  }, [formik.errors, formik.touched, formik.values]);
+    const logToEdit = callLogs.find(
+      (log) => String(log.id) === String(logId),
+    );
+  
+    if (logId) {
+      setEditLog(logToEdit);
+    } else{
+      setEditLog(null)
+    }
+  }, [logId, callLogs]);
 
   return (
     <div className="page--content">
@@ -423,7 +435,7 @@ const LeadCallLogs = () => {
                   options={callStatusOption}
                   value={
                     callStatusOption.find(
-                      (option) => option.value === formik.values.call_status
+                      (option) => option.value === formik.values.call_status,
                     ) || null
                   }
                   onChange={handleCallStatusChange}
@@ -524,7 +536,7 @@ const LeadCallLogs = () => {
                       name="schedule_for"
                       value={
                         trainerList.find(
-                          (opt) => opt.value === formik.values.schedule_for
+                          (opt) => opt.value === formik.values.schedule_for,
                         ) || null
                       }
                       options={trainerList}
@@ -571,7 +583,9 @@ const LeadCallLogs = () => {
                             placeholderText="Select date & time"
                             className="border px-3 py-2 w-full input--icon"
                             minDate={now} // Disable past dates
-                            minTime={getMinTime(formik.values.follow_up_datetime)}
+                            minTime={getMinTime(
+                              formik.values.follow_up_datetime,
+                            )}
                             maxTime={baseMaxTime} // 10:00 PM limit
                             disabled={editLog ? true : false}
                           />
@@ -596,7 +610,7 @@ const LeadCallLogs = () => {
                               .flatMap((group) => group.options)
                               .find(
                                 (opt) =>
-                                  opt.value === formik.values?.training_by
+                                  opt.value === formik.values?.training_by,
                               ) || null
                           }
                           options={staffList}
@@ -633,12 +647,12 @@ const LeadCallLogs = () => {
                       options={notInterestedOption}
                       value={notInterestedOption.find(
                         (option) =>
-                          option.value === formik.values.not_interested_reason
+                          option.value === formik.values.not_interested_reason,
                       )}
                       onChange={(option) => {
                         formik.setFieldValue(
                           "not_interested_reason",
-                          option.value
+                          option.value,
                         );
                         formik.setFieldTouched("not_interested_reason", true);
                       }}

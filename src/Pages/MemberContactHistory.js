@@ -1,11 +1,10 @@
 import React, { useState } from "react"; // Import React and useState hook
 import { formatDateTimeLead } from "../Helper/helper";
+import { useNavigate } from "react-router-dom";
 
 // Component to render individual call card details
-export default function MemberContactHistory({
-  filteredData,
-  handleEditLog,
-}) {
+export default function MemberContactHistory({ filteredData, handleEditLog }) {
+  const navigate = useNavigate();
   const [isExpanded, setIsExpanded] = useState(false); // State to manage remarks expand/collapse
 
   // Function to toggle remarks between view more and view less
@@ -37,7 +36,8 @@ export default function MemberContactHistory({
               <span>Scheduled For:</span> {filteredData?.schedule_for}
             </p> */}
             <p className="text-sm flex gap-2">
-              <span>Scheduled On:</span> {formatDateTimeLead(filteredData?.follow_up_datetime)}
+              <span>Scheduled On:</span>{" "}
+              {formatDateTimeLead(filteredData?.follow_up_datetime)}
             </p>
           </div>
 
@@ -89,7 +89,13 @@ export default function MemberContactHistory({
           {/* Update button */}
           <button
             className="mt-3 bg-black text-white py-1 px-4 rounded-[5px] hover:bg-gray-800"
-            onClick={() => handleEditLog(filteredData)}
+            // onClick={() => handleEditLog(filteredData)}
+            onClick={() => {
+              navigate(
+                `/member/${filteredData.member_id}?view=call-logs&logId=${filteredData.id}`,
+              );
+              handleEditLog(filteredData);
+            }}
           >
             Update
           </button>
@@ -100,7 +106,6 @@ export default function MemberContactHistory({
               {formatDateTimeLead(filteredData?.updatedAt)}
             </p>
           )}
-
         </div>
       </div>
     </div>

@@ -19,6 +19,11 @@ const PlanTypeOptions = [
   { value: "NONDLF", label: "Non-DLF" },
 ];
 
+const TrialTypeOptions = [
+  { value: "TRIAL", label: "Trial" },
+  { value: "NONTRIAL", label: "No Trial" },
+];
+
 const packageTypeOptions = [
   { value: "SUBSCRIPTION", label: "Membership" },
   { value: "PACKAGE", label: "Package" },
@@ -36,6 +41,7 @@ const payModeTypeOptions = [
 ];
 
 export default function MembershipSalesPanel({
+  filterTrialType,
   filterBillType,
   filterPlanType,
   filterServiceName,
@@ -162,7 +168,7 @@ export default function MembershipSalesPanel({
 
   const serviceOptions = serviceList.map((item) => ({
     label: item.title,
-    value: item.id,
+    value: item.title,
   }));
 
   useEffect(() => {
@@ -186,12 +192,13 @@ export default function MembershipSalesPanel({
   // ✅ Apply button - update parent's appliedFilters
   const handleApply = () => {
     setAppliedFilters({
-      bill_type: formik.values.filterBillType,
+      trial_type: formik.values.filterTrialType,
+      subscription_type: formik.values.filterBillType,
       plan_type: formik.values.filterPlanType,
       service_name: formik.values.filterServiceName,
       lead_source: formik.values.filterLeadSource,
-      lead_owner: formik.values.filterLeadOwner,
-      pay_mode: formik.values.filterPayMode,
+      owner_id: formik.values.filterLeadOwner,
+      payment_method: formik.values.filterPayMode,
     });
 
     setShowFilters(false);
@@ -200,12 +207,13 @@ export default function MembershipSalesPanel({
   // ✅ Remove filter chip - update both parent state and formik
   const handleRemoveFilter = (key) => {
     const keyMap = {
-      bill_type: "filterBillType",
+      trial_type: "filterTrialType",
+      subscription_type: "filterBillType",
       plan_type: "filterPlanType",
       service_name: "filterServiceName",
       lead_source: "filterLeadSource",
-      lead_owner: "filterLeadOwner",
-      pay_mode: "filterPayMode",
+      owner_id: "filterLeadOwner",
+      payment_method: "filterPayMode",
     };
 
     // Update parent's applied filters
@@ -221,7 +229,11 @@ export default function MembershipSalesPanel({
   const getFilterLabel = (key, value) => {
     if (!value) return "";
 
-    if (key === "bill_type") {
+    if (key === "trial_type") {
+      const trialType = TrialTypeOptions.find((opt) => opt.value === value);
+      return trialType ? trialType.label : value;
+    }
+    if (key === "subscription_type") {
       const billType = BillTypeOptions.find((opt) => opt.value === value);
       return billType ? billType.label : value;
     }
@@ -244,13 +256,13 @@ export default function MembershipSalesPanel({
       return leadSource ? leadSource.label : value;
     }
 
-    if (key === "lead_owner") {
+    if (key === "owner_id") {
       const allOwners = leadOwnerOptions.flatMap((group) => group.options);
       const owner = allOwners.find((opt) => opt.value === value);
       return owner ? owner.label : value;
     }
 
-    if (key === "pay_mode") {
+    if (key === "payment_method") {
       const payMode = payModeTypeOptions.find((opt) => opt.value === value);
       return payMode ? payMode.label : value;
     }
@@ -277,6 +289,28 @@ export default function MembershipSalesPanel({
           </div>
           <div className="p-4">
             <div className="grid grid-cols-2 gap-4 min-w-[500px]">
+              <div>
+                <label className="block mb-1 text-sm font-medium">
+                  Trial Type
+                </label>
+                <Select
+                  value={
+                    TrialTypeOptions.find(
+                      (opt) => opt.value === filterTrialType
+                    ) || null
+                  }
+                  onChange={(option) =>
+                    setFilterValue(
+                      "filterTrialType",
+                      option ? option.value : null
+                    )
+                  }
+                  options={TrialTypeOptions}
+                  placeholder="Select Bill Type"
+                  styles={customStyles}
+                  // isClearable
+                />
+              </div>
               <div>
                 <label className="block mb-1 text-sm font-medium">
                   Bill Type

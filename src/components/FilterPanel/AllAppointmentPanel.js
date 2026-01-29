@@ -166,8 +166,8 @@ export default function AllAppointmentPanel({
     setAppliedFilters({
       ...appliedFilters,
       assigned_staff_id: formik.values.filterTrainer,
-      service_type: formik.values.filterServiceType,
-      service_name: formik.values.filterServiceName,
+      service_id: formik.values.filterServiceType,
+      package_id: formik.values.filterServiceName,
       booking_status: formik.values.filterBookingStatus,
       appointment_date: formatDateForApi(formik.values.filterAppointmentDate),
     });
@@ -179,8 +179,8 @@ export default function AllAppointmentPanel({
   const handleRemoveFilter = (key) => {
     const keyMap = {
       assigned_staff_id: "filterTrainer",
-      service_type: "filterServiceType",
-      service_name: "filterServiceName",
+      service_id: "filterServiceType",
+      package_id: "filterServiceName",
       booking_status: "filterBookingStatus",
       appointment_date: "filterAppointmentDate",
     };
@@ -203,12 +203,12 @@ export default function AllAppointmentPanel({
       return trainer ? trainer.label : value;
     }
 
-    if (key === "service_type") {
+    if (key === "service_id") {
       const service = serviceOptions.find((opt) => opt.value === value);
       return service ? service.label : value;
     }
 
-    if (key === "service_name") {
+    if (key === "package_id") {
       const pkg = packageOptions.find((opt) => opt.value === value);
       return pkg ? pkg.label : value;
     }

@@ -76,24 +76,25 @@ const StaffList = () => {
   // 🚀 Fetch staff list from API
   const fetchStaff = async (search = "", currentPage = page) => {
     try {
-      const res = await authAxios().get("/staff/list", {
-        params: {
-          page: currentPage,
-          limit: rowsPerPage,
-          ...(search ? { search } : {}),
-        },
-      });
+      const params = {
+        page: currentPage,
+        limit: rowsPerPage,
+        ...(search ? { search } : {}),
+      };
 
-      let data = res.data?.data || [];
-      if (statusFilter?.value) {
-        data = data.filter((item) => item.status === statusFilter.value);
-      }
       if (clubFilter) {
-        data = data.filter((item) => item.club_id === clubFilter);
+        params.club_id = clubFilter.value;
       }
       if (roleFilter) {
-        data = data.filter((item) => item.role === roleFilter);
+        params.role = roleFilter.value;
       }
+      if (statusFilter) {
+        params.status = statusFilter.value;
+      }
+
+      const res = await authAxios().get("/staff/list", { params });
+
+      let data = res.data?.data || [];
 
       setStaffList(data);
       setPage(res.data?.currentPage || 1);
@@ -183,7 +184,7 @@ const StaffList = () => {
         Yup.object({
           title: Yup.string().required("Title is required"),
           description: Yup.string().required("Description is required"),
-        })
+        }),
       )
       .min(1, "At least one content item is required"),
   });
@@ -357,10 +358,10 @@ const StaffList = () => {
           <div className="w-fit min-w-[200px]">
             <Select
               placeholder="Filter by club"
-              value={clubOptions.find((o) => o.value === clubFilter) || null}
+              value={clubFilter}
               options={clubOptions}
-              onChange={(option) => setClubFilter(option?.value)}
-              isClearable
+              onChange={(option) => setClubFilter(option)}
+              isClearable={currentUserRole === "ADMIN" ? true : false}
               styles={customStyles}
               className="w-full"
             />
@@ -368,10 +369,10 @@ const StaffList = () => {
           <div className="w-fit min-w-[200px]">
             <Select
               placeholder="Filter by role"
-              value={roleOptions.find((o) => o.value === roleFilter) || null}
+              value={roleFilter}
               options={roleOptions}
-              onChange={(option) => setRoleFilter(option?.value)}
-              isClearable
+              onChange={(option) => setRoleFilter(option)}
+              isClearable={currentUserRole === "ADMIN" ? true : false}
               styles={customStyles}
               className="w-full"
             />

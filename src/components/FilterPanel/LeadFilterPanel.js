@@ -13,6 +13,7 @@ export default function LeadFilterPanel({
   filterLeadSource,
   filterLeadStatus,
   filterLastCallType,
+  filterLeadType,
   filterCallTag,
   filterServiceName,
   filterGender,
@@ -34,6 +35,7 @@ export default function LeadFilterPanel({
   useEffect(() => {
     dispatch(fetchOptionList("LEAD_SOURCE"));
     dispatch(fetchOptionList("LEAD_CALL_STATUS"));
+    dispatch(fetchOptionList("LEAD_TYPE"));
     dispatch(fetchOptionList("GOAL"));
   }, [dispatch]);
 
@@ -80,6 +82,7 @@ export default function LeadFilterPanel({
   const leadsSources = lists["LEAD_SOURCE"] || [];
   const lastCallStatusOptions = lists["LEAD_CALL_STATUS"] || [];
   const leadServiceOptions = lists["GOAL"] || [];
+  const lead_typeOptions = lists["LEAD_TYPE"] || [];
 
   const leadOwnerOptions = [
     {
@@ -124,6 +127,7 @@ export default function LeadFilterPanel({
       ...appliedFilters,
       lead_source: formik.values.filterLeadSource,
       lead_status: formik.values.filterLeadStatus,
+      lead_type: formik.values.filterLeadType,
       last_call_status: formik.values.filterLastCallType,
       lead_owner: formik.values.filterCallTag,
       interested_in: formik.values.filterServiceName,
@@ -138,6 +142,7 @@ export default function LeadFilterPanel({
     const keyMap = {
       lead_source: "filterLeadSource",
       lead_status: "filterLeadStatus",
+      lead_type: "filterLeadType",
       last_call_status: "filterLastCallType",
       lead_owner: "filterCallTag",
       interested_in: "filterServiceName",
@@ -165,6 +170,11 @@ export default function LeadFilterPanel({
     if (key === "lead_status") {
       const status = lead_statusOptions.find((opt) => opt.value === value);
       return status ? status.label : value;
+    }
+
+    if (key === "lead_type") {
+      const type = lead_typeOptions.find((opt) => opt.value === value);
+      return type ? type.label : value;
     }
 
     if (key === "last_call_status") {
@@ -254,6 +264,29 @@ export default function LeadFilterPanel({
                 />
               </div>
 
+              {/* Lead Type */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Lead Type
+                </label>
+                <Select
+                  value={
+                    lead_typeOptions.find(
+                      (opt) => opt.value === filterLeadType
+                    ) || null
+                  }
+                  onChange={(option) =>
+                    setFilterValue(
+                      "filterLeadType",
+                      option ? option.value : null
+                    )
+                  }
+                  options={lead_typeOptions}
+                  placeholder="Select Lead Type"
+                  styles={customStyles}
+                  // isClearable
+                />
+              </div>
               {/* Lead Status */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">

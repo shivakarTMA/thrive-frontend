@@ -14,7 +14,7 @@ import {
 import { authAxios } from "../../../config/config";
 import { toast } from "react-toastify";
 import { FaCircle } from "react-icons/fa";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useFormik } from "formik";
 import { useSelector } from "react-redux";
 import Pagination from "../../common/Pagination";
@@ -29,6 +29,7 @@ const dateFilterOptions = [
 
 const NewJoineesReport = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const [newJoineesList, setNewJoineesList] = useState([]);
   const [clubList, setClubList] = useState([]);
   const [clubFilter, setClubFilter] = useState(null);
@@ -44,19 +45,23 @@ const NewJoineesReport = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
 
+  const [filtersInitialized, setFiltersInitialized] = useState(false);
+
   // ✅ Single source of truth for applied filters
   const [appliedFilters, setAppliedFilters] = useState({
-    bill_type: null,
+    trial_type: null,
+    subscription_type: null,
     plan_type: null,
     service_name: null,
     lead_source: null,
-    lead_owner: null,
-    pay_mode: null,
+    owner_id: null,
+    payment_method: null,
   });
 
   const formik = useFormik({
     enableReinitialize: true,
     initialValues: {
+      filterTrialType: null,
       filterBillType: null,
       filterPlanType: null,
       filterServiceName: null,
@@ -93,6 +98,50 @@ const NewJoineesReport = () => {
     value: item.id,
   }));
 
+  // ---------------------------
+  // UPDATE URL WITH PARAMS
+  // ---------------------------
+  const updateURLParams = (filters) => {
+    const params = new URLSearchParams();
+
+    // Date filter
+    if (dateFilter?.value && dateFilter.value !== "custom") {
+      params.set("dateFilter", dateFilter.value);
+    }
+
+    if (dateFilter?.value === "custom" && customFrom && customTo) {
+      params.set("startDate", format(customFrom, "yyyy-MM-dd"));
+      params.set("endDate", format(customTo, "yyyy-MM-dd"));
+    }
+
+    // Club filter
+    if (clubFilter?.value) {
+      params.set("club_id", clubFilter.value);
+    }
+
+    // Applied filters
+    if (filters.subscription_type) {
+      params.set("subscription_type", filters.subscription_type);
+    }
+    if (filters.plan_type) {
+      params.set("plan_type", filters.plan_type);
+    }
+    if (filters.service_name) {
+      params.set("service_name", filters.service_name);
+    }
+    if (filters.lead_source) {
+      params.set("lead_source", filters.lead_source);
+    }
+    if (filters.owner_id) {
+      params.set("owner_id", filters.owner_id);
+    }
+    if (filters.payment_method) {
+      params.set("payment_method", filters.payment_method);
+    }
+
+    navigate(`?${params.toString()}`, { replace: true });
+  };
+
   const fetchNewJoinessReport = async (currentPage = page) => {
     try {
       const params = {
@@ -116,15 +165,16 @@ const NewJoineesReport = () => {
         params.club_id = clubFilter.value;
       }
 
-      if (appliedFilters.bill_type) params.bill_type = appliedFilters.bill_type;
+      if (appliedFilters.subscription_type) params.subscription_type = appliedFilters.subscription_type;
       if (appliedFilters.plan_type) params.plan_type = appliedFilters.plan_type;
       if (appliedFilters.service_name)
         params.service_name = appliedFilters.service_name;
       if (appliedFilters.lead_source)
         params.lead_source = appliedFilters.lead_source;
-      if (appliedFilters.lead_owner)
-        params.lead_owner = appliedFilters.lead_owner;
-      if (appliedFilters.pay_mode) params.pay_mode = appliedFilters.pay_mode;
+      if (appliedFilters.owner_id)
+        params.owner_id = appliedFilters.owner_id;
+      if (appliedFilters.payment_method) params.payment_method = appliedFilters.payment_method;
+      if (appliedFilters.trial_type) params.trial_type = appliedFilters.trial_type;
 
       const res = await authAxios().get("/marketing/report/newjoinee", {
         params,
@@ -141,24 +191,41 @@ const NewJoineesReport = () => {
       toast.error("data not found");
     }
   };
-  
-useEffect(() => {
-  if (dateFilter?.value === "custom") {
-    if (customFrom && customTo) {
-      fetchNewJoinessReport(1);
-    }
-    return;
-  }
 
-  fetchNewJoinessReport(1);
-}, [dateFilter, customFrom, customTo, clubFilter, appliedFilters]);
+  // ---------------------------
+  // INITIALIZE FROM URL
+  // ---------------------------
 
   useEffect(() => {
     // Wait for clubList to be loaded
     if (clubList.length === 0) return;
 
+    // Only run initialization once
+    if (filtersInitialized) return;
+
     const params = new URLSearchParams(location.search);
 
+    // Date filter
+    const dateFilterValue = params.get("dateFilter");
+    if (dateFilterValue) {
+      const matchedDate = dateFilterOptions.find(
+        (opt) => opt.value === dateFilterValue,
+      );
+      if (matchedDate) {
+        setDateFilter(matchedDate);
+      }
+    }
+
+    // Custom date filter
+    const startDate = params.get("startDate");
+    const endDate = params.get("endDate");
+    if (startDate && endDate) {
+      setDateFilter(dateFilterOptions.find((d) => d.value === "custom"));
+      setCustomFrom(new Date(startDate));
+      setCustomTo(new Date(endDate));
+    }
+
+    // Club filter - only set from URL if present, otherwise default to first club
     const clubId = params.get("club_id");
     if (clubId) {
       const club = clubList.find((c) => c.id === Number(clubId));
@@ -172,7 +239,58 @@ useEffect(() => {
         value: clubList[0].id,
       });
     }
+
+    // Applied filters from URL
+    const urlFilters = {
+      trial_type: params.get("trial_type") || null,
+      // plan_type: params.get("plan_type") || null,
+      // service_name: params.get("service_name") || null,
+    };
+
+    setAppliedFilters(urlFilters);
+
+    // Sync with formik
+    formik.setValues({
+      filterTrialType: urlFilters.trial_type,
+      filterBillType: urlFilters.subscription_type,
+      filterPlanType: urlFilters.plan_type,
+      filterServiceName: urlFilters.service_name,
+      filterLeadSource: urlFilters.lead_source,
+      filterLeadOwner: urlFilters.owner_id,
+      filterPayMode: urlFilters.payment_method,
+    });
+
+    setFiltersInitialized(true);
   }, [clubList]);
+
+  // ---------------------------
+  // FETCH WHEN FILTERS CHANGE
+  // ---------------------------
+  useEffect(() => {
+    if (!filtersInitialized) return;
+
+    // 🚫 Prevent API call until both dates are selected
+    if (dateFilter?.value === "custom" && (!customFrom || !customTo)) {
+      return;
+    }
+
+    setPage(1);
+    fetchNewJoinessReport(1);
+    updateURLParams(appliedFilters);
+  }, [
+    filtersInitialized,
+    dateFilter?.value,
+    customFrom,
+    customTo,
+    clubFilter?.value,
+    appliedFilters.trial_type,
+    appliedFilters.subscription_type,
+    appliedFilters.plan_type,
+    appliedFilters.service_name,
+    appliedFilters.lead_source,
+    appliedFilters.owner_id,
+    appliedFilters.payment_method,
+  ]);
 
   return (
     <div className="page--content">
@@ -267,6 +385,7 @@ useEffect(() => {
             <MembershipSalesPanel
               userRole={userRole}
               clubId={clubFilter?.value}
+              filterTrialType={formik.values.filterTrialType}
               filterBillType={formik.values.filterBillType}
               filterPlanType={formik.values.filterPlanType}
               filterServiceName={formik.values.filterServiceName}
@@ -290,6 +409,7 @@ useEffect(() => {
                 <th className="px-2 py-4 min-w-[50px]">S.no</th>
                 <th className="px-2 py-4 min-w-[150px]">Club Name</th>
                 <th className="px-2 py-4 min-w-[100px]">Bill Type</th>
+                <th className="px-2 py-4 min-w-[100px]">Trial Type</th>
                 <th className="px-2 py-4 min-w-[100px]">Member ID</th>
                 <th className="px-2 py-4 min-w-[150px]">Member Name</th>
                 <th className="px-2 py-4 min-w-[130px]">Service Type</th>
@@ -323,7 +443,10 @@ useEffect(() => {
                   >
                     <td className="px-2 py-4">{index + 1}</td>
                     <td className="px-2 py-4">{row.club_name || "--"}</td>
-                    <td className="px-2 py-4">{row.bill_type || "--"}</td>
+                    <td className="px-2 py-4">{formatText(row.subscription_type) || "--"}</td>
+                    <td className="px-2 py-4">
+                      {row?.trial_type === "NONTRIAL" ? "No Trial": formatText(row?.trial_type)}
+                      </td>
                     <td className="px-2 py-4">
                       {row.membership_number || "--"}
                     </td>
@@ -338,7 +461,7 @@ useEffect(() => {
                       {formatText(row.service_type) || "--"}
                     </td>
                     <td className="px-2 py-4">
-                      {formatText(row.plan_type) || "--"}
+                      {row.plan_type === "NONDLF" ? "NON-DLF" : row.plan_type || "--"}
                     </td>
                     <td className="px-2 py-4">{row.service_name || "--"}</td>
                     <td className="px-2 py-4">{row.invoice_id || "--"}</td>
@@ -375,7 +498,7 @@ useEffect(() => {
                     <td className="px-2 py-4">
                       ₹{formatIndianNumber(row.paid_amount) || 0}
                     </td>
-                    <td className="px-2 py-4">{row.pay_mode || "--"}</td>
+                    <td className="px-2 py-4">{formatText(row.payment_method) || "--"}</td>
                     <td className="px-2 py-4">
                       <span
                         className={`flex items-center justify-between gap-1 rounded-full min-h-[30px] px-3 text-sm w-fit ${

@@ -139,13 +139,18 @@ const AllLostFound = () => {
     // Filter out null/undefined values
     return Object.fromEntries(
       Object.entries(currentFilters).filter(
-        ([_, v]) => v !== null && v !== undefined
-      )
+        ([_, v]) => v !== null && v !== undefined,
+      ),
     );
   };
 
   // ✅ Fetch data when date filter or page changes
   useEffect(() => {
+    // 🚫 Do not fetch if custom is selected but dates are incomplete
+    if (dateFilter?.value === "custom" && (!customFrom || !customTo)) {
+      return;
+    }
+
     const cleanFilters = getCurrentFilters();
     fetchLostFoundList(page, cleanFilters);
   }, [dateFilter, customFrom, customTo, page]);

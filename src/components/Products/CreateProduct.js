@@ -123,7 +123,7 @@ const CreateProduct = ({
       >
         <div className="bg-white rounded-t-[10px] flex gap-3 items-center justify-between py-4 px-4 border-b">
           <h2 className="text-xl font-semibold">
-            {editingOption ? "Edit Product" : "Create Product"}
+            {editingOption ? "Edit Nourish" : "Create Nourish"}
           </h2>
           <div className="close--lead cursor-pointer" onClick={handleLeadModal}>
             <IoCloseCircle className="text-3xl" />
@@ -205,10 +205,10 @@ const CreateProduct = ({
                     )}
                   </div>
 
-                  {/* Product Name */}
+                  {/* Nourish Name */}
                   <div>
                     <label className="mb-2 block">
-                      Product Name<span className="text-red-500">*</span>
+                      Nourish Name<span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
                       <input
@@ -275,10 +275,10 @@ const CreateProduct = ({
                       </p>
                     )}
                   </div>
-                  {/* Product Category */}
+                  {/* Nourish Category */}
                   <div>
                     <label className="mb-2 block">
-                      Product Category<span className="text-red-500">*</span>
+                      Nourish Category<span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
                       <Select
@@ -307,10 +307,10 @@ const CreateProduct = ({
                       )}
                   </div>
 
-                  {/*  Product Type */}
+                  {/*  Nourish Type */}
                   <div>
                     <label className="mb-2 block">
-                      Product Type<span className="text-red-500">*</span>
+                      Nourish Type<span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
                       <Select

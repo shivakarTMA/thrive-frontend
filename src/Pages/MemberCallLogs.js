@@ -2,16 +2,12 @@ import React, { useEffect, useState } from "react";
 import Select from "react-select";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { useLocation, useParams } from "react-router-dom";
-import { assignedLeadsData, mockData } from "../DummyData/DummyData";
 import PhoneInput from "react-phone-number-input";
 import { customStyles } from "../Helper/helper";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchOptionList } from "../Redux/Reducers/optionListSlice";
-import { LuCalendar } from "react-icons/lu";
-import { FiClock } from "react-icons/fi";
 import { toast } from "react-toastify";
 import { authAxios } from "../config/config";
 import MemberContactHistory from "./MemberContactHistory";
@@ -20,6 +16,7 @@ import { format } from "date-fns";
 import { BsExclamationCircle } from "react-icons/bs";
 import LeadContactHistory from "./LeadContactHistory";
 import { addYears, subYears } from "date-fns";
+import { useParams, useSearchParams, useNavigate } from "react-router-dom";
 
 // Validation schema with conditional required fields
 const validationSchema = Yup.object().shape({
@@ -68,12 +65,12 @@ const validationSchema = Yup.object().shape({
 });
 
 const MemberCallLogs = () => {
-  const { id } = useParams();
-  // const location = useLocation();
-  // const queryParams = new URLSearchParams(location.search);
-  // const action = queryParams.get("action");
+  const { id: memberId } = useParams();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
 
-  // const dataSource = action === "add-follow-up" ? assignedLeadsData : mockData;
+  const view = searchParams.get("view"); // "call-logs"
+  const logId = searchParams.get("logId");
 
   const [filterStatus, setFilterStatus] = useState("");
   const [enquiryfilterStatus, setEnquiryFilterStatus] = useState("");
@@ -82,9 +79,7 @@ const MemberCallLogs = () => {
   const [filteredCallStatus, setFilteredCallStatus] = useState([]);
   const [activeTab, setActiveTab] = useState("Member Logs");
   const [memberDetails, setMemberDetails] = useState(null);
-  const [staffList, setStaffList] = useState([]);
   const [callDataList, setCallDataList] = useState([]);
-  const [editData, setEditData] = useState(null);
   const [memberEnquiry, setMemberEnquiry] = useState([]);
   const [editLog, setEditLog] = useState(null);
 
@@ -94,20 +89,6 @@ const MemberCallLogs = () => {
 
   const maxTime = new Date();
   maxTime.setHours(22, 0, 0, 0);
-
-  const fetchStaff = async (search = "") => {
-    try {
-      const res = await authAxios().get("/staff/list", {
-        params: search ? { search } : {},
-      });
-      let data = res.data?.data || res?.data || [];
-      const activeService = data?.filter((item) => item?.status === "ACTIVE");
-      setStaffList(activeService);
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to fetch club");
-    }
-  };
 
   const fetchMemberEnquiery = async (memberId, filters = {}) => {
     try {
@@ -119,15 +100,10 @@ const MemberCallLogs = () => {
       if (filters.endDate)
         params.endDate = format(filters.endDate, "yyyy-MM-dd");
 
-      console.log(params, "params");
-
-      // ✅ Correct way to send params — DO NOT add them inside the URL string
       const res = await authAxios().get(
         `/member/call/log/enquiry/list/${memberId}`,
-        { params } // Axios will automatically append ?call_status=...&startDate=... etc.
+        { params },
       );
-
-      // console.log(res.request.responseURL, "Final Request URL"); // 🔍 This will show full correct URL
 
       const data = res.data?.data || res.data || [];
       setMemberEnquiry(data);
@@ -136,16 +112,6 @@ const MemberCallLogs = () => {
       toast.error("Failed to fetch club");
     }
   };
-
-  useEffect(() => {
-    fetchStaff();
-  }, []);
-
-  const staffListOptions =
-    staffList?.map((item) => ({
-      label: item.name,
-      value: item.id,
-    })) || [];
 
   const dispatch = useDispatch();
   const { lists } = useSelector((state) => state.optionList);
@@ -175,7 +141,7 @@ const MemberCallLogs = () => {
       // ✅ Correct way to send params — DO NOT add them inside the URL string
       const res = await authAxios().get(
         `/member/call/log/list/${memberId}`,
-        { params } // Axios will automatically append ?call_type=...&startDate=... etc.
+        { params }, // Axios will automatically append ?call_type=...&startDate=... etc.
       );
 
       // console.log(res.request.responseURL, "Final Request URL"); // 🔍 This will show full correct URL
@@ -201,9 +167,9 @@ const MemberCallLogs = () => {
   };
 
   useEffect(() => {
-    if (!id) return;
+    if (!memberId) return;
 
-    fetchMemberById(id);
+    fetchMemberById(memberId);
 
     const filters = {
       call_type: filterStatus?.value || "",
@@ -217,13 +183,12 @@ const MemberCallLogs = () => {
       endDate,
     };
 
-    fetchMemberCallLogs(id, filters);
-    fetchMemberEnquiery(id, filtersLead);
-  }, [id, filterStatus, startDate, endDate, enquiryfilterStatus]);
+    fetchMemberCallLogs(memberId, filters);
+    fetchMemberEnquiery(memberId, filtersLead);
+  }, [memberId, filterStatus, startDate, endDate, enquiryfilterStatus]);
 
   const initialValues = {
-    member_id: memberDetails?.id,
-    schedule_for: 1,
+    member_id: memberId,
     call_type: "",
     call_status: "",
     not_interested_reason: "",
@@ -250,9 +215,26 @@ const MemberCallLogs = () => {
           toast.success("Call created successfully!");
         }
 
-        resetForm();
-        setEditLog(null); // Exit edit mode
-        fetchMemberCallLogs(id);
+        // ✅ 1. CLEAN URL FIRST (kills logId)
+        navigate(`/member/${memberId}?view=call-logs`, { replace: true });
+
+        // ✅ 2. EXIT edit mode
+        setEditLog(null);
+
+        // ✅ 3. RESET form explicitly
+        resetForm({
+          values: {
+            member_id: memberId,
+            call_type: "",
+            call_status: "",
+            not_interested_reason: "",
+            follow_up_datetime: "",
+            remark: "",
+          },
+        });
+
+        // ✅ 4. Refresh list
+        fetchMemberCallLogs(memberId);
       } catch (error) {
         toast.error("Something went wrong. Please try again.");
         console.error("Error submitting form:", error);
@@ -270,7 +252,7 @@ const MemberCallLogs = () => {
     } else if (formik.values?.call_type === "Cross-sell Call") {
       // ✅ Show ALL statuses including cross-sell-specific ones
       filtered = callStatusOption.filter(
-        (status) => status.name !== "Successful"
+        (status) => status.name !== "Successful",
       );
     } else if (
       formik.values?.call_type === "Welcome Call" ||
@@ -289,12 +271,12 @@ const MemberCallLogs = () => {
         (status) =>
           status.name !== "Not Interested" &&
           status.name !== "Future Prospect" &&
-          status.name !== "Cross-sales trial scheduled"
+          status.name !== "Cross-sales trial scheduled",
       );
     } else {
       // ✅ For all other call types → hide cross-sell-specific statuses
       filtered = callStatusOption.filter(
-        (status) => status.name !== "Cross-sales trial scheduled"
+        (status) => status.name !== "Cross-sales trial scheduled",
       );
     }
 
@@ -351,7 +333,6 @@ const MemberCallLogs = () => {
       formik.setValues({
         call_status: editLog.call_status,
         member_id: memberDetails?.id,
-        schedule_for: editLog.schedule_for,
         call_type: editLog.call_type || "",
         call_status: editLog.call_status || "",
         not_interested_reason: editLog.not_interested_reason || "",
@@ -361,6 +342,28 @@ const MemberCallLogs = () => {
       });
     }
   }, [editLog]);
+
+  useEffect(() => {
+    if (view === "call-logs") {
+      setActiveTab("Member Logs");
+    } else if (view === "enquiry-logs") {
+      setActiveTab("Enquiry Logs");
+    }
+  }, [view]);
+
+useEffect(() => {
+  const logToEdit = callDataList.find(
+    (log) => String(log.id) === String(logId),
+  );
+
+  if (logId) {
+    setEditLog(logToEdit);
+    setActiveTab("Member Logs");
+  } else{
+    setEditLog(null)
+  }
+}, [logId, callDataList]);
+
 
   return (
     <div className="">
@@ -415,7 +418,7 @@ const MemberCallLogs = () => {
                         name="call_type"
                         value={
                           callTypeOption.find(
-                            (opt) => opt.value === formik.values?.call_type
+                            (opt) => opt.value === formik.values?.call_type,
                           ) || ""
                         }
                         onChange={(option) => {
@@ -444,7 +447,8 @@ const MemberCallLogs = () => {
                         value={
                           formik.values?.call_status
                             ? filteredCallStatus.find(
-                                (opt) => opt.name === formik.values?.call_status
+                                (opt) =>
+                                  opt.name === formik.values?.call_status,
                               )
                             : null
                         } // Only show a value if call_status is not empty
@@ -477,12 +481,12 @@ const MemberCallLogs = () => {
                           name="not_interested_reason"
                           value={notInterestedOption.find(
                             (opt) =>
-                              opt.name === formik.values?.not_interested_reason
+                              opt.name === formik.values?.not_interested_reason,
                           )}
                           onChange={(option) =>
                             formik.setFieldValue(
                               "not_interested_reason",
-                              option.name
+                              option.name,
                             )
                           }
                           options={notInterestedOption.map((opt) => ({
@@ -599,6 +603,7 @@ const MemberCallLogs = () => {
                         onClick={() => {
                           formik.resetForm();
                           setEditLog(null);
+                          navigate(`/member/${memberId}?view=call-logs`);
                         }}
                       >
                         Clear
@@ -606,7 +611,6 @@ const MemberCallLogs = () => {
                     )}
                     <button
                       type="submit"
-                      // disabled={isDisabled ? true : false}
                       className="px-4 py-2 bg-black text-white rounded"
                     >
                       Submit

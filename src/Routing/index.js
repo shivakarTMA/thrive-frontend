@@ -106,6 +106,10 @@ import SetIncentivePolicy from "../components/Reports/FinanceReports/SetIncentiv
 import RefundRequests from "../components/Reports/FinanceReports/RefundRequests";
 import AllAppointments from "../Pages/Reports/Appointments/AllAppointments";
 import MyFollowUps from "../Pages/MyFollowUps";
+import GroupClassesList from "../components/GroupClassesList/GroupClassesList";
+import GroupClassParticipants from "../components/GroupClassesList/GroupClassParticipants";
+import BirthdayReport from "../Pages/Reports/BirthdayReport";
+import AnniversaryReport from "../Pages/Reports/AnniversaryReport";
 
 // Role-based route wrapper component
 const RoleProtectedRoute = ({ children, path, skipPrivateRoute = false }) => {
@@ -279,6 +283,26 @@ export default function Routing() {
           element={
             <RoleProtectedRoute path="/lost-found">
               <AllLostFound />
+            </RoleProtectedRoute>
+          }
+        />
+
+        {/* Birthday report */}
+        <Route
+          path="/birthday-report"
+          element={
+            <RoleProtectedRoute path="/birthday-report">
+              <BirthdayReport />
+            </RoleProtectedRoute>
+          }
+        />
+
+        {/* Anniversary report */}
+        <Route
+          path="/anniversary-report"
+          element={
+            <RoleProtectedRoute path="/anniversary-report">
+              <AnniversaryReport />
             </RoleProtectedRoute>
           }
         />
@@ -567,6 +591,22 @@ export default function Routing() {
           element={
             <RoleProtectedRoute path="/packages">
               <PackagesList />
+            </RoleProtectedRoute>
+          }
+        />
+        <Route
+          path="/group-class"
+          element={
+            <RoleProtectedRoute path="/group-class">
+              <GroupClassesList />
+            </RoleProtectedRoute>
+          }
+        />
+        <Route
+          path="/group-class/:id"
+          element={
+            <RoleProtectedRoute path="/group-class/:id">
+              <GroupClassParticipants />
             </RoleProtectedRoute>
           }
         />

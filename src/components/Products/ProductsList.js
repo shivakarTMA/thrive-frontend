@@ -261,8 +261,8 @@ const ProductsList = () => {
     <div className="page--content">
       <div className="flex items-end justify-between gap-2 mb-5">
         <div className="title--breadcrumbs">
-          <p className="text-sm">{`Home > Nourish Products`}</p>
-          <h1 className="text-3xl font-semibold">Nourish Products</h1>
+          <p className="text-sm">{`Home > Nourish`}</p>
+          <h1 className="text-3xl font-semibold">Nourish</h1>
         </div>
         <div className="flex items-end gap-2">
           <button
@@ -274,7 +274,7 @@ const ProductsList = () => {
               setShowModal(true);
             }}
           >
-            <FiPlus /> Create Product
+            <FiPlus /> Create Nourish
           </button>
         </div>
       </div>
@@ -326,7 +326,7 @@ const ProductsList = () => {
                 <th className="px-2 py-4 min-w-[200px]">Club Name</th>
                 <th className="px-2 py-4 min-w-[200px]">Title</th>
                 <th className="px-2 py-4 min-w-[100px]">Category</th>
-                <th className="px-2 py-4 min-w-[120px]">Product Type</th>
+                <th className="px-2 py-4 min-w-[120px]">Nourish Type</th>
                 <th className="px-2 py-4 min-w-[100px]">Amount</th>
                 <th className="px-2 py-4 min-w-[100px]">Discount</th>
                 <th className="px-2 py-4 min-w-[110px]">Total Amount</th>

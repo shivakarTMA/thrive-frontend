@@ -20,6 +20,7 @@ import { format } from "date-fns";
 import { FaShareSquare } from "react-icons/fa";
 import Tooltip from "../../components/common/Tooltip";
 import { useSelector } from "react-redux";
+import { IoEyeOutline } from "react-icons/io5";
 
 const dateFilterOptions = [
   { value: "today", label: "Today" },
@@ -290,6 +291,11 @@ const ProductsSold = () => {
   useEffect(() => {
     if (!filtersInitialized) return;
 
+        // 🚫 Prevent API call until both dates are selected
+    if (dateFilter?.value === "custom" && (!customFrom || !customTo)) {
+      return;
+    }
+
     setPage(1);
     fetchProductSold(1);
     updateURLParams(appliedFilters);
@@ -319,7 +325,7 @@ const ProductsSold = () => {
   return (
     <>
       <div className="page--content">
-        <div className="flex items-end justify-between gap-2 mb-2">
+        <div className="flex items-end justify-between gap-2 mb-5">
           <div className="title--breadcrumbs">
             <p className="text-sm">{`Home > Reports > All Orders`}</p>
             <h1 className="text-3xl font-semibold">All Orders</h1>
@@ -526,7 +532,7 @@ const ProductsSold = () => {
                     <th className="px-2 py-4 min-w-[100px]">CGST</th>
                     <th className="px-2 py-4 min-w-[100px]">SGST</th>
                     <th className="px-2 py-4 min-w-[100px]">IGST</th>
-                    <th className="px-2 py-4 min-w-[130px]">Booking Amount</th>
+                    <th className="px-2 py-4 min-w-[130px]">Final Amount</th>
                     <th className="px-2 py-4 min-w-[120px]">Paid Amount</th>
                     <th className="px-2 py-4 min-w-[120px]">Pay Mode</th>
                     <th className="px-2 py-4 min-w-[120px]">Invoice Details</th>
@@ -563,12 +569,12 @@ const ProductsSold = () => {
                         <td className="px-2 py-4">
                           {row?.package_type === "SUBSCRIPTION"
                             ? "Membership"
-                            : formatText(row?.package_type)}
+                            : row?.package_type === "PRODUCT" ? "Nourish" : formatText(row?.package_type)}
                         </td>
                         <td className="px-2 py-4">
                           {row?.service_type === "SUBSCRIPTION"
                             ? "Membership"
-                            : formatText(row?.service_type)}
+                            : row?.service_type === "PRODUCT" ? "Nourish" : formatText(row?.service_type)}
                         </td>
                         <td className="px-2 py-4">
                           {row?.plan_type ? row?.plan_type : "--"}
@@ -621,7 +627,7 @@ const ProductsSold = () => {
                           <div className="flex items-center gap-2">
                             <Tooltip content="View Invoice">
                               <button className="text-xl">
-                                <FaEye />
+                                <IoEyeOutline />
                               </button>
                             </Tooltip>
                             <Tooltip content="Print Invoice">

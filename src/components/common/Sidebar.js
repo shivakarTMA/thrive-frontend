@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { AiOutlineHome, AiOutlineProduct } from "react-icons/ai";
 import { FiUsers } from "react-icons/fi";
-import { FaAngleDown, FaCircle, FaRegBuilding } from "react-icons/fa6";
+import { FaAngleDown, FaCircle, FaReact, FaRegBuilding } from "react-icons/fa6";
 import { Link, useLocation } from "react-router-dom";
 import { SlCalender } from "react-icons/sl";
 import {
@@ -10,12 +10,18 @@ import {
   IoSettingsOutline,
 } from "react-icons/io5";
 import { GoTools } from "react-icons/go";
-import { LuCalendarCheck, LuChartLine, LuList } from "react-icons/lu";
+import {
+  LuCalendarCheck,
+  LuChartLine,
+  LuList,
+  LuPartyPopper,
+} from "react-icons/lu";
 import { useSelector } from "react-redux";
 import { TbGymnastics } from "react-icons/tb";
 import TopLogo from "../../assets/images/DLF-Thrive-New-Logo-1-White.png";
 import { TfiAnnouncement } from "react-icons/tfi";
 import { MdFollowTheSigns } from "react-icons/md";
+import { BsCake2 } from "react-icons/bs";
 
 const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
   const location = useLocation();
@@ -171,6 +177,25 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
             </Link>
 
             <Link
+              to="/birthday-report"
+              className={`nav-link mb-2 ${
+                location.pathname === "/birthday-report" ? "active" : ""
+              }`}
+            >
+              <BsCake2 className="menu--icon" />
+              <span className="nav-text">Client Birthdays</span>
+            </Link>
+            <Link
+              to="/anniversary-report"
+              className={`nav-link mb-2 ${
+                location.pathname === "/anniversary-report" ? "active" : ""
+              }`}
+            >
+              <LuPartyPopper className="menu--icon" />
+              <span className="nav-text">Client Anniversary</span>
+            </Link>
+
+            <Link
               to="/reports/appointments/all-trial-appointments"
               className={`nav-link mb-2 ${
                 location.pathname ===
@@ -202,6 +227,18 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
               <AiOutlineProduct className="menu--icon" />
               <span className="nav-text">All Orders</span>
             </Link>
+
+             <Link
+              to="/group-class"
+              className={`nav-link mb-2 ${
+                location.pathname === "/group-class" ? "active" : ""
+              }`}
+            >
+              <FaReact className="menu--icon" />
+              <span className="nav-text">Group Class</span>
+            </Link>
+
+            
 
             <div
               className="nav-link d-flex justify-between align-items-center mb-2"
@@ -644,7 +681,7 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
                 >
                   <FaCircle className="menu--icon !text-[10px]" />
-                  <span className="nav-text">Nourish Products</span>
+                  <span className="nav-text">Nourish</span>
                 </Link>
                 <Link
                   to="/packages"
@@ -653,6 +690,7 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                   <FaCircle className="menu--icon !text-[10px]" />
                   <span className="nav-text">Packages</span>
                 </Link>
+                
                 <Link
                   to="/option-list"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
@@ -681,6 +719,24 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
 
         {accessToken && userType === "MARKETING_MANAGER" && (
           <>
+            <Link
+              to="/birthday-report"
+              className={`nav-link mb-2 ${
+                location.pathname === "/birthday-report" ? "active" : ""
+              }`}
+            >
+              <BsCake2 className="menu--icon" />
+              <span className="nav-text">Client Birthdays</span>
+            </Link>
+            <Link
+              to="/anniversary-report"
+              className={`nav-link mb-2 ${
+                location.pathname === "/anniversary-report" ? "active" : ""
+              }`}
+            >
+              <LuPartyPopper className="menu--icon" />
+              <span className="nav-text">Client Anniversary</span>
+            </Link>
             <div
               className="nav-link d-flex justify-between align-items-center mb-2"
               onClick={() => toggleMenu("marketing")}
@@ -871,6 +927,24 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
 
         {accessToken && userType === "FINANCE_MANAGER" && (
           <>
+            <Link
+              to="/birthday-report"
+              className={`nav-link mb-2 ${
+                location.pathname === "/birthday-report" ? "active" : ""
+              }`}
+            >
+              <BsCake2 className="menu--icon" />
+              <span className="nav-text">Client Birthdays</span>
+            </Link>
+            <Link
+              to="/anniversary-report"
+              className={`nav-link mb-2 ${
+                location.pathname === "/anniversary-report" ? "active" : ""
+              }`}
+            >
+              <LuPartyPopper className="menu--icon" />
+              <span className="nav-text">Client Anniversary</span>
+            </Link>
             <div
               className="nav-link d-flex justify-between align-items-center mb-2"
               onClick={() => toggleMenu("finance")}
@@ -946,7 +1020,7 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
                 >
                   <FaCircle className="menu--icon !text-[10px]" />
-                  <span className="nav-text">Nourish Products</span>
+                  <span className="nav-text">Nourish</span>
                 </Link>
                 <Link
                   to="/packages"
@@ -1151,6 +1225,24 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
               <GoTools className="menu--icon" />
               <span className="nav-text">Lost & Found</span>
             </Link>
+            <Link
+              to="/birthday-report"
+              className={`nav-link mb-2 ${
+                location.pathname === "/birthday-report" ? "active" : ""
+              }`}
+            >
+              <BsCake2 className="menu--icon" />
+              <span className="nav-text">Client Birthdays</span>
+            </Link>
+            <Link
+              to="/anniversary-report"
+              className={`nav-link mb-2 ${
+                location.pathname === "/anniversary-report" ? "active" : ""
+              }`}
+            >
+              <LuPartyPopper className="menu--icon" />
+              <span className="nav-text">Client Anniversary</span>
+            </Link>
 
             <div
               className="nav-link d-flex justify-between align-items-center mb-2"
@@ -1260,6 +1352,24 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
             >
               <AiOutlineProduct className="menu--icon" />
               <span className="nav-text">All Orders</span>
+            </Link>
+            <Link
+              to="/birthday-report"
+              className={`nav-link mb-2 ${
+                location.pathname === "/birthday-report" ? "active" : ""
+              }`}
+            >
+              <BsCake2 className="menu--icon" />
+              <span className="nav-text">Client Birthdays</span>
+            </Link>
+            <Link
+              to="/anniversary-report"
+              className={`nav-link mb-2 ${
+                location.pathname === "/anniversary-report" ? "active" : ""
+              }`}
+            >
+              <LuPartyPopper className="menu--icon" />
+              <span className="nav-text">Client Anniversary</span>
             </Link>
 
             <div
@@ -1390,6 +1500,25 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
             >
               <GoTools className="menu--icon" />
               <span className="nav-text">Lost & Found</span>
+            </Link>
+
+            <Link
+              to="/birthday-report"
+              className={`nav-link mb-2 ${
+                location.pathname === "/birthday-report" ? "active" : ""
+              }`}
+            >
+              <BsCake2 className="menu--icon" />
+              <span className="nav-text">Client Birthdays</span>
+            </Link>
+            <Link
+              to="/anniversary-report"
+              className={`nav-link mb-2 ${
+                location.pathname === "/anniversary-report" ? "active" : ""
+              }`}
+            >
+              <LuPartyPopper className="menu--icon" />
+              <span className="nav-text">Client Anniversary</span>
             </Link>
 
             <div
@@ -1743,7 +1872,7 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
                 >
                   <FaCircle className="menu--icon !text-[10px]" />
-                  <span className="nav-text">Nourish Products</span>
+                  <span className="nav-text">Nourish</span>
                 </Link>
                 <Link
                   to="/packages"

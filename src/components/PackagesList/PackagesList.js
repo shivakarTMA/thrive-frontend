@@ -437,16 +437,10 @@ const PackagesList = () => {
   useEffect(() => {
     if (sessionLevelValue === "GROUP_CLASS") {
       formik.setFieldValue("caption", "");
-      if (!formik.values.session_level && sessionLevel.length > 0) {
-        formik.setFieldValue("session_level", sessionLevel[0].value);
-      }
-    } else {
-      // Only clear if the current value is the previously auto-set value
-      if (formik.values.session_level === sessionLevel[0]?.value) {
-        formik.setFieldValue("session_level", "");
-      }
     }
-  }, [sessionLevelValue, sessionLevel]);
+  }, [sessionLevelValue]);
+
+  console.log(sessionLevelValue,'sessionLevelValue')
 
   console.log(formik.values?.session_level, "didijidj");
 
@@ -770,7 +764,7 @@ const PackagesList = () => {
                       <div className="w-fit">
                         <Tooltip
                           id={`tooltip-edit-${item.id}`}
-                          content="Edit Club"
+                          content="Edit Package"
                           place="left"
                         >
                           <div

@@ -17,7 +17,7 @@ const BillTypeOptions = [
 const packageTypeOptions = [
   { value: "SUBSCRIPTION", label: "Membership" },
   { value: "PACKAGE", label: "Package" },
-  { value: "PRODUCT", label: "Product" },
+  { value: "PRODUCT", label: "Nourish" },
 ];
 
 const payModeTypeOptions = [
