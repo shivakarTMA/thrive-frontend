@@ -5,10 +5,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import { IoClose, IoTriangle } from "react-icons/io5";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchOptionList } from "../../Redux/Reducers/optionListSlice";
-import {
-  customStyles,
-  formatAutoDate,
-} from "../../Helper/helper";
+import { customStyles, formatAutoDate } from "../../Helper/helper";
 import { HiOutlineAdjustmentsHorizontal } from "react-icons/hi2";
 import { format } from "date-fns";
 
@@ -23,49 +20,17 @@ const StatusOptions = [
 ];
 
 export default function LostFoundPanel({
-  clubOptions,
-  selectedClub,
-  setSelectedClub,
-  itemStatus,
-  setItemStatus,
-  itemCategory,
-  setItemCategory,
-  itemLocation,
-  setItemLocation,
-  itemFloor,
-  setItemFloor,
-  itemFoundFrom,
-  setItemFoundFrom,
-  itemFoundTo,
-  setItemFoundTo,
-  itemReturnedFrom,
-  setItemReturnedFrom,
-  itemReturnedTo,
-  setItemReturnedTo,
-  onApplyFilters,
-  onRemoveFilter,
+  filterCategory,
+  filterLocation,
+  filterStatus,
+
+  formik,
+  setFilterValue,
+  appliedFilters, // ✅ Receive from parent
+  setAppliedFilters, // ✅ Receive from parent
 }) {
   const [showFilters, setShowFilters] = useState(false);
- 
   const panelRef = useRef(null);
-
-  const [appliedFilters, setAppliedFilters] = useState({
-    club_id: selectedClub,
-    status: itemStatus,
-    category: itemCategory,
-    found_at_location: itemLocation,
-    floor: itemFloor,
-    found_from: itemFoundFrom,
-    found_to: itemFoundTo,
-    returned_from: itemReturnedFrom,
-    returned_to: itemReturnedTo,
-  });
-
-  
-
-  const handleClubChange = (selectedOption) => {
-    setSelectedClub(selectedOption); // selectedOption will have { label, value }
-  };
 
   // Redux state
   const dispatch = useDispatch();
@@ -99,76 +64,55 @@ export default function LostFoundPanel({
     };
   }, [showFilters]);
 
-  const gymFloor = [
-    { value: "Ground Floor", label: "Ground Floor" },
-    { value: "First Floor", label: "First Floor" },
-    { value: "Second Floor", label: "Second Floor" },
-  ];
+  // ✅ Apply button - update parent's appliedFilters
+  const handleApply = () => {
+    setAppliedFilters({
+      category: formik.values.filterCategory,
+      found_at_location: formik.values.filterLocation,
+      status: formik.values.filterStatus,
+    });
 
-  const handleSubmitFilters = () => {
-    const applied = {
-      club_id: selectedClub?.value,
-      status: itemStatus?.value,
-      category: itemCategory?.value,
-      found_at_location: itemLocation?.value,
-      floor: itemFloor?.value,
-      found_from: itemFoundFrom ? format(itemFoundFrom, "yyyy-MM-dd") : null,
-      found_to: itemFoundTo ? format(itemFoundTo, "yyyy-MM-dd") : null,
-      returned_from: itemReturnedFrom
-        ? format(itemReturnedFrom, "yyyy-MM-dd")
-        : null,
-      returned_to: itemReturnedTo ? format(itemReturnedTo, "yyyy-MM-dd") : null,
-    };
-
-    setAppliedFilters(applied);
     setShowFilters(false);
-
-    if (onApplyFilters) {
-      onApplyFilters(applied);
-    }
   };
 
-  console.log("appliedFilters", appliedFilters);
-
-  const removeFilter = (filterKey) => {
-    // ✅ Fixed: Correct setter map without .value
-    const setterMap = {
-      club_id: setSelectedClub,
-      status: setItemStatus,
-      category: setItemCategory,
-      found_at_location: setItemLocation,
-      floor: setItemFloor,
-      found_from: setItemFoundFrom,
-      found_to: setItemFoundTo,
-      returned_from: setItemReturnedFrom,
-      returned_to: setItemReturnedTo,
+  // ✅ Remove filter chip - update both parent state and formik
+  const handleRemoveFilter = (key) => {
+    const keyMap = {
+      category: "filterCategory",
+      found_at_location: "filterLocation",
+      status: "filterStatus",
     };
 
-    // ✅ Clear value in child state
-    setterMap[filterKey]?.(null);
+    // Update parent's applied filters
+    setAppliedFilters((prev) => ({ ...prev, [key]: null }));
 
-    // ✅ Update applied filters state
-    const updatedFilters = { ...appliedFilters, [filterKey]: null };
-    setAppliedFilters(updatedFilters);
-
-    // ✅ Tell parent to refetch without this filter
-    if (onRemoveFilter) {
-      const remaining = Object.fromEntries(
-        Object.entries(updatedFilters).filter(
-          ([_, v]) => v !== null && v !== undefined
-        )
-      );
-      onRemoveFilter(remaining);
+    // Update formik
+    if (keyMap[key]) {
+      setFilterValue(keyMap[key], null);
     }
   };
 
-  // Reset dates whenever the itemStatus changes
-  useEffect(() => {
-    setItemFoundFrom(null);
-    setItemFoundTo(null);
-    setItemReturnedFrom(null);
-    setItemReturnedTo(null);
-  }, [itemStatus]);
+  // ✅ Get display labels for filter chips
+  const getFilterLabel = (key, value) => {
+    if (!value) return "";
+
+    if (key === "category") {
+      const category = lostCategory.find((opt) => opt.value === value);
+      return category ? category.label : value;
+    }
+
+    if (key === "found_at_location") {
+      const location = foundLocation.find((opt) => opt.value === value);
+      return location ? location.label : value;
+    }
+
+    if (key === "status") {
+      const status = StatusOptions.find((opt) => opt.value === value);
+      return status ? status.label : value;
+    }
+
+    return String(value);
+  };
 
   return (
     <div className="relative max-w-fit w-full" ref={panelRef}>
@@ -189,29 +133,17 @@ export default function LostFoundPanel({
           </div>
           <div className="p-4">
             <div className="grid grid-cols-2 gap-4 min-w-[500px]">
-              {/* Club */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Club
-                </label>
-                <Select
-                  value={selectedClub}
-                  onChange={handleClubChange} // When user selects an option
-                  getOptionLabel={(e) => e.label} // Show the label (club name)
-                  getOptionValue={(e) => e.value} // Use value (club ID) for filtering
-                  options={clubOptions}
-                  placeholder="Select Club"
-                  styles={customStyles}
-                />
-              </div>
               {/* Status */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Status
-                </label>
+                <label className="block mb-1 text-sm font-medium">Status</label>
                 <Select
-                  value={itemStatus}
-                  onChange={setItemStatus}
+                  value={
+                    StatusOptions.find((opt) => opt.value === filterStatus) ||
+                    null
+                  }
+                  onChange={(option) =>
+                    setFilterValue("filterStatus", option ? option.value : null)
+                  }
                   options={StatusOptions}
                   placeholder="Select Status"
                   styles={customStyles}
@@ -223,8 +155,16 @@ export default function LostFoundPanel({
                   Category
                 </label>
                 <Select
-                  value={itemCategory}
-                  onChange={setItemCategory}
+                  value={
+                    lostCategory.find((opt) => opt.value === filterCategory) ||
+                    null
+                  }
+                  onChange={(option) =>
+                    setFilterValue(
+                      "filterCategory",
+                      option ? option.value : null,
+                    )
+                  }
                   options={lostCategory}
                   placeholder="Select Category"
                   styles={customStyles}
@@ -236,8 +176,16 @@ export default function LostFoundPanel({
                   Found Location
                 </label>
                 <Select
-                  value={itemLocation}
-                  onChange={setItemLocation}
+                  value={
+                    foundLocation.find((opt) => opt.value === filterLocation) ||
+                    null
+                  }
+                  onChange={(option) =>
+                    setFilterValue(
+                      "filterLocation",
+                      option ? option.value : null,
+                    )
+                  }
                   options={foundLocation}
                   placeholder="Select Location"
                   styles={customStyles}
@@ -354,7 +302,7 @@ export default function LostFoundPanel({
             {/* Apply Button */}
             <div className="flex justify-between pt-3">
               <button
-                onClick={handleSubmitFilters}
+                onClick={handleApply}
                 className="px-4 py-2 bg-black text-white rounded flex items-center gap-2 cursor-pointer ml-auto"
               >
                 Apply
@@ -364,49 +312,22 @@ export default function LostFoundPanel({
         </div>
       )}
 
-      {/* Applied Filters Display */}
-      {Object.values(appliedFilters).some((value) => value) && (
-        <div className="flex gap-2 mt-4 flex-wrap">
+      {/* ✅ Applied Filters Chips - using parent's appliedFilters */}
+      {Object.values(appliedFilters).some((v) => v) && (
+        <div className="flex flex-wrap gap-2 mt-4">
           {Object.entries(appliedFilters).map(([key, value]) => {
-            if (!value) return null;
+            if (!value || key === "club_id") return null;
 
-            // Format display label
-            let displayLabel = value;
-
-            if (key === "club_id") {
-              displayLabel = selectedClub?.label || value;
-            }
-
-            if (
-              key === "status" ||
-              key === "category" ||
-              key === "found_at_location" ||
-              key === "floor"
-            ) {
-              const stateMap = {
-                status: itemStatus,
-                category: itemCategory,
-                found_at_location: itemLocation,
-                floor: itemFloor,
-              };
-              displayLabel = stateMap[key]?.label || value;
-            } else if (key.includes("from") || key.includes("to")) {
-              // Display dates in readable format
-              // displayLabel = value;
-              if (isValidDate(value)) {
-                const parsedDate = new Date(value);
-                displayLabel = formatAutoDate(parsedDate);
-              }
-            }
+            const displayValue = getFilterLabel(key, value);
 
             return (
               <div
                 key={key}
                 className="flex items-center justify-between gap-1 border rounded-full bg-[#EEEEEE] min-h-[30px] px-3 text-sm"
               >
-                <span>{displayLabel}</span>
+                <span>{displayValue}</span>
                 <IoClose
-                  onClick={() => removeFilter(key)}
+                  onClick={() => handleRemoveFilter(key)}
                   className="cursor-pointer text-xl"
                 />
               </div>

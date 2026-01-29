@@ -23,6 +23,9 @@ import { authAxios } from "../../config/config";
 import { toast } from "react-toastify";
 import Pagination from "../common/Pagination";
 import Tooltip from "../common/Tooltip";
+import { useSelector } from "react-redux";
+import { useFormik } from "formik";
+import { useLocation } from "react-router-dom";
 
 const dateFilterOptions = [
   { value: "today", label: "Today" },
@@ -32,12 +35,16 @@ const dateFilterOptions = [
 ];
 
 const AllLostFound = () => {
+  const location = useLocation();
   const [data, setData] = useState([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [returnedModalOpen, setReturnedModalOpen] = useState(false);
   const [markReturnedData, setMarkReturnedData] = useState([]);
   const [clubList, setClubList] = useState([]);
+  const [clubFilter, setClubFilter] = useState(null);
   const [editingOption, setEditingOption] = useState(null);
+  const { user } = useSelector((state) => state.auth);
+  const userRole = user.role;
 
   const [dateFilter, setDateFilter] = useState(dateFilterOptions[1]);
   const [customFrom, setCustomFrom] = useState(null);
@@ -48,15 +55,26 @@ const AllLostFound = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
 
-  const [selectedClub, setSelectedClub] = useState(null);
-  const [itemStatus, setItemStatus] = useState(null);
-  const [itemCategory, setItemCategory] = useState(null);
-  const [itemLocation, setItemLocation] = useState(null);
-  const [itemFloor, setItemFloor] = useState(null);
-  const [itemFoundFrom, setItemFoundFrom] = useState(null);
-  const [itemFoundTo, setItemFoundTo] = useState(null);
-  const [itemReturnedFrom, setItemReturnedFrom] = useState(null);
-  const [itemReturnedTo, setItemReturnedTo] = useState(null);
+  const [filtersInitialized, setFiltersInitialized] = useState(false);
+
+  // ✅ Single source of truth for applied filters
+  const [appliedFilters, setAppliedFilters] = useState({
+    category: null,
+    found_at_location: null,
+    status: null,
+  });
+
+  const formik = useFormik({
+    enableReinitialize: true,
+    initialValues: {
+      filterCategory: null,
+      filterLocation: null,
+      filterStatus: null,
+    },
+    onSubmit: (values) => {
+      console.log(values);
+    },
+  });
 
   // Function to fetch club list
   const fetchClub = async () => {
@@ -69,41 +87,47 @@ const AllLostFound = () => {
       toast.error("Failed to fetch clubs");
     }
   };
+  // Function to fetch role list
 
   useEffect(() => {
     fetchClub();
   }, []);
 
-  // Club dropdown options
-  const clubOptions =
-    clubList?.map((item) => ({
-      label: item.name,
-      value: item.id,
-    })) || [];
+  const clubOptions = clubList.map((item) => ({
+    label: item.name,
+    value: item.id,
+  }));
 
-  // ✅ Build complete filter params including date filter
-  const buildFinalFilters = (filters = {}) => {
-    const finalFilters = { ...filters };
-
-    // Add date filter logic (from top dropdown)
-    if (dateFilter?.value && dateFilter.value !== "custom") {
-      finalFilters.dateFilter = dateFilter.value;
-    } else if (dateFilter?.value === "custom" && customFrom && customTo) {
-      finalFilters.startDate = customFrom.toISOString().split("T")[0];
-      finalFilters.endDate = customTo.toISOString().split("T")[0];
-    }
-
-    return finalFilters;
-  };
-
-  const fetchLostFoundList = async (currentPage = page, filters = {}) => {
+  const fetchLostFoundList = async (currentPage = page) => {
     try {
       // ✅ Always include date filter in params
       const params = {
         page: currentPage,
         limit: rowsPerPage,
-        ...buildFinalFilters(filters),
       };
+
+      // Date Filter
+      if (dateFilter?.value && dateFilter.value !== "custom") {
+        params.dateFilter = dateFilter.value;
+      }
+
+      if (dateFilter?.value === "custom" && customFrom && customTo) {
+        const formatDate = (d) => format(d, "yyyy-MM-dd");
+        params.startDate = formatDate(customFrom);
+        params.endDate = formatDate(customTo);
+      }
+
+      // Club filter
+      if (clubFilter?.value) {
+        params.club_id = clubFilter.value;
+      }
+
+      // ✅ Applied Filters
+
+      if (appliedFilters.category) params.category = appliedFilters.category;
+      if (appliedFilters.found_at_location)
+        params.found_at_location = appliedFilters.found_at_location;
+      if (appliedFilters.status) params.status = appliedFilters.status;
 
       const res = await authAxios().get("/lost/found/list", { params });
 
@@ -120,70 +144,96 @@ const AllLostFound = () => {
     }
   };
 
-  // ✅ Helper function to get current filters
-  const getCurrentFilters = () => {
-    const currentFilters = {
-      club_id: selectedClub?.value,
-      status: itemStatus?.value,
-      category: itemCategory?.value,
-      found_at_location: itemLocation?.value,
-      floor: itemFloor?.value,
-      found_from: itemFoundFrom ? format(itemFoundFrom, "yyyy-MM-dd") : null,
-      found_to: itemFoundTo ? format(itemFoundTo, "yyyy-MM-dd") : null,
-      returned_from: itemReturnedFrom
-        ? format(itemReturnedFrom, "yyyy-MM-dd")
-        : null,
-      returned_to: itemReturnedTo ? format(itemReturnedTo, "yyyy-MM-dd") : null,
+  // ---------------------------
+  // INITIALIZE FROM URL
+  // ---------------------------
+
+  useEffect(() => {
+    // Wait for clubList to be loaded
+    if (clubList.length === 0) return;
+
+    // Only run initialization once
+    if (filtersInitialized) return;
+
+    const params = new URLSearchParams(location.search);
+
+    // Date filter
+    const dateFilterValue = params.get("dateFilter");
+    if (dateFilterValue) {
+      const matchedDate = dateFilterOptions.find(
+        (opt) => opt.value === dateFilterValue,
+      );
+      if (matchedDate) {
+        setDateFilter(matchedDate);
+      }
+    }
+
+    // Custom date filter
+    const startDate = params.get("startDate");
+    const endDate = params.get("endDate");
+    if (startDate && endDate) {
+      setDateFilter(dateFilterOptions.find((d) => d.value === "custom"));
+      setCustomFrom(new Date(startDate));
+      setCustomTo(new Date(endDate));
+    }
+
+    // Club filter - only set from URL if present, otherwise default to first club
+    const clubId = params.get("club_id");
+    if (clubId) {
+      const club = clubList.find((c) => c.id === Number(clubId));
+      if (club) {
+        setClubFilter({ label: club.name, value: club.id });
+      }
+    } else {
+      // Set default club only on initial load
+      setClubFilter({
+        label: clubList[0].name,
+        value: clubList[0].id,
+      });
+    }
+
+    // Applied filters from URL
+    const urlFilters = {
+      // bill_type: params.get("bill_type") || null,
+      // service_type: params.get("service_type") || null,
+      // package_type: params.get("package_type") || null,
     };
 
-    // Filter out null/undefined values
-    return Object.fromEntries(
-      Object.entries(currentFilters).filter(
-        ([_, v]) => v !== null && v !== undefined,
-      ),
-    );
-  };
+    setAppliedFilters(urlFilters);
 
-  // ✅ Fetch data when date filter or page changes
+    // Sync with formik
+    formik.setValues({
+      filterCategory: urlFilters.category,
+      filterLocation: urlFilters.found_at_location,
+      filterStatus: urlFilters.status,
+    });
+
+    setFiltersInitialized(true);
+  }, [clubList]);
+
+  // ---------------------------
+  // FETCH WHEN FILTERS CHANGE
+  // ---------------------------
   useEffect(() => {
-    // 🚫 Do not fetch if custom is selected but dates are incomplete
+    if (!filtersInitialized) return;
+
+    // 🚫 Prevent API call until both dates are selected
     if (dateFilter?.value === "custom" && (!customFrom || !customTo)) {
       return;
     }
 
-    const cleanFilters = getCurrentFilters();
-    fetchLostFoundList(page, cleanFilters);
-  }, [dateFilter, customFrom, customTo, page]);
-
-  // ✅ Function to refresh data with current filters
-  const refreshData = () => {
-    const cleanFilters = getCurrentFilters();
-    fetchLostFoundList(page, cleanFilters);
-  };
-
-  // ✅ Apply filters from LostFoundPanel
-  const handleApplyFilters = (filters) => {
-    setPage(1); // Reset to first page
-    fetchLostFoundList(1, filters);
-  };
-
-  // ✅ Remove filter from LostFoundPanel
-  const handleRemoveFilter = (remainingFilters) => {
-    // Reset local state for removed filters
-    if (!remainingFilters.club_id) setSelectedClub(null);
-    if (!remainingFilters.status) setItemStatus(null);
-    if (!remainingFilters.category) setItemCategory(null);
-    if (!remainingFilters.found_at_location) setItemLocation(null);
-    if (!remainingFilters.floor) setItemFloor(null);
-    if (!remainingFilters.found_from) setItemFoundFrom(null);
-    if (!remainingFilters.found_to) setItemFoundTo(null);
-    if (!remainingFilters.returned_from) setItemReturnedFrom(null);
-    if (!remainingFilters.returned_to) setItemReturnedTo(null);
-
-    // ✅ Reset to first page and fetch with remaining filters
     setPage(1);
-    fetchLostFoundList(1, remainingFilters);
-  };
+    fetchLostFoundList(1);
+  }, [
+    filtersInitialized,
+    dateFilter?.value,
+    customFrom,
+    customTo,
+    clubFilter?.value,
+    appliedFilters.category,
+    appliedFilters.found_at_location,
+    appliedFilters.status,
+  ]);
 
   return (
     <div className="page--content">
@@ -248,7 +298,7 @@ const AllLostFound = () => {
                 }}
                 placeholderText="To Date"
                 className="custom--input w-full input--icon"
-                minDate={subYears(new Date(), 20)}
+                minDate={customFrom || subYears(new Date(), 20)}
                 maxDate={addYears(new Date(), 0)}
                 showMonthDropdown
                 showYearDropdown
@@ -258,33 +308,32 @@ const AllLostFound = () => {
             </div>
           </>
         )}
+
+        <div className="w-fit min-w-[180px]">
+          <Select
+            placeholder="Filter by club"
+            options={clubOptions}
+            value={clubFilter}
+            onChange={setClubFilter}
+            isClearable={userRole === "ADMIN" ? true : false}
+            styles={customStyles}
+          />
+        </div>
       </div>
 
       <div className="w-full p-3 border bg-white shodow--box rounded-[10px]">
         <div className="flex items-start gap-3 justify-between w-full mb-3 border-b border-b-[#D4D4D4] pb-3">
           <div>
             <LostFoundPanel
-              selectedClub={selectedClub}
-              setSelectedClub={setSelectedClub}
-              itemStatus={itemStatus}
-              setItemStatus={setItemStatus}
-              itemCategory={itemCategory}
-              setItemCategory={setItemCategory}
-              itemLocation={itemLocation}
-              setItemLocation={setItemLocation}
-              itemFloor={itemFloor}
-              setItemFloor={setItemFloor}
-              itemFoundFrom={itemFoundFrom}
-              setItemFoundFrom={setItemFoundFrom}
-              itemFoundTo={itemFoundTo}
-              setItemFoundTo={setItemFoundTo}
-              itemReturnedFrom={itemReturnedFrom}
-              setItemReturnedFrom={setItemReturnedFrom}
-              itemReturnedTo={itemReturnedTo}
-              setItemReturnedTo={setItemReturnedTo}
-              clubOptions={clubOptions}
-              onApplyFilters={handleApplyFilters}
-              onRemoveFilter={handleRemoveFilter}
+              filterCategory={formik.values.filterCategory}
+              filterLocation={formik.values.filterLocation}
+              filterStatus={formik.values.filterStatus}
+              formik={formik}
+              setFilterValue={(field, value) =>
+                formik.setFieldValue(field, value)
+              }
+              appliedFilters={appliedFilters}
+              setAppliedFilters={setAppliedFilters}
             />
           </div>
           <div>
@@ -423,7 +472,6 @@ const AllLostFound = () => {
       {/* Modals */}
       {modalOpen && (
         <AddNewItemModal
-          onSuccess={refreshData}
           onClose={() => setModalOpen(false)}
           clubOptions={clubOptions}
           editingOption={editingOption}
@@ -435,7 +483,6 @@ const AllLostFound = () => {
         <MarkReturnedModal
           lostID={markReturnedData}
           onClose={() => setReturnedModalOpen(false)}
-          onSuccess={refreshData}
           clubOptions={clubOptions}
         />
       )}

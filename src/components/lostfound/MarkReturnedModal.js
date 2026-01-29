@@ -16,7 +16,7 @@ import { useSelector } from "react-redux";
 import Select from "react-select";
 import { customStyles } from "../../Helper/helper";
 
-const MarkReturnedModal = ({ lostID, onClose, onSuccess, clubOptions }) => {
+const MarkReturnedModal = ({ lostID, onClose, clubOptions }) => {
   const { user } = useSelector((state) => state.auth);
   const leadBoxRef = useRef(null);
   const [mobileError, setMobileError] = useState("");
@@ -85,10 +85,7 @@ const MarkReturnedModal = ({ lostID, onClose, onSuccess, clubOptions }) => {
         toast.success("Item marked as returned successfully");
         onClose();
 
-        // Trigger parent to refresh data
-        if (onSuccess) {
-          onSuccess();
-        }
+  
       } catch (error) {
         toast.error(
           error.response?.data?.message ||

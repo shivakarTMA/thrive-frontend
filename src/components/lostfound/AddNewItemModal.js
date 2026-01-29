@@ -14,7 +14,6 @@ import { authAxios } from "../../config/config";
 
 const AddNewItemModal = ({
   onClose,
-  onSuccess,
   clubOptions,
   editingOption,
   fetchLostFoundList
@@ -48,10 +47,6 @@ const AddNewItemModal = ({
 
         // Reset form and close modal
         resetForm();
-        // Trigger parent to refresh data BEFORE closing
-        if (onSuccess) {
-          onSuccess();
-        }
         // Close modal after refresh
         onClose();
         fetchLostFoundList();
