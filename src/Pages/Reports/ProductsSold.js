@@ -21,6 +21,9 @@ import { FaShareSquare } from "react-icons/fa";
 import Tooltip from "../../components/common/Tooltip";
 import { useSelector } from "react-redux";
 import { IoEyeOutline } from "react-icons/io5";
+import { MdFileDownload } from "react-icons/md";
+import { IoIosShareAlt } from "react-icons/io";
+import IsLoadingHOC from "../../components/common/IsLoadingHOC";
 
 const dateFilterOptions = [
   { value: "today", label: "Today" },
@@ -29,7 +32,8 @@ const dateFilterOptions = [
   { value: "custom", label: "Custom Date" },
 ];
 
-const ProductsSold = () => {
+const ProductsSold = (props) => {
+  const { setLoading } = props;
   const location = useLocation();
   const navigate = useNavigate();
   const [productSoldData, setProductSoldData] = useState([]);
@@ -48,15 +52,6 @@ const ProductsSold = () => {
   const [rowsPerPage] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
-
-  // const [stats, setStats] = useState({
-  //   memberships: 0,
-  //   products: 0,
-  //   group_class_count: 0,
-  //   recovery: 0,
-  //   personal_training: 0,
-  //   pilates: 0,
-  // });
 
   const [stats, setStats] = useState({});
 
@@ -193,7 +188,6 @@ const ProductsSold = () => {
       const responseData = res.data;
       const data = responseData?.data || [];
 
-
       setProductSoldData(data);
       setPage(responseData?.currentPage || 1);
       setTotalPages(responseData?.totalPage || 1);
@@ -232,7 +226,7 @@ const ProductsSold = () => {
     const dateFilterValue = params.get("dateFilter");
     if (dateFilterValue) {
       const matchedDate = dateFilterOptions.find(
-        (opt) => opt.value === dateFilterValue
+        (opt) => opt.value === dateFilterValue,
       );
       if (matchedDate) {
         setDateFilter(matchedDate);
@@ -291,7 +285,7 @@ const ProductsSold = () => {
   useEffect(() => {
     if (!filtersInitialized) return;
 
-        // 🚫 Prevent API call until both dates are selected
+    // 🚫 Prevent API call until both dates are selected
     if (dateFilter?.value === "custom" && (!customFrom || !customTo)) {
       return;
     }
@@ -320,6 +314,42 @@ const ProductsSold = () => {
   const confirmSend = (mode) => {
     alert(`Invoice sent to ${sendModalOrder.name} via ${mode}`);
     setSendModalOrder(null);
+  };
+
+  const downloadInvoice = async (row) => {
+    setLoading(true)
+    try {
+      const payload = {
+        order_id: row.order_id, // ⚠️ confirm correct key (id / order_id)
+        order_type: row.package_type, // SUBSCRIPTION | PACKAGE | PRODUCT
+      };
+
+      const res = await authAxios().post(
+        "/invoice/download",
+        payload,
+        { responseType: "blob" }, // 👈 IMPORTANT
+      );
+
+      // Create blob URL
+      const blob = new Blob([res.data], { type: "application/pdf" });
+      const url = window.URL.createObjectURL(blob);
+
+      // Auto-download
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `invoice_${payload.order_id}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+
+      // Cleanup
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      setLoading(false)
+    } catch (err) {
+      console.error("Invoice download failed", err);
+      toast.error("Failed to download invoice");
+      setLoading(false)
+    }
   };
 
   return (
@@ -569,12 +599,16 @@ const ProductsSold = () => {
                         <td className="px-2 py-4">
                           {row?.package_type === "SUBSCRIPTION"
                             ? "Membership"
-                            : row?.package_type === "PRODUCT" ? "Nourish" : formatText(row?.package_type)}
+                            : row?.package_type === "PRODUCT"
+                              ? "Nourish"
+                              : formatText(row?.package_type)}
                         </td>
                         <td className="px-2 py-4">
                           {row?.service_type === "SUBSCRIPTION"
                             ? "Membership"
-                            : row?.service_type === "PRODUCT" ? "Nourish" : formatText(row?.service_type)}
+                            : row?.service_type === "PRODUCT"
+                              ? "Nourish"
+                              : formatText(row?.service_type)}
                         </td>
                         <td className="px-2 py-4">
                           {row?.plan_type ? row?.plan_type : "--"}
@@ -624,17 +658,48 @@ const ProductsSold = () => {
                             : "--"}
                         </td>
                         <td className="px-2 py-4">
-                          <div className="flex items-center gap-2">
+                          <div className="flex">
+                          <Tooltip
+                            id={`tooltip-edit-${row.id}`}
+                            content="Download Invoice"
+                            place="left"
+                          >
+                            <div
+                              className="bg-[#F1F1F1] border border-[#D4D4D4] rounded-l-[5px] w-[32px] h-[32px] flex items-center justify-center cursor-pointer"
+                              onClick={() => downloadInvoice(row)}
+                            >
+                              <MdFileDownload />
+                            </div>
+                          </Tooltip>
+                          <Tooltip
+                            id={`tooltip-return-${row.id}`}
+                            content="Send Invoice"
+                            place="left"
+                          >
+                            <div
+                              className={`bg-[#F1F1F1] border border-[#D4D4D4] rounded-r-[5px] w-[32px] h-[32px] flex items-center justify-center cursor-pointer `}
+                              onClick={() => handleSendInvoice(row)}
+                            >
+                              <IoIosShareAlt />
+                            </div>
+                          </Tooltip>
+                        </div>
+
+                          {/* <div className="flex items-center gap-2">
                             <Tooltip content="View Invoice">
                               <button className="text-xl">
                                 <IoEyeOutline />
                               </button>
                             </Tooltip>
                             <Tooltip content="Print Invoice">
-                              <button className="text-xl">
-                                <FaPrint />
+                              <button
+                                className="text-xl"
+                                onClick={() => downloadInvoice(row)}
+                              >
+                                <MdFileDownload />
                               </button>
                             </Tooltip>
+
                             <Tooltip content="Send Invoice">
                               <button
                                 onClick={() => handleSendInvoice(row)}
@@ -643,7 +708,7 @@ const ProductsSold = () => {
                                 <FaShareSquare />
                               </button>
                             </Tooltip>
-                          </div>
+                          </div> */}
                         </td>
                       </tr>
                     ))
@@ -716,4 +781,4 @@ const ProductsSold = () => {
   );
 };
 
-export default ProductsSold;
+export default IsLoadingHOC(ProductsSold);
