@@ -76,7 +76,7 @@ import RefundReport from "../components/Reports/FinanceReports/RefundReport";
 import CollectionReport from "../components/Reports/FinanceReports/CollectionReport";
 import MemberCheckInsReport from "../components/Reports/OperationsReports/MemberCheckInsReport";
 import MembershipExpiryReport from "../components/Reports/OperationsReports/MembershipExpiryReport";
-import PtExpiryReport from "../components/Reports/OperationsReports/PtExpiryReport";
+import ServiceExpiryReport from "../components/Reports/OperationsReports/ServiceExpiryReport";
 import IrregularMembersReport from "../components/Reports/OperationsReports/IrregularMembersReport";
 import ActiveClientSummaryReport from "../components/Reports/OperationsReports/ActiveClientSummaryReport";
 import InactiveClientSummaryReport from "../components/Reports/OperationsReports/InactiveClientSummaryReport";
@@ -761,10 +761,10 @@ export default function Routing() {
           }
         />
         <Route
-          path="/reports/operations-reports/pt-expiry-report"
+          path="/reports/operations-reports/service-expiry-report"
           element={
             <PrivateRoute>
-              <PtExpiryReport />
+              <ServiceExpiryReport />
             </PrivateRoute>
           }
         />

@@ -69,7 +69,7 @@ import RefundReport from "../components/Reports/FinanceReports/RefundReport";
 import CollectionReport from "../components/Reports/FinanceReports/CollectionReport";
 import MemberCheckInsReport from "../components/Reports/OperationsReports/MemberCheckInsReport";
 import MembershipExpiryReport from "../components/Reports/OperationsReports/MembershipExpiryReport";
-import PtExpiryReport from "../components/Reports/OperationsReports/PtExpiryReport";
+import ServiceExpiryReport from "../components/Reports/OperationsReports/ServiceExpiryReport";
 import IrregularMembersReport from "../components/Reports/OperationsReports/IrregularMembersReport";
 import ActiveClientSummaryReport from "../components/Reports/OperationsReports/ActiveClientSummaryReport";
 import InactiveClientSummaryReport from "../components/Reports/OperationsReports/InactiveClientSummaryReport";
@@ -692,10 +692,10 @@ export default function Routing() {
         />
 
         {/* Dashboard Routes */}
-        {/* <Route path="/club-manager" element={<RoleProtectedRoute path="/club-manager"><ClubManagerDashboard /></RoleProtectedRoute>} />
+        <Route path="/club-manager" element={<RoleProtectedRoute path="/club-manager"><ClubManagerDashboard /></RoleProtectedRoute>} />
         <Route path="/marketing-manager" element={<RoleProtectedRoute path="/marketing-manager"><MarketingManagerDashboard /></RoleProtectedRoute>} />
         <Route path="/foh-dashboard" element={<RoleProtectedRoute path="/foh-dashboard"><FohDashboard /></RoleProtectedRoute>} />
-        <Route path="/trainer-dashboard" element={<RoleProtectedRoute path="/trainer-dashboard"><TrainerDashboard /></RoleProtectedRoute>} /> */}
+        <Route path="/trainer-dashboard" element={<RoleProtectedRoute path="/trainer-dashboard"><TrainerDashboard /></RoleProtectedRoute>} />
 
         {/* Sales Reports */}
         <Route
@@ -863,10 +863,10 @@ export default function Routing() {
           }
         />
         <Route
-          path="/reports/operations-reports/pt-expiry-report"
+          path="/reports/operations-reports/service-expiry-report"
           element={
-            <RoleProtectedRoute path="/reports/operations-reports/pt-expiry-report">
-              <PtExpiryReport />
+            <RoleProtectedRoute path="/reports/operations-reports/service-expiry-report">
+              <ServiceExpiryReport />
             </RoleProtectedRoute>
           }
         />

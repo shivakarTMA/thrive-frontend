@@ -746,7 +746,20 @@ const MemberList = () => {
                         {member?.trainer ? member?.trainer : "--"}
                       </td>
                       <td className="px-2 py-4">
-                        {member?.app_downloaded ? member?.app_downloaded : "--"}
+                  
+                        <span
+                          className={`
+                            flex items-center justify-between gap-1 rounded-full min-h-[30px] px-3 text-sm w-fit
+                          ${
+                            member?.app_downloaded !== true
+                              ? "bg-red-100 text-red-600"
+                              : "bg-[#E8FFE6] text-[#138808]"
+                          }
+                          `}
+                        >
+                          {member?.app_downloaded === true ? "Yes" : "No"}
+                        </span>
+
                       </td>
                       <td className="px-2 py-4">
                         <div className="flex flex-col gap-1">

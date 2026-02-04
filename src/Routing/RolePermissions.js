@@ -19,7 +19,7 @@ export const ROUTE_PERMISSIONS = {
   '/all-leads/:id': ['ADMIN', 'FOH', 'CLUB_MANAGER'],
   '/edit-lead-details/:id': ['ADMIN', 'FOH'],
   '/lead-follow-up/:id': ['ADMIN', 'FOH', 'CLUB_MANAGER'],
-  '/my-follow-ups': ['ADMIN', 'FOH', 'CLUB_MANAGER'],
+  '/my-follow-ups': ['ADMIN', 'FOH', 'CLUB_MANAGER', 'MARKETING_MANAGER'],
   
   // Member Management
   '/all-members': ['ADMIN', 'FOH', 'TRAINER', 'CLUB_MANAGER'],
@@ -92,10 +92,10 @@ export const ROUTE_PERMISSIONS = {
 
   
   // Dashboards
-//   '/club-manager': ['ADMIN', 'CLUB_MANAGER'],
-//   '/marketing-manager': ['ADMIN', 'MARKETING_MANAGER'],
-//   '/foh-dashboard': ['ADMIN', 'FOH'],
-//   '/trainer-dashboard': ['ADMIN', 'TRAINER'],
+  '/club-manager': ['ADMIN', 'CLUB_MANAGER'],
+  '/marketing-manager': ['ADMIN', 'MARKETING_MANAGER'],
+  '/foh-dashboard': ['ADMIN', 'FOH'],
+  '/trainer-dashboard': ['ADMIN', 'TRAINER'],
   
   // Sales Reports
   '/reports/sales-reports/membership-sales-report': ['ADMIN', 'MARKETING_MANAGER', 'FINANCE_MANAGER', 'FOH', 'CLUB_MANAGER'],
@@ -122,7 +122,7 @@ export const ROUTE_PERMISSIONS = {
   '/reports/operations-reports/member-checkins-report': ['ADMIN', 'FOH', 'TRAINER', 'CLUB_MANAGER'],
   '/reports/operations-reports/member-checkins-report/:id': ['ADMIN', 'FOH', 'TRAINER', 'CLUB_MANAGER'],
   '/reports/operations-reports/membership-expiry-report': ['ADMIN', 'FOH', 'CLUB_MANAGER'],
-  '/reports/operations-reports/pt-expiry-report': ['ADMIN', 'TRAINER', 'CLUB_MANAGER'],
+  '/reports/operations-reports/service-expiry-report': ['ADMIN', 'TRAINER', 'CLUB_MANAGER'],
   '/reports/operations-reports/irregular-members-report': ['ADMIN'],
   '/reports/operations-reports/active-client-report': ['ADMIN', 'FOH', 'TRAINER', 'CLUB_MANAGER'],
   '/reports/operations-reports/inactive-client-report': ['ADMIN', 'TRAINER', 'CLUB_MANAGER'],

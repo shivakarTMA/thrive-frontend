@@ -37,7 +37,7 @@ const GroupClassesList = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [productSoldData, setProductSoldData] = useState([]);
-  const [dateFilter, setDateFilter] = useState(dateFilterOptions[0]);
+  const [dateFilter, setDateFilter] = useState(dateFilterOptions[1]);
   const [customFrom, setCustomFrom] = useState(null);
   const [customTo, setCustomTo] = useState(null);
   const { user } = useSelector((state) => state.auth);

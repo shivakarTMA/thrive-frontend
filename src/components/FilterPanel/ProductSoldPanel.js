@@ -12,6 +12,8 @@ import { fetchOptionList } from "../../Redux/Reducers/optionListSlice";
 const BillTypeOptions = [
   { value: "NEW", label: "New" },
   { value: "RENEWAL", label: "Renewal" },
+  { value: "ADVANCED_RENEWAL", label: "Advanced Renewal" },
+  { value: "RETURNING", label: "Returning" },
 ];
 
 const packageTypeOptions = [

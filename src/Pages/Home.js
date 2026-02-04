@@ -32,6 +32,7 @@ import { toast } from "react-toastify";
 const summaryData = {
   Yesterday: {
     FollowUps: "10/50",
+    "Tour/Trials": "10/50",
     Appointments: "0/0",
     Classes: "4/5",
     MembershipExpiry: 12,
@@ -42,6 +43,7 @@ const summaryData = {
   },
   Today: {
     FollowUps: "17/50",
+    "Tour/Trials": "10/50",
     Appointments: "0/0",
     Classes: "5/5",
     MembershipExpiry: 11,
@@ -52,6 +54,7 @@ const summaryData = {
   },
   Tomorrow: {
     FollowUps: "8/50",
+    "Tour/Trials": "10/50",
     Appointments: "1/2",
     Classes: "2/5",
     MembershipExpiry: 10,
@@ -61,6 +64,18 @@ const summaryData = {
     ClientAnniversaries: 1,
   },
 };
+
+const routeMap = {
+  FollowUps: "/my-follow-ups",
+  "Tour/Trials": "/reports/appointments/all-trial-appointments",
+  Appointments: "/reports/all-bookings",
+  Classes: "/group-class",
+  MembershipExpiry: "/reports/operations-reports/membership-expiry-report",
+  ServiceExpiry: "/reports/operations-reports/service-expiry-report",
+  ClientBirthdays: "/birthday-report",
+  ClientAnniversaries: "/anniversary-report",
+};
+
 
 const dateFilterOptions = [
   { value: "today", label: "Today" },
@@ -508,19 +523,6 @@ const Home = () => {
   const currentData = summaryData[currentDay];
 
   // Memoize the URL generation
-  // const generateUrl = (baseUrl) => {
-  //   let url = `${baseUrl}&date=${encodeURIComponent(dateFilter?.value)}`;
-
-  //   // If custom dates are selected, append customFrom and customTo to the URL
-  //   if (dateFilter?.value === "custom") {
-  //     url += `&customFrom=${encodeURIComponent(
-  //       customFrom
-  //     )}&customTo=${encodeURIComponent(customTo)}`;
-  //   }
-
-  //   return url;
-  // };
-
   const generateUrl = useCallback(
     (baseUrl) => {
       const params = new URLSearchParams();
@@ -925,7 +927,7 @@ const Home = () => {
                     <th className="p-2">Scheduled</th>
                     <th className="p-2">Bookings</th>
                     <th className="p-2">Cancellations</th>
-                    {/* <th className="p-2">Action</th> */}
+                    <th className="p-2">Action</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -941,14 +943,14 @@ const Home = () => {
                       <td className="p-2">
                         {String(item.cancellations).padStart(2, "0")}
                       </td>
-                      {/* <td className="p-2">
+                      <td className="p-2">
                         <Link
                           to={generateUrl(item.url)}
                           className="bg-[#F1F1F1] border border-[#D4D4D4] rounded-[5px] w-[32px] h-[32px] flex items-center justify-center cursor-pointer"
                         >
                           <img src={eyeIcon} />
                         </Link>
-                      </td> */}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -960,7 +962,7 @@ const Home = () => {
           <div className="rounded-[15px] p-4 box--shadow bg-white">
             <div>
               <p className="text-lg font-[600] mb-3 text-center">Summary </p>
-              {/* <div className="flex justify-between gap-3 items-center rounded-full bg-[#F1F1F1] px-3 py-2">
+              <div className="flex justify-between gap-3 items-center rounded-full bg-[#F1F1F1] px-3 py-2">
                 <button
                   onClick={handlePrevious}
                   disabled={currentDayIndex === 0}
@@ -982,8 +984,8 @@ const Home = () => {
                 >
                   <LiaAngleRightSolid />
                 </button>
-              </div> */}
-              <SummaryDashboard data={currentData} />
+              </div>
+              <SummaryDashboard data={currentData} routeMap={routeMap} generateUrl={generateUrl} />
             </div>
           </div>
           <div className="rounded-[15px] p-4 box--shadow bg-white mt-4">
@@ -992,7 +994,7 @@ const Home = () => {
         </div>
       </div>
 
-      {/* <div className="rounded-[15px] p-4 w-full mt-2 box--shadow bg-white">
+      <div className="rounded-[15px] p-4 w-full mt-2 box--shadow bg-white">
         <div className="flex justify-between items-center mb-4">
           <h2 className="font-semibold">Pending Orders</h2>
           <a href="#" className="text-[#009EB2] underline text-sm">
@@ -1000,7 +1002,7 @@ const Home = () => {
           </a>
         </div>
         <PendingOrderTable setOrders={setOrders} orders={orders} />
-      </div> */}
+      </div>
     </div>
   );
 };

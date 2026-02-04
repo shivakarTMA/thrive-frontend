@@ -1,11 +1,13 @@
 import React from "react";
+import { Link } from "react-router-dom";
 
-function SummaryDashboard({ data }) {
+function SummaryDashboard({ data, routeMap, generateUrl }) {
   return (
     <div className="mt-2 space-y-2 ">
       {Object.entries(data).map(([key, value]) => {
         // Convert value to string to safely use includes
         const stringValue = String(value);
+        const route = routeMap[key];
 
         return (
           <div
@@ -15,8 +17,22 @@ function SummaryDashboard({ data }) {
             {/* Format key by adding space before capital letters */}
             <span>{key.replace(/([A-Z])/g, " $1")}</span>
             {/* If value contains a slash, wrap it in parentheses */}
+            {/* Value (clickable if route exists) */}
             <strong>
-              {stringValue.includes("/") ? `(${stringValue})` : stringValue}
+              {route ? (
+                <Link
+                  to={generateUrl(route)}
+                  className="text-black"
+                >
+                  {stringValue.includes("/")
+                    ? `(${stringValue})`
+                    : stringValue}
+                </Link>
+              ) : (
+                stringValue.includes("/")
+                  ? `(${stringValue})`
+                  : stringValue
+              )}
             </strong>
           </div>
         );

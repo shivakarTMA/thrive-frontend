@@ -75,7 +75,7 @@ const dummyData = [
   },
 ];
 
-const PtExpiryReport = () => {
+const ServiceExpiryReport = () => {
   const [data] = useState(dummyData);
   const [clubList, setClubList] = useState([]);
   const [clubFilter, setClubFilter] = useState(null);
@@ -114,9 +114,9 @@ const PtExpiryReport = () => {
       <div className="flex items-end justify-between gap-2 mb-5">
         <div className="title--breadcrumbs">
           <p className="text-sm">
-            {`Home > Reports > Operations Reports > PT Expiry Report`}
+            {`Home > Reports > Operations Reports > Service Expiry Report`}
           </p>
-          <h1 className="text-3xl font-semibold">PT Expiry Report</h1>
+          <h1 className="text-3xl font-semibold">Service Expiry Report</h1>
         </div>
       </div>
 
@@ -292,4 +292,4 @@ const PtExpiryReport = () => {
   );
 };
 
-export default PtExpiryReport;
+export default ServiceExpiryReport;

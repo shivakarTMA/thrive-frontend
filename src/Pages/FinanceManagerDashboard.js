@@ -62,6 +62,16 @@ const summaryData = {
   },
 };
 
+const routeMap = {
+  FollowUps: "/my-follow-ups",
+  Appointments: "",
+  Classes: "",
+  MembershipExpiry: "",
+  ServiceExpiry: "",
+  ClientBirthdays: "",
+  ClientAnniversaries: "",
+};
+
 const dateFilterOptions = [
   { value: "today", label: "Today" },
   { value: "last_7_days", label: "Last 7 Days" },

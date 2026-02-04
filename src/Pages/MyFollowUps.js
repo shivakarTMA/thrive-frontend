@@ -1,15 +1,21 @@
 import React, { useEffect, useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { addYears, subYears } from "date-fns";
+import { addYears, subYears, format } from "date-fns";
 import { FaCalendarDays } from "react-icons/fa6";
 import Select from "react-select";
-import { customStyles, filterActiveItems, formatAutoDate, formatTimeAppointment, formatText } from "../Helper/helper";
+import {
+  customStyles,
+  filterActiveItems,
+  formatAutoDate,
+  formatTimeAppointment,
+  formatText,
+} from "../Helper/helper";
 import { authAxios } from "../config/config";
 import { toast } from "react-toastify";
 import Tooltip from "../components/common/Tooltip";
 import { LiaEdit } from "react-icons/lia";
-import { Link } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import Pagination from "../components/common/Pagination";
 import { useSelector } from "react-redux";
 
@@ -29,6 +35,11 @@ const MyFollowUps = () => {
   const [myFollowUps, setMyFollowUps] = useState([]);
   const [clubList, setClubList] = useState([]);
   const [clubFilter, setClubFilter] = useState(null);
+
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const [filtersInitialized, setFiltersInitialized] = useState(false);
 
   const { user } = useSelector((state) => state.auth);
   const userRole = user.role;
@@ -51,13 +62,6 @@ const MyFollowUps = () => {
       const data = response.data?.data || [];
       const activeOnly = filterActiveItems(data);
       setClubList(activeOnly);
-
-      if (activeOnly.length > 0) {
-        setClubFilter({
-          label: activeOnly[0].name,
-          value: activeOnly[0].id,
-        });
-      }
     } catch (error) {
       toast.error("Failed to fetch clubs");
     }
@@ -73,9 +77,36 @@ const MyFollowUps = () => {
     value: item.id,
   }));
 
-  const fetchMyFollowups = async () => {
+  // ---------------------------
+  // UPDATE URL WITH PARAMS
+  // ---------------------------
+  const updateURLParams = () => {
+    const params = new URLSearchParams();
+
+    // Date filter
+    if (dateFilter?.value && dateFilter.value !== "custom") {
+      params.set("dateFilter", dateFilter.value);
+    }
+
+    if (dateFilter?.value === "custom" && customFrom && customTo) {
+      params.set("startDate", format(customFrom, "yyyy-MM-dd"));
+      params.set("endDate", format(customTo, "yyyy-MM-dd"));
+    }
+
+    // Club filter
+    if (clubFilter?.value) {
+      params.set("club_id", clubFilter.value);
+    }
+
+    navigate(`?${params.toString()}`, { replace: true });
+  };
+
+  const fetchMyFollowups = async (currentPage = page) => {
     try {
-      const params = {};
+      const params = {
+        page: currentPage,
+        limit: rowsPerPage,
+      };
 
       // Club filter
       if (clubFilter?.value) {
@@ -100,26 +131,84 @@ const MyFollowUps = () => {
 
       setMyFollowUps(data);
       setPage(responseData?.currentPage || 1);
-      setTotalPages(responseData?.totalPage || 1);
+      setTotalPages(responseData?.totalPages || 1);
       setTotalCount(responseData?.totalCount || data.length);
     } catch (err) {
       console.error(err);
       toast.error("data not found");
     }
   };
+
+  // ---------------------------
+  // INITIALIZE FROM URL
+  // ---------------------------
+
   useEffect(() => {
-    // If custom date is selected, wait for both dates
-    if (dateFilter?.value === "custom") {
-      if (customFrom && customTo) {
-        fetchMyFollowups();
-        setPage(1);
+    if (clubList.length === 0) return;
+    if (filtersInitialized) return;
+
+    const params = new URLSearchParams(location.search);
+
+    // ---- Date filter ----
+    const dateFilterValue = params.get("dateFilter");
+    if (dateFilterValue) {
+      const matchedDate = dateFilterOptions.find(
+        (opt) => opt.value === dateFilterValue,
+      );
+      if (matchedDate) {
+        setDateFilter(matchedDate);
       }
+    }
+
+    // ---- Custom date ----
+    const startDate = params.get("startDate");
+    const endDate = params.get("endDate");
+    if (startDate && endDate) {
+      setDateFilter(dateFilterOptions.find((d) => d.value === "custom"));
+      setCustomFrom(new Date(startDate));
+      setCustomTo(new Date(endDate));
+    }
+
+    // ---- Club filter ----
+    const clubId = params.get("club_id");
+
+    if (clubId) {
+      const club = clubList.find((c) => c.id === Number(clubId));
+      if (club) {
+        setClubFilter({ label: club.name, value: club.id });
+      }
+    } else {
+      // ✅ default only when URL does NOT have club_id
+      setClubFilter({
+        label: clubList[0].name,
+        value: clubList[0].id,
+      });
+    }
+
+    setFiltersInitialized(true);
+  }, [clubList, location.search]);
+
+  // ---------------------------
+  // FETCH WHEN FILTERS CHANGE
+  // ---------------------------
+  useEffect(() => {
+    if (!filtersInitialized) return;
+
+    // 🚫 wait until both dates are selected for custom range
+    if (dateFilter?.value === "custom" && (!customFrom || !customTo)) {
       return;
     }
 
-    // For all non-custom filters
-    fetchMyFollowups();
-  }, [dateFilter, customFrom, customTo, clubFilter]);
+    setPage(1);
+    fetchMyFollowups(1);
+    updateURLParams();
+  }, [
+    filtersInitialized,
+    dateFilter?.value,
+    customFrom,
+    customTo,
+    clubFilter?.value,
+  ]);
 
   return (
     <div className="page--content">
@@ -235,8 +324,12 @@ const MyFollowUps = () => {
                   >
                     <td className="px-2 py-4">{index + 1}</td>
                     <td className="px-2 py-4">{row.club_name}</td>
-                    <td className="px-2 py-4">{formatAutoDate(row.schedule_date)}</td>
-                    <td className="px-2 py-4">{formatTimeAppointment(row.schedule_time)}</td>
+                    <td className="px-2 py-4">
+                      {formatAutoDate(row.schedule_date)}
+                    </td>
+                    <td className="px-2 py-4">
+                      {formatTimeAppointment(row.schedule_time)}
+                    </td>
                     <td className="px-2 py-4">
                       {row.call_type ? row.call_type : "--"}
                     </td>

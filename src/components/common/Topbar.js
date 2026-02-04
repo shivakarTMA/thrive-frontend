@@ -31,7 +31,6 @@ const Topbar = ({
   setSelectedLead,
   leadModalPage,
 }) => {
-  console.log("leadModalPage", leadModalPage);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [searchItem, setSearchItem] = useState("");
@@ -54,6 +53,15 @@ const Topbar = ({
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [previewNewLeads, setPreviewNewLeads] = useState([]);
   const [previewDuplicateLeads, setPreviewDuplicateLeads] = useState([]);
+
+  const getInitials = (name = "") => {
+  return name
+    .trim()
+    .split(/\s+/)
+    .map(word => word[0])
+    .join("")
+    .toUpperCase();
+};
 
   const toggleDropdown = (name) => {
     setActiveDropdown((prev) => (prev === name ? null : name));
@@ -382,7 +390,7 @@ const Topbar = ({
                       "linear-gradient(161.54deg, #527DDD 0.51%, #001136 119.51%)",
                   }}
                 >
-                  <p>AM</p>
+                  <p>{getInitials(user?.name)}</p>
                 </div>
                 <IoIosArrowDown />
               </div>

@@ -62,6 +62,16 @@ const summaryData = {
   },
 };
 
+const routeMap = {
+  FollowUps: "/my-follow-ups",
+  Appointments: "",
+  Classes: "",
+  MembershipExpiry: "",
+  ServiceExpiry: "",
+  ClientBirthdays: "",
+  ClientAnniversaries: "",
+};
+
 const dateFilterOptions = [
   { value: "today", label: "Today" },
   { value: "last_7_days", label: "Last 7 Days" },
@@ -941,7 +951,7 @@ const MarketingManagerDashboard = () => {
                   <LiaAngleRightSolid />
                 </button>
               </div> */}
-              <SummaryDashboard data={currentData} />
+              <SummaryDashboard data={currentData} routeMap={routeMap} />
             </div>
           </div>
           <div className="rounded-[15px] p-4 box--shadow bg-white mt-4">

@@ -20,7 +20,7 @@ import { useSelector } from "react-redux";
 import { TbGymnastics } from "react-icons/tb";
 import TopLogo from "../../assets/images/DLF-Thrive-New-Logo-1-White.png";
 import { TfiAnnouncement } from "react-icons/tfi";
-import { MdFollowTheSigns } from "react-icons/md";
+import { MdFollowTheSigns, MdOutlineDashboardCustomize } from "react-icons/md";
 import { BsCake2 } from "react-icons/bs";
 
 const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
@@ -34,12 +34,15 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
   const [salesReportsOpen, setSalesReportsOpen] = useState(false);
   const [financeReportsOpen, setFinanceReportsOpen] = useState(false);
   const [operationsReportsOpen, setOperationsReportsOpen] = useState(false);
+  const [marketingReportsOpen, setMarketingReportsOpen] = useState(false);
 
   const toggleReports = () => setReportsOpen(!reportsOpen);
   const toggleSalesReports = () => setSalesReportsOpen(!salesReportsOpen);
   const toggleFinanceReports = () => setFinanceReportsOpen(!financeReportsOpen);
   const toggleOperationsReports = () =>
     setOperationsReportsOpen(!operationsReportsOpen);
+  const toggleMarketingReports = () =>
+    setMarketingReportsOpen(!marketingReportsOpen);
 
   const toggleMenu = (menuKey) => {
     setDropdownToggles((prev) => {
@@ -86,7 +89,7 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
 
         {accessToken && userType === "ADMIN" && (
           <>
-            {/* <div
+            <div
               className="nav-link d-flex justify-between align-items-center mb-2"
               onClick={() => toggleMenu("otherclubs")}
               style={{ cursor: "pointer" }}
@@ -134,7 +137,7 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                   <span className="nav-text">Marketing Dashboard</span>
                 </Link>
               </div>
-            )} */}
+            )}
 
             <Link
               to="/all-leads"
@@ -144,6 +147,16 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
             >
               <IoBarChartOutline className="menu--icon" />
               <span className="nav-text">My Leads</span>
+            </Link>
+
+            <Link
+              to="/my-follow-ups"
+              className={`nav-link mb-2 ${
+                location.pathname === "/my-follow-ups" ? "active" : ""
+              }`}
+            >
+              <MdFollowTheSigns className="menu--icon" />
+              <span className="nav-text">My Followups</span>
             </Link>
 
             <Link
@@ -228,7 +241,7 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
               <span className="nav-text">All Orders</span>
             </Link>
 
-             <Link
+            <Link
               to="/group-class"
               className={`nav-link mb-2 ${
                 location.pathname === "/group-class" ? "active" : ""
@@ -237,8 +250,6 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
               <FaReact className="menu--icon" />
               <span className="nav-text">Group Class</span>
             </Link>
-
-            
 
             <div
               className="nav-link d-flex justify-between align-items-center mb-2"
@@ -457,10 +468,22 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                       All Invoice Reports
                     </Link>
                     <Link
+                      to="/reports/finance-reports/pending-collection"
+                      className="submenu-link text-white text-sm"
+                    >
+                      Pending Collection
+                    </Link>
+                    <Link
                       to="/reports/finance-reports/cancelled-paid-invoice"
                       className="submenu-link text-white text-sm"
                     >
                       Cancelled Paid Invoices
+                    </Link>
+                    <Link
+                      to="/reports/finance-reports/refund-report"
+                      className="submenu-link text-white text-sm"
+                    >
+                      Refund Report
                     </Link>
                     <Link
                       to="/reports/finance-reports/collection-report"
@@ -520,10 +543,10 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                       Membership Expiry Report
                     </Link>
                     <Link
-                      to="/reports/operations-reports/pt-expiry-report"
+                      to="/reports/operations-reports/service-expiry-report"
                       className="submenu-link text-white text-sm"
                     >
-                      PT Expiry Report
+                      Service Expiry Report
                     </Link>
                     <Link
                       to="/reports/operations-reports/irregular-members-report"
@@ -560,6 +583,75 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                       className="submenu-link text-white text-sm"
                     >
                       Referral Report
+                    </Link>
+                  </div>
+                )}
+
+                {/* MARKETING REPORTS */}
+                <div
+                  className="text-white flex justify-between items-center cursor-pointer text-sm mb-2"
+                  onClick={toggleMarketingReports}
+                >
+                  <div className="flex gap-[5px] items-center cursor-pointer">
+                    <FaCircle className="menu--icon !text-[10px]" />
+                    <span className="nav-text">Marketing Reports</span>
+                  </div>
+                  <FaAngleDown
+                    className={`downmenu transition ${
+                      marketingReportsOpen ? "rotate-[180deg]" : ""
+                    }`}
+                  />
+                </div>
+
+                {marketingReportsOpen && (
+                  <div className="pl-[5px] flex flex-col gap-1 mb-3">
+                    <Link
+                      to="/reports/marketing-reports/lead-source-performance"
+                      className="submenu-link text-white text-sm"
+                    >
+                      Lead Source Performance
+                    </Link>
+                    <Link
+                      to="/reports/marketing-reports/thrive-coins-usage"
+                      className="submenu-link text-white text-sm"
+                    >
+                      Thrive Coins Usage
+                    </Link>
+                    <Link
+                      to="/reports/marketing-reports/customer-segmentation-report"
+                      className="submenu-link text-white text-sm"
+                    >
+                      Customer Segmentation
+                    </Link>
+                    <Link
+                      to="/reports/marketing-reports/discount-codes-performance"
+                      className="submenu-link text-white text-sm"
+                    >
+                      Discount Codes Performance
+                    </Link>
+                    <Link
+                      to="/reports/marketing-reports/engagement-tracking-report"
+                      className="submenu-link text-white text-sm"
+                    >
+                      Engagement Tracking
+                    </Link>
+                    <Link
+                      to="/reports/marketing-reports/email-automation-report"
+                      className="submenu-link text-white text-sm"
+                    >
+                      Email Automation
+                    </Link>
+                    <Link
+                      to="/reports/marketing-reports/sms-delivery-report"
+                      className="submenu-link text-white text-sm"
+                    >
+                      SMS Delivery
+                    </Link>
+                    <Link
+                      to="/reports/marketing-reports/event-community-engagement"
+                      className="submenu-link text-white text-sm"
+                    >
+                      Event Community Engagement
                     </Link>
                   </div>
                 )}
@@ -619,6 +711,13 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                 >
                   <FaCircle className="menu--icon !text-[10px]" />
                   <span className="nav-text">On Boarding List</span>
+                </Link>
+                <Link
+                  to="/splash-screen"
+                  className="text-white flex items-center gap-[5px] mb-2 text-sm"
+                >
+                  <FaCircle className="menu--icon !text-[10px]" />
+                  <span className="nav-text">Splash Screen</span>
                 </Link>
                 <Link
                   to="/companies"
@@ -690,13 +789,26 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                   <FaCircle className="menu--icon !text-[10px]" />
                   <span className="nav-text">Packages</span>
                 </Link>
-                
                 <Link
                   to="/option-list"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
                 >
                   <FaCircle className="menu--icon !text-[10px]" />
                   <span className="nav-text">Options List</span>
+                </Link>
+                <Link
+                  to="/role-list"
+                  className="text-white flex items-center gap-[5px] mb-2 text-sm"
+                >
+                  <FaCircle className="menu--icon !text-[10px]" />
+                  <span className="nav-text">Role List</span>
+                </Link>
+                <Link
+                  to="/module-list"
+                  className="text-white flex items-center gap-[5px] mb-2 text-sm"
+                >
+                  <FaCircle className="menu--icon !text-[10px]" />
+                  <span className="nav-text">Module List</span>
                 </Link>
                 <Link
                   to="/faq-category"
@@ -906,13 +1018,6 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                   <FaCircle className="menu--icon !text-[10px]" />
                   <span className="nav-text">SMS Delivery</span>
                 </Link>
-                {/* <Link
-                  to="/reports/marketing-reports/event-community-engagement"
-                  className="text-white flex items-center gap-[5px] mb-2 text-sm"
-                >
-                  <FaCircle className="menu--icon !text-[10px]" />
-                  <span className="nav-text">Event & Community Engagement</span>
-                </Link> */}
                 <Link
                   to="/reports/marketing-reports/thrive-coins-usage"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
@@ -1074,13 +1179,7 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                   <FaCircle className="menu--icon !text-[10px]" />
                   <span className="nav-text">Sales Leaderboard</span>
                 </Link>
-                {/* <Link
-                  to="#"
-                  className="text-white flex items-center gap-[5px] mb-2 text-sm"
-                >
-                  <FaCircle className="menu--icon !text-[10px]" />
-                  <span className="nav-text">Salesperson Report</span>
-                </Link> */}
+
                 <Link
                   to="/reports/operations-reports/renewal-report"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
@@ -1102,13 +1201,7 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                   <FaCircle className="menu--icon !text-[10px]" />
                   <span className="nav-text">Cancelled Paid Invoices</span>
                 </Link>
-                {/* <Link
-                  to="#"
-                  className="text-white flex items-center gap-[5px] mb-2 text-sm"
-                >
-                  <FaCircle className="menu--icon !text-[10px]" />
-                  <span className="nav-text">Refund Report</span>
-                </Link> */}
+                
                 <Link
                   to="/reports/finance-reports/collection-report"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
@@ -1130,20 +1223,7 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                   <FaCircle className="menu--icon !text-[10px]" />
                   <span className="nav-text">Membership Frozen Report</span>
                 </Link>
-                {/* <Link
-                  to="#"
-                  className="text-white flex items-center gap-[5px] mb-2 text-sm"
-                >
-                  <FaCircle className="menu--icon !text-[10px]" />
-                  <span className="nav-text">Deferred Revenue Report</span>
-                </Link>
-                <Link
-                  to="#"
-                  className="text-white flex items-center gap-[5px] mb-2 text-sm"
-                >
-                  <FaCircle className="menu--icon !text-[10px]" />
-                  <span className="nav-text">Payment Modes Report</span>
-                </Link> */}
+                
 
                 <Link
                   to="/reports/marketing-reports/discount-codes-performance"
@@ -1400,11 +1480,11 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                   <span className="nav-text">Sales Leaderboard</span>
                 </Link>
                 <Link
-                  to="/reports/operations-reports/pt-expiry-report"
+                  to="/reports/operations-reports/service-expiry-report"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
                 >
                   <FaCircle className="menu--icon !text-[10px]" />
-                  <span className="nav-text">PT Expiry Report</span>
+                  <span className="nav-text">Service Expiry Report</span>
                 </Link>
 
                 <Link
@@ -1751,10 +1831,10 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                       Membership Expiry Report
                     </Link>
                     <Link
-                      to="/reports/operations-reports/pt-expiry-report"
+                      to="/reports/operations-reports/service-expiry-report"
                       className="submenu-link text-white text-sm"
                     >
-                      PT Expiry Report
+                      Service Expiry Report
                     </Link>
                     <Link
                       to="/reports/operations-reports/active-client-report"
