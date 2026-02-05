@@ -11,6 +11,7 @@ import {
 } from "../../../Helper/helper";
 import { authAxios } from "../../../config/config";
 import { toast } from "react-toastify";
+import { useSelector } from "react-redux";
 
 const dateFilterOptions = [
   { value: "today", label: "Today" },
@@ -29,6 +30,9 @@ const LeadSourcePerformance = () => {
   const [clubList, setClubList] = useState([]);
   const [clubFilter, setClubFilter] = useState(null);
 
+      const { user } = useSelector((state) => state.auth);
+    const userRole = user.role;
+
   const [dateFilter, setDateFilter] = useState(dateFilterOptions[1]);
   const [customFrom, setCustomFrom] = useState(null);
   const [customTo, setCustomTo] = useState(null);
@@ -43,7 +47,8 @@ const LeadSourcePerformance = () => {
       const activeOnly = filterActiveItems(data);
       setClubList(activeOnly);
 
-      if (activeOnly.length === 1) {
+      // ✅ Set default club (index 0) ONLY if not already set
+      if (!clubFilter && activeOnly.length > 0) {
         setClubFilter(activeOnly[0].id);
       }
     } catch (error) {
@@ -82,7 +87,7 @@ const LeadSourcePerformance = () => {
 
       const res = await authAxios().get(
         "/marketing/report/lead/source/performance",
-        { params }
+        { params },
       );
       const responseData = res.data;
       const data = responseData?.data || [];
@@ -188,6 +193,7 @@ const LeadSourcePerformance = () => {
               onChange={(option) => setClubFilter(option?.value)}
               styles={customStyles}
               className="w-full"
+              isClearable={userRole === "ADMIN" ? true : false}
             />
           </div>
         </div>

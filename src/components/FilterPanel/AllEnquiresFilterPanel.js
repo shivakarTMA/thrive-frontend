@@ -157,7 +157,7 @@ export default function AllEnquiresFilterPanel({
       enquiry_type: formik.values.filterEnquiryType,
       lead_status: formik.values.filterLeadStatus,
       lead_source: formik.values.filterLeadSource,
-      lead_owner: formik.values.filterLeadOwner,
+      owner_id: formik.values.filterLeadOwner,
       call_tag: formik.values.filterCallTag,
     });
 
@@ -171,7 +171,7 @@ export default function AllEnquiresFilterPanel({
       enquiry_type: "filterEnquiryType",
       lead_status: "filterLeadStatus",
       lead_source: "filterLeadSource",
-      lead_owner: "filterLeadOwner",
+      owner_id: "filterLeadOwner",
       call_tag: "filterCallTag",
     };
 
@@ -207,7 +207,7 @@ export default function AllEnquiresFilterPanel({
       return leadSource ? leadSource.label : value;
     }
 
-    if (key === "lead_owner") {
+    if (key === "owner_id") {
       const allOwners = leadOwnerOptions.flatMap((group) => group.options);
       const owner = allOwners.find((opt) => opt.value === value);
       return owner ? owner.label : value;

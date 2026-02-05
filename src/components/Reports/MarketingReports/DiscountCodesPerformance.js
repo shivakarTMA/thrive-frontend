@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { addYears, subYears } from "date-fns";
+import { addYears, format, subYears } from "date-fns";
 import { FaCalendarDays } from "react-icons/fa6";
 import Select from "react-select";
 import {
@@ -14,6 +14,7 @@ import {
 import { authAxios } from "../../../config/config";
 import { toast } from "react-toastify";
 import { FaCircle } from "react-icons/fa";
+import { useSelector } from "react-redux";
 
 const dateFilterOptions = [
   { value: "today", label: "Today" },
@@ -22,15 +23,15 @@ const dateFilterOptions = [
   { value: "custom", label: "Custom Date" },
 ];
 
-const formatDate = (date) => {
-  if (!date) return null;
-  return date.toISOString().split("T")[0]; // YYYY-MM-DD
-};
+const formatDate = (date) => format(date, "yyyy-MM-dd");
 
 const DiscountCodesPerformance = () => {
   const [leadSource, setLeadSource] = useState([]);
   const [clubList, setClubList] = useState([]);
   const [clubFilter, setClubFilter] = useState(null);
+
+    const { user } = useSelector((state) => state.auth);
+  const userRole = user.role;
 
   const [dateFilter, setDateFilter] = useState(dateFilterOptions[1]);
   const [customFrom, setCustomFrom] = useState(null);
@@ -46,8 +47,9 @@ const DiscountCodesPerformance = () => {
       const activeOnly = filterActiveItems(data);
       setClubList(activeOnly);
 
-      if (activeOnly.length === 1) {
-        setClubFilter(activeOnly[0].id);
+      // ✅ EXACTLY like dateFilter default
+      if (activeOnly.length > 0) {
+        setClubFilter((prev) => prev ?? activeOnly[0].id);
       }
     } catch (error) {
       toast.error("Failed to fetch clubs");
@@ -79,13 +81,13 @@ const DiscountCodesPerformance = () => {
           params.startDate = formatDate(customFrom);
           params.endDate = formatDate(customTo);
         }
-      } else if (dateFilter?.value) {
+      } else {
         params.dateFilter = dateFilter.value;
       }
 
       const res = await authAxios().get(
         "/marketing/report/discount/codes/performance",
-        { params }
+        { params },
       );
       const responseData = res.data;
       const data = responseData?.data || [];
@@ -191,6 +193,7 @@ const DiscountCodesPerformance = () => {
               onChange={(option) => setClubFilter(option?.value)}
               styles={customStyles}
               className="w-full"
+              isClearable={userRole === "ADMIN" ? true : false}
             />
           </div>
         </div>
@@ -237,10 +240,10 @@ const DiscountCodesPerformance = () => {
                           item?.status === "ACTIVE"
                             ? "bg-[#E8FFE6] text-[#138808]"
                             : item?.status === "INACTIVE"
-                            ? "bg-[#EEEEEE] text-[#666666]"
-                            : item?.status === "EXPIRED"
-                            ? "bg-[#FFE8E8] text-[#D32F2F]"
-                            : ""
+                              ? "bg-[#EEEEEE] text-[#666666]"
+                              : item?.status === "EXPIRED"
+                                ? "bg-[#FFE8E8] text-[#D32F2F]"
+                                : ""
                         }
                                             `}
                       >

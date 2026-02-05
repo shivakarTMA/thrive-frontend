@@ -89,7 +89,7 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
 
         {accessToken && userType === "ADMIN" && (
           <>
-            <div
+            {/* <div
               className="nav-link d-flex justify-between align-items-center mb-2"
               onClick={() => toggleMenu("otherclubs")}
               style={{ cursor: "pointer" }}
@@ -137,7 +137,7 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                   <span className="nav-text">Marketing Dashboard</span>
                 </Link>
               </div>
-            )}
+            )} */}
 
             <Link
               to="/all-leads"
@@ -465,7 +465,7 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                       to="/reports/finance-reports/all-invoice-report"
                       className="submenu-link text-white text-sm"
                     >
-                      All Invoice Reports
+                      All Invoice Report
                     </Link>
                     <Link
                       to="/reports/finance-reports/pending-collection"
@@ -639,13 +639,13 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                       to="/reports/marketing-reports/email-automation-report"
                       className="submenu-link text-white text-sm"
                     >
-                      Email Automation
+                      Email Delivery Report
                     </Link>
                     <Link
                       to="/reports/marketing-reports/sms-delivery-report"
                       className="submenu-link text-white text-sm"
                     >
-                      SMS Delivery
+                      SMS Delivery Report
                     </Link>
                     <Link
                       to="/reports/marketing-reports/event-community-engagement"
@@ -1009,14 +1009,14 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
                 >
                   <FaCircle className="menu--icon !text-[10px]" />
-                  <span className="nav-text">Email Delivery</span>
+                  <span className="nav-text">Email Delivery Report</span>
                 </Link>
                 <Link
                   to="/reports/marketing-reports/sms-delivery-report"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
                 >
                   <FaCircle className="menu--icon !text-[10px]" />
-                  <span className="nav-text">SMS Delivery</span>
+                  <span className="nav-text">SMS Delivery Report</span>
                 </Link>
                 <Link
                   to="/reports/marketing-reports/thrive-coins-usage"
@@ -1776,7 +1776,7 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                       to="/reports/finance-reports/all-invoice-report"
                       className="submenu-link text-white text-sm"
                     >
-                      All Invoice Reports
+                      All Invoice Report
                     </Link>
 
                     <Link

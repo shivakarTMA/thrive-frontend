@@ -133,9 +133,9 @@ const AllInvoiceReport = () => {
       <div className="flex items-end justify-between gap-2 mb-5">
         <div className="title--breadcrumbs">
           <p className="text-sm">
-            {`Home > Reports > Finance Reports > All Invioce`}
+            {`Home > Reports > Finance Reports > All Invoice Report`}
           </p>
-          <h1 className="text-3xl font-semibold">All Invioce</h1>
+          <h1 className="text-3xl font-semibold">All Invoice Report</h1>
         </div>
       </div>
 

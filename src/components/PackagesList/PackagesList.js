@@ -55,7 +55,7 @@ const PackagesList = () => {
       const res = await authAxios().get("/service/list", { params });
       let data = res.data?.data || res.data || [];
       const activeService = data.filter((item) => item.status === "ACTIVE");
-      console.log(activeService, "activeService");
+      // console.log(activeService, "activeService");
       setService(activeService);
     } catch (err) {
       console.error(err);
@@ -63,14 +63,19 @@ const PackagesList = () => {
     }
   };
 
-  const serviceOptions =
-    service
-      ?.map((item) => ({
-        label: item.name,
-        value: item.id,
-        type: item.type,
-      }))
-      .filter((item) => item.type !== "PRODUCT") || [];
+const serviceOptions =
+  service
+    ?.map((item) => ({
+      label: item.name,
+      value: item.id,
+      type: item.type,
+    }))
+    .filter(
+      (item) =>
+        item.type !== "PRODUCT" &&
+        item.type !== "GROUP_CLASS"
+    ) || [];
+
 
   const fetchClub = async (search = "") => {
     try {
@@ -440,10 +445,6 @@ const PackagesList = () => {
     }
   }, [sessionLevelValue]);
 
-  console.log(sessionLevelValue,'sessionLevelValue')
-
-  console.log(formik.values?.session_level, "didijidj");
-
   const createPackageVariation = async (packageId, variation) => {
     const fd = new FormData();
 
@@ -637,7 +638,7 @@ const PackagesList = () => {
   }, [clubFilter]);
 
     // console.log(formik.values, "SHIVAKAR values");
-  console.log(formik.errors, "SHIVAKAR ERRORS");
+  // console.log(formik.errors, "SHIVAKAR ERRORS");
   // console.log(formik.values, "SHIVAKAR values");
 
   return (

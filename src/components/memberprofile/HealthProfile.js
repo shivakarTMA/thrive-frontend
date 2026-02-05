@@ -177,9 +177,7 @@ const HealthProfile = ({ details }) => {
             Body Fat
           </button>
         </div>
-        <div>
-          <p>Last Updated : October 4, 2025, 4:30 PM</p>
-        </div>
+
       </div>
 
       {/* Render table based on active tab */}

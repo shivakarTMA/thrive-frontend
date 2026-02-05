@@ -92,10 +92,10 @@ export const ROUTE_PERMISSIONS = {
 
   
   // Dashboards
-  '/club-manager': ['ADMIN', 'CLUB_MANAGER'],
-  '/marketing-manager': ['ADMIN', 'MARKETING_MANAGER'],
-  '/foh-dashboard': ['ADMIN', 'FOH'],
-  '/trainer-dashboard': ['ADMIN', 'TRAINER'],
+  // '/club-manager': ['ADMIN', 'CLUB_MANAGER'],
+  // '/marketing-manager': ['ADMIN', 'MARKETING_MANAGER'],
+  // '/foh-dashboard': ['ADMIN', 'FOH'],
+  // '/trainer-dashboard': ['ADMIN', 'TRAINER'],
   
   // Sales Reports
   '/reports/sales-reports/membership-sales-report': ['ADMIN', 'MARKETING_MANAGER', 'FINANCE_MANAGER', 'FOH', 'CLUB_MANAGER'],

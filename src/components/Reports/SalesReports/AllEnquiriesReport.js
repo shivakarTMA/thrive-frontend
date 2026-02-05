@@ -58,7 +58,7 @@ const AllEnquiriesReport = () => {
     lead_source: null,
     lead_status: null,
     call_tag: null,
-    lead_owner: null,
+    owner_id: null,
   });
 
   const formik = useFormik({
@@ -160,8 +160,8 @@ const AllEnquiriesReport = () => {
       if (appliedFilters.lead_status)
         params.lead_status = appliedFilters.lead_status;
       if (appliedFilters.call_tag) params.call_tag = appliedFilters.call_tag;
-      if (appliedFilters.lead_owner)
-        params.lead_owner = appliedFilters.lead_owner;
+      if (appliedFilters.owner_id)
+        params.owner_id = appliedFilters.owner_id;
 
       const res = await authAxios().get("/marketing/report/enquiry", {
         params,
@@ -242,7 +242,7 @@ const AllEnquiriesReport = () => {
       filterLeadSource: urlFilters.lead_source,
       filterLeadStatus: urlFilters.lead_status,
       filterCallTag: urlFilters.call_tag,
-      filterLeadOwner: urlFilters.lead_owner,
+      filterLeadOwner: urlFilters.owner_id,
     });
 
     setFiltersInitialized(true);
@@ -273,7 +273,7 @@ const AllEnquiriesReport = () => {
     appliedFilters.lead_source,
     appliedFilters.lead_status,
     appliedFilters.call_tag,
-    appliedFilters.lead_owner,
+    appliedFilters.owner_id,
   ]);
 
   return (

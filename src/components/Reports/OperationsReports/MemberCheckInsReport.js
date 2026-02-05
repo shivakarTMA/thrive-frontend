@@ -8,6 +8,7 @@ import Select from "react-select";
 import { authAxios } from "../../../config/config";
 import { toast } from "react-toastify";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
+import { useSelector } from "react-redux";
 
 // Date filter dropdown options
 const dateFilterOptions = [
@@ -23,6 +24,8 @@ const MemberCheckInsReport = () => {
   const { id } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
+    const { user } = useSelector((state) => state.auth);
+  const userRole = user.role;
 
   const [data, setData] = useState([]);
   const [summaryData, setSummaryData] = useState({});
@@ -81,7 +84,14 @@ const MemberCheckInsReport = () => {
   const fetchClub = async () => {
     try {
       const res = await authAxios().get("/club/list");
-      setClubList(filterActiveItems(res.data?.data || []));
+      const activeClubs = filterActiveItems(res.data?.data || []);
+      setClubList(activeClubs);
+
+       // ✅ Set default club (index 0) ONLY if not already set
+    if (!clubFilter && activeClubs.length > 0) {
+      setClubFilter(activeClubs[0].id);
+    }
+
     } catch {
       toast.error("Failed to fetch clubs");
     }
@@ -95,6 +105,8 @@ const MemberCheckInsReport = () => {
     label: c.name,
     value: c.id,
   }));
+
+  console.log(clubOptions,'clubOptions')
 
   /* ------------------ FETCH REPORT ------------------ */
 
@@ -289,7 +301,7 @@ const MemberCheckInsReport = () => {
                 value={clubOptions.find((o) => o.value === clubFilter) || null}
                 onChange={(o) => setClubFilter(o?.value || null)}
                 className="w-full"
-                isClearable
+                isClearable={userRole === "ADMIN" ? true : false}
               />
             </div>
             <div className="relative max-w-[250px] w-full">

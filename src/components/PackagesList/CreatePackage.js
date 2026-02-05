@@ -170,14 +170,18 @@ const CreatePackage = ({
       value: item.id,
     })) || [];
 
-  const serviceOptions =
-    service
-      ?.map((item) => ({
-        label: item.name,
-        value: item.id,
-        type: item.type,
-      }))
-      .filter((item) => item.type !== "PRODUCT") || [];
+const serviceOptions =
+  service
+    ?.map((item) => ({
+      label: item.name,
+      value: item.id,
+      type: item.type,
+    }))
+    .filter(
+      (item) =>
+        item.type !== "PRODUCT" &&
+        item.type !== "GROUP_CLASS"
+    ) || [];
 
   const packageCategoryOptions =
     packageCategory?.map((item) => ({
