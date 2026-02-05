@@ -18,6 +18,7 @@ import { FaCircle } from "react-icons/fa";
 import Select from "react-select";
 import { IoCheckboxOutline, IoEyeOutline } from "react-icons/io5";
 import { Link } from "react-router-dom";
+import { useSelector } from "react-redux";
 
 const statusColors = {
   ACTIVE: "bg-[#D1FADF] text-[#027A48]", // green
@@ -57,6 +58,8 @@ const ChallengeList = () => {
 
   const [clubList, setClubList] = useState([]);
   const [clubFilter, setClubFilter] = useState(null);
+  const { user } = useSelector((state) => state.auth);
+  const userRole = user.role;
 
   const [page, setPage] = useState(1);
   const [rowsPerPage] = useState(10);
@@ -71,10 +74,13 @@ const ChallengeList = () => {
       });
       const data = response.data?.data || [];
       const activeOnly = filterActiveItems(data);
-      if (activeOnly.length === 1) {
-        setClubFilter(activeOnly[0].id);
-      }
       setClubList(activeOnly);
+      if (!clubFilter && activeOnly.length > 0) {
+        setClubFilter({
+          label: activeOnly[0].name,
+          value: activeOnly[0].id,
+        });
+      }
     } catch (error) {
       toast.error("Failed to fetch clubs");
     }
@@ -90,7 +96,7 @@ const ChallengeList = () => {
           ...(search ? { search } : {}),
           ...(typeFilter ? { challenge_type: typeFilter } : {}),
           ...(statusFilter ? { status: statusFilter } : {}),
-          ...(clubFilter ? { club_id: clubFilter } : {}),
+          ...(clubFilter?.value ? { club_id: clubFilter?.value } : {}),
         },
       });
 
@@ -116,6 +122,9 @@ const ChallengeList = () => {
     value: item.id,
   }));
 
+  const selectedClub =
+  clubOptions.find((opt) => opt.value === clubFilter?.value) || null;
+
   useEffect(() => {
     const delayDebounce = setTimeout(() => {
       fetchChallengeList(searchTerm);
@@ -123,7 +132,7 @@ const ChallengeList = () => {
     }, 300);
 
     return () => clearTimeout(delayDebounce);
-  }, [searchTerm, statusFilter, typeFilter]);
+  }, [searchTerm, statusFilter, typeFilter, clubFilter]);
 
   const formik = useFormik({
     initialValues: {
@@ -181,20 +190,20 @@ const ChallengeList = () => {
       reward_second: Yup.string().required("Second reward is required"),
       reward_third: Yup.string().required("Third reward is required"),
       about_challenge: Yup.string().required(
-        "Challenge Essentials is required"
+        "Challenge Essentials is required",
       ),
       position: Yup.string().required("Position is required"),
       winning_caption_heading: Yup.string().required(
-        "Winning caption heading is required"
+        "Winning caption heading is required",
       ),
       winning_caption_subheading: Yup.string().required(
-        "Winning caption subheading is required"
+        "Winning caption subheading is required",
       ),
       progress_caption_heading: Yup.string().required(
-        "Progress caption heading is required"
+        "Progress caption heading is required",
       ),
       progress_caption_subheading: Yup.string().required(
-        "Progress caption subheading is required"
+        "Progress caption subheading is required",
       ),
     }),
 
@@ -245,7 +254,7 @@ const ChallengeList = () => {
       });
 
       toast.success(
-        `"${selectedChallenge.name}" marked as completed successfully!`
+        `"${selectedChallenge.name}" marked as completed successfully!`,
       );
       setShowConfirmModal(false);
       setSelectedChallenge({ id: null, name: "" });
@@ -303,7 +312,7 @@ const ChallengeList = () => {
         <div className="w-full max-w-[200px]">
           <Select
             placeholder="Challenge Type"
-            alue={challengeType.find((o) => o.value === typeFilter) || null}
+            value={challengeType.find((o) => o.value === typeFilter) || null}
             options={challengeType}
             onChange={(option) => setTypeFilter(option?.value)}
             isClearable
@@ -313,7 +322,7 @@ const ChallengeList = () => {
         <div className="w-full max-w-[200px]">
           <Select
             placeholder="Status"
-            alue={statusType.find((o) => o.value === statusFilter) || null}
+            value={statusType.find((o) => o.value === statusFilter) || null}
             options={statusType}
             onChange={(option) => setStatusFilter(option?.value)}
             isClearable
@@ -323,10 +332,11 @@ const ChallengeList = () => {
         <div className="w-fit min-w-[200px]">
           <Select
             placeholder="Filter by club"
-            value={clubOptions.find((o) => o.value === clubFilter) || null}
+            value={selectedClub}
             options={clubOptions}
-            onChange={(option) => setClubFilter(option?.value)}
+            onChange={(option) => setClubFilter(option)}
             styles={customStyles}
+            isClearable={userRole === "ADMIN" ? true : false}
             className="w-full"
           />
         </div>

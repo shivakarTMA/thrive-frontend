@@ -98,6 +98,9 @@ const MemberList = () => {
     value: item.id,
   }));
 
+  const selectedClub =
+    clubOptions.find((opt) => opt.value === clubFilter?.value) || null;
+
   const fetchMemberList = async (currentPage = page, overrideSelected = {}) => {
     try {
       const params = {
@@ -187,16 +190,30 @@ const MemberList = () => {
   useEffect(() => {
     if (!clubList.length) return;
 
-    if (clubIdFromUrl) {
-      const club = clubList.find((c) => c.id === Number(clubIdFromUrl));
-      if (club) {
-        setClubFilter({ label: club.name, value: club.id });
+    // if (clubIdFromUrl) {
+    //   const club = clubList.find((c) => c.id === Number(clubIdFromUrl));
+    //   if (club) {
+    //     setClubFilter({ label: club.name, value: club.id });
+    //   }
+    // } else if (!initialized) {
+    //   setClubFilter({
+    //     label: clubList[0].name,
+    //     value: clubList[0].id,
+    //   });
+    // }
+
+    if (!clubFilter) {
+      if (clubIdFromUrl) {
+        const club = clubList.find((c) => c.id === Number(clubIdFromUrl));
+        if (club) {
+          setClubFilter({ label: club.name, value: club.id });
+        }
+      } else {
+        setClubFilter({
+          label: clubList[0].name,
+          value: clubList[0].id,
+        });
       }
-    } else if (!initialized) {
-      setClubFilter({
-        label: clubList[0].name,
-        value: clubList[0].id,
-      });
     }
 
     if (!initialized) {
@@ -495,7 +512,7 @@ const MemberList = () => {
             <div className="w-fit min-w-[180px]">
               <Select
                 placeholder="Filter by club"
-                value={clubFilter}
+                value={selectedClub}
                 options={clubOptions}
                 onChange={handleClubFilterChange}
                 isClearable={userRole === "ADMIN" ? true : false}
@@ -746,7 +763,6 @@ const MemberList = () => {
                         {member?.trainer ? member?.trainer : "--"}
                       </td>
                       <td className="px-2 py-4">
-                  
                         <span
                           className={`
                             flex items-center justify-between gap-1 rounded-full min-h-[30px] px-3 text-sm w-fit
@@ -759,7 +775,6 @@ const MemberList = () => {
                         >
                           {member?.app_downloaded === true ? "Yes" : "No"}
                         </span>
-
                       </td>
                       <td className="px-2 py-4">
                         <div className="flex flex-col gap-1">

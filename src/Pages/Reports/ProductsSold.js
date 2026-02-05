@@ -106,6 +106,9 @@ const ProductsSold = (props) => {
     value: item.id,
   }));
 
+  const selectedClub =
+    clubOptions.find((opt) => opt.value === clubFilter?.value) || null;
+
   // ---------------------------
   // UPDATE URL WITH PARAMS
   // ---------------------------
@@ -244,17 +247,30 @@ const ProductsSold = (props) => {
 
     // Club filter - only set from URL if present, otherwise default to first club
     const clubId = params.get("club_id");
-    if (clubId) {
-      const club = clubList.find((c) => c.id === Number(clubId));
-      if (club) {
-        setClubFilter({ label: club.name, value: club.id });
+    // if (clubId) {
+    //   const club = clubList.find((c) => c.id === Number(clubId));
+    //   if (club) {
+    //     setClubFilter({ label: club.name, value: club.id });
+    //   }
+    // } else {
+    //   // Set default club only on initial load
+    //   setClubFilter({
+    //     label: clubList[0].name,
+    //     value: clubList[0].id,
+    //   });
+    // }
+    if (!clubFilter) {
+      if (clubId) {
+        const club = clubList.find((c) => c.id === Number(clubId));
+        if (club) {
+          setClubFilter({ label: club.name, value: club.id });
+        }
+      } else {
+        setClubFilter({
+          label: clubList[0].name,
+          value: clubList[0].id,
+        });
       }
-    } else {
-      // Set default club only on initial load
-      setClubFilter({
-        label: clubList[0].name,
-        value: clubList[0].id,
-      });
     }
 
     // Applied filters from URL
@@ -317,7 +333,7 @@ const ProductsSold = (props) => {
   };
 
   const downloadInvoice = async (row) => {
-    setLoading(true)
+    setLoading(true);
     try {
       const payload = {
         order_id: row.order_id, // ⚠️ confirm correct key (id / order_id)
@@ -344,11 +360,11 @@ const ProductsSold = (props) => {
       // Cleanup
       link.remove();
       window.URL.revokeObjectURL(url);
-      setLoading(false)
+      setLoading(false);
     } catch (err) {
       console.error("Invoice download failed", err);
       toast.error("Failed to download invoice");
-      setLoading(false)
+      setLoading(false);
     }
   };
 
@@ -427,7 +443,7 @@ const ProductsSold = (props) => {
             <div className="w-fit min-w-[180px]">
               <Select
                 placeholder="Filter by club"
-                value={clubFilter}
+                value={selectedClub}
                 options={clubOptions}
                 onChange={(option) => setClubFilter(option)}
                 isClearable={userRole === "ADMIN" ? true : false}
@@ -659,31 +675,31 @@ const ProductsSold = (props) => {
                         </td>
                         <td className="px-2 py-4">
                           <div className="flex">
-                          <Tooltip
-                            id={`tooltip-edit-${row.id}`}
-                            content="Download Invoice"
-                            place="left"
-                          >
-                            <div
-                              className="bg-[#F1F1F1] border border-[#D4D4D4] rounded-l-[5px] w-[32px] h-[32px] flex items-center justify-center cursor-pointer"
-                              onClick={() => downloadInvoice(row)}
+                            <Tooltip
+                              id={`tooltip-edit-${row.id}`}
+                              content="Download Invoice"
+                              place="left"
                             >
-                              <MdFileDownload />
-                            </div>
-                          </Tooltip>
-                          <Tooltip
-                            id={`tooltip-return-${row.id}`}
-                            content="Send Invoice"
-                            place="left"
-                          >
-                            <div
-                              className={`bg-[#F1F1F1] border border-[#D4D4D4] rounded-r-[5px] w-[32px] h-[32px] flex items-center justify-center cursor-pointer `}
-                              onClick={() => handleSendInvoice(row)}
+                              <div
+                                className="bg-[#F1F1F1] border border-[#D4D4D4] rounded-l-[5px] w-[32px] h-[32px] flex items-center justify-center cursor-pointer"
+                                onClick={() => downloadInvoice(row)}
+                              >
+                                <MdFileDownload />
+                              </div>
+                            </Tooltip>
+                            <Tooltip
+                              id={`tooltip-return-${row.id}`}
+                              content="Send Invoice"
+                              place="left"
                             >
-                              <IoIosShareAlt />
-                            </div>
-                          </Tooltip>
-                        </div>
+                              <div
+                                className={`bg-[#F1F1F1] border border-[#D4D4D4] rounded-r-[5px] w-[32px] h-[32px] flex items-center justify-center cursor-pointer `}
+                                onClick={() => handleSendInvoice(row)}
+                              >
+                                <IoIosShareAlt />
+                              </div>
+                            </Tooltip>
+                          </div>
 
                           {/* <div className="flex items-center gap-2">
                             <Tooltip content="View Invoice">

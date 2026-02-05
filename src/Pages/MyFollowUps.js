@@ -77,6 +77,9 @@ const MyFollowUps = () => {
     value: item.id,
   }));
 
+  const selectedClub =
+    clubOptions.find((opt) => opt.value === clubFilter?.value) || null;
+
   // ---------------------------
   // UPDATE URL WITH PARAMS
   // ---------------------------
@@ -172,17 +175,31 @@ const MyFollowUps = () => {
     // ---- Club filter ----
     const clubId = params.get("club_id");
 
-    if (clubId) {
-      const club = clubList.find((c) => c.id === Number(clubId));
-      if (club) {
-        setClubFilter({ label: club.name, value: club.id });
+    // if (clubId) {
+    //   const club = clubList.find((c) => c.id === Number(clubId));
+    //   if (club) {
+    //     setClubFilter({ label: club.name, value: club.id });
+    //   }
+    // } else {
+    //   // ✅ default only when URL does NOT have club_id
+    //   setClubFilter({
+    //     label: clubList[0].name,
+    //     value: clubList[0].id,
+    //   });
+    // }
+
+    if (!clubFilter) {
+      if (clubId) {
+        const club = clubList.find((c) => c.id === Number(clubId));
+        if (club) {
+          setClubFilter({ label: club.name, value: club.id });
+        }
+      } else {
+        setClubFilter({
+          label: clubList[0].name,
+          value: clubList[0].id,
+        });
       }
-    } else {
-      // ✅ default only when URL does NOT have club_id
-      setClubFilter({
-        label: clubList[0].name,
-        value: clubList[0].id,
-      });
     }
 
     setFiltersInitialized(true);
@@ -285,7 +302,7 @@ const MyFollowUps = () => {
           <div className="w-fit min-w-[200px]">
             <Select
               placeholder="Filter by club"
-              value={clubFilter}
+              value={selectedClub}
               options={clubOptions}
               onChange={(option) => setClubFilter(option)}
               styles={customStyles}

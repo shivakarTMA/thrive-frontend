@@ -98,6 +98,9 @@ const AllLostFound = () => {
     value: item.id,
   }));
 
+  const selectedClub =
+    clubOptions.find((opt) => opt.value === clubFilter?.value) || null;
+
   const fetchLostFoundList = async (currentPage = page) => {
     try {
       // ✅ Always include date filter in params
@@ -179,17 +182,31 @@ const AllLostFound = () => {
 
     // Club filter - only set from URL if present, otherwise default to first club
     const clubId = params.get("club_id");
-    if (clubId) {
-      const club = clubList.find((c) => c.id === Number(clubId));
-      if (club) {
-        setClubFilter({ label: club.name, value: club.id });
+    // if (clubId) {
+    //   const club = clubList.find((c) => c.id === Number(clubId));
+    //   if (club) {
+    //     setClubFilter({ label: club.name, value: club.id });
+    //   }
+    // } else {
+    //   // Set default club only on initial load
+    //   setClubFilter({
+    //     label: clubList[0].name,
+    //     value: clubList[0].id,
+    //   });
+    // }
+
+    if (!clubFilter) {
+      if (clubId) {
+        const club = clubList.find((c) => c.id === Number(clubId));
+        if (club) {
+          setClubFilter({ label: club.name, value: club.id });
+        }
+      } else {
+        setClubFilter({
+          label: clubList[0].name,
+          value: clubList[0].id,
+        });
       }
-    } else {
-      // Set default club only on initial load
-      setClubFilter({
-        label: clubList[0].name,
-        value: clubList[0].id,
-      });
     }
 
     // Applied filters from URL
@@ -313,7 +330,7 @@ const AllLostFound = () => {
           <Select
             placeholder="Filter by club"
             options={clubOptions}
-            value={clubFilter}
+            value={selectedClub}
             onChange={setClubFilter}
             isClearable={userRole === "ADMIN" ? true : false}
             styles={customStyles}

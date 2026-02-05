@@ -98,6 +98,9 @@ const GroupClassesList = () => {
     value: item.id,
   }));
 
+  const selectedClub =
+  clubOptions.find((opt) => opt.value === clubFilter?.value) || null;
+
   // ---------------------------
   // UPDATE URL WITH PARAMS
   // ---------------------------
@@ -348,17 +351,30 @@ const GroupClassesList = () => {
 
     // Club filter - only set from URL if present, otherwise default to first club
     const clubId = params.get("club_id");
-    if (clubId) {
-      const club = clubList.find((c) => c.id === Number(clubId));
-      if (club) {
-        setClubFilter({ label: club.name, value: club.id });
+    // if (clubId) {
+    //   const club = clubList.find((c) => c.id === Number(clubId));
+    //   if (club) {
+    //     setClubFilter({ label: club.name, value: club.id });
+    //   }
+    // } else {
+    //   // Set default club only on initial load
+    //   setClubFilter({
+    //     label: clubList[0].name,
+    //     value: clubList[0].id,
+    //   });
+    // }
+    if (!clubFilter) {
+      if (clubId) {
+        const club = clubList.find((c) => c.id === Number(clubId));
+        if (club) {
+          setClubFilter({ label: club.name, value: club.id });
+        }
+      } else {
+        setClubFilter({
+          label: clubList[0].name,
+          value: clubList[0].id,
+        });
       }
-    } else {
-      // Set default club only on initial load
-      setClubFilter({
-        label: clubList[0].name,
-        value: clubList[0].id,
-      });
     }
 
     // Applied filters from URL
@@ -494,7 +510,7 @@ const GroupClassesList = () => {
             <div className="w-fit min-w-[180px]">
               <Select
                 placeholder="Filter by club"
-                value={clubFilter}
+                value={selectedClub}
                 options={clubOptions}
                 onChange={(option) => setClubFilter(option)}
                 isClearable={userRole === "ADMIN" ? true : false}

@@ -286,6 +286,9 @@ const AllLeads = () => {
     value: item.id,
   }));
 
+  const selectedClub =
+    clubOptions.find((opt) => opt.value === clubFilter?.value) || null;
+
   // Initial load effect
   useEffect(() => {
     fetchStaff();
@@ -385,16 +388,30 @@ const AllLeads = () => {
       setCustomTo(new Date(endDate));
     }
 
-    if (clubId) {
-      const club = clubList.find((c) => c.id === Number(clubId));
-      if (club) {
-        setClubFilter({ label: club.name, value: club.id });
+    // if (clubId) {
+    //   const club = clubList.find((c) => c.id === Number(clubId));
+    //   if (club) {
+    //     setClubFilter({ label: club.name, value: club.id });
+    //   }
+    // } else {
+    //   setClubFilter({
+    //     label: clubList[0].name,
+    //     value: clubList[0].id,
+    //   });
+    // }
+
+    if (!clubFilter) {
+      if (clubId) {
+        const club = clubList.find((c) => c.id === Number(clubId));
+        if (club) {
+          setClubFilter({ label: club.name, value: club.id });
+        }
+      } else {
+        setClubFilter({
+          label: clubList[0].name,
+          value: clubList[0].id,
+        });
       }
-    } else {
-      setClubFilter({
-        label: clubList[0].name,
-        value: clubList[0].id,
-      });
     }
 
     const urlFilters = {
@@ -617,7 +634,7 @@ const AllLeads = () => {
                   <div className="w-fit min-w-[180px]">
                     <Select
                       placeholder="Filter by club"
-                      value={clubFilter}
+                      value={selectedClub}
                       options={clubOptions}
                       onChange={(option) => setClubFilter(option)}
                       isClearable={userRole === "ADMIN" ? true : false}

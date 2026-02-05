@@ -76,7 +76,6 @@ const routeMap = {
   ClientAnniversaries: "/anniversary-report",
 };
 
-
 const dateFilterOptions = [
   { value: "today", label: "Today" },
   { value: "last_7_days", label: "Last 7 Days" },
@@ -283,7 +282,13 @@ const Home = () => {
       const activeOnly = filterActiveItems(data);
       setClubList(activeOnly);
 
-      if (activeOnly.length > 0) {
+      // if (activeOnly.length > 0) {
+      //   setClubFilter({
+      //     label: activeOnly[0].name,
+      //     value: activeOnly[0].id,
+      //   });
+      // }
+      if (!clubFilter && activeOnly.length > 0) {
         setClubFilter({
           label: activeOnly[0].name,
           value: activeOnly[0].id,
@@ -326,6 +331,10 @@ const Home = () => {
     value: item.id,
   }));
 
+  const selectedClub = clubOptions.find(
+    (option) => option.value === clubFilter?.value,
+  );
+
   // Enquiry line chart
   const maxValueLeads = Math.max(...leadSeries, 0);
 
@@ -358,7 +367,11 @@ const Home = () => {
     },
     legend: { enabled: false },
     tooltip: {
-      useHTML: true, // ✅ allows HTML tags like <b>
+      useHTML: true,
+      outside: true,
+      style: {
+        zIndex: 9999,
+      },
       formatter: function () {
         const label = this.point.category; // dynamic label
         const value = this.y; // count
@@ -451,6 +464,7 @@ const Home = () => {
     },
     legend: { enabled: false },
     tooltip: {
+      outside: true,
       formatter: function () {
         let label = this.point.category;
 
@@ -563,7 +577,7 @@ const Home = () => {
           <div className="w-fit min-w-[180px]">
             <Select
               placeholder="Filter by club"
-              value={clubFilter}
+              value={selectedClub || null}
               options={clubOptions}
               onChange={(option) => setClubFilter(option)}
               // isClearable
@@ -985,7 +999,11 @@ const Home = () => {
                   <LiaAngleRightSolid />
                 </button>
               </div>
-              <SummaryDashboard data={currentData} routeMap={routeMap} generateUrl={generateUrl} />
+              <SummaryDashboard
+                data={currentData}
+                routeMap={routeMap}
+                generateUrl={generateUrl}
+              />
             </div>
           </div>
           <div className="rounded-[15px] p-4 box--shadow bg-white mt-4">
