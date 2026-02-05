@@ -11,9 +11,15 @@ import CreateCoupon from "./CreateCoupon";
 import { authAxios } from "../../config/config";
 import { RiDeleteBin6Line } from "react-icons/ri";
 import ConfirmPopup from "../common/ConfirmPopup";
-import { customStyles, formatAutoDate, formatText } from "../../Helper/helper";
+import {
+  customStyles,
+  filterActiveItems,
+  formatAutoDate,
+  formatText,
+} from "../../Helper/helper";
 import { FaCircle } from "react-icons/fa6";
 import Select from "react-select";
+import { useSelector } from "react-redux";
 
 const CouponsList = () => {
   const [showModal, setShowModal] = useState(false);
@@ -29,12 +35,51 @@ const CouponsList = () => {
   const [originalApplicableRules, setOriginalApplicableRules] = useState([]);
   const leadBoxRef = useRef(null);
 
+  const [clubList, setClubList] = useState([]);
+  const [clubFilter, setClubFilter] = useState(null);
+  const { user } = useSelector((state) => state.auth);
+  const userRole = user.role;
+
+  // Function to fetch club list
+  const fetchClub = async (search = "") => {
+    try {
+      const response = await authAxios().get("/club/list", {
+        params: search ? { search } : {},
+      });
+      const data = response.data?.data || [];
+      const activeOnly = filterActiveItems(data);
+      setClubList(activeOnly);
+      if (!clubFilter && activeOnly.length > 0) {
+        setClubFilter({
+          label: activeOnly[0].name,
+          value: activeOnly[0].id,
+        });
+      }
+    } catch (error) {
+      toast.error("Failed to fetch clubs");
+    }
+  };
+  // Function to fetch role list
+
+  useEffect(() => {
+    fetchClub();
+  }, []);
+
+  const clubOptions = clubList.map((item) => ({
+    label: item.name,
+    value: item.id,
+  }));
+
+  const selectedClub =
+    clubOptions.find((opt) => opt.value === clubFilter?.value) || null;
+
   const fetchCoupons = async (currentPage = page) => {
     try {
       const params = {
         page: currentPage,
         limit: rowsPerPage,
         ...(statusFilter?.value && { status: statusFilter.value }),
+        ...(clubFilter?.value ? { club_id: clubFilter?.value } : {}),
       };
 
       const response = await authAxios().get("/coupon/list", { params });
@@ -51,7 +96,7 @@ const CouponsList = () => {
 
   useEffect(() => {
     fetchCoupons(1); // reset to first page when filter changes
-  }, [statusFilter]);
+  }, [statusFilter, clubFilter]);
 
   const handleOverlayClick = (event) => {
     if (leadBoxRef.current && !leadBoxRef.current.contains(event.target)) {
@@ -111,25 +156,27 @@ const CouponsList = () => {
         position: Yup.string().required("Position is required"),
       }),
       applicable_rules: Yup.array()
-    .of(
-      Yup.object().shape({
-        applicable_type: Yup.string().required("Applicable Type is required"),
-        applicable_id: Yup.mixed().when("applicable_type", {
-          is: (type) => type && type !== "ALL",
-          then: (schema) =>
-            schema
-              .required("Applicable Item is required when type is not ALL")
-              .nullable()
-              .test(
-                "is-not-null",
-                "Applicable Item is required",
-                (value) => value !== null && value !== undefined
-              ),
-          otherwise: (schema) => schema.nullable(),
-        }),
-      })
-    )
-    .min(1, "At least one applicable rule is required"),
+        .of(
+          Yup.object().shape({
+            applicable_type: Yup.string().required(
+              "Applicable Type is required",
+            ),
+            applicable_id: Yup.mixed().when("applicable_type", {
+              is: (type) => type && type !== "ALL",
+              then: (schema) =>
+                schema
+                  .required("Applicable Item is required when type is not ALL")
+                  .nullable()
+                  .test(
+                    "is-not-null",
+                    "Applicable Item is required",
+                    (value) => value !== null && value !== undefined,
+                  ),
+              otherwise: (schema) => schema.nullable(),
+            }),
+          }),
+        )
+        .min(1, "At least one applicable rule is required"),
     }),
     onSubmit: async (values, { resetForm }) => {
       try {
@@ -165,8 +212,8 @@ const CouponsList = () => {
                 r.applicable_type === "ALL"
                   ? null
                   : r.applicable_id == null
-                  ? null
-                  : Number(r.applicable_id),
+                    ? null
+                    : Number(r.applicable_id),
             };
 
             if (r.id == null) {
@@ -219,8 +266,8 @@ const CouponsList = () => {
                     r.applicable_type === "ALL"
                       ? null
                       : r.applicable_id == null
-                      ? null
-                      : Number(r.applicable_id),
+                        ? null
+                        : Number(r.applicable_id),
                 }))
               : [],
           };
@@ -252,7 +299,7 @@ const CouponsList = () => {
       try {
         await authAxios().delete(`/coupon/${couponToDelete.id}`);
         const updatedCoupons = couponsList.filter(
-          (ex) => ex.id !== couponToDelete.id
+          (ex) => ex.id !== couponToDelete.id,
         );
         setCouponsList(updatedCoupons);
         toast.success("Coupon deleted successfully");
@@ -308,6 +355,17 @@ const CouponsList = () => {
             styles={customStyles}
           />
         </div>
+        <div className="w-fit min-w-[200px]">
+          <Select
+            placeholder="Filter by club"
+            value={selectedClub}
+            options={clubOptions}
+            onChange={(option) => setClubFilter(option)}
+            styles={customStyles}
+            isClearable={userRole === "ADMIN" ? true : false}
+            className="w-full"
+          />
+        </div>
       </div>
 
       <div className="box--shadow bg-white rounded-[15px] p-4">
@@ -349,20 +407,20 @@ const CouponsList = () => {
                       {formatText(item?.discount_type)}
                     </td>
                     <td className="px-2 py-4">
-                      {item?.discount_type === "FIXED" && ("₹")}
+                      {item?.discount_type === "FIXED" && "₹"}
                       {item?.discount_value}
-                      {item?.discount_type === "PERCENTAGE" && ("%")}
-                      </td>
+                      {item?.discount_type === "PERCENTAGE" && "%"}
+                    </td>
                     <td className="px-2 py-4">
                       <span
                         className={`flex items-center justify-between gap-1 rounded-full min-h-[30px] px-3 text-sm w-fit ${
                           item?.status === "ACTIVE"
                             ? "bg-[#E8FFE6] text-[#138808]"
                             : item?.status === "INACTIVE"
-                            ? "bg-[#EEEEEE] text-[#666666]"
-                            : item?.status === "EXPIRED"
-                            ? "bg-[#FFE8E8] text-[#D32F2F]"
-                            : ""
+                              ? "bg-[#EEEEEE] text-[#666666]"
+                              : item?.status === "EXPIRED"
+                                ? "bg-[#FFE8E8] text-[#D32F2F]"
+                                : ""
                         }
                         `}
                       >
