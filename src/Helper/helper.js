@@ -344,3 +344,21 @@ export const formatIndianNumber = (value) => {
 
   return new Intl.NumberFormat("en-IN").format(number);
 };
+
+export const sanitizePositiveInteger = (value) => {
+  if (value === "") return "";
+
+  // Remove everything except digits
+  const digitsOnly = value.replace(/[^0-9]/g, "");
+
+  // Prevent values like 000, 00 → keep single 0
+  return digitsOnly.replace(/^0+(?!$)/, "");
+};
+
+export const blockInvalidNumberKeys = (e) => {
+  const invalidKeys = ["-", "+", "e", "E", ".", ","];
+
+  if (invalidKeys.includes(e.key)) {
+    e.preventDefault();
+  }
+};

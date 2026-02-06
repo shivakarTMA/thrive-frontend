@@ -74,18 +74,19 @@ const CompanyList = () => {
 
   const fetchCompanies = async (search = "", currentPage = page) => {
     try {
-      const res = await authAxios().get("/company/list", {
-        params: {
-          page: currentPage,
-          limit: rowsPerPage,
-          ...(search ? { search } : {}),
-        },
-      });
+      const params = {
+        page: currentPage,
+        limit: rowsPerPage,
+        ...(search ? { search } : {}),
+      };
+
+      const res = await authAxios().get("/company/list", { params });
+
+      if (statusFilter) {
+        params.status = statusFilter.value;
+      }
 
       let data = res.data?.data || [];
-      if (statusFilter?.value) {
-        data = data.filter((item) => item.status === statusFilter.value);
-      }
 
       setCompanies(data);
       setPage(res.data?.currentPage || 1);
@@ -124,28 +125,39 @@ const CompanyList = () => {
       phone: "",
       address: "",
       city: "",
-      state: indianStates[0],
-      country: "India",
+      state: null,
+      country: {
+        label: "India",
+        value: "IN",
+      },
       zipcode: "",
       gstno: "",
       status: "ACTIVE",
     },
     validationSchema: Yup.object({
       name: Yup.string().required("Company name is required"),
+      phone: Yup.string()
+        .required("Contact number is required")
+        .test(
+          "is-valid-phone",
+          "Please enter a valid phone number",
+          (value) => value && isValidPhoneNumber(value),
+        ),
     }),
     onSubmit: async (values, { resetForm }) => {
       try {
         const formData = new FormData();
         formData.append("name", values.name);
         formData.append("email", values.email);
-        formData.append(
-          "phone",
-          values.phone?.startsWith("+") ? values.phone.slice(1) : values.phone
-        );
+        formData.append("phone", values.phone);
+        // formData.append(
+        //   "phone",
+        //   values.phone ? values.phone.replace("+", "") : "",
+        // );
         formData.append("address", values.address);
         formData.append("city", values.city);
-        formData.append("state", values.state?.value || values.state);
-        formData.append("country", values.country);
+        formData.append("state", values.state?.label || "");
+        formData.append("country", values.country?.label || "");
         formData.append("zipcode", values.zipcode);
         formData.append("gstno", values.gstno);
         formData.append("status", values.status);
@@ -181,12 +193,6 @@ const CompanyList = () => {
       setShowModal(false);
     },
   });
-
-  const handlePhoneChange = (value) => {
-    formik.setFieldValue("phone", value);
-  };
-
-  console.log(companies, "companies");
 
   return (
     <div className="page--content">
@@ -267,13 +273,21 @@ const CompanyList = () => {
                     key={company.id || index}
                     className="group bg-white border-b hover:bg-gray-50 relative transition duration-700"
                   >
-                    <td className="px-2 py-4">{company?.name ? company?.name : "--"}</td>
-                    <td className="px-2 py-4">{company?.email ? company?.email : "--"}</td>
-                    <td className="px-2 py-4">{company?.city ? company?.city : "--"}</td>
+                    <td className="px-2 py-4">
+                      {company?.name ? company?.name : "--"}
+                    </td>
+                    <td className="px-2 py-4">
+                      {company?.email ? company?.email : "--"}
+                    </td>
+                    <td className="px-2 py-4">
+                      {company?.city ? company?.city : "--"}
+                    </td>
                     <td className="px-2 py-4">
                       {company?.state ? company?.state : "--"}
                     </td>
-                    <td className="px-2 py-4">{company?.country ? company?.country : "--"}</td>
+                    <td className="px-2 py-4">
+                      {company?.country ? company?.country : "--"}
+                    </td>
                     <td className="px-2 py-4">
                       <div
                         className={`flex gap-1 items-center ${
@@ -332,7 +346,6 @@ const CompanyList = () => {
           formik={formik}
           handleOverlayClick={handleOverlayClick}
           leadBoxRef={leadBoxRef}
-          handlePhoneChange={handlePhoneChange}
           indianStates={indianStates}
         />
       )}

@@ -48,17 +48,23 @@ const ExercisesList = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
 
-  const fetchExercisesList = async () => {
+  const fetchExercisesList = async (search = "", currentPage = page) => {
     try {
       // Build query parameters dynamically
-      const params = new URLSearchParams();
+      const params = {
+        page: currentPage,
+        limit: rowsPerPage,
+        ...(search ? { search } : {}),
+      };
 
-      if (searchTerm) params.append("search", searchTerm);
-      if (selectedCategory?.value)
-        params.append("category", selectedCategory.value);
+      if (selectedCategory?.value) {
+        params.category = selectedCategory.value;
+      }
 
       // Example: /exercise/list?search=press&category=Shoulders
-      const res = await authAxios().get(`/exercise/list?${params.toString()}`);
+      const res = await authAxios().get(`/exercise/list`, { params });
+
+      console.log("SHIVAKAR", res.data);
 
       const data = res.data?.data || [];
       setExercisesList(data);
@@ -72,7 +78,12 @@ const ExercisesList = () => {
   };
 
   useEffect(() => {
-    fetchExercisesList();
+    const delayDebounce = setTimeout(() => {
+      setPage(1);
+      fetchExercisesList(searchTerm, 1);
+    }, 300);
+
+    return () => clearTimeout(delayDebounce);
   }, [searchTerm, selectedCategory]);
 
   const handleDeleteClick = (exercise) => {
@@ -175,7 +186,9 @@ const ExercisesList = () => {
                     <td className="px-2 py-4">{row?.category}</td>
                     <td className="px-2 py-4">{row?.name}</td>
                     <td className="px-2 py-4">Admin</td>
-                    <td className="px-2 py-4">{row?.position ? row?.position : "--"}</td>
+                    <td className="px-2 py-4">
+                      {row?.position ? row?.position : "--"}
+                    </td>
                     <td className="px-2 py-4">
                       <div className="flex">
                         <Tooltip
@@ -221,7 +234,7 @@ const ExercisesList = () => {
               )}
             </tbody>
           </table>
-        </div> 
+        </div>
 
         {/* Pagination */}
         <Pagination

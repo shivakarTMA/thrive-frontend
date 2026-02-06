@@ -137,7 +137,8 @@ const RecoveryServices = ({
                     </div>
                     {formik.touched.image && formik.errors.image && (
                       <p className="text-red-500 text-sm mt-1">
-                        {formik.errors.image}
+                        {/* {formik.errors.image} */}
+                        Image is required
                       </p>
                     )}
                   </div>

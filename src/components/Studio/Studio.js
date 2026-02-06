@@ -12,6 +12,7 @@ import { IoSearchOutline } from "react-icons/io5";
 import Select from "react-select";
 import { customStyles } from "../../Helper/helper";
 import { useSelector } from "react-redux";
+import Pagination from "../common/Pagination";
 
 const Studio = () => {
   const [showModal, setShowModal] = useState(false);
@@ -27,6 +28,11 @@ const Studio = () => {
   const [statusFilter, setStatusFilter] = useState(null);
 
   const [file, setFile] = useState(null);
+
+  const [page, setPage] = useState(1);
+  const [rowsPerPage] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
 
   const fetchClub = async (search = "") => {
     try {
@@ -45,12 +51,13 @@ const Studio = () => {
     }
   };
 
-  const fetchStudio = async (search = "") => {
+  const fetchStudio = async (search = "", currentPage = page) => {
     try {
-      const params = {};
-
-      // Search param
-      if (search) params.search = search;
+      const params = {
+        page: currentPage,
+        limit: rowsPerPage,
+        ...(search ? { search } : {}),
+      };
 
       if (clubFilter?.value) {
         params.club_id = clubFilter.value;
@@ -60,6 +67,9 @@ const Studio = () => {
       let data = res.data?.data || res.data || [];
 
       setModule(data);
+      setPage(res.data?.currentPage || 1);
+      setTotalPages(res.data?.totalPage || 1);
+      setTotalCount(res.data?.totalCount || data.length);
     } catch (err) {
       console.error(err);
       toast.error("Failed to fetch studio");
@@ -76,11 +86,10 @@ const Studio = () => {
       value: item.id, // Store club_id as ID
     })) || [];
 
-  console.log(clubOptions, "clubOptions");
-
   useEffect(() => {
     const delayDebounce = setTimeout(() => {
-      fetchStudio(searchTerm);
+      setPage(1);
+      fetchStudio(searchTerm, 1);
     }, 300);
 
     return () => clearTimeout(delayDebounce);
@@ -273,6 +282,17 @@ const Studio = () => {
             </tbody>
           </table>
         </div>
+        <Pagination
+          page={page}
+          totalPages={totalPages}
+          rowsPerPage={rowsPerPage}
+          totalCount={totalCount}
+          currentDataLength={module.length}
+          onPageChange={(newPage) => {
+            setPage(newPage);
+            fetchStudio(searchTerm, newPage);
+          }}
+        />
       </div>
 
       {showModal && (

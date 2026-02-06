@@ -9,6 +9,7 @@ import PhoneInput from "react-phone-number-input";
 import { toast } from "react-toastify";
 import { authAxios } from "../../config/config";
 import { PiImageFill } from "react-icons/pi";
+import { Country, State } from "country-state-city";
 
 const CreateCompany = ({
   setShowModal,
@@ -16,10 +17,14 @@ const CreateCompany = ({
   formik,
   handleOverlayClick,
   leadBoxRef,
-  handlePhoneChange,
   indianStates,
 }) => {
   // ✅ Fetch company details when selectedId changes
+
+  const handlePhoneChange = (value) => {
+    formik.setFieldValue("phone", value);
+  };
+
   useEffect(() => {
     if (!editingCompany) return;
 
@@ -27,6 +32,8 @@ const CreateCompany = ({
       try {
         const res = await authAxios().get(`/company/${id}`);
         const data = res.data?.data || res.data || null;
+
+        console.log(data, "data");
 
         if (data) {
           // ✅ Prefill formik fields with fetched data
@@ -37,11 +44,25 @@ const CreateCompany = ({
             phone: data.phone || "",
             address: data.address || "",
             city: data.city || "",
-            state:
-              typeof data.state === "string"
-                ? { label: data.state, value: data.state }
-                : data.state || "",
-            country: data.country || "",
+            country: data.country
+              ? {
+                  label: data.country,
+                  value: Country.getAllCountries().find(
+                    (c) => c.name === data.country,
+                  )?.isoCode,
+                }
+              : null,
+
+            state: data.state
+              ? {
+                  label: data.state,
+                  value: State.getStatesOfCountry(
+                    Country.getAllCountries().find(
+                      (c) => c.name === data.country,
+                    )?.isoCode,
+                  )?.find((s) => s.name === data.state)?.isoCode,
+                }
+              : null,
             zipcode: data.zipcode || "",
             gstno: data.gstno || "",
             status: data.status || "ACTIVE",
@@ -183,7 +204,9 @@ const CreateCompany = ({
 
                   {/* Phone */}
                   <div>
-                    <label className="mb-2 block">Contact Number</label>
+                    <label className="mb-2 block">
+                      Contact Number<span className="text-red-500">*</span>
+                    </label>
                     <PhoneInput
                       name="phone"
                       value={formik.values.phone}
@@ -194,9 +217,79 @@ const CreateCompany = ({
                       countryCallingCodeEditable={false}
                       className="custom--input w-full custom--phone"
                     />
-                    {/* {formik.touched.phone && formik.errors.phone && (
+                    {formik.touched.phone && formik.errors.phone && (
                       <p className="text-red-500 text-sm mt-1">
                         {formik.errors.phone}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Country */}
+                  <div>
+                    <label className="mb-2 block">Country</label>
+                    <div className="relative">
+                      <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[10]">
+                        <IoLocationOutline />
+                      </span>
+                      <Select
+                        name="country"
+                        value={formik.values.country}
+                        options={Country.getAllCountries().map((c) => ({
+                          label: c.name,
+                          value: c.isoCode,
+                        }))}
+                        onChange={(option) => {
+                          formik.setFieldValue("country", option);
+                          formik.setFieldValue("state", null); // reset state
+                        }}
+                        styles={selectIcon}
+                        placeholder="Select Country"
+                      />
+                    </div>
+                    {/* {formik.touched.country && formik.errors.country && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {formik.errors.country}
+                      </p>
+                    )} */}
+                  </div>
+
+                  {/* State */}
+                  <div>
+                    <label className="mb-2 block">State/Province</label>
+                    <div className="relative">
+                      <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[10]">
+                        <IoLocationOutline />
+                      </span>
+                      <Select
+                        name="state"
+                        value={formik.values.state}
+                        options={
+                          formik.values.country
+                            ? State.getStatesOfCountry(
+                                formik.values.country.value,
+                              ).map((s) => ({
+                                label: s.name,
+                                value: s.isoCode,
+                              }))
+                            : []
+                        }
+                        onChange={(option) =>
+                          formik.setFieldValue("state", option)
+                        }
+                        onBlur={() => formik.setFieldTouched("state", true)}
+                        styles={selectIcon}
+                        isDisabled={!formik.values.country}
+                        placeholder={
+                          formik.values.country
+                            ? "Select State"
+                            : "Select Country First"
+                        }
+                        className="text-black"
+                      />
+                    </div>
+                    {/* {formik.touched.state && formik.errors.state && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {formik.errors.state}
                       </p>
                     )} */}
                   </div>
@@ -220,54 +313,6 @@ const CreateCompany = ({
                     {/* {formik.touched.city && formik.errors.city && (
                       <p className="text-red-500 text-sm mt-1">
                         {formik.errors.city}
-                      </p>
-                    )} */}
-                  </div>
-
-                  {/* State */}
-                  <div>
-                    <label className="mb-2 block">State/Province</label>
-                    <div className="relative">
-                      <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[10]">
-                        <IoLocationOutline />
-                      </span>
-                      <Select
-                        name="state"
-                        value={formik.values.state} // ✅ should be an object { label, value }
-                        options={indianStates}
-                        onChange={(option) =>
-                          formik.setFieldValue("state", option)
-                        } // ✅ store whole object
-                        onBlur={() => formik.setFieldTouched("state", true)}
-                        styles={selectIcon}
-                      />
-                    </div>
-                    {/* {formik.touched.state && formik.errors.state && (
-                      <p className="text-red-500 text-sm mt-1">
-                        {formik.errors.state}
-                      </p>
-                    )} */}
-                  </div>
-
-                  {/* Country */}
-                  <div>
-                    <label className="mb-2 block">Country</label>
-                    <div className="relative">
-                      <span className="absolute top-[50%] translate-y-[-50%] left-[15px]">
-                        <IoLocationOutline />
-                      </span>
-                      <input
-                        type="text"
-                        name="country"
-                        value={formik.values.country}
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
-                        className="custom--input w-full input--icon"
-                      />
-                    </div>
-                    {/* {formik.touched.country && formik.errors.country && (
-                      <p className="text-red-500 text-sm mt-1">
-                        {formik.errors.country}
                       </p>
                     )} */}
                   </div>

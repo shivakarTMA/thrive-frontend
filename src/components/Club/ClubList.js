@@ -62,7 +62,6 @@ const indianStates = [
 ];
 
 const ClubList = () => {
-  const qrRefs = useRef({});
   const [showModal, setShowModal] = useState(false);
   const [club, setClub] = useState([]);
   const [editingClub, setEditingClub] = useState(null);
@@ -91,19 +90,19 @@ const ClubList = () => {
 
   const fetchClubs = async (search = "", currentPage = page) => {
     try {
-      const res = await authAxios().get("/club/list", {
-        params: {
-          page: currentPage,
-          limit: rowsPerPage,
-          ...(search ? { search } : {}),
-        },
-      });
+      const params = {
+        page: currentPage,
+        limit: rowsPerPage,
+        ...(search ? { search } : {}),
+      };
 
-      let data = res.data?.data || [];
-      if (statusFilter?.value) {
-        data = data.filter((item) => item.status === statusFilter.value);
+      const res = await authAxios().get("/club/list", { params });
+
+      if (statusFilter) {
+        params.status = statusFilter.value;
       }
 
+      let data = res.data?.data || [];
       setClub(data);
       setPage(res.data?.currentPage || 1);
       setTotalPages(res.data?.totalPage || 1);
@@ -120,14 +119,12 @@ const ClubList = () => {
 
   useEffect(() => {
     const delayDebounce = setTimeout(() => {
-      fetchClubs(searchTerm);
       setPage(1);
+      fetchClubs(searchTerm, 1);
     }, 300);
 
     return () => clearTimeout(delayDebounce);
   }, [searchTerm, statusFilter]);
-
-  console.log(club, "club");
 
   const handleOverlayClick = (e) => {
     if (leadBoxRef.current && !leadBoxRef.current.contains(e.target)) {
@@ -171,7 +168,7 @@ const ClubList = () => {
           "is-valid-state",
           "State/Province is required",
           (value) =>
-            value && (typeof value === "object" || typeof value === "string")
+            value && (typeof value === "object" || typeof value === "string"),
         )
         .required("State/Province is required"),
       country: Yup.string().required("Country is required"),
@@ -207,7 +204,7 @@ const ClubList = () => {
         formData.append("email", values.email);
         formData.append(
           "phone",
-          values.phone?.startsWith("+") ? values.phone.slice(1) : values.phone
+          values.phone?.startsWith("+") ? values.phone.slice(1) : values.phone,
         );
         formData.append("address", values.address);
         formData.append("city", values.city);
@@ -222,7 +219,7 @@ const ClubList = () => {
         formData.append("gstno", values.gstno);
         formData.append(
           "club_available_service",
-          JSON.stringify(values.club_available_service)
+          JSON.stringify(values.club_available_service),
         );
 
         formData.append("trial_duration", values.trial_duration);

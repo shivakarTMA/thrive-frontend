@@ -90,9 +90,10 @@ const GalleryList = () => {
   }, []);
 
   // Fetch gallery list when filters change
-  useEffect(() => {
-    fetchGallery();
-  }, [positionFilter, clubFilter]);
+useEffect(() => {
+  setPage(1);
+  fetchGallery(1);
+}, [positionFilter, clubFilter]);
 
   // Club dropdown options
   const clubOptions =

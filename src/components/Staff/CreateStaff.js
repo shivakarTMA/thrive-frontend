@@ -1,7 +1,13 @@
 import React, { useEffect, useRef, useState } from "react";
 import Select from "react-select";
 import { IoAppsSharp, IoCloseCircle, IoPricetagSharp } from "react-icons/io5";
-import { filterActiveItems, selectIcon } from "../../Helper/helper";
+import {
+  allowOnlyPositiveNumbers,
+  blockInvalidNumberKeys,
+  filterActiveItems,
+  sanitizePositiveInteger,
+  selectIcon,
+} from "../../Helper/helper";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { toast } from "react-toastify";
@@ -32,13 +38,13 @@ const today = new Date();
 const adultLimitDate = new Date(
   today.getFullYear() - 18,
   today.getMonth(),
-  today.getDate()
+  today.getDate(),
 );
 
 const oldestYearLimit = new Date(
   today.getFullYear() - 50,
   today.getMonth(),
-  today.getDate()
+  today.getDate(),
 );
 
 const genderOptions = [
@@ -131,7 +137,7 @@ const CreateStaff = ({
             .map((item) =>
               clubIds.includes(item.id)
                 ? { label: item.name, value: item.id }
-                : null
+                : null,
             )
             .filter(Boolean);
 
@@ -208,7 +214,7 @@ const CreateStaff = ({
         <div className="bg-white rounded-t-[10px] flex gap-3 items-center justify-between py-4 px-4 border-b">
           <h2 className="text-xl font-semibold">
             {editingOption ? "Edit a Staff" : "Create a Staff"}
-            </h2>
+          </h2>
           <div className="close--lead cursor-pointer" onClick={handleLeadModal}>
             <IoCloseCircle className="text-3xl" />
           </div>
@@ -348,7 +354,7 @@ const CreateStaff = ({
                       <Select
                         name="gender"
                         value={genderOptions.find(
-                          (opt) => opt.value === formik.values.gender
+                          (opt) => opt.value === formik.values.gender,
                         )}
                         options={genderOptions}
                         onChange={(option) =>
@@ -380,7 +386,7 @@ const CreateStaff = ({
                           roleOptions.find(
                             (option) =>
                               option.value.toString() ===
-                              formik.values.role?.toString()
+                              formik.values.role?.toString(),
                           ) || null
                         }
                         options={roleOptions}
@@ -416,9 +422,15 @@ const CreateStaff = ({
                         <input
                           type="number"
                           name="experience"
-                          className="custom--input w-full input--icon"
+                          className="custom--input w-full input--icon number--appearance-none"
                           value={formik.values.experience}
-                          onChange={formik.handleChange}
+                          onKeyDown={blockInvalidNumberKeys} // ⛔ blocks typing -, e, etc.
+                          onChange={(e) => {
+                            const cleanValue = sanitizePositiveInteger(
+                              e.target.value,
+                            );
+                            formik.setFieldValue("experience", cleanValue);
+                          }}
                           onBlur={formik.handleBlur}
                         />
                       </div>
@@ -445,7 +457,7 @@ const CreateStaff = ({
                           onChange={(selectedOptions) => {
                             setSelected(selectedOptions); // set objects
                             const values = selectedOptions.map(
-                              (opt) => opt.value
+                              (opt) => opt.value,
                             ); // only IDs
                             formik.setFieldValue("club_id", values);
                           }}
@@ -515,7 +527,7 @@ const CreateStaff = ({
                             value={
                               yesNoOptions.find(
                                 (opt) =>
-                                  opt.value === formik.values?.show_on_app
+                                  opt.value === formik.values?.show_on_app,
                               ) || null
                             }
                             options={yesNoOptions}
@@ -552,7 +564,7 @@ const CreateStaff = ({
                               onChange={(e) =>
                                 formik.setFieldValue(
                                   `content[${index}].title`,
-                                  e.target.value
+                                  e.target.value,
                                 )
                               }
                             />
@@ -574,7 +586,7 @@ const CreateStaff = ({
                               onChange={(e) =>
                                 formik.setFieldValue(
                                   `content[${index}].description`,
-                                  e.target.value
+                                  e.target.value,
                                 )
                               }
                             />

@@ -134,7 +134,7 @@ const Login = (props) => {
                   <input
                     id="identifier"
                     name="identifier"
-                    type="text"
+                    type="number"
                     value={data.identifier}
                     onChange={handleChange}
                     required
@@ -142,7 +142,7 @@ const Login = (props) => {
                     maxLength={10} // Maximum 10 characters
                     pattern="\d{10}" // Only allow digits
                     title="Phone number must be exactly 10 digits"
-                    className="block w-full rounded-md border-0 py-1.5 px-4 text-gray-900 focus:outline-none sm:text-sm"
+                    className="number--appearance-none block w-full rounded-md border-0 py-1.5 px-4 text-gray-900 focus:outline-none sm:text-sm"
                     placeholder="Enter your phone number"
                   />
                 </div>
@@ -166,11 +166,11 @@ const Login = (props) => {
                   <input
                     id="otp"
                     name="otp"
-                    type="text"
+                    type="number"
                     value={data.otp}
                     onChange={handleChange}
                     required
-                    className="block w-full rounded-md border-0 py-1.5 px-4 text-gray-900 focus:outline-none sm:text-sm"
+                    className="number--appearance-none block w-full rounded-md border-0 py-1.5 px-4 text-gray-900 focus:outline-none sm:text-sm"
                     placeholder="Enter your OTP"
                     minLength={6}
                     maxLength={6}

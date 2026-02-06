@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { addYears, subYears } from "date-fns";
+import { addYears, format, subYears } from "date-fns";
 import { FaCalendarDays } from "react-icons/fa6";
 import Select from "react-select";
 import {
@@ -20,10 +20,7 @@ const dateFilterOptions = [
   { value: "custom", label: "Custom Date" },
 ];
 
-const formatDate = (date) => {
-  if (!date) return null;
-  return date.toISOString().split("T")[0]; // YYYY-MM-DD
-};
+const formatDate = (date) => format(date, "yyyy-MM-dd");
 
 const LeadSourcePerformance = () => {
   const [leadSource, setLeadSource] = useState([]);

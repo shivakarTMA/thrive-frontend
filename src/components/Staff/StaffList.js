@@ -133,8 +133,8 @@ const StaffList = () => {
 
   useEffect(() => {
     const delayDebounce = setTimeout(() => {
-      fetchStaff(searchTerm);
       setPage(1);
+      fetchStaff(searchTerm, 1);
     }, 300);
 
     return () => clearTimeout(delayDebounce);
@@ -316,8 +316,8 @@ const StaffList = () => {
     <div className="page--content">
       <div className="flex items-end justify-between gap-2 mb-5">
         <div className="title--breadcrumbs">
-          <p className="text-sm">{`Home > All Users`}</p>
-          <h1 className="text-3xl font-semibold">All Users</h1>
+          <p className="text-sm">{`Home > All Staff`}</p>
+          <h1 className="text-3xl font-semibold">All Staff</h1>
         </div>
         <button
           type="button"
@@ -328,7 +328,7 @@ const StaffList = () => {
             setShowModal(true);
           }}
         >
-          <FiPlus /> Add User
+          <FiPlus /> Add Staff
         </button>
       </div>
 

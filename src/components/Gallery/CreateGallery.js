@@ -249,12 +249,12 @@ const CreateGallery = ({
                         <FaListUl />
                       </span>
                       <input
-                        type="text"
+                        type="number"
                         name="position"
                         value={formik.values.position}
                         onChange={formik.handleChange}
                         onBlur={formik.handleBlur}
-                        className="custom--input w-full input--icon"
+                        className="custom--input w-full input--icon number--appearance-none"
                       />
                     </div>
                     {formik.touched.position && formik.errors.position && (

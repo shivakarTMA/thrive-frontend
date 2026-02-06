@@ -17,6 +17,8 @@ import {
   formatText,
 } from "../../Helper/helper";
 import { FaCircle } from "react-icons/fa6";
+import { useSelector } from "react-redux";
+import Pagination from "../common/Pagination";
 
 // Main Services component
 const Services = () => {
@@ -26,6 +28,7 @@ const Services = () => {
   const [module, setModule] = useState([]);
   // State to hold list of clubs
   const [club, setClub] = useState([]);
+  const [clubFilter, setClubFilter] = useState(null);
   // State to hold list of studios
   const [studio, setStudio] = useState([]);
   // State to hold editing option data
@@ -36,6 +39,13 @@ const Services = () => {
   const [searchTerm, setSearchTerm] = useState("");
   // State for status filter
   const [statusFilter, setStatusFilter] = useState(null);
+  const { user } = useSelector((state) => state.auth);
+  const currentUserRole = user?.role; // Example, dynamically from user info
+
+  const [page, setPage] = useState(1);
+  const [rowsPerPage] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
 
   // Function to fetch clubs
   const fetchClub = async (search = "") => {
@@ -74,16 +84,28 @@ const Services = () => {
   };
 
   // Function to fetch services
-  const fetchServices = async (search = "") => {
+  const fetchServices = async (search = "", currentPage = page) => {
     try {
-      const res = await authAxios().get("/service/list", {
-        params: search ? { search } : {},
-      });
-      let data = res.data?.data || res.data || [];
-      if (statusFilter?.value) {
-        data = data.filter((item) => item.status === statusFilter.value);
+      const params = {
+        page: currentPage,
+        limit: rowsPerPage,
+        ...(search ? { search } : {}),
+      };
+      if (clubFilter) {
+        params.club_id = clubFilter.value;
       }
+
+      if (statusFilter) {
+        params.status = statusFilter.value;
+      }
+      const res = await authAxios().get("/service/list", { params });
+
+      let data = res.data?.data || res.data || [];
+
       setModule(data);
+      setPage(res.data?.currentPage || 1);
+      setTotalPages(res.data?.totalPage || 1);
+      setTotalCount(res.data?.totalCount || data.length);
     } catch (err) {
       console.error(err);
       toast.error("Failed to fetch companies");
@@ -112,12 +134,15 @@ const Services = () => {
     })) || [];
 
   // Debounced search for services
+
   useEffect(() => {
     const delayDebounce = setTimeout(() => {
-      fetchServices(searchTerm);
+      setPage(1);
+      fetchServices(searchTerm, 1);
     }, 300);
+
     return () => clearTimeout(delayDebounce);
-  }, [searchTerm, statusFilter]);
+  }, [searchTerm, statusFilter, clubFilter]);
 
   // Handle overlay click to close modal
   const handleOverlayClick = (e) => {
@@ -146,7 +171,7 @@ const Services = () => {
             return value !== null;
           }
           return true;
-        }
+        },
       ),
       name: Yup.string().required("Title is required"),
       club_id: Yup.string().required("Club is required"),
@@ -246,6 +271,17 @@ const Services = () => {
             styles={customStyles}
           />
         </div>
+        <div className="w-fit min-w-[200px]">
+          <Select
+            placeholder="Filter by club"
+            value={clubFilter}
+            options={clubOptions}
+            onChange={(option) => setClubFilter(option)}
+            isClearable={currentUserRole === "ADMIN" ? true : false}
+            styles={customStyles}
+            className="w-full"
+          />
+        </div>
       </div>
 
       {/* Table Section */}
@@ -332,6 +368,18 @@ const Services = () => {
             </tbody>
           </table>
         </div>
+        {/* Pagination */}
+        <Pagination
+          page={page}
+          totalPages={totalPages}
+          rowsPerPage={rowsPerPage}
+          totalCount={totalCount}
+          currentDataLength={module.length}
+          onPageChange={(newPage) => {
+            setPage(newPage);
+            fetchServices(searchTerm, newPage);
+          }}
+        />
       </div>
 
       {/* Modal for Create/Update Service */}

@@ -8,6 +8,7 @@ import { LiaEdit } from "react-icons/lia";
 import { FaCircle } from "react-icons/fa6";
 import CreatePackageCategory from "./CreatePackageCategory";
 import { authAxios } from "../../config/config";
+import Pagination from "../common/Pagination";
 
 const PackageCategoryList = () => {
   const [showModal, setShowModal] = useState(false);
@@ -15,11 +16,23 @@ const PackageCategoryList = () => {
   const [editingOption, setEditingOption] = useState(null);
   const leadBoxRef = useRef(null);
 
-  const fetchPackageCategoryList = async () => {
+  const [page, setPage] = useState(1);
+  const [rowsPerPage] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+
+  const fetchPackageCategoryList = async (currentPage = page) => {
     try {
-      const res = await authAxios().get("/package-category/list");
+      const params = {
+        page: currentPage,
+        limit: rowsPerPage,
+      };
+      const res = await authAxios().get("/package-category/list", { params });
       let data = res.data?.data || res.data || [];
       setPackages(data);
+      setPage(res.data?.currentPage || 1);
+      setTotalPages(res.data?.totalPage || 1);
+      setTotalCount(res.data?.totalCount || data.length);
     } catch (err) {
       console.error(err);
       toast.error("Failed to fetch companies");
@@ -63,9 +76,13 @@ const PackageCategoryList = () => {
 
         if (editingOption && editingOption) {
           // Update
-          await authAxios().put(`/package-category/${editingOption}`, formData, {
-            headers: { "Content-Type": "multipart/form-data" },
-          });
+          await authAxios().put(
+            `/package-category/${editingOption}`,
+            formData,
+            {
+              headers: { "Content-Type": "multipart/form-data" },
+            },
+          );
           toast.success("Updated Successfully");
         } else {
           // Create
@@ -185,6 +202,18 @@ const PackageCategoryList = () => {
             </tbody>
           </table>
         </div>
+        {/* Pagination */}
+        <Pagination
+          page={page}
+          totalPages={totalPages}
+          rowsPerPage={rowsPerPage}
+          totalCount={totalCount}
+          currentDataLength={packages.length}
+          onPageChange={(newPage) => {
+            setPage(newPage);
+            fetchPackageCategoryList(newPage);
+          }}
+        />
       </div>
       {showModal && (
         <CreatePackageCategory
