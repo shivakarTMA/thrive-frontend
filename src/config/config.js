@@ -11,9 +11,6 @@ export const apiAxios = () => {
   });
 };
 
-console.log("BaseURL:", process.env.REACT_APP_BASEURL);
-console.log("API Key:", process.env.REACT_APP_API_KEY);
-
 export const phoneAxios = axios.create({
   baseURL: process.env.REACT_APP_BASEURL,
   headers: {

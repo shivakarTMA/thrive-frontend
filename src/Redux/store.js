@@ -3,6 +3,12 @@ import logger from "redux-logger";
 import rootReducer from "./Reducers/rootReducer";
 import storage from "redux-persist/lib/storage";
 import { persistStore, persistReducer, FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER } from "redux-persist";
+import { createLogger } from "redux-logger";
+
+const loggerMiddleware = createLogger({
+  predicate: (getState, action) =>
+    !action.type.startsWith("persist/"),
+});
 
 const persistConfig = {
   key: "thrive",
@@ -18,7 +24,7 @@ export const store = configureStore({
       serializableCheck: {
         ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
       },
-    }).concat(logger),
+    }).concat(loggerMiddleware),
   devTools: process.env.NODE_ENV !== "production",
 });
 
