@@ -424,7 +424,7 @@ const NewJoineesReport = () => {
           <table className="w-full text-sm text-left ">
             <thead className="text-xs text-gray-700 uppercase bg-gray-50">
               <tr>
-                <th className="px-2 py-4 min-w-[50px]">S.no</th>
+                {/* <th className="px-2 py-4 min-w-[50px]">S.no</th> */}
                 <th className="px-2 py-4 min-w-[150px]">Club Name</th>
                 <th className="px-2 py-4 min-w-[100px]">Bill Type</th>
                 <th className="px-2 py-4 min-w-[100px]">Trial Type</th>
@@ -459,7 +459,7 @@ const NewJoineesReport = () => {
                     key={index}
                     className="bg-white border-b hover:bg-gray-50"
                   >
-                    <td className="px-2 py-4">{index + 1}</td>
+                    {/* <td className="px-2 py-4">{index + 1}</td> */}
                     <td className="px-2 py-4">{row.club_name || "--"}</td>
                     <td className="px-2 py-4">{formatText(row.subscription_type) || "--"}</td>
                     <td className="px-2 py-4">
