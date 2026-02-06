@@ -23,6 +23,7 @@ import CreateMemberForm from "../../Pages/CreateMemberForm";
 import { useDropzone } from "react-dropzone";
 import { authAxios } from "../../config/config";
 import { toast } from "react-toastify";
+import NotificationDropdown from "./NotificationDropdown";
 
 const Topbar = ({
   setToggleMenuBar,
@@ -44,6 +45,7 @@ const Topbar = ({
   const [hasSearched, setHasSearched] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState(null);
   const [leadTopModal, setLeadTopModal] = useState(false);
+  const [notificationList, setNotificationList] = useState(false);
   const [memberModal, setMemberModal] = useState(false);
   const [invoiceModal, setInvoiceModal] = useState(false);
   const [profileModal, setProfileModal] = useState(false);
@@ -55,13 +57,13 @@ const Topbar = ({
   const [previewDuplicateLeads, setPreviewDuplicateLeads] = useState([]);
 
   const getInitials = (name = "") => {
-  return name
-    .trim()
-    .split(/\s+/)
-    .map(word => word[0])
-    .join("")
-    .toUpperCase();
-};
+    return name
+      .trim()
+      .split(/\s+/)
+      .map((word) => word[0])
+      .join("")
+      .toUpperCase();
+  };
 
   const toggleDropdown = (name) => {
     setActiveDropdown((prev) => (prev === name ? null : name));
@@ -79,16 +81,16 @@ const Topbar = ({
   const fetchSearchResults = async (searchTerm) => {
     try {
       const res = await authAxios().get(
-        `/member/lead/list?search=${searchTerm}`
+        `/member/lead/list?search=${searchTerm}`,
       );
       const response = res.data;
 
       if (response.status) {
         const leads = response.data.rows.filter(
-          (item) => item.entity_type === "LEAD"
+          (item) => item.entity_type === "LEAD",
         );
         const members = response.data.rows.filter(
-          (item) => item.entity_type === "MEMBER"
+          (item) => item.entity_type === "MEMBER",
         );
         setFilteredUsers({ leads, members });
       } else {
@@ -203,7 +205,7 @@ const Topbar = ({
 
   return (
     <>
-      <section className="top--bar p-3 border-b border-b-[#000]">
+      <section className="top--bar p-3 border-b border-b-[#000] relative">
         <div className="inner--container flex justify-between gap-3">
           {/* Left Section */}
           <div className="topbar--left flex items-center gap-3 w-full flex-1">
@@ -374,8 +376,18 @@ const Topbar = ({
                     </div> */}
                   {/* </DropdownMenu> */}
                 </div>
-
-                <img src={notificationBell} className="cursor-pointer w-6" />
+                <div className="notification--top relative">
+                  <div className="notification--count rounded-[50px] text-white flex items-center justify-center w-[21px] h-[21px] absolute top-[-10px] right-[-5px]">
+                    <span className="text-[12px]">3</span>
+                  </div>
+                  <img
+                    src={notificationBell}
+                    onClick={() => {
+                      setNotificationList(true);
+                    }}
+                    className="cursor-pointer w-6"
+                  />
+                </div>
               </>
             )}
             <div className="relative">
@@ -417,6 +429,13 @@ const Topbar = ({
             </div>
           </div>
         </div>
+
+        {/* Notification Dropdown */}
+        {notificationList && (
+          <NotificationDropdown setNotificationList={setNotificationList} />
+        )}
+
+        {/* Notification Dropdown end */}
       </section>
       {leadTopModal && <CreateLeadForm setLeadModal={setLeadTopModal} />}
       {memberModal && <CreateMemberForm setMemberModal={setMemberModal} />}
