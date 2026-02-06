@@ -499,7 +499,7 @@ const NewJoineesReport = () => {
                     <td className="px-2 py-4">{row.sales_rep_name || "--"}</td>
 
                     <td className="px-2 py-4">
-                      ₹{formatIndianNumber(row.booking_amount) || 0}
+                      ₹{formatIndianNumber(row.amount) || 0}
                     </td>
                     <td className="px-2 py-4">
                       ₹{formatIndianNumber(row.cgst) || 0}
@@ -511,10 +511,10 @@ const NewJoineesReport = () => {
                       ₹{formatIndianNumber(row.igst) || 0}
                     </td>
                     <td className="px-2 py-4">
-                      ₹{formatIndianNumber(row.final_amount) || 0}
+                      ₹{formatIndianNumber(row.total_amount) || 0}
                     </td>
                     <td className="px-2 py-4">
-                      ₹{formatIndianNumber(row.paid_amount) || 0}
+                      ₹{formatIndianNumber(row.booking_amount) || 0}
                     </td>
                     <td className="px-2 py-4">{formatText(row.payment_method) || "--"}</td>
                     <td className="px-2 py-4">
