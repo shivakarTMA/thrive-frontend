@@ -137,69 +137,69 @@ const Topbar = ({
     setSearchItem("");
   }, [location.pathname]);
 
-  const handleBulkUpload = (acceptedFiles) => {
-    const file = acceptedFiles[0];
+  // const handleBulkUpload = (acceptedFiles) => {
+  //   const file = acceptedFiles[0];
 
-    Papa.parse(file, {
-      header: true,
-      skipEmptyLines: true,
-      complete: (results) => {
-        const existingPhones = new Set(
-          allLeads.map((lead) => lead.phoneNumber)
-        );
-        const newLeads = [];
-        const duplicates = [];
-        const errors = [];
+  //   Papa.parse(file, {
+  //     header: true,
+  //     skipEmptyLines: true,
+  //     complete: (results) => {
+  //       const existingPhones = new Set(
+  //         allLeads.map((lead) => lead.phoneNumber)
+  //       );
+  //       const newLeads = [];
+  //       const duplicates = [];
+  //       const errors = [];
 
-        results.data.forEach((row, idx) => {
-          const name = row["Name"]?.trim();
-          const phone = row["Phone Number"]?.trim();
-          const email = row["Email"]?.trim();
+  //       results.data.forEach((row, idx) => {
+  //         const name = row["Name"]?.trim();
+  //         const phone = row["Phone Number"]?.trim();
+  //         const email = row["Email"]?.trim();
 
-          // Check required fields
-          if (!name || !phone || !email) {
-            errors.push({
-              row: idx + 2,
-              reason: "Missing Name, Phone, or Email",
-            });
-            return;
-          }
+  //         // Check required fields
+  //         if (!name || !phone || !email) {
+  //           errors.push({
+  //             row: idx + 2,
+  //             reason: "Missing Name, Phone, or Email",
+  //           });
+  //           return;
+  //         }
 
-          const isDuplicatePhone = existingPhones.has(phone);
+  //         const isDuplicatePhone = existingPhones.has(phone);
 
-          const leadObj = {
-            id: allLeads.length + newLeads.length + 1,
-            enquiryId: `ENQ${allLeads.length + newLeads.length + 1000}`,
-            createdOn: new Date().toLocaleDateString("en-GB"),
-            name,
-            phoneNumber: phone,
-            email,
-            leadType: row["Lead Type"] || "Phone",
-            leadSource: row["Lead Source"] || "Unknown",
-            leadStatus: row["Lead Status"] || "New",
-            lastUpdated: new Date().toLocaleDateString("en-GB"),
-            callTag: "Not Called",
-            staff: row["Staff"] || "Unassigned",
-          };
+  //         const leadObj = {
+  //           id: allLeads.length + newLeads.length + 1,
+  //           enquiryId: `ENQ${allLeads.length + newLeads.length + 1000}`,
+  //           createdOn: new Date().toLocaleDateString("en-GB"),
+  //           name,
+  //           phoneNumber: phone,
+  //           email,
+  //           leadType: row["Lead Type"] || "Phone",
+  //           leadSource: row["Lead Source"] || "Unknown",
+  //           leadStatus: row["Lead Status"] || "New",
+  //           lastUpdated: new Date().toLocaleDateString("en-GB"),
+  //           callTag: "Not Called",
+  //           staff: row["Staff"] || "Unassigned",
+  //         };
 
-          if (isDuplicatePhone) {
-            duplicates.push(leadObj); // Only duplicates by phone
-          } else {
-            newLeads.push(leadObj);
-          }
-        });
+  //         if (isDuplicatePhone) {
+  //           duplicates.push(leadObj); // Only duplicates by phone
+  //         } else {
+  //           newLeads.push(leadObj);
+  //         }
+  //       });
 
-        setPreviewNewLeads(newLeads);
-        setPreviewDuplicateLeads(duplicates);
-        setShowUploadModal(true);
-      },
-    });
-  };
+  //       setPreviewNewLeads(newLeads);
+  //       setPreviewDuplicateLeads(duplicates);
+  //       setShowUploadModal(true);
+  //     },
+  //   });
+  // };
 
-  const { getRootProps, getInputProps } = useDropzone({
-    onDrop: handleBulkUpload,
-    accept: ".csv",
-  });
+  // const { getRootProps, getInputProps } = useDropzone({
+  //   onDrop: handleBulkUpload,
+  //   accept: ".csv",
+  // });
 
   return (
     <>

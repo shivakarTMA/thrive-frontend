@@ -5,6 +5,7 @@ const initialState = {
     accessToken: '',
     user: {},
     isAuthenticated: false,
+    tokenExpiry: null,
 };
 
 export const authSlice = createSlice({
@@ -22,15 +23,20 @@ export const authSlice = createSlice({
         setIsAuthenticated:(state,action)=>{
          state.isAuthenticated=action.payload
         },
+
+        setTokenExpiry: (state, action) => {
+            state.tokenExpiry = action.payload;
+        },
         
         logout: (state, action) => {
-            state.user = {}
-            state.accessToken = ''
-            state.isAuthenticated=false
+            state.user = {};
+            state.accessToken = '';
+            state.isAuthenticated=false;
+            state.tokenExpiry = null;
         },
     },
 });
 
-export const { setAccessToken,  setuser ,setIsAuthenticated , logout  } = authSlice.actions;
+export const { setAccessToken,  setuser ,setIsAuthenticated , setTokenExpiry, logout  } = authSlice.actions;
 
 export default authSlice.reducer;

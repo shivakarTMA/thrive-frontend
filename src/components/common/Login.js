@@ -7,12 +7,14 @@ import { useDispatch, useSelector } from "react-redux";
 import {
   setAccessToken,
   setIsAuthenticated,
+  setTokenExpiry,
   setuser,
 } from "../../Redux/Reducers/authSlice";
 import { FaPhoneAlt } from "react-icons/fa";
 import { RiLockPasswordFill } from "react-icons/ri";
 import Logo from "../../assets/images/DLF-Thrive-New-Logo-1-White.png";
 import { authAxios } from "../../config/config";
+import {jwtDecode} from "jwt-decode";
 
 // Login component
 const Login = (props) => {
@@ -62,7 +64,7 @@ const Login = (props) => {
         }
       } catch (error) {
         toast.error(
-          error.response?.data?.message || "Invalid phone number or email"
+          error.response?.data?.message || "Invalid phone number or email",
         );
       } finally {
         setLoading(false);
@@ -78,9 +80,14 @@ const Login = (props) => {
 
         if (response.data.status) {
           const result = response.data.data;
-          dispatch(setAccessToken(result.token));
+          const token = result.token;
+          const decoded = jwtDecode(token);
+
+          dispatch(setAccessToken(token));
           dispatch(setuser(result));
           dispatch(setIsAuthenticated(true));
+          // ✅ Store expiry in milliseconds
+          dispatch(setTokenExpiry(decoded.exp * 1000));
           toast.success(response.data.message || "Login successful");
           navigate("/");
         } else {
@@ -131,14 +138,13 @@ const Login = (props) => {
                     value={data.identifier}
                     onChange={handleChange}
                     required
-                    minLength={10}        // Minimum 10 characters
-                    maxLength={10}        // Maximum 10 characters
-                    pattern="\d{10}"      // Only allow digits
+                    minLength={10} // Minimum 10 characters
+                    maxLength={10} // Maximum 10 characters
+                    pattern="\d{10}" // Only allow digits
                     title="Phone number must be exactly 10 digits"
                     className="block w-full rounded-md border-0 py-1.5 px-4 text-gray-900 focus:outline-none sm:text-sm"
                     placeholder="Enter your phone number"
                   />
-
                 </div>
               </div>
             </div>

@@ -15,7 +15,7 @@ import {
   formatText,
 } from "../Helper/helper";
 import CreateLeadForm from "./CreateLeadForm";
-import { Link, useParams, useSearchParams } from "react-router-dom";
+import { Link, Navigate, useParams, useSearchParams } from "react-router-dom";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import MailIcon from "../assets/images/icons/mail.png";
@@ -37,10 +37,12 @@ import { LuCalendarPlus } from "react-icons/lu";
 import CreateLeadAppointment from "../components/Appointment/CreateLeadAppointment";
 import { FaCalendarDays } from "react-icons/fa6";
 import LeadFilterPanel from "../components/FilterPanel/LeadFilterPanel";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import Sidebar from "../components/common/Sidebar";
 import Topbar from "../components/common/Topbar";
 import { useFormik } from "formik";
+import { persistor } from "../Redux/store";
+import { logout } from "../Redux/Reducers/authSlice";
 
 const dateFilterOptions = [
   { value: "today", label: "Today" },
@@ -51,9 +53,9 @@ const dateFilterOptions = [
 
 const AllLeads = () => {
   const navigate = useNavigate();
-  const { id } = useParams();
   const location = useLocation();
-  const { user } = useSelector((state) => state.auth);
+  const dispatch = useDispatch();
+  const { user, tokenExpiry, accessToken } = useSelector((state) => state.auth);
 
   const [toggleMenuBar, setToggleMenuBar] = useState(false);
 
@@ -105,6 +107,11 @@ const AllLeads = () => {
     interested_in: null,
     gender: null,
   });
+
+  const handleLogout = () => {
+    dispatch(logout());
+    persistor.purge();
+  };
 
   const handleCommunicate = (type) => {
     if (selectedUserId.length === 0) {
@@ -535,6 +542,75 @@ const AllLeads = () => {
       );
     }
   };
+
+  /* =========================
+     1️⃣ JWT EXPIRY HANDLER
+  ========================== */
+  useEffect(() => {
+    if (!tokenExpiry) return;
+
+    const remainingTime = tokenExpiry - Date.now();
+
+    if (remainingTime <= 0) {
+      handleLogout();
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      handleLogout();
+    }, remainingTime);
+
+    return () => clearTimeout(timer);
+  }, [tokenExpiry]);
+
+  /* =========================
+     2️⃣ STAFF VALIDATION
+  ========================== */
+  useEffect(() => {
+    if (!accessToken || !user?.id) return;
+
+    const validateUser = async () => {
+      try {
+        const res = await authAxios().get(`/staff/${user.id}`);
+        const staff = res?.data?.data;
+
+        // Not staff → allow access (admin, etc.)
+        if (!staff) return;
+
+        // Soft deleted
+        if (staff.is_deleted === 1) {
+          handleLogout();
+          return;
+        }
+
+        // Inactive staff
+        if (staff.status !== "ACTIVE") {
+          handleLogout();
+          return;
+        }
+      } catch (error) {
+        if ([401, 404].includes(error.response?.status)) {
+          handleLogout();
+        }
+        console.error("Staff validation failed:", error);
+      }
+    };
+
+    validateUser();
+  }, [accessToken, user?.id, location.pathname]);
+
+  /* =========================
+     3️⃣ ROUTE PROTECTION
+  ========================== */
+  if (!accessToken) {
+    return <Navigate to="/login" replace />;
+  }
+
+  // Extra safety: expired before render
+  if (tokenExpiry && Date.now() > tokenExpiry) {
+    handleLogout();
+    return <Navigate to="/login" replace />;
+  }
 
   return (
     <>

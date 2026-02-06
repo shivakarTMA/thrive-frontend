@@ -22,7 +22,6 @@ import { addYears, format, subYears } from "date-fns";
 import { Link, useNavigate } from "react-router-dom";
 import HighchartsReact from "highcharts-react-official";
 import Highcharts from "highcharts";
-import { CiLocationOn } from "react-icons/ci";
 import SummaryDashboard from "../components/common/SummaryDashboard";
 import { LiaAngleLeftSolid, LiaAngleRightSolid } from "react-icons/lia";
 import SolidGaugeChart from "../components/ClubManagerChild/SolidGaugeChart";
@@ -101,8 +100,14 @@ const classPerformance = [
     url: "/reports/all-bookings",
   },
 ];
+Highcharts.setOptions({
+  accessibility: {
+    enabled: false,
+  },
+});
 
 const Home = () => {
+  
   const navigate = useNavigate();
   const days = ["Yesterday", "Today", "Tomorrow"];
   const [dashboardData, setDashboardData] = useState([]);
@@ -339,6 +344,9 @@ const Home = () => {
   const maxValueLeads = Math.max(...leadSeries, 0);
 
   const leadsStatus = {
+     accessibility: {
+    enabled: false,
+  },
     chart: { type: "column", height: 300 },
     title: {
       text: "Enquiries",
@@ -428,6 +436,9 @@ const Home = () => {
   const maxValue = Math.max(...productSeries, 0);
 
   const productStatus = {
+     accessibility: {
+    enabled: false,
+  },
     chart: {
       type: "column",
       height: 300,

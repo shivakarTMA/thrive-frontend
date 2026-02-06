@@ -16,6 +16,7 @@
     "highcharts": "^12.2.0",
     "highcharts-react-official": "^3.2.2",
     "jodit-react": "^5.2.38",
+    "jwt-decode": "^4.0.0",
     "papaparse": "^5.5.3",
     "primeicons": "^7.0.0",
     "qrcode.react": "^4.2.0",

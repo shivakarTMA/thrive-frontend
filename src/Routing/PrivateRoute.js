@@ -9,43 +9,62 @@ import { logout } from "../Redux/Reducers/authSlice";
 export default function PrivateRoute({ children }) {
   const dispatch = useDispatch();
   const location = useLocation();
-  const { accessToken, user } = useSelector((state) => state.auth);
+  const { accessToken, user, tokenExpiry } = useSelector(
+    (state) => state.auth
+  );
 
+  const handleLogout = () => {
+    dispatch(logout());
+    persistor.purge();
+  };
+
+  /* =========================
+     1️⃣ JWT EXPIRY HANDLER
+  ========================== */
+  useEffect(() => {
+    if (!tokenExpiry) return;
+
+    const remainingTime = tokenExpiry - Date.now();
+
+    if (remainingTime <= 0) {
+      handleLogout();
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      handleLogout();
+    }, remainingTime);
+
+    return () => clearTimeout(timer);
+  }, [tokenExpiry]);
+
+  /* =========================
+     2️⃣ STAFF VALIDATION
+  ========================== */
   useEffect(() => {
     if (!accessToken || !user?.id) return;
-
-    const handleLogout = () => {
-      dispatch(logout());
-      persistor.purge();
-    };
 
     const validateUser = async () => {
       try {
         const res = await authAxios().get(`/staff/${user.id}`);
-
         const staff = res?.data?.data;
-        // ✅ User is not staff (ADMIN or API returned nothing)
-        if (!staff) {
-          console.warn("User is not a staff member — skipping staff validation");
-          return;
-        }
 
-        // ❌ Soft delete check
+        // Not staff → allow access (admin, etc.)
+        if (!staff) return;
+
+        // Soft deleted
         if (staff.is_deleted === 1) {
           handleLogout();
           return;
         }
 
-        // ❌ Status check
+        // Inactive staff
         if (staff.status !== "ACTIVE") {
           handleLogout();
           return;
         }
-
       } catch (error) {
-        // ❗ Optional: logout only if staff API returns 404/401
-        if (error.response?.status === 404) {
-          console.warn("Staff not found → logout");
+        if ([401, 404].includes(error.response?.status)) {
           handleLogout();
         }
         console.error("Staff validation failed:", error);
@@ -53,9 +72,18 @@ export default function PrivateRoute({ children }) {
     };
 
     validateUser();
-  }, [accessToken, user?.id, location.pathname, dispatch]);
+  }, [accessToken, user?.id, location.pathname]);
 
+  /* =========================
+     3️⃣ ROUTE PROTECTION
+  ========================== */
   if (!accessToken) {
+    return <Navigate to="/login" replace />;
+  }
+
+  // Extra safety: expired before render
+  if (tokenExpiry && Date.now() > tokenExpiry) {
+    handleLogout();
     return <Navigate to="/login" replace />;
   }
 
