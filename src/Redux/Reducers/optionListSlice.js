@@ -17,8 +17,6 @@ export const fetchOptionList = createAsyncThunk(
 
     let data = res.data?.data || [];
 
-    console.log(data,'Options list')
-
     data = data.filter(item => item.status === "ACTIVE");
 
      data = data.sort((a, b) => {

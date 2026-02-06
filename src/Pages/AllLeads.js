@@ -1,9 +1,5 @@
-import React, { useEffect, useMemo, useState } from "react";
-import Papa from "papaparse";
-import { useDropzone } from "react-dropzone";
-import { FaAngleLeft, FaAngleRight, FaCircle } from "react-icons/fa";
+import React, { useEffect, useState } from "react";
 import { IoIosAddCircleOutline, IoIosSearch } from "react-icons/io";
-import { FiPlus } from "react-icons/fi";
 import { LiaEdit } from "react-icons/lia";
 import { MdCall } from "react-icons/md";
 import Select from "react-select";
@@ -15,7 +11,7 @@ import {
   formatText,
 } from "../Helper/helper";
 import CreateLeadForm from "./CreateLeadForm";
-import { Link, Navigate, useParams, useSearchParams } from "react-router-dom";
+import { Link, Navigate, useSearchParams } from "react-router-dom";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import MailIcon from "../assets/images/icons/mail.png";
@@ -888,7 +884,6 @@ const AllLeads = () => {
                                   </div>
                                 </td>
                               )}
-                              {/* <td className="px-2 py-4">{row?.id}</td> */}
 
                               <td className="px-2 py-4">
                                 {row?.full_name ? row?.full_name : "--"}
@@ -932,105 +927,107 @@ const AllLeads = () => {
                               </td>
                               <td className="px-2 py-4">
                                 {formatAutoDate(row?.updatedAt)}
+
+                                {/* Lead Actions */}
+                                  {(userRole === "CLUB_MANAGER" ||
+                                    userRole === "GENERAL_MANAGER" ||
+                                    userRole === "ADMIN" ||
+                                    userRole === "FOH") && (
+                                    <div className="absolute hidden group-hover:flex gap-2 right-0 h-full top-0 w-[50%] items-center justify-end bg-[linear-gradient(269deg,_#ffffff_30%,_transparent)] pr-5 transition duration-700">
+                                      <Tooltip
+                                        id={`tooltip-edit-${row.id}`}
+                                        content="Edit Lead"
+                                        place="top"
+                                      >
+                                        <div
+                                          onClick={() => {
+                                            setSelectedLead(row?.id);
+                                            setLeadModal(true);
+                                          }}
+                                          className="p-1 cursor-pointer"
+                                        >
+                                          <LiaEdit className="text-[25px] text-black" />
+                                        </div>
+                                      </Tooltip>
+                                      <Tooltip
+                                        id={`tooltip-call-${row.id}`}
+                                        content="Add Call log"
+                                        place="top"
+                                      >
+                                        <div className="p-1 cursor-pointer">
+                                          <Link
+                                            to={`/lead-follow-up/${row.id}`}
+                                            className="p-0"
+                                          >
+                                            <MdCall className="text-[25px] text-black" />
+                                          </Link>
+                                        </div>
+                                      </Tooltip>
+                                      <Tooltip
+                                        id={`tooltip-convert-${row.id}`}
+                                        content="Convert to member"
+                                        place="top"
+                                      >
+                                        <div
+                                          onClick={() => {
+                                            setSelectedLeadMember(row?.id);
+                                            setMemberModal(true);
+                                          }}
+                                          className="p-1 cursor-pointer"
+                                        >
+                                          <TbArrowsExchange className="text-[25px] text-black" />
+                                        </div>
+                                      </Tooltip>
+                                      <Tooltip
+                                        id={`tooltip-schedule-${row.id}`}
+                                        content="Schedule Trial"
+                                        place="top"
+                                      >
+                                        <div className="p-1 cursor-pointer">
+                                          <Link
+                                            to={`/lead-follow-up/${row.id}?action=schedule-tour-trial`}
+                                            className="p-0"
+                                          >
+                                            <RiCalendarScheduleLine className="text-[25px] text-black" />
+                                          </Link>
+                                        </div>
+                                      </Tooltip>
+
+                                      <Tooltip
+                                        id={`tooltip-appointment-${row.id}`}
+                                        content="Add Appointment"
+                                        place="top"
+                                      >
+                                        <div
+                                          onClick={() => {
+                                            setSelectedLeadMember(row?.id);
+                                            setAppointmentModal(true);
+                                          }}
+                                          className="p-1 cursor-pointer"
+                                        >
+                                          <LuCalendarPlus className="text-[25px] text-black" />
+                                        </div>
+                                      </Tooltip>
+
+                                      <Tooltip
+                                        id={`tooltip-send-${row.id}`}
+                                        content="Send Payment Link"
+                                        place="top"
+                                      >
+                                        <div
+                                          onClick={() => {
+                                            setSelectedLeadMember(row.id);
+                                            setSendPaymentModal(true);
+                                          }}
+                                          className="p-1 cursor-pointer"
+                                        >
+                                          <IoIosAddCircleOutline className="text-[25px] text-black" />
+                                        </div>
+                                      </Tooltip>
+                                    </div>
+                                  )}
+                                {/* Lead Actions End */}
                               </td>
-
-                              {(userRole === "CLUB_MANAGER" ||
-                                userRole === "GENERAL_MANAGER" ||
-                                userRole === "ADMIN" ||
-                                userRole === "FOH") && (
-                                <div className="absolute hidden group-hover:flex gap-2 right-0 h-full top-0 w-[50%] items-center justify-end bg-[linear-gradient(269deg,_#ffffff_30%,_transparent)] pr-5 transition duration-700">
-                                  <Tooltip
-                                    id={`tooltip-edit-${row.id}`}
-                                    content="Edit Lead"
-                                    place="top"
-                                  >
-                                    <div
-                                      onClick={() => {
-                                        setSelectedLead(row?.id);
-                                        setLeadModal(true);
-                                      }}
-                                      className="p-1 cursor-pointer"
-                                    >
-                                      <LiaEdit className="text-[25px] text-black" />
-                                    </div>
-                                  </Tooltip>
-                                  <Tooltip
-                                    id={`tooltip-call-${row.id}`}
-                                    content="Add Call log"
-                                    place="top"
-                                  >
-                                    <div className="p-1 cursor-pointer">
-                                      <Link
-                                        to={`/lead-follow-up/${row.id}`}
-                                        className="p-0"
-                                      >
-                                        <MdCall className="text-[25px] text-black" />
-                                      </Link>
-                                    </div>
-                                  </Tooltip>
-                                  <Tooltip
-                                    id={`tooltip-convert-${row.id}`}
-                                    content="Convert to member"
-                                    place="top"
-                                  >
-                                    <div
-                                      onClick={() => {
-                                        setSelectedLeadMember(row?.id);
-                                        setMemberModal(true);
-                                      }}
-                                      className="p-1 cursor-pointer"
-                                    >
-                                      <TbArrowsExchange className="text-[25px] text-black" />
-                                    </div>
-                                  </Tooltip>
-                                  <Tooltip
-                                    id={`tooltip-schedule-${row.id}`}
-                                    content="Schedule Trial"
-                                    place="top"
-                                  >
-                                    <div className="p-1 cursor-pointer">
-                                      <Link
-                                        to={`/lead-follow-up/${row.id}?action=schedule-tour-trial`}
-                                        className="p-0"
-                                      >
-                                        <RiCalendarScheduleLine className="text-[25px] text-black" />
-                                      </Link>
-                                    </div>
-                                  </Tooltip>
-
-                                  <Tooltip
-                                    id={`tooltip-appointment-${row.id}`}
-                                    content="Add Appointment"
-                                    place="top"
-                                  >
-                                    <div
-                                      onClick={() => {
-                                        setSelectedLeadMember(row?.id);
-                                        setAppointmentModal(true);
-                                      }}
-                                      className="p-1 cursor-pointer"
-                                    >
-                                      <LuCalendarPlus className="text-[25px] text-black" />
-                                    </div>
-                                  </Tooltip>
-
-                                  <Tooltip
-                                    id={`tooltip-send-${row.id}`}
-                                    content="Send Payment Link"
-                                    place="top"
-                                  >
-                                    <div
-                                      onClick={() => {
-                                        setSelectedLeadMember(row.id);
-                                        setSendPaymentModal(true);
-                                      }}
-                                      className="p-1 cursor-pointer"
-                                    >
-                                      <IoIosAddCircleOutline className="text-[25px] text-black" />
-                                    </div>
-                                  </Tooltip>
-                                </div>
-                              )}
                             </tr>
                           ))
                         ) : (

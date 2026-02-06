@@ -791,8 +791,10 @@ const MemberList = () => {
                             ></div>
                           </div>
                         </div>
-                      </td>
-                      {(userRole === "CLUB_MANAGER" ||
+
+
+                        {/* Member Action */}
+                        {(userRole === "CLUB_MANAGER" ||
                         userRole === "GENERAL_MANAGER" ||
                         userRole === "ADMIN" ||
                         userRole === "FOH") && (
@@ -883,6 +885,10 @@ const MemberList = () => {
                           </div>
                         </div>
                       )}
+                        {/* Member Action End */}
+
+                      </td>
+                      
                     </tr>
                   ))}
                 </tbody>

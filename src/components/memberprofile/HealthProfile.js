@@ -2,13 +2,13 @@
 import React, { useEffect, useState } from "react";
 import { authAxios } from "../../config/config";
 import { toast } from "react-toastify";
-import { formatAutoDate } from "../../Helper/helper";
+import { formatDateTimeLead } from "../../Helper/helper";
 
 // Functional component HealthProfile
 const HealthProfile = ({ details }) => {
   // State to manage active tab selection
   const [memberSteps, setMemberSteps] = useState([]);
-  const columns = ["Date", "Steps", "Weight", "SMM", "PDF"];
+  const columns = ["Date & Time", "Steps", "Weight", "SMM", "PDF"];
 
   const fetchMemberSteps = async () => {
     try {
@@ -46,7 +46,7 @@ const HealthProfile = ({ details }) => {
             {memberSteps.length ? (
               memberSteps.map((item, idx) => (
                 <tr key={idx}>
-                  <td className="border px-3 py-2">{formatAutoDate(item.datetime)}</td>
+                  <td className="border px-3 py-2">{formatDateTimeLead(item.datetime)}</td>
                   <td className="border px-3 py-2">
                     {item.steps}
                   </td>

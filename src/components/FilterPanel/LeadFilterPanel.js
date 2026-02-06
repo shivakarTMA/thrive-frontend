@@ -26,7 +26,6 @@ export default function LeadFilterPanel({
   const [showFilters, setShowFilters] = useState(false);
   const panelRef = useRef(null);
   const [staffList, setStaffList] = useState([]);
-  console.log(clubId,'SELECTED CLUB')
 
   const dispatch = useDispatch();
   const { lists, loading } = useSelector((state) => state.optionList);

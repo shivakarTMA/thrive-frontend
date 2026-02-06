@@ -185,9 +185,11 @@ const NewJoineesReport = () => {
       const responseData = res.data;
       const data = responseData?.data || [];
 
+      console.log('SHIVAKAR', responseData)
+
       setNewJoineesList(data);
       setPage(responseData?.currentPage || 1);
-      setTotalPages(responseData?.totalPage || 1);
+      setTotalPages(responseData?.totalPages || 1);
       setTotalCount(responseData?.totalCount || data.length);
     } catch (err) {
       console.error(err);
