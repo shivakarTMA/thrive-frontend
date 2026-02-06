@@ -172,10 +172,9 @@ const AllEnquiriesReport = () => {
 
       const responseData = res.data;
       const data = responseData?.data || [];
-
       setAllLeads(data);
       setPage(responseData?.currentPage || 1);
-      setTotalPages(responseData?.totalPage || 1);
+      setTotalPages(responseData?.totalPages || 1);
       setTotalCount(responseData?.totalCount || data.length);
     } catch (err) {
       console.error(err);
