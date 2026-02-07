@@ -2,7 +2,11 @@ import React, { useRef, useEffect } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import Select from "react-select";
-import { selectIcon } from "../../Helper/helper";
+import {
+  blockInvalidNumberKeys,
+  sanitizePositiveInteger,
+  selectIcon,
+} from "../../Helper/helper";
 import { IoCloseCircle } from "react-icons/io5";
 import { toast } from "react-toastify";
 import { FaListCheck } from "react-icons/fa6";
@@ -31,8 +35,12 @@ const validationSchema = Yup.object({
   name: Yup.string().required("Exercise name is required"),
 });
 
-const CreateExercise = ({ setShowModal, editingExercise, onExerciseCreated }) => {
-  console.log(editingExercise?.id,'editingExercise')
+const CreateExercise = ({
+  setShowModal,
+  editingExercise,
+  onExerciseCreated,
+}) => {
+  console.log(editingExercise?.id, "editingExercise");
 
   const leadBoxRef = useRef(null);
 
@@ -94,8 +102,10 @@ const CreateExercise = ({ setShowModal, editingExercise, onExerciseCreated }) =>
     const fetchExerciseById = async () => {
       if (editingExercise?.id) {
         try {
-          const response = await authAxios().get(`/exercise/${editingExercise.id}`);
-          const exerciseData = response.data?.data || response.data || null;;
+          const response = await authAxios().get(
+            `/exercise/${editingExercise.id}`,
+          );
+          const exerciseData = response.data?.data || response.data || null;
 
           // Set form values from fetched data
           formik.setValues({
@@ -162,7 +172,7 @@ const CreateExercise = ({ setShowModal, editingExercise, onExerciseCreated }) =>
                   <Select
                     options={exerciseTypeOptions}
                     value={exerciseTypeOptions.find(
-                      (option) => option.value === formik.values.category
+                      (option) => option.value === formik.values.category,
                     )}
                     onChange={(option) =>
                       formik.setFieldValue("category", option?.value)
@@ -215,8 +225,14 @@ const CreateExercise = ({ setShowModal, editingExercise, onExerciseCreated }) =>
                     type="number"
                     name="position"
                     className="custom--input w-full input--icon"
-                    value={formik.values.position}
-                    onChange={formik.handleChange}
+                    value={formik.values.position}                
+                    onKeyDown={blockInvalidNumberKeys} // ⛔ blocks typing -, e, etc.
+                    onChange={(e) => {
+                      const cleanValue = sanitizePositiveInteger(
+                        e.target.value,
+                      );
+                      formik.setFieldValue("position", cleanValue);
+                    }}
                     onBlur={formik.handleBlur}
                   />
                 </div>

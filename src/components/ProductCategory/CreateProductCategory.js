@@ -3,7 +3,11 @@ import { IoCloseCircle } from "react-icons/io5";
 import { FaListUl } from "react-icons/fa6";
 import { LuPlug } from "react-icons/lu";
 import Select from "react-select";
-import { selectIcon } from "../../Helper/helper";
+import {
+  blockInvalidNumberKeys,
+  sanitizePositiveInteger,
+  selectIcon,
+} from "../../Helper/helper";
 import { toast } from "react-toastify";
 import { authAxios } from "../../config/config";
 import { PiImageFill } from "react-icons/pi";
@@ -15,8 +19,7 @@ const CreatePackageCategory = ({
   handleOverlayClick,
   leadBoxRef,
 }) => {
-
-    // ✅ Fetch role details when selectedId changes
+  // ✅ Fetch role details when selectedId changes
   useEffect(() => {
     if (!editingOption) return;
 
@@ -42,8 +45,8 @@ const CreatePackageCategory = ({
 
     fetchPackageById(editingOption);
   }, [editingOption]);
- 
-    const handleLogoChange = (e) => {
+
+  const handleLogoChange = (e) => {
     const file = e.target.files[0];
     if (file) {
       const previewURL = URL.createObjectURL(file);
@@ -154,7 +157,14 @@ const CreatePackageCategory = ({
                         type="number"
                         name="position"
                         value={formik.values.position}
-                        onChange={formik.handleChange}
+                        onKeyDown={blockInvalidNumberKeys} // ⛔ blocks typing -, e, etc.
+                        onChange={(e) => {
+                          const cleanValue = sanitizePositiveInteger(
+                            e.target.value,
+                          );
+                          formik.setFieldValue("position", cleanValue);
+                        }}
+                        // onChange={formik.handleChange}
                         onBlur={formik.handleBlur}
                         className="custom--input w-full input--icon"
                       />
@@ -167,38 +177,40 @@ const CreatePackageCategory = ({
                   </div>
 
                   {/* Status */}
-                  <div>
-                    <label className="mb-2 block">
-                      Status<span className="text-red-500">*</span>
-                    </label>
-                    <div className="relative">
-                      <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[10]">
-                        <LuPlug />
-                      </span>
-                      <Select
-                        name="status"
-                        value={{
-                          label: formik.values.status,
-                          value: formik.values.status,
-                        }}
-                        options={[
-                          { label: "Active", value: "ACTIVE" },
-                          { label: "Inactive", value: "INACTIVE" },
-                        ]}
-                        onChange={(option) =>
-                          formik.setFieldValue("status", option.value)
-                        }
-                        onBlur={() => formik.setFieldTouched("status", true)}
-                        styles={selectIcon}
-                        className="!capitalize"
-                      />
+                  {editingOption && (
+                    <div>
+                      <label className="mb-2 block">
+                        Status<span className="text-red-500">*</span>
+                      </label>
+                      <div className="relative">
+                        <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[10]">
+                          <LuPlug />
+                        </span>
+                        <Select
+                          name="status"
+                          value={{
+                            label: formik.values.status,
+                            value: formik.values.status,
+                          }}
+                          options={[
+                            { label: "Active", value: "ACTIVE" },
+                            { label: "Inactive", value: "INACTIVE" },
+                          ]}
+                          onChange={(option) =>
+                            formik.setFieldValue("status", option.value)
+                          }
+                          onBlur={() => formik.setFieldTouched("status", true)}
+                          styles={selectIcon}
+                          className="!capitalize"
+                        />
+                      </div>
+                      {formik.touched.status && formik.errors.status && (
+                        <p className="text-red-500 text-sm mt-1">
+                          {formik.errors.status}
+                        </p>
+                      )}
                     </div>
-                    {formik.touched.status && formik.errors.status && (
-                      <p className="text-red-500 text-sm mt-1">
-                        {formik.errors.status}
-                      </p>
-                    )}
-                  </div>
+                  )}
                 </div>
               </div>
             </div>

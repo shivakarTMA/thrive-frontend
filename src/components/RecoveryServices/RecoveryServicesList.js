@@ -18,6 +18,7 @@ import {
 } from "../../Helper/helper";
 import { FaCircle } from "react-icons/fa6";
 import Pagination from "../common/Pagination";
+import { useSelector } from "react-redux";
 
 // Main Services component
 const RecoveryServicesList = () => {
@@ -25,13 +26,15 @@ const RecoveryServicesList = () => {
   const [recoveryServiceList, setRecoveryServiceList] = useState([]);
   const [servicesList, setServicesList] = useState([]);
   const [club, setClub] = useState([]);
+  const [clubFilter, setClubFilter] = useState(null);
   const [packageList, setPackageList] = useState([]);
   const [editingOption, setEditingOption] = useState(null);
   const leadBoxRef = useRef(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState(null);
-  const [packageFilter, setPackageFilter] = useState(null);
-  const [serviceFilter, setServiceFilter] = useState(null);
+
+  const { user } = useSelector((state) => state.auth);
+  const currentUserRole = user?.role; // Example, dynamically from user info
 
   const [page, setPage] = useState(1);
   const [rowsPerPage] = useState(10);
@@ -69,24 +72,23 @@ const RecoveryServicesList = () => {
   // Function to fetch services
   const fetchRecoveryServices = async (search = "", currentPage = page) => {
     try {
-      const res = await authAxios().get("/ourservices/list", {
-        params: {
-          page: currentPage,
-          limit: rowsPerPage,
-          ...(search ? { search } : {}),
-          ...(statusFilter?.value ? { status: statusFilter.value } : {}),
-        },
-      });
+      const params = {
+        page: currentPage,
+        limit: rowsPerPage,
+        ...(search ? { search } : {}),
+      };
+
+      if (clubFilter) {
+        params.club_id = clubFilter.value;
+      }
+      if (statusFilter) {
+        params.status = statusFilter.value;
+      }
+
+      const res = await authAxios().get("/ourservices/list", {params});
+
       let data = res.data?.data || res.data || [];
-      // if (statusFilter?.value) {
-      //   data = data.filter((item) => item.status === statusFilter.value);
-      // }
-      if (serviceFilter) {
-        data = data.filter((item) => item.service_id === serviceFilter);
-      }
-      if (packageFilter) {
-        data = data.filter((item) => item.package_id === packageFilter);
-      }
+
       setRecoveryServiceList(data);
       setPage(res.data?.currentPage || 1);
       setTotalPages(res.data?.totalPage || 1);
@@ -118,14 +120,15 @@ const RecoveryServicesList = () => {
     })) || [];
 
   // Debounced search for services
-  useEffect(() => {
-    const delayDebounce = setTimeout(() => {
-      fetchRecoveryServices(searchTerm);
-      setPage(1);
-    }, 300);
 
-    return () => clearTimeout(delayDebounce);
-  }, [searchTerm, statusFilter, serviceFilter, packageFilter]);
+  // useEffect(() => {
+  //   const delayDebounce = setTimeout(() => {
+  //     setPage(1);
+  //     fetchRecoveryServices(searchTerm, 1);
+  //   }, 300);
+
+  //   return () => clearTimeout(delayDebounce);
+  // }, [searchTerm, statusFilter]);
 
   // Handle overlay click to close modal
   const handleOverlayClick = (e) => {
@@ -158,7 +161,7 @@ const RecoveryServicesList = () => {
             return value !== null;
           }
           return true;
-        }
+        },
       ),
       name: Yup.string().required("Title is required"),
       service_id: Yup.string().required("Service is required"),
@@ -259,30 +262,19 @@ const RecoveryServicesList = () => {
             styles={customStyles}
           />
         </div>
-        {/* <div className="w-full max-w-[200px]">
-          <Select
-            placeholder="Filter by service"
-            value={
-              servicesOptions.find((o) => o.value === serviceFilter) || null
-            }
-            options={servicesOptions}
-            onChange={(option) => setServiceFilter(option?.value)}
-            isClearable
-            styles={customStyles}
-          />
-        </div>
-        <div className="w-full max-w-[200px]">
-          <Select
-            placeholder="Filter by package"
-            value={
-              packageOptions.find((o) => o.value === packageFilter) || null
-            }
-            options={packageOptions}
-            onChange={(option) => setPackageFilter(option?.value)}
-            isClearable
-            styles={customStyles}
-          />
-        </div> */}
+
+        <div className="w-fit min-w-[200px]">
+                    <Select
+                      placeholder="Filter by club"
+                      value={clubFilter}
+                      options={clubOptions}
+                      onChange={(option) => setClubFilter(option)}
+                      isClearable={currentUserRole === "ADMIN" ? true : false}
+                      styles={customStyles}
+                      className="w-full"
+                    />
+                  </div>
+        
       </div>
 
       {/* Table Section */}

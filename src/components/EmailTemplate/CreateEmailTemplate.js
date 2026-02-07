@@ -3,7 +3,8 @@ import { useFormik } from "formik";
 import * as Yup from "yup";
 import RichTextEditor from "../common/RichTextEditor";
 import { toast } from "react-toastify";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { MdOutlineKeyboardBackspace } from "react-icons/md";
 
 // ✅ Define validation schema using Yup
 const validationSchema = Yup.object({
@@ -39,7 +40,10 @@ const CreateEmailTemplate = () => {
           <h1 className="text-3xl font-semibold">Create Email Template</h1>
         </div>
       </div>
-      <div className="w-full p-4 border bg-white shadow-box rounded-[10px] mt-6">
+      <Link to="/email-template-list" className="flex items-center gap-2 mt-5 cursor-pointer border rounded-full w-fit border-black px-3 py-1 bg-black text-white">
+        <MdOutlineKeyboardBackspace /> <span>Back</span>
+      </Link>
+      <div className="w-full p-4 border bg-white shadow-box rounded-[10px] mt-5">
         {/* ✅ Regular form tag using formik.handleSubmit */}
         <form onSubmit={formik.handleSubmit}>
           {/* --- EMAIL TEMPLATE SECTION --- */}

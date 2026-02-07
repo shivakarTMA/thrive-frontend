@@ -8,7 +8,7 @@ import { LuPlug } from "react-icons/lu";
 // Import select component
 import Select from "react-select";
 // Import custom styles for select input
-import { handleTextOnlyChange, selectIcon } from "../../Helper/helper";
+import { blockInvalidNumberKeys, handleTextOnlyChange, sanitizePositiveInteger, selectIcon } from "../../Helper/helper";
 import { PiImageFill } from "react-icons/pi";
 import { toast } from "react-toastify";
 import { authAxios } from "../../config/config";
@@ -305,7 +305,14 @@ const RecoveryServices = ({
                         type="number"
                         name="position"
                         value={formik.values.position}
-                        onChange={formik.handleChange}
+                        // onChange={formik.handleChange}
+                        onKeyDown={blockInvalidNumberKeys} // ⛔ blocks typing -, e, etc.
+                        onChange={(e) => {
+                          const cleanValue = sanitizePositiveInteger(
+                            e.target.value,
+                          );
+                          formik.setFieldValue("position", cleanValue);
+                        }}
                         onBlur={formik.handleBlur}
                         className="custom--input w-full input--icon"
                       />

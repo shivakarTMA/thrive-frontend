@@ -164,7 +164,6 @@ const LeadSourceReport = () => {
                 <th className="px-2 py-4">Trials </th>
                 <th className="px-2 py-4">Lost </th>
                 <th className="px-2 py-4">Won </th>
-                <th className="px-2 py-4">Open/Follow-up </th>
               </tr>
             </thead>
 
@@ -183,7 +182,6 @@ const LeadSourceReport = () => {
                     <td className="px-2 py-4">20</td>
                     <td className="px-2 py-4">20</td>
                     <td className="px-2 py-4">10</td>
-                    <td className="px-2 py-4">50</td>
                   </tr>
                 ))
               ) : (
