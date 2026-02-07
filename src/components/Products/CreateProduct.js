@@ -1,6 +1,10 @@
 import React, { useEffect, useRef } from "react";
 import Select from "react-select";
-import { customStyles } from "../../Helper/helper";
+import {
+  blockInvalidNumberKeys,
+  customStyles,
+  sanitizePositiveInteger,
+} from "../../Helper/helper";
 import { IoCloseCircle } from "react-icons/io5";
 import { toast } from "react-toastify";
 import { authAxios } from "../../config/config";
@@ -66,9 +70,22 @@ const CreateProduct = ({
             amount: data?.amount || "",
             discount: data?.discount || "",
             gst: data?.gst || "",
-            stock_quantity: data?.stock_quantity || "",
-            earn_coin: data?.earn_coin || "",
-            position: data?.position || "",
+            // stock_quantity: data?.stock_quantity || "",
+            stock_quantity:
+              data?.stock_quantity !== null &&
+              data?.stock_quantity !== undefined
+                ? String(data.stock_quantity)
+                : "",
+            // earn_coin: data?.earn_coin || "",
+            earn_coin:
+              data?.earn_coin !== null && data?.earn_coin !== undefined
+                ? String(data.earn_coin)
+                : "",
+            // position: data?.position || "",
+            position:
+              data?.position !== null && data?.position !== undefined
+                ? String(data.position)
+                : "",
             status: data?.status || "",
           });
         }
@@ -186,7 +203,7 @@ const CreateProduct = ({
                           clubOptions.find(
                             (option) =>
                               option.value.toString() ===
-                              formik.values.club_id?.toString()
+                              formik.values.club_id?.toString(),
                           ) || null
                         }
                         options={clubOptions}
@@ -258,7 +275,7 @@ const CreateProduct = ({
                       <Select
                         options={serviceOptions}
                         value={serviceOptions.find(
-                          (option) => option.value === formik.values.service_id
+                          (option) => option.value === formik.values.service_id,
                         )}
                         onChange={(option) =>
                           formik.setFieldValue("service_id", option?.value)
@@ -285,12 +302,12 @@ const CreateProduct = ({
                         options={productCategoryOptions}
                         value={productCategoryOptions.find(
                           (option) =>
-                            option.value === formik.values.product_category_id
+                            option.value === formik.values.product_category_id,
                         )}
                         onChange={(option) =>
                           formik.setFieldValue(
                             "product_category_id",
-                            option?.value
+                            option?.value,
                           )
                         }
                         onBlur={() =>
@@ -317,7 +334,7 @@ const CreateProduct = ({
                         options={productTypeOptions}
                         value={productTypeOptions.find(
                           (option) =>
-                            option.value === formik.values.product_type
+                            option.value === formik.values.product_type,
                         )}
                         onChange={(option) =>
                           formik.setFieldValue("product_type", option?.value)
@@ -344,7 +361,7 @@ const CreateProduct = ({
                       <Select
                         options={foodTypeOptions}
                         value={foodTypeOptions.find(
-                          (option) => option.value === formik.values.food_type
+                          (option) => option.value === formik.values.food_type,
                         )}
                         onChange={(option) =>
                           formik.setFieldValue("food_type", option?.value)
@@ -433,9 +450,16 @@ const CreateProduct = ({
                       <input
                         type="number"
                         name="amount"
-                        className="custom--input w-full"
+                        className="custom--input w-full number--appearance-none"
                         value={formik.values.amount}
-                        onChange={formik.handleChange}
+                        // onChange={formik.handleChange}
+                        onKeyDown={blockInvalidNumberKeys} // ⛔ blocks typing -, e, etc.
+                        onChange={(e) => {
+                          const cleanValue = sanitizePositiveInteger(
+                            e.target.value,
+                          );
+                          formik.setFieldValue("amount", cleanValue);
+                        }}
                         onBlur={formik.handleBlur}
                       />
                     </div>
@@ -455,9 +479,16 @@ const CreateProduct = ({
                       <input
                         type="number"
                         name="discount"
-                        className="custom--input w-full"
+                        className="custom--input w-full number--appearance-none"
                         value={formik.values.discount}
-                        onChange={formik.handleChange}
+                        // onChange={formik.handleChange}
+                        onKeyDown={blockInvalidNumberKeys} // ⛔ blocks typing -, e, etc.
+                        onChange={(e) => {
+                          const cleanValue = sanitizePositiveInteger(
+                            e.target.value,
+                          );
+                          formik.setFieldValue("discount", cleanValue);
+                        }}
                         onBlur={formik.handleBlur}
                       />
                     </div>
@@ -477,9 +508,16 @@ const CreateProduct = ({
                       <input
                         type="number"
                         name="gst"
-                        className="custom--input w-full"
+                        className="custom--input w-full number--appearance-none"
                         value={formik.values.gst}
-                        onChange={formik.handleChange}
+                        // onChange={formik.handleChange}
+                        onKeyDown={blockInvalidNumberKeys} // ⛔ blocks typing -, e, etc.
+                        onChange={(e) => {
+                          const cleanValue = sanitizePositiveInteger(
+                            e.target.value,
+                          );
+                          formik.setFieldValue("gst", cleanValue);
+                        }}
                         onBlur={formik.handleBlur}
                       />
                     </div>
@@ -499,9 +537,16 @@ const CreateProduct = ({
                       <input
                         type="number"
                         name="stock_quantity"
-                        className="custom--input w-full"
+                        className="custom--input w-full number--appearance-none"
                         value={formik.values.stock_quantity}
-                        onChange={formik.handleChange}
+                        // onChange={formik.handleChange}
+                        onKeyDown={blockInvalidNumberKeys} // ⛔ blocks typing -, e, etc.
+                        onChange={(e) => {
+                          const cleanValue = sanitizePositiveInteger(
+                            e.target.value,
+                          );
+                          formik.setFieldValue("stock_quantity", cleanValue);
+                        }}
                         onBlur={formik.handleBlur}
                       />
                     </div>
@@ -523,9 +568,16 @@ const CreateProduct = ({
                         type="number"
                         name="calorie"
                         value={formik.values.calorie}
-                        onChange={formik.handleChange}
+                        // onChange={formik.handleChange}
+                        onKeyDown={blockInvalidNumberKeys} // ⛔ blocks typing -, e, etc.
+                        onChange={(e) => {
+                          const cleanValue = sanitizePositiveInteger(
+                            e.target.value,
+                          );
+                          formik.setFieldValue("calorie", cleanValue);
+                        }}
                         onBlur={formik.handleBlur}
-                        className="custom--input w-full"
+                        className="custom--input w-full number--appearance-none"
                       />
                     </div>
                     {formik.touched.calorie && formik.errors.calorie && (
@@ -544,9 +596,16 @@ const CreateProduct = ({
                         type="number"
                         name="protein"
                         value={formik.values.protein}
-                        onChange={formik.handleChange}
+                        // onChange={formik.handleChange}
+                        onKeyDown={blockInvalidNumberKeys} // ⛔ blocks typing -, e, etc.
+                        onChange={(e) => {
+                          const cleanValue = sanitizePositiveInteger(
+                            e.target.value,
+                          );
+                          formik.setFieldValue("protein", cleanValue);
+                        }}
                         onBlur={formik.handleBlur}
-                        className="custom--input w-full"
+                        className="custom--input w-full number--appearance-none"
                       />
                     </div>
                     {formik.touched.protein && formik.errors.protein && (
@@ -565,9 +624,16 @@ const CreateProduct = ({
                         type="number"
                         name="carbohydrate"
                         value={formik.values.carbohydrate}
-                        onChange={formik.handleChange}
+                        // onChange={formik.handleChange}
+                        onKeyDown={blockInvalidNumberKeys} // ⛔ blocks typing -, e, etc.
+                        onChange={(e) => {
+                          const cleanValue = sanitizePositiveInteger(
+                            e.target.value,
+                          );
+                          formik.setFieldValue("carbohydrate", cleanValue);
+                        }}
                         onBlur={formik.handleBlur}
-                        className="custom--input w-full"
+                        className="custom--input w-full number--appearance-none"
                       />
                     </div>
                     {formik.touched.carbohydrate &&
@@ -587,9 +653,16 @@ const CreateProduct = ({
                         type="number"
                         name="fat"
                         value={formik.values.fat}
-                        onChange={formik.handleChange}
+                        // onChange={formik.handleChange}
+                        onKeyDown={blockInvalidNumberKeys} // ⛔ blocks typing -, e, etc.
+                        onChange={(e) => {
+                          const cleanValue = sanitizePositiveInteger(
+                            e.target.value,
+                          );
+                          formik.setFieldValue("fat", cleanValue);
+                        }}
                         onBlur={formik.handleBlur}
-                        className="custom--input w-full"
+                        className="custom--input w-full number--appearance-none"
                       />
                     </div>
                     {formik.touched.fat && formik.errors.fat && (
@@ -608,9 +681,16 @@ const CreateProduct = ({
                       <input
                         type="number"
                         name="earn_coin"
-                        className="custom--input w-full"
+                        className="custom--input w-full number--appearance-none"
                         value={formik.values.earn_coin}
-                        onChange={formik.handleChange}
+                        // onChange={formik.handleChange}
+                        onKeyDown={blockInvalidNumberKeys} // ⛔ blocks typing -, e, etc.
+                        onChange={(e) => {
+                          const cleanValue = sanitizePositiveInteger(
+                            e.target.value,
+                          );
+                          formik.setFieldValue("earn_coin", cleanValue);
+                        }}
                         onBlur={formik.handleBlur}
                       />
                     </div>
@@ -631,7 +711,14 @@ const CreateProduct = ({
                         type="number"
                         name="position"
                         value={formik.values.position}
-                        onChange={formik.handleChange}
+                        // onChange={formik.handleChange}
+                        onKeyDown={blockInvalidNumberKeys} // ⛔ blocks typing -, e, etc.
+                        onChange={(e) => {
+                          const cleanValue = sanitizePositiveInteger(
+                            e.target.value,
+                          );
+                          formik.setFieldValue("position", cleanValue);
+                        }}
                         onBlur={formik.handleBlur}
                         className="custom--input w-full"
                       />
@@ -672,14 +759,14 @@ const CreateProduct = ({
                           name="status"
                           value={
                             statusType.find(
-                              (opt) => opt.value === formik.values.status
+                              (opt) => opt.value === formik.values.status,
                             ) || null
                           }
                           options={statusType}
                           onChange={(option) =>
                             formik.setFieldValue(
                               "status",
-                              option ? option.value : ""
+                              option ? option.value : "",
                             )
                           }
                           onBlur={() => formik.setFieldTouched("status", true)}

@@ -8,7 +8,11 @@ import { LuPlug } from "react-icons/lu";
 // Import select component
 import Select from "react-select";
 // Import custom styles for select input
-import { selectIcon } from "../../Helper/helper";
+import {
+  blockInvalidNumberKeys,
+  sanitizePositiveInteger,
+  selectIcon,
+} from "../../Helper/helper";
 import { toast } from "react-toastify";
 import { authAxios } from "../../config/config";
 import { PiImageFill } from "react-icons/pi";
@@ -191,7 +195,7 @@ const CreateGallery = ({
                           clubOptions.find(
                             (option) =>
                               option.value.toString() ===
-                              formik.values.club_id?.toString()
+                              formik.values.club_id?.toString(),
                           ) || null
                         }
                         options={clubOptions}
@@ -222,7 +226,7 @@ const CreateGallery = ({
                       <Select
                         name="display_position"
                         value={displayPosition.find(
-                          (opt) => opt.value === formik.values.display_position
+                          (opt) => opt.value === formik.values.display_position,
                         )}
                         onChange={(option) =>
                           formik.setFieldValue("display_position", option.value)
@@ -252,9 +256,16 @@ const CreateGallery = ({
                         type="number"
                         name="position"
                         value={formik.values.position}
-                        onChange={formik.handleChange}
+                        // onChange={formik.handleChange}
+                        onKeyDown={blockInvalidNumberKeys} // ⛔ blocks typing -, e, etc.
+                        onChange={(e) => {
+                          const cleanValue = sanitizePositiveInteger(
+                            e.target.value,
+                          );
+                          formik.setFieldValue("position", cleanValue);
+                        }}
                         onBlur={formik.handleBlur}
-                        className="custom--input w-full input--icon number--appearance-none"
+                        className="custom--input w-full input--icon"
                       />
                     </div>
                     {formik.touched.position && formik.errors.position && (

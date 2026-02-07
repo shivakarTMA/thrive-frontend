@@ -13,7 +13,7 @@ import {
 import { GrDocument } from "react-icons/gr";
 import { LuPlug } from "react-icons/lu";
 import Select from "react-select";
-import { multiRowStyles, selectIcon } from "../../Helper/helper";
+import { blockInvalidNumberKeys, multiRowStyles, sanitizePositiveInteger, selectIcon } from "../../Helper/helper";
 import PhoneInput from "react-phone-number-input";
 import { authAxios } from "../../config/config";
 import { toast } from "react-toastify";
@@ -22,7 +22,6 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { GoClock } from "react-icons/go";
 import { PiImageFill } from "react-icons/pi";
-
 
 const CreateClub = ({
   setShowModal,
@@ -138,7 +137,7 @@ const CreateClub = ({
 
         if (data) {
           const normalizedServices = normalizeServicesArray(
-            data.club_available_service
+            data.club_available_service,
           );
           // ✅ Prefill formik fields with fetched data
           formik.setValues({
@@ -512,12 +511,12 @@ const CreateClub = ({
                       isClearable={false}
                       name="club_available_service"
                       value={servicesToOptions(
-                        formik.values.club_available_service
+                        formik.values.club_available_service,
                       )}
                       onChange={(selected) =>
                         formik.setFieldValue(
                           "club_available_service",
-                          selected ? selected.map((i) => i.value) : []
+                          selected ? selected.map((i) => i.value) : [],
                         )
                       }
                       onCreateOption={handleCreateService}
@@ -554,7 +553,7 @@ const CreateClub = ({
                               hour: "2-digit",
                               minute: "2-digit",
                               hour12: false,
-                            })
+                            }),
                           )
                         }
                         showTimeSelect
@@ -594,7 +593,7 @@ const CreateClub = ({
                               hour: "2-digit",
                               minute: "2-digit",
                               hour12: false,
-                            })
+                            }),
                           )
                         }
                         showTimeSelect
@@ -671,10 +670,17 @@ const CreateClub = ({
                         <FaListUl />
                       </span>
                       <input
-                        type="text"
+                        type="number"
                         name="position"
                         value={formik.values.position}
-                        onChange={formik.handleChange}
+                        // onChange={formik.handleChange}
+                        onKeyDown={blockInvalidNumberKeys} // ⛔ blocks typing -, e, etc.
+                        onChange={(e) => {
+                          const cleanValue = sanitizePositiveInteger(
+                            e.target.value,
+                          );
+                          formik.setFieldValue("position", cleanValue);
+                        }}
                         onBlur={formik.handleBlur}
                         className="custom--input w-full input--icon"
                       />

@@ -3,7 +3,11 @@ import { IoCloseCircle } from "react-icons/io5";
 import { FaListOl, FaListUl } from "react-icons/fa6";
 import { LuPlug } from "react-icons/lu";
 import Select from "react-select";
-import { selectIcon } from "../../Helper/helper";
+import {
+  blockInvalidNumberKeys,
+  sanitizePositiveInteger,
+  selectIcon,
+} from "../../Helper/helper";
 import CreatableSelect from "react-select/creatable";
 import { toast } from "react-toastify";
 import { authAxios } from "../../config/config";
@@ -37,26 +41,25 @@ const CreateOption = ({
   //   }
   // }, [formik.values.option_list_type, availableTags]);
 
-const handleTagChange = (newValue, actionMeta) => {
-  if (actionMeta.action === "create-option") {
-    // Transform: "employee category" -> "EMPLOYEE_CATEGORY"
-    const formattedValue = newValue.label
-      .trim()
-      .toUpperCase()
-      .replace(/\s+/g, "_");
+  const handleTagChange = (newValue, actionMeta) => {
+    if (actionMeta.action === "create-option") {
+      // Transform: "employee category" -> "EMPLOYEE_CATEGORY"
+      const formattedValue = newValue.label
+        .trim()
+        .toUpperCase()
+        .replace(/\s+/g, "_");
 
-    const newTag = {
-      label: newValue.label, // Keep the user-friendly label
-      value: formattedValue, // Store uppercase underscore version
-    };
+      const newTag = {
+        label: newValue.label, // Keep the user-friendly label
+        value: formattedValue, // Store uppercase underscore version
+      };
 
-    setAvailableTags((prev) => [...prev, newTag]);
-    formik.setFieldValue("option_list_type", newTag.value);
-  } else {
-    formik.setFieldValue("option_list_type", newValue ? newValue.value : "");
-  }
-};
-
+      setAvailableTags((prev) => [...prev, newTag]);
+      formik.setFieldValue("option_list_type", newTag.value);
+    } else {
+      formik.setFieldValue("option_list_type", newValue ? newValue.value : "");
+    }
+  };
 
   console.log(formik.values, "formik");
 
@@ -130,7 +133,7 @@ const handleTagChange = (newValue, actionMeta) => {
                           formik.values.option_list_type
                             ? availableTags.find(
                                 (opt) =>
-                                  opt.value === formik.values.option_list_type
+                                  opt.value === formik.values.option_list_type,
                               )
                             : null
                         }
@@ -159,7 +162,14 @@ const handleTagChange = (newValue, actionMeta) => {
                         type="number"
                         name="position"
                         value={formik.values.position}
-                        onChange={formik.handleChange}
+                        // onChange={formik.handleChange}
+                        onKeyDown={blockInvalidNumberKeys} // ⛔ blocks typing -, e, etc.
+                        onChange={(e) => {
+                          const cleanValue = sanitizePositiveInteger(
+                            e.target.value,
+                          );
+                          formik.setFieldValue("position", cleanValue);
+                        }}
                         onBlur={formik.handleBlur}
                         className="custom--input w-full input--icon"
                       />

@@ -3,7 +3,11 @@ import { IoCloseCircle } from "react-icons/io5";
 import { FaListUl } from "react-icons/fa6";
 import { LuPlug } from "react-icons/lu";
 import Select from "react-select";
-import { selectIcon } from "../../Helper/helper";
+import {
+  blockInvalidNumberKeys,
+  sanitizePositiveInteger,
+  selectIcon,
+} from "../../Helper/helper";
 
 const CreateStudio = ({
   setShowModal,
@@ -54,10 +58,14 @@ const CreateStudio = ({
                       <Select
                         name="club_id"
                         value={
-                          clubOptions.find(option => option.value === formik.values.club_id) || null
+                          clubOptions.find(
+                            (option) => option.value === formik.values.club_id,
+                          ) || null
                         }
                         options={clubOptions}
-                        onChange={(option) => formik.setFieldValue("club_id", option.value)}
+                        onChange={(option) =>
+                          formik.setFieldValue("club_id", option.value)
+                        }
                         onBlur={() => formik.setFieldTouched("club_id", true)}
                         styles={selectIcon}
                         className="!capitalize"
@@ -105,7 +113,14 @@ const CreateStudio = ({
                         type="number"
                         name="position"
                         value={formik.values.position}
-                        onChange={formik.handleChange}
+                        // onChange={formik.handleChange}
+                        onKeyDown={blockInvalidNumberKeys} // ⛔ blocks typing -, e, etc.
+                        onChange={(e) => {
+                          const cleanValue = sanitizePositiveInteger(
+                            e.target.value,
+                          );
+                          formik.setFieldValue("position", cleanValue);
+                        }}
                         onBlur={formik.handleBlur}
                         className="custom--input w-full input--icon"
                       />

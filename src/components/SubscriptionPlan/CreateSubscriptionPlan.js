@@ -3,7 +3,11 @@ import { IoCalendarClearOutline, IoCloseCircle } from "react-icons/io5";
 import { FaListUl } from "react-icons/fa6";
 import { LuPlug } from "react-icons/lu";
 import Select from "react-select";
-import { selectIcon } from "../../Helper/helper";
+import {
+  blockInvalidNumberKeys,
+  sanitizePositiveInteger,
+  selectIcon,
+} from "../../Helper/helper";
 import { authAxios } from "../../config/config";
 import { toast } from "react-toastify";
 
@@ -40,10 +44,17 @@ const CreateSubscriptionPlan = ({
             amount: data?.amount || "",
             discount: data?.discount || "",
             gst: data?.gst || "",
-            earn_coin: data?.earn_coin || "",
+            earn_coin:
+              data?.earn_coin !== null && data?.earn_coin !== undefined
+                ? String(data.earn_coin)
+                : "",
             is_spouse_plan: data?.is_spouse_plan || false,
             status: data?.status || "ACTIVE",
-            position: data?.position || "",
+            // position: data?.position || "",
+            position:
+              data?.position !== null && data?.position !== undefined
+                ? String(data.position)
+                : "",
           });
         }
       } catch (err) {
@@ -147,7 +158,7 @@ const CreateSubscriptionPlan = ({
                         name="club_id"
                         value={
                           clubOptions.find(
-                            (option) => option.value === formik.values.club_id
+                            (option) => option.value === formik.values.club_id,
                           ) || null
                         }
                         options={clubOptions}
@@ -333,9 +344,16 @@ const CreateSubscriptionPlan = ({
                         type="number"
                         name="amount"
                         value={formik.values.amount}
-                        onChange={formik.handleChange}
+                        // onChange={formik.handleChange}
+                        onKeyDown={blockInvalidNumberKeys} // ⛔ blocks typing -, e, etc.
+                        onChange={(e) => {
+                          const cleanValue = sanitizePositiveInteger(
+                            e.target.value,
+                          );
+                          formik.setFieldValue("amount", cleanValue);
+                        }}
                         onBlur={formik.handleBlur}
-                        className="custom--input w-full input--icon"
+                        className="custom--input w-full input--icon number--appearance-none"
                       />
                     </div>
                     {formik.touched.amount && formik.errors.amount && (
@@ -356,9 +374,16 @@ const CreateSubscriptionPlan = ({
                         type="number"
                         name="discount"
                         value={formik.values.discount}
-                        onChange={formik.handleChange}
+                        // onChange={formik.handleChange}
+                        onKeyDown={blockInvalidNumberKeys} // ⛔ blocks typing -, e, etc.
+                        onChange={(e) => {
+                          const cleanValue = sanitizePositiveInteger(
+                            e.target.value,
+                          );
+                          formik.setFieldValue("discount", cleanValue);
+                        }}
                         onBlur={formik.handleBlur}
-                        className="custom--input w-full input--icon"
+                        className="custom--input w-full input--icon number--appearance-none"
                       />
                     </div>
                     {formik.touched.discount && formik.errors.discount && (
@@ -380,9 +405,16 @@ const CreateSubscriptionPlan = ({
                         type="number"
                         name="gst"
                         value={formik.values.gst}
-                        onChange={formik.handleChange}
+                        // onChange={formik.handleChange}
+                        onKeyDown={blockInvalidNumberKeys} // ⛔ blocks typing -, e, etc.
+                        onChange={(e) => {
+                          const cleanValue = sanitizePositiveInteger(
+                            e.target.value,
+                          );
+                          formik.setFieldValue("gst", cleanValue);
+                        }}
                         onBlur={formik.handleBlur}
-                        className="custom--input w-full input--icon"
+                        className="custom--input w-full input--icon number--appearance-none"
                       />
                     </div>
                     {formik.touched.gst && formik.errors.gst && (
@@ -404,9 +436,16 @@ const CreateSubscriptionPlan = ({
                         type="number"
                         name="earn_coin"
                         value={formik.values.earn_coin}
-                        onChange={formik.handleChange}
+                        // onChange={formik.handleChange}
+                        onKeyDown={blockInvalidNumberKeys} // ⛔ blocks typing -, e, etc.
+                        onChange={(e) => {
+                          const cleanValue = sanitizePositiveInteger(
+                            e.target.value,
+                          );
+                          formik.setFieldValue("earn_coin", cleanValue);
+                        }}
                         onBlur={formik.handleBlur}
-                        className="custom--input w-full input--icon"
+                        className="custom--input w-full input--icon number--appearance-none"
                       />
                     </div>
                     {formik.touched.earn_coin && formik.errors.earn_coin && (
@@ -427,7 +466,8 @@ const CreateSubscriptionPlan = ({
                         name="is_spouse_plan"
                         value={
                           subscriptionOption.find(
-                            (opt) => opt.value === formik.values?.is_spouse_plan
+                            (opt) =>
+                              opt.value === formik.values?.is_spouse_plan,
                           ) || null
                         }
                         options={subscriptionOption}
@@ -493,7 +533,14 @@ const CreateSubscriptionPlan = ({
                         type="number"
                         name="position"
                         value={formik.values.position}
-                        onChange={formik.handleChange}
+                        // onChange={formik.handleChange}
+                        onKeyDown={blockInvalidNumberKeys} // ⛔ blocks typing -, e, etc.
+                        onChange={(e) => {
+                          const cleanValue = sanitizePositiveInteger(
+                            e.target.value,
+                          );
+                          formik.setFieldValue("position", cleanValue);
+                        }}
                         onBlur={formik.handleBlur}
                         className="custom--input w-full input--icon"
                       />

@@ -2,7 +2,12 @@ import React, { useEffect, useRef, useState } from "react";
 import { FiClock, FiPlus, FiTrash2 } from "react-icons/fi";
 import { IoCloseCircle } from "react-icons/io5";
 import Select from "react-select";
-import { customStyles, filterActiveItems } from "../../Helper/helper";
+import {
+  blockInvalidNumberKeys,
+  customStyles,
+  filterActiveItems,
+  sanitizePositiveInteger,
+} from "../../Helper/helper";
 import DatePicker from "react-datepicker"; // Date picker component
 import "react-datepicker/dist/react-datepicker.css"; // Date picker styles
 import { FaCalendarDays } from "react-icons/fa6";
@@ -170,18 +175,16 @@ const CreatePackage = ({
       value: item.id,
     })) || [];
 
-const serviceOptions =
-  service
-    ?.map((item) => ({
-      label: item.name,
-      value: item.id,
-      type: item.type,
-    }))
-    .filter(
-      (item) =>
-        item.type !== "PRODUCT" &&
-        item.type !== "GROUP_CLASS"
-    ) || [];
+  const serviceOptions =
+    service
+      ?.map((item) => ({
+        label: item.name,
+        value: item.id,
+        type: item.type,
+      }))
+      .filter(
+        (item) => item.type !== "PRODUCT" && item.type !== "GROUP_CLASS",
+      ) || [];
 
   const packageCategoryOptions =
     packageCategory?.map((item) => ({
@@ -799,9 +802,19 @@ const serviceOptions =
                                   ? formik.values.no_of_sessions
                                   : ""
                               }
-                              onChange={formik.handleChange}
+                              // onChange={formik.handleChange}
+                              onKeyDown={blockInvalidNumberKeys} // ⛔ blocks typing -, e, etc.
+                              onChange={(e) => {
+                                const cleanValue = sanitizePositiveInteger(
+                                  e.target.value,
+                                );
+                                formik.setFieldValue(
+                                  "no_of_sessions",
+                                  cleanValue,
+                                );
+                              }}
                               onBlur={formik.handleBlur}
-                              className="custom--input w-full"
+                              className="custom--input w-full number--appearance-none"
                             />
                           </div>
                           {formik.touched.no_of_sessions &&
@@ -826,9 +839,19 @@ const serviceOptions =
                                   ? formik.values.session_duration
                                   : ""
                               }
-                              onChange={formik.handleChange}
+                              // onChange={formik.handleChange}
+                              onKeyDown={blockInvalidNumberKeys} // ⛔ blocks typing -, e, etc.
+                              onChange={(e) => {
+                                const cleanValue = sanitizePositiveInteger(
+                                  e.target.value,
+                                );
+                                formik.setFieldValue(
+                                  "session_duration",
+                                  cleanValue,
+                                );
+                              }}
                               onBlur={formik.handleBlur}
-                              className="custom--input w-full"
+                              className="custom--input w-full number--appearance-none"
                             />
                           </div>
                           {formik.touched.session_duration &&
@@ -852,9 +875,19 @@ const serviceOptions =
                                   ? formik.values.session_validity
                                   : ""
                               }
-                              onChange={formik.handleChange}
+                              // onChange={formik.handleChange}
+                              onKeyDown={blockInvalidNumberKeys} // ⛔ blocks typing -, e, etc.
+                              onChange={(e) => {
+                                const cleanValue = sanitizePositiveInteger(
+                                  e.target.value,
+                                );
+                                formik.setFieldValue(
+                                  "session_validity",
+                                  cleanValue,
+                                );
+                              }}
                               onBlur={formik.handleBlur}
-                              className="custom--input w-full"
+                              className="custom--input w-full number--appearance-none"
                             />
                           </div>
                           {formik.touched.session_validity &&
@@ -1066,9 +1099,19 @@ const serviceOptions =
                                   ? formik.values.max_capacity
                                   : ""
                               }
-                              onChange={formik.handleChange}
+                              // onChange={formik.handleChange}
+                              onKeyDown={blockInvalidNumberKeys} // ⛔ blocks typing -, e, etc.
+                              onChange={(e) => {
+                                const cleanValue = sanitizePositiveInteger(
+                                  e.target.value,
+                                );
+                                formik.setFieldValue(
+                                  "max_capacity",
+                                  cleanValue,
+                                );
+                              }}
                               onBlur={formik.handleBlur}
-                              className="custom--input w-full"
+                              className="custom--input w-full number--appearance-none"
                             />
                           </div>
                           {formik.touched.max_capacity &&
@@ -1093,9 +1136,19 @@ const serviceOptions =
                                   ? formik.values.waitlist_capacity
                                   : ""
                               }
-                              onChange={formik.handleChange}
+                              // onChange={formik.handleChange}
+                              onKeyDown={blockInvalidNumberKeys} // ⛔ blocks typing -, e, etc.
+                              onChange={(e) => {
+                                const cleanValue = sanitizePositiveInteger(
+                                  e.target.value,
+                                );
+                                formik.setFieldValue(
+                                  "waitlist_capacity",
+                                  cleanValue,
+                                );
+                              }}
                               onBlur={formik.handleBlur}
-                              className="custom--input w-full"
+                              className="custom--input w-full number--appearance-none"
                             />
                           </div>
                           {formik.touched.waitlist_capacity &&
@@ -1157,9 +1210,16 @@ const serviceOptions =
                                   ? formik.values.amount
                                   : ""
                               }
-                              onChange={formik.handleChange}
+                              // onChange={formik.handleChange}
+                              onKeyDown={blockInvalidNumberKeys} // ⛔ blocks typing -, e, etc.
+                              onChange={(e) => {
+                                const cleanValue = sanitizePositiveInteger(
+                                  e.target.value,
+                                );
+                                formik.setFieldValue("amount", cleanValue);
+                              }}
                               onBlur={formik.handleBlur}
-                              className="custom--input w-full"
+                              className="custom--input w-full number--appearance-none"
                             />
                           </div>
 
@@ -1187,9 +1247,16 @@ const serviceOptions =
                                   ? formik.values.discount
                                   : ""
                               }
-                              onChange={formik.handleChange}
+                              // onChange={formik.handleChange}
+                              onKeyDown={blockInvalidNumberKeys} // ⛔ blocks typing -, e, etc.
+                              onChange={(e) => {
+                                const cleanValue = sanitizePositiveInteger(
+                                  e.target.value,
+                                );
+                                formik.setFieldValue("discount", cleanValue);
+                              }}
                               onBlur={formik.handleBlur}
-                              className="custom--input w-full"
+                              className="custom--input w-full number--appearance-none"
                             />
                           </div>
                           {formik.touched.discount &&
@@ -1219,9 +1286,16 @@ const serviceOptions =
                                   ? formik.values.gst
                                   : ""
                               }
-                              onChange={formik.handleChange}
+                              // onChange={formik.handleChange}
+                              onKeyDown={blockInvalidNumberKeys} // ⛔ blocks typing -, e, etc.
+                              onChange={(e) => {
+                                const cleanValue = sanitizePositiveInteger(
+                                  e.target.value,
+                                );
+                                formik.setFieldValue("gst", cleanValue);
+                              }}
                               onBlur={formik.handleBlur}
-                              className="custom--input w-full"
+                              className="custom--input w-full number--appearance-none"
                             />
                           </div>
                           {formik.touched.gst && formik.errors.gst && (
@@ -1302,7 +1376,14 @@ const serviceOptions =
                               ? formik.values.position
                               : ""
                           }
-                          onChange={formik.handleChange}
+                          // onChange={formik.handleChange}
+                          onKeyDown={blockInvalidNumberKeys} // ⛔ blocks typing -, e, etc.
+                          onChange={(e) => {
+                            const cleanValue = sanitizePositiveInteger(
+                              e.target.value,
+                            );
+                            formik.setFieldValue("position", cleanValue);
+                          }}
                           onBlur={formik.handleBlur}
                           className="custom--input w-full"
                         />
@@ -1329,9 +1410,16 @@ const serviceOptions =
                                 ? formik.values.earn_coin
                                 : ""
                             }
-                            onChange={formik.handleChange}
+                            // onChange={formik.handleChange}
+                            onKeyDown={blockInvalidNumberKeys} // ⛔ blocks typing -, e, etc.
+                            onChange={(e) => {
+                              const cleanValue = sanitizePositiveInteger(
+                                e.target.value,
+                              );
+                              formik.setFieldValue("earn_coin", cleanValue);
+                            }}
                             onBlur={formik.handleBlur}
-                            className="custom--input w-full"
+                            className="custom--input w-full number--appearance-none"
                           />
                         </div>
                         {formik.touched.earn_coin &&
@@ -1534,9 +1622,16 @@ const serviceOptions =
                                   formik.values.variation[index]
                                     ?.no_of_sessions ?? ""
                                 }
-                                onChange={formik.handleChange}
+                                onKeyDown={blockInvalidNumberKeys}
+                                onChange={(e) => {
+                                  const cleanValue = sanitizePositiveInteger(e.target.value);
+                                  formik.setFieldValue(
+                                    `variation[${index}].no_of_sessions`,
+                                    cleanValue,
+                                  );
+                                }}
                                 onBlur={formik.handleBlur}
-                                className="custom--input w-full"
+                                className="custom--input w-full number--appearance-none"
                               />
                               {formik.touched.variation?.[index]
                                 ?.no_of_sessions &&
@@ -1564,9 +1659,17 @@ const serviceOptions =
                                   formik.values.variation[index]
                                     ?.session_duration ?? ""
                                 }
-                                onChange={formik.handleChange}
+                                // onChange={formik.handleChange}
+                                onKeyDown={blockInvalidNumberKeys}
+                                onChange={(e) => {
+                                  const cleanValue = sanitizePositiveInteger(e.target.value);
+                                  formik.setFieldValue(
+                                    `variation[${index}].session_duration`,
+                                    cleanValue,
+                                  );
+                                }}
                                 onBlur={formik.handleBlur}
-                                className="custom--input w-full"
+                                className="custom--input w-full number--appearance-none"
                               />
                               {formik.touched.variation?.[index]
                                 ?.session_duration &&
@@ -1593,9 +1696,17 @@ const serviceOptions =
                                   formik.values.variation[index]
                                     ?.session_validity ?? ""
                                 }
-                                onChange={formik.handleChange}
+                                // onChange={formik.handleChange}
+                                onKeyDown={blockInvalidNumberKeys}
+                                onChange={(e) => {
+                                  const cleanValue = sanitizePositiveInteger(e.target.value);
+                                  formik.setFieldValue(
+                                    `variation[${index}].session_validity`,
+                                    cleanValue,
+                                  );
+                                }}
                                 onBlur={formik.handleBlur}
-                                className="custom--input w-full"
+                                className="custom--input w-full number--appearance-none"
                               />
                               {formik.touched.variation?.[index]
                                 ?.session_validity &&
@@ -1622,9 +1733,17 @@ const serviceOptions =
                                 value={
                                   formik.values.variation[index]?.amount ?? ""
                                 }
-                                onChange={formik.handleChange}
+                                // onChange={formik.handleChange}
+                                onKeyDown={blockInvalidNumberKeys}
+                                onChange={(e) => {
+                                  const cleanValue = sanitizePositiveInteger(e.target.value);
+                                  formik.setFieldValue(
+                                    `variation[${index}].amount`,
+                                    cleanValue,
+                                  );
+                                }}
                                 onBlur={formik.handleBlur}
-                                className="custom--input w-full"
+                                className="custom--input w-full number--appearance-none"
                               />
                               {formik.touched.variation?.[index]?.amount &&
                                 formik.errors.variation?.[index]?.amount && (
@@ -1646,9 +1765,17 @@ const serviceOptions =
                                 value={
                                   formik.values.variation[index]?.discount ?? ""
                                 }
-                                onChange={formik.handleChange}
+                                // onChange={formik.handleChange}
+                                onKeyDown={blockInvalidNumberKeys}
+                                onChange={(e) => {
+                                  const cleanValue = sanitizePositiveInteger(e.target.value);
+                                  formik.setFieldValue(
+                                    `variation[${index}].discount`,
+                                    cleanValue,
+                                  );
+                                }}
                                 onBlur={formik.handleBlur}
-                                className="custom--input w-full"
+                                className="custom--input w-full number--appearance-none"
                               />
                               {formik.touched.variation?.[index]?.discount &&
                                 formik.errors.variation?.[index]?.discount && (
@@ -1669,9 +1796,17 @@ const serviceOptions =
                                 value={
                                   formik.values.variation[index]?.gst ?? ""
                                 }
-                                onChange={formik.handleChange}
+                                // onChange={formik.handleChange}
+                                onKeyDown={blockInvalidNumberKeys}
+                                onChange={(e) => {
+                                  const cleanValue = sanitizePositiveInteger(e.target.value);
+                                  formik.setFieldValue(
+                                    `variation[${index}].gst`,
+                                    cleanValue,
+                                  );
+                                }}
                                 onBlur={formik.handleBlur}
-                                className="custom--input w-full"
+                                className="custom--input w-full number--appearance-none"
                               />
                               {formik.touched.variation?.[index]?.gst &&
                                 formik.errors.variation?.[index]?.gst && (
@@ -1693,9 +1828,17 @@ const serviceOptions =
                                   formik.values.variation[index]?.earn_coin ??
                                   ""
                                 }
-                                onChange={formik.handleChange}
+                                // onChange={formik.handleChange}
+                                onKeyDown={blockInvalidNumberKeys}
+                                onChange={(e) => {
+                                  const cleanValue = sanitizePositiveInteger(e.target.value);
+                                  formik.setFieldValue(
+                                    `variation[${index}].earn_coin`,
+                                    cleanValue,
+                                  );
+                                }}
                                 onBlur={formik.handleBlur}
-                                className="custom--input w-full"
+                                className="custom--input w-full number--appearance-none"
                               />
                               {formik.touched.variation?.[index]?.earn_coin &&
                                 formik.errors.variation?.[index]?.earn_coin && (
@@ -1716,7 +1859,15 @@ const serviceOptions =
                                 value={
                                   formik.values.variation[index]?.position ?? ""
                                 }
-                                onChange={formik.handleChange}
+                                // onChange={formik.handleChange}
+                                onKeyDown={blockInvalidNumberKeys}
+                                onChange={(e) => {
+                                  const cleanValue = sanitizePositiveInteger(e.target.value);
+                                  formik.setFieldValue(
+                                    `variation[${index}].position`,
+                                    cleanValue,
+                                  );
+                                }}
                                 onBlur={formik.handleBlur}
                                 className="custom--input w-full"
                               />
