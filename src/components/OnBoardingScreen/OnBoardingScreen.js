@@ -8,18 +8,27 @@ import { LiaEdit } from "react-icons/lia";
 import { FaCircle } from "react-icons/fa6";
 import CreateOnBoardingScreen from "./CreateOnBoardingScreen";
 import { authAxios } from "../../config/config";
+import { customStyles } from "../../Helper/helper";
+import Select from "react-select";
 
 const OnBoardingScreen = () => {
   const [showModal, setShowModal] = useState(false);
   const [module, setModule] = useState([]);
   const [editingOption, setEditingOption] = useState(null);
+  const [statusFilter, setStatusFilter] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
   const leadBoxRef = useRef(null);
 
   const fetchOnBoardingScreen = async (search = "") => {
     try {
-      const res = await authAxios().get("/onboarding-screen/list", {
-        params: search ? { search } : {},
-      });
+      const params = {
+        ...(search ? { search } : {}),
+      };
+      if (statusFilter) {
+        params.status = statusFilter.value;
+      }
+
+      const res = await authAxios().get("/onboarding-screen/list", { params });
       let data = res.data?.data || res.data || [];
       setModule(data);
     } catch (err) {
@@ -31,6 +40,14 @@ const OnBoardingScreen = () => {
   useEffect(() => {
     fetchOnBoardingScreen();
   }, []);
+
+  useEffect(() => {
+    const delayDebounce = setTimeout(() => {
+      fetchOnBoardingScreen(searchTerm);
+    }, 300);
+
+    return () => clearTimeout(delayDebounce);
+  }, [searchTerm, statusFilter]);
 
   const handleOverlayClick = (e) => {
     if (leadBoxRef.current && !leadBoxRef.current.contains(e.target)) {
@@ -70,7 +87,7 @@ const OnBoardingScreen = () => {
             formData,
             {
               headers: { "Content-Type": "multipart/form-data" },
-            }
+            },
           );
           toast.success("Updated Successfully");
         } else {
@@ -112,6 +129,32 @@ const OnBoardingScreen = () => {
           >
             <FiPlus /> Create On Boarding
           </button>
+        </div>
+      </div>
+
+      {/* Filters */}
+      <div className="flex gap-3 mb-4 items-center justify-between">
+        <div className="flex gap-2 w-full">
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Search by name or mobile"
+            className="custom--input w-full max-w-[210px]"
+          />
+          <div className="w-full max-w-[200px]">
+            <Select
+              placeholder="Filter by status"
+              options={[
+                { label: "Active", value: "ACTIVE" },
+                { label: "Inactive", value: "INACTIVE" },
+              ]}
+              value={statusFilter}
+              onChange={(option) => setStatusFilter(option)}
+              isClearable
+              styles={customStyles}
+            />
+          </div>
         </div>
       </div>
 

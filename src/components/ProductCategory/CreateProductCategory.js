@@ -18,6 +18,7 @@ const CreatePackageCategory = ({
   formik,
   handleOverlayClick,
   leadBoxRef,
+  clubOptions
 }) => {
   // ✅ Fetch role details when selectedId changes
   useEffect(() => {
@@ -35,6 +36,7 @@ const CreatePackageCategory = ({
             icon: data.icon || "",
             position: data.position || "",
             status: data.status || "",
+            club_id: data.club_id || "",
           });
         }
       } catch (err) {
@@ -142,6 +144,36 @@ const CreatePackageCategory = ({
                     {formik.touched.title && formik.errors.title && (
                       <p className="text-red-500 text-sm mt-1">
                         Title is required
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="mb-2 block">
+                      Club<span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[10]">
+                        <FaListUl />
+                      </span>
+                      <Select
+                        name="club_id"
+                        value={
+                          clubOptions.find(
+                            (option) => option.value === formik.values.club_id,
+                          ) || null
+                        }
+                        options={clubOptions}
+                        onChange={(option) =>
+                          formik.setFieldValue("club_id", option.value)
+                        }
+                        onBlur={() => formik.setFieldTouched("club_id", true)}
+                        styles={selectIcon}
+                        className="!capitalize"
+                      />
+                    </div>
+                    {formik.touched.club_id && formik.errors.club_id && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {formik.errors.club_id}
                       </p>
                     )}
                   </div>

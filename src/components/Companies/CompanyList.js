@@ -79,12 +79,11 @@ const CompanyList = () => {
         limit: rowsPerPage,
         ...(search ? { search } : {}),
       };
-
-      const res = await authAxios().get("/company/list", { params });
-
       if (statusFilter) {
         params.status = statusFilter.value;
       }
+
+      const res = await authAxios().get("/company/list", { params });
 
       let data = res.data?.data || [];
 
@@ -104,8 +103,8 @@ const CompanyList = () => {
 
   useEffect(() => {
     const delayDebounce = setTimeout(() => {
-      fetchCompanies(searchTerm, 1);
       setPage(1);
+      fetchCompanies(searchTerm, 1);
     }, 300);
 
     return () => clearTimeout(delayDebounce);

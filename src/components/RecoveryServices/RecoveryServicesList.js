@@ -121,14 +121,14 @@ const RecoveryServicesList = () => {
 
   // Debounced search for services
 
-  // useEffect(() => {
-  //   const delayDebounce = setTimeout(() => {
-  //     setPage(1);
-  //     fetchRecoveryServices(searchTerm, 1);
-  //   }, 300);
+  useEffect(() => {
+    const delayDebounce = setTimeout(() => {
+      setPage(1);
+      fetchRecoveryServices(searchTerm, 1);
+    }, 300);
 
-  //   return () => clearTimeout(delayDebounce);
-  // }, [searchTerm, statusFilter]);
+    return () => clearTimeout(delayDebounce);
+  }, [searchTerm, statusFilter, clubFilter]);
 
   // Handle overlay click to close modal
   const handleOverlayClick = (e) => {

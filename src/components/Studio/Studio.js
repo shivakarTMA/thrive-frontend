@@ -41,9 +41,6 @@ const Studio = () => {
       });
       let data = res.data?.data || res.data || [];
       const activeClub = data.filter((item) => item.status === "ACTIVE");
-      if (statusFilter?.value) {
-        data = data.filter((item) => item.status === statusFilter.value);
-      }
       setClub(activeClub);
     } catch (err) {
       console.error(err);
@@ -78,6 +75,7 @@ const Studio = () => {
 
   useEffect(() => {
     fetchClub();
+    fetchStudio();
   }, []);
 
   const clubOptions =

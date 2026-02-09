@@ -118,7 +118,7 @@ const CreateCompany = ({
               <div className="p-6 flex-1">
                 <div className="grid md:grid-cols-4 grid-cols-1 gap-4 gap-y-2">
                   {/* Image Preview */}
-                  <div className="row-span-2">
+                  {/* <div className="row-span-2">
                     <div className="bg-gray-100 rounded-lg w-full h-[160px] overflow-hidden p-4">
                       {formik.values?.logo ? (
                         <img
@@ -134,8 +134,8 @@ const CreateCompany = ({
                         </div>
                       )}
                     </div>
-                  </div>
-                  <div>
+                  </div> */}
+                  {/* <div>
                     <label className="mb-2 block">Company Logo</label>
                     <input
                       type="file"
@@ -144,7 +144,7 @@ const CreateCompany = ({
                       onBlur={() => formik.setFieldTouched("logo", true)}
                       className="custom--input w-full"
                     />
-                    {/* {formik.values.logo && (
+                    {formik.values.logo && (
                       <div className="mt-2">
                         <img
                           src={formik.values.logo}
@@ -152,8 +152,8 @@ const CreateCompany = ({
                           className="w-32 h-32 object-cover rounded"
                         />
                       </div>
-                    )} */}
-                  </div>
+                    )}
+                  </div> */}
                   {/* Company Name */}
                   <div>
                     <label className="mb-2 block">

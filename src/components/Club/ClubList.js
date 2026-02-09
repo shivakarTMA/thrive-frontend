@@ -95,12 +95,11 @@ const ClubList = () => {
         limit: rowsPerPage,
         ...(search ? { search } : {}),
       };
-
-      const res = await authAxios().get("/club/list", { params });
-
       if (statusFilter) {
         params.status = statusFilter.value;
       }
+
+      const res = await authAxios().get("/club/list", { params });
 
       let data = res.data?.data || [];
       setClub(data);

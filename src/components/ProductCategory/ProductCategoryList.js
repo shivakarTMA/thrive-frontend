@@ -8,6 +8,11 @@ import { LiaEdit } from "react-icons/lia";
 import { FaCircle } from "react-icons/fa6";
 import CreateProductCategory from "./CreateProductCategory";
 import { authAxios } from "../../config/config";
+import { useSelector } from "react-redux";
+import Select from "react-select";
+import { customStyles } from "../../Helper/helper";
+import { IoSearchOutline } from "react-icons/io5";
+import Pagination from "../common/Pagination";
 
 const ProductCategoryList = () => {
   const [showModal, setShowModal] = useState(false);
@@ -15,11 +20,55 @@ const ProductCategoryList = () => {
   const [editingOption, setEditingOption] = useState(null);
   const leadBoxRef = useRef(null);
 
-  const fetchProductCategoryList = async () => {
+  const [club, setClub] = useState([]);
+  const [clubFilter, setClubFilter] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState(null);
+  const { user } = useSelector((state) => state.auth);
+  const userRole = user.role;
+
+  const [page, setPage] = useState(1);
+  const [rowsPerPage] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+
+  const fetchClub = async (search = "") => {
     try {
-      const res = await authAxios().get("/product/category/list");
+      const res = await authAxios().get("/club/list", {
+        params: search ? { search } : {},
+      });
       let data = res.data?.data || res.data || [];
+      const activeClub = data.filter((item) => item.status === "ACTIVE");
+      setClub(activeClub);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to fetch companies");
+    }
+  };
+
+  const fetchProductCategoryList = async (search = "", currentPage = page) => {
+    try {
+      const params = {
+        page: currentPage,
+        limit: rowsPerPage,
+        ...(search ? { search } : {}),
+      };
+
+      if (clubFilter?.value) {
+        params.club_id = clubFilter.value;
+      }
+
+      if (statusFilter?.value) {
+        params.status = statusFilter.value;
+      }
+
+      const res = await authAxios().get("/product/category/list", { params });
+      let data = res.data?.data || res.data || [];
+      console.log(res.data,'res.data')
       setPackages(data);
+      setPage(res.data?.currentPage || 1);
+      setTotalPages(res.data?.totalPage || 1);
+      setTotalCount(res.data?.totalCount || data.length);
     } catch (err) {
       console.error(err);
       toast.error("Failed to fetch companies");
@@ -28,7 +77,23 @@ const ProductCategoryList = () => {
 
   useEffect(() => {
     fetchProductCategoryList();
+    fetchClub();
   }, []);
+
+  const clubOptions =
+    club?.map((item) => ({
+      label: item.name, // Show club name
+      value: item.id, // Store club_id as ID
+    })) || [];
+
+  useEffect(() => {
+    const delayDebounce = setTimeout(() => {
+      setPage(1);
+      fetchProductCategoryList(searchTerm, 1);
+    }, 300);
+
+    return () => clearTimeout(delayDebounce);
+  }, [searchTerm, clubFilter, statusFilter]);
 
   const handleOverlayClick = (e) => {
     if (leadBoxRef.current && !leadBoxRef.current.contains(e.target)) {
@@ -40,14 +105,16 @@ const ProductCategoryList = () => {
     initialValues: {
       title: "",
       icon: "",
-      position: null,
+      position: "",
       status: "ACTIVE",
+      club_id: "",
     },
     validationSchema: Yup.object({
       title: Yup.string().required("Title is required"),
       icon: Yup.string().required("Icon is required"),
       position: Yup.number().required("Position is required"),
       status: Yup.string().required("Status is required"),
+      club_id: Yup.string().required("Club is required"),
     }),
     onSubmit: async (values, { resetForm }) => {
       try {
@@ -55,6 +122,7 @@ const ProductCategoryList = () => {
         formData.append("title", values.title);
         formData.append("position", values.position);
         formData.append("status", values.status);
+        formData.append("club_id", values.club_id);
 
         // if file exists, append it (instead of just file name)
         if (values.iconFile instanceof File) {
@@ -63,9 +131,13 @@ const ProductCategoryList = () => {
 
         if (editingOption && editingOption) {
           // Update
-          await authAxios().put(`/product/category/${editingOption}`, formData, {
-            headers: { "Content-Type": "multipart/form-data" },
-          });
+          await authAxios().put(
+            `/product/category/${editingOption}`,
+            formData,
+            {
+              headers: { "Content-Type": "multipart/form-data" },
+            },
+          );
           toast.success("Updated Successfully");
         } else {
           // Create
@@ -108,6 +180,46 @@ const ProductCategoryList = () => {
           </button>
         </div>
       </div>
+      <div className="flex gap-3 mb-4">
+        <div className="mb-4 w-full max-w-[250px]">
+          <div className="relative">
+            <span className="absolute top-[50%] translate-y-[-50%] left-[15px]">
+              <IoSearchOutline />
+            </span>
+            <input
+              type="text"
+              placeholder="Search Category..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="custom--input w-full input--icon"
+            />
+          </div>
+        </div>
+        <div className="w-fit min-w-[180px]">
+          <Select
+            placeholder="Filter by club"
+            options={clubOptions}
+            value={clubFilter}
+            onChange={setClubFilter}
+            isClearable={userRole === "ADMIN" ? true : false}
+            styles={customStyles}
+          />
+        </div>
+        <div className="w-full max-w-[200px]">
+          <Select
+            placeholder="Filter by Status"
+            options={[
+              { label: "Active", value: "ACTIVE" },
+              { label: "Inactive", value: "INACTIVE" },
+            ]}
+            value={statusFilter}
+            onChange={(option) => setStatusFilter(option)}
+            isClearable
+            styles={customStyles}
+          />
+        </div>
+      </div>
+
       <div className="box--shadow bg-white rounded-[15px] p-4">
         <div className="relative overflow-x-auto">
           <table className="w-full text-sm text-left text-gray-500">
@@ -185,6 +297,17 @@ const ProductCategoryList = () => {
             </tbody>
           </table>
         </div>
+        <Pagination
+          page={page}
+          totalPages={totalPages}
+          rowsPerPage={rowsPerPage}
+          totalCount={totalCount}
+          currentDataLength={packages.length}
+          onPageChange={(newPage) => {
+            setPage(newPage);
+            fetchProductCategoryList(searchTerm, newPage);
+          }}
+        />
       </div>
       {showModal && (
         <CreateProductCategory
@@ -193,6 +316,7 @@ const ProductCategoryList = () => {
           formik={formik}
           handleOverlayClick={handleOverlayClick}
           leadBoxRef={leadBoxRef}
+          clubOptions={clubOptions}
         />
       )}
     </div>

@@ -1,12 +1,20 @@
 import React, { useEffect, useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { addYears, subYears } from "date-fns";
+import { addYears, format, subYears } from "date-fns";
 import { FaCalendarDays } from "react-icons/fa6";
 import Select from "react-select";
-import { customStyles, filterActiveItems } from "../../../Helper/helper";
+import {
+  customStyles,
+  filterActiveItems,
+  formatAutoDate,
+  formatIndianNumber,
+  formatText,
+} from "../../../Helper/helper";
 import { authAxios } from "../../../config/config";
 import { toast } from "react-toastify";
+import { useSelector } from "react-redux";
+import Pagination from "../../common/Pagination";
 
 const dateFilterOptions = [
   { value: "today", label: "Today" },
@@ -15,32 +23,24 @@ const dateFilterOptions = [
   { value: "custom", label: "Custom Date" },
 ];
 
-const dummyData = [
-  {
-    club_name: "DLF Summit Plaza",
-    member_id: 2004689,
-    member_name: "purnibala maibam chanu",
-    mobile: "8132967600",
-    service_name: "membership plan",
-    service_variation: "three months plan",
-    company_name: "lets farm (cyber city) building 8c",
-    purchase_date: "01-03-2025",
-    start_date: "03-03-2025",
-    end_date: "02-06-2025",
-    lead_source: "hoardings",
-    sales_rep_name: "swati singh",
-    bill_amount: "5700.00",
-  },
-];
+const formatDate = (date) => format(date, "yyyy-MM-dd");
 
 const GroupClassesUtilizationReport = () => {
-  const [data] = useState(dummyData);
+  const [activeMember, setActiveMember] = useState([]);
   const [clubList, setClubList] = useState([]);
   const [clubFilter, setClubFilter] = useState(null);
+
+  const { user } = useSelector((state) => state.auth);
+  const userRole = user.role;
 
   const [dateFilter, setDateFilter] = useState(dateFilterOptions[1]);
   const [customFrom, setCustomFrom] = useState(null);
   const [customTo, setCustomTo] = useState(null);
+
+  const [page, setPage] = useState(1);
+  const [rowsPerPage] = useState(2);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
 
   // Function to fetch club list
   const fetchClub = async (search = "") => {
@@ -50,10 +50,12 @@ const GroupClassesUtilizationReport = () => {
       });
       const data = response.data?.data || [];
       const activeOnly = filterActiveItems(data);
-      if (activeOnly.length === 1) {
+      setClubList(activeOnly);
+
+      // ✅ Set default club (index 0) ONLY if not already set
+      if (!clubFilter && activeOnly.length > 0) {
         setClubFilter(activeOnly[0].id);
       }
-      setClubList(activeOnly);
     } catch (error) {
       toast.error("Failed to fetch clubs");
     }
@@ -68,6 +70,55 @@ const GroupClassesUtilizationReport = () => {
     label: item.name,
     value: item.id,
   }));
+
+  const fetchGroupClassesReport = async (currentPage = page) => {
+    try {
+      const params = {
+        page: currentPage,
+        limit: rowsPerPage,
+      };
+
+      // Club filter
+      if (clubFilter) {
+        params.club_id = clubFilter;
+      }
+
+      // Date filter
+      if (dateFilter?.value === "custom") {
+        if (customFrom && customTo) {
+          params.startDate = formatDate(customFrom);
+          params.endDate = formatDate(customTo);
+        }
+      } else if (dateFilter?.value) {
+        params.dateFilter = dateFilter.value;
+      }
+
+      const res = await authAxios().get("/report/group/class/list", { params });
+      const responseData = res.data;
+      const data = responseData?.data || [];
+
+      console.log(responseData, "responseData");
+
+      setActiveMember(data);
+      setPage(responseData?.currentPage || 1);
+      setTotalPages(responseData?.totalPage || 1);
+      setTotalCount(responseData?.totalCount || data.length);
+    } catch (err) {
+      console.error(err);
+      toast.error("data not found");
+    }
+  };
+
+  useEffect(() => {
+    if (dateFilter?.value === "custom") {
+      if (customFrom && customTo) {
+        fetchGroupClassesReport(1);
+      }
+      return;
+    }
+    setPage(1);
+    fetchGroupClassesReport(1);
+  }, [dateFilter, customFrom, customTo, clubFilter, clubFilter]);
 
   return (
     <div className="page--content">
@@ -149,8 +200,9 @@ const GroupClassesUtilizationReport = () => {
               value={clubOptions.find((o) => o.value === clubFilter) || null}
               options={clubOptions}
               onChange={(option) => setClubFilter(option?.value)}
-              className="w-full"
               styles={customStyles}
+              className="w-full"
+              isClearable={userRole === "ADMIN" ? true : false}
             />
           </div>
         </div>
@@ -174,25 +226,25 @@ const GroupClassesUtilizationReport = () => {
             </thead>
 
             <tbody>
-              {data.length ? (
-                data.map((row, index) => (
+              {activeMember.length ? (
+                activeMember.map((row, index) => (
                   <tr
                     key={index}
-                    className="bg-white border-b hover:bg-gray-50 transition"
+                    className="bg-white border-b hover:bg-gray-50"
                   >
-                    <td className="px-2 py-4">{row.club_name || "-"}</td>
-                    <td className="px-2 py-4">Performance</td>
-                    <td className="px-2 py-4">Group Class Activity</td>
-                    <td className="px-2 py-4">20</td>
-                    <td className="px-2 py-4">16</td>
-                    <td className="px-2 py-4">80%</td>
-                    <td className="px-2 py-4">Shivakar Sharma</td>
-                    <td className="px-2 py-4">--</td>
+                    <td className="px-2 py-4">{row.club_name || "--"}</td>
+                    <td className="px-2 py-4">{row?.package_category_name}</td>
+                    <td className="px-2 py-4">{row?.package_name ? row?.package_name : "--"}</td>
+                    <td className="px-2 py-4">{row?.availability}</td>
+                    <td className="px-2 py-4">{row?.attendance}</td>
+                    <td className="px-2 py-4">{row?.utilization}%</td>
+                    <td className="px-2 py-4">{row?.trainer_name ? row?.trainer_name : "--"}</td>
+                    <td className="px-2 py-4">{row?.studio_name ? row?.studio_name : "--"}</td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan={9} className="text-center px-2 py-4">
+                  <td colSpan={18} className="text-center py-4">
                     No data found
                   </td>
                 </tr>
@@ -200,6 +252,18 @@ const GroupClassesUtilizationReport = () => {
             </tbody>
           </table>
         </div>
+        {/* Pagination Component */}
+        <Pagination
+          page={page}
+          totalPages={totalPages}
+          rowsPerPage={rowsPerPage}
+          totalCount={totalCount}
+          currentDataLength={activeMember.length}
+          onPageChange={(newPage) => {
+            setPage(newPage);
+            fetchGroupClassesReport(newPage);
+          }}
+        />
       </div>
     </div>
   );
