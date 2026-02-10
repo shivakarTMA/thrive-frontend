@@ -1,12 +1,20 @@
 import React, { useEffect, useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { addYears, subYears } from "date-fns";
-import { FaCalendarDays, FaCircle } from "react-icons/fa6";
+import { addYears, format, subYears } from "date-fns";
+import { FaCalendarDays } from "react-icons/fa6";
 import Select from "react-select";
-import { customStyles, filterActiveItems } from "../../../Helper/helper";
+import {
+  customStyles,
+  filterActiveItems,
+  formatAutoDate,
+  formatIndianNumber,
+  formatText,
+} from "../../../Helper/helper";
 import { authAxios } from "../../../config/config";
 import { toast } from "react-toastify";
+import { useSelector } from "react-redux";
+import Pagination from "../../common/Pagination";
 
 const dateFilterOptions = [
   { value: "today", label: "Today" },
@@ -15,62 +23,34 @@ const dateFilterOptions = [
   { value: "custom", label: "Custom Date" },
 ];
 
-const dummyData = [
-  {
-    club_name: "DLF Summit Plaza",
-    memberId: "MB-501",
-    memberName: "Amit Sharma",
-    planName: "Gold Membership",
-    startDate: "01-01-2025",
-    endDate: "31-12-2025",
-    lastCheckInDate: "22-12-2025",
-    leadSource: "Website",
-    salesRepName: "Rohit Verma",
-    billAmount: 12000,
-    payMode: "Credit Card",
-    companyName: "FitZone Gym",
-    gender: "Male",
-  },
-  {
-    club_name: "DLF Summit Plaza",
-    memberId: "MB-502",
-    memberName: "Neha Singh",
-    planName: "Silver Membership",
-    startDate: "15-03-2025",
-    endDate: "14-09-2025",
-    lastCheckInDate: "20-12-2025",
-    leadSource: "Referral",
-    salesRepName: "Anjali Mehta",
-    billAmount: 8000,
-    payMode: "UPI",
-    companyName: "FitZone Gym",
-    gender: "Female",
-  },
-  {
-    club_name: "DLF Summit Plaza",
-    memberId: "MB-503",
-    memberName: "Rahul Patel",
-    planName: "Platinum Membership",
-    startDate: "10-02-2025",
-    endDate: "09-02-2026",
-    lastCheckInDate: "23-12-2025",
-    leadSource: "Walk-in",
-    salesRepName: "Kunal Shah",
-    billAmount: 18000,
-    payMode: "Cash",
-    companyName: "Elite Fitness Club",
-    gender: "Male",
-  },
-];
+  const genderOptions = [
+    { value: "MALE", label: "Male" },
+    { value: "FEMALE", label: "Female" },
+    { value: "NOTDISCLOSE", label: "Prefer Not To Say" },
+  ];
 
-const ActiveClientSummaryReport = () => {
-  const [data] = useState(dummyData);
+const formatDate = (date) => format(date, "yyyy-MM-dd");
+
+const ActiveClientReport = () => {
+  const [activeMember, setActiveMember] = useState([]);
   const [clubList, setClubList] = useState([]);
   const [clubFilter, setClubFilter] = useState(null);
+
+  const [companyList, setCompanyList] = useState([]);
+  const [companyFilter, setCompanyFilter] = useState(null);
+  const [genderFilter, setGenderFilter] = useState(null);
+
+  const { user } = useSelector((state) => state.auth);
+  const userRole = user.role;
 
   const [dateFilter, setDateFilter] = useState(dateFilterOptions[1]);
   const [customFrom, setCustomFrom] = useState(null);
   const [customTo, setCustomTo] = useState(null);
+
+  const [page, setPage] = useState(1);
+  const [rowsPerPage] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
 
   // Function to fetch club list
   const fetchClub = async (search = "") => {
@@ -81,20 +61,104 @@ const ActiveClientSummaryReport = () => {
       const data = response.data?.data || [];
       const activeOnly = filterActiveItems(data);
       setClubList(activeOnly);
+
+      // ✅ Set default club (index 0) ONLY if not already set
+      if (!clubFilter && activeOnly.length > 0) {
+        setClubFilter(activeOnly[0].id);
+      }
     } catch (error) {
       toast.error("Failed to fetch clubs");
     }
   };
   // Function to fetch role list
 
+  // Function to fetch company list
+  const fetchCompanies = async () => {
+    try {
+      const response = await authAxios().get("/company/list");
+      const data = response.data?.data || [];
+      const activeOnly = filterActiveItems(data);
+      setCompanyList(activeOnly)
+    } catch (error) {
+      toast.error("Failed to fetch company");
+    }
+  };
+  // Function to fetch company list
+
   useEffect(() => {
     fetchClub();
+    fetchCompanies();
   }, []);
 
   const clubOptions = clubList.map((item) => ({
     label: item.name,
     value: item.id,
   }));
+
+  const companyOptions = companyList.map((item) => ({
+    label: item.name,
+    value: item.id,
+  }));
+
+  const fetchActiveClientReport = async (currentPage = page) => {
+    try {
+      const params = {
+        page: currentPage,
+        limit: rowsPerPage,
+      };
+
+      // Club filter
+      if (clubFilter) {
+        params.club_id = clubFilter;
+      }
+
+      // Company filter
+      if (companyFilter) {
+        params.company_id = companyFilter;
+      }
+      // Gender filter
+      if (genderFilter) {
+        params.gender = genderFilter;
+      }
+
+      // Date filter
+      if (dateFilter?.value === "custom") {
+        if (customFrom && customTo) {
+          params.startDate = formatDate(customFrom);
+          params.endDate = formatDate(customTo);
+        }
+      } else if (dateFilter?.value) {
+        params.dateFilter = dateFilter.value;
+      }
+
+      const res = await authAxios().get("/report/active/client/list", {
+        params,
+      });
+      const responseData = res.data;
+      const data = responseData?.data || [];
+
+      console.log(responseData, "responseData");
+
+      setActiveMember(data);
+      setPage(responseData?.currentPage || 1);
+      setTotalPages(responseData?.totalPage || 1);
+      setTotalCount(responseData?.totalCount || data.length);
+    } catch (err) {
+      console.error(err);
+      toast.error("data not found");
+    }
+  };
+
+  useEffect(() => {
+    if (dateFilter?.value === "custom") {
+      if (customFrom && customTo) {
+        fetchActiveClientReport(1);
+      }
+      return;
+    }
+    setPage(1);
+    fetchActiveClientReport(1);
+  }, [dateFilter, customFrom, customTo, clubFilter, companyFilter, genderFilter]);
 
   return (
     <div className="page--content">
@@ -104,9 +168,7 @@ const ActiveClientSummaryReport = () => {
           <p className="text-sm">
             {`Home > Reports > Operations Reports > Active Client Report`}
           </p>
-          <h1 className="text-3xl font-semibold">
-            Active Client Report
-          </h1>
+          <h1 className="text-3xl font-semibold">Active Client Report</h1>
         </div>
       </div>
 
@@ -137,7 +199,10 @@ const ActiveClientSummaryReport = () => {
                 </span>
                 <DatePicker
                   selected={customFrom}
-                  onChange={setCustomFrom}
+                  onChange={(date) => {
+                    setCustomFrom(date);
+                    setCustomTo(null); // ✅ reset To Date if From Date changes
+                  }}
                   placeholderText="From Date"
                   className="custom--input w-full input--icon"
                   minDate={subYears(new Date(), 20)}
@@ -148,35 +213,58 @@ const ActiveClientSummaryReport = () => {
                   dropdownMode="select"
                 />
               </div>
-
               <div className="custom--date dob-format flex-1 max-w-[180px] w-full">
                 <span className="absolute z-[1] mt-[11px] ml-[15px]">
                   <FaCalendarDays />
                 </span>
                 <DatePicker
                   selected={customTo}
-                  onChange={setCustomTo}
+                  onChange={(date) => setCustomTo(date)}
                   placeholderText="To Date"
                   className="custom--input w-full input--icon"
-                  minDate={subYears(new Date(), 20)}
+                  minDate={customFrom || subYears(new Date(), 20)}
                   maxDate={addYears(new Date(), 0)}
-                  dateFormat="dd-MM-yyyy"
                   showMonthDropdown
                   showYearDropdown
                   dropdownMode="select"
+                  dateFormat="dd-MM-yyyy"
+                  disabled={!customFrom}
                 />
               </div>
             </>
           )}
 
-          <div className="w-full max-w-[200px]">
+          <div className="w-fit min-w-[200px]">
             <Select
               placeholder="Filter by club"
               value={clubOptions.find((o) => o.value === clubFilter) || null}
               options={clubOptions}
               onChange={(option) => setClubFilter(option?.value)}
-              isClearable
               styles={customStyles}
+              className="w-full"
+              isClearable={userRole === "ADMIN" ? true : false}
+            />
+          </div>
+          <div className="w-fit min-w-[200px]">
+            <Select
+              placeholder="Filter by Company"
+              value={companyOptions.find((o) => o.value === companyFilter) || null}
+              options={companyOptions}
+              onChange={(option) => setCompanyFilter(option?.value)}
+              styles={customStyles}
+              className="w-full"
+              isClearable={userRole === "ADMIN" ? true : false}
+            />
+          </div>
+          <div className="w-fit min-w-[200px]">
+            <Select
+              placeholder="Filter by Gender"
+              value={genderOptions.find((o) => o.value === genderFilter) || null}
+              options={genderOptions}
+              onChange={(option) => setGenderFilter(option?.value)}
+              styles={customStyles}
+              className="w-full"
+              isClearable={userRole === "ADMIN" ? true : false}
             />
           </div>
         </div>
@@ -191,7 +279,7 @@ const ActiveClientSummaryReport = () => {
                 <th className="px-2 py-4 min-w-[150px]">Club Name</th>
                 <th className="px-2 py-4 min-w-[100px]">Member ID</th>
                 <th className="px-2 py-4 min-w-[120px]">Member Name</th>
-                <th className="px-2 py-4 min-w-[150px]">Plan Name</th>
+                <th className="px-2 py-4 min-w-[120px]">Plan Name</th>
                 <th className="px-2 py-4 min-w-[100px]">Start Date</th>
                 <th className="px-2 py-4 min-w-[100px]">End Date</th>
                 <th className="px-2 py-4 min-w-[150px]">Last Check-in Date</th>
@@ -205,25 +293,57 @@ const ActiveClientSummaryReport = () => {
             </thead>
 
             <tbody>
-              {data.length ? (
-                data.map((row, index) => (
+              {activeMember.length ? (
+                activeMember.map((row, index) => (
                   <tr
                     key={index}
                     className="bg-white border-b hover:bg-gray-50"
                   >
-                    <td className="px-2 py-4">{row.club_name || "-"}</td>
-                    <td className="px-2 py-4">{row.memberId}</td>
-                    <td className="px-2 py-4">{row.memberName}</td>
-                    <td className="px-2 py-4">{row.planName}</td>
-                    <td className="px-2 py-4">{row.startDate}</td>
-                    <td className="px-2 py-4">{row.endDate}</td>
-                    <td className="px-2 py-4">{row.lastCheckInDate}</td>
-                    <td className="px-2 py-4">{row.leadSource}</td>
-                    <td className="px-2 py-4">{row.salesRepName}</td>
-                    <td className="px-2 py-4">₹{row.billAmount}</td>
-                    <td className="px-2 py-4">{row.payMode}</td>
-                    <td className="px-2 py-4">{row.companyName}</td>
-                    <td className="px-2 py-4">{row.gender}</td>
+                    <td className="px-2 py-4">{row.club_name || "--"}</td>
+                    <td className="px-2 py-4">
+                      {row.membership_number ? row.membership_number : "--"}
+                    </td>
+                    <td className="px-2 py-4">
+                      {row.full_name ? row.full_name : "--"}
+                    </td>
+                    <td className="px-2 py-4">
+                      {row.plan_name ? row.plan_name : "--"}
+                    </td>
+                    <td className="px-2 py-4">
+                      {row.start_date ? formatAutoDate(row.start_date) : "--"}
+                    </td>
+                    <td className="px-2 py-4">
+                      {row.end_date ? formatAutoDate(row.end_date) : "--"}
+                    </td>
+                    <td className="px-2 py-4">
+                      {row.last_check_in_date
+                        ? formatAutoDate(row.last_check_in_date)
+                        : "--"}
+                    </td>
+                    <td className="px-2 py-4">
+                      {row.lead_source ? row.lead_source : "--"}
+                    </td>
+                    <td className="px-2 py-4">
+                      {row.sales_rep_name ? row.sales_rep_name : "--"}
+                    </td>
+                    <td className="px-2 py-4">
+                      ₹{formatIndianNumber(row.booking_amount)}
+                    </td>
+                    <td className="px-2 py-4">
+                      {row.payment_method
+                        ? formatText(row.payment_method)
+                        : "--"}
+                    </td>
+                    <td className="px-2 py-4">
+                      {row.company_name ? row.company_name : "--"}
+                    </td>
+                    <td className="px-2 py-4">
+                      {formatText(
+                        row?.gender === "NOTDISCLOSE"
+                          ? "Prefer Not To Say"
+                          : row?.gender,
+                      )}
+                    </td>
                   </tr>
                 ))
               ) : (
@@ -236,9 +356,21 @@ const ActiveClientSummaryReport = () => {
             </tbody>
           </table>
         </div>
+        {/* Pagination Component */}
+        <Pagination
+          page={page}
+          totalPages={totalPages}
+          rowsPerPage={rowsPerPage}
+          totalCount={totalCount}
+          currentDataLength={activeMember.length}
+          onPageChange={(newPage) => {
+            setPage(newPage);
+            fetchActiveClientReport(newPage);
+          }}
+        />
       </div>
     </div>
   );
 };
 
-export default ActiveClientSummaryReport;
+export default ActiveClientReport;

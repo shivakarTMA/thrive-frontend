@@ -25,7 +25,7 @@ import { TbArrowsExchange } from "react-icons/tb";
 import Tooltip from "../components/common/Tooltip";
 import ConvertMemberForm from "./ConvertMemberForm";
 import CreateInvoice from "./CreateInvoice";
-import SendPaymentLink from "./SendPaymentLink";
+import LeadSendPaymentLink from "./LeadSendPaymentLink";
 import { toast } from "react-toastify";
 import { authAxios } from "../config/config";
 import Pagination from "../components/common/Pagination";
@@ -1091,7 +1091,7 @@ const AllLeads = () => {
         />
       )}
       {sendPaymentModal && (
-        <SendPaymentLink
+        <LeadSendPaymentLink
           setSendPaymentModal={setSendPaymentModal}
           selectedLeadMember={selectedLeadMember}
         />

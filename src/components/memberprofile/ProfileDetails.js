@@ -771,14 +771,14 @@ const ProfileDetails = ({ member }) => {
                     {member?.membership_number || "N/A"}
                   </span>
                 </div>
-                <div className="flex justify-between">
+                {/* <div className="flex justify-between">
                   <span className="text-[#6F6F6F] font-[500] text-[15px]">
                     Centre ID:
                   </span>
                   <span className="text-[#6F6F6F] font-[500] text-[15px]">
                     {member?.club_id || "N/A"}
                   </span>
-                </div>
+                </div> */}
                 <div className="flex justify-between">
                   <span className="text-[#6F6F6F] font-[500] text-[15px]">
                     Centre Name:

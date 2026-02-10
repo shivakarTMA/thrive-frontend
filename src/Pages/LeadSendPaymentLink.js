@@ -8,7 +8,6 @@ import Select from "react-select";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { toast } from "react-toastify";
-import { useSelector } from "react-redux";
 import { authAxios } from "../config/config";
 import { FaCalendarDays, FaListCheck } from "react-icons/fa6";
 import { RiDiscountPercentFill } from "react-icons/ri";
@@ -22,16 +21,18 @@ const validationSchema = Yup.object({
   productType: Yup.string().required("Product Type is required"),
 });
 
-const SendPaymentLink = ({ setSendPaymentModal, selectedLeadMember }) => {
-
-  console.log(selectedLeadMember,'selectedLeadMember')
+const LeadSendPaymentLink = ({ setSendPaymentModal, selectedLeadMember }) => {
+  console.log(selectedLeadMember, "selectedLeadMember");
 
   const [showProductModal, setShowProductModal] = useState(false);
 
   const [voucherInput, setVoucherInput] = useState("");
   const [voucherStatus, setVoucherStatus] = useState(null); // "success", "error", or null
   const [selectedVoucher, setSelectedVoucher] = useState(null);
-  const [selected, setSelected] = useState([]);
+
+  const [paymentModalOpen, setPaymentModalOpen] = useState(false);
+  const [paymentUrl, setPaymentUrl] = useState("");
+  const [orderNo, setOrderNo] = useState("");
 
   const leadBoxRef = useRef(null);
 
@@ -39,6 +40,8 @@ const SendPaymentLink = ({ setSendPaymentModal, selectedLeadMember }) => {
     id: "",
     club_id: null,
     productType: "MEMBERSHIP_PLAN",
+    plan_type: "", // ✅ ADD THIS
+    start_date: new Date(), // ✅ ADD THIS
     productDetails: {
       id: null,
       title: "",
@@ -60,10 +63,37 @@ const SendPaymentLink = ({ setSendPaymentModal, selectedLeadMember }) => {
   const formik = useFormik({
     initialValues,
     validationSchema,
-    onSubmit: (values) => {
-      console.log("Submitting full form", values);
-      toast.success("Payment send successfully!")
-      setSendPaymentModal(false)
+    onSubmit: async (values) => {
+      // console.log("Submitting full form", values);
+
+      // 3️⃣ Proceed to payment (IMPORTANT PART)
+      if (values.productDetails?.id) {
+        const paymentPayload = {
+          subscription_plan_id: values.productDetails.id,
+          order_type: "SUBSCRIPTION",
+          start_date: values.start_date
+            ? new Date(values.start_date).toISOString().split("T")[0]
+            : null,
+          coins: 0,
+          coupon_code: values.coupon || "",
+          applicable_ids: [values.productDetails.id],
+          member_id: selectedLeadMember,
+        };
+
+        console.log("paymentPayload", paymentPayload);
+
+        const res = await authAxios().post("/payment/proceed", paymentPayload);
+
+        if (res.data?.status) {
+          const { paymentUrl, order_no } = res.data.response;
+
+          setPaymentUrl(paymentUrl);
+          setOrderNo(order_no);
+          setPaymentModalOpen(true); // ✅ OPEN MODAL
+
+          toast.success("Payment send successfully!");
+        }
+      }
     },
   });
 
@@ -80,8 +110,8 @@ const SendPaymentLink = ({ setSendPaymentModal, selectedLeadMember }) => {
           formik.setValues({
             id: data.id || "",
             club_id: data.club_id || null,
-
             productType: "MEMBERSHIP_PLAN",
+            start_date: formik.values.start_date || new Date(),
           });
         }
       } catch (err) {
@@ -274,7 +304,7 @@ const SendPaymentLink = ({ setSendPaymentModal, selectedLeadMember }) => {
                       <Select
                         name="plan_type"
                         value={planTypeOption.find(
-                          (opt) => opt.value === formik.values.plan_type
+                          (opt) => opt.value === formik.values.plan_type,
                         )}
                         options={planTypeOption}
                         onChange={(option) =>
@@ -306,7 +336,7 @@ const SendPaymentLink = ({ setSendPaymentModal, selectedLeadMember }) => {
                       </span>
                       <input
                         name="productDetails.title"
-                        value={formik.values?.productDetails?.title}
+                        value={formik.values?.productDetails?.title || ""}
                         onChange={formik.handleChange}
                         className="custom--input w-full input--icon"
                         readOnly={true}
@@ -364,8 +394,8 @@ const SendPaymentLink = ({ setSendPaymentModal, selectedLeadMember }) => {
                           voucherStatus === "success"
                             ? "border-green-500"
                             : voucherStatus === "error"
-                            ? "border-red-500"
-                            : ""
+                              ? "border-red-500"
+                              : ""
                         }`}
                       />
                       <button
@@ -480,8 +510,51 @@ const SendPaymentLink = ({ setSendPaymentModal, selectedLeadMember }) => {
           onSubmit={handleProductSubmit}
         />
       )}
+
+      {paymentModalOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]">
+          <div className="bg-white rounded-lg w-[500px] p-6">
+            <h2 className="text-lg font-semibold mb-2">
+              Complete Your Payment
+            </h2>
+
+            <p className="text-sm text-gray-600 mb-3">
+              Order No: <span className="font-medium">{orderNo}</span>
+            </p>
+
+            <textarea
+              readOnly
+              value={paymentUrl}
+              className="w-full h-[120px] border rounded p-2 text-sm"
+            />
+
+            <div className="flex justify-end gap-3 mt-4">
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(paymentUrl);
+                  toast.success("Payment URL copied");
+                }}
+                className="px-4 py-2 bg-black text-white rounded"
+              >
+                Copy URL
+              </button>
+
+              <button
+                onClick={() => {
+                  setPaymentModalOpen(false);
+                  setSendPaymentModal(false);
+                  formik.resetForm(); // optional
+                }}
+                className="px-4 py-2 border rounded"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };
 
-export default SendPaymentLink;
+export default LeadSendPaymentLink;

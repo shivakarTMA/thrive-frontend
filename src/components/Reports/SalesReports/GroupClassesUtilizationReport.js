@@ -38,7 +38,7 @@ const GroupClassesUtilizationReport = () => {
   const [customTo, setCustomTo] = useState(null);
 
   const [page, setPage] = useState(1);
-  const [rowsPerPage] = useState(2);
+  const [rowsPerPage] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
 
@@ -118,7 +118,7 @@ const GroupClassesUtilizationReport = () => {
     }
     setPage(1);
     fetchGroupClassesReport(1);
-  }, [dateFilter, customFrom, customTo, clubFilter, clubFilter]);
+  }, [dateFilter, customFrom, customTo, clubFilter]);
 
   return (
     <div className="page--content">

@@ -1,12 +1,22 @@
 import React, { useEffect, useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { addYears, subYears } from "date-fns";
-import { FaCalendarDays, FaCircle } from "react-icons/fa6";
+import { addYears, format, subYears } from "date-fns";
+import { FaCalendarDays } from "react-icons/fa6";
 import Select from "react-select";
-import { customStyles, filterActiveItems } from "../../../Helper/helper";
+import {
+  customStyles,
+  filterActiveItems,
+  formatAutoDate,
+  formatIndianNumber,
+  formatText,
+} from "../../../Helper/helper";
 import { authAxios } from "../../../config/config";
 import { toast } from "react-toastify";
+import { useSelector } from "react-redux";
+import Pagination from "../../common/Pagination";
+import { FaCircle } from "react-icons/fa";
+import MemberSendPaymentLink from "../../../Pages/MemberSendPaymentLink";
 
 const dateFilterOptions = [
   { value: "today", label: "Today" },
@@ -15,85 +25,26 @@ const dateFilterOptions = [
   { value: "custom", label: "Custom Date" },
 ];
 
-const dummyData = [
-  {
-    club_name: "DLF Summit Plaza",
-    memberId: "MB-2001",
-    memberName: "Amit Sharma",
-    status: "Active",
-    salesRep: "Rohit Verma",
-    generalTrainer: "Sandeep Yadav",
-    planName: "Gold Membership",
-    planType: "Annual",
-    amount: 15000,
-    expiryDate: "25-12-2025",
-    lastCheckInDate: "20-12-2025",
-    renewalDone: "N",
-    paymentLink: "Pending",
-    companyName: "FitZone Gym",
-    gender: "Male",
-  },
-  {
-    club_name: "DLF Summit Plaza",
-    memberId: "MB-2002",
-    memberName: "Neha Singh",
-    status: "Expiring Soon",
-    salesRep: "Anjali Mehta",
-    generalTrainer: "Pooja Nair",
-    planName: "Silver Membership",
-    planType: "6 Months",
-    amount: 9000,
-    expiryDate: "30-12-2025",
-    lastCheckInDate: "22-12-2025",
-    renewalDone: "N",
-    paymentLink: "Sent",
-    companyName: "FitZone Gym",
-    gender: "Female",
-  },
-  {
-    club_name: "DLF Summit Plaza",
-    memberId: "MB-2003",
-    memberName: "Rahul Patel",
-    status: "Expired",
-    salesRep: "Kunal Shah",
-    generalTrainer: "Aakash Jain",
-    planName: "Monthly Membership",
-    planType: "Monthly",
-    amount: 2500,
-    expiryDate: "15-12-2025",
-    lastCheckInDate: "10-12-2025",
-    renewalDone: "Y",
-    paymentLink: "Paid",
-    companyName: "Urban Fitness",
-    gender: "Male",
-  },
-  {
-    club_name: "DLF Summit Plaza",
-    memberId: "MB-2004",
-    memberName: "Sneha Iyer",
-    status: "Active",
-    salesRep: "Arjun Malhotra",
-    generalTrainer: "Ritika Das",
-    planName: "Platinum Membership",
-    planType: "Annual",
-    amount: 22000,
-    expiryDate: "10-01-2026",
-    lastCheckInDate: "23-12-2025",
-    renewalDone: "N",
-    paymentLink: "Sent",
-    companyName: "Elite Fitness Club",
-    gender: "Female",
-  },
-];
+const formatDate = (date) => format(date, "yyyy-MM-dd");
 
 const MembershipExpiryReport = () => {
-  const [data] = useState(dummyData);
+  const [activeMember, setActiveMember] = useState([]);
   const [clubList, setClubList] = useState([]);
   const [clubFilter, setClubFilter] = useState(null);
+  const [sendPaymentModal, setSendPaymentModal] = useState(false);
+  const [selectedLeadMember, setSelectedLeadMember] = useState(null);
+
+  const { user } = useSelector((state) => state.auth);
+  const userRole = user.role;
 
   const [dateFilter, setDateFilter] = useState(dateFilterOptions[1]);
   const [customFrom, setCustomFrom] = useState(null);
   const [customTo, setCustomTo] = useState(null);
+
+  const [page, setPage] = useState(1);
+  const [rowsPerPage] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
 
   // Function to fetch club list
   const fetchClub = async (search = "") => {
@@ -104,6 +55,11 @@ const MembershipExpiryReport = () => {
       const data = response.data?.data || [];
       const activeOnly = filterActiveItems(data);
       setClubList(activeOnly);
+
+      // ✅ Set default club (index 0) ONLY if not already set
+      if (!clubFilter && activeOnly.length > 0) {
+        setClubFilter(activeOnly[0].id);
+      }
     } catch (error) {
       toast.error("Failed to fetch clubs");
     }
@@ -118,6 +74,57 @@ const MembershipExpiryReport = () => {
     label: item.name,
     value: item.id,
   }));
+
+  const fetchMembershipExpiryReport = async (currentPage = page) => {
+    try {
+      const params = {
+        page: currentPage,
+        limit: rowsPerPage,
+      };
+
+      // Club filter
+      if (clubFilter) {
+        params.club_id = clubFilter;
+      }
+
+      // Date filter
+      if (dateFilter?.value === "custom") {
+        if (customFrom && customTo) {
+          params.startDate = formatDate(customFrom);
+          params.endDate = formatDate(customTo);
+        }
+      } else if (dateFilter?.value) {
+        params.dateFilter = dateFilter.value;
+      }
+
+      const res = await authAxios().get("/report/membership/expiry/list", {
+        params,
+      });
+      const responseData = res.data;
+      const data = responseData?.data || [];
+
+      console.log(responseData, "responseData");
+
+      setActiveMember(data);
+      setPage(responseData?.currentPage || 1);
+      setTotalPages(responseData?.totalPage || 1);
+      setTotalCount(responseData?.totalCount || data.length);
+    } catch (err) {
+      console.error(err);
+      toast.error("data not found");
+    }
+  };
+
+  useEffect(() => {
+    if (dateFilter?.value === "custom") {
+      if (customFrom && customTo) {
+        fetchMembershipExpiryReport(1);
+      }
+      return;
+    }
+    setPage(1);
+    fetchMembershipExpiryReport(1);
+  }, [dateFilter, customFrom, customTo, clubFilter]);
 
   return (
     <div className="page--content">
@@ -158,7 +165,10 @@ const MembershipExpiryReport = () => {
                 </span>
                 <DatePicker
                   selected={customFrom}
-                  onChange={setCustomFrom}
+                  onChange={(date) => {
+                    setCustomFrom(date);
+                    setCustomTo(null); // ✅ reset To Date if From Date changes
+                  }}
                   placeholderText="From Date"
                   className="custom--input w-full input--icon"
                   minDate={subYears(new Date(), 20)}
@@ -169,35 +179,36 @@ const MembershipExpiryReport = () => {
                   dropdownMode="select"
                 />
               </div>
-
               <div className="custom--date dob-format flex-1 max-w-[180px] w-full">
                 <span className="absolute z-[1] mt-[11px] ml-[15px]">
                   <FaCalendarDays />
                 </span>
                 <DatePicker
                   selected={customTo}
-                  onChange={setCustomTo}
+                  onChange={(date) => setCustomTo(date)}
                   placeholderText="To Date"
                   className="custom--input w-full input--icon"
-                  minDate={subYears(new Date(), 20)}
+                  minDate={customFrom || subYears(new Date(), 20)}
                   maxDate={addYears(new Date(), 0)}
-                  dateFormat="dd-MM-yyyy"
                   showMonthDropdown
                   showYearDropdown
                   dropdownMode="select"
+                  dateFormat="dd-MM-yyyy"
+                  disabled={!customFrom}
                 />
               </div>
             </>
           )}
 
-          <div className="w-full max-w-[200px]">
+          <div className="w-fit min-w-[200px]">
             <Select
               placeholder="Filter by club"
               value={clubOptions.find((o) => o.value === clubFilter) || null}
               options={clubOptions}
               onChange={(option) => setClubFilter(option?.value)}
-              isClearable
               styles={customStyles}
+              className="w-full"
+              isClearable={userRole === "ADMIN" ? true : false}
             />
           </div>
         </div>
@@ -228,54 +239,57 @@ const MembershipExpiryReport = () => {
             </thead>
 
             <tbody>
-              {data.length ? (
-                data.map((row, index) => (
+              {activeMember.length ? (
+                activeMember.map((row, index) => (
                   <tr
                     key={index}
                     className="bg-white border-b hover:bg-gray-50"
                   >
                     <td className="px-2 py-4">{row.club_name || "-"}</td>
-                    <td className="px-2 py-4">{row.memberId}</td>
-                    <td className="px-2 py-4">{row.memberName}</td>
+                    <td className="px-2 py-4">{row.membership_number}</td>
+                    <td className="px-2 py-4">{row.full_name}</td>
                     <td className="px-2 py-4 flex items-center gap-1">
-                      <FaCircle
-                        className={`text-xs ${
-                          row.status === "Active"
-                            ? "text-green-500"
-                            : row.status === "Expiring Soon"
-                            ? "text-yellow-500"
-                            : "text-red-500"
-                        }`}
-                      />
-                      {row.status}
+                      {row.is_subscribed === true ? "Active" : "Inactive"}
                     </td>
-                    <td className="px-2 py-4">{row.salesRep}</td>
-                    <td className="px-2 py-4">{row.generalTrainer}</td>
-                    <td className="px-2 py-4">{row.planName}</td>
-                    <td className="px-2 py-4">{row.planType}</td>
-                    <td className="px-2 py-4">₹{row.amount}</td>
-                    <td className="px-2 py-4">{row.expiryDate}</td>
-                    <td className="px-2 py-4">{row.lastCheckInDate}</td>
+                    <td className="px-2 py-4">{row.sales_rep_name ? row.sales_rep_name : "--"}</td>
+                    <td className="px-2 py-4">{row.general_trainer ? row.general_trainer : "--"}</td>
+                    <td className="px-2 py-4">{row.plan_name}</td>
+                    <td className="px-2 py-4">{row.plan_type}</td>
+                    <td className="px-2 py-4">₹{formatIndianNumber(row.booking_amount)}</td>
+                    <td className="px-2 py-4">{formatAutoDate(row.end_date)}</td>
+                    <td className="px-2 py-4">{formatAutoDate(row.last_check_in_date)}</td>
                     <td className="px-2 py-4 flex items-center justify-center gap-1">
                       <FaCircle
                         className={`text-xs ${
-                          row.renewalDone === "Y"
+                          row.is_renewal === true
                             ? "text-green-500"
                             : "text-red-500"
                         }`}
                       />
-                      {row.renewalDone}
+                      {row.is_renewal === true ? "Y" : "N"}
                     </td>
                     <td className="px-2 py-4">
                       <button
                         type="button"
+                        onClick={() => {
+                                          setSelectedLeadMember(row.id);
+                                          setSendPaymentModal(true);
+                                        }}
                         className="px-3 py-1 bg-black text-white rounded flex items-center gap-2 !text-[13px]"
                       >
                         Send Link
                       </button>
                     </td>
-                    <td className="px-2 py-4">{row.companyName}</td>
-                    <td className="px-2 py-4">{row.gender}</td>
+                    <td className="px-2 py-4">
+                      {row.company_name ? row.company_name : "--"}
+                    </td>
+                    <td className="px-2 py-4">
+                      {formatText(
+                        row?.gender === "NOTDISCLOSE"
+                          ? "Prefer Not To Say"
+                          : row?.gender,
+                      )}
+                    </td>
                   </tr>
                 ))
               ) : (
@@ -288,7 +302,27 @@ const MembershipExpiryReport = () => {
             </tbody>
           </table>
         </div>
+        {/* Pagination Component */}
+        <Pagination
+          page={page}
+          totalPages={totalPages}
+          rowsPerPage={rowsPerPage}
+          totalCount={totalCount}
+          currentDataLength={activeMember.length}
+          onPageChange={(newPage) => {
+            setPage(newPage);
+            fetchMembershipExpiryReport(newPage);
+          }}
+        />
       </div>
+
+      {sendPaymentModal && (
+        <MemberSendPaymentLink
+          setSendPaymentModal={setSendPaymentModal}
+          selectedLeadMember={selectedLeadMember}
+        />
+      )}
+
     </div>
   );
 };

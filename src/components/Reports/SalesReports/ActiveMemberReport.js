@@ -118,7 +118,7 @@ const ActiveMemberReport = () => {
     }
     setPage(1);
     fetchActiveMemberReport(1);
-  }, [dateFilter, customFrom, customTo, clubFilter, clubFilter]);
+  }, [dateFilter, customFrom, customTo, clubFilter]);
 
   return (
     <div className="page--content">

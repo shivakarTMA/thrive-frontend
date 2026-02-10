@@ -99,7 +99,7 @@ const NewJoineesReport = () => {
   }));
 
   const selectedClub =
-  clubOptions.find((opt) => opt.value === clubFilter?.value) || null;
+    clubOptions.find((opt) => opt.value === clubFilter?.value) || null;
 
   // ---------------------------
   // UPDATE URL WITH PARAMS
@@ -168,16 +168,18 @@ const NewJoineesReport = () => {
         params.club_id = clubFilter.value;
       }
 
-      if (appliedFilters.subscription_type) params.subscription_type = appliedFilters.subscription_type;
+      if (appliedFilters.subscription_type)
+        params.subscription_type = appliedFilters.subscription_type;
       if (appliedFilters.plan_type) params.plan_type = appliedFilters.plan_type;
       if (appliedFilters.service_name)
         params.service_name = appliedFilters.service_name;
       if (appliedFilters.lead_source)
         params.lead_source = appliedFilters.lead_source;
-      if (appliedFilters.owner_id)
-        params.owner_id = appliedFilters.owner_id;
-      if (appliedFilters.payment_method) params.payment_method = appliedFilters.payment_method;
-      if (appliedFilters.trial_type) params.trial_type = appliedFilters.trial_type;
+      if (appliedFilters.owner_id) params.owner_id = appliedFilters.owner_id;
+      if (appliedFilters.payment_method)
+        params.payment_method = appliedFilters.payment_method;
+      if (appliedFilters.trial_type)
+        params.trial_type = appliedFilters.trial_type;
 
       const res = await authAxios().get("/marketing/report/newjoinee", {
         params,
@@ -185,7 +187,7 @@ const NewJoineesReport = () => {
       const responseData = res.data;
       const data = responseData?.data || [];
 
-      console.log('SHIVAKAR', responseData)
+      console.log("SHIVAKAR", responseData);
 
       setNewJoineesList(data);
       setPage(responseData?.currentPage || 1);
@@ -442,10 +444,12 @@ const NewJoineesReport = () => {
                 <th className="px-2 py-4 min-w-[150px]">Lead Owner</th>
 
                 <th className="px-2 py-4 min-w-[100px]">Amount</th>
+                <th className="px-2 py-4 min-w-[100px]">Discount</th>
+                <th className="px-2 py-4 min-w-[110px]">Final Amount</th>
                 <th className="px-2 py-4 min-w-[100px]">CGST</th>
                 <th className="px-2 py-4 min-w-[100px]">SGST</th>
                 <th className="px-2 py-4 min-w-[100px]">IGST</th>
-                <th className="px-2 py-4 min-w-[110px]">Final Amount</th>
+
                 <th className="px-2 py-4 min-w-[110px]">Paid Amount</th>
                 <th className="px-2 py-4 min-w-[100px]">Pay Mode</th>
                 <th className="px-2 py-4">Status</th>
@@ -461,10 +465,14 @@ const NewJoineesReport = () => {
                   >
                     {/* <td className="px-2 py-4">{index + 1}</td> */}
                     <td className="px-2 py-4">{row.club_name || "--"}</td>
-                    <td className="px-2 py-4">{formatText(row.subscription_type) || "--"}</td>
                     <td className="px-2 py-4">
-                      {row?.trial_type === "NONTRIAL" ? "No Trial": formatText(row?.trial_type)}
-                      </td>
+                      {formatText(row.subscription_type) || "--"}
+                    </td>
+                    <td className="px-2 py-4">
+                      {row?.trial_type === "NONTRIAL"
+                        ? "No Trial"
+                        : formatText(row?.trial_type)}
+                    </td>
                     <td className="px-2 py-4">
                       {row.membership_number || "--"}
                     </td>
@@ -479,7 +487,9 @@ const NewJoineesReport = () => {
                       {formatText(row.service_type) || "--"}
                     </td>
                     <td className="px-2 py-4">
-                      {row.plan_type === "NONDLF" ? "NON-DLF" : row.plan_type || "--"}
+                      {row.plan_type === "NONDLF"
+                        ? "NON-DLF"
+                        : row.plan_type || "--"}
                     </td>
                     <td className="px-2 py-4">{row.service_name || "--"}</td>
                     <td className="px-2 py-4">{row.invoice_id || "--"}</td>
@@ -502,21 +512,27 @@ const NewJoineesReport = () => {
                       ₹{formatIndianNumber(row.amount) || 0}
                     </td>
                     <td className="px-2 py-4">
-                      ₹{formatIndianNumber(row.cgst) || 0}
-                    </td>
-                    <td className="px-2 py-4">
-                      ₹{formatIndianNumber(row.sgst) || 0}
-                    </td>
-                    <td className="px-2 py-4">
-                      ₹{formatIndianNumber(row.igst) || 0}
+                      ₹{formatIndianNumber(row.discount) || 0}
                     </td>
                     <td className="px-2 py-4">
                       ₹{formatIndianNumber(row.total_amount) || 0}
                     </td>
                     <td className="px-2 py-4">
+                      ₹{formatIndianNumber(row.cgst_amount) || 0}
+                    </td>
+                    <td className="px-2 py-4">
+                      ₹{formatIndianNumber(row.sgst_amount) || 0}
+                    </td>
+                    <td className="px-2 py-4">
+                      ₹{formatIndianNumber(row.igst_amount) || 0}
+                    </td>
+
+                    <td className="px-2 py-4">
                       ₹{formatIndianNumber(row.booking_amount) || 0}
                     </td>
-                    <td className="px-2 py-4">{formatText(row.payment_method) || "--"}</td>
+                    <td className="px-2 py-4">
+                      {formatText(row.payment_method) || "--"}
+                    </td>
                     <td className="px-2 py-4">
                       <span
                         className={`flex items-center justify-between gap-1 rounded-full min-h-[30px] px-3 text-sm w-fit ${

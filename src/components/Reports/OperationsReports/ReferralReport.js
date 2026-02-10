@@ -171,8 +171,9 @@ const ReferralReport = () => {
                 <th className="px-2 py-4 min-w-[150px]">Club Name</th>
                 <th className="px-2 py-4 min-w-[150px]">Referral Name</th>
                 <th className="px-2 py-4 min-w-[150px]">Ref. Sales Rep</th>
-                <th className="px-2 py-4 min-w-[100px]">Lead Source</th>
+                {/* <th className="px-2 py-4 min-w-[100px]">Lead Source</th> */}
                 <th className="px-2 py-4 min-w-[150px]">Referred by</th>
+                <th className="px-2 py-4 min-w-[150px]">Membership Type</th>
                 <th className="px-2 py-4 min-w-[100px]">Converted (Y/N)</th>
                 <th className="px-2 py-4 min-w-[100px]">Enquiry Date</th>
               </tr>
@@ -188,8 +189,9 @@ const ReferralReport = () => {
                     <td className="px-2 py-4">{row.club_name || "-"}</td>
                     <td className="px-2 py-2">{row.referralName}</td>
                     <td className="px-2 py-2">{row.refSalesRep}</td>
-                    <td className="px-2 py-2">{row.leadSource}</td>
+                    {/* <td className="px-2 py-2">{row.leadSource}</td> */}
                     <td className="px-2 py-2">{row.referredBy}</td>
+                    <td className="px-2 py-2">{row.membership_type ? row.membership_type : "--"}</td>
                     <td className="px-2 py-2">
                       {row.converted === "Y" ? "Yes" : "No"}
                     </td>

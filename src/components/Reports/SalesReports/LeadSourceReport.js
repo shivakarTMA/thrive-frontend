@@ -118,7 +118,7 @@ const LeadSourceReport = () => {
     }
     setPage(1);
     fetchLeadSourceReport(1);
-  }, [dateFilter, customFrom, customTo, clubFilter, clubFilter]);
+  }, [dateFilter, customFrom, customTo, clubFilter]);
 
   return (
     <div className="page--content">
