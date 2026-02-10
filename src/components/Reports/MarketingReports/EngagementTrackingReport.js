@@ -1,12 +1,21 @@
 import React, { useEffect, useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { addYears, subYears } from "date-fns";
+import { addYears, format, subYears } from "date-fns";
 import { FaCalendarDays } from "react-icons/fa6";
 import Select from "react-select";
-import { customStyles, filterActiveItems } from "../../../Helper/helper";
+import {
+  customStyles,
+  filterActiveItems,
+  formatAutoDate,
+  formatIndianNumber,
+  formatText,
+} from "../../../Helper/helper";
 import { authAxios } from "../../../config/config";
 import { toast } from "react-toastify";
+import { useSelector } from "react-redux";
+import Pagination from "../../common/Pagination";
+import { FaCircle } from "react-icons/fa";
 
 const dateFilterOptions = [
   { value: "today", label: "Today" },
@@ -15,162 +24,24 @@ const dateFilterOptions = [
   { value: "custom", label: "Custom Date" },
 ];
 
-const formatDate = (date) => {
-  if (!date) return null;
-  return date.toISOString().split("T")[0]; // YYYY-MM-DD
-};
+const formatDate = (date) => format(date, "yyyy-MM-dd");
 
-const customerData = [
-  {
-    id: 1,
-    memberId: "THR001245",
-    memberName: "Rohan Mehta",
-    gender: "Male",
-    age: 32,
-    status: "Active",
-    memberFrom: "12-Mar-2024",
-    expiredOn: "11-04-2026",
-    attendance: 18,
-    sessionsBooked: 16,
-    sessionsAttended: 14,
-    favoriteClass: "Strength Training",
-  },
-  {
-    id: 2,
-    memberId: "THR001312",
-    memberName: "Ananya Singh",
-    gender: "Female",
-    age: 28,
-    status: "Active",
-    memberFrom: "05-Jun-2024",
-    expiredOn: "05-07-2026",
-    attendance: 22,
-    sessionsBooked: 20,
-    sessionsAttended: 19,
-    favoriteClass: "Yoga",
-  },
-  {
-    id: 3,
-    memberId: "THR001401",
-    memberName: "Kunal Verma",
-    gender: "Male",
-    age: 35,
-    status: "Expired",
-    memberFrom: "19-Jan-2023",
-    expiredOn: "17-02-2025",
-    attendance: 14,
-    sessionsBooked: 12,
-    sessionsAttended: 10,
-    favoriteClass: "HIIT",
-  },
-  {
-    id: 4,
-    memberId: "THR001455",
-    memberName: "Neha Kapoor",
-    gender: "Female",
-    age: 30,
-    status: "Active",
-    memberFrom: "02-Aug-2024",
-    expiredOn: "01-09-2026",
-    attendance: 16,
-    sessionsBooked: 14,
-    sessionsAttended: 13,
-    favoriteClass: "Pilates",
-  },
-  {
-    id: 5,
-    memberId: "THR001512",
-    memberName: "Arjun Malhotra",
-    gender: "Male",
-    age: 41,
-    status: "Expired",
-    memberFrom: "11-Nov-2022",
-    expiredOn: "10-12-2024",
-    attendance: 12,
-    sessionsBooked: 10,
-    sessionsAttended: 9,
-    favoriteClass: "Functional Training",
-  },
-  {
-    id: 6,
-    memberId: "THR001588",
-    memberName: "Pooja Nair",
-    gender: "Female",
-    age: 34,
-    status: "Expired",
-    memberFrom: "21-Feb-2023",
-    expiredOn: "22-03-2025",
-    attendance: 4,
-    sessionsBooked: 6,
-    sessionsAttended: 2,
-    favoriteClass: "Zumba",
-  },
-  {
-    id: 7,
-    memberId: "THR001643",
-    memberName: "Aman Khurana",
-    gender: "Male",
-    age: 27,
-    status: "Active",
-    memberFrom: "15-Sep-2024",
-    expiredOn: "15-10-2026",
-    attendance: 20,
-    sessionsBooked: 18,
-    sessionsAttended: 17,
-    favoriteClass: "CrossFit",
-  },
-  {
-    id: 8,
-    memberId: "THR001702",
-    memberName: "Simran Kaur",
-    gender: "Female",
-    age: 29,
-    status: "Active",
-    memberFrom: "07-Jul-2024",
-    expiredOn: "06-08-2026",
-    attendance: 15,
-    sessionsBooked: 14,
-    sessionsAttended: 12,
-    favoriteClass: "Dance Fitness",
-  },
-  {
-    id: 9,
-    memberId: "THR001758",
-    memberName: "Rahul Bansal",
-    gender: "Male",
-    age: 38,
-    status: "Expired",
-    memberFrom: "18-Jan-2022",
-    expiredOn: "17-02-2024",
-    attendance: 6,
-    sessionsBooked: 8,
-    sessionsAttended: 5,
-    favoriteClass: "Strength Training",
-  },
-  {
-    id: 10,
-    memberId: "THR001804",
-    memberName: "Meenal Joshi",
-    gender: "Female",
-    age: 33,
-    status: "Active",
-    memberFrom: "09-Apr-2024",
-    expiredOn: "09-05-2026",
-    attendance: 19,
-    sessionsBooked: 17,
-    sessionsAttended: 16,
-    favoriteClass: "Yoga",
-  },
-];
-
-const EngagementTrackingReport = () => {
-  const [leadSource, setLeadSource] = useState(customerData);
+const ReferralReport = () => {
+  const [activeMember, setActiveMember] = useState([]);
   const [clubList, setClubList] = useState([]);
   const [clubFilter, setClubFilter] = useState(null);
+
+  const { user } = useSelector((state) => state.auth);
+  const userRole = user.role;
 
   const [dateFilter, setDateFilter] = useState(dateFilterOptions[1]);
   const [customFrom, setCustomFrom] = useState(null);
   const [customTo, setCustomTo] = useState(null);
+
+  const [page, setPage] = useState(1);
+  const [rowsPerPage] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
 
   // Function to fetch club list
   const fetchClub = async (search = "") => {
@@ -182,7 +53,8 @@ const EngagementTrackingReport = () => {
       const activeOnly = filterActiveItems(data);
       setClubList(activeOnly);
 
-      if (activeOnly.length === 1) {
+      // ✅ Set default club (index 0) ONLY if not already set
+      if (!clubFilter && activeOnly.length > 0) {
         setClubFilter(activeOnly[0].id);
       }
     } catch (error) {
@@ -200,9 +72,12 @@ const EngagementTrackingReport = () => {
     value: item.id,
   }));
 
-  const fetchEngagementTrackingReport = async () => {
+  const fetchEngagementReport = async (currentPage = page) => {
     try {
-      const params = {};
+      const params = {
+        page: currentPage,
+        limit: rowsPerPage,
+      };
 
       // Club filter
       if (clubFilter) {
@@ -219,30 +94,33 @@ const EngagementTrackingReport = () => {
         params.dateFilter = dateFilter.value;
       }
 
-      const res = await authAxios().get(
-        "/marketing/report/lead/source/performance",
-        { params }
-      );
+      const res = await authAxios().get("/report/engagement/tracking/list", {
+        params,
+      });
       const responseData = res.data;
       const data = responseData?.data || [];
 
-      // setLeadSource(data);
+      console.log(responseData, "responseData");
+
+      setActiveMember(data);
+      setPage(responseData?.currentPage || 1);
+      setTotalPages(responseData?.totalPage || 1);
+      setTotalCount(responseData?.totalCount || data.length);
     } catch (err) {
       console.error(err);
       toast.error("data not found");
     }
   };
+
   useEffect(() => {
-    // If custom date is selected, wait for both dates
     if (dateFilter?.value === "custom") {
       if (customFrom && customTo) {
-        fetchEngagementTrackingReport();
+        fetchEngagementReport(1);
       }
       return;
     }
-
-    // For all non-custom filters
-    fetchEngagementTrackingReport();
+    setPage(1);
+    fetchEngagementReport(1);
   }, [dateFilter, customFrom, customTo, clubFilter]);
 
   return (
@@ -327,6 +205,7 @@ const EngagementTrackingReport = () => {
               onChange={(option) => setClubFilter(option?.value)}
               styles={customStyles}
               className="w-full"
+              isClearable={userRole === "ADMIN" ? true : false}
             />
           </div>
         </div>
@@ -338,7 +217,6 @@ const EngagementTrackingReport = () => {
           <table className="w-full text-sm text-left text-gray-500">
             <thead className="text-xs text-gray-700 uppercase bg-gray-50">
               <tr>
-                <th className="px-2 py-4">S.No</th>
                 <th className="px-2 py-4">Member ID</th>
                 <th className="px-2 py-4">Name</th>
                 <th className="px-2 py-4">Gender</th>
@@ -352,27 +230,48 @@ const EngagementTrackingReport = () => {
             </thead>
 
             <tbody>
-              {customerData.length ? (
-                customerData.map((item, index) => (
+              {activeMember.length ? (
+                activeMember.map((row, index) => (
                   <tr
                     key={index}
                     className="bg-white border-b hover:bg-gray-50"
                   >
-                    <td className="px-2 py-3">{index + 1}</td>
-                    <td className="px-2 py-3">{item.memberId}</td>
-                    <td className="px-2 py-3">{item.memberName}</td>
-                    <td className="px-2 py-3">{item.gender}</td>
-                    <td className="px-2 py-3">{item.age}</td>
-                    <td className="px-2 py-3">{item.status}</td>
-                    <td className="px-2 py-3">{item.attendance}</td>
-                    <td className="px-2 py-3">{item.sessionsBooked}</td>
-                    <td className="px-2 py-3">{item.sessionsAttended}</td>
-                    <td className="px-2 py-3">{item.favoriteClass}</td>
+                    <td className="px-2 py-3">{row?.membership_number}</td>
+                    <td className="px-2 py-3">{row?.full_name}</td>
+                    <td className="px-2 py-3">
+                      {formatText(
+                        row?.gender === "NOTDISCLOSE"
+                          ? "Prefer Not To Say"
+                          : row?.gender,
+                      )}
+                    </td>
+                    <td className="px-2 py-3">{row?.age}</td>
+                    <td className="px-2 py-3">
+                      <span
+                        className={`
+                            flex items-center justify-between gap-1 rounded-full min-h-[30px] px-3 text-sm w-fit
+                          ${
+                            row?.is_subscribed !== true
+                              ? "bg-[#EEEEEE]"
+                              : "bg-[#E8FFE6] text-[#138808]"
+                          }
+                          `}
+                      >
+                        <FaCircle className="text-[10px]" />{" "}
+                        {row?.is_subscribed !== true ? "Inactive" : "Active"}
+                      </span>
+                    </td>
+                    <td className="px-2 py-3">{row?.total_attendance}</td>
+                    <td className="px-2 py-3">{row?.session_booked}</td>
+                    <td className="px-2 py-3">{row?.session_attended}</td>
+                    <td className="px-2 py-3">
+                      {row?.favourite_class ? row?.favourite_class : "--"}
+                    </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan={10} className="text-center py-4">
+                  <td colSpan={9} className="text-center py-4">
                     No data found
                   </td>
                 </tr>
@@ -380,9 +279,21 @@ const EngagementTrackingReport = () => {
             </tbody>
           </table>
         </div>
+        {/* Pagination Component */}
+        <Pagination
+          page={page}
+          totalPages={totalPages}
+          rowsPerPage={rowsPerPage}
+          totalCount={totalCount}
+          currentDataLength={activeMember.length}
+          onPageChange={(newPage) => {
+            setPage(newPage);
+            fetchEngagementReport(newPage);
+          }}
+        />
       </div>
     </div>
   );
 };
 
-export default EngagementTrackingReport;
+export default ReferralReport;

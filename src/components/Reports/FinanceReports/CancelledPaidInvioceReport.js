@@ -137,9 +137,9 @@ const CancelledPaidInvioceReport = () => {
       <div className="flex items-end justify-between gap-2 mb-5">
         <div className="title--breadcrumbs">
           <p className="text-sm">
-            {`Home > Reports > Finance Reports > Cancelled Paid Invioce`}
+            {`Home > Reports > Finance Reports > Cancelled Paid Invoice`}
           </p>
-          <h1 className="text-3xl font-semibold">Cancelled Paid Invioce</h1>
+          <h1 className="text-3xl font-semibold">Cancelled Paid Invoice</h1>
         </div>
       </div>
 

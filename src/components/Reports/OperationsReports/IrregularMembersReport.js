@@ -1,52 +1,37 @@
 import React, { useEffect, useState } from "react";
-import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
-import { addYears, subYears } from "date-fns";
-import { FaCalendarDays, FaCircle } from "react-icons/fa6";
 import Select from "react-select";
-import { customStyles, filterActiveItems } from "../../../Helper/helper";
+import {
+  customStyles,
+  filterActiveItems,
+  formatAutoDate,
+} from "../../../Helper/helper";
 import { authAxios } from "../../../config/config";
 import { toast } from "react-toastify";
+import { useSelector } from "react-redux";
+import Pagination from "../../common/Pagination";
 
-const dateFilterOptions = [
-  { value: "today", label: "Today" },
-  { value: "last_7_days", label: "Last 7 Days" },
-  { value: "month_till_date", label: "Month Till Date" },
-  { value: "custom", label: "Custom Date" },
-];
-
-const dummyData = [
-  {
-    club_name: "DLF Summit Plaza",
-    memberName: "Amit Sharma",
-    planName: "Gold Membership",
-    lastVisitedOn: "22-12-2025",
-    salesRep: "Rohit Verma",
-  },
-  {
-    club_name: "DLF Summit Plaza",
-    memberName: "Neha Singh",
-    planName: "Silver Membership",
-    lastVisitedOn: "20-12-2025",
-    salesRep: "Anjali Mehta",
-  },
-  {
-    club_name: "DLF Summit Plaza",
-    memberName: "Rahul Patel",
-    planName: "Platinum Membership",
-    lastVisitedOn: "15-12-2025",
-    salesRep: "Kunal Shah",
-  },
+const noOfDaysOptions = [
+  { value: 7, label: "Last 7 Days" },
+  { value: 15, label: "Last 15 Days" },
+  { value: 30, label: "Last 30 Days" },
+  { value: 60, label: "Last 60 Days" },
+  { value: 90, label: "Last 90 Days" },
 ];
 
 const IrregularMembersReport = () => {
-  const [data] = useState(dummyData);
+  const [irregularMember, setIrregularMember] = useState([]);
   const [clubList, setClubList] = useState([]);
   const [clubFilter, setClubFilter] = useState(null);
 
-  const [dateFilter, setDateFilter] = useState(dateFilterOptions[1]);
-  const [customFrom, setCustomFrom] = useState(null);
-  const [customTo, setCustomTo] = useState(null);
+  const { user } = useSelector((state) => state.auth);
+  const userRole = user.role;
+
+  const [noOfDays, setNoOfDays] = useState(noOfDaysOptions[1]);
+
+  const [page, setPage] = useState(1);
+  const [rowsPerPage] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
 
   // Function to fetch club list
   const fetchClub = async (search = "") => {
@@ -57,6 +42,11 @@ const IrregularMembersReport = () => {
       const data = response.data?.data || [];
       const activeOnly = filterActiveItems(data);
       setClubList(activeOnly);
+
+      // ✅ Set default club (index 0) ONLY if not already set
+      if (!clubFilter && activeOnly.length > 0) {
+        setClubFilter(activeOnly[0].id);
+      }
     } catch (error) {
       toast.error("Failed to fetch clubs");
     }
@@ -71,6 +61,46 @@ const IrregularMembersReport = () => {
     label: item.name,
     value: item.id,
   }));
+
+  const fetchIrregularMembersReport = async (currentPage = page) => {
+    try {
+      const params = {
+        page: currentPage,
+        limit: rowsPerPage,
+      };
+
+      // Club filter
+      if (clubFilter) {
+        params.club_id = clubFilter;
+      }
+
+      // noOfDays filter
+      if (noOfDays?.value) {
+        params.no_of_days = noOfDays.value;
+      }
+
+      const res = await authAxios().get("/report/irregular/list", {
+        params,
+      });
+      const responseData = res.data;
+      const data = responseData?.data || [];
+
+      console.log(responseData, "responseData");
+
+      setIrregularMember(data);
+      setPage(responseData?.currentPage || 1);
+      setTotalPages(responseData?.totalPage || 1);
+      setTotalCount(responseData?.totalCount || data.length);
+    } catch (err) {
+      console.error(err);
+      toast.error("data not found");
+    }
+  };
+
+  useEffect(() => {
+    setPage(1);
+    fetchIrregularMembersReport(1);
+  }, [clubFilter, noOfDays]);
 
   return (
     <div className="page--content">
@@ -87,70 +117,25 @@ const IrregularMembersReport = () => {
       {/* Filters */}
       <div className="flex gap-3 mb-4 items-center justify-between">
         <div className="flex gap-2 w-full">
-          <div className="max-w-[180px] w-full">
+          <div className="max-w-[200px] w-full">
             <Select
-              placeholder="Date Filter"
-              options={dateFilterOptions}
-              value={dateFilter}
-              onChange={(selected) => {
-                setDateFilter(selected);
-                if (selected?.value !== "custom") {
-                  setCustomFrom(null);
-                  setCustomTo(null);
-                }
-              }}
+              placeholder="Irregular Since"
+              options={noOfDaysOptions}
+              value={noOfDays}
+              onChange={(selected) => setNoOfDays(selected)}
               styles={customStyles}
             />
           </div>
 
-          {dateFilter?.value === "custom" && (
-            <>
-              <div className="custom--date dob-format flex-1 max-w-[180px] w-full">
-                <span className="absolute z-[1] mt-[11px] ml-[15px]">
-                  <FaCalendarDays />
-                </span>
-                <DatePicker
-                  selected={customFrom}
-                  onChange={setCustomFrom}
-                  placeholderText="From Date"
-                  className="custom--input w-full input--icon"
-                  minDate={subYears(new Date(), 20)}
-                  maxDate={addYears(new Date(), 0)}
-                  dateFormat="dd-MM-yyyy"
-                  showMonthDropdown
-                  showYearDropdown
-                  dropdownMode="select"
-                />
-              </div>
-
-              <div className="custom--date dob-format flex-1 max-w-[180px] w-full">
-                <span className="absolute z-[1] mt-[11px] ml-[15px]">
-                  <FaCalendarDays />
-                </span>
-                <DatePicker
-                  selected={customTo}
-                  onChange={setCustomTo}
-                  placeholderText="To Date"
-                  className="custom--input w-full input--icon"
-                  minDate={subYears(new Date(), 20)}
-                  maxDate={addYears(new Date(), 0)}
-                  dateFormat="dd-MM-yyyy"
-                  showMonthDropdown
-                  showYearDropdown
-                  dropdownMode="select"
-                />
-              </div>
-            </>
-          )}
-
-          <div className="w-full max-w-[200px]">
+          <div className="w-fit min-w-[200px]">
             <Select
               placeholder="Filter by club"
               value={clubOptions.find((o) => o.value === clubFilter) || null}
               options={clubOptions}
               onChange={(option) => setClubFilter(option?.value)}
-              isClearable
               styles={customStyles}
+              className="w-full"
+              isClearable={userRole === "ADMIN" ? true : false}
             />
           </div>
         </div>
@@ -171,17 +156,23 @@ const IrregularMembersReport = () => {
             </thead>
 
             <tbody>
-              {data.length ? (
-                data.map((row, index) => (
+              {irregularMember.length ? (
+                irregularMember.map((row, index) => (
                   <tr
                     key={index}
                     className="bg-white border-b hover:bg-gray-50"
                   >
                     <td className="px-2 py-4">{row.club_name || "-"}</td>
-                    <td className="px-2 py-4">{row.memberName}</td>
-                    <td className="px-2 py-4">{row.planName}</td>
-                    <td className="px-2 py-4">{row.lastVisitedOn}</td>
-                    <td className="px-2 py-4">{row.salesRep}</td>
+                    <td className="px-2 py-4">{row.full_name}</td>
+                    <td className="px-2 py-4">{row.plan_name}</td>
+                    <td className="px-2 py-4">
+                      {row.last_visited_on
+                        ? formatAutoDate(row.last_visited_on)
+                        : "--"}
+                    </td>
+                    <td className="px-2 py-4">
+                      {row.sales_rep_name ? row.sales_rep_name : "--"}
+                    </td>
                   </tr>
                 ))
               ) : (
@@ -194,6 +185,18 @@ const IrregularMembersReport = () => {
             </tbody>
           </table>
         </div>
+        {/* Pagination Component */}
+        <Pagination
+          page={page}
+          totalPages={totalPages}
+          rowsPerPage={rowsPerPage}
+          totalCount={totalCount}
+          currentDataLength={irregularMember.length}
+          onPageChange={(newPage) => {
+            setPage(newPage);
+            fetchIrregularMembersReport(newPage);
+          }}
+        />
       </div>
     </div>
   );

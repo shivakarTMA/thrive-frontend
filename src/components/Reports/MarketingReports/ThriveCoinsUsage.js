@@ -4,10 +4,11 @@ import "react-datepicker/dist/react-datepicker.css";
 import { addYears, format, subYears } from "date-fns";
 import { FaCalendarDays } from "react-icons/fa6";
 import Select from "react-select";
-import { customStyles, filterActiveItems } from "../../../Helper/helper";
+import { customStyles, filterActiveItems, formatAutoDate } from "../../../Helper/helper";
 import { authAxios } from "../../../config/config";
 import { toast } from "react-toastify";
 import { useSelector } from "react-redux";
+import Pagination from "../../common/Pagination";
 
 const dateFilterOptions = [
   { value: "today", label: "Today" },
@@ -29,6 +30,11 @@ const ThriveCoinsUsage = () => {
   const [dateFilter, setDateFilter] = useState(dateFilterOptions[1]);
   const [customFrom, setCustomFrom] = useState(null);
   const [customTo, setCustomTo] = useState(null);
+
+  const [page, setPage] = useState(1);
+  const [rowsPerPage] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
 
   // Function to fetch club list
   const fetchClub = async (search = "") => {
@@ -59,9 +65,12 @@ const ThriveCoinsUsage = () => {
     value: item.id,
   }));
 
-  const fetchThriveCoinsUsage = async () => {
+  const fetchThriveCoinsUsage = async (currentPage = page) => {
     try {
-      const params = {};
+      const params = {
+        page: currentPage,
+        limit: rowsPerPage,
+      };
 
       // Club filter
       if (clubFilter) {
@@ -85,6 +94,10 @@ const ThriveCoinsUsage = () => {
       const data = responseData?.data || [];
 
       setLeadSource(data);
+
+      setPage(responseData?.currentPage || 1);
+      setTotalPages(responseData?.totalPage || 1);
+      setTotalCount(responseData?.totalCount || data.length);
     } catch (err) {
       console.error(err);
       toast.error("data not found");
@@ -92,16 +105,14 @@ const ThriveCoinsUsage = () => {
   };
 
   useEffect(() => {
-    // If custom date is selected, wait for both dates
     if (dateFilter?.value === "custom") {
       if (customFrom && customTo) {
-        fetchThriveCoinsUsage();
+        fetchThriveCoinsUsage(1);
       }
       return;
     }
-
-    // For all non-custom filters
-    fetchThriveCoinsUsage();
+    setPage(1);
+    fetchThriveCoinsUsage(1);
   }, [dateFilter, customFrom, customTo, clubFilter]);
 
   return (
@@ -226,10 +237,10 @@ const ThriveCoinsUsage = () => {
                     </td>
                     <td className="px-2 py-2">{row?.status}</td>
                     <td className="px-2 py-2">
-                      {row?.member_from ? row?.member_from : "--"}
+                      {row?.member_from ? formatAutoDate(row?.member_from) : "--"}
                     </td>
                     <td className="px-2 py-2">
-                      {row?.expired_on ? row?.expired_on : "--"}
+                      {row?.expired_on ? formatAutoDate(row?.expired_on) : "--"}
                     </td>
                     <td className="px-2 py-2">
                       {row?.total_points_issued
@@ -254,6 +265,18 @@ const ThriveCoinsUsage = () => {
             </tbody>
           </table>
         </div>
+        {/* Pagination Component */}
+        <Pagination
+          page={page}
+          totalPages={totalPages}
+          rowsPerPage={rowsPerPage}
+          totalCount={totalCount}
+          currentDataLength={leadSource.length}
+          onPageChange={(newPage) => {
+            setPage(newPage);
+            fetchThriveCoinsUsage(newPage);
+          }}
+        />
       </div>
     </div>
   );

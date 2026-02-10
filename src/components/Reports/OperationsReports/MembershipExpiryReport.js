@@ -189,7 +189,7 @@ const MembershipExpiryReport = () => {
                   placeholderText="To Date"
                   className="custom--input w-full input--icon"
                   minDate={customFrom || subYears(new Date(), 20)}
-                  maxDate={addYears(new Date(), 0)}
+                  // maxDate={addYears(new Date(), 0)}
                   showMonthDropdown
                   showYearDropdown
                   dropdownMode="select"
