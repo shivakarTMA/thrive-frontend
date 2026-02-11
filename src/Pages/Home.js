@@ -305,9 +305,9 @@ const Home = () => {
   };
   // Function to fetch role list
 
-  useEffect(() => {
-    fetchDashboardData();
-  }, [dateFilter, customFrom, customTo, clubFilter]);
+  // useEffect(() => {
+  //   fetchDashboardData();
+  // }, [dateFilter, customFrom, customTo, clubFilter]);
 
   useEffect(() => {
     fetchClub();
