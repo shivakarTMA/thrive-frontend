@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import Select from "react-select";
@@ -9,20 +9,7 @@ import { emailTemplates } from "../../DummyData/DummyData";
 import { toast } from "react-toastify";
 import DatePicker from "react-datepicker";
 
-// ✅ Define available merge tags for email personalization
-const MERGE_TAGS = [
-  { label: "User Name", value: "{{user_name}}" },
-  { label: "Email", value: "{{email}}" },
-  { label: "Club Name", value: "{{club_name}}" },
-  { label: "Phone Number", value: "{{phone}}" },
-  { label: "Membership ID", value: "{{membership_id}}" },
-  { label: "Expiry Date", value: "{{expiry_date}}" },
-  { label: "Service Name", value: "{{service_name}}" },
-];
-
 const EmailCriteriaForm = ({ activeTab, onFilterDirtyChange }) => {
-  const editorRef = useRef(null); // ✅ Ref for editor
-
   // ✅ Define validation schema using Yup
   const validationSchema = Yup.object({
     // selectedTemplate: Yup.object().nullable().required("Template is required"),
@@ -30,17 +17,53 @@ const EmailCriteriaForm = ({ activeTab, onFilterDirtyChange }) => {
     message: Yup.string().required("Message is required"),
     campaign_name: Yup.string().required("Campaign Name is required"),
     filterClub: Yup.string().nullable().required("Club is required"),
+
     filterMemberValidity: Yup.string().when("module", {
       is: "Member",
       then: (schema) => schema.required("Validity is required"),
       otherwise: (schema) => schema.nullable(),
     }),
+
     filterLeadValidity: Yup.string().when("module", {
       is: "Enquiries",
       then: (schema) => schema.required("Validity is required"),
       otherwise: (schema) => schema.nullable(),
     }),
+
+    // filterAgeGroup: Yup.string().nullable().required("Age Group is required"),
+    // filterGender: Yup.string().nullable().required("Gender is required"),
+
+    // filterLeadSource: Yup.string().when("module", {
+    //   is: "Enquiries",
+    //   then: (schema) => schema.required("Lead Source is required"),
+    //   otherwise: (schema) => schema.nullable(),
+    // }),
+
+    // filterServiceType: Yup.string().when("module", {
+    //   is: "Member",
+    //   then: (schema) => schema.required("Service Type is required"),
+    //   otherwise: (schema) => schema.nullable(),
+    // }),
+    // filterServiceName: Yup.string().when("module", {
+    //   is: "Member",
+    //   then: (schema) => schema.required("Service Name is required"),
+    //   otherwise: (schema) => schema.nullable(),
+    // }),
+
+    // filterExpiryFrom: Yup.date().when("module", {
+    //   is: "Member",
+    //   then: (schema) => schema.required("Expiry From is required"),
+    //   otherwise: (schema) => schema.nullable(),
+    // }),
+
+    // filterExpiryTo: Yup.date().when("module", {
+    //   is: "Member",
+    //   then: (schema) => schema.required("Expiry To is required"),
+    //   otherwise: (schema) => schema.nullable(),
+    // }),
+
     sendType: Yup.string().oneOf(["NOW", "SCHEDULED"]),
+
     scheduledAt: Yup.date()
       .nullable()
       .when("sendType", {
@@ -94,17 +117,20 @@ const EmailCriteriaForm = ({ activeTab, onFilterDirtyChange }) => {
         toast.error("Please complete all filter criteria");
         return;
       }
+
       const payload = {
         ...values,
         send_type: values.sendType,
         scheduled_at:
           values.sendType === "SCHEDULED" ? values.scheduledAt : null,
       };
+
       console.log("Final Payload:", payload);
+
       toast.success(
         values.sendType === "SCHEDULED"
           ? "Notification scheduled successfully"
-          : "Notification sent successfully",
+          : "Notification sent successfully"
       );
     },
   });
@@ -123,34 +149,28 @@ const EmailCriteriaForm = ({ activeTab, onFilterDirtyChange }) => {
 
   // ✅ Derived value (no extra state needed)
   const hasFilterErrors = filterFields.some(
-    (field) => formik.touched[field] && formik.errors[field],
+    (field) => formik.touched[field] && formik.errors[field]
   );
 
   // ✅ Detect dirty filters (for tab change blocking)
   useEffect(() => {
     const hasAnyFilterValue = filterFields.some(
-      (field) => formik.values[field] !== null && formik.values[field] !== "",
+      (field) => formik.values[field] !== null && formik.values[field] !== ""
     );
+
     onFilterDirtyChange(hasAnyFilterValue);
   }, [formik.values, onFilterDirtyChange]);
 
   const handleTemplateSelect = (option) => {
     formik.setFieldValue("selectedTemplate", option);
+
     if (option?.value && emailTemplates[option.value]) {
       const templateHtml = emailTemplates[option.value];
+
       // Insert template into the editor
       formik.setFieldValue("message", templateHtml);
     }
   };
-
-const copyMergeTag = async (tagValue) => {
-  try {
-    await navigator.clipboard.writeText(tagValue);
-    toast.success("Merge tag copied to clipboard!");
-  } catch (error) {
-    toast.error("Failed to copy merge tag.");
-  }
-};
 
   return (
     <div className="w-full p-3 border bg-white shadow-box rounded-[10px]">
@@ -175,20 +195,23 @@ const copyMergeTag = async (tagValue) => {
             }
           />
         </div>
+
         {/* Show FilterClub error */}
         {hasFilterErrors && (
           <div className="mb-3 flex gap-2 flex-wrap">
             <p className="text-sm font-[500]">Please Select the Criteria:</p>
+
             {filterFields.map((field, index) =>
               formik.touched[field] && formik.errors[field] ? (
                 <p key={field} className="text-red-500 text-sm">
                   {formik.errors[field]}
                   {index < filterFields.length - 1 ? "," : ""}
                 </p>
-              ) : null,
+              ) : null
             )}
           </div>
         )}
+
         {/* --- EMAIL TEMPLATE SECTION --- */}
         <div>
           <div className="grid grid-cols-3 gap-2">
@@ -212,11 +235,15 @@ const copyMergeTag = async (tagValue) => {
                 </p>
               )}
             </div>
+
             {/* Select Template */}
             <div>
               <label className="mb-2 block">Select Email Template</label>
               <Select
                 value={formik.values.selectedTemplate}
+                // onChange={(option) =>
+                //   formik.setFieldValue("selectedTemplate", option)
+                // }
                 onChange={handleTemplateSelect}
                 options={[
                   { value: "welcome", label: "Welcome Template" },
@@ -233,6 +260,7 @@ const copyMergeTag = async (tagValue) => {
                   </p>
                 )}
             </div>
+
             {/* Subject Input */}
             <div>
               <label className="mb-2 block">
@@ -254,40 +282,23 @@ const copyMergeTag = async (tagValue) => {
               )}
             </div>
           </div>
+
           {/* --- MESSAGE SECTION --- */}
           <div className="mt-4">
-            {/* ✅ Merge Tags Helper Panel */}
-            <div className="mb-2 p-2 bg-gray-50 border border-gray-200 rounded">
-              <p className="text-sm font-medium mb-2">
-                📌 Personalize your email:
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {MERGE_TAGS.map((tag) => (
-                  <button
-                    key={tag.value}
-                    type="button"
-                    onClick={() => copyMergeTag(tag.value)}
-                    className="px-3 py-1 text-sm bg-white hover:bg-gray-100 border rounded"
-                  >
-                    {tag.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
             <RichTextEditor
-              ref={editorRef} // ✅ Pass ref
               value={formik.values.message}
               label="Message"
               onChange={(content) => formik.setFieldValue("message", content)}
               placeholder="Enter your email message..."
             />
+
             {formik.touched.message && formik.errors.message && (
               <p className="text-red-500 text-sm mt-1">
                 {formik.errors.message}
               </p>
             )}
           </div>
+
           {/* --- SCHEDULE SEND (Gmail-like using DatePicker) --- */}
           <div className="mt-4">
             <label className="flex items-center gap-2 cursor-pointer">
@@ -305,6 +316,7 @@ const copyMergeTag = async (tagValue) => {
               />
               <span className="text-sm font-medium">Schedule send</span>
             </label>
+
             {formik.values.sendType === "SCHEDULED" && (
               <div className="mt-2 max-w-sm">
                 <DatePicker
@@ -317,6 +329,7 @@ const copyMergeTag = async (tagValue) => {
                   placeholderText="Select date & time"
                   className="custom--input w-full"
                 />
+
                 {formik.errors.scheduledAt && (
                   <p className="text-red-500 text-sm mt-1">
                     {formik.errors.scheduledAt}
@@ -325,6 +338,7 @@ const copyMergeTag = async (tagValue) => {
               </div>
             )}
           </div>
+
           {/* --- SUBMIT BUTTON --- */}
           <button
             type="submit"
@@ -336,12 +350,13 @@ const copyMergeTag = async (tagValue) => {
             className="px-4 py-2 bg-black text-white rounded flex items-center gap-2 mt-4 disabled:opacity-50"
           >
             {formik.values.sendType === "SCHEDULED"
-              ? "Schedule Email"
-              : "Send Email"}
+              ? "Schedule SMS"
+              : "Send SMS"}
           </button>
         </div>
       </form>
     </div>
   );
 };
+
 export default EmailCriteriaForm;

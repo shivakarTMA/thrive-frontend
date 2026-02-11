@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import Select from "react-select";
@@ -18,10 +18,21 @@ const validationSchema = Yup.object({
   message: Yup.string().required("Message is required"),
 });
 
-const BulkEmailCriteriaForm = () => {
+// ✅ Define available merge tags for email personalization
+const MERGE_TAGS = [
+  { label: "User Name", value: "{{user_name}}" },
+  { label: "Email", value: "{{email}}" },
+  { label: "Club Name", value: "{{club_name}}" },
+  { label: "Phone Number", value: "{{phone}}" },
+  { label: "Membership ID", value: "{{membership_id}}" },
+  { label: "Expiry Date", value: "{{expiry_date}}" },
+  { label: "Service Name", value: "{{service_name}}" },
+];
 
+const BulkEmailCriteriaForm = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const editorRef = useRef(null); // ✅ Ref for editor
 
   // ✅ Parse URL to get type (member/lead) and ids
   // Parse URL query params correctly
@@ -125,6 +136,15 @@ const BulkEmailCriteriaForm = () => {
     fetchMemberList();
   }, [currentType]);
 
+  const copyMergeTag = async (tagValue) => {
+    try {
+      await navigator.clipboard.writeText(tagValue);
+      toast.success("Merge tag copied to clipboard!");
+    } catch (error) {
+      toast.error("Failed to copy merge tag.");
+    }
+  };
+
   return (
     <div className="page--content">
       <div className=" flex items-end justify-between gap-2 mb-6">
@@ -166,10 +186,6 @@ const BulkEmailCriteriaForm = () => {
 
           {/* --- EMAIL TEMPLATE SECTION --- */}
           <div>
-            <p className="text-lg font-[600] text-black mb-3">
-              Customise your template
-            </p>
-
             <div className="grid grid-cols-2 gap-2">
               {/* Select Template */}
               <div>
@@ -221,6 +237,26 @@ const BulkEmailCriteriaForm = () => {
             </div>
 
             {/* --- MESSAGE SECTION --- */}
+            <div className="mt-4">
+              {/* ✅ Merge Tags Helper Panel */}
+              <div className="mb-2 p-2 bg-gray-50 border border-gray-200 rounded">
+                <p className="text-sm font-medium mb-2">
+                  📌 Personalize your email:
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {MERGE_TAGS.map((tag) => (
+                    <button
+                      key={tag.value}
+                      type="button"
+                      onClick={() => copyMergeTag(tag.value)}
+                      className="px-3 py-1 text-sm bg-white hover:bg-gray-100 border rounded"
+                    >
+                      {tag.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
             <div className="mt-4">
               <RichTextEditor
                 value={formik.values.message}

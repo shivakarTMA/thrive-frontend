@@ -1,8 +1,8 @@
-import React, { useState, useRef, useEffect, useMemo, forwardRef, useImperativeHandle } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import JoditEditor from "jodit-react";
 import { toast } from "react-toastify";
 
-const RichTextEditor = forwardRef(({
+const RichTextEditor = ({
   label,
   value = "",
   onChange = () => {},
@@ -12,21 +12,11 @@ const RichTextEditor = forwardRef(({
   disabled = false,
   emitOnChange = false,
   height = 400,
-}, ref) => {
+}) => {
   const editorRef = useRef(null);
   const [internalValue, setInternalValue] = useState(value);
   const [showHtml, setShowHtml] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
-
-  // ✅ NEW: Expose insertText method to parent component
-  useImperativeHandle(ref, () => ({
-    insertText: (text) => {
-      if (editorRef.current) {
-        const editor = editorRef.current;
-        editor.selection.insertHTML(text);
-      }
-    }
-  }));
 
   const config = useMemo(
     () => ({
@@ -146,46 +136,6 @@ const RichTextEditor = forwardRef(({
 
           return false; // Prevent default upload behavior
         },
-
-        // ✅ NEW: Auto-center tables after insertion
-        afterInsertNode: function (node) {
-          if (node.tagName === 'TABLE') {
-            node.style.marginLeft = 'auto';
-            node.style.marginRight = 'auto';
-            node.style.marginTop = '10px';
-            node.style.marginBottom = '10px';
-            node.style.borderCollapse = 'collapse';
-            
-            const cells = node.querySelectorAll('td, th');
-            cells.forEach(cell => {
-              cell.style.border = '1px solid #ddd';
-              cell.style.padding = '8px';
-            });
-          }
-        },
-
-        // ✅ NEW: Style existing tables on load and change
-        afterInit: function (editor) {
-          const styleTables = () => {
-            const tables = editor.editor.querySelectorAll('table');
-            tables.forEach(table => {
-              table.style.marginLeft = 'auto';
-              table.style.marginRight = 'auto';
-              table.style.marginTop = '10px';
-              table.style.marginBottom = '10px';
-              table.style.borderCollapse = 'collapse';
-              
-              const cells = table.querySelectorAll('td, th');
-              cells.forEach(cell => {
-                cell.style.border = '1px solid #ddd';
-                cell.style.padding = '8px';
-              });
-            });
-          };
-
-          styleTables();
-          editor.events.on('change', styleTables);
-        },
       },
 
       defaultActionOnPaste: "insert_as_html",
@@ -245,7 +195,7 @@ const RichTextEditor = forwardRef(({
           {label}
           <span className="text-red-500">*</span>
         </label>
-        {/* {showHtmlToggle && (
+        {showHtmlToggle && (
           <div className="flex justify-end ">
             <button
               type="button"
@@ -255,7 +205,7 @@ const RichTextEditor = forwardRef(({
               {showHtml ? "Back to Editor" : "Edit HTML"}
             </button>
           </div>
-        )} */}
+        )}
       </div>
 
       {showHtml ? (
@@ -280,8 +230,6 @@ const RichTextEditor = forwardRef(({
       )}
     </div>
   );
-});
-
-RichTextEditor.displayName = 'RichTextEditor';
+};
 
 export default RichTextEditor;
