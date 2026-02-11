@@ -154,7 +154,7 @@ export default function AllEnquiresFilterPanel({
   const handleApply = () => {
     setAppliedFilters({
       gender: formik.values.filterGender,
-      enquiry_type: formik.values.filterEnquiryType,
+      lead_type: formik.values.filterEnquiryType,
       lead_status: formik.values.filterLeadStatus,
       lead_source: formik.values.filterLeadSource,
       owner_id: formik.values.filterLeadOwner,
@@ -168,7 +168,7 @@ export default function AllEnquiresFilterPanel({
   const handleRemoveFilter = (key) => {
     const keyMap = {
       gender: "filterGender",
-      enquiry_type: "filterEnquiryType",
+      lead_type: "filterEnquiryType",
       lead_status: "filterLeadStatus",
       lead_source: "filterLeadSource",
       owner_id: "filterLeadOwner",
@@ -192,7 +192,7 @@ export default function AllEnquiresFilterPanel({
       const billType = genderOptions.find((opt) => opt.value === value);
       return billType ? billType.label : value;
     }
-    if (key === "enquiry_type") {
+    if (key === "lead_type") {
       const planType = leadTypeOptions.find((opt) => opt.value === value);
       return planType ? planType.label : value;
     }

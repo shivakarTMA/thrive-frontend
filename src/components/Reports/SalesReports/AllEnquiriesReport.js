@@ -54,7 +54,7 @@ const AllEnquiriesReport = () => {
   // ✅ Single source of truth for applied filters
   const [appliedFilters, setAppliedFilters] = useState({
     gender: null,
-    enquiry_type: null,
+    lead_type: null,
     lead_source: null,
     lead_status: null,
     call_tag: null,
@@ -156,8 +156,8 @@ const AllEnquiriesReport = () => {
       }
 
       if (appliedFilters.gender) params.gender = appliedFilters.gender;
-      if (appliedFilters.enquiry_type)
-        params.enquiry_type = appliedFilters.enquiry_type;
+      if (appliedFilters.lead_type)
+        params.lead_type = appliedFilters.lead_type;
       if (appliedFilters.lead_source)
         params.lead_source = appliedFilters.lead_source;
       if (appliedFilters.lead_status)
@@ -254,7 +254,7 @@ const AllEnquiriesReport = () => {
     // Sync with formik
     formik.setValues({
       filterGender: urlFilters.gender,
-      filterEnquiryType: urlFilters.enquiry_type,
+      filterEnquiryType: urlFilters.lead_type,
       filterLeadSource: urlFilters.lead_source,
       filterLeadStatus: urlFilters.lead_status,
       filterCallTag: urlFilters.call_tag,
@@ -285,7 +285,7 @@ const AllEnquiriesReport = () => {
     customTo,
     clubFilter?.value,
     appliedFilters.gender,
-    appliedFilters.enquiry_type,
+    appliedFilters.lead_type,
     appliedFilters.lead_source,
     appliedFilters.lead_status,
     appliedFilters.call_tag,
