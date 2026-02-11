@@ -347,7 +347,7 @@ const Services = () => {
                       <div className="w-fit">
                         <Tooltip
                           id={`tooltip-edit-${item.id || index}`}
-                          content="Edit Club"
+                          content="Edit Club Service"
                           place="left"
                         >
                           <div

@@ -355,7 +355,7 @@ const RecoveryServicesList = () => {
                       <div className="w-fit">
                         <Tooltip
                           id={`tooltip-edit-${item.id || index}`}
-                          content="Edit Club"
+                          content="Edit Recovery Service"
                           place="left"
                         >
                           <div

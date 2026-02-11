@@ -694,7 +694,15 @@ const TrialAppointments = () => {
                                 if (!selected) return;
                                 updateAppointmentStatus(row, selected.value);
                               }}
-                              styles={customStyles}
+                              styles={{
+                                ...customStyles,
+                                menuPortal: (base) => ({
+                                  ...base,
+                                  zIndex: 9999,
+                                }),
+                              }}
+                              menuPortalTarget={document.body}
+                              menuPosition="fixed"
                             />
                           </div>
                         </td>
