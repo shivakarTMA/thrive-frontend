@@ -322,7 +322,7 @@ const MemberSendPaymentLink = ({ setSendPaymentModal, selectedLeadMember }) => {
                   </div>
                   <div>
                     <label className="mb-2 block">
-                      Product Name<span className="text-red-500">*</span>
+                      Plan Name<span className="text-red-500">*</span>
                     </label>
                     <div
                       className="relative"

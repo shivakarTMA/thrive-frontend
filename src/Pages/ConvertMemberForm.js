@@ -41,6 +41,7 @@ import { fetchOptionList } from "../Redux/Reducers/optionListSlice";
 import Webcam from "react-webcam";
 import { IoCheckmark, IoClose } from "react-icons/io5";
 import MultiSelect from "react-multi-select-component";
+import { CgFormatLineHeight } from "react-icons/cg";
 
 const planTypeOption = [
   { value: "DLF", label: "DLF" },
@@ -59,6 +60,7 @@ const stepValidationSchemas = [
     email: Yup.string()
       .email("Invalid email format")
       .required("Email is required"),
+    height: Yup.string().required("Height is required"),
     gender: Yup.string().required("Gender is required"),
     mobile: Yup.string()
       .required("Contact number is required")
@@ -171,6 +173,7 @@ const ConvertMemberForm = ({
     email: "",
     gender: "",
     date_of_birth: "",
+    height:"",
     address: "",
     location: "",
     company_name: "",
@@ -364,6 +367,7 @@ const ConvertMemberForm = ({
             country_code: data.country_code || "",
             email: data.email || "",
             gender: data.gender || "NOTDISCLOSE",
+            height: data.height || "",
             date_of_birth: dobIso,
             address: data.address || "",
             location: data.location || "",
@@ -1057,6 +1061,29 @@ const ConvertMemberForm = ({
 
                           <div>
                             <label className="mb-2 block">
+                              Height (cm)<span className="text-red-500">*</span>
+                            </label>
+                            <div className="relative">
+                              <span className="absolute top-[50%] translate-y-[-50%] left-[15px]">
+                                <CgFormatLineHeight />
+                              </span>
+                              <input
+                                name="height"
+                                value={formik.values.height}
+                                onChange={formik.handleChange}
+                                className="custom--input w-full input--icon"
+                              />
+                            </div>
+                            {formik.errors?.height &&
+                              formik.touched?.height && (
+                                <div className="text-red-500 text-sm">
+                                  {formik.errors.height}
+                                </div>
+                              )}
+                          </div>
+
+                          <div>
+                            <label className="mb-2 block">
                               Location<span className="text-red-500">*</span>
                             </label>
                             <div className="relative">
@@ -1078,7 +1105,7 @@ const ConvertMemberForm = ({
                               )}
                           </div>
 
-                          <div className="col-span-3">
+                          <div className="col-span-2">
                             <label className="mb-2 block">Address</label>
                             <div className="relative">
                               <input
@@ -1575,7 +1602,7 @@ const ConvertMemberForm = ({
                         </div>
                         <div>
                           <label className="mb-2 block">
-                            Product Name<span className="text-red-500">*</span>
+                            Plan Name<span className="text-red-500">*</span>
                           </label>
                           <div
                             className="relative"

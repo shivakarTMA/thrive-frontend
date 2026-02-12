@@ -66,7 +66,7 @@ const ProductModal = ({ selectedType, onClose, onSubmit, planType }) => {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-[999]">
       <div className="bg-white w-full max-w-xl rounded-lg p-6 shadow-lg">
-        <h2 className="text-xl font-semibold mb-4">Select Products</h2>
+        <h2 className="text-xl font-semibold mb-4">Select Plan</h2>
 
         {loading ? (
           <p className="text-center py-10">Loading...</p>

@@ -1013,7 +1013,7 @@ const AllLeads = () => {
                                       </div>
                                     </Tooltip>
 
-                                    <Tooltip
+                                    {/* <Tooltip
                                       id={`tooltip-send-${row.id}`}
                                       content="Send Payment Link"
                                       place="top"
@@ -1027,7 +1027,7 @@ const AllLeads = () => {
                                       >
                                         <IoIosAddCircleOutline className="text-[25px] text-black" />
                                       </div>
-                                    </Tooltip>
+                                    </Tooltip> */}
                                   </div>
                                 )}
                                 {/* Lead Actions End */}
