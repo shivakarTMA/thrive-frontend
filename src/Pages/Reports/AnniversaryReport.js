@@ -64,12 +64,15 @@ const AnniversaryReport = () => {
     value: item.id,
   }));
 
-    const selectedClub =
+  const selectedClub =
     clubOptions.find((opt) => opt.value === clubFilter?.value) || null;
 
-  const fetchMemberAnniversaryReport = async () => {
+  const fetchMemberAnniversaryReport = async (currentPage = page) => {
     try {
-      const params = {};
+      const params = {
+        page: currentPage,
+        limit: rowsPerPage,
+      };
 
       // Club filter
       if (clubFilter?.value) {
@@ -117,18 +120,6 @@ const AnniversaryReport = () => {
     const params = new URLSearchParams(location.search);
 
     const clubId = params.get("club_id");
-    // if (clubId) {
-    //   const club = clubList.find((c) => c.id === Number(clubId));
-    //   if (club) {
-    //     setClubFilter({ label: club.name, value: club.id });
-    //   }
-    // } else {
-    //   // Set default club only on initial load
-    //   setClubFilter({
-    //     label: clubList[0].name,
-    //     value: clubList[0].id,
-    //   });
-    // }
     if (!clubFilter) {
       if (clubId) {
         const club = clubList.find((c) => c.id === Number(clubId));
@@ -187,7 +178,7 @@ const AnniversaryReport = () => {
                   }}
                   placeholderText="From Date"
                   className="custom--input w-full input--icon"
-                  minDate={new Date()}
+                  // minDate={new Date()}
                   dateFormat="dd-MM-yyyy"
                   showMonthDropdown
                   showYearDropdown
@@ -233,7 +224,7 @@ const AnniversaryReport = () => {
           <table className="w-full text-sm text-left text-gray-500">
             <thead className="text-xs text-gray-700 uppercase bg-gray-50">
               <tr>
-                <th className="px-2 py-4 min-w-[30px]">S.No</th>
+                {/* <th className="px-2 py-4 min-w-[30px]">S.No</th> */}
                 <th className="px-2 py-4 min-w-[120px]">Member ID</th>
                 <th className="px-2 py-4 min-w-[120px]">Member Name</th>
                 <th className="px-2 py-4 min-w-[120px]">Member Since</th>
@@ -250,13 +241,13 @@ const AnniversaryReport = () => {
                     key={index}
                     className="bg-white border-b hover:bg-gray-50"
                   >
-                    <td className="px-2 py-4">{index + 1}</td>
-                    <td className="px-2 py-2">{row?.membership_number}</td>
-                    <td className="px-2 py-2">{row?.full_name}</td>
-                    <td className="px-2 py-2">
+                    {/* <td className="px-2 py-4">{index + 1}</td> */}
+                    <td className="px-4 py-4">{row?.membership_number}</td>
+                    <td className="px-4 py-4">{row?.full_name}</td>
+                    <td className="px-4 py-4">
                       {formatAutoDate(row?.first_time_subscription)}
                     </td>
-                    <td className="px-2 py-2">
+                    <td className="px-4 py-4">
                       {formatAutoDate(row?.subscription_expiry_date)}
                     </td>
                   </tr>

@@ -67,9 +67,12 @@ const BirthdayReport = () => {
   const selectedClub =
     clubOptions.find((opt) => opt.value === clubFilter?.value) || null;
 
-  const fetchMemberBirthdayReport = async () => {
+  const fetchMemberBirthdayReport = async (currentPage = page) => {
     try {
-      const params = {};
+      const params = {
+        page: currentPage,
+        limit: rowsPerPage,
+      };
 
       // Club filter
       if (clubFilter?.value) {
