@@ -110,8 +110,29 @@ const SubscriptionPlan = () => {
       duration_value: Yup.string().required("Duration Value is required"),
       booking_type: Yup.string().required("Booking Type is required"),
       plan_type: Yup.string().required("Plan Type is required"),
-      amount: Yup.string().required("Amount is required"),
-      discount: Yup.string().required("Discount is required"),
+      // amount: Yup.string().required("Amount is required"),
+      // discount: Yup.string().required("Discount is required"),
+      amount: Yup.number()
+        .typeError("Amount must be a number")
+        .required("Amount is required")
+        .min(0, "Amount cannot be negative"),
+
+      discount: Yup.number()
+        .typeError("Discount must be a number")
+        .min(0, "Discount cannot be negative")
+        .when("amount", (amount, schema) => {
+          if (amount === 0) {
+            return schema.test(
+              "no-discount-when-zero",
+              "Discount is not allowed when amount is 0",
+              (value) => !value || value === 0,
+            );
+          }
+
+          return schema
+            .required("Discount is required")
+            .max(amount, "Discount cannot be greater than amount");
+        }),
       gst: Yup.string().required("GST is required"),
       earn_coin: Yup.string().required("Earn Coins is required"),
       status: Yup.string().required("Status is required"),

@@ -253,11 +253,11 @@ const MembershipExpiryReport = () => {
                     </td>
                     <td className="px-2 py-4">{row.sales_rep_name ? row.sales_rep_name : "--"}</td>
                     <td className="px-2 py-4">{row.general_trainer ? row.general_trainer : "--"}</td>
-                    <td className="px-2 py-4">{row.plan_name}</td>
-                    <td className="px-2 py-4">{row.plan_type}</td>
+                    <td className="px-2 py-4">{row.plan_name ? row.plan_name : "--"}</td>
+                    <td className="px-2 py-4">{row.plan_type ? row.plan_type : "--"}</td>
                     <td className="px-2 py-4">₹{formatIndianNumber(row.booking_amount)}</td>
-                    <td className="px-2 py-4">{formatAutoDate(row.end_date)}</td>
-                    <td className="px-2 py-4">{formatAutoDate(row.last_check_in_date)}</td>
+                    <td className="px-2 py-4">{row.end_date ? formatAutoDate(row.end_date) : "--"}</td>
+                    <td className="px-2 py-4">{row.last_check_in_date ? formatAutoDate(row.last_check_in_date) : "--"}</td>
                     <td className="px-2 py-4 flex items-center justify-center gap-1">
                       <FaCircle
                         className={`text-xs ${

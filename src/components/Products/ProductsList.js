@@ -98,7 +98,7 @@ const ProductsList = () => {
   const fetchProductList = async (
     search = searchTerm,
     currentPage = page,
-    category = productFilter
+    category = productFilter,
   ) => {
     try {
       const params = {
@@ -168,8 +168,29 @@ const ProductsList = () => {
     fat: Yup.string().required("Fat is required"),
     description: Yup.string().required("Description is required"),
     allergens: Yup.string().required("Allergens is required"),
-    amount: Yup.string().required("Amount is required"),
-    discount: Yup.string().required("Discount is required"),
+    // amount: Yup.string().required("Amount is required"),
+    // discount: Yup.string().required("Discount is required"),
+    amount: Yup.number()
+      .typeError("Amount must be a number")
+      .required("Amount is required")
+      .min(0, "Amount cannot be negative"),
+
+    discount: Yup.number()
+      .typeError("Discount must be a number")
+      .min(0, "Discount cannot be negative")
+      .when("amount", (amount, schema) => {
+        if (amount === 0) {
+          return schema.test(
+            "no-discount-when-zero",
+            "Discount is not allowed when amount is 0",
+            (value) => !value || value === 0,
+          );
+        }
+
+        return schema
+          .required("Discount is required")
+          .max(amount, "Discount cannot be greater than amount");
+      }),
     gst: Yup.string().required("GST is required"),
     stock_quantity: Yup.string().required("Stock Quantity is required"),
     earn_coin: Yup.string().required("Thrive Coins is required"),

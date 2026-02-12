@@ -1,12 +1,22 @@
 import React, { useEffect, useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { addYears, subYears } from "date-fns";
+import { addYears, format, subYears } from "date-fns";
 import { FaCalendarDays } from "react-icons/fa6";
 import Select from "react-select";
-import { customStyles, filterActiveItems } from "../../../Helper/helper";
+import {
+  customStyles,
+  filterActiveItems,
+  formatAutoDate,
+  formatIndianNumber,
+  formatText,
+} from "../../../Helper/helper";
 import { authAxios } from "../../../config/config";
 import { toast } from "react-toastify";
+import { useSelector } from "react-redux";
+import Pagination from "../../common/Pagination";
+import { FaCircle } from "react-icons/fa";
+import CreateNewInvoice from "../../../Pages/CreateNewInvoice";
 
 const dateFilterOptions = [
   { value: "today", label: "Today" },
@@ -15,71 +25,26 @@ const dateFilterOptions = [
   { value: "custom", label: "Custom Date" },
 ];
 
-const dummyData = [
-  {
-    club_name: "DLF Summit Plaza",
-    branch: "Mumbai",
-    sequence: "SEQ-001",
-    billNo: "BILL-1001",
-    billType: "Tax Invoice",
-    paidInvoiceNo: "PINV-5001",
-    receiptNo: "RCPT-9001",
-    purchaseDate: "2025-06-01",
-    paidDate: "2025-06-01",
-    type: "Membership",
-    branchLocation: "Andheri West",
-    memberId: "MBR-001",
-    clubId: "CLB-01",
-    memberName: "Rahul Sharma",
-    mobile: "9876543210",
-    mail: "rahul.sharma@gmail.com",
-    amount: 20000,
-    taxAmount: 3600,
-    finalAmount: 23600,
-    paidAmount: 23600,
-    pending: 0,
-    serviceName: "Annual Gym Membership",
-    salesRepName: "Neha Singh",
-    ptStaff: "Amit Trainer",
-    paymodeDetails: "Credit Card",
-  },
-  {
-    club_name: "DLF Summit Plaza",
-    branch: "Delhi",
-    sequence: "SEQ-002",
-    billNo: "BILL-1002",
-    billType: "Proforma Invoice",
-    paidInvoiceNo: "PINV-5002",
-    receiptNo: "RCPT-9002",
-    purchaseDate: "2025-06-05",
-    paidDate: "2025-06-06",
-    type: "Gym + PT",
-    branchLocation: "Saket",
-    memberId: "MBR-002",
-    clubId: "CLB-02",
-    memberName: "Anjali Verma",
-    mobile: "9123456789",
-    mail: "anjali.verma@gmail.com",
-    amount: 15000,
-    taxAmount: 2700,
-    finalAmount: 17700,
-    paidAmount: 10000,
-    pending: 7700,
-    serviceName: "6 Months Gym + PT",
-    salesRepName: "Aakash Jain",
-    ptStaff: "Suresh PT",
-    paymodeDetails: "UPI",
-  },
-];
+const formatDate = (date) => format(date, "yyyy-MM-dd");
 
 const CollectionReport = () => {
-  const [data] = useState(dummyData);
+  const [activeService, setActiveService] = useState([]);
   const [clubList, setClubList] = useState([]);
   const [clubFilter, setClubFilter] = useState(null);
+  const [invoiceModal, setInvoiceModal] = useState(false);
+  const [selectedLeadMember, setSelectedLeadMember] = useState(null);
+
+  const { user } = useSelector((state) => state.auth);
+  const userRole = user.role;
 
   const [dateFilter, setDateFilter] = useState(dateFilterOptions[1]);
   const [customFrom, setCustomFrom] = useState(null);
   const [customTo, setCustomTo] = useState(null);
+
+  const [page, setPage] = useState(1);
+  const [rowsPerPage] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
 
   // Function to fetch club list
   const fetchClub = async (search = "") => {
@@ -90,6 +55,11 @@ const CollectionReport = () => {
       const data = response.data?.data || [];
       const activeOnly = filterActiveItems(data);
       setClubList(activeOnly);
+
+      // ✅ Set default club (index 0) ONLY if not already set
+      if (!clubFilter && activeOnly.length > 0) {
+        setClubFilter(activeOnly[0].id);
+      }
     } catch (error) {
       toast.error("Failed to fetch clubs");
     }
@@ -104,6 +74,57 @@ const CollectionReport = () => {
     label: item.name,
     value: item.id,
   }));
+
+  const fetchCollectionReport = async (currentPage = page) => {
+    try {
+      const params = {
+        page: currentPage,
+        limit: rowsPerPage,
+      };
+
+      // Club filter
+      if (clubFilter) {
+        params.club_id = clubFilter;
+      }
+
+      // Date filter
+      if (dateFilter?.value === "custom") {
+        if (customFrom && customTo) {
+          params.startDate = formatDate(customFrom);
+          params.endDate = formatDate(customTo);
+        }
+      } else if (dateFilter?.value) {
+        params.dateFilter = dateFilter.value;
+      }
+
+      const res = await authAxios().get("/report/collection/list", {
+        params,
+      });
+      const responseData = res.data;
+      const data = responseData?.data || [];
+
+      console.log(responseData, "responseData");
+
+      setActiveService(data);
+      setPage(responseData?.currentPage || 1);
+      setTotalPages(responseData?.totalPage || 1);
+      setTotalCount(responseData?.totalCount || data.length);
+    } catch (err) {
+      console.error(err);
+      toast.error("data not found");
+    }
+  };
+
+  useEffect(() => {
+    if (dateFilter?.value === "custom") {
+      if (customFrom && customTo) {
+        fetchCollectionReport(1);
+      }
+      return;
+    }
+    setPage(1);
+    fetchCollectionReport(1);
+  }, [dateFilter, customFrom, customTo, clubFilter]);
 
   return (
     <div className="page--content">
@@ -144,7 +165,10 @@ const CollectionReport = () => {
                 </span>
                 <DatePicker
                   selected={customFrom}
-                  onChange={setCustomFrom}
+                  onChange={(date) => {
+                    setCustomFrom(date);
+                    setCustomTo(null); // ✅ reset To Date if From Date changes
+                  }}
                   placeholderText="From Date"
                   className="custom--input w-full input--icon"
                   minDate={subYears(new Date(), 20)}
@@ -155,35 +179,36 @@ const CollectionReport = () => {
                   dropdownMode="select"
                 />
               </div>
-
               <div className="custom--date dob-format flex-1 max-w-[180px] w-full">
                 <span className="absolute z-[1] mt-[11px] ml-[15px]">
                   <FaCalendarDays />
                 </span>
                 <DatePicker
                   selected={customTo}
-                  onChange={setCustomTo}
+                  onChange={(date) => setCustomTo(date)}
                   placeholderText="To Date"
                   className="custom--input w-full input--icon"
-                  minDate={subYears(new Date(), 20)}
+                  minDate={customFrom || subYears(new Date(), 20)}
                   maxDate={addYears(new Date(), 0)}
-                  dateFormat="dd-MM-yyyy"
                   showMonthDropdown
                   showYearDropdown
                   dropdownMode="select"
+                  dateFormat="dd-MM-yyyy"
+                  disabled={!customFrom}
                 />
               </div>
             </>
           )}
 
-          <div className="w-full max-w-[200px]">
+          <div className="w-fit min-w-[200px]">
             <Select
               placeholder="Filter by club"
               value={clubOptions.find((o) => o.value === clubFilter) || null}
               options={clubOptions}
               onChange={(option) => setClubFilter(option?.value)}
-              isClearable
               styles={customStyles}
+              className="w-full"
+              isClearable={userRole === "ADMIN" ? true : false}
             />
           </div>
         </div>
@@ -195,28 +220,20 @@ const CollectionReport = () => {
           <table className="w-full text-sm text-left text-gray-500">
             <thead className="text-xs text-gray-700 uppercase bg-gray-50">
               <tr>
-                <th className="px-2 py-4 min-w-[50px]">s.no</th>
                 <th className="px-2 py-4 min-w-[150px]">Club Name</th>
-                <th className="px-2 py-4 min-w-[100px]">branch</th>
-                <th className="px-2 py-4 min-w-[100px]">sequence</th>
-                <th className="px-2 py-4 min-w-[100px]">bill no</th>
-                <th className="px-2 py-4 min-w-[130px]">bill type</th>
-                <th className="px-2 py-4 min-w-[120px]">paid invoice no</th>
-                <th className="px-2 py-4 min-w-[110px]">receipt no</th>
+                <th className="px-2 py-4 min-w-[100px]">bill type</th>
+                <th className="px-2 py-4 min-w-[150px]">paid invoice no</th>
                 <th className="px-2 py-4 min-w-[120px]">purchase date</th>
-                <th className="px-2 py-4 min-w-[120px]">paid date</th>
-                <th className="px-2 py-4 min-w-[120px]">type</th>
+                <th className="px-2 py-4 min-w-[120px]">Start date</th>
                 <th className="px-2 py-4 min-w-[140px]">branch location</th>
-                <th className="px-2 py-4 min-w-[100px]">member id</th>
-                <th className="px-2 py-4 min-w-[80px]">club id</th>
-                <th className="px-2 py-4 min-w-[120px]">member name</th>
-                <th className="px-2 py-4 min-w-[120px]">mobile</th>
+                <th className="px-2 py-4 min-w-[130px]">member id</th>
+                <th className="px-2 py-4 min-w-[150px]">member name</th>
+                <th className="px-2 py-4 min-w-[150px]">mobile</th>
                 <th className="px-2 py-4 min-w-[120px]">mail</th>
                 <th className="px-2 py-4 min-w-[80px]">amount</th>
                 <th className="px-2 py-4 min-w-[100px]">tax amount</th>
                 <th className="px-2 py-4 min-w-[110px]">final amount</th>
                 <th className="px-2 py-4 min-w-[100px]">paid amount</th>
-                <th className="px-2 py-4 min-w-[80px]">pending</th>
                 <th className="px-2 py-4 min-w-[150px]">service name</th>
                 <th className="px-2 py-4 min-w-[130px]">sales rep name</th>
                 <th className="px-2 py-4 min-w-[120px]">pt staff</th>
@@ -225,43 +242,35 @@ const CollectionReport = () => {
             </thead>
 
             <tbody>
-              {data.length ? (
-                data.map((row, index) => (
+              {activeService.length ? (
+                activeService.map((row, index) => (
                   <tr
                     key={index}
                     className="bg-white border-b hover:bg-gray-50"
                   >
-                    <td className="px-2 py-4">{index + 1}</td>
                     <td className="px-2 py-4">{row.club_name || "-"}</td>
-                    <td className="px-2 py-4">{row.branch}</td>
-                    <td className="px-2 py-4">{row.sequence}</td>
-                    <td className="px-2 py-4">{row.billNo}</td>
-                    <td className="px-2 py-4">{row.billType}</td>
-                    <td className="px-2 py-4">{row.paidInvoiceNo}</td>
-                    <td className="px-2 py-4">{row.receiptNo}</td>
-                    <td className="px-2 py-4">{row.purchaseDate}</td>
-                    <td className="px-2 py-4">{row.paidDate}</td>
-                    <td className="px-2 py-4">{row.type}</td>
-                    <td className="px-2 py-4">{row.branchLocation}</td>
-                    <td className="px-2 py-4">{row.memberId}</td>
-                    <td className="px-2 py-4">{row.clubId}</td>
-                    <td className="px-2 py-4">{row.memberName}</td>
-                    <td className="px-2 py-4">{row.mobile}</td>
-                    <td className="px-2 py-4">{row.mail}</td>
-                    <td className="px-2 py-4">₹{row.amount}</td>
-                    <td className="px-2 py-4">₹{row.taxAmount}</td>
-                    <td className="px-2 py-4">₹{row.finalAmount}</td>
-                    <td className="px-2 py-4">₹{row.paidAmount}</td>
-                    <td className="px-2 py-4">₹{row.pending}</td>
-                    <td className="px-2 py-4">{row.serviceName}</td>
-                    <td className="px-2 py-4">{row.salesRepName}</td>
-                    <td className="px-2 py-4">{row.ptStaff}</td>
-                    <td className="px-2 py-4">{row.paymodeDetails}</td>
+                    <td className="px-2 py-4">{row.bill_type ? formatText(row.bill_type) : "--"}</td>
+                    <td className="px-2 py-4">{row.invoice_no ? row.invoice_no : "--"}</td>
+                    <td className="px-2 py-4">{row.purchase_date ? formatAutoDate(row.purchase_date) : "--"}</td>
+                    <td className="px-2 py-4">{row.service_start_date ? formatAutoDate(row.service_start_date) : "--"}</td>
+                    <td className="px-2 py-4">{row.club_city ? row.club_city : "--"}</td>
+                    <td className="px-2 py-4">{row.membership_number ? row.membership_number : "--"}</td>
+                    <td className="px-2 py-4">{row.member_name ? row.member_name : "--"}</td>
+                    <td className="px-2 py-4">+{row.country_code}{" "}{row.mobile}</td>
+                    <td className="px-2 py-4">{row.email ? row.email : "--"}</td>
+                    <td className="px-2 py-4">₹{formatIndianNumber(row.amount)}</td>
+                    <td className="px-2 py-4">₹{formatIndianNumber(row.tax_amount)}</td>
+                    <td className="px-2 py-4">₹{formatIndianNumber(row.final_amount)}</td>
+                    <td className="px-2 py-4">₹{formatIndianNumber(row.paid_amount)}</td>
+                    <td className="px-2 py-4">{row.service_name ? row.service_name : "--"}</td>
+                    <td className="px-2 py-4">{row.lead_owner ? row.lead_owner : "--"}</td>
+                    <td className="px-2 py-4">{row.trainer_name ? row.trainer_name : "--"}</td>
+                    <td className="px-2 py-4">{row.payment_method ? formatText(row.payment_method) : "--"}</td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan={25} className="text-center py-4">
+                  <td colSpan={24} className="text-center py-4">
                     No data found
                   </td>
                 </tr>
@@ -269,7 +278,26 @@ const CollectionReport = () => {
             </tbody>
           </table>
         </div>
+        {/* Pagination Component */}
+        <Pagination
+          page={page}
+          totalPages={totalPages}
+          rowsPerPage={rowsPerPage}
+          totalCount={totalCount}
+          currentDataLength={activeService.length}
+          onPageChange={(newPage) => {
+            setPage(newPage);
+            fetchCollectionReport(newPage);
+          }}
+        />
       </div>
+
+      {invoiceModal && (
+        <CreateNewInvoice
+          setInvoiceModal={setInvoiceModal}
+          selectedLeadMember={selectedLeadMember}
+        />
+      )}
     </div>
   );
 };

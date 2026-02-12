@@ -22,6 +22,7 @@ import { addYears, format, subYears } from "date-fns";
 import { Link, useNavigate } from "react-router-dom";
 import HighchartsReact from "highcharts-react-official";
 import Highcharts from "highcharts";
+import { CiLocationOn } from "react-icons/ci";
 import SummaryDashboard from "../components/common/SummaryDashboard";
 import { LiaAngleLeftSolid, LiaAngleRightSolid } from "react-icons/lia";
 import SolidGaugeChart from "../components/ClubManagerChild/SolidGaugeChart";
@@ -31,7 +32,6 @@ import { toast } from "react-toastify";
 const summaryData = {
   Yesterday: {
     FollowUps: "10/50",
-    "Tour/Trials": "10/50",
     Appointments: "0/0",
     Classes: "4/5",
     MembershipExpiry: 12,
@@ -42,7 +42,6 @@ const summaryData = {
   },
   Today: {
     FollowUps: "17/50",
-    "Tour/Trials": "10/50",
     Appointments: "0/0",
     Classes: "5/5",
     MembershipExpiry: 11,
@@ -53,7 +52,6 @@ const summaryData = {
   },
   Tomorrow: {
     FollowUps: "8/50",
-    "Tour/Trials": "10/50",
     Appointments: "1/2",
     Classes: "2/5",
     MembershipExpiry: 10,
@@ -66,13 +64,12 @@ const summaryData = {
 
 const routeMap = {
   FollowUps: "/my-follow-ups",
-  "Tour/Trials": "/reports/appointments/all-trial-appointments",
-  Appointments: "/reports/all-bookings",
-  Classes: "/group-class",
-  MembershipExpiry: "/reports/operations-reports/membership-expiry-report",
-  ServiceExpiry: "/reports/operations-reports/service-expiry-report",
-  ClientBirthdays: "/birthday-report",
-  ClientAnniversaries: "/anniversary-report",
+  Appointments: "",
+  Classes: "",
+  MembershipExpiry: "",
+  ServiceExpiry: "",
+  ClientBirthdays: "",
+  ClientAnniversaries: "",
 };
 
 const dateFilterOptions = [
@@ -100,14 +97,8 @@ const classPerformance = [
     url: "/reports/all-bookings",
   },
 ];
-Highcharts.setOptions({
-  accessibility: {
-    enabled: false,
-  },
-});
 
 const MarketingManagerDashboard = () => {
-  
   const navigate = useNavigate();
   const days = ["Yesterday", "Today", "Tomorrow"];
   const [dashboardData, setDashboardData] = useState([]);
@@ -287,13 +278,7 @@ const MarketingManagerDashboard = () => {
       const activeOnly = filterActiveItems(data);
       setClubList(activeOnly);
 
-      // if (activeOnly.length > 0) {
-      //   setClubFilter({
-      //     label: activeOnly[0].name,
-      //     value: activeOnly[0].id,
-      //   });
-      // }
-      if (!clubFilter && activeOnly.length > 0) {
+      if (activeOnly.length > 0) {
         setClubFilter({
           label: activeOnly[0].name,
           value: activeOnly[0].id,
@@ -305,9 +290,9 @@ const MarketingManagerDashboard = () => {
   };
   // Function to fetch role list
 
-  // useEffect(() => {
-  //   fetchDashboardData();
-  // }, [dateFilter, customFrom, customTo, clubFilter]);
+  useEffect(() => {
+    fetchDashboardData();
+  }, [dateFilter, customFrom, customTo, clubFilter]);
 
   useEffect(() => {
     fetchClub();
@@ -336,17 +321,10 @@ const MarketingManagerDashboard = () => {
     value: item.id,
   }));
 
-  const selectedClub = clubOptions.find(
-    (option) => option.value === clubFilter?.value,
-  );
-
   // Enquiry line chart
   const maxValueLeads = Math.max(...leadSeries, 0);
 
   const leadsStatus = {
-     accessibility: {
-    enabled: false,
-  },
     chart: { type: "column", height: 300 },
     title: {
       text: "Enquiries",
@@ -375,11 +353,7 @@ const MarketingManagerDashboard = () => {
     },
     legend: { enabled: false },
     tooltip: {
-      useHTML: true,
-      outside: true,
-      style: {
-        zIndex: 9999,
-      },
+      useHTML: true, // ✅ allows HTML tags like <b>
       formatter: function () {
         const label = this.point.category; // dynamic label
         const value = this.y; // count
@@ -436,9 +410,6 @@ const MarketingManagerDashboard = () => {
   const maxValue = Math.max(...productSeries, 0);
 
   const productStatus = {
-     accessibility: {
-    enabled: false,
-  },
     chart: {
       type: "column",
       height: 300,
@@ -475,7 +446,6 @@ const MarketingManagerDashboard = () => {
     },
     legend: { enabled: false },
     tooltip: {
-      outside: true,
       formatter: function () {
         let label = this.point.category;
 
@@ -548,6 +518,19 @@ const MarketingManagerDashboard = () => {
   const currentData = summaryData[currentDay];
 
   // Memoize the URL generation
+  // const generateUrl = (baseUrl) => {
+  //   let url = `${baseUrl}&date=${encodeURIComponent(dateFilter?.value)}`;
+
+  //   // If custom dates are selected, append customFrom and customTo to the URL
+  //   if (dateFilter?.value === "custom") {
+  //     url += `&customFrom=${encodeURIComponent(
+  //       customFrom
+  //     )}&customTo=${encodeURIComponent(customTo)}`;
+  //   }
+
+  //   return url;
+  // };
+
   const generateUrl = useCallback(
     (baseUrl) => {
       const params = new URLSearchParams();
@@ -588,7 +571,7 @@ const MarketingManagerDashboard = () => {
           <div className="w-fit min-w-[180px]">
             <Select
               placeholder="Filter by club"
-              value={selectedClub || null}
+              value={clubFilter}
               options={clubOptions}
               onChange={(option) => setClubFilter(option)}
               // isClearable
@@ -940,54 +923,12 @@ const MarketingManagerDashboard = () => {
             </div>
           </div>
 
-          <div className="border border-[#D4D4D4] rounded-[5px] bg-white p-2 pb-1 w-full relative mt-3">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="font-semibold">Class Performances Overview</h2>
-            </div>
-            <div className="relative overflow-x-auto">
-              <table className="min-w-full text-sm text-left">
-                <thead className="bg-[#F1F1F1]">
-                  <tr>
-                    <th className="p-2">Class Type</th>
-                    <th className="p-2">Scheduled</th>
-                    <th className="p-2">Bookings</th>
-                    <th className="p-2">Cancellations</th>
-                    <th className="p-2">Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {classPerformance.map((item, index) => (
-                    <tr key={item.id} className="border-t">
-                      <td className="p-2">{item.classType}</td>
-                      <td className="p-2">
-                        {String(item.bookings).padStart(2, "0")}
-                      </td>
-                      <td className="p-2">
-                        {String(item.reservations).padStart(2, "0")}
-                      </td>
-                      <td className="p-2">
-                        {String(item.cancellations).padStart(2, "0")}
-                      </td>
-                      <td className="p-2">
-                        <Link
-                          to={generateUrl(item.url)}
-                          className="bg-[#F1F1F1] border border-[#D4D4D4] rounded-[5px] w-[32px] h-[32px] flex items-center justify-center cursor-pointer"
-                        >
-                          <img src={eyeIcon} />
-                        </Link>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
         </div>
         <div className="w-[25%]">
           <div className="rounded-[15px] p-4 box--shadow bg-white">
             <div>
               <p className="text-lg font-[600] mb-3 text-center">Summary </p>
-              <div className="flex justify-between gap-3 items-center rounded-full bg-[#F1F1F1] px-3 py-2">
+              {/* <div className="flex justify-between gap-3 items-center rounded-full bg-[#F1F1F1] px-3 py-2">
                 <button
                   onClick={handlePrevious}
                   disabled={currentDayIndex === 0}
@@ -1009,12 +950,8 @@ const MarketingManagerDashboard = () => {
                 >
                   <LiaAngleRightSolid />
                 </button>
-              </div>
-              <SummaryDashboard
-                data={currentData}
-                routeMap={routeMap}
-                generateUrl={generateUrl}
-              />
+              </div> */}
+              <SummaryDashboard data={currentData} routeMap={routeMap} />
             </div>
           </div>
           <div className="rounded-[15px] p-4 box--shadow bg-white mt-4">

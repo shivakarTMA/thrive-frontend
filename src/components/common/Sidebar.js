@@ -467,12 +467,12 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                     >
                       All Invoice Report
                     </Link>
-                    <Link
+                    {/* <Link
                       to="/reports/finance-reports/pending-collection"
                       className="submenu-link text-white text-sm"
                     >
                       Pending Collection
-                    </Link>
+                    </Link> */}
                     <Link
                       to="/reports/finance-reports/cancelled-paid-invoice"
                       className="submenu-link text-white text-sm"
@@ -491,18 +491,18 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                     >
                       Collection Report
                     </Link>
-                    <Link
+                    {/* <Link
                       to="/reports/finance-reports/tds-report"
                       className="submenu-link text-white text-sm"
                     >
                       TDS Report
-                    </Link>
-                    <Link
+                    </Link> */}
+                    {/* <Link
                       to="/reports/finance-reports/advance-payments-report"
                       className="submenu-link text-white text-sm"
                     >
                       Advance Payments Report
-                    </Link>
+                    </Link> */}
                   </div>
                 )}
 
@@ -560,18 +560,18 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                     >
                       Active Client Report
                     </Link>
-                    <Link
+                    {/* <Link
                       to="/reports/operations-reports/inactive-client-report"
                       className="submenu-link text-white text-sm"
                     >
                       Inactive Client Report
-                    </Link>
-                    <Link
+                    </Link> */}
+                    {/* <Link
                       to="/reports/operations-reports/membership-frozen-report"
                       className="submenu-link text-white text-sm"
                     >
                       Membership Frozen Report
-                    </Link>
+                    </Link> */}
                     <Link
                       to="/reports/operations-reports/attendance-heatmap-report"
                       className="submenu-link text-white text-sm"
@@ -1209,20 +1209,20 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                   <FaCircle className="menu--icon !text-[10px]" />
                   <span className="nav-text">Collection Report</span>
                 </Link>
-                <Link
+                {/* <Link
                   to="/reports/finance-reports/tds-report"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
                 >
                   <FaCircle className="menu--icon !text-[10px]" />
                   <span className="nav-text">TDS Report</span>
-                </Link>
-                <Link
+                </Link> */}
+                {/* <Link
                   to="/reports/operations-reports/membership-frozen-report"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
                 >
                   <FaCircle className="menu--icon !text-[10px]" />
                   <span className="nav-text">Membership Frozen Report</span>
-                </Link>
+                </Link> */}
                 
 
                 <Link
@@ -1501,13 +1501,13 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                   <FaCircle className="menu--icon !text-[10px]" />
                   Active Client Report
                 </Link>
-                <Link
+                {/* <Link
                   to="/reports/operations-reports/inactive-client-report"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
                 >
                   <FaCircle className="menu--icon !text-[10px]" />
                   Inactive Client Report
-                </Link>
+                </Link> */}
               </div>
             )}
           </>
@@ -1842,18 +1842,18 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                     >
                       Active Client Report
                     </Link>
-                    <Link
+                    {/* <Link
                       to="/reports/operations-reports/inactive-client-report"
                       className="submenu-link text-white text-sm"
                     >
                       Inactive Client Report
-                    </Link>
-                    <Link
+                    </Link> */}
+                    {/* <Link
                       to="/reports/operations-reports/membership-frozen-report"
                       className="submenu-link text-white text-sm"
                     >
                       Membership Frozen Report
-                    </Link>
+                    </Link> */}
                     <Link
                       to="/reports/operations-reports/attendance-heatmap-report"
                       className="submenu-link text-white text-sm"

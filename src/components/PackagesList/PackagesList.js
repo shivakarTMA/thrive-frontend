@@ -28,8 +28,8 @@ const PackagesList = () => {
   const [serviceFilter, setServiceFilter] = useState(null);
   const [club, setClub] = useState([]);
   const [clubFilter, setClubFilter] = useState(null);
-    const { user } = useSelector((state) => state.auth);
-    const userRole = user.role;
+  const { user } = useSelector((state) => state.auth);
+  const userRole = user.role;
 
   const [sessionLevelValue, setSessionLevelValue] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
@@ -63,19 +63,16 @@ const PackagesList = () => {
     }
   };
 
-const serviceOptions =
-  service
-    ?.map((item) => ({
-      label: item.name,
-      value: item.id,
-      type: item.type,
-    }))
-    .filter(
-      (item) =>
-        item.type !== "PRODUCT" &&
-        item.type !== "GROUP_CLASS"
-    ) || [];
-
+  const serviceOptions =
+    service
+      ?.map((item) => ({
+        label: item.name,
+        value: item.id,
+        type: item.type,
+      }))
+      .filter(
+        (item) => item.type !== "PRODUCT" && item.type !== "GROUP_CLASS",
+      ) || [];
 
   const fetchClub = async (search = "") => {
     try {
@@ -160,20 +157,22 @@ const serviceOptions =
           .test("fileType", "Only JPG, PNG, or WEBP allowed", (value) => {
             if (!value || typeof value === "string") return true;
             return ["image/jpeg", "image/png", "image/webp"].includes(
-              value.type
+              value.type,
             );
           }),
         service_id: Yup.number().required("Service is required"),
         club_id: Yup.number().required("Club is required"),
         session_level: Yup.string().required("Level is required"),
         name: Yup.string().required("Name is required"),
-        caption: service_type === "GROUP_CLASS"
+        caption:
+          service_type === "GROUP_CLASS"
             ? Yup.string() // not required if editing
             : Yup.string().required("Caption is required"),
         tags: Yup.string().required("Tags is required"),
 
         // trainer_id: Yup.string().required("Staff is required"),
-        trainer_id: service_type !== "GROUP_CLASS"
+        trainer_id:
+          service_type !== "GROUP_CLASS"
             ? Yup.string() // not required if editing
             : Yup.string().required("Trainer Name is required"),
         position: Yup.string().required("Position is required"),
@@ -195,7 +194,7 @@ const serviceOptions =
             .typeError("Earn Coins must be a number")
             .required("Earn Coins is required"),
           waitlist_capacity: Yup.string().required(
-            "Waitlist Capacity is required"
+            "Waitlist Capacity is required",
           ),
           is_featured: Yup.string().required("Featured Event is required"),
         };
@@ -209,19 +208,51 @@ const serviceOptions =
             .oneOf(["PAID", "FREE"])
             .required("Booking Type is required"),
 
+          // amount: Yup.number()
+          //   .typeError("Amount must be a number")
+          //   .when("booking_type", {
+          //     is: "PAID",
+          //     then: (schema) => schema.required("Amount is required"),
+          //     otherwise: (schema) => schema.nullable(),
+          //   }),
+
+          // discount: Yup.number()
+          //   .typeError("Discount must be a number")
+          //   .when("booking_type", {
+          //     is: "PAID",
+          //     then: (schema) => schema.required("Discount is required"),
+          //     otherwise: (schema) => schema.nullable(),
+          //   }),
           amount: Yup.number()
             .typeError("Amount must be a number")
             .when("booking_type", {
               is: "PAID",
-              then: (schema) => schema.required("Amount is required"),
+              then: (schema) =>
+                schema
+                  .required("Amount is required")
+                  .min(0, "Amount cannot be negative"),
               otherwise: (schema) => schema.nullable(),
             }),
 
           discount: Yup.number()
             .typeError("Discount must be a number")
-            .when("booking_type", {
-              is: "PAID",
-              then: (schema) => schema.required("Discount is required"),
+            .when(["booking_type", "amount"], {
+              is: (booking_type) => booking_type === "PAID",
+              then: (schema) =>
+                schema
+                  .required("Discount is required")
+                  .min(0, "Discount cannot be negative")
+                  .test(
+                    "discount-not-greater-than-amount",
+                    "Discount cannot be greater than Amount",
+                    function (value) {
+                      const { amount } = this.parent;
+                      if (!amount || amount === 0) {
+                        return value === 0 || !value;
+                      }
+                      return value <= amount;
+                    },
+                  ),
               otherwise: (schema) => schema.nullable(),
             }),
 
@@ -242,7 +273,7 @@ const serviceOptions =
         schema = {
           ...schema,
           session_duration: Yup.number().required(
-            "Session duration is required"
+            "Session duration is required",
           ),
           session_validity: Yup.number().required("Validity is required"),
           no_of_sessions: Yup.number().required("No. of Sessions is required"),
@@ -275,11 +306,11 @@ const serviceOptions =
                 .test("fileType", "Only JPG, PNG, or WEBP allowed", (value) => {
                   if (!value || typeof value === "string") return true;
                   return ["image/jpeg", "image/png", "image/webp"].includes(
-                    value.type
+                    value.type,
                   );
                 }),
               recovery_goals: Yup.string().required(
-                "Recovery Goals are required"
+                "Recovery Goals are required",
               ),
               caption: Yup.string().required("Caption is required"),
               description: Yup.string().required("Description is required"),
@@ -289,12 +320,33 @@ const serviceOptions =
               session_duration: Yup.number()
                 .typeError("Session Duration must be a number")
                 .required("Session Duration is required"),
+              // amount: Yup.number()
+              //   .typeError("Amount must be a number")
+              //   .required("Amount is required"),
+              // discount: Yup.number()
+              //   .typeError("Discount must be a number")
+              //   .required("Discount is required"),
               amount: Yup.number()
                 .typeError("Amount must be a number")
-                .required("Amount is required"),
+                .required("Amount is required")
+                .min(0, "Amount cannot be negative"),
+
               discount: Yup.number()
                 .typeError("Discount must be a number")
-                .required("Discount is required"),
+                .min(0, "Discount cannot be negative")
+                .when("amount", (amount, schema) => {
+                  if (amount === 0) {
+                    return schema.test(
+                      "no-discount-when-zero",
+                      "Discount is not allowed when amount is 0",
+                      (value) => !value || value === 0,
+                    );
+                  }
+
+                  return schema
+                    .required("Discount is required")
+                    .max(amount, "Discount cannot be greater than amount");
+                }),
               gst: Yup.number()
                 .typeError("GST must be a number")
                 .required("GST is required"),
@@ -305,7 +357,7 @@ const serviceOptions =
               position: Yup.number()
                 .typeError("Position must be a number")
                 .required("Position is required"),
-            })
+            }),
           ),
         };
       }
@@ -637,7 +689,7 @@ const serviceOptions =
     setServiceFilter(null); // Reset selected service when club changes
   }, [clubFilter]);
 
-    // console.log(formik.values, "SHIVAKAR values");
+  // console.log(formik.values, "SHIVAKAR values");
   // console.log(formik.errors, "SHIVAKAR ERRORS");
   // console.log(formik.values, "SHIVAKAR values");
 
@@ -803,7 +855,6 @@ const serviceOptions =
         <CreatePackage
           setShowModal={setShowModal}
           editingOption={editingOption}
-          
           formik={formik}
           setSessionLevelValue={setSessionLevelValue}
           sessionLevel={sessionLevel}

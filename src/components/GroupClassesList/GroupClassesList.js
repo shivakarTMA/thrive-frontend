@@ -99,7 +99,7 @@ const GroupClassesList = () => {
   }));
 
   const selectedClub =
-  clubOptions.find((opt) => opt.value === clubFilter?.value) || null;
+    clubOptions.find((opt) => opt.value === clubFilter?.value) || null;
 
   // ---------------------------
   // UPDATE URL WITH PARAMS
@@ -206,19 +206,52 @@ const GroupClassesList = () => {
       .oneOf(["PAID", "FREE"])
       .required("Booking Type is required"),
 
+    // amount: Yup.number()
+    //   .typeError("Amount must be a number")
+    //   .when("booking_type", {
+    //     is: "PAID",
+    //     then: (schema) => schema.required("Amount is required"),
+    //     otherwise: (schema) => schema.nullable(),
+    //   }),
+
+    // discount: Yup.number()
+    //   .typeError("Discount must be a number")
+    //   .when("booking_type", {
+    //     is: "PAID",
+    //     then: (schema) => schema.required("Discount is required"),
+    //     otherwise: (schema) => schema.nullable(),
+    //   }),
+
     amount: Yup.number()
       .typeError("Amount must be a number")
       .when("booking_type", {
         is: "PAID",
-        then: (schema) => schema.required("Amount is required"),
+        then: (schema) =>
+          schema
+            .required("Amount is required")
+            .min(0, "Amount cannot be negative"),
         otherwise: (schema) => schema.nullable(),
       }),
 
     discount: Yup.number()
       .typeError("Discount must be a number")
-      .when("booking_type", {
-        is: "PAID",
-        then: (schema) => schema.required("Discount is required"),
+      .when(["booking_type", "amount"], {
+        is: (booking_type) => booking_type === "PAID",
+        then: (schema) =>
+          schema
+            .required("Discount is required")
+            .min(0, "Discount cannot be negative")
+            .test(
+              "discount-not-greater-than-amount",
+              "Discount cannot be greater than Amount",
+              function (value) {
+                const { amount } = this.parent;
+                if (!amount || amount === 0) {
+                  return value === 0 || !value;
+                }
+                return value <= amount;
+              },
+            ),
         otherwise: (schema) => schema.nullable(),
       }),
 
