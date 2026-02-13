@@ -780,7 +780,7 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
                 >
                   <FaCircle className="menu--icon !text-[10px]" />
-                  <span className="nav-text">Nourish</span>
+                  <span className="nav-text">Nourish Products</span>
                 </Link>
                 <Link
                   to="/packages"
@@ -1125,7 +1125,7 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
                 >
                   <FaCircle className="menu--icon !text-[10px]" />
-                  <span className="nav-text">Nourish</span>
+                  <span className="nav-text">Nourish Products</span>
                 </Link>
                 <Link
                   to="/packages"
@@ -1952,7 +1952,7 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
                 >
                   <FaCircle className="menu--icon !text-[10px]" />
-                  <span className="nav-text">Nourish</span>
+                  <span className="nav-text">Nourish Products</span>
                 </Link>
                 <Link
                   to="/packages"

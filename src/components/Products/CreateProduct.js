@@ -140,7 +140,7 @@ const CreateProduct = ({
       >
         <div className="bg-white rounded-t-[10px] flex gap-3 items-center justify-between py-4 px-4 border-b">
           <h2 className="text-xl font-semibold">
-            {editingOption ? "Edit Nourish" : "Create Nourish"}
+            {editingOption ? "Edit Product" : "Create Product"}
           </h2>
           <div className="close--lead cursor-pointer" onClick={handleLeadModal}>
             <IoCloseCircle className="text-3xl" />
@@ -225,7 +225,7 @@ const CreateProduct = ({
                   {/* Nourish Name */}
                   <div>
                     <label className="mb-2 block">
-                      Nourish Name<span className="text-red-500">*</span>
+                      Product Name<span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
                       <input
@@ -295,7 +295,7 @@ const CreateProduct = ({
                   {/* Nourish Category */}
                   <div>
                     <label className="mb-2 block">
-                      Nourish Category<span className="text-red-500">*</span>
+                      Product Category<span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
                       <Select
@@ -327,7 +327,7 @@ const CreateProduct = ({
                   {/*  Nourish Type */}
                   <div>
                     <label className="mb-2 block">
-                      Nourish Type<span className="text-red-500">*</span>
+                      Product Type<span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
                       <Select

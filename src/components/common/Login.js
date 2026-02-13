@@ -14,7 +14,7 @@ import { FaPhoneAlt } from "react-icons/fa";
 import { RiLockPasswordFill } from "react-icons/ri";
 import Logo from "../../assets/images/DLF-Thrive-New-Logo-1-White.png";
 import { authAxios } from "../../config/config";
-import {jwtDecode} from "jwt-decode";
+import { jwtDecode } from "jwt-decode";
 
 // Login component
 const Login = (props) => {
@@ -26,6 +26,8 @@ const Login = (props) => {
   const [data, setData] = useState({ identifier: "", otp: "" });
   const [step, setStep] = useState(1);
   const [currentUser, setCurrentUser] = useState(null);
+  const [timer, setTimer] = useState(0);
+  const [isResending, setIsResending] = useState(false);
 
   // Redirect to home if already logged in
   useEffect(() => {
@@ -59,6 +61,9 @@ const Login = (props) => {
           setCurrentUser({ mobile: data.identifier });
           toast.success(response.data.message || "OTP sent successfully");
           setStep(2);
+
+          // ✅ Start 60 sec countdown
+          setTimer(60);
         } else {
           toast.error(response.data.message || "Failed to send OTP");
         }
@@ -100,6 +105,41 @@ const Login = (props) => {
       }
     }
   };
+
+  const handleResendOtp = async () => {
+    try {
+      setIsResending(true);
+      setLoading(true);
+
+      const response = await authAxios().post("staff/login", {
+        mobile: currentUser.mobile,
+      });
+
+      if (response.data.status) {
+        toast.success("OTP resent successfully");
+        setTimer(60); // ✅ Restart timer
+      } else {
+        toast.error(response.data.message || "Failed to resend OTP");
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to resend OTP");
+    } finally {
+      setIsResending(false);
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    let interval = null;
+
+    if (timer > 0) {
+      interval = setInterval(() => {
+        setTimer((prev) => prev - 1);
+      }, 1000);
+    }
+
+    return () => clearInterval(interval);
+  }, [timer]);
 
   return (
     <div className="flex min-h-screen flex-1 flex-col justify-center px-6 py-12 lg:px-8">
@@ -166,16 +206,44 @@ const Login = (props) => {
                   <input
                     id="otp"
                     name="otp"
-                    type="number"
+                    type="tel"
+                    inputMode="numeric"
+                    pattern="[0-9]{6}"
+                    maxLength={6}
                     value={data.otp}
                     onChange={handleChange}
                     required
                     className="number--appearance-none block w-full rounded-md border-0 py-1.5 px-4 text-gray-900 focus:outline-none sm:text-sm"
-                    placeholder="Enter your OTP"
-                    minLength={6}
-                    maxLength={6}
+                    placeholder="Enter 6 digit OTP"
                   />
                 </div>
+              </div>
+
+              <div className="flex gap-2 justify-between mt-2">
+                {/* ✅ Resend Button */}
+                <button
+                  type="button"
+                  onClick={handleResendOtp}
+                  disabled={timer > 0 || isResending}
+                  className={`mt-2 text-sm font-medium ${
+                    timer > 0
+                      ? "text-gray-400 cursor-not-allowed"
+                      : "text-black-600 hover:underline"
+                  }`}
+                >
+                  Resend OTP
+                </button>
+                {/* ✅ Timer Display */}
+                {timer > 0 ? (
+                  <p className="text-sm text-gray-500 mt-2">
+                    OTP expires in{" "}
+                    <span className="font-semibold">{timer}s</span>
+                  </p>
+                ) : (
+                  <p className="text-sm text-red-500 mt-2">
+                    OTP expired. Please resend.
+                  </p>
+                )}
               </div>
             </div>
           )}
