@@ -62,8 +62,8 @@ const Login = (props) => {
           toast.success(response.data.message || "OTP sent successfully");
           setStep(2);
 
-          // ✅ Start 60 sec countdown
-          setTimer(60);
+          // ✅ Start 30 sec countdown
+          setTimer(30);
         } else {
           toast.error(response.data.message || "Failed to send OTP");
         }
@@ -117,7 +117,7 @@ const Login = (props) => {
 
       if (response.data.status) {
         toast.success("OTP resent successfully");
-        setTimer(60); // ✅ Restart timer
+        setTimer(30); // ✅ Restart timer
       } else {
         toast.error(response.data.message || "Failed to resend OTP");
       }
@@ -221,27 +221,23 @@ const Login = (props) => {
 
               <div className="flex gap-2 justify-between mt-2">
                 {/* ✅ Resend Button */}
-                <button
-                  type="button"
-                  onClick={handleResendOtp}
-                  disabled={timer > 0 || isResending}
-                  className={`mt-2 text-sm font-medium ${
-                    timer > 0
-                      ? "text-gray-400 cursor-not-allowed"
-                      : "text-black-600 hover:underline"
-                  }`}
-                >
-                  Resend OTP
-                </button>
+
                 {/* ✅ Timer Display */}
                 {timer > 0 ? (
-                  <p className="text-sm text-gray-500 mt-2">
-                    OTP expires in{" "}
+                  <p className="text-sm text-gray-500">
+                    Didn’t receive the code? Resend OTP in{" "}
                     <span className="font-semibold">{timer}s</span>
                   </p>
                 ) : (
-                  <p className="text-sm text-red-500 mt-2">
-                    OTP expired. Please resend.
+                  <p className="text-sm ">
+                    <span className="text-gray-400">Didn’t receive the code?</span>{" "}
+                    <button
+                      type="button"
+                      onClick={handleResendOtp}
+                      className={`text-sm font-medium text-black-600 hover:underline`}
+                    >
+                      Resend OTP
+                    </button>
                   </p>
                 )}
               </div>
