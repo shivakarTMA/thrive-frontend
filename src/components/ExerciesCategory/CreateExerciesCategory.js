@@ -22,7 +22,6 @@ const CreateExerciesCategory = ({
   formik,
   handleOverlayClick,
   leadBoxRef,
-  clubOptions,
 }) => {
   const displayPosition = [
     { label: "Active", value: "ACTIVE" },
@@ -40,10 +39,10 @@ const CreateExerciesCategory = ({
         if (data) {
           // ✅ Prefill formik fields with fetched data
           formik.setValues({
-            club_id: data.club_id || "",
+            // club_id: data.club_id || "",
             title: data.title || "",
             position: data.position || "",
-            status: data.status || "",
+            status: data.status || "ACTIVE",
           });
         }
       } catch (err) {
@@ -63,7 +62,7 @@ const CreateExerciesCategory = ({
     >
       {/* Modal container */}
       <div
-        className="min-h-[70vh] w-[95%] max-w-[550px] mx-auto mt-[100px] mb-[100px] container--leadbox rounded-[10px] flex flex-col"
+        className="min-h-[70vh] w-[95%] max-w-[300px] mx-auto mt-[100px] mb-[100px] container--leadbox rounded-[10px] flex flex-col"
         ref={leadBoxRef}
         onClick={(e) => e.stopPropagation()}
       >
@@ -88,7 +87,7 @@ const CreateExerciesCategory = ({
           <form onSubmit={formik.handleSubmit} className="p-0 space-y-0">
             <div className="flex bg-white rounded-b-[10px]">
               <div className="p-6 flex-1">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4">
                   {/* Title Input */}
                   <div>
                     <label className="mb-2 block">
@@ -114,39 +113,6 @@ const CreateExerciesCategory = ({
                     )}
                   </div>
 
-                  {/* Club Dropdown */}
-                  <div>
-                    <label className="mb-2 block">
-                      Club<span className="text-red-500">*</span>
-                    </label>
-                    <div className="relative">
-                      <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[10]">
-                        <FaListUl />
-                      </span>
-                      <Select
-                        name="club_id"
-                        value={
-                          clubOptions.find(
-                            (option) =>
-                              option.value.toString() ===
-                              formik.values.club_id?.toString(),
-                          ) || null
-                        }
-                        options={clubOptions}
-                        onChange={(option) =>
-                          formik.setFieldValue("club_id", option.value)
-                        }
-                        onBlur={() => formik.setFieldTouched("club_id", true)}
-                        styles={selectIcon}
-                        className="!capitalize"
-                      />
-                    </div>
-                    {formik.touched.club_id && formik.errors.club_id && (
-                      <p className="text-red-500 text-sm mt-1">
-                        {formik.errors.club_id}
-                      </p>
-                    )}
-                  </div>
                   {/* Position Input */}
                   <div>
                     <label className="mb-2 block">

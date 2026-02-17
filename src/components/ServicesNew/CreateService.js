@@ -145,7 +145,7 @@ const CreateService = ({
                     </div>
                     {formik.touched.image && formik.errors.image && (
                       <p className="text-red-500 text-sm mt-1">
-                        {formik.errors.image}
+                        Image is required
                       </p>
                     )}
                   </div>
@@ -308,42 +308,39 @@ const CreateService = ({
                   </div>
 
                   {/* Status Dropdown */}
-                  <div>
-                    <label className="mb-2 block">
-                      Status<span className="text-red-500">*</span>
-                    </label>
-                    <div className="relative">
-                      <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[10]">
-                        <LuPlug />
-                      </span>
-                      <Select
-                        name="status"
-                        value={
-                          formik.values.status
-                            ? {
-                                label: formik.values.status,
-                                value: formik.values.status,
-                              }
-                            : ""
-                        }
-                        options={[
-                          { label: "Active", value: "ACTIVE" },
-                          { label: "Inactive", value: "INACTIVE" },
-                        ]}
-                        onChange={(option) =>
-                          formik.setFieldValue("status", option.value)
-                        }
-                        onBlur={() => formik.setFieldTouched("status", true)}
-                        styles={selectIcon}
-                        className="!capitalize"
-                      />
+                  {editingOption && (
+                    <div>
+                      <label className="mb-2 block">
+                        Status
+                      </label>
+                      <div className="relative">
+                        <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[10]">
+                          <LuPlug />
+                        </span>
+                        <Select
+                          name="status"
+                          value={
+                            formik.values.status
+                              ? {
+                                  label: formik.values.status,
+                                  value: formik.values.status,
+                                }
+                              : ""
+                          }
+                          options={[
+                            { label: "Active", value: "ACTIVE" },
+                            { label: "Inactive", value: "INACTIVE" },
+                          ]}
+                          onChange={(option) =>
+                            formik.setFieldValue("status", option.value)
+                          }
+                          onBlur={() => formik.setFieldTouched("status", true)}
+                          styles={selectIcon}
+                          className="!capitalize"
+                        />
+                      </div>
                     </div>
-                    {formik.touched.status && formik.errors.status && (
-                      <p className="text-red-500 text-sm mt-1">
-                        {formik.errors.status}
-                      </p>
-                    )}
-                  </div>
+                  )}
                 </div>
               </div>
             </div>

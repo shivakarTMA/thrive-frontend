@@ -7,22 +7,10 @@ import { RiDeleteBin6Fill } from "react-icons/ri";
 import Tooltip from "../common/Tooltip";
 import ConfirmPopup from "../common/ConfirmPopup";
 import Select from "react-select";
-import { customStyles } from "../../Helper/helper";
+import { customStyles, filterActiveItems } from "../../Helper/helper";
 import { authAxios } from "../../config/config";
 import Pagination from "../common/Pagination";
 
-const exerciseTypeOptions = [
-  { value: "shoulders", label: "Shoulders" },
-  { value: "triceps", label: "Triceps" },
-  { value: "biceps", label: "Biceps" },
-  { value: "chest", label: "Chest" },
-  { value: "back", label: "Back" },
-  { value: "legs", label: "Legs" },
-  { value: "abs", label: "Abs" },
-  { value: "cardio", label: "Cardio" },
-  { value: "warmup", label: "Warmup" },
-  { value: "others", label: "Others" },
-];
 
 const columns = [
   // "S.NO",
@@ -39,14 +27,40 @@ const ExercisesList = () => {
   const [editingExercise, setEditingExercise] = useState(null);
   const [exerciseToDelete, setExerciseToDelete] = useState(null);
   const [showConfirmPopup, setShowConfirmPopup] = useState(false);
+  const [productCategory, setProductCategory] = useState([]);
+  const [productFilter, setProductFilter] = useState(null);
 
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState(null);
 
   const [page, setPage] = useState(1);
   const [rowsPerPage] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
+
+  const fetchProductCategory = async () => {
+    try {
+      const res = await authAxios().get("/exercise/category/list");
+      let data = res.data?.data || res.data || [];
+      const activeOnly = filterActiveItems(data);
+      setProductCategory(activeOnly);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to fetch category");
+    }
+  };
+
+  useEffect(() => {
+    fetchProductCategory();
+  }, []);
+
+  const productCategoryOptions =
+    productCategory
+      ?.sort((a, b) => a.position - b.position)
+      .map((item) => ({
+        label: item.title,
+        value: item.title,
+        position: item.position,
+      })) || [];
 
   const fetchExercisesList = async (search = "", currentPage = page) => {
     try {
@@ -57,8 +71,8 @@ const ExercisesList = () => {
         ...(search ? { search } : {}),
       };
 
-      if (selectedCategory?.value) {
-        params.category = selectedCategory.value;
+      if (productFilter?.value) {
+        params.category = productFilter.value;
       }
 
       // Example: /exercise/list?search=press&category=Shoulders
@@ -84,7 +98,7 @@ const ExercisesList = () => {
     }, 300);
 
     return () => clearTimeout(delayDebounce);
-  }, [searchTerm, selectedCategory]);
+  }, [searchTerm, productFilter]);
 
   const handleDeleteClick = (exercise) => {
     setExerciseToDelete(exercise);
@@ -151,12 +165,20 @@ const ExercisesList = () => {
 
         {/* Category Filter */}
         <div>
-          <Select
+          {/* <Select
             options={exerciseTypeOptions}
             value={selectedCategory}
             onChange={setSelectedCategory}
             isClearable
             placeholder="All Categories"
+            styles={customStyles}
+          /> */}
+          <Select
+            placeholder="Filter by Category"
+            options={productCategoryOptions}
+            value={productFilter}
+            onChange={(option) => setProductFilter(option)}
+            isClearable
             styles={customStyles}
           />
         </div>
@@ -256,6 +278,7 @@ const ExercisesList = () => {
           setShowModal={setShowModal}
           editingExercise={editingExercise}
           onExerciseCreated={fetchExercisesList}
+          productCategoryOptions={productCategoryOptions}
         />
       )}
 

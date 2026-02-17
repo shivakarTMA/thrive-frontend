@@ -5,6 +5,7 @@ import { LuPlug } from "react-icons/lu";
 import Select from "react-select";
 import {
   blockInvalidNumberKeys,
+  durationValueInteger,
   sanitizePositiveInteger,
   selectIcon,
 } from "../../Helper/helper";
@@ -38,7 +39,7 @@ const CreateSubscriptionPlan = ({
             club_id: data?.club_id || "",
             duration_type: data?.duration_type || "",
             duration_value: data?.duration_value || "",
-            booking_type: data?.booking_type || "",
+            // booking_type: data?.booking_type || "",
             plan_type: data?.plan_type || "",
             hsn_sac_code: data?.hsn_sac_code || "",
             amount: data?.amount || "",
@@ -227,51 +228,23 @@ const CreateSubscriptionPlan = ({
                         type="number"
                         name="duration_value"
                         value={formik.values.duration_value}
-                        onChange={formik.handleChange}
+                        // onChange={formik.handleChange}
+                        onKeyDown={blockInvalidNumberKeys} // ⛔ blocks typing -, e, etc.
+                        onChange={(e) => {
+                          const cleanValue = durationValueInteger(
+                            e.target.value,
+                          );
+                          formik.setFieldValue("duration_value", cleanValue);
+                        }}
                         onBlur={formik.handleBlur}
                         className="custom--input w-full input--icon"
+                        min="1"
                       />
                     </div>
                     {formik.touched.duration_value &&
                       formik.errors.duration_value && (
                         <p className="text-red-500 text-sm mt-1">
                           {formik.errors.duration_value}
-                        </p>
-                      )}
-                  </div>
-
-                  <div>
-                    <label className="mb-2 block">
-                      Booking Type<span className="text-red-500">*</span>
-                    </label>
-                    <div className="relative">
-                      <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[10]">
-                        <LuPlug />
-                      </span>
-                      <Select
-                        name="booking_type"
-                        value={{
-                          label: formik.values.booking_type,
-                          value: formik.values.booking_type,
-                        }}
-                        options={[
-                          { label: "Free", value: "FREE" },
-                          { label: "Paid", value: "PAID" },
-                        ]}
-                        onChange={(option) =>
-                          formik.setFieldValue("booking_type", option.value)
-                        }
-                        onBlur={() =>
-                          formik.setFieldTouched("booking_type", true)
-                        }
-                        styles={selectIcon}
-                        className="!capitalize"
-                      />
-                    </div>
-                    {formik.touched.booking_type &&
-                      formik.errors.booking_type && (
-                        <p className="text-red-500 text-sm mt-1">
-                          {formik.errors.booking_type}
                         </p>
                       )}
                   </div>
@@ -331,6 +304,42 @@ const CreateSubscriptionPlan = ({
                         </p>
                       )}
                   </div>
+
+                  {/* <div>
+                    <label className="mb-2 block">
+                      Booking Type<span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[10]">
+                        <LuPlug />
+                      </span>
+                      <Select
+                        name="booking_type"
+                        value={{
+                          label: formik.values.booking_type,
+                          value: formik.values.booking_type,
+                        }}
+                        options={[
+                          { label: "Free", value: "FREE" },
+                          { label: "Paid", value: "PAID" },
+                        ]}
+                        onChange={(option) =>
+                          formik.setFieldValue("booking_type", option.value)
+                        }
+                        onBlur={() =>
+                          formik.setFieldTouched("booking_type", true)
+                        }
+                        styles={selectIcon}
+                        className="!capitalize"
+                      />
+                    </div>
+                    {formik.touched.booking_type &&
+                      formik.errors.booking_type && (
+                        <p className="text-red-500 text-sm mt-1">
+                          {formik.errors.booking_type}
+                        </p>
+                      )}
+                  </div> */}
 
                   <div className="">
                     <label className="mb-2 block">
@@ -488,39 +497,6 @@ const CreateSubscriptionPlan = ({
                       )}
                   </div>
 
-                  <div>
-                    <label className="mb-2 block">
-                      Status<span className="text-red-500">*</span>
-                    </label>
-                    <div className="relative">
-                      <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[10]">
-                        <LuPlug />
-                      </span>
-                      <Select
-                        name="status"
-                        value={{
-                          label: formik.values.status,
-                          value: formik.values.status,
-                        }}
-                        options={[
-                          { label: "Active", value: "ACTIVE" },
-                          { label: "Inactive", value: "INACTIVE" },
-                        ]}
-                        onChange={(option) =>
-                          formik.setFieldValue("status", option.value)
-                        }
-                        onBlur={() => formik.setFieldTouched("status", true)}
-                        styles={selectIcon}
-                        className="!capitalize"
-                      />
-                    </div>
-                    {formik.touched.status && formik.errors.status && (
-                      <p className="text-red-500 text-sm mt-1">
-                        {formik.errors.status}
-                      </p>
-                    )}
-                  </div>
-
                   <div className="">
                     <label className="mb-2 block">
                       Position<span className="text-red-500">*</span>
@@ -551,6 +527,33 @@ const CreateSubscriptionPlan = ({
                       </p>
                     )}
                   </div>
+                  {editingOption && (
+                    <div>
+                      <label className="mb-2 block">Status</label>
+                      <div className="relative">
+                        <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[10]">
+                          <LuPlug />
+                        </span>
+                        <Select
+                          name="status"
+                          value={{
+                            label: formik.values.status,
+                            value: formik.values.status,
+                          }}
+                          options={[
+                            { label: "Active", value: "ACTIVE" },
+                            { label: "Inactive", value: "INACTIVE" },
+                          ]}
+                          onChange={(option) =>
+                            formik.setFieldValue("status", option.value)
+                          }
+                          onBlur={() => formik.setFieldTouched("status", true)}
+                          styles={selectIcon}
+                          className="!capitalize"
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

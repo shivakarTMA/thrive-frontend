@@ -193,8 +193,60 @@ const GroupClassesList = () => {
     description: Yup.string().required("Description is required"),
     package_category_id: Yup.number().required("Category is required"),
     start_date: Yup.string().required("Start Date is required"),
-    start_time: Yup.string().required("Start Time is required"),
-    end_time: Yup.string().required("End Time is required"),
+
+    // start_time: Yup.string().required("Start Time is required"),
+    // end_time: Yup.string().required("End Time is required"),
+    start_time: Yup.string()
+      .required("Start time is required")
+      .test(
+        "not-in-past",
+        "Start time cannot be in the past",
+        function (value) {
+          const { start_date } = this.parent;
+
+          if (!start_date || !value) return true;
+
+          const today = new Date();
+          const selectedDate = new Date(start_date);
+
+          // If selected date is today
+          if (selectedDate.toDateString() === today.toDateString()) {
+            const [hours, minutes] = value.split(":");
+            const selectedDateTime = new Date(selectedDate);
+            selectedDateTime.setHours(hours, minutes, 0);
+
+            if (selectedDateTime < today) {
+              return false;
+            }
+          }
+
+          return true;
+        },
+      ),
+
+    end_time: Yup.string()
+      .required("End time is required")
+      .test("not-in-past", "End time cannot be in the past", function (value) {
+        const { start_date } = this.parent;
+
+        if (!start_date || !value) return true;
+
+        const today = new Date();
+        const selectedDate = new Date(start_date);
+
+        if (selectedDate.toDateString() === today.toDateString()) {
+          const [hours, minutes] = value.split(":");
+          const selectedDateTime = new Date(selectedDate);
+          selectedDateTime.setHours(hours, minutes, 0);
+
+          if (selectedDateTime < today) {
+            return false;
+          }
+        }
+
+        return true;
+      }),
+
     max_capacity: Yup.string().required("Max Capacity is required"),
     earn_coin: Yup.number()
       .typeError("Earn Coins must be a number")

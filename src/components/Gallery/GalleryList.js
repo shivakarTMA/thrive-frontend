@@ -13,8 +13,13 @@ import Tooltip from "../common/Tooltip";
 import Pagination from "../common/Pagination";
 import CreateGallery from "./CreateGallery";
 import { authAxios } from "../../config/config";
-import { customStyles, filterActiveItems, formatText } from "../../Helper/helper";
+import {
+  customStyles,
+  filterActiveItems,
+  formatText,
+} from "../../Helper/helper";
 import { RiDeleteBin6Line } from "react-icons/ri";
+import ConfirmPopup from "../common/ConfirmPopup";
 
 // Define display position options
 const displayPosition = [
@@ -37,6 +42,9 @@ const GalleryList = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const leadBoxRef = useRef(null);
+
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [selectedDeleteId, setSelectedDeleteId] = useState(null);
 
   // Function to fetch club list
   const fetchClub = async (search = "") => {
@@ -90,10 +98,10 @@ const GalleryList = () => {
   }, []);
 
   // Fetch gallery list when filters change
-useEffect(() => {
-  setPage(1);
-  fetchGallery(1);
-}, [positionFilter, clubFilter]);
+  useEffect(() => {
+    setPage(1);
+    fetchGallery(1);
+  }, [positionFilter, clubFilter]);
 
   // Club dropdown options
   const clubOptions =
@@ -164,15 +172,26 @@ useEffect(() => {
     },
   });
 
-  const handleDelete = async (id) => {
+  const handleConfirmDelete = async () => {
+    const exerciesID = selectedDeleteId?.id;
+    if (!exerciesID) return;
+
     try {
-      await authAxios().delete(`/club/gallery/${id}`);
+      await authAxios().delete(`/club/gallery/${exerciesID}`);
       toast.success("Gallery item deleted successfully");
-      fetchGallery(); // refresh list
+      fetchGallery();
     } catch (error) {
       console.error(error);
       toast.error("Failed to delete gallery item");
+    } finally {
+      setShowDeleteModal(false);
+      setSelectedDeleteId(null);
     }
+  };
+
+  const handleCancelDelete = () => {
+    setSelectedDeleteId(null);
+    setShowDeleteModal(false);
   };
 
   // Component render
@@ -264,7 +283,9 @@ useEffect(() => {
                     </td>
                     <td className="px-2 py-4">{item?.title}</td>
                     <td className="px-2 py-4">{item?.club_name}</td>
-                    <td className="px-2 py-4">{formatText(item?.display_position)}</td>
+                    <td className="px-2 py-4">
+                      {formatText(item?.display_position)}
+                    </td>
                     <td className="px-2 py-4">{item?.position}</td>
                     <td className="px-2 py-4">
                       <div className="flex items-center">
@@ -292,7 +313,10 @@ useEffect(() => {
                         >
                           <div
                             className="p-1 cursor-pointer"
-                            onClick={() => handleDelete(item.id)}
+                            onClick={() => {
+                              setSelectedDeleteId(item);
+                              setShowDeleteModal(true);
+                            }}
                           >
                             <RiDeleteBin6Line className="text-[22px] text-black" />
                           </div>
@@ -329,6 +353,14 @@ useEffect(() => {
           handleOverlayClick={handleOverlayClick}
           leadBoxRef={leadBoxRef}
           clubOptions={clubOptions}
+        />
+      )}
+
+      {showDeleteModal && selectedDeleteId && (
+        <ConfirmPopup
+          message={`Confirm deletion of the "${selectedDeleteId?.title}"?`}
+          onConfirm={handleConfirmDelete}
+          onCancel={handleCancelDelete}
         />
       )}
     </div>

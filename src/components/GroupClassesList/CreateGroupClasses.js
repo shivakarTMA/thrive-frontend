@@ -562,14 +562,24 @@ const CreateGroupClasses = ({ setShowModal, editingOption, formik }) => {
                               ? new Date(formik.values.start_date) // ✅ Ensure valid Date object
                               : null
                           }
-                          onChange={
-                            (date) =>
-                              formik.setFieldValue(
-                                "start_date",
-                                // date.toISOString().split("T")[0]
-                                date.toLocaleDateString("en-CA"),
-                              ) // ✅ Save as YYYY-MM-DD
-                          }
+                          // onChange={
+                          //   (date) =>
+                          //     formik.setFieldValue(
+                          //       "start_date",
+                          //       // date.toISOString().split("T")[0]
+                          //       date.toLocaleDateString("en-CA"),
+                          //     ) // ✅ Save as YYYY-MM-DD
+                          // }
+
+                          onChange={(date) => {
+                            const formattedDate = date.toLocaleDateString("en-CA");
+
+                            formik.setFieldValue("start_date", formattedDate);
+
+                            // ✅ Reset times when date changes
+                            formik.setFieldValue("start_time", "");
+                            formik.setFieldValue("end_time", "");
+                          }}
                           onBlur={() =>
                             formik.setFieldTouched("start_date", true)
                           }
@@ -688,6 +698,7 @@ const CreateGroupClasses = ({ setShowModal, editingOption, formik }) => {
                         </div>
                       )}
                     </div>
+
                     {/* Max Capacity Field */}
                     <div>
                       <label className="mb-2 block">

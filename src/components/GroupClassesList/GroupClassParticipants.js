@@ -3,8 +3,9 @@ import React, { useEffect, useState } from "react";
 import { authAxios } from "../../config/config";
 import { toast } from "react-toastify";
 import Pagination from "../../components/common/Pagination";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { formatAutoDate, formatTimeAppointment } from "../../Helper/helper";
+import { MdOutlineKeyboardBackspace } from "react-icons/md";
 
 const GroupClassParticipants = () => {
   const { id } = useParams();
@@ -128,7 +129,14 @@ const GroupClassParticipants = () => {
           </div>
         </div>
 
-        <div className="w-full p-3 border bg-white shodow--box rounded-[10px]">
+        <Link
+          to="/group-class"
+          className="flex items-center gap-2 mt-5 cursor-pointer border rounded-full w-fit border-black px-3 py-1 bg-black text-white"
+        >
+          <MdOutlineKeyboardBackspace /> <span>Back</span>
+        </Link>
+
+        <div className="w-full p-3 border bg-white shodow--box rounded-[10px] mt-5">
           <div className="table--data--bottom w-full">
             <div className="relative overflow-x-auto">
               <table className="w-full text-sm text-left ">

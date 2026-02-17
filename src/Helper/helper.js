@@ -355,6 +355,23 @@ export const sanitizePositiveInteger = (value) => {
   return digitsOnly.replace(/^0+(?!$)/, "");
 };
 
+export const durationValueInteger = (value) => {
+  if (value === "") return "";
+
+  // Remove non-digits
+  const digitsOnly = value.replace(/[^0-9]/g, "");
+
+  // Remove leading zeros
+  const cleaned = digitsOnly.replace(/^0+/, "");
+
+  // ❌ Prevent 0
+  if (cleaned === "" || cleaned === "0") {
+    return "";
+  }
+
+  return cleaned;
+};
+
 export const blockInvalidNumberKeys = (e) => {
   const invalidKeys = ["-", "+", "e", "E", ".", ","];
 

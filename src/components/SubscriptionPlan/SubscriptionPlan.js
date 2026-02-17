@@ -107,8 +107,12 @@ const SubscriptionPlan = () => {
       description: Yup.string().required("Description is required"),
       club_id: Yup.string().required("Club is required"),
       duration_type: Yup.string().required("Duration Type is required"),
-      duration_value: Yup.string().required("Duration Value is required"),
-      booking_type: Yup.string().required("Booking Type is required"),
+      // duration_value: Yup.string().required("Duration Value is required"),
+      duration_value: Yup.number()
+      .typeError("Duration must be a number")
+      .required("Duration is required")
+      .min(1, "Duration must be greater than 0"),
+      // booking_type: Yup.string().required("Booking Type is required"),
       plan_type: Yup.string().required("Plan Type is required"),
       // amount: Yup.string().required("Amount is required"),
       // discount: Yup.string().required("Discount is required"),
@@ -135,7 +139,7 @@ const SubscriptionPlan = () => {
         }),
       gst: Yup.string().required("GST is required"),
       earn_coin: Yup.string().required("Earn Coins is required"),
-      status: Yup.string().required("Status is required"),
+      // status: Yup.string().required("Status is required"),
       position: Yup.number().required("Position is required"),
     }),
     enableReinitialize: true,
@@ -236,7 +240,7 @@ const SubscriptionPlan = () => {
                 <th className="px-2 py-4 min-w-[150px]">Description</th>
                 <th className="px-2 py-4 min-w-[150px]">Club Name</th>
                 <th className="px-2 py-4 min-w-[100px]">Duration</th>
-                <th className="px-2 py-4 min-w-[110px]">Booking Type</th>
+                {/* <th className="px-2 py-4 min-w-[110px]">Booking Type</th> */}
                 <th className="px-2 py-4 min-w-[100px]">Amount</th>
                 <th className="px-2 py-4 min-w-[100px]">Discount</th>
                 <th className="px-2 py-4 min-w-[110px]">Total Amount</th>
@@ -271,7 +275,7 @@ const SubscriptionPlan = () => {
                     <td className="px-2 py-4">
                       {item?.duration_value} {item?.duration_type}
                     </td>
-                    <td className="px-2 py-4">{item?.booking_type}</td>
+                    {/* <td className="px-2 py-4">{item?.booking_type}</td> */}
                     <td className="px-2 py-4">₹{item?.amount}</td>
                     <td className="px-2 py-4">₹{item?.discount}</td>
                     <td className="px-2 py-4">₹{item?.total_amount}</td>

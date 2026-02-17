@@ -178,7 +178,7 @@ const Services = () => {
       // studio_id: Yup.string().required("Studio is required"),
       type: Yup.string().required("Type is required"),
       position: Yup.string().required("Position is required"),
-      status: Yup.string().required("Status is required"),
+      // status: Yup.string().required("Status is required"),
     }),
     onSubmit: async (values, { resetForm }) => {
       try {

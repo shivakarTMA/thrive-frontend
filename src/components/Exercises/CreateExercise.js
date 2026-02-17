@@ -15,20 +15,6 @@ import { TbGymnastics } from "react-icons/tb";
 import { CgGym } from "react-icons/cg";
 import { authAxios } from "../../config/config";
 
-// Options for exercise categories
-const exerciseTypeOptions = [
-  { value: "Shoulders", label: "Shoulders" },
-  { value: "Triceps", label: "Triceps" },
-  { value: "Biceps", label: "Biceps" },
-  { value: "Chest", label: "Chest" },
-  { value: "Back", label: "Back" },
-  { value: "Legs", label: "Legs" },
-  { value: "Abs", label: "Abs" },
-  { value: "Cardio", label: "Cardio" },
-  { value: "Warmup", label: "Warmup" },
-  { value: "Others", label: "Others" },
-];
-
 // Validation schema using Yup
 const validationSchema = Yup.object({
   category: Yup.string().required("Category is required"),
@@ -39,6 +25,7 @@ const CreateExercise = ({
   setShowModal,
   editingExercise,
   onExerciseCreated,
+  productCategoryOptions,
 }) => {
   console.log(editingExercise?.id, "editingExercise");
 
@@ -170,8 +157,8 @@ const CreateExercise = ({
                     <CgGym />
                   </span>
                   <Select
-                    options={exerciseTypeOptions}
-                    value={exerciseTypeOptions.find(
+                    options={productCategoryOptions}
+                    value={productCategoryOptions.find(
                       (option) => option.value === formik.values.category,
                     )}
                     onChange={(option) =>
