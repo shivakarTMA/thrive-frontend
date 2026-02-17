@@ -33,6 +33,7 @@ export const ROUTE_PERMISSIONS = {
   '/create-workout-plan': ['ADMIN', 'TRAINER'],
   '/create-workout-plan/:id': ['ADMIN', 'TRAINER'],
   '/exercises': ['ADMIN', 'TRAINER', 'CLUB_MANAGER'],
+  '/exercises-categories': ['ADMIN', 'TRAINER', 'CLUB_MANAGER'],
   
   // Lost & Found
   '/lost-found': ['ADMIN', 'FOH', 'CLUB_MANAGER'],

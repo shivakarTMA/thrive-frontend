@@ -692,6 +692,13 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                   <span className="nav-text">Exercises</span>
                 </Link>
                 <Link
+                  to="/exercises-categories"
+                  className="text-white flex items-center gap-[5px] mb-2 text-sm"
+                >
+                  <FaCircle className="menu--icon !text-[10px]" />
+                  <span className="nav-text">Exercises Categories</span>
+                </Link>
+                <Link
                   to="/email-template-list"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
                 >
@@ -1903,6 +1910,13 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                 >
                   <FaCircle className="menu--icon !text-[10px]" />
                   <span className="nav-text">Exercises</span>
+                </Link>
+                <Link
+                  to="/exercises-categories"
+                  className="text-white flex items-center gap-[5px] mb-2 text-sm"
+                >
+                  <FaCircle className="menu--icon !text-[10px]" />
+                  <span className="nav-text">Exercises Categories</span>
                 </Link>
                 <Link
                   to="/email-template-list"

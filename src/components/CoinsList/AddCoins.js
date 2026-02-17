@@ -13,7 +13,7 @@ const AddCoins = ({ setCoinsModal, details, handleUpdateCoins }) => {
   const leadBoxRef = useRef(null);
 
   const sourceData = [
-    { value: "Challlenges", label: "Challlenges" },
+    { value: "Challenges", label: "Challenges" },
     { value: "Referral", label: "Referral" },
     { value: "Compensation", label: "Compensation" },
   ];

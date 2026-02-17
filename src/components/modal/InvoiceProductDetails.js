@@ -38,7 +38,7 @@ const InvoiceProductDetails = ({
       setFilteredProducts(activeOnly);
     } catch (err) {
       console.error("Failed to fetch packages", err);
-      toast.error("Failed to fetch products");
+      toast.error("Failed to fetch packages");
       setFilteredProducts([]);
     } finally {
       setLoading(false);

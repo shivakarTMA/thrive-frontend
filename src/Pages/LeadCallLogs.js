@@ -53,9 +53,9 @@ const validationSchema = Yup.object().shape({
     then: (schema) => schema.required("Date and time is required"),
     otherwise: (schema) => schema.notRequired(),
   }),
-  schedule_for: Yup.string().when("call_status", {
+  training_by: Yup.string().when("call_status", {
     is: "Trial/Tour Scheduled",
-    then: (schema) => schema.required("Staff Name is required"),
+    then: (schema) => schema.required("Trainer is required"),
     otherwise: (schema) => schema.notRequired(),
   }),
 
@@ -241,12 +241,12 @@ const LeadCallLogs = () => {
     if (!val) return;
     formik.setFieldValue("trial_tour_datetime", val.toISOString());
     // reset selected trainer whenever date/time changes
-    formik.setFieldValue("schedule_for", "");
+    formik.setFieldValue("training_by", "");
   };
 
   // Staff select -> just the value/id
   const handleSelectSchedule = (_, selectedOption) => {
-    formik.setFieldValue("schedule_for", selectedOption?.value ?? "");
+    formik.setFieldValue("training_by", selectedOption?.value ?? "");
   };
 
   const now = new Date();
@@ -531,15 +531,15 @@ const LeadCallLogs = () => {
                       Trainer <span className="text-red-500">*</span>
                     </label>
                     <Select
-                      name="schedule_for"
+                      name="training_by"
                       value={
                         trainerList.find(
-                          (opt) => opt.value === formik.values.schedule_for,
+                          (opt) => opt.value === formik.values.training_by,
                         ) || null
                       }
                       options={trainerList}
                       onChange={(option) =>
-                        handleSelectSchedule("schedule_for", option)
+                        handleSelectSchedule("training_by", option)
                       }
                       placeholder="Select Trainer"
                       styles={customStyles}
@@ -552,10 +552,10 @@ const LeadCallLogs = () => {
                         </p>
                       )}
 
-                    {formik.touched.schedule_for &&
-                      formik.errors.schedule_for && (
+                    {formik.touched.training_by &&
+                      formik.errors.training_by && (
                         <p className="text-sm text-red-500 mt-1">
-                          {formik.errors.schedule_for}
+                          {formik.errors.training_by}
                         </p>
                       )}
                   </div>
@@ -602,29 +602,27 @@ const LeadCallLogs = () => {
                         <label className="mb-2 block">Schedule For</label>
 
                         <Select
-                          name="training_by"
+                          name="schedule_for"
                           value={
-                            staffList
-                              .flatMap((group) => group.options)
-                              .find(
+                            staffList.flatMap((group) => group.options).find(
                                 (opt) =>
-                                  opt.value === formik.values?.training_by,
+                                  opt.value === formik.values?.schedule_for,
                               ) || null
                           }
                           options={staffList}
                           onChange={(option) =>
-                            formik.setFieldValue("training_by", option.value)
+                            formik.setFieldValue("schedule_for", option.value)
                           }
                           onBlur={() =>
-                            formik.setFieldTouched("training_by", true)
+                            formik.setFieldTouched("schedule_for", true)
                           }
                           styles={customStyles}
                           isDisabled={editLog ? true : false}
                         />
-                        {formik.errors?.training_by &&
-                          formik.touched?.training_by && (
+                        {formik.errors?.schedule_for &&
+                          formik.touched?.schedule_for && (
                             <div className="text-red-500 text-sm">
-                              {formik.errors?.training_by}
+                              {formik.errors?.schedule_for}
                             </div>
                           )}
                       </div>

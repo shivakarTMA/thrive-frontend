@@ -778,15 +778,12 @@ const MemberList = () => {
                       </td>
                       <td className="px-2 py-4">
                         <div className="flex flex-col gap-1">
-                          {member?.lead_source === "APP" ? "100%" : "25%"}
+                          {member?.profile_completion}%
                           <div className="progress--bar bg-[#E5E5E5] rounded-full h-[10px] w-full max-w-[150px]">
                             <div
-                              className="bg--color w-full rounded-full h-full flex items-center"
+                              className="bg--color w-fit rounded-full h-full flex items-center"
                               style={{
-                                width:
-                                  member?.lead_source === "APP"
-                                    ? "100%"
-                                    : "25%",
+                                width:`${member?.profile_completion}%`
                               }}
                             ></div>
                           </div>

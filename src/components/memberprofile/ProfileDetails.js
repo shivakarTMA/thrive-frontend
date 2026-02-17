@@ -1375,7 +1375,10 @@ const ProfileDetails = ({ member }) => {
 
               <div className="grid grid-cols-4 gap-6">
                 <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 rounded-full bg--color flex items-center justify-center">
+                  <div
+                    className={`w-8 h-8 rounded-full flex items-center justify-center 
+                    ${member?.personal_information ? 'bg--color' : 'bg-[#D4D4D4]'}`}
+                  >
                     <IoCheckmark className="w-5 h-5 text-white" />
                   </div>
                   <span className="text-sm font-medium text-gray-700">
@@ -1384,7 +1387,10 @@ const ProfileDetails = ({ member }) => {
                 </div>
 
                 <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 rounded-full bg-[#D4D4D4] flex items-center justify-center">
+                  <div
+                    className={`w-8 h-8 rounded-full flex items-center justify-center 
+                    ${member?.terms_submitted ? 'bg--color' : 'bg-[#D4D4D4]'}`}
+                  >
                     <IoCheckmark className="w-5 h-5 text-white" />
                   </div>
                   <span className="text-sm font-medium text-gray-700">
@@ -1393,7 +1399,10 @@ const ProfileDetails = ({ member }) => {
                 </div>
 
                 <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 rounded-full bg--color flex items-center justify-center">
+                  <div
+                    className={`w-8 h-8 rounded-full flex items-center justify-center 
+                    ${member?.is_parq_submitted ? 'bg--color' : 'bg-[#D4D4D4]'}`}
+                  >
                     <IoCheckmark className="w-5 h-5 text-white" />
                   </div>
                   <span className="text-sm font-medium text-gray-700">
@@ -1402,7 +1411,10 @@ const ProfileDetails = ({ member }) => {
                 </div>
 
                 <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 rounded-full bg-[#D4D4D4] flex items-center justify-center">
+                  <div
+                    className={`w-8 h-8 rounded-full flex items-center justify-center 
+                    ${member?.is_kyc ? 'bg--color' : 'bg-[#D4D4D4]'}`}
+                  >
                     <IoCheckmark className="w-5 h-5 text-white" />
                   </div>
                   <span className="text-sm font-medium text-gray-700">
