@@ -228,6 +228,7 @@ const ProductCategoryList = () => {
                 {/* <th className="px-2 py-4">Module ID</th> */}
                 <th className="px-2 py-4">Image</th>
                 <th className="px-2 py-4">Title</th>
+                <th className="px-2 py-4">Club Name</th>
                 <th className="px-2 py-4">Position</th>
                 <th className="px-2 py-4">Status</th>
                 <th className="px-2 py-4">Action</th>
@@ -256,6 +257,7 @@ const ProductCategoryList = () => {
                       </div>
                     </td>
                     <td className="px-2 py-4">{item?.title}</td>
+                    <td className="px-2 py-4">{item?.club_name ? item?.club_name : "--"}</td>
                     <td>{item.position}</td>
                     <td className="px-2 py-4">
                       <div

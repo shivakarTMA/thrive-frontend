@@ -21,6 +21,7 @@ import {
 } from "../../Helper/helper";
 import { RiDeleteBin6Line } from "react-icons/ri";
 import ConfirmPopup from "../common/ConfirmPopup";
+import { FaCircle } from "react-icons/fa";
 
 // Define display position options
 const displayPosition = [
@@ -239,7 +240,18 @@ const ExerciesCategoryList = () => {
                     {/* <td className="px-2 py-4">{item?.club_name}</td> */}
                     <td className="px-2 py-4">{item?.title}</td>
                     <td className="px-2 py-4">{item?.position}</td>
-                    <td className="px-2 py-4">{formatText(item?.status)}</td>
+                    <td className="px-2 py-4">
+                      <div
+                        className={`flex gap-1 items-center ${
+                          item?.status === "ACTIVE"
+                            ? "text-green-500"
+                            : "text-red-500"
+                        }`}
+                      >
+                        <FaCircle />
+                        {item?.status ? formatText(item?.status) : "--"}
+                      </div>
+                    </td>
                     <td className="px-2 py-4">
                       {formatAutoDate(item?.createdAt)}
                     </td>

@@ -53,7 +53,6 @@ const CreatePackage = ({
   const [service, setService] = useState([]);
   const [staffList, setStaffList] = useState([]);
 
-  const [packageCategory, setPackageCategory] = useState([]);
   const getServiceType = (service_id, serviceOptions) => {
     const found = serviceOptions.find((s) => s.value === service_id);
     return found?.type || null;
@@ -122,24 +121,8 @@ const CreatePackage = ({
     }
   };
 
-  const fetchPackageCategory = async (search = "") => {
-    try {
-      const res = await authAxios().get("/package-category/list", {
-        params: search ? { search } : {},
-      });
-      let data = res.data?.data || res.data || [];
-      // filter only ACTIVE categories
-      const activeCategories = data.filter((item) => item.status === "ACTIVE");
-      setPackageCategory(activeCategories);
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to fetch Classes category");
-    }
-  };
-
   useEffect(() => {
     fetchClub();
-    fetchPackageCategory();
   }, []);
 
   useEffect(() => {
@@ -185,12 +168,6 @@ const CreatePackage = ({
       .filter(
         (item) => item.type !== "PRODUCT" && item.type !== "GROUP_CLASS",
       ) || [];
-
-  const packageCategoryOptions =
-    packageCategory?.map((item) => ({
-      label: item.title,
-      value: item.id,
-    })) || [];
 
   const fetchVariationList = async (packageId) => {
     try {
@@ -604,79 +581,6 @@ const CreatePackage = ({
                         </div>
                       )}
 
-                    {service_type_check &&
-                      service_type_check === "GROUP_CLASS" && (
-                        <>
-                          <div>
-                            <label className="mb-2 block">
-                              Category<span className="text-red-500">*</span>
-                            </label>
-
-                            <Select
-                              name="package_category_id"
-                              value={
-                                packageCategoryOptions.find(
-                                  (opt) =>
-                                    opt.value ===
-                                    formik.values.package_category_id,
-                                ) || null
-                              }
-                              options={packageCategoryOptions}
-                              onChange={(option) =>
-                                formik.setFieldValue(
-                                  "package_category_id",
-                                  option.value,
-                                )
-                              }
-                              onBlur={() =>
-                                formik.setFieldTouched(
-                                  "package_category_id",
-                                  true,
-                                )
-                              }
-                              styles={customStyles}
-                            />
-
-                            {formik.touched.package_category_id &&
-                              formik.errors.package_category_id && (
-                                <div className="text-red-500 text-sm">
-                                  {formik.errors.package_category_id}
-                                </div>
-                              )}
-                          </div>
-                          <div>
-                            <label className="mb-2 block">
-                              Trainer Name
-                              <span className="text-red-500">*</span>
-                            </label>
-
-                            <Select
-                              name="trainer_id"
-                              value={
-                                trainerOptions.find(
-                                  (opt) =>
-                                    opt.value === formik.values.trainer_id,
-                                ) || null
-                              }
-                              options={trainerOptions}
-                              onChange={(option) =>
-                                formik.setFieldValue("trainer_id", option.value)
-                              }
-                              onBlur={() =>
-                                formik.setFieldTouched("trainer_id", true)
-                              }
-                              styles={customStyles}
-                            />
-
-                            {formik.touched.trainer_id &&
-                              formik.errors.trainer_id && (
-                                <div className="text-red-500 text-sm">
-                                  {formik.errors.trainer_id}
-                                </div>
-                              )}
-                          </div>
-                        </>
-                      )}
 
                     {/* Name */}
                     <div>

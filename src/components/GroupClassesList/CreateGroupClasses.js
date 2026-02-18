@@ -103,12 +103,12 @@ const CreateGroupClasses = ({ setShowModal, editingOption, formik }) => {
     }
   };
 
-  const fetchPackageCategory = async (search = "") => {
+  const fetchPackageCategory = async (clubId = null) => {
     try {
-      const res = await authAxios().get("/package-category/list", {
-        params: search ? { search } : {},
-      });
-      let data = res.data?.data || res.data || [];
+      const params = {};
+      if (clubId) params.club_id = clubId;
+      const res = await authAxios().get("/package-category/list", { params });
+       let data = res.data?.data || res.data || [];
       // filter only ACTIVE categories
       const activeCategories = data.filter((item) => item.status === "ACTIVE");
       setPackageCategory(activeCategories);
@@ -120,7 +120,6 @@ const CreateGroupClasses = ({ setShowModal, editingOption, formik }) => {
 
   useEffect(() => {
     fetchClub();
-    fetchPackageCategory();
   }, []);
 
   useEffect(() => {
@@ -128,17 +127,20 @@ const CreateGroupClasses = ({ setShowModal, editingOption, formik }) => {
       fetchService(formik.values.club_id);
       fetchStudio(formik.values.club_id);
       fetchStaff(formik.values.club_id);
+      fetchPackageCategory(formik.values.club_id);
 
       // ❌ reset ONLY when NOT editing
       if (!editingOption) {
         formik.setFieldValue("service_id", "");
         formik.setFieldValue("studio_id", "");
         formik.setFieldValue("trainer_id", "");
+        formik.setFieldValue("package_category_id", "");
       }
     } else {
       setService([]);
       setStudio([]);
       setStaffList([]);
+      setPackageCategory([]);
     }
   }, [formik.values.club_id]);
 

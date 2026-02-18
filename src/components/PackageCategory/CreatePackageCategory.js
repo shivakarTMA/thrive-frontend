@@ -18,6 +18,7 @@ const CreatePackageCategory = ({
   formik,
   handleOverlayClick,
   leadBoxRef,
+  clubOptions,
 }) => {
   // ✅ Fetch role details when selectedId changes
   useEffect(() => {
@@ -34,6 +35,7 @@ const CreatePackageCategory = ({
           // ✅ Prefill formik fields with fetched data
           formik.setValues({
             title: data.title || "",
+            club_id: data.club_id || "",
             icon: data.icon || "",
             position: data.position || "",
             status: data.status || "",
@@ -121,6 +123,37 @@ const CreatePackageCategory = ({
                     {formik.touched.icon && formik.errors.icon && (
                       <p className="text-red-500 text-sm mt-1">
                         {formik.errors.icon}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="mb-2 block">
+                      Club<span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[10]">
+                        <FaListUl />
+                      </span>
+                      <Select
+                        name="club_id"
+                        value={
+                          clubOptions.find(
+                            (option) => option.value === formik.values.club_id,
+                          ) || null
+                        }
+                        options={clubOptions}
+                        onChange={(option) =>
+                          formik.setFieldValue("club_id", option.value)
+                        }
+                        onBlur={() => formik.setFieldTouched("club_id", true)}
+                        styles={selectIcon}
+                        className="!capitalize"
+                      />
+                    </div>
+                    {formik.touched.club_id && formik.errors.club_id && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {formik.errors.club_id}
                       </p>
                     )}
                   </div>

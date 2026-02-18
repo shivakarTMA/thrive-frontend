@@ -3,6 +3,7 @@ import Select from "react-select";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import {
+  Link,
   useLocation,
   useNavigate,
   useParams,
@@ -21,6 +22,7 @@ import { FaCalendarDays } from "react-icons/fa6";
 import { LuIndianRupee } from "react-icons/lu";
 import { format } from "date-fns";
 import { addYears, subYears } from "date-fns";
+import { MdOutlineKeyboardBackspace } from "react-icons/md";
 
 const validationSchema = Yup.object().shape({
   call_status: Yup.string().required("Call status is required"),
@@ -388,7 +390,14 @@ const LeadCallLogs = () => {
         </div>
       </div>
 
-      <div className="flex gap-5">
+      <Link
+          to={logId ? "/my-follow-ups":"/all-leads"}
+          className="flex items-center gap-2 mt-5 cursor-pointer border rounded-full w-fit border-black px-3 py-1 bg-black text-white"
+        >
+          <MdOutlineKeyboardBackspace /> <span>Back</span>
+        </Link>
+
+      <div className="flex gap-5 mt-5">
         <div className="z-[222] relative max-w-[500px] bg-white p-4 rounded-[10px] w-full box--shadow">
           <form onSubmit={formik.handleSubmit} className="sticky top-[50px]">
             <h2 className="text-xl font-semibold mb-4">

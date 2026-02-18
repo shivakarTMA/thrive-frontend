@@ -9,24 +9,57 @@ import { FaCircle } from "react-icons/fa6";
 import CreatePackageCategory from "./CreatePackageCategory";
 import { authAxios } from "../../config/config";
 import Pagination from "../common/Pagination";
+import { useSelector } from "react-redux";
+import Select from "react-select";
+import { customStyles } from "../../Helper/helper";
+import { IoSearchOutline } from "react-icons/io5";
 
 const PackageCategoryList = () => {
   const [showModal, setShowModal] = useState(false);
   const [packages, setPackages] = useState([]);
   const [editingOption, setEditingOption] = useState(null);
   const leadBoxRef = useRef(null);
+  const [club, setClub] = useState([]);
+  const [clubFilter, setClubFilter] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState(null);
+  const { user } = useSelector((state) => state.auth);
+  const userRole = user.role;
 
   const [page, setPage] = useState(1);
   const [rowsPerPage] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
 
-  const fetchPackageCategoryList = async (currentPage = page) => {
+  const fetchClub = async (search = "") => {
+    try {
+      const res = await authAxios().get("/club/list", {
+        params: search ? { search } : {},
+      });
+      let data = res.data?.data || res.data || [];
+      const activeClub = data.filter((item) => item.status === "ACTIVE");
+      setClub(activeClub);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to fetch companies");
+    }
+  };
+
+  const fetchPackageCategoryList = async (search = "", currentPage = page) => {
     try {
       const params = {
         page: currentPage,
         limit: rowsPerPage,
+         ...(search ? { search } : {}),
       };
+      if (clubFilter?.value) {
+        params.club_id = clubFilter.value;
+      }
+
+      if (statusFilter?.value) {
+        params.status = statusFilter.value;
+      }
+
       const res = await authAxios().get("/package-category/list", { params });
       let data = res.data?.data || res.data || [];
       setPackages(data);
@@ -40,8 +73,24 @@ const PackageCategoryList = () => {
   };
 
   useEffect(() => {
+    fetchClub();
     fetchPackageCategoryList();
   }, []);
+
+  const clubOptions =
+    club?.map((item) => ({
+      label: item.name, // Show club name
+      value: item.id, // Store club_id as ID
+    })) || [];
+
+  useEffect(() => {
+    const delayDebounce = setTimeout(() => {
+      setPage(1);
+      fetchPackageCategoryList(searchTerm, 1);
+    }, 300);
+
+    return () => clearTimeout(delayDebounce);
+  }, [searchTerm, clubFilter, statusFilter]);
 
   const handleOverlayClick = (e) => {
     if (leadBoxRef.current && !leadBoxRef.current.contains(e.target)) {
@@ -51,12 +100,14 @@ const PackageCategoryList = () => {
 
   const formik = useFormik({
     initialValues: {
+      club_id: "",
       title: "",
       icon: "",
       position: null,
       status: "ACTIVE",
     },
     validationSchema: Yup.object({
+      club_id: Yup.string().required("Club is required"),
       title: Yup.string().required("Title is required"),
       icon: Yup.string().required("Icon is required"),
       position: Yup.number().required("Position is required"),
@@ -66,6 +117,7 @@ const PackageCategoryList = () => {
       try {
         const formData = new FormData();
         formData.append("title", values.title);
+        formData.append("club_id", values.club_id);
         formData.append("position", values.position);
         formData.append("status", values.status);
 
@@ -104,6 +156,15 @@ const PackageCategoryList = () => {
     },
   });
 
+    useEffect(() => {
+      if (club.length > 0 && !clubFilter) {
+        setClubFilter({
+          label: club[0].name,
+          value: club[0].id,
+        });
+      }
+    }, [club]);
+
   return (
     <div className="page--content">
       <div className="flex items-end justify-between gap-2 mb-5">
@@ -125,6 +186,45 @@ const PackageCategoryList = () => {
           </button>
         </div>
       </div>
+      <div className="flex gap-3 mb-4">
+        <div className="mb-4 w-full max-w-[250px]">
+          <div className="relative">
+            <span className="absolute top-[50%] translate-y-[-50%] left-[15px]">
+              <IoSearchOutline />
+            </span>
+            <input
+              type="text"
+              placeholder="Search Studio..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="custom--input w-full input--icon"
+            />
+          </div>
+        </div>
+        <div className="w-fit min-w-[200px]">
+          <Select
+            placeholder="Filter by club"
+            options={clubOptions}
+            value={clubFilter}
+            onChange={setClubFilter}
+            isClearable={userRole === "ADMIN" ? true : false}
+            styles={customStyles}
+          />
+        </div>
+        <div className="w-full max-w-[200px]">
+          <Select
+            placeholder="Filter by Status"
+            options={[
+              { label: "Active", value: "ACTIVE" },
+              { label: "Inactive", value: "INACTIVE" },
+            ]}
+            value={statusFilter}
+            onChange={(option) => setStatusFilter(option)}
+            isClearable
+            styles={customStyles}
+          />
+        </div>
+      </div>
       <div className="box--shadow bg-white rounded-[15px] p-4">
         <div className="relative overflow-x-auto">
           <table className="w-full text-sm text-left text-gray-500">
@@ -132,6 +232,7 @@ const PackageCategoryList = () => {
               <tr>
                 {/* <th className="px-2 py-4">Module ID</th> */}
                 <th className="px-2 py-4">Image</th>
+                <th className="px-2 py-4">Club Name</th>
                 <th className="px-2 py-4">Title</th>
                 <th className="px-2 py-4">Position</th>
                 <th className="px-2 py-4">Status</th>
@@ -160,6 +261,7 @@ const PackageCategoryList = () => {
                         />
                       </div>
                     </td>
+                    <td className="px-2 py-4">{item?.club_name}</td>
                     <td className="px-2 py-4">{item?.title}</td>
                     <td className="px-2 py-4">{item.position}</td>
                     <td className="px-2 py-4">
@@ -222,6 +324,7 @@ const PackageCategoryList = () => {
           formik={formik}
           handleOverlayClick={handleOverlayClick}
           leadBoxRef={leadBoxRef}
+          clubOptions={clubOptions}
         />
       )}
     </div>

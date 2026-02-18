@@ -49,10 +49,15 @@ export default function GroupClassPanel({
     }
   };
 
-  const fetchCategoryClass = async () => {
+  const fetchCategoryClass = async (club_id = null) => {
     try {
-
-      const response = await authAxios().get("/package-category/list");
+      const params = {};
+      if (club_id) {
+        params.club_id = club_id;
+      }
+      const response = await authAxios().get("/package-category/list", {
+        params,
+      });
       const data = response.data?.data || [];
       const activeOnly = filterActiveItems(data);
       setCategoryList(activeOnly);
@@ -62,13 +67,38 @@ export default function GroupClassPanel({
     }
   };
 
+  // useEffect(() => {
+  //   if (clubId) {
+  //     fetchTrainer(clubId);
+  //     fetchCategoryClass(clubId);
+
+  //     setFilterValue("filterTrainer", null);
+  //     setFilterValue("filterCategory", null);
+  //     setCategoryList([]);
+  //   }
+  // }, [clubId]);
+
   useEffect(() => {
-    fetchCategoryClass();
     if (clubId) {
       fetchTrainer(clubId);
-
-      setFilterValue("filterTrainer", null);
+      fetchCategoryClass(clubId);
     }
+
+    // ✅ Reset Formik filter values
+    setFilterValue("filterCategory", null);
+    setFilterValue("filterBookingType", null);
+    setFilterValue("filterTrainer", null);
+
+    // ✅ Reset parent applied filters
+    setAppliedFilters({
+      package_category_id: null,
+      booking_type: null,
+      trainer_id: null,
+    });
+
+    // ✅ Optional: clear local lists while loading new club data
+    setTrainerList([]);
+    setCategoryList([]);
   }, [clubId]);
 
   const trainerOptions =
@@ -177,13 +207,13 @@ export default function GroupClassPanel({
                 <Select
                   value={
                     CategoryOptions.find(
-                      (opt) => opt.value === filterCategory
+                      (opt) => opt.value === filterCategory,
                     ) || null
                   }
                   onChange={(option) =>
                     setFilterValue(
                       "filterCategory",
-                      option ? option.value : null
+                      option ? option.value : null,
                     )
                   }
                   options={CategoryOptions}
@@ -199,13 +229,13 @@ export default function GroupClassPanel({
                 <Select
                   value={
                     BookingTypeOption.find(
-                      (opt) => opt.value === filterBookingType
+                      (opt) => opt.value === filterBookingType,
                     ) || null
                   }
                   onChange={(option) =>
                     setFilterValue(
                       "filterBookingType",
-                      option ? option.value : null
+                      option ? option.value : null,
                     )
                   }
                   options={BookingTypeOption}
@@ -227,7 +257,7 @@ export default function GroupClassPanel({
                   onChange={(option) =>
                     setFilterValue(
                       "filterTrainer",
-                      option ? option.value : null
+                      option ? option.value : null,
                     )
                   }
                   options={trainerOptions}

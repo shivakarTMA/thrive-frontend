@@ -747,14 +747,40 @@ const ConvertMemberForm = ({
     }
   };
 
-  const handleDobChange = (date) => {
-    if (!date) return;
-
-    formik.setFieldValue("date_of_birth", date);
-  };
-
   const fifteenYearsAgo = new Date();
   fifteenYearsAgo.setFullYear(fifteenYearsAgo.getFullYear() - 15);
+  fifteenYearsAgo.setMonth(11); // December
+  fifteenYearsAgo.setDate(31);
+
+  // const handleDobChange = (date) => {
+  //   if (!date) return;
+
+  //   formik.setFieldValue("date_of_birth", date);
+  // };
+
+   const handleDobChange = (date) => {
+      if (!date) return;
+      const today = new Date();
+      const birthDate = new Date(date);
+      const age =
+        today.getFullYear() -
+        date.getFullYear() -
+        (today < new Date(birthDate.setFullYear(today.getFullYear())) ? 1 : 0);
+  
+      if (age < 15) {
+        toast.error("Age must be at least 15 years");
+        return;
+      }
+      if (age >= 15 && age < 18) {
+        setPendingDob(date.toISOString());
+        setShowUnderageModal(true);
+      } else {
+        formik.setFieldValue("date_of_birth", date.toISOString()); // store ISO string
+      }
+    };
+
+  // const fifteenYearsAgo = new Date();
+  // fifteenYearsAgo.setFullYear(fifteenYearsAgo.getFullYear() - 15);
 
   const confirmDob = () => {
     formik.setFieldValue("date_of_birth", pendingDob);
@@ -1818,7 +1844,7 @@ const ConvertMemberForm = ({
       {showUnderageModal && (
         <ConfirmUnderAge
           title="Underage Confirmation"
-          message="Lead's age is less than 18. Do you still wish to continue?"
+          message="This lead is a minor (under 18 years old). Do you still wish to proceed?"
           onConfirm={confirmDob}
           onCancel={cancelDob}
         />

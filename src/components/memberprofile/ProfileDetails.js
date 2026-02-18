@@ -636,17 +636,23 @@ const ProfileDetails = ({ member }) => {
     }
   };
 
+  // const fifteenYearsAgo = new Date();
+  // fifteenYearsAgo.setFullYear(fifteenYearsAgo.getFullYear() - 15);
+
   const fifteenYearsAgo = new Date();
   fifteenYearsAgo.setFullYear(fifteenYearsAgo.getFullYear() - 15);
+  fifteenYearsAgo.setMonth(11); // December
+  fifteenYearsAgo.setDate(31);
 
   // Handle manual date selection
-  const handleDobChange = (date) => {
+ const handleDobChange = (date) => {
     if (!date) return;
     const today = new Date();
+    const birthDate = new Date(date);
     const age =
       today.getFullYear() -
       date.getFullYear() -
-      (today < new Date(date.setFullYear(today.getFullYear())) ? 1 : 0);
+      (today < new Date(birthDate.setFullYear(today.getFullYear())) ? 1 : 0);
 
     if (age < 15) {
       toast.error("Age must be at least 15 years");
@@ -1439,7 +1445,7 @@ const ProfileDetails = ({ member }) => {
       {showUnderageModal && (
         <ConfirmUnderAge
           title="Underage Confirmation"
-          message="This lead is a minor (under 18 years old). Do you still wish to proceed?"
+          message="This Member is a minor (under 18 years old). Do you still wish to proceed?"
           onConfirm={confirmDob}
           onCancel={cancelDob}
         />
