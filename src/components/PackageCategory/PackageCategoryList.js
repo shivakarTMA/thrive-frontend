@@ -44,13 +44,23 @@ const PackageCategoryList = () => {
       toast.error("Failed to fetch companies");
     }
   };
+  
+  useEffect(() => {
+    fetchClub();
+  }, []);
+
+  const clubOptions =
+    club?.map((item) => ({
+      label: item.name, // Show club name
+      value: item.id, // Store club_id as ID
+    })) || [];
 
   const fetchPackageCategoryList = async (search = "", currentPage = page) => {
     try {
       const params = {
         page: currentPage,
         limit: rowsPerPage,
-         ...(search ? { search } : {}),
+        ...(search ? { search } : {}),
       };
       if (clubFilter?.value) {
         params.club_id = clubFilter.value;
@@ -71,17 +81,6 @@ const PackageCategoryList = () => {
       toast.error("Failed to fetch companies");
     }
   };
-
-  useEffect(() => {
-    fetchClub();
-    fetchPackageCategoryList();
-  }, []);
-
-  const clubOptions =
-    club?.map((item) => ({
-      label: item.name, // Show club name
-      value: item.id, // Store club_id as ID
-    })) || [];
 
   useEffect(() => {
     const delayDebounce = setTimeout(() => {
@@ -156,14 +155,14 @@ const PackageCategoryList = () => {
     },
   });
 
-    useEffect(() => {
-      if (club.length > 0 && !clubFilter) {
-        setClubFilter({
-          label: club[0].name,
-          value: club[0].id,
-        });
-      }
-    }, [club]);
+  useEffect(() => {
+    if (club.length > 0 && !clubFilter) {
+      setClubFilter({
+        label: club[0].name,
+        value: club[0].id,
+      });
+    }
+  }, [club]);
 
   return (
     <div className="page--content">
@@ -194,7 +193,7 @@ const PackageCategoryList = () => {
             </span>
             <input
               type="text"
-              placeholder="Search Studio..."
+              placeholder="Search category..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="custom--input w-full input--icon"
@@ -313,7 +312,7 @@ const PackageCategoryList = () => {
           currentDataLength={packages.length}
           onPageChange={(newPage) => {
             setPage(newPage);
-            fetchPackageCategoryList(newPage);
+            fetchPackageCategoryList(searchTerm, newPage);
           }}
         />
       </div>
