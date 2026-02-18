@@ -105,7 +105,7 @@ const PackagesList = () => {
         params.club_id = clubFilter.value;
       }
 
-      const res = await authAxios().get("/package/list", { params });
+      const res = await authAxios().get("/package/list?package_type=SESSION", { params });
       const responseData = res.data;
       const data = responseData?.data || [];
 

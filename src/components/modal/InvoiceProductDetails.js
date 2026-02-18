@@ -8,11 +8,14 @@ const InvoiceProductDetails = ({
   packageId,
   isVariationModal = false,
   onClose, 
-  onSubmit 
+  onSubmit,
+  clubId,
 }) => {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [loading, setLoading] = useState(false);
+
+  console.log(clubId,'clubIdshivaki')
 
   useEffect(() => {
     if (isVariationModal) {
@@ -24,13 +27,13 @@ const InvoiceProductDetails = ({
       if (!serviceId) return;
       fetchPackages();
     }
-  }, [serviceId, packageId, isVariationModal]);
+  }, [serviceId, packageId, isVariationModal, clubId]);
 
   const fetchPackages = async () => {
     setLoading(true);
     try {
-      const response = await authAxios().get("/package/list", {
-        params: { service_id: serviceId }
+      const response = await authAxios().get("/package/list?booking_type=PAID", {
+        params: { service_id: serviceId, club_id: clubId }
       });
 
       const data = response.data?.data || response.data || [];
@@ -49,7 +52,7 @@ const InvoiceProductDetails = ({
     setLoading(true);
     try {
       const response = await authAxios().get("/package/variation/list", {
-        params: { package_id: packageId }
+        params: { package_id: packageId, club_id: clubId }
       });
 
       const data = response.data?.data || response.data || [];

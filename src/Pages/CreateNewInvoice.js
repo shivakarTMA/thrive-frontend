@@ -165,7 +165,7 @@ const CreateNewInvoice = ({ setInvoiceModal, selectedLeadMember }) => {
     start_date: Yup.date().when("service_name", {
       is: (name) =>
         ["PILATES", "RECOVERY", "PERSONAL TRAINING"].includes(
-          name?.toUpperCase()
+          name?.toUpperCase(),
         ),
       then: (schema) => schema.required("Start date is required"),
       otherwise: (schema) => schema.nullable(),
@@ -174,7 +174,7 @@ const CreateNewInvoice = ({ setInvoiceModal, selectedLeadMember }) => {
     start_time: Yup.string().when("service_name", {
       is: (name) =>
         ["PILATES", "RECOVERY", "PERSONAL TRAINING"].includes(
-          name?.toUpperCase()
+          name?.toUpperCase(),
         ),
       then: (schema) => schema.required("Start time is required"),
       otherwise: (schema) => schema.notRequired(),
@@ -210,7 +210,7 @@ const CreateNewInvoice = ({ setInvoiceModal, selectedLeadMember }) => {
             start_time: true,
             variation: true,
           },
-          true
+          true,
         );
         return;
       }
@@ -241,10 +241,10 @@ const CreateNewInvoice = ({ setInvoiceModal, selectedLeadMember }) => {
             toast.success("Service booked successfully");
           }
         } else {
-        // ❌ API status false
-        setInvoiceModal(false);
-        toast.success("Service booked successfully");
-      }
+          // ❌ API status false
+          setInvoiceModal(false);
+          toast.success("Service booked successfully");
+        }
 
         // if (res.data?.status) {
         //   toast.success("Payment initiated successfully");
@@ -264,7 +264,7 @@ const CreateNewInvoice = ({ setInvoiceModal, selectedLeadMember }) => {
     authAxios()
       .get("/service/list")
       .then((res) =>
-        setService(res.data.data.filter((s) => s.status === "ACTIVE"))
+        setService(res.data.data.filter((s) => s.status === "ACTIVE")),
       );
   }, []);
 
@@ -442,12 +442,17 @@ const CreateNewInvoice = ({ setInvoiceModal, selectedLeadMember }) => {
 
   // new
 
+  // console.log(formik.values?.club_id, "club_id");
+
+  const clubId = formik.values?.club_id;
+  
+
   // Fetch services
-  const fetchService = async (search = "") => {
+  const fetchService = async (clubId = null) => {
     try {
-      const res = await authAxios().get("/service/list", {
-        params: search ? { search } : {},
-      });
+      const params = {};
+      if (clubId) params.club_id = clubId;
+      const res = await authAxios().get("/service/list", { params });
       let data = res.data?.data || res.data || [];
       const activeService = data.filter((item) => item.status === "ACTIVE");
       setService(activeService);
@@ -458,8 +463,8 @@ const CreateNewInvoice = ({ setInvoiceModal, selectedLeadMember }) => {
   };
 
   useEffect(() => {
-    fetchService();
-  }, []);
+    fetchService(clubId);
+  }, [clubId]); // <-- dependency added
 
   // Re-validate when service changes
   useEffect(() => {
@@ -474,11 +479,11 @@ const CreateNewInvoice = ({ setInvoiceModal, selectedLeadMember }) => {
     }
   };
 
-  useEffect(() => {
-    console.log("Formik Errors:", formik.errors);
-    console.log("Formik Touched:", formik.touched);
-    console.log("Formik Values:", formik.values);
-  }, [formik.errors, formik.touched, formik.values]);
+  // useEffect(() => {
+  //   console.log("Formik Errors:", formik.errors);
+  //   console.log("Formik Touched:", formik.touched);
+  //   console.log("Formik Values:", formik.values);
+  // }, [formik.errors, formik.touched, formik.values]);
 
   return (
     <>
@@ -519,14 +524,14 @@ const CreateNewInvoice = ({ setInvoiceModal, selectedLeadMember }) => {
                           name="product_type"
                           options={productTypeOptions}
                           value={productTypeOptions.find(
-                            (opt) => opt.value === formik.values.product_type
+                            (opt) => opt.value === formik.values.product_type,
                           )}
                           onChange={(option) => {
                             formik.setFieldValue("product_type", option.value);
                             formik.setFieldValue("service_name", option.label); // ✅ KEY
                             formik.setFieldValue(
                               "productDetails",
-                              initialValues.productDetails
+                              initialValues.productDetails,
                             );
                             formik.setFieldValue("variation", null);
                             formik.setFieldValue("start_date", null);
@@ -699,7 +704,7 @@ const CreateNewInvoice = ({ setInvoiceModal, selectedLeadMember }) => {
                                       hour: "2-digit",
                                       minute: "2-digit",
                                       hour12: false,
-                                    })
+                                    }),
                                   );
                                 } else {
                                   formik.setFieldValue("start_time", "");
@@ -707,7 +712,7 @@ const CreateNewInvoice = ({ setInvoiceModal, selectedLeadMember }) => {
                                 formik.setFieldTouched(
                                   "start_time",
                                   true,
-                                  true
+                                  true,
                                 );
                               }}
                               onBlur={() =>
@@ -768,8 +773,8 @@ const CreateNewInvoice = ({ setInvoiceModal, selectedLeadMember }) => {
                             voucherStatus === "success"
                               ? "border-green-500"
                               : voucherStatus === "error"
-                              ? "border-red-500"
-                              : ""
+                                ? "border-red-500"
+                                : ""
                           }`}
                         />
                         <button
@@ -886,6 +891,7 @@ const CreateNewInvoice = ({ setInvoiceModal, selectedLeadMember }) => {
           serviceId={formik.values.product_type}
           onSubmit={handleProductSubmit}
           onClose={() => setShowProductModal(false)}
+          clubId={clubId}
         />
       )}
 
@@ -897,6 +903,7 @@ const CreateNewInvoice = ({ setInvoiceModal, selectedLeadMember }) => {
           isVariationModal={true}
           onSubmit={handleVariationSubmit}
           onClose={() => setShowVariationModal(false)}
+          clubId={clubId}
         />
       )}
 

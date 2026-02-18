@@ -12,6 +12,7 @@ import { FaCircle } from "react-icons/fa";
 import { Formik, Form, Field } from "formik";
 import * as Yup from "yup";
 import { IoCloseCircle } from "react-icons/io5";
+import { useSelector } from "react-redux";
 
 const dateFilterOptions = [
   { value: "today", label: "Today" },
@@ -91,6 +92,9 @@ const RefundRequests = () => {
   const [data] = useState(dummyData);
   const [clubList, setClubList] = useState([]);
   const [clubFilter, setClubFilter] = useState(null);
+  const { user } = useSelector((state) => state.auth);
+
+  const currentRole = user.role
 
   const [selectedRow, setSelectedRow] = useState(null);
   const [modalType, setModalType] = useState(null); // approve | deny | view
@@ -263,7 +267,9 @@ const RefundRequests = () => {
                 </th>
                 <th className="px-2 py-4 min-w-[120px]">Approved By</th>
                 <th className="px-2 py-4 min-w-[120px]">Status</th>
-                <th className="px-2 py-4 min-w-[140px]">Actions</th>
+                {currentRole !== "CLUB_MANAGER" && (
+                  <th className="px-2 py-4 min-w-[140px]">Actions</th>
+                )}
               </tr>
             </thead>
             <tbody>
@@ -308,6 +314,7 @@ const RefundRequests = () => {
                         <FaCircle className="text-[10px]" /> {row.Status}
                       </span>
                     </td>
+                    {currentRole !== "CLUB_MANAGER" && (
                     <td className="px-2 py-2">
                       {row.Status === "Pending" && (
                         <div className="flex gap-1 text-sm">
@@ -337,6 +344,7 @@ const RefundRequests = () => {
                         </button>
                       )}
                     </td>
+                    )}
                   </tr>
                 ))
               ) : (

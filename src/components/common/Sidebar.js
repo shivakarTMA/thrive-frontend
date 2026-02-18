@@ -341,7 +341,7 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
             {dropdownToggles["finance"] && (
               <div className="mt-2 pl-5 relative">
                 <div className="absolute h-[calc(100%-15px)] w-[2px] bg-white left-[23px] top-[8px]"></div>
-                <Link
+                {/* <Link
                   to="/reports/finance-reports/monthly-targets-report"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
                 >
@@ -354,7 +354,7 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                 >
                   <FaCircle className="menu--icon !text-[10px]" />
                   <span className="nav-text">Set Incentive Policy</span>
-                </Link>
+                </Link> */}
                 <Link
                   to="/reports/finance-reports/refund-requests"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
@@ -1076,7 +1076,7 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
             {dropdownToggles["finance"] && (
               <div className="mt-2 pl-5 relative">
                 <div className="absolute h-[calc(100%-15px)] w-[2px] bg-white left-[23px] top-[8px]"></div>
-                <Link
+                {/* <Link
                   to="/reports/finance-reports/monthly-targets-report"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
                 >
@@ -1089,7 +1089,7 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                 >
                   <FaCircle className="menu--icon !text-[10px]" />
                   <span className="nav-text">Set Incentive Policy</span>
-                </Link>
+                </Link> */}
                 <Link
                   to="/reports/finance-reports/refund-requests"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
@@ -1673,12 +1673,19 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
             {dropdownToggles["clubmanagerfinance"] && (
               <div className="mt-2 pl-5 relative">
                 <div className="absolute h-[calc(100%-15px)] w-[2px] bg-white left-[23px] top-[8px]"></div>
-                <Link
+                {/* <Link
                   to="/reports/finance-reports/monthly-targets-report"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
                 >
                   <FaCircle className="menu--icon !text-[10px]" />
                   <span className="nav-text">Set Monthly Targets</span>
+                </Link> */}
+                <Link
+                  to="reports/finance-reports/refund-requests"
+                  className="text-white flex items-center gap-[5px] mb-2 text-sm"
+                >
+                  <FaCircle className="menu--icon !text-[10px]" />
+                  <span className="nav-text">Refund Requests</span>
                 </Link>
               </div>
             )}
