@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
-import { mockData } from "../DummyData/DummyData";
 import ProfileDetails from "../components/memberprofile/ProfileDetails";
 import ServiceCard from "../components/memberprofile/ServiceCard";
 import OrderHistory from "../components/memberprofile/OrderHistory";

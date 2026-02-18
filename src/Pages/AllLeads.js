@@ -61,6 +61,7 @@ const AllLeads = () => {
   const [memberModal, setMemberModal] = useState(false);
   const [invoiceModal, setInvoiceModal] = useState(false);
   const [selectedLeadMember, setSelectedLeadMember] = useState(null);
+  const [selectedLeadClub, setSelectedLeadClub] = useState(null);
   const [sendPaymentModal, setSendPaymentModal] = useState(false);
   const [appointmentModal, setAppointmentModal] = useState(false);
 
@@ -1006,6 +1007,7 @@ const AllLeads = () => {
                                         onClick={() => {
                                           setSelectedLeadMember(row?.id);
                                           setAppointmentModal(true);
+                                          setSelectedLeadClub(row?.club_id)
                                         }}
                                         className="p-1 cursor-pointer"
                                       >
@@ -1103,6 +1105,7 @@ const AllLeads = () => {
           defaultCategory="complementary"
           memberType="LEAD"
           handleLeadUpdate={fetchLeadList}
+          clubId={selectedLeadClub}
         />
       )}
     </>

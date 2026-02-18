@@ -30,8 +30,8 @@ import MultiSelect from "react-multi-select-component";
 import { useSelector } from "react-redux";
 
 const yesNoOptions = [
-  { value: true, label: "Active" },
-  { value: false, label: "Inactive" },
+  { label: "Yes", value: true },
+  { label: "No", value: false },
 ];
 
 const today = new Date();
@@ -544,93 +544,6 @@ const CreateStaff = ({
                     )}
                   </div>
 
-                  <div className="md:col-span-3 space-y-4">
-                    <label className="mb-0 block">
-                      Profile Info.<span className="text-red-500">*</span>
-                    </label>
-                    {formik.values.content.map((item, index) => {
-                      return (
-                        <div
-                          key={index}
-                          className="grid grid-cols-3 gap-4 border p-4 rounded-md bg-gray-50 relative"
-                        >
-                          {/* Title */}
-                          <div className="mb-3">
-                            <label className="block mb-1">Title</label>
-                            <input
-                              type="text"
-                              className="custom--input w-full"
-                              value={item.title}
-                              onChange={(e) =>
-                                formik.setFieldValue(
-                                  `content[${index}].title`,
-                                  e.target.value,
-                                )
-                              }
-                            />
-                            {formik.touched.content?.[index]?.title &&
-                              formik.errors.content?.[index]?.title && (
-                                <p className="text-red-500 text-sm">
-                                  {formik.errors.content[index].title}
-                                </p>
-                              )}
-                          </div>
-
-                          {/* Description */}
-                          <div className="col-span-2 mb-3">
-                            <label className="block mb-1">Description</label>
-                            <input
-                              type="text"
-                              className="custom--input w-full"
-                              value={item.description}
-                              onChange={(e) =>
-                                formik.setFieldValue(
-                                  `content[${index}].description`,
-                                  e.target.value,
-                                )
-                              }
-                            />
-                            {formik.touched.content?.[index]?.description &&
-                              formik.errors.content?.[index]?.description && (
-                                <p className="text-red-500 text-sm">
-                                  {formik.errors.content[index].description}
-                                </p>
-                              )}
-                          </div>
-
-                          {/* Remove Button */}
-                          {formik.values.content.length > 1 && (
-                            <button
-                              type="button"
-                              className="absolute flex items-center justify-center px-1 py-1 bg-red-600 text-white rounded-full w-9 h-9 top-[-5px] right-[-5px]"
-                              onClick={() => {
-                                const updated = [...formik.values.content];
-                                updated.splice(index, 1);
-                                formik.setFieldValue("content", updated);
-                              }}
-                            >
-                              <FiTrash2 />
-                            </button>
-                          )}
-                        </div>
-                      );
-                    })}
-
-                    {/* Add New Item */}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        formik.setFieldValue("content", [
-                          ...formik.values.content,
-                          { title: "", description: "" },
-                        ]);
-                      }}
-                      className="flex items-center justify-center px-2 py-1 bg-black text-white rounded text-sm"
-                    >
-                      <FiPlus /> Add Content
-                    </button>
-                  </div>
-
                   {/* Conditionally rendered fields */}
                   {formik.values?.show_on_app === true && (
                     <>
@@ -733,6 +646,97 @@ const CreateStaff = ({
                               {formik.errors.description}
                             </p>
                           )}
+                      </div>
+
+                      {/* Profile Info */}
+                      <div className="md:col-span-3 space-y-4">
+                        <label className="mb-0 block">
+                          Profile Info.<span className="text-red-500">*</span>
+                        </label>
+                        {formik.values.content.map((item, index) => {
+                          return (
+                            <div
+                              key={index}
+                              className="grid grid-cols-3 gap-4 border p-4 rounded-md bg-gray-50 relative"
+                            >
+                              {/* Title */}
+                              <div className="mb-3">
+                                <label className="block mb-1">Title</label>
+                                <input
+                                  type="text"
+                                  className="custom--input w-full"
+                                  value={item.title}
+                                  onChange={(e) =>
+                                    formik.setFieldValue(
+                                      `content[${index}].title`,
+                                      e.target.value,
+                                    )
+                                  }
+                                />
+                                {formik.touched.content?.[index]?.title &&
+                                  formik.errors.content?.[index]?.title && (
+                                    <p className="text-red-500 text-sm">
+                                      {formik.errors.content[index].title}
+                                    </p>
+                                  )}
+                              </div>
+
+                              {/* Description */}
+                              <div className="col-span-2 mb-3">
+                                <label className="block mb-1">
+                                  Description
+                                </label>
+                                <input
+                                  type="text"
+                                  className="custom--input w-full"
+                                  value={item.description}
+                                  onChange={(e) =>
+                                    formik.setFieldValue(
+                                      `content[${index}].description`,
+                                      e.target.value,
+                                    )
+                                  }
+                                />
+                                {formik.touched.content?.[index]?.description &&
+                                  formik.errors.content?.[index]
+                                    ?.description && (
+                                    <p className="text-red-500 text-sm">
+                                      {formik.errors.content[index].description}
+                                    </p>
+                                  )}
+                              </div>
+
+                              {/* Remove Button */}
+                              {formik.values.content.length > 1 && (
+                                <button
+                                  type="button"
+                                  className="absolute flex items-center justify-center px-1 py-1 bg-red-600 text-white rounded-full w-9 h-9 top-[-5px] right-[-5px]"
+                                  onClick={() => {
+                                    const updated = [...formik.values.content];
+                                    updated.splice(index, 1);
+                                    formik.setFieldValue("content", updated);
+                                  }}
+                                >
+                                  <FiTrash2 />
+                                </button>
+                              )}
+                            </div>
+                          );
+                        })}
+
+                        {/* Add New Item */}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            formik.setFieldValue("content", [
+                              ...formik.values.content,
+                              { title: "", description: "" },
+                            ]);
+                          }}
+                          className="flex items-center justify-center px-2 py-1 bg-black text-white rounded text-sm"
+                        >
+                          <FiPlus /> Add Content
+                        </button>
                       </div>
                     </>
                   )}

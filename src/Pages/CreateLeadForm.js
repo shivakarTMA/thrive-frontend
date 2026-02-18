@@ -452,13 +452,8 @@ const CreateLeadForm = ({
       value: item.id,
     })) || [];
 
-  // const fifteenYearsAgo = new Date();
-  // fifteenYearsAgo.setFullYear(fifteenYearsAgo.getFullYear() - 15);
-
   const fifteenYearsAgo = new Date();
   fifteenYearsAgo.setFullYear(fifteenYearsAgo.getFullYear() - 15);
-  fifteenYearsAgo.setMonth(11); // December
-  fifteenYearsAgo.setDate(31);
 
   // Handle manual date selection
   const handleDobChange = (date) => {

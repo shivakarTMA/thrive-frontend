@@ -168,25 +168,37 @@ const StaffList = () => {
 
     profile_image: Yup.string().when("show_on_app", {
       is: true,
-      then: () => Yup.string().required("Image is required"),
+      then: (schema) => schema.required("Image is required"),
+      otherwise: (schema) => schema.notRequired(),
     }),
 
     description: Yup.string().when("show_on_app", {
       is: true,
-      then: () => Yup.string().required("Long Description is required"),
+      then: (schema) => schema.required("Long Description is required"),
+      otherwise: (schema) => schema.notRequired(),
     }),
+
     tags: Yup.string().when("show_on_app", {
       is: true,
-      then: () => Yup.string().required("Tags are required"),
+      then: (schema) => schema.required("Tags are required"),
+      otherwise: (schema) => schema.notRequired(),
     }),
-    content: Yup.array()
-      .of(
-        Yup.object({
-          title: Yup.string().required("Title is required"),
-          description: Yup.string().required("Description is required"),
-        }),
-      )
-      .min(1, "At least one content item is required"),
+
+    // Conditional validation for content array
+    content: Yup.array().when("show_on_app", {
+      is: true,
+      then: (schema) =>
+        schema
+          .of(
+            Yup.object({
+              title: Yup.string().required("Title is required"),
+              description: Yup.string().required("Description is required"),
+            }),
+          )
+          .min(1, "At least one content item is required")
+          .required("Content is required"),
+      otherwise: (schema) => schema.notRequired(),
+    }),
   });
 
   const initialValues = {
@@ -311,6 +323,7 @@ const StaffList = () => {
     setStaffToDelete(null);
     setShowConfirmPopup(false);
   };
+
 
   return (
     <div className="page--content">
@@ -455,7 +468,7 @@ const StaffList = () => {
                               : "bg-red-100 text-red-800"
                           }`}
                         >
-                          {row?.show_on_app === true ? "Active" : "Inactive"}
+                          {row?.show_on_app === true ? "Yes" : "No"}
                         </span>
                       ) : (
                         "--"

@@ -234,6 +234,7 @@ const Appointments = ({ details }) => {
           setAppointmentModal={setAppointmentModal}
           memberID={details?.id}
           handleUpdate={fetchAppointmentsList}
+          clubId={details?.club_id}
         />
       )}
     </div>

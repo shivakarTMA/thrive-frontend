@@ -749,8 +749,6 @@ const ConvertMemberForm = ({
 
   const fifteenYearsAgo = new Date();
   fifteenYearsAgo.setFullYear(fifteenYearsAgo.getFullYear() - 15);
-  fifteenYearsAgo.setMonth(11); // December
-  fifteenYearsAgo.setDate(31);
 
   // const handleDobChange = (date) => {
   //   if (!date) return;

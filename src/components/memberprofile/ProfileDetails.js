@@ -92,7 +92,10 @@ const ProfileDetails = ({ member }) => {
 
   const [emergencyContacts, setEmergencyContacts] = useState([]);
   const [newEmergencies, setNewEmergencies] = useState([]);
-  const [emergencyErrors, setEmergencyErrors] = useState([]);
+  const [emergencyErrors, setEmergencyErrors] = useState({
+    existing: {},
+    new: {},
+  });
 
   const fetchStaff = async () => {
     try {
@@ -146,7 +149,7 @@ const ProfileDetails = ({ member }) => {
   const fetchEmergencyContacts = async () => {
     try {
       const response = await authAxios().get(
-        `/member-emergency-contact/list?member_id=${memberId}`
+        `/member-emergency-contact/list?member_id=${memberId}`,
       );
       const res = response?.data?.data;
       setEmergencyContacts(res);
@@ -166,7 +169,7 @@ const ProfileDetails = ({ member }) => {
 
       // ✅ Filter only active companies
       const activeCompanies = data.filter(
-        (company) => company.status === "ACTIVE"
+        (company) => company.status === "ACTIVE",
       );
 
       // ✅ Convert to dropdown-friendly format
@@ -264,50 +267,77 @@ const ProfileDetails = ({ member }) => {
   // Map strings → objects for MultiSelect
   // --------------------
   const selectedInterested = servicesName.filter((item) =>
-    initialValues.interested_in.includes(item.value)
+    initialValues.interested_in.includes(item.value),
   );
 
   // ✅ Validate all emergency contacts
   const validateEmergencyContacts = () => {
-    const allContacts = [...emergencyContacts, ...newEmergencies];
-    const errors = {};
+    const errors = {
+      existing: {},
+      new: {},
+    };
+
     let isValid = true;
 
-    // Check if at least one contact exists
-    if (allContacts.length === 0) {
-      toast.error("At least one emergency contact is required");
+    // 🚨 If no contact at all
+    if (emergencyContacts.length + newEmergencies.length === 0) {
+      setEmergencyErrors({
+        existing: {},
+        new: {},
+        global: "At least one emergency contact is required",
+      });
       return false;
     }
 
-    // Validate each contact
-    allContacts.forEach((contact, index) => {
+    // ✅ Validate existing contacts
+    emergencyContacts.forEach((contact, index) => {
       const contactErrors = {};
 
-      if (!contact.name || contact.name.trim() === "") {
+      if (!contact.name?.trim()) {
         contactErrors.name = "Name is required";
         isValid = false;
       }
 
-      if (!contact.phone || contact.phone.trim() === "") {
+      if (!contact.phone?.trim()) {
         contactErrors.phone = "Phone is required";
         isValid = false;
       }
 
-      if (!contact.relationship || contact.relationship.trim() === "") {
+      if (!contact.relationship?.trim()) {
         contactErrors.relationship = "Relationship is required";
         isValid = false;
       }
 
       if (Object.keys(contactErrors).length > 0) {
-        errors[index] = contactErrors;
+        errors.existing[index] = contactErrors;
+      }
+    });
+
+    // ✅ Validate NEW contacts
+    newEmergencies.forEach((contact, index) => {
+      const contactErrors = {};
+
+      if (!contact.name?.trim()) {
+        contactErrors.name = "Name is required";
+        isValid = false;
+      }
+
+      if (!contact.phone?.trim()) {
+        contactErrors.phone = "Phone is required";
+        isValid = false;
+      }
+
+      if (!contact.relationship?.trim()) {
+        contactErrors.relationship = "Relationship is required";
+        isValid = false;
+      }
+
+      if (Object.keys(contactErrors).length > 0) {
+        errors.new[index] = contactErrors;
       }
     });
 
     setEmergencyErrors(errors);
-
-    if (!isValid) {
-      toast.error("Please fix emergency contact value");
-    }
 
     return isValid;
   };
@@ -334,7 +364,7 @@ const ProfileDetails = ({ member }) => {
           if (phoneNumber) {
             profilePayload.append(
               "country_code",
-              phoneNumber.countryCallingCode
+              phoneNumber.countryCallingCode,
             );
             profilePayload.append("mobile", phoneNumber.nationalNumber);
           }
@@ -375,12 +405,12 @@ const ProfileDetails = ({ member }) => {
             headers: {
               "Content-Type": "multipart/form-data",
             },
-          }
+          },
         );
         toast.success("Profile updated successfully.");
         console.log(
           "Profile updated successfully.",
-          profileResponse?.data?.data
+          profileResponse?.data?.data,
         );
 
         // ✅ Update Emergency Contacts
@@ -401,12 +431,12 @@ const ProfileDetails = ({ member }) => {
           if (contact.id) {
             await authAxios().put(
               `/member-emergency-contact/${contact.id}`,
-              contactPayload
+              contactPayload,
             );
           } else {
             await authAxios().post(
               `/member-emergency-contact/create`,
-              contactPayload
+              contactPayload,
             );
           }
         }
@@ -420,7 +450,7 @@ const ProfileDetails = ({ member }) => {
       } catch (error) {
         console.error("Error updating profile:", error);
         toast.error(
-          error?.response?.data?.message || "Failed to update profile."
+          error?.response?.data?.message || "Failed to update profile.",
         );
       }
     },
@@ -584,11 +614,11 @@ const ProfileDetails = ({ member }) => {
     } catch (error) {
       console.error(
         "Error checking phone uniqueness:",
-        error.response || error
+        error.response || error,
       );
       formik.setFieldError(
         "phoneFull",
-        "Unable to check phone number. Please try again."
+        "Unable to check phone number. Please try again.",
       );
     }
   };
@@ -627,25 +657,25 @@ const ProfileDetails = ({ member }) => {
     } catch (error) {
       console.error(
         "Error checking phone uniqueness:",
-        error.response || error
+        error.response || error,
       );
       formik.setFieldError(
         "Email",
-        "Unable to check phone number. Please try again."
+        "Unable to check phone number. Please try again.",
       );
     }
   };
 
-  // const fifteenYearsAgo = new Date();
-  // fifteenYearsAgo.setFullYear(fifteenYearsAgo.getFullYear() - 15);
-
   const fifteenYearsAgo = new Date();
   fifteenYearsAgo.setFullYear(fifteenYearsAgo.getFullYear() - 15);
-  fifteenYearsAgo.setMonth(11); // December
-  fifteenYearsAgo.setDate(31);
+
+  // const fifteenYearsAgo = new Date();
+  // fifteenYearsAgo.setFullYear(fifteenYearsAgo.getFullYear() - 15);
+  // fifteenYearsAgo.setMonth(11); // December
+  // fifteenYearsAgo.setDate(31);
 
   // Handle manual date selection
- const handleDobChange = (date) => {
+  const handleDobChange = (date) => {
     if (!date) return;
     const today = new Date();
     const birthDate = new Date(date);
@@ -797,29 +827,31 @@ const ProfileDetails = ({ member }) => {
             </div>
 
             {/* Referred By Section */}
-            <div className="border-t border-t-[#D4D4D4] pt-5">
-              <div className="text-md font-semibold text-black mb-2">
-                Referred By:
-              </div>
-              <div className="space-y-1">
-                <div className="flex justify-between">
-                  <span className="text-[#6F6F6F] font-[500] text-[15px]">
-                    Name:
-                  </span>
-                  <span className="text-[#6F6F6F] font-[500] text-[15px]">
-                    {member?.referrer_name || "N/A"}
-                  </span>
+            {member?.referrer_name && member?.referrer_id && (
+              <div className="border-t border-t-[#D4D4D4] pt-5">
+                <div className="text-md font-semibold text-black mb-2">
+                  Referred By:
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-[#6F6F6F] font-[500] text-[15px]">
-                    Referrer ID:
-                  </span>
-                  <span className="text-[#6F6F6F] font-[500] text-[15px]">
-                    {member?.referrer_id || "N/A"}
-                  </span>
+                <div className="space-y-1">
+                  <div className="flex justify-between">
+                    <span className="text-[#6F6F6F] font-[500] text-[15px]">
+                      Name:
+                    </span>
+                    <span className="text-[#6F6F6F] font-[500] text-[15px]">
+                      {member?.referrer_name || "N/A"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-[#6F6F6F] font-[500] text-[15px]">
+                      Referrer ID:
+                    </span>
+                    <span className="text-[#6F6F6F] font-[500] text-[15px]">
+                      {member?.referrer_id || "N/A"}
+                    </span>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
 
@@ -901,7 +933,7 @@ const ProfileDetails = ({ member }) => {
                   <Select
                     name="gender"
                     value={genderOptions.find(
-                      (opt) => opt.value === formik.values?.gender
+                      (opt) => opt.value === formik.values?.gender,
                     )}
                     options={genderOptions}
                     onChange={(option) =>
@@ -997,7 +1029,7 @@ const ProfileDetails = ({ member }) => {
                     name="gt"
                     value={
                       trainerList.find(
-                        (opt) => opt.value === formik.values?.gt
+                        (opt) => opt.value === formik.values?.gt,
                       ) || null
                     }
                     options={trainerList}
@@ -1016,7 +1048,7 @@ const ProfileDetails = ({ member }) => {
                     name="personal_trainer"
                     value={
                       trainerList.find(
-                        (opt) => opt.value === formik.values?.personal_trainer
+                        (opt) => opt.value === formik.values?.personal_trainer,
                       ) || null
                     }
                     options={trainerList}
@@ -1058,8 +1090,6 @@ const ProfileDetails = ({ member }) => {
                     className="custom--input w-full cursor-not-allowed pointer-events-none !bg-gray-100 !text-gray-500"
                     disabled={true}
                   />
-
-                  
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-black mb-2">
@@ -1073,7 +1103,6 @@ const ProfileDetails = ({ member }) => {
                     className="custom--input w-full cursor-not-allowed pointer-events-none !bg-gray-100 !text-gray-500"
                     disabled={true}
                   />
-                  
                 </div>
               </div>
             </div>
@@ -1094,7 +1123,7 @@ const ProfileDetails = ({ member }) => {
                     value={
                       formik.values?.company_name
                         ? companyOptions.find(
-                            (opt) => opt.value === formik.values?.company_name
+                            (opt) => opt.value === formik.values?.company_name,
                           ) || {
                             label: formik.values?.company_name,
                             value: formik.values?.company_name,
@@ -1150,9 +1179,18 @@ const ProfileDetails = ({ member }) => {
               <h2 className="text-xl font-semibold text-gray-900 mb-6">
                 Emergency Contact
               </h2>
+              {emergencyErrors?.global && (
+                <p className="text-red-500 text-sm mb-3">
+                  {emergencyErrors.global}
+                </p>
+              )}
 
               {emergencyContacts.map((contact, index) => {
-                const errs = emergencyErrors?.[index] || {};
+                const errs =
+                  (emergencyErrors?.existing &&
+                    emergencyErrors.existing[index]) ||
+                  {};
+
                 return (
                   <div
                     className="relative flex items-center gap-2"
@@ -1170,7 +1208,7 @@ const ProfileDetails = ({ member }) => {
                             updateEmergencyContactField(
                               index,
                               "name",
-                              e.target.value
+                              e.target.value,
                             )
                           }
                           className="custom--input w-full"
@@ -1214,7 +1252,7 @@ const ProfileDetails = ({ member }) => {
                             updateEmergencyContactField(
                               index,
                               "email",
-                              e.target.value
+                              e.target.value,
                             )
                           }
                           className="custom--input w-full"
@@ -1233,13 +1271,13 @@ const ProfileDetails = ({ member }) => {
                         <Select
                           options={relationList}
                           value={relationList.find(
-                            (option) => option.value === contact.relationship
+                            (option) => option.value === contact.relationship,
                           )}
                           onChange={(selectedOption) =>
                             updateEmergencyContactField(
                               index,
                               "relationship",
-                              selectedOption?.value
+                              selectedOption?.value,
                             )
                           }
                           styles={customStyles}
@@ -1267,10 +1305,7 @@ const ProfileDetails = ({ member }) => {
 
               {newEmergencies.map((contact, index) => {
                 const errs =
-                  (emergencyErrors &&
-                    emergencyErrors.new &&
-                    emergencyErrors.new[index]) ||
-                  {};
+                  (emergencyErrors?.new && emergencyErrors.new[index]) || {};
                 return (
                   <div
                     className="relative flex items-center gap-2"
@@ -1289,11 +1324,16 @@ const ProfileDetails = ({ member }) => {
                             updateNewEmergencyField(
                               index,
                               "name",
-                              e.target.value
+                              e.target.value,
                             )
                           }
                           className="custom--input w-full"
                         />
+                        {errs.name && (
+                          <p className="text-red-500 text-xs mt-1">
+                            {errs.name}
+                          </p>
+                        )}
                       </div>
 
                       <div>
@@ -1311,6 +1351,11 @@ const ProfileDetails = ({ member }) => {
                           countryCallingCodeEditable={false}
                           className="custom--input w-full custom--phone"
                         />
+                        {errs.phone && (
+                          <p className="text-red-500 text-xs mt-1">
+                            {errs.phone}
+                          </p>
+                        )}
                       </div>
 
                       <div>
@@ -1325,7 +1370,7 @@ const ProfileDetails = ({ member }) => {
                             updateNewEmergencyField(
                               index,
                               "email",
-                              e.target.value
+                              e.target.value,
                             )
                           }
                           className="custom--input w-full"
@@ -1339,17 +1384,22 @@ const ProfileDetails = ({ member }) => {
                         <Select
                           options={relationList}
                           value={relationList.find(
-                            (option) => option.value === contact.relationship
+                            (option) => option.value === contact.relationship,
                           )}
                           onChange={(selectedOption) =>
                             updateNewEmergencyField(
                               index,
                               "relationship",
-                              selectedOption.value
+                              selectedOption.value,
                             )
                           }
                           styles={customStyles}
                         />
+                        {errs.relationship && (
+                          <p className="text-red-500 text-xs mt-1">
+                            {errs.relationship}
+                          </p>
+                        )}
                       </div>
                     </div>
                     <div className="flex items-center">
@@ -1383,7 +1433,7 @@ const ProfileDetails = ({ member }) => {
                 <div className="flex items-center space-x-3">
                   <div
                     className={`w-8 h-8 rounded-full flex items-center justify-center 
-                    ${member?.personal_information ? 'bg--color' : 'bg-[#D4D4D4]'}`}
+                    ${member?.personal_information ? "bg--color" : "bg-[#D4D4D4]"}`}
                   >
                     <IoCheckmark className="w-5 h-5 text-white" />
                   </div>
@@ -1395,7 +1445,7 @@ const ProfileDetails = ({ member }) => {
                 <div className="flex items-center space-x-3">
                   <div
                     className={`w-8 h-8 rounded-full flex items-center justify-center 
-                    ${member?.terms_submitted ? 'bg--color' : 'bg-[#D4D4D4]'}`}
+                    ${member?.terms_submitted ? "bg--color" : "bg-[#D4D4D4]"}`}
                   >
                     <IoCheckmark className="w-5 h-5 text-white" />
                   </div>
@@ -1407,7 +1457,7 @@ const ProfileDetails = ({ member }) => {
                 <div className="flex items-center space-x-3">
                   <div
                     className={`w-8 h-8 rounded-full flex items-center justify-center 
-                    ${member?.is_parq_submitted ? 'bg--color' : 'bg-[#D4D4D4]'}`}
+                    ${member?.is_parq_submitted ? "bg--color" : "bg-[#D4D4D4]"}`}
                   >
                     <IoCheckmark className="w-5 h-5 text-white" />
                   </div>
@@ -1419,7 +1469,7 @@ const ProfileDetails = ({ member }) => {
                 <div className="flex items-center space-x-3">
                   <div
                     className={`w-8 h-8 rounded-full flex items-center justify-center 
-                    ${member?.is_kyc ? 'bg--color' : 'bg-[#D4D4D4]'}`}
+                    ${member?.is_kyc ? "bg--color" : "bg-[#D4D4D4]"}`}
                   >
                     <IoCheckmark className="w-5 h-5 text-white" />
                   </div>

@@ -9,39 +9,39 @@ import { IoCloseCircle } from "react-icons/io5";
 import { toast } from "react-toastify";
 import { authAxios } from "../../config/config";
 
-function toCapitalizedCase(inputString) {
-  return inputString
-    .replace(/_/g, " ") // Replace underscores with spaces
-    .split(" ") // Split string by spaces
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()) // Capitalize each word
-    .join(" "); // Join words back into a single string with spaces
-}
-
 // Main component
 const CreateLeadAppointment = ({
   setAppointmentModal,
   defaultCategory,
   memberID,
   memberType,
-  handleLeadUpdate
+  handleLeadUpdate,
+  clubId,
 }) => {
   const leadBoxRef = useRef(null);
   const [staffList, setStaffList] = useState([]);
   const [serviceList, setServiceList] = useState([]);
-  const [club, setClub] = useState([]);
+
+  console.log(clubId, "clubId");
 
   const now = new Date();
-  const minTime = new Date();
-  minTime.setHours(6, 0, 0, 0);
+  const minTimeDefault = new Date();
+  minTimeDefault.setHours(6, 0, 0, 0);
 
-  const maxTime = new Date();
-  maxTime.setHours(22, 0, 0, 0);
+  const maxTimeDefault = new Date();
+  maxTimeDefault.setHours(22, 0, 0, 0);
 
-  const fetchStaff = async (search = "") => {
+  // Helper to round up current time to next interval
+  const roundUpTime = (date, interval) => {
+    const ms = 1000 * 60 * interval; // interval in ms
+    return new Date(Math.ceil(date.getTime() / ms) * ms);
+  };
+
+  const fetchStaff = async (clubId = null) => {
     try {
-      const res = await authAxios().get("/staff/list?role=TRAINER", {
-        params: search ? { search } : {},
-      });
+      const params = {};
+      if (clubId) params.club_id = clubId;
+      const res = await authAxios().get("/staff/list?role=TRAINER", { params });
       let data = res.data?.data || res?.data || [];
       const activeService = data?.filter((item) => item?.status === "ACTIVE");
       setStaffList(activeService);
@@ -51,11 +51,11 @@ const CreateLeadAppointment = ({
     }
   };
 
-  const fetchService = async (search = "") => {
+  const fetchService = async (clubId = null) => {
     try {
-      const res = await authAxios().get("/service/list", {
-        params: search ? { search } : {},
-      });
+      const params = {};
+      if (clubId) params.club_id = clubId;
+      const res = await authAxios().get("/service/list", { params });
       let data = res.data?.data || res?.data || [];
       const activeService = data?.filter((item) => item?.status === "ACTIVE");
       setServiceList(activeService);
@@ -65,36 +65,14 @@ const CreateLeadAppointment = ({
     }
   };
 
-  // Function to fetch clubs
-  const fetchClub = async (search = "") => {
-    try {
-      const res = await authAxios().get("/club/list", {
-        params: search ? { search } : {},
-      });
-      let data = res.data?.data || res.data || [];
-
-      const activeOnly = filterActiveItems(data);
-      setClub(activeOnly);
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to fetch companies");
-    }
-  };
-
   useEffect(() => {
-    fetchStaff();
-    fetchService();
-    fetchClub();
-  }, []);
+    // Fetch services and staff based on clubId if provided
+    fetchStaff(clubId);
+    fetchService(clubId);
+  }, [clubId]); // <-- dependency added
 
   const staffListOptions =
     staffList?.map((item) => ({
-      label: item.name,
-      value: item.id,
-    })) || [];
-
-  const clubOptions =
-    club?.map((item) => ({
       label: item.name,
       value: item.id,
     })) || [];
@@ -110,8 +88,6 @@ const CreateLeadAppointment = ({
       ? [{ label: "Tour / Trial", value: "TOURTRIAL" }]
       : []),
   ];
-
-  console.log(appointmentTypes, "appointmentTypes");
 
   const appointmentCategories = [
     { value: "service", label: "Service Appointment" },
@@ -243,7 +219,7 @@ const CreateLeadAppointment = ({
                           if (!isServiceDisabled) {
                             formik.setFieldValue(
                               "appointment_category",
-                              cat.value
+                              cat.value,
                             );
                           }
                         }}
@@ -258,52 +234,29 @@ const CreateLeadAppointment = ({
             </div>
 
             {/* Complimentary Appointment Inputs */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-black mb-2">
-                  Club<span className="text-red-500">*</span>
-                </label>
-                <Select
-                  value={clubOptions.find(
-                    (option) => option.value === formik.values.club_id
-                  )}
-                  onChange={(selectedOption) =>
-                    formik.setFieldValue("club_id", selectedOption?.value || "")
-                  }
-                  options={clubOptions}
-                  styles={customStyles}
-                  placeholder="Select club"
-                />
-                {formik.errors.club_id && formik.touched.club_id && (
-                  <div className="text-red-500 text-sm">
-                    {formik.errors.club_id}
-                  </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-black mb-2">
+                Appointment Type<span className="text-red-500">*</span>
+              </label>
+              <Select
+                value={appointmentTypes.find(
+                  (option) => option.value === formik.values.service_id,
                 )}
-              </div>
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-black mb-2">
-                  Appointment Type<span className="text-red-500">*</span>
-                </label>
-                <Select
-                  value={appointmentTypes.find(
-                    (option) => option.value === formik.values.service_id
-                  )}
-                  onChange={(selectedOption) =>
-                    formik.setFieldValue(
-                      "service_id",
-                      selectedOption?.value || null
-                    )
-                  }
-                  options={appointmentTypes}
-                  styles={customStyles}
-                  placeholder="Select type"
-                />
-                {formik.errors.service_id && formik.touched.service_id && (
-                  <div className="text-red-500 text-sm">
-                    {formik.errors.service_id}
-                  </div>
-                )}
-              </div>
+                onChange={(selectedOption) =>
+                  formik.setFieldValue(
+                    "service_id",
+                    selectedOption?.value || null,
+                  )
+                }
+                options={appointmentTypes}
+                styles={customStyles}
+                placeholder="Select type"
+              />
+              {formik.errors.service_id && formik.touched.service_id && (
+                <div className="text-red-500 text-sm">
+                  {formik.errors.service_id}
+                </div>
+              )}
             </div>
 
             <div className="grid grid-cols-2 gap-4">
@@ -315,17 +268,47 @@ const CreateLeadAppointment = ({
                 <div className="custom--date">
                   <DatePicker
                     selected={formik.values.appointment_date}
-                    onChange={(date) =>
-                      formik.setFieldValue("appointment_date", date)
-                    }
+                    onChange={(date) => {
+                      if (!date) {
+                        formik.setFieldValue("appointment_date", null);
+                        return;
+                      }
+
+                      const newDate = new Date(date);
+                      const isToday =
+                        newDate.toDateString() === now.toDateString();
+
+                      if (isToday) {
+                        // Round current time to next 30-min slot
+                        const roundedNow = roundUpTime(now, 30);
+                        newDate.setHours(
+                          roundedNow.getHours(),
+                          roundedNow.getMinutes(),
+                          0,
+                          0,
+                        );
+                      } else {
+                        // Future dates → default to 6:00 AM
+                        newDate.setHours(6, 0, 0, 0);
+                      }
+
+                      formik.setFieldValue("appointment_date", newDate);
+                    }}
                     showTimeSelect
                     timeFormat="hh:mm aa"
                     dateFormat="dd/MM/yyyy hh:mm aa"
+                    timeIntervals={30} // time slot every 30 minutes
                     placeholderText="Select date & time"
                     className="custom--input !w-full"
                     minDate={now}
-                    minTime={minTime}
-                    maxTime={maxTime}
+                    minTime={
+                      formik.values.appointment_date &&
+                      formik.values.appointment_date.toDateString() ===
+                        now.toDateString()
+                        ? roundUpTime(now, 30) // next 30-min slot
+                        : minTimeDefault
+                    }
+                    maxTime={maxTimeDefault}
                   />
                   {formik.errors.appointment_date &&
                     formik.touched.appointment_date && (
@@ -346,14 +329,14 @@ const CreateLeadAppointment = ({
                   value={
                     formik.values.trainer_id
                       ? staffListOptions.find(
-                          (option) => option.value === formik.values.trainer_id
+                          (option) => option.value === formik.values.trainer_id,
                         )
                       : null
                   }
                   onChange={(selectedOption) =>
                     formik.setFieldValue(
                       "trainer_id",
-                      selectedOption?.value || null
+                      selectedOption?.value || null,
                     )
                   }
                   options={staffListOptions}
