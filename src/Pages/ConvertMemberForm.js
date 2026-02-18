@@ -1836,6 +1836,7 @@ const ConvertMemberForm = ({
           planType={formik.values?.plan_type}
           onClose={() => setShowProductModal(false)}
           onSubmit={handleProductSubmit}
+          clubId={formik.values?.club_id}
         />
       )}
 

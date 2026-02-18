@@ -2,13 +2,13 @@ import React, { useEffect, useState } from "react";
 import { authAxios } from "../../config/config";
 import { filterActiveItems } from "../../Helper/helper";
 
-const ProductModal = ({ selectedType, onClose, onSubmit, planType }) => {
+const ProductModal = ({ selectedType, onClose, onSubmit, planType, clubId }) => {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!selectedType || !planType) return;
+    if (!selectedType || !planType || !clubId) return;
 
     const fetchProducts = async () => {
       setLoading(true);
@@ -18,6 +18,7 @@ const ProductModal = ({ selectedType, onClose, onSubmit, planType }) => {
 
         const params = {
           plan_type: planType, // MUST match backend key
+          club_id:clubId
         };
 
         // -------------------------------
