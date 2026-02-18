@@ -669,7 +669,7 @@ const MarketingManagerDashboard = () => {
       </div>
 
       <div className="flex gap-3">
-        <div className="rounded-[15px] p-4 box--shadow bg-white w-[75%]">
+        <div className="rounded-[15px] p-4 box--shadow bg-white w-[100%]">
           <div className="flex gap-2 w-full mb-4">
             <div className="max-w-[180px] w-full">
               <Select
@@ -940,7 +940,7 @@ const MarketingManagerDashboard = () => {
             </div>
           </div>
 
-          <div className="border border-[#D4D4D4] rounded-[5px] bg-white p-2 pb-1 w-full relative mt-3">
+          {/* <div className="border border-[#D4D4D4] rounded-[5px] bg-white p-2 pb-1 w-full relative mt-3">
             <div className="flex justify-between items-center mb-4">
               <h2 className="font-semibold">Class Performances Overview</h2>
             </div>
@@ -981,9 +981,9 @@ const MarketingManagerDashboard = () => {
                 </tbody>
               </table>
             </div>
-          </div>
+          </div> */}
         </div>
-        <div className="w-[25%]">
+        {/* <div className="w-[25%]">
           <div className="rounded-[15px] p-4 box--shadow bg-white">
             <div>
               <p className="text-lg font-[600] mb-3 text-center">Summary </p>
@@ -1020,7 +1020,7 @@ const MarketingManagerDashboard = () => {
           <div className="rounded-[15px] p-4 box--shadow bg-white mt-4">
             <SolidGaugeChart />
           </div>
-        </div>
+        </div> */}
       </div>
 
       {/* <div className="rounded-[15px] p-4 w-full mt-2 box--shadow bg-white">

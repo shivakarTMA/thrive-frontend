@@ -22,7 +22,6 @@ import { addYears, format, subYears } from "date-fns";
 import { Link, useNavigate } from "react-router-dom";
 import HighchartsReact from "highcharts-react-official";
 import Highcharts from "highcharts";
-import { CiLocationOn } from "react-icons/ci";
 import SummaryDashboard from "../components/common/SummaryDashboard";
 import { LiaAngleLeftSolid, LiaAngleRightSolid } from "react-icons/lia";
 import SolidGaugeChart from "../components/ClubManagerChild/SolidGaugeChart";
@@ -32,6 +31,7 @@ import { toast } from "react-toastify";
 const summaryData = {
   Yesterday: {
     FollowUps: "10/50",
+    "Tour/Trials": "10/50",
     Appointments: "0/0",
     Classes: "4/5",
     MembershipExpiry: 12,
@@ -42,6 +42,7 @@ const summaryData = {
   },
   Today: {
     FollowUps: "17/50",
+    "Tour/Trials": "10/50",
     Appointments: "0/0",
     Classes: "5/5",
     MembershipExpiry: 11,
@@ -52,6 +53,7 @@ const summaryData = {
   },
   Tomorrow: {
     FollowUps: "8/50",
+    "Tour/Trials": "10/50",
     Appointments: "1/2",
     Classes: "2/5",
     MembershipExpiry: 10,
@@ -64,12 +66,13 @@ const summaryData = {
 
 const routeMap = {
   FollowUps: "/my-follow-ups",
-  Appointments: "",
-  Classes: "",
-  MembershipExpiry: "",
-  ServiceExpiry: "",
-  ClientBirthdays: "",
-  ClientAnniversaries: "",
+  "Tour/Trials": "/reports/appointments/all-trial-appointments",
+  Appointments: "/reports/all-bookings",
+  Classes: "/group-class",
+  MembershipExpiry: "/reports/operations-reports/membership-expiry-report",
+  ServiceExpiry: "/reports/operations-reports/service-expiry-report",
+  ClientBirthdays: "/birthday-report",
+  ClientAnniversaries: "/anniversary-report",
 };
 
 const dateFilterOptions = [
@@ -97,8 +100,14 @@ const classPerformance = [
     url: "/reports/all-bookings",
   },
 ];
+Highcharts.setOptions({
+  accessibility: {
+    enabled: false,
+  },
+});
 
 const FohDashboard = () => {
+  
   const navigate = useNavigate();
   const days = ["Yesterday", "Today", "Tomorrow"];
   const [dashboardData, setDashboardData] = useState([]);
@@ -121,41 +130,42 @@ const FohDashboard = () => {
   const [totalLeads, setTotalLeads] = useState(0);
 
   const [orders, setOrders] = useState([
-  {
-    id: "ORD001",
-    member_id: "MEM001",
-    member_name: "John Doe",
-    category: "Beverage",
-    product_name: "Latte",
-    final_amount: 180,
-    stock_pending: "No",
-    placedOn: "2025-04-28",
-    isDone: false,
-  },
-  {
-    id: "ORD002",
-    member_id: "MEM002",
-    member_name: "Jane Smith",
-    category: "Beverage",
-    product_name: "Black Coffee",
-    final_amount: 120,
-    stock_pending: "Yes",
-    placedOn: "2025-04-27",
-    isDone: false,
-  },
-  {
-    id: "ORD003",
-    member_id: "MEM003",
-    member_name: "Alex Brown",
-    category: "Food",
-    product_name: "Broccoli Soup",
-    final_amount: 200,
-    stock_pending: "No",
-    placedOn: "2025-04-26",
-    isDone: false,
-  },
-]);
-
+    {
+      id: "ORD001",
+      member: "John Doe",
+      items: "Latte & Salad",
+      placedOn: "2025-04-28",
+      isDone: false,
+    },
+    {
+      id: "ORD002",
+      member: "Jane Smith",
+      items: "Black Coffice",
+      placedOn: "2025-04-27",
+      isDone: false,
+    },
+    {
+      id: "ORD003",
+      member: "Jane Smith",
+      items: "Espresso",
+      placedOn: "2025-04-27",
+      isDone: false,
+    },
+    {
+      id: "ORD004",
+      member: "Jane Smith",
+      items: "Americano",
+      placedOn: "2025-04-27",
+      isDone: false,
+    },
+    {
+      id: "ORD005",
+      member: "Jane Smith",
+      items: "Broccoli Soup",
+      placedOn: "2025-04-27",
+      isDone: false,
+    },
+  ]);
 
   const fetchDashboardData = async () => {
     try {
@@ -277,7 +287,13 @@ const FohDashboard = () => {
       const activeOnly = filterActiveItems(data);
       setClubList(activeOnly);
 
-      if (activeOnly.length > 0) {
+      // if (activeOnly.length > 0) {
+      //   setClubFilter({
+      //     label: activeOnly[0].name,
+      //     value: activeOnly[0].id,
+      //   });
+      // }
+      if (!clubFilter && activeOnly.length > 0) {
         setClubFilter({
           label: activeOnly[0].name,
           value: activeOnly[0].id,
@@ -289,9 +305,9 @@ const FohDashboard = () => {
   };
   // Function to fetch role list
 
-  useEffect(() => {
-    fetchDashboardData();
-  }, [dateFilter, customFrom, customTo, clubFilter]);
+  // useEffect(() => {
+  //   fetchDashboardData();
+  // }, [dateFilter, customFrom, customTo, clubFilter]);
 
   useEffect(() => {
     fetchClub();
@@ -320,10 +336,17 @@ const FohDashboard = () => {
     value: item.id,
   }));
 
+  const selectedClub = clubOptions.find(
+    (option) => option.value === clubFilter?.value,
+  );
+
   // Enquiry line chart
   const maxValueLeads = Math.max(...leadSeries, 0);
 
   const leadsStatus = {
+     accessibility: {
+    enabled: false,
+  },
     chart: { type: "column", height: 300 },
     title: {
       text: "Enquiries",
@@ -352,7 +375,11 @@ const FohDashboard = () => {
     },
     legend: { enabled: false },
     tooltip: {
-      useHTML: true, // ✅ allows HTML tags like <b>
+      useHTML: true,
+      outside: true,
+      style: {
+        zIndex: 9999,
+      },
       formatter: function () {
         const label = this.point.category; // dynamic label
         const value = this.y; // count
@@ -409,6 +436,9 @@ const FohDashboard = () => {
   const maxValue = Math.max(...productSeries, 0);
 
   const productStatus = {
+     accessibility: {
+    enabled: false,
+  },
     chart: {
       type: "column",
       height: 300,
@@ -445,6 +475,7 @@ const FohDashboard = () => {
     },
     legend: { enabled: false },
     tooltip: {
+      outside: true,
       formatter: function () {
         let label = this.point.category;
 
@@ -517,19 +548,6 @@ const FohDashboard = () => {
   const currentData = summaryData[currentDay];
 
   // Memoize the URL generation
-  // const generateUrl = (baseUrl) => {
-  //   let url = `${baseUrl}&date=${encodeURIComponent(dateFilter?.value)}`;
-
-  //   // If custom dates are selected, append customFrom and customTo to the URL
-  //   if (dateFilter?.value === "custom") {
-  //     url += `&customFrom=${encodeURIComponent(
-  //       customFrom
-  //     )}&customTo=${encodeURIComponent(customTo)}`;
-  //   }
-
-  //   return url;
-  // };
-
   const generateUrl = useCallback(
     (baseUrl) => {
       const params = new URLSearchParams();
@@ -570,7 +588,7 @@ const FohDashboard = () => {
           <div className="w-fit min-w-[180px]">
             <Select
               placeholder="Filter by club"
-              value={clubFilter}
+              value={selectedClub || null}
               options={clubOptions}
               onChange={(option) => setClubFilter(option)}
               // isClearable
@@ -934,7 +952,7 @@ const FohDashboard = () => {
                     <th className="p-2">Scheduled</th>
                     <th className="p-2">Bookings</th>
                     <th className="p-2">Cancellations</th>
-                    {/* <th className="p-2">Action</th> */}
+                    <th className="p-2">Action</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -950,14 +968,14 @@ const FohDashboard = () => {
                       <td className="p-2">
                         {String(item.cancellations).padStart(2, "0")}
                       </td>
-                      {/* <td className="p-2">
+                      <td className="p-2">
                         <Link
                           to={generateUrl(item.url)}
                           className="bg-[#F1F1F1] border border-[#D4D4D4] rounded-[5px] w-[32px] h-[32px] flex items-center justify-center cursor-pointer"
                         >
                           <img src={eyeIcon} />
                         </Link>
-                      </td> */}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -969,7 +987,7 @@ const FohDashboard = () => {
           <div className="rounded-[15px] p-4 box--shadow bg-white">
             <div>
               <p className="text-lg font-[600] mb-3 text-center">Summary </p>
-              {/* <div className="flex justify-between gap-3 items-center rounded-full bg-[#F1F1F1] px-3 py-2">
+              <div className="flex justify-between gap-3 items-center rounded-full bg-[#F1F1F1] px-3 py-2">
                 <button
                   onClick={handlePrevious}
                   disabled={currentDayIndex === 0}
@@ -991,13 +1009,17 @@ const FohDashboard = () => {
                 >
                   <LiaAngleRightSolid />
                 </button>
-              </div> */}
-              <SummaryDashboard data={currentData} routeMap={routeMap} />
+              </div>
+              <SummaryDashboard
+                data={currentData}
+                routeMap={routeMap}
+                generateUrl={generateUrl}
+              />
             </div>
           </div>
-          <div className="rounded-[15px] p-4 box--shadow bg-white mt-4">
+          {/* <div className="rounded-[15px] p-4 box--shadow bg-white mt-4">
             <SolidGaugeChart />
-          </div>
+          </div> */}
         </div>
       </div>
 

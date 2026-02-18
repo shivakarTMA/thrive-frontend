@@ -19,10 +19,9 @@ import {
   formatIndianNumber,
 } from "../Helper/helper";
 import { addYears, format, subYears } from "date-fns";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import HighchartsReact from "highcharts-react-official";
 import Highcharts from "highcharts";
-import { CiLocationOn } from "react-icons/ci";
 import SummaryDashboard from "../components/common/SummaryDashboard";
 import { LiaAngleLeftSolid, LiaAngleRightSolid } from "react-icons/lia";
 import SolidGaugeChart from "../components/ClubManagerChild/SolidGaugeChart";
@@ -32,6 +31,7 @@ import { toast } from "react-toastify";
 const summaryData = {
   Yesterday: {
     FollowUps: "10/50",
+    "Tour/Trials": "10/50",
     Appointments: "0/0",
     Classes: "4/5",
     MembershipExpiry: 12,
@@ -42,6 +42,7 @@ const summaryData = {
   },
   Today: {
     FollowUps: "17/50",
+    "Tour/Trials": "10/50",
     Appointments: "0/0",
     Classes: "5/5",
     MembershipExpiry: 11,
@@ -52,6 +53,7 @@ const summaryData = {
   },
   Tomorrow: {
     FollowUps: "8/50",
+    "Tour/Trials": "10/50",
     Appointments: "1/2",
     Classes: "2/5",
     MembershipExpiry: 10,
@@ -64,12 +66,13 @@ const summaryData = {
 
 const routeMap = {
   FollowUps: "/my-follow-ups",
-  Appointments: "",
-  Classes: "",
-  MembershipExpiry: "",
-  ServiceExpiry: "",
-  ClientBirthdays: "",
-  ClientAnniversaries: "",
+  "Tour/Trials": "/reports/appointments/all-trial-appointments",
+  Appointments: "/reports/all-bookings",
+  Classes: "/group-class",
+  MembershipExpiry: "/reports/operations-reports/membership-expiry-report",
+  ServiceExpiry: "/reports/operations-reports/service-expiry-report",
+  ClientBirthdays: "/birthday-report",
+  ClientAnniversaries: "/anniversary-report",
 };
 
 const dateFilterOptions = [
@@ -86,31 +89,25 @@ const classPerformance = [
     bookings: 4,
     reservations: 95,
     cancellations: 3,
+    url: "/group-class",
   },
   {
     id: 2,
-    classType: "Pilates",
+    classType: "Sessions",
     bookings: 10,
     reservations: 10,
     cancellations: 0,
-  },
-  {
-    id: 3,
-    classType: "Recovery",
-    bookings: 5,
-    reservations: 5,
-    cancellations: 1,
-  },
-  {
-    id: 4,
-    classType: "Personal Training",
-    bookings: 8,
-    reservations: 8,
-    cancellations: 2,
+    url: "/reports/all-bookings",
   },
 ];
+Highcharts.setOptions({
+  accessibility: {
+    enabled: false,
+  },
+});
 
 const FinanceManagerDashboard = () => {
+  
   const navigate = useNavigate();
   const days = ["Yesterday", "Today", "Tomorrow"];
   const [dashboardData, setDashboardData] = useState([]);
@@ -121,6 +118,17 @@ const FinanceManagerDashboard = () => {
   const [customTo, setCustomTo] = useState(null);
   const [clubList, setClubList] = useState([]);
   const [clubFilter, setClubFilter] = useState(null);
+
+  // Product Sold
+  const [productSeries, setProductSeries] = useState([]);
+  const [productCategories, setProductCategories] = useState([]);
+  const [totalProductValue, setTotalProductValue] = useState(0);
+
+  // Enquiry
+  const [leadCategories, setLeadCategories] = useState([]);
+  const [leadSeries, setLeadSeries] = useState([]);
+  const [totalLeads, setTotalLeads] = useState(0);
+
   const [orders, setOrders] = useState([
     {
       id: "ORD001",
@@ -188,6 +196,89 @@ const FinanceManagerDashboard = () => {
     }
   };
 
+  const fetchProductStatus = async () => {
+    try {
+      const params = {};
+
+      // Date filter
+      if (dateFilter?.value && dateFilter.value !== "custom") {
+        params.dateFilter = dateFilter.value;
+      }
+
+      // Custom date filter
+      if (dateFilter?.value === "custom" && customFrom && customTo) {
+        params.startDate = format(customFrom, "yyyy-MM-dd");
+        params.endDate = format(customTo, "yyyy-MM-dd");
+      }
+
+      // Club filter
+      if (clubFilter?.value) {
+        params.club_id = clubFilter.value;
+      }
+
+      const res = await authAxios().get("/dashboard/service/count", { params });
+
+      const apiData = res.data?.data || {};
+      const services = apiData.service_wise_count || [];
+
+      setTotalProductValue(apiData.total_count || 0);
+
+      // 🟢 Fully dynamic
+      const categories = services.map((item) => item.service_name);
+      const seriesData = services.map((item) => item.count);
+
+      setProductCategories(categories);
+      setProductSeries(seriesData);
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to fetch product status");
+    }
+  };
+
+  const fetchLeadStatus = async () => {
+    try {
+      const params = {};
+
+      // Date filter
+      if (dateFilter?.value && dateFilter.value !== "custom") {
+        params.dateFilter = dateFilter.value;
+      }
+
+      // Custom date filter
+      if (dateFilter?.value === "custom" && customFrom && customTo) {
+        params.startDate = format(customFrom, "yyyy-MM-dd");
+        params.endDate = format(customTo, "yyyy-MM-dd");
+      }
+
+      // Club filter
+      if (clubFilter?.value) {
+        params.club_id = clubFilter.value;
+      }
+
+      const res = await authAxios().get("/dashboard/enquiry/count", { params });
+
+      const apiData = res.data?.data || {};
+      const statuses = apiData.lead_status_count || [];
+
+      setTotalLeads(apiData.total_count || 0);
+
+      // Optional: Friendly names (capitalize first letter)
+      const categories = statuses.map((item) =>
+        item.lead_status
+          .split(" ")
+          .map((w) => w[0].toUpperCase() + w.slice(1))
+          .join(" "),
+      );
+      const seriesData = statuses.map((item) => item.count);
+
+      setLeadCategories(categories);
+      setLeadSeries(seriesData);
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to fetch enquiry status");
+    }
+  };
+
   // Function to fetch club list
   const fetchClub = async () => {
     try {
@@ -196,7 +287,13 @@ const FinanceManagerDashboard = () => {
       const activeOnly = filterActiveItems(data);
       setClubList(activeOnly);
 
-      if (activeOnly.length > 0) {
+      // if (activeOnly.length > 0) {
+      //   setClubFilter({
+      //     label: activeOnly[0].name,
+      //     value: activeOnly[0].id,
+      //   });
+      // }
+      if (!clubFilter && activeOnly.length > 0) {
         setClubFilter({
           label: activeOnly[0].name,
           value: activeOnly[0].id,
@@ -208,9 +305,9 @@ const FinanceManagerDashboard = () => {
   };
   // Function to fetch role list
 
-  useEffect(() => {
-    fetchDashboardData();
-  }, [dateFilter, customFrom, customTo, clubFilter]);
+  // useEffect(() => {
+  //   fetchDashboardData();
+  // }, [dateFilter, customFrom, customTo, clubFilter]);
 
   useEffect(() => {
     fetchClub();
@@ -222,25 +319,35 @@ const FinanceManagerDashboard = () => {
     }
   }, [dateFilter, customFrom, customTo, clubFilter]);
 
+  useEffect(() => {
+    if (dateFilter?.value !== "custom" || (customFrom && customTo)) {
+      fetchProductStatus();
+    }
+  }, [dateFilter, customFrom, customTo, clubFilter]);
+
+  useEffect(() => {
+    if (dateFilter?.value !== "custom" || (customFrom && customTo)) {
+      fetchLeadStatus();
+    }
+  }, [dateFilter, customFrom, customTo, clubFilter]);
+
   const clubOptions = clubList.map((item) => ({
     label: item.name,
     value: item.id,
   }));
 
-  const dataProductSeries = [5, 3, 7, 2, 4];
-  const totalProcutValue = dataProductSeries.reduce(
-    (sum, value) => sum + value,
-    0
+  const selectedClub = clubOptions.find(
+    (option) => option.value === clubFilter?.value,
   );
 
-  const dataSeries = [5, 6, 2, 3, 1];
-  const totalValue = dataSeries.reduce((sum, value) => sum + value, 0);
+  // Enquiry line chart
+  const maxValueLeads = Math.max(...leadSeries, 0);
 
   const leadsStatus = {
-    chart: {
-      type: "column",
-      height: 300,
-    },
+     accessibility: {
+    enabled: false,
+  },
+    chart: { type: "column", height: 300 },
     title: {
       text: "Enquiries",
       align: "left",
@@ -252,7 +359,7 @@ const FinanceManagerDashboard = () => {
       },
     },
     xAxis: {
-      categories: ["Lead", "Opportunity", "New", "Won", "Lost"],
+      categories: leadCategories,
       labels: {
         style: {
           fontSize: "13px",
@@ -263,26 +370,29 @@ const FinanceManagerDashboard = () => {
     },
     yAxis: {
       min: 0,
-      gridLineColor: "#e5e5e5",
-      title: {
-        text: null,
-      },
-      maxPadding: 0.1, // adds space at the top
-      tickInterval: 1,
+      tickInterval: Math.max(1, Math.ceil(maxValueLeads / 5)),
+      title: { text: null },
     },
-    legend: {
-      enabled: false,
-    },
+    legend: { enabled: false },
     tooltip: {
-      pointFormat: "Count: <b>{point.y}</b>",
+      useHTML: true,
+      outside: true,
+      style: {
+        zIndex: 9999,
+      },
+      formatter: function () {
+        const label = this.point.category; // dynamic label
+        const value = this.y; // count
+
+        return `<b>${label}</b><br/>Count: <b>${value}</b>`;
+      },
     },
     plotOptions: {
       column: {
         pointWidth: 40,
-        borderRadius: 0,
+        borderWidth: 0,
         pointPadding: 0.1,
         groupPadding: 0.05,
-        borderWidth: 0,
         width: 50,
         color: {
           linearGradient: { x1: 0, y1: 0, x2: 0, y2: 1 },
@@ -297,36 +407,38 @@ const FinanceManagerDashboard = () => {
         point: {
           events: {
             click: function () {
-              // Example: open a link based on category
-              const linkMap = {
-                Lead: generateUrl(`/all-leads?leadStatus=Lead`),
-                Opportunity: generateUrl(`/all-leads?leadStatus=Opportunity`),
-                New: generateUrl(`/all-leads?leadStatus=New`),
-                Won: generateUrl(`/all-leads?leadStatus=Won`),
-                Lost: generateUrl(`/all-leads?leadStatus=Lost`),
-              };
-              const targetLink = linkMap[this.category];
-              if (targetLink) {
-                window.location.href = targetLink; // navigate to link
+              const category = this.category;
+
+              let target;
+
+              if (category.toLowerCase() === "won") {
+                // 👑 Special case for Won
+                target = generateUrl(
+                  "/reports/sales-reports/membership-sales-report",
+                );
+              } else {
+                // 🔁 Default for all other statuses
+                target = generateUrl(
+                  `/reports/sales-reports/all-enquiries-report?lead_status=${category}`,
+                );
               }
+              window.location.href = target;
             },
           },
         },
       },
     },
-
-    series: [
-      {
-        name: "Leads",
-        data: dataSeries,
-      },
-    ],
-    credits: {
-      enabled: false,
-    },
+    series: [{ name: "Leads", data: leadSeries }],
+    credits: { enabled: false },
   };
 
+  // Product Sold Chart
+  const maxValue = Math.max(...productSeries, 0);
+
   const productStatus = {
+     accessibility: {
+    enabled: false,
+  },
     chart: {
       type: "column",
       height: 300,
@@ -342,49 +454,44 @@ const FinanceManagerDashboard = () => {
       },
     },
     xAxis: {
-      categories: [
-        "Membership",
-        "Personal Training",
-        "Recovery",
-        "Nourish",
-        "Pilates",
-      ],
+      categories: productCategories,
       labels: {
         style: {
           fontSize: "13px",
           fontWeight: "700",
           fontFamily: "Roboto, sans-serif",
         },
-        rotation: 0, // Prevent rotation even if text is long
         formatter: function () {
-          // Just add <br> for line break (manual)
-          return this.value.replace(" ", "<br>");
+          if (this.value === "SUBSCRIPTION") return "Membership";
+          if (this.value === "PRODUCT") return "Nourish";
+          return this.value; // everything else stays dynamic
         },
       },
     },
     yAxis: {
       min: 0,
-      gridLineColor: "#e5e5e5",
-      title: {
-        text: null,
-      },
-      maxPadding: 0.1, // adds space at the top
-      tickInterval: 1,
+      tickInterval: Math.max(1, Math.ceil(maxValue / 5)),
+      title: { text: null },
     },
-    legend: {
-      enabled: false,
-    },
+    legend: { enabled: false },
     tooltip: {
-      pointFormat: "Count: <b>{point.y}</b>",
+      outside: true,
+      formatter: function () {
+        let label = this.point.category;
+
+        console.log(label, "map label");
+
+        if (label === "SUBSCRIPTION") label = "Membership";
+        if (label === "PRODUCT") label = "Nourish";
+
+        return `<b>${label}</b><br/>Count: <b>${this.y}</b>`;
+      },
     },
+
     plotOptions: {
       column: {
         pointWidth: 40,
-        borderRadius: 0,
-        pointPadding: 0.1,
-        groupPadding: 0.05,
         borderWidth: 0,
-        width: 50,
         color: {
           linearGradient: { x1: 0, y1: 0, x2: 0, y2: 1 },
           stops: [
@@ -398,34 +505,30 @@ const FinanceManagerDashboard = () => {
         point: {
           events: {
             click: function () {
-              // Example: open a link based on category
-              const linkMap = {
-                Membership: "/reports/all-orders/",
-                "Personal Training": "/reports/all-orders/",
-                Recovery: "/reports/all-orders/",
-                Nourish: "/reports/all-orders/",
-                Pilates: "/reports/all-orders/",
-              };
-              const targetLink = linkMap[this.category];
-              if (targetLink) {
-                window.location.href = targetLink; // navigate to link
-              }
+              const value = this.category;
+              const isPackageType =
+                value === "SUBSCRIPTION" || value === "PRODUCT";
+
+              const paramKey = isPackageType ? "package_type" : "service_type";
+              const target = generateUrl(
+                `/reports/all-orders?${paramKey}=${value}`,
+              );
+              window.location.href = target;
             },
           },
         },
       },
     },
-
     series: [
       {
-        name: "Product",
-        data: dataProductSeries,
+        name: "Service",
+        data: productSeries,
       },
     ],
-    credits: {
-      enabled: false,
-    },
+    credits: { enabled: false },
   };
+
+  // End Product Sold Chart
 
   // Handler to move to previous day
   const handlePrevious = () => {
@@ -445,19 +548,6 @@ const FinanceManagerDashboard = () => {
   const currentData = summaryData[currentDay];
 
   // Memoize the URL generation
-  // const generateUrl = (baseUrl) => {
-  //   let url = `${baseUrl}&date=${encodeURIComponent(dateFilter?.value)}`;
-
-  //   // If custom dates are selected, append customFrom and customTo to the URL
-  //   if (dateFilter?.value === "custom") {
-  //     url += `&customFrom=${encodeURIComponent(
-  //       customFrom
-  //     )}&customTo=${encodeURIComponent(customTo)}`;
-  //   }
-
-  //   return url;
-  // };
-
   const generateUrl = useCallback(
     (baseUrl) => {
       const params = new URLSearchParams();
@@ -484,7 +574,7 @@ const FinanceManagerDashboard = () => {
         ? `${baseUrl}${separator}${params.toString()}`
         : baseUrl;
     },
-    [clubFilter, dateFilter, customFrom, customTo]
+    [clubFilter, dateFilter, customFrom, customTo],
   );
 
   return (
@@ -498,7 +588,7 @@ const FinanceManagerDashboard = () => {
           <div className="w-fit min-w-[180px]">
             <Select
               placeholder="Filter by club"
-              value={clubFilter}
+              value={selectedClub || null}
               options={clubOptions}
               onChange={(option) => setClubFilter(option)}
               // isClearable
@@ -579,7 +669,7 @@ const FinanceManagerDashboard = () => {
       </div>
 
       <div className="flex gap-3">
-        <div className="rounded-[15px] p-4 box--shadow bg-white w-[75%]">
+        <div className="rounded-[15px] p-4 box--shadow bg-white w-[100%]">
           <div className="flex gap-2 w-full mb-4">
             <div className="max-w-[180px] w-full">
               <Select
@@ -649,30 +739,32 @@ const FinanceManagerDashboard = () => {
               title="Total Sales"
               titleLink={generateUrl(`/reports/all-orders?`)}
               totalSales={`₹${formatIndianNumber(
-                dashboardData?.summary_cards?.total_sales?.amount
+                dashboardData?.summary_cards?.total_sales?.amount,
               )}`}
               items={[
                 {
                   label: "Memberships",
                   value: `₹${formatIndianNumber(
                     dashboardData?.summary_cards?.total_sales?.breakup
-                      ?.memberships
+                      ?.memberships,
                   )}`,
                   link: generateUrl(
-                    `/reports/all-orders?package_type=SUBSCRIPTION`
+                    `/reports/all-orders?package_type=SUBSCRIPTION`,
                   ),
                 },
                 {
                   label: "Packages",
                   value: `₹${formatIndianNumber(
-                    dashboardData?.summary_cards?.total_sales?.breakup?.packages
+                    dashboardData?.summary_cards?.total_sales?.breakup
+                      ?.packages,
                   )}`,
                   link: generateUrl(`/reports/all-orders?package_type=PACKAGE`),
                 },
                 {
-                  label: "Products",
+                  label: "Nourish",
                   value: `₹${formatIndianNumber(
-                    dashboardData?.summary_cards?.total_sales?.breakup?.products
+                    dashboardData?.summary_cards?.total_sales?.breakup
+                      ?.products,
                   )}`,
                   link: generateUrl(`/reports/all-orders?package_type=PRODUCT`),
                 },
@@ -691,7 +783,7 @@ const FinanceManagerDashboard = () => {
                     dashboardData?.summary_cards?.new_clients?.breakup
                       ?.memberships,
                   link: generateUrl(
-                    `/reports/all-orders?bill_type=NEW&package_type=SUBSCRIPTION`
+                    `/reports/all-orders?bill_type=NEW&package_type=SUBSCRIPTION`,
                   ),
                 },
                 {
@@ -700,16 +792,16 @@ const FinanceManagerDashboard = () => {
                     dashboardData?.summary_cards?.new_clients?.breakup
                       ?.packages,
                   link: generateUrl(
-                    `/reports/all-orders?bill_type=NEW&package_type=PACKAGE`
+                    `/reports/all-orders?bill_type=NEW&package_type=PACKAGE`,
                   ),
                 },
                 {
-                  label: "Products",
+                  label: "Nourish",
                   value:
                     dashboardData?.summary_cards?.new_clients?.breakup
                       ?.products,
                   link: generateUrl(
-                    `/reports/all-orders?bill_type=NEW&package_type=PRODUCT`
+                    `/reports/all-orders?bill_type=NEW&package_type=PRODUCT`,
                   ),
                 },
               ]}
@@ -726,7 +818,7 @@ const FinanceManagerDashboard = () => {
                     dashboardData?.summary_cards?.renewals?.breakup
                       ?.memberships,
                   link: generateUrl(
-                    `/reports/all-orders?bill_type=RENEWAL&package_type=SUBSCRIPTION`
+                    `/reports/all-orders?bill_type=RENEWAL&package_type=SUBSCRIPTION`,
                   ),
                 },
                 {
@@ -734,15 +826,15 @@ const FinanceManagerDashboard = () => {
                   value:
                     dashboardData?.summary_cards?.renewals?.breakup?.packages,
                   link: generateUrl(
-                    `/reports/all-orders?bill_type=RENEWAL&package_type=PACKAGE`
+                    `/reports/all-orders?bill_type=RENEWAL&package_type=PACKAGE`,
                   ),
                 },
                 {
-                  label: "Products",
+                  label: "Nourish",
                   value:
                     dashboardData?.summary_cards?.renewals?.breakup?.products,
                   link: generateUrl(
-                    `/reports/all-orders?bill_type=RENEWAL&package_type=PRODUCT`
+                    `/reports/all-orders?bill_type=RENEWAL&package_type=PRODUCT`,
                   ),
                 },
               ]}
@@ -752,7 +844,7 @@ const FinanceManagerDashboard = () => {
               icon={trialIcon}
               title="Trials"
               titleLink={generateUrl(
-                `/reports/appointments/all-trial-appointments?`
+                `/reports/appointments/all-trial-appointments?`,
               )}
               totalSales={dashboardData?.summary_cards?.trials?.total}
               items={[
@@ -760,21 +852,21 @@ const FinanceManagerDashboard = () => {
                   label: "Scheduled",
                   value: dashboardData?.summary_cards?.trials?.scheduled,
                   link: generateUrl(
-                    `/reports/appointments/all-trial-appointments?booking_status=ACTIVE`
+                    `/reports/appointments/all-trial-appointments?`,
                   ),
                 },
                 {
                   label: "Completed",
                   value: dashboardData?.summary_cards?.trials?.completed,
                   link: generateUrl(
-                    `/reports/appointments/all-trial-appointments?booking_status=COMPLETED`
+                    `/reports/appointments/all-trial-appointments?booking_status=COMPLETED`,
                   ),
                 },
                 {
                   label: "No-Show",
                   value: dashboardData?.summary_cards?.trials?.no_show,
                   link: generateUrl(
-                    `/reports/appointments/all-trial-appointments?booking_status=NO_SHOW`
+                    `/reports/appointments/all-trial-appointments?booking_status=NO_SHOW`,
                   ),
                 },
               ]}
@@ -782,18 +874,24 @@ const FinanceManagerDashboard = () => {
             <SalesSummary
               icon={enquiriesIcon}
               title="Conversion"
-              titleLink="#"
+              titleLink={generateUrl(
+                `/reports/sales-reports/membership-sales-report`,
+              )}
               totalSales={`${dashboardData?.summary_cards?.conversion?.overall_percentage}%`}
               items={[
                 {
                   label: "Lead To Trial",
                   value: `${dashboardData?.summary_cards?.conversion?.lead_to_trial_percentage}%`,
-                  link: "#",
+                  link: generateUrl(
+                    `/reports/appointments/all-trial-appointments`,
+                  ),
                 },
                 {
                   label: "Trial To Membership",
                   value: `${dashboardData?.summary_cards?.conversion?.trial_to_membership_percentage}%`,
-                  link: "#",
+                  link: generateUrl(
+                    `/reports/sales-reports/membership-sales-report?trial_type=TRIAL`,
+                  ),
                 },
               ]}
             />
@@ -801,7 +899,7 @@ const FinanceManagerDashboard = () => {
               icon={checkInIcon}
               title="Check-ins"
               titleLink={generateUrl(
-                `/reports/operations-reports/member-checkins-report?`
+                `/reports/operations-reports/member-checkins-report?`,
               )}
               totalSales={dashboardData?.summary_cards?.check_ins?.total}
               items={[
@@ -810,7 +908,7 @@ const FinanceManagerDashboard = () => {
                   value:
                     dashboardData?.summary_cards?.check_ins?.unique_check_ins,
                   link: generateUrl(
-                    `/reports/operations-reports/member-checkins-report?checkin-type=unique-check-in`
+                    `/reports/operations-reports/member-checkins-report?checkin-type=unique-check-in`,
                   ),
                 },
                 {
@@ -818,7 +916,7 @@ const FinanceManagerDashboard = () => {
                   value:
                     dashboardData?.summary_cards?.check_ins?.unique_members,
                   link: generateUrl(
-                    `/reports/operations-reports/member-checkins-report?checkin-type=unique-members`
+                    `/reports/operations-reports/member-checkins-report?checkin-type=unique-members`,
                   ),
                 },
               ]}
@@ -827,7 +925,7 @@ const FinanceManagerDashboard = () => {
           <div className="mt-3 w-full grid grid-cols-8 gap-3">
             <div className="border border-[#D4D4D4] rounded-[5px] bg-white p-2 pb-1 w-full relative col-span-4">
               <span className="absolute top-[10px] right-[20px] z-[2] text-lg font-bold">
-                {totalProcutValue}
+                {totalProductValue}
               </span>
               <HighchartsReact
                 highcharts={Highcharts}
@@ -836,21 +934,104 @@ const FinanceManagerDashboard = () => {
             </div>
             <div className="border border-[#D4D4D4] rounded-[5px] bg-white p-2 pb-1 w-full relative col-span-4">
               <span className="absolute top-[10px] right-[20px] z-[2] text-lg font-bold">
-                {totalValue}
+                {totalLeads}
               </span>
               <HighchartsReact highcharts={Highcharts} options={leadsStatus} />
             </div>
           </div>
 
+          {/* <div className="border border-[#D4D4D4] rounded-[5px] bg-white p-2 pb-1 w-full relative mt-3">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="font-semibold">Class Performances Overview</h2>
+            </div>
+            <div className="relative overflow-x-auto">
+              <table className="min-w-full text-sm text-left">
+                <thead className="bg-[#F1F1F1]">
+                  <tr>
+                    <th className="p-2">Class Type</th>
+                    <th className="p-2">Scheduled</th>
+                    <th className="p-2">Bookings</th>
+                    <th className="p-2">Cancellations</th>
+                    <th className="p-2">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {classPerformance.map((item, index) => (
+                    <tr key={item.id} className="border-t">
+                      <td className="p-2">{item.classType}</td>
+                      <td className="p-2">
+                        {String(item.bookings).padStart(2, "0")}
+                      </td>
+                      <td className="p-2">
+                        {String(item.reservations).padStart(2, "0")}
+                      </td>
+                      <td className="p-2">
+                        {String(item.cancellations).padStart(2, "0")}
+                      </td>
+                      <td className="p-2">
+                        <Link
+                          to={generateUrl(item.url)}
+                          className="bg-[#F1F1F1] border border-[#D4D4D4] rounded-[5px] w-[32px] h-[32px] flex items-center justify-center cursor-pointer"
+                        >
+                          <img src={eyeIcon} />
+                        </Link>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div> */}
         </div>
-        <div className="w-[25%]">
-    
+        {/* <div className="w-[25%]">
           <div className="rounded-[15px] p-4 box--shadow bg-white">
+            <div>
+              <p className="text-lg font-[600] mb-3 text-center">Summary </p>
+              <div className="flex justify-between gap-3 items-center rounded-full bg-[#F1F1F1] px-3 py-2">
+                <button
+                  onClick={handlePrevious}
+                  disabled={currentDayIndex === 0}
+                  className={`${
+                    currentDayIndex === 0 ? "opacity-0 invisible" : ""
+                  }`}
+                >
+                  <LiaAngleLeftSolid />
+                </button>
+                <span>{currentDay}</span>
+                <button
+                  onClick={handleNext}
+                  disabled={currentDayIndex === days.length - 1}
+                  className={`${
+                    currentDayIndex === days.length - 1
+                      ? "opacity-0 invisible"
+                      : ""
+                  }`}
+                >
+                  <LiaAngleRightSolid />
+                </button>
+              </div>
+              <SummaryDashboard
+                data={currentData}
+                routeMap={routeMap}
+                generateUrl={generateUrl}
+              />
+            </div>
+          </div>
+          <div className="rounded-[15px] p-4 box--shadow bg-white mt-4">
             <SolidGaugeChart />
           </div>
-        </div>
+        </div> */}
       </div>
 
+      {/* <div className="rounded-[15px] p-4 w-full mt-2 box--shadow bg-white">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="font-semibold">Pending Orders</h2>
+          <a href="#" className="text-[#009EB2] underline text-sm">
+            View All
+          </a>
+        </div>
+        <PendingOrderTable setOrders={setOrders} orders={orders} />
+      </div> */}
     </div>
   );
 };

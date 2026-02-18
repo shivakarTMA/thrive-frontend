@@ -1017,9 +1017,9 @@ const Home = () => {
               />
             </div>
           </div>
-          <div className="rounded-[15px] p-4 box--shadow bg-white mt-4">
+          {/* <div className="rounded-[15px] p-4 box--shadow bg-white mt-4">
             <SolidGaugeChart />
-          </div>
+          </div> */}
         </div>
       </div>
 

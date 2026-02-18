@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { IoCloseCircle } from "react-icons/io5";
 import { authAxios } from "../../config/config";
 import { toast } from "react-toastify";
+import { formatText } from "../../Helper/helper";
 
 const ProfileDetails = ({ staffID, setProfileModal }) => {
   const [profileData, setProfileData] = useState("");
@@ -52,7 +53,7 @@ const ProfileDetails = ({ staffID, setProfileModal }) => {
       >
         <div className="flex gap-3 items-center justify-between p-6 border-b">
           <h2 className="text-xl font-semibold">
-            {profileData?.role} Profile Details
+            {formatText(profileData?.role)} Profile Details
           </h2>
           <div
             className="close--lead cursor-pointer"
