@@ -31,6 +31,7 @@ const MemberSendPaymentLink = ({
   const [voucherInput, setVoucherInput] = useState("");
   const [voucherStatus, setVoucherStatus] = useState(null); // "success", "error", or null
   const [selectedVoucher, setSelectedVoucher] = useState(null);
+  const [voucherMessage, setVoucherMessage] = useState("");
 
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
   const [paymentUrl, setPaymentUrl] = useState("");
@@ -188,13 +189,20 @@ const MemberSendPaymentLink = ({
       };
 
       const res = await authAxios().post("/coupon/applicable", payload);
-      const data = res.data?.data;
 
-      const couponDiscount = Number(data.discountAmount) || 0;
+      const response = res.data;
 
+      // ✅ CHECK API STATUS (IMPORTANT)
+      if (!response?.status) {
+        throw new Error(response?.message || "Invalid coupon");
+      }
+
+      const data = response?.data;
+
+      const couponDiscount = Number(data?.discountAmount) || 0;
       const totalAmount =
-        Number(formik.values.productDetails.total_amount) || 0;
-      const gstPercent = Number(formik.values.productDetails.gst) || 0;
+        Number(formik.values.productDetails?.total_amount) || 0;
+      const gstPercent = Number(formik.values.productDetails?.gst) || 0;
 
       const discountedTotal = totalAmount - couponDiscount;
       const gstAmount = (discountedTotal * gstPercent) / 100;
@@ -214,11 +222,14 @@ const MemberSendPaymentLink = ({
         final_amount: finalAmount,
         amount_pay: finalAmount,
       });
+
+      // toast.success(response?.message || "Coupon applied successfully");
+      setVoucherMessage(response?.message);
     } catch (err) {
       setSelectedVoucher(null);
       setVoucherStatus("error");
+      setVoucherMessage(err?.message || "Invalid or expired coupon");
 
-      // ✅ SAFE fallback
       const originalFinal =
         Number(formik.values.productDetails?.final_amount) || 0;
 
@@ -230,7 +241,7 @@ const MemberSendPaymentLink = ({
         amount_pay: originalFinal,
       });
 
-      toast.error(err?.response?.data?.message || "Invalid or expired coupon");
+      // toast.error(err?.message || "Invalid or expired coupon");
     }
   };
 
@@ -408,7 +419,7 @@ const MemberSendPaymentLink = ({
                         Apply
                       </button>
                     </div>
-                    {voucherStatus === "success" && (
+                    {/* {voucherStatus === "success" && (
                       <p className="text-green-600 text-sm mt-1">
                         Voucher applied successfully
                       </p>
@@ -416,6 +427,17 @@ const MemberSendPaymentLink = ({
                     {voucherStatus === "error" && (
                       <p className="text-red-600 text-sm mt-1">
                         Invalid voucher code.
+                      </p>
+                    )} */}
+                    {voucherStatus === "success" && (
+                      <p className="text-green-600 text-sm mt-1">
+                        {voucherMessage}
+                      </p>
+                    )}
+
+                    {voucherStatus === "error" && (
+                      <p className="text-red-600 text-sm mt-1">
+                        {voucherMessage}
                       </p>
                     )}
                   </div>

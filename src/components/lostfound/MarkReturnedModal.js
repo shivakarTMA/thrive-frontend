@@ -16,7 +16,7 @@ import { useSelector } from "react-redux";
 import Select from "react-select";
 import { customStyles } from "../../Helper/helper";
 
-const MarkReturnedModal = ({ lostID, onClose, clubOptions }) => {
+const MarkReturnedModal = ({ lostID, onClose, clubOptions, fetchLostFoundList }) => {
   const { user } = useSelector((state) => state.auth);
   const leadBoxRef = useRef(null);
   const [mobileError, setMobileError] = useState("");
@@ -84,6 +84,7 @@ const MarkReturnedModal = ({ lostID, onClose, clubOptions }) => {
 
         toast.success("Item marked as returned successfully");
         onClose();
+        fetchLostFoundList();
 
   
       } catch (error) {
@@ -373,7 +374,7 @@ const MarkReturnedModal = ({ lostID, onClose, clubOptions }) => {
                     <label className="mb-2 block">
                       Return Date & Time<span className="text-red-500">*</span>
                     </label>
-                    <div className="custom--date relative">
+                    <div className="custom--date">
                       <span className="absolute z-[1] mt-[11px] ml-[15px]">
                         <FaCalendarDays />
                       </span>

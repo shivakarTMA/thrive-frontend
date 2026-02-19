@@ -38,7 +38,7 @@ const AddNewItemModal = ({
       category: Yup.string().required("Category Name is required"),
       found_at_location: Yup.string().required("Location is required"),
       found_date_time: Yup.date().required("Date & Time is required"),
-      description: Yup.string().required("Description is required"),
+      // description: Yup.string().required("Description is required"),
     }),
     onSubmit: async (values, { resetForm }) => {
       try {

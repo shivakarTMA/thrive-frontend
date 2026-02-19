@@ -117,6 +117,7 @@ const CreateNewInvoice = ({ setInvoiceModal, selectedLeadMember, clubId }) => {
   const [selectedPackageType, setSelectedPackageType] = useState("");
   const [voucherInput, setVoucherInput] = useState("");
   const [voucherStatus, setVoucherStatus] = useState(null);
+  const [voucherMessage, setVoucherMessage] = useState("");
 
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
   const [paymentUrl, setPaymentUrl] = useState("");
@@ -405,42 +406,77 @@ const CreateNewInvoice = ({ setInvoiceModal, selectedLeadMember, clubId }) => {
   const applyCoupon = async () => {
     if (!voucherInput.trim()) return;
 
+    if (!formik.values.productDetails?.id) {
+      toast.error("Please select a product before applying a coupon");
+      return;
+    }
+
     try {
       setVoucherStatus("loading");
 
       const payload = {
         coupon: voucherInput.trim(),
         applicable_ids: [formik.values.productDetails?.id],
-        applicable_type: "PACKAGE",
+        applicable_type: "SUBSCRIPTION",
         amount: formik.values.productDetails?.total_amount,
         club_id: formik.values.club_id,
-        member_id: formik.values.member_id,
       };
 
       const res = await authAxios().post("/coupon/applicable", payload);
-      const data = res.data?.data;
 
-      const discount = Number(data.discountAmount) || 0;
-      const total = formik.values.productDetails.total_amount - discount;
-      const gst = (total * formik.values.productDetails.gst) / 100;
+      const response = res.data;
 
-      const finalAmount = total + gst;
+      // ✅ CHECK API STATUS (IMPORTANT)
+      if (!response?.status) {
+        throw new Error(response?.message || "Invalid coupon");
+      }
+
+      const data = response?.data;
+
+      const couponDiscount = Number(data?.discountAmount) || 0;
+      const totalAmount =
+        Number(formik.values.productDetails?.total_amount) || 0;
+      const gstPercent = Number(formik.values.productDetails?.gst) || 0;
+
+      const discountedTotal = totalAmount - couponDiscount;
+      const gstAmount = (discountedTotal * gstPercent) / 100;
+      const finalAmount = discountedTotal + gstAmount;
 
       setVoucherStatus("success");
 
       formik.setValues({
         ...formik.values,
         coupon: voucherInput,
-        discountAmount: discount,
+        discountAmount: couponDiscount,
+        productDetails: {
+          ...formik.values.productDetails,
+          gst_amount: gstAmount,
+        },
         final_amount: finalAmount,
         amount_pay: finalAmount,
       });
-    } catch {
+
+      // toast.success(response?.message || "Coupon applied successfully");
+      setVoucherMessage(response?.message);
+    } catch (err) {
       setVoucherStatus("error");
+      setVoucherMessage(err?.message || "Invalid or expired coupon");
+
+      const originalFinal =
+        Number(formik.values.productDetails?.final_amount) || 0;
+
+      formik.setValues({
+        ...formik.values,
+        coupon: "",
+        discountAmount: 0,
+        final_amount: originalFinal,
+        amount_pay: originalFinal,
+      });
+
+      // toast.error(err?.message || "Invalid or expired coupon");
     }
   };
 
- 
   // Fetch services
   const fetchService = async (clubId = null) => {
     try {
@@ -780,7 +816,7 @@ const CreateNewInvoice = ({ setInvoiceModal, selectedLeadMember, clubId }) => {
                           {voucherStatus === "loading" ? "..." : "Apply"}
                         </button>
                       </div>
-                      {voucherStatus === "success" && (
+                      {/* {voucherStatus === "success" && (
                         <p className="text-green-600 text-sm mt-1">
                           Voucher applied successfully
                         </p>
@@ -788,6 +824,17 @@ const CreateNewInvoice = ({ setInvoiceModal, selectedLeadMember, clubId }) => {
                       {voucherStatus === "error" && (
                         <p className="text-red-600 text-sm mt-1">
                           Invalid voucher code
+                        </p>
+                      )} */}
+                      {voucherStatus === "success" && (
+                        <p className="text-green-600 text-sm mt-1">
+                          {voucherMessage}
+                        </p>
+                      )}
+
+                      {voucherStatus === "error" && (
+                        <p className="text-red-600 text-sm mt-1">
+                          {voucherMessage}
                         </p>
                       )}
                     </div>

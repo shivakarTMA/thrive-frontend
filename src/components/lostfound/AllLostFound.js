@@ -501,6 +501,7 @@ const AllLostFound = () => {
           lostID={markReturnedData}
           onClose={() => setReturnedModalOpen(false)}
           clubOptions={clubOptions}
+          fetchLostFoundList={fetchLostFoundList}
         />
       )}
     </div>

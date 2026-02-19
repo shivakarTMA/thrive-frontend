@@ -16,13 +16,33 @@ import { authAxios } from "../../config/config";
 import { toast } from "react-toastify";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchOptionList } from "../../Redux/Reducers/optionListSlice";
+import {
+  parsePhoneNumberFromString,
+  isPossiblePhoneNumber,
+} from "libphonenumber-js";
 
 /* ---------------- VALIDATION ---------------- */
 
 const validationSchema = Yup.object({
   full_name: Yup.string().required("Full Name is required"),
 
-  mobile: Yup.string().required("Contact number is required"),
+  // mobile: Yup.string().required("Contact number is required"),
+    mobile: Yup.string()
+      .required("Contact number is required")
+      .test("is-valid-phone", "Invalid phone number", function (value) {
+        const { country_code } = this.parent;
+        if (!value || !country_code) return false;
+  
+        // Combine country code and number to full international format
+        const phoneNumberString = `+${country_code}${value}`;
+  
+        // First check if the number is even possible (not just valid)
+        if (!isPossiblePhoneNumber(phoneNumberString)) return false;
+  
+        // Parse and check validity strictly according to country
+        const phoneNumber = parsePhoneNumberFromString(phoneNumberString);
+        return phoneNumber?.isValid() || false;
+      }),
 
   country_code: Yup.string().required(),
 
@@ -117,7 +137,10 @@ const Relations = ({ details }) => {
     <div className="p-4 bg-white rounded shadow">
       <div className="flex justify-end mb-3">
         <button
-          onClick={() => setIsModalOpen(true)}
+         onClick={() => {
+            setIsModalOpen(true);
+            formik.resetForm();
+          }}
           className="px-4 py-2 bg-black text-white rounded flex items-center gap-2"
         >
           <FiPlus /> Add Referral

@@ -1040,7 +1040,7 @@ const ProfileDetails = ({ member }) => {
                     styles={customStyles}
                   />
                 </div>
-                <div>
+                {/* <div>
                   <label className="block text-sm font-medium text-black mb-2">
                     Personal Trainer
                   </label>
@@ -1058,7 +1058,7 @@ const ProfileDetails = ({ member }) => {
                     placeholder="Select Trainer"
                     styles={customStyles}
                   />
-                </div>
+                </div> */}
                 <div className="hide-clear-icon">
                   <label className="block text-sm font-medium text-black mb-2">
                     Interested In
