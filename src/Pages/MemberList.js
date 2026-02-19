@@ -41,6 +41,7 @@ const MemberList = () => {
 
   const [invoiceModal, setInvoiceModal] = useState(false);
   const [selectedLeadMember, setSelectedLeadMember] = useState(null);
+  const [selectedLeadClub, setSelectedLeadClub] = useState(null);
 
   const [memberList, setMemberList] = useState([]);
   const [memberModal, setMemberModal] = useState(false);
@@ -783,109 +784,107 @@ const MemberList = () => {
                             <div
                               className="bg--color w-fit rounded-full h-full flex items-center"
                               style={{
-                                width:`${member?.profile_completion}%`
+                                width: `${member?.profile_completion}%`,
                               }}
                             ></div>
                           </div>
                         </div>
 
-
                         {/* Member Action */}
                         {(userRole === "CLUB_MANAGER" ||
-                        userRole === "GENERAL_MANAGER" ||
-                        userRole === "ADMIN" ||
-                        userRole === "FOH") && (
-                        <div className="absolute hidden group-hover:flex gap-2 right-0 h-full top-0 w-[50%] items-center justify-end bg-[linear-gradient(269deg,_#ffffff_30%,_transparent)] pr-5 transition duration-700">
-                          <div className="flex gap-1">
-                            <Tooltip
-                              id={`edit-member-${member?.id}`}
-                              content="Edit Member"
-                              place="top"
-                            >
-                              <div className="p-1 cursor-pointer">
-                                <Link
-                                  to={`/member/${member?.id}`}
-                                  className="p-0"
-                                >
-                                  <LiaEdit className="text-[25px] text-black" />
-                                </Link>
-                              </div>
-                            </Tooltip>
-
-                            <Tooltip
-                              id={`member-call-${member?.id}`}
-                              content="Call Logs"
-                              place="top"
-                            >
-                              <div className="p-1 cursor-pointer">
-                                <Link
-                                  to={`/member/${member?.id}?view=call-logs`}
-                                  className="p-0"
-                                >
-                                  <MdCall className="text-[25px] text-black" />
-                                </Link>
-                              </div>
-                            </Tooltip>
-
-                            <Tooltip
-                              id={`send-payment-${member?.id}`}
-                              content="Buy services"
-                              place="top"
-                            >
-                              <div
-                                className="p-1 cursor-pointer"
-                                onClick={() => {
-                                  setSelectedLeadMember(member.id);
-                                  setInvoiceModal(true);
-                                }}
+                          userRole === "GENERAL_MANAGER" ||
+                          userRole === "ADMIN" ||
+                          userRole === "FOH") && (
+                          <div className="absolute hidden group-hover:flex gap-2 right-0 h-full top-0 w-[50%] items-center justify-end bg-[linear-gradient(269deg,_#ffffff_30%,_transparent)] pr-5 transition duration-700">
+                            <div className="flex gap-1">
+                              <Tooltip
+                                id={`edit-member-${member?.id}`}
+                                content="Edit Member"
+                                place="top"
                               >
-                                <Link to="#" className="p-0">
-                                  <IoIosAddCircleOutline className="text-[25px] text-black" />
-                                </Link>
-                              </div>
-                            </Tooltip>
-                          </div>
-                        </div>
-                      )}
-                      {userRole === "TRAINER" && (
-                        <div className="absolute hidden group-hover:flex gap-2 right-0 h-full top-0 w-[50%] items-center justify-end bg-[linear-gradient(269deg,_#ffffff_30%,_transparent)] pr-5 transition duration-700">
-                          <div className="flex gap-1">
-                            <Tooltip
-                              id={`edit-member-${member?.id}`}
-                              content="View Profile"
-                              place="top"
-                            >
-                              <div className="p-1 cursor-pointer">
-                                <Link
-                                  to={`/member/${member?.id}`}
-                                  className="p-0"
-                                >
-                                  <IoEyeOutline className="text-[25px] text-black" />
-                                </Link>
-                              </div>
-                            </Tooltip>
+                                <div className="p-1 cursor-pointer">
+                                  <Link
+                                    to={`/member/${member?.id}`}
+                                    className="p-0"
+                                  >
+                                    <LiaEdit className="text-[25px] text-black" />
+                                  </Link>
+                                </div>
+                              </Tooltip>
 
-                            <Tooltip
-                              id={`member-call-${member?.id}`}
-                              content="Call Logs"
-                              place="top"
-                            >
-                              <div className="p-1 cursor-pointer">
-                                <Link
-                                  to={`/member/${member?.id}?view=call-logs`}
-                                  className="p-0"
+                              <Tooltip
+                                id={`member-call-${member?.id}`}
+                                content="Call Logs"
+                                place="top"
+                              >
+                                <div className="p-1 cursor-pointer">
+                                  <Link
+                                    to={`/member/${member?.id}?view=call-logs`}
+                                    className="p-0"
+                                  >
+                                    <MdCall className="text-[25px] text-black" />
+                                  </Link>
+                                </div>
+                              </Tooltip>
+
+                              <Tooltip
+                                id={`send-payment-${member?.id}`}
+                                content="Buy services"
+                                place="top"
+                              >
+                                <div
+                                  className="p-1 cursor-pointer"
+                                  onClick={() => {
+                                    setSelectedLeadMember(member.id);
+                                    setInvoiceModal(true);
+                                    setSelectedLeadClub(member?.club_id);
+                                  }}
                                 >
-                                  <MdCall className="text-[25px] text-black" />
-                                </Link>
-                              </div>
-                            </Tooltip>
+                                  <Link to="#" className="p-0">
+                                    <IoIosAddCircleOutline className="text-[25px] text-black" />
+                                  </Link>
+                                </div>
+                              </Tooltip>
+                            </div>
                           </div>
-                        </div>
-                      )}
+                        )}
+                        {userRole === "TRAINER" && (
+                          <div className="absolute hidden group-hover:flex gap-2 right-0 h-full top-0 w-[50%] items-center justify-end bg-[linear-gradient(269deg,_#ffffff_30%,_transparent)] pr-5 transition duration-700">
+                            <div className="flex gap-1">
+                              <Tooltip
+                                id={`edit-member-${member?.id}`}
+                                content="View Profile"
+                                place="top"
+                              >
+                                <div className="p-1 cursor-pointer">
+                                  <Link
+                                    to={`/member/${member?.id}`}
+                                    className="p-0"
+                                  >
+                                    <IoEyeOutline className="text-[25px] text-black" />
+                                  </Link>
+                                </div>
+                              </Tooltip>
+
+                              <Tooltip
+                                id={`member-call-${member?.id}`}
+                                content="Call Logs"
+                                place="top"
+                              >
+                                <div className="p-1 cursor-pointer">
+                                  <Link
+                                    to={`/member/${member?.id}?view=call-logs`}
+                                    className="p-0"
+                                  >
+                                    <MdCall className="text-[25px] text-black" />
+                                  </Link>
+                                </div>
+                              </Tooltip>
+                            </div>
+                          </div>
+                        )}
                         {/* Member Action End */}
-
                       </td>
-                      
                     </tr>
                   ))}
                 </tbody>
@@ -921,6 +920,7 @@ const MemberList = () => {
         <CreateNewInvoice
           setInvoiceModal={setInvoiceModal}
           selectedLeadMember={selectedLeadMember}
+          clubId={selectedLeadClub}
         />
       )}
     </>

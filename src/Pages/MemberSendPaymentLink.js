@@ -21,9 +21,11 @@ const validationSchema = Yup.object({
   productType: Yup.string().required("Product Type is required"),
 });
 
-const MemberSendPaymentLink = ({ setSendPaymentModal, selectedLeadMember }) => {
-  console.log(selectedLeadMember, "selectedLeadMember");
-
+const MemberSendPaymentLink = ({
+  setSendPaymentModal,
+  selectedLeadMember,
+  clubId,
+}) => {
   const [showProductModal, setShowProductModal] = useState(false);
 
   const [voucherInput, setVoucherInput] = useState("");
@@ -508,6 +510,7 @@ const MemberSendPaymentLink = ({ setSendPaymentModal, selectedLeadMember }) => {
           planType={formik.values?.plan_type}
           onClose={() => setShowProductModal(false)}
           onSubmit={handleProductSubmit}
+          clubId={clubId}
         />
       )}
 

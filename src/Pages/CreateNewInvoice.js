@@ -108,7 +108,7 @@ const buildPaymentPayload = ({ values, user, selectedPackageType }) => {
   return payload;
 };
 
-const CreateNewInvoice = ({ setInvoiceModal, selectedLeadMember }) => {
+const CreateNewInvoice = ({ setInvoiceModal, selectedLeadMember, clubId }) => {
   const { user } = useSelector((state) => state.auth);
 
   const [service, setService] = useState([]);
@@ -260,13 +260,13 @@ const CreateNewInvoice = ({ setInvoiceModal, selectedLeadMember }) => {
 
   /* ================= DATA ================= */
 
-  useEffect(() => {
-    authAxios()
-      .get("/service/list")
-      .then((res) =>
-        setService(res.data.data.filter((s) => s.status === "ACTIVE")),
-      );
-  }, []);
+  // useEffect(() => {
+  //   authAxios()
+  //     .get(`/service/list?club_id${clubId}`)
+  //     .then((res) =>
+  //       setService(res.data.data.filter((s) => s.status === "ACTIVE")),
+  //     );
+  // }, [clubId]);
 
   // ✅ Fetch lead details when selectedId changes
   useEffect(() => {
@@ -440,13 +440,7 @@ const CreateNewInvoice = ({ setInvoiceModal, selectedLeadMember }) => {
     }
   };
 
-  // new
-
-  // console.log(formik.values?.club_id, "club_id");
-
-  const clubId = formik.values?.club_id;
-  
-
+ 
   // Fetch services
   const fetchService = async (clubId = null) => {
     try {

@@ -33,6 +33,7 @@ const MembershipExpiryReport = () => {
   const [clubFilter, setClubFilter] = useState(null);
   const [sendPaymentModal, setSendPaymentModal] = useState(false);
   const [selectedLeadMember, setSelectedLeadMember] = useState(null);
+  const [selectedLeadClub, setSelectedLeadClub] = useState(null);
 
   const { user } = useSelector((state) => state.auth);
   const userRole = user.role;
@@ -251,13 +252,29 @@ const MembershipExpiryReport = () => {
                     <td className="px-2 py-4 flex items-center gap-1">
                       {row.is_subscribed === true ? "Active" : "Inactive"}
                     </td>
-                    <td className="px-2 py-4">{row.sales_rep_name ? row.sales_rep_name : "--"}</td>
-                    <td className="px-2 py-4">{row.general_trainer ? row.general_trainer : "--"}</td>
-                    <td className="px-2 py-4">{row.plan_name ? row.plan_name : "--"}</td>
-                    <td className="px-2 py-4">{row.plan_type ? row.plan_type : "--"}</td>
-                    <td className="px-2 py-4">₹{formatIndianNumber(row.booking_amount)}</td>
-                    <td className="px-2 py-4">{row.end_date ? formatAutoDate(row.end_date) : "--"}</td>
-                    <td className="px-2 py-4">{row.last_check_in_date ? formatAutoDate(row.last_check_in_date) : "--"}</td>
+                    <td className="px-2 py-4">
+                      {row.sales_rep_name ? row.sales_rep_name : "--"}
+                    </td>
+                    <td className="px-2 py-4">
+                      {row.general_trainer ? row.general_trainer : "--"}
+                    </td>
+                    <td className="px-2 py-4">
+                      {row.plan_name ? row.plan_name : "--"}
+                    </td>
+                    <td className="px-2 py-4">
+                      {row.plan_type ? row.plan_type : "--"}
+                    </td>
+                    <td className="px-2 py-4">
+                      ₹{formatIndianNumber(row.booking_amount)}
+                    </td>
+                    <td className="px-2 py-4">
+                      {row.end_date ? formatAutoDate(row.end_date) : "--"}
+                    </td>
+                    <td className="px-2 py-4">
+                      {row.last_check_in_date
+                        ? formatAutoDate(row.last_check_in_date)
+                        : "--"}
+                    </td>
                     <td className="px-2 py-4 flex items-center justify-center gap-1">
                       <FaCircle
                         className={`text-xs ${
@@ -272,9 +289,10 @@ const MembershipExpiryReport = () => {
                       <button
                         type="button"
                         onClick={() => {
-                                          setSelectedLeadMember(row.id);
-                                          setSendPaymentModal(true);
-                                        }}
+                          setSelectedLeadMember(row.id);
+                          setSendPaymentModal(true);
+                          setSelectedLeadClub(row?.club_id)
+                        }}
                         className="px-3 py-1 bg-black text-white rounded flex items-center gap-2 !text-[13px]"
                       >
                         Send Link
@@ -320,9 +338,9 @@ const MembershipExpiryReport = () => {
         <MemberSendPaymentLink
           setSendPaymentModal={setSendPaymentModal}
           selectedLeadMember={selectedLeadMember}
+          clubId={selectedLeadClub}
         />
       )}
-
     </div>
   );
 };

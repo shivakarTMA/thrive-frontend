@@ -5,7 +5,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import "react-phone-number-input/style.css";
 import PhoneInput, { isValidPhoneNumber } from "react-phone-number-input";
 import { parsePhoneNumberFromString } from "libphonenumber-js";
-import { formatText, selectIcon } from "../Helper/helper";
+import { blockInvalidNumberKeys, formatText, sanitizePositiveInteger, selectIcon } from "../Helper/helper";
 import { IoBan, IoCloseCircle } from "react-icons/io5";
 import { PiGenderIntersex, PiGenderIntersexBold } from "react-icons/pi";
 import { useFormik } from "formik";
@@ -1092,10 +1092,18 @@ const ConvertMemberForm = ({
                                 <CgFormatLineHeight />
                               </span>
                               <input
+                                type="number"
                                 name="height"
                                 value={formik.values.height}
-                                onChange={formik.handleChange}
-                                className="custom--input w-full input--icon"
+                                // onChange={formik.handleChange}
+                                onKeyDown={blockInvalidNumberKeys} // ⛔ blocks typing -, e, etc.
+                                onChange={(e) => {
+                                  const cleanValue = sanitizePositiveInteger(
+                                    e.target.value,
+                                  );
+                                  formik.setFieldValue("height", cleanValue);
+                                }}
+                                className="custom--input w-full input--icon number--appearance-none"
                               />
                             </div>
                             {formik.errors?.height &&

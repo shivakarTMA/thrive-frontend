@@ -33,6 +33,7 @@ const ServiceExpiryReport = () => {
   const [clubFilter, setClubFilter] = useState(null);
   const [invoiceModal, setInvoiceModal] = useState(false);
   const [selectedLeadMember, setSelectedLeadMember] = useState(null);
+  const [selectedLeadClub, setSelectedLeadClub] = useState(null);
 
   const { user } = useSelector((state) => state.auth);
   const userRole = user.role;
@@ -323,6 +324,7 @@ const ServiceExpiryReport = () => {
                         onClick={() => {
                           setSelectedLeadMember(row.member_id);
                           setInvoiceModal(true);
+                          setSelectedLeadClub(row?.club_id)
                         }}
                         className="px-3 py-1 bg-black text-white rounded flex items-center gap-2 !text-[13px]"
                       >
@@ -359,6 +361,7 @@ const ServiceExpiryReport = () => {
         <CreateNewInvoice
           setInvoiceModal={setInvoiceModal}
           selectedLeadMember={selectedLeadMember}
+          clubId={selectedLeadClub}
         />
       )}
     </div>
