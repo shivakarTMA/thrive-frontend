@@ -25,59 +25,38 @@ import { addYears, subYears } from "date-fns";
 import { MdOutlineKeyboardBackspace } from "react-icons/md";
 import { createFilterTime } from "../utils/dateTimeHelpers";
 import { useClubDateTime } from "../hooks/useClubDateTime";
-import { useDateTimePicker } from "../hooks/useDateTimePicker";
 
 const validationSchema = Yup.object().shape({
   call_status: Yup.string().required("Call status is required"),
 
   // Follow-up Date & Time
   trial_tour_datetime: Yup.string().when("call_status", {
-    is: (val) => val === "Trial/Tour Scheduled",
-    then: (schema) =>
-      schema
-        .required("Date & Time is required")
-        .test("has-time", "Please select a time as well", (value) => {
-          if (!value) return false;
-          const date = new Date(value);
-          // ✅ If hours and minutes are both 0 → time was not selected
-          return !(date.getHours() === 0 && date.getMinutes() === 0);
-        }),
+    is: (val) =>
+      val !== "Not Interested" &&
+      val !== "Not Relevant" &&
+      val !== "Invalid number" &&
+      val !== "Lead follow-up" &&
+      val !== "Busy Tone" &&
+      val !== "Switched Off/ Out of Reach" &&
+      val !== "No answer" &&
+      val !== "Future Prospect" &&
+      val !== "Won",
+    then: (schema) => schema.required("Date & Time is required"),
     otherwise: (schema) => schema.notRequired(),
   }),
 
-  follow_up_datetime: Yup.string()
-    .nullable()
-    .transform((value) => (value === "" ? null : value))
-    .when("call_status", {
-      is: (val) => val === "Trial/Tour Scheduled",
-      then: (schema) =>
-        schema.test("has-time", "Please select a time as well", (value) => {
-          // ✅ If empty → valid (not required)
-          if (!value) return true;
+  // Staff Name — only when Trial/Tour Scheduled
+  follow_up_datetime: Yup.string().when("call_status", {
+    is: (val) =>
+      val !== "Trial/Tour Scheduled" &&
+      val !== "Not Interested" &&
+      val !== "Not Relevant" &&
+      val !== "Invalid number" &&
+      val !== "Won",
 
-          const date = new Date(value);
-
-          // ❌ Invalid if time is 00:00
-          return !(date.getHours() === 0 && date.getMinutes() === 0);
-        }),
-      otherwise: (schema) =>
-        schema.when("call_status", {
-          is: (val) =>
-            val !== "Not Interested" &&
-            val !== "Not Relevant" &&
-            val !== "Invalid number" &&
-            val !== "Won",
-          then: (schema) =>
-            schema
-              .required("Date & Time is required")
-              .test("has-time", "Please select a time as well", (value) => {
-                if (!value) return false;
-                const date = new Date(value);
-                return !(date.getHours() === 0 && date.getMinutes() === 0);
-              }),
-          otherwise: (schema) => schema.notRequired(),
-        }),
-    }),
+    then: (schema) => schema.required("Date and time is required"),
+    otherwise: (schema) => schema.notRequired(),
+  }),
   training_by: Yup.string().when("call_status", {
     is: "Trial/Tour Scheduled",
     then: (schema) => schema.required("Trainer is required"),
@@ -131,7 +110,6 @@ const LeadCallLogs = () => {
   const [trainerList, setTrainerList] = useState([]);
   const [staffList, setStaffList] = useState([]);
   const [editLog, setEditLog] = useState(null);
-  const [timeSelected, setTimeSelected] = useState(false);
 
   // Redux state
   const dispatch = useDispatch();
@@ -257,26 +235,9 @@ const LeadCallLogs = () => {
     },
   });
 
-  const { filterTime: followUpFilterTime } = useClubDateTime(
-    formik.values.follow_up_datetime,
-    clubData,
-  );
-
-  const { filterTime: trialFilterTime } = useClubDateTime(
-    formik.values.trial_tour_datetime,
-    clubData,
-  );
-
-  const followUpDT = useDateTimePicker(
-    formik,
-    "follow_up_datetime",
-    followUpFilterTime,
-  );
-  const trialToDT = useDateTimePicker(
-    formik,
-    "trial_tour_datetime",
-    trialFilterTime,
-  );
+  const handleDateChange = (date) => {
+    formik.setFieldValue("follow_up_datetime", date);
+  };
 
   const handleCallStatusChange = (option) => {
     if (formik.values.id) {
@@ -289,6 +250,40 @@ const LeadCallLogs = () => {
       });
     }
   };
+
+  const { minDate, filterTime } = useClubDateTime(
+  formik.values.follow_up_datetime,
+  clubData,
+);
+
+ const handleDateTime = (date) => {
+  if (!date) {
+    formik.setFieldValue("follow_up_datetime", null);
+    return;
+  }
+
+  // ✅ If only date selected (no time yet), don't store time
+  // react-datepicker passes full Date object, check if time was manually picked
+  const currentValue = formik.values.follow_up_datetime;
+  const currentDate = currentValue ? new Date(currentValue) : null;
+
+  // If previously had no value OR the date changed → reset time to null
+  const dateChanged =
+    !currentDate ||
+    date.getDate() !== currentDate.getDate() ||
+    date.getMonth() !== currentDate.getMonth() ||
+    date.getFullYear() !== currentDate.getFullYear();
+
+  if (dateChanged) {
+    // ✅ Store only date, no time — input will show just date without time
+    const dateOnly = new Date(date);
+    dateOnly.setHours(0, 0, 0, 0); // zero out time
+    formik.setFieldValue("follow_up_datetime", dateOnly);
+  } else {
+    // Time was changed → store full datetime
+    formik.setFieldValue("follow_up_datetime", date);
+  }
+};
 
   const handleDateTrainerChange = (val) => {
     if (!val) return;
@@ -456,6 +451,33 @@ const LeadCallLogs = () => {
             </h2>
 
             <div className="grid grid-cols-2 gap-4">
+              {/* Schedule For only admin */}
+              {/* <div>
+                <label className="mb-2 block">
+                  Schedule For<span className="text-red-500">*</span>
+                </label>
+
+                <Select
+                  name="scheduleFor"
+                  value={
+                    staffListOptions.find(
+                      (opt) => opt.value === formik.values?.scheduleFor
+                    ) || null
+                  }
+                  options={staffListOptions}
+                  onChange={(option) =>
+                    formik.setFieldValue("scheduleFor", option.value)
+                  }
+                  onBlur={() => formik.setFieldTouched("scheduleFor", true)}
+                  styles={customStyles}
+                />
+                {formik.errors?.scheduleFor && formik.touched?.scheduleFor && (
+                  <div className="text-red-500 text-sm">
+                    {formik.errors?.scheduleFor}
+                  </div>
+                )}
+              </div> */}
+
               <div>
                 <label className="mb-2 block">
                   Call Status
@@ -495,19 +517,60 @@ const LeadCallLogs = () => {
                       <span className="absolute z-[1] mt-[11px] ml-[15px]">
                         <FaCalendarDays />
                       </span>
-                      <DatePicker
-                        selected={followUpDT.selected}
-                        onChange={followUpDT.handleDateTime}
-                        onChangeRaw={followUpDT.handleChangeRaw}
+                      {/* <DatePicker
+                        selected={
+                          formik.values.follow_up_datetime
+                            ? new Date(formik.values.follow_up_datetime)
+                            : null
+                        }
+                        onChange={handleDateTime}
                         showTimeSelect
                         timeFormat="hh:mm aa"
-                        dateFormat={followUpDT.dateFormat}
+                        dateFormat="dd/MM/yyyy hh:mm aa"
+                        placeholderText="Select date & time"
+                        className="border px-3 py-2 w-full input--icon"
+                        minDate={now} // Disable past dates
+                        minTime={getMinTime(formik.values.follow_up_datetime)}
+                        maxTime={baseMaxTime} // 10:00 PM limit
+                        disabled={editLog ? true : false}
+                      /> */}
+
+                      {/* <DatePicker
+                        selected={
+                          formik.values.follow_up_datetime
+                            ? new Date(formik.values.follow_up_datetime)
+                            : null
+                        }
+                        onChange={handleDateTime}
+                        showTimeSelect
+                        timeFormat="hh:mm aa"
+                        dateFormat="dd/MM/yyyy hh:mm aa"
                         placeholderText="Select date & time"
                         minDate={new Date()}
-                        filterTime={followUpFilterTime}
+                        filterTime={createFilterTime(
+                          formik.values.follow_up_datetime,
+                          22,
+                        )}
                         className="border px-3 py-2 w-full input--icon"
-                        disabled={!!editLog}
-                      />
+                        disabled={editLog ? true : false}
+                      /> */}
+
+                      <DatePicker
+  selected={
+    formik.values.follow_up_datetime
+      ? new Date(formik.values.follow_up_datetime)
+      : null
+  }
+  onChange={handleDateTime}
+  showTimeSelect
+  timeFormat="hh:mm aa"
+  dateFormat="dd/MM/yyyy hh:mm aa"
+  placeholderText="Select date & time"
+  minDate={minDate}
+  filterTime={filterTime}
+  // ✅ removed openToDate — no default time pre-selected
+  className="border px-3 py-2 w-full input--icon"
+/>
                     </div>
                     {formik.touched.follow_up_datetime &&
                       formik.errors.follow_up_datetime && (
@@ -529,17 +592,21 @@ const LeadCallLogs = () => {
                         <FaCalendarDays />
                       </span>
                       <DatePicker
-                        selected={trialToDT.selected}
-                        onChange={trialToDT.handleDateTime}
-                        onChangeRaw={trialToDT.handleChangeRaw}
+                        selected={
+                          formik.values.trial_tour_datetime
+                            ? new Date(formik.values.trial_tour_datetime)
+                            : null
+                        }
+                        onChange={handleDateTrainerChange}
                         showTimeSelect
                         timeFormat="hh:mm aa"
-                        dateFormat={trialToDT.dateFormat}
+                        dateFormat="dd/MM/yyyy hh:mm aa"
                         placeholderText="Select date & time"
-                        minDate={new Date()}
-                        filterTime={trialFilterTime}
                         className="border px-3 py-2 w-full input--icon"
-                        disabled={!!editLog}
+                        minDate={now} // Disable past dates
+                        minTime={getMinTime(formik.values.trial_tour_datetime)}
+                        maxTime={baseMaxTime} // 10:00 PM limit
+                        disabled={editLog ? true : false}
                       />
                       {formik.touched.trial_tour_datetime &&
                         formik.errors.trial_tour_datetime && (
@@ -592,40 +659,39 @@ const LeadCallLogs = () => {
 
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="mb-2 block">
-                          Date & Time
-                        </label>
+                        <label className="mb-2 block">Date & Time</label>
                         <div className="custom--date flex-1">
                           <span className="absolute z-[1] mt-[11px] ml-[15px]">
                             <FaCalendarDays />
                           </span>
                           <DatePicker
-                            selected={followUpDT.selected}
-                            onChange={followUpDT.handleDateTime}
-                            onChangeRaw={followUpDT.handleChangeRaw}
+                            selected={formik.values.follow_up_datetime}
+                            onChange={handleDateChange}
                             showTimeSelect
                             timeFormat="hh:mm aa"
-                            dateFormat={followUpDT.dateFormat}
+                            dateFormat="dd/MM/yyyy hh:mm aa"
                             placeholderText="Select date & time"
-                            minDate={new Date()}
-                            filterTime={followUpFilterTime}
                             className="border px-3 py-2 w-full input--icon"
-                            disabled={!!editLog}
+                            minDate={now} // Disable past dates
+                            minTime={getMinTime(
+                              formik.values.follow_up_datetime,
+                            )}
+                            maxTime={baseMaxTime} // 10:00 PM limit
+                            disabled={editLog ? true : false}
                           />
                         </div>
-                        {formik.touched.follow_up_datetime &&
-                          formik.errors.follow_up_datetime && (
-                            <p className="text-sm text-red-500 mt-1">
-                              {formik.errors.follow_up_datetime}
-                            </p>
-                          )}
+
+                        {/* {formik.errors?.follow_up_datetime &&
+                          formik.touched?.follow_up_datetime && (
+                            <div className="text-red-500 text-sm">
+                              {formik.errors?.follow_up_datetime}
+                            </div>
+                          )} */}
                       </div>
 
                       {/* Schedule For */}
                       <div>
-                        <label className="mb-2 block">
-                          Schedule For
-                        </label>
+                        <label className="mb-2 block">Schedule For</label>
 
                         <Select
                           name="schedule_for"
@@ -709,11 +775,11 @@ const LeadCallLogs = () => {
                         onChange={(val) =>
                           formik.setFieldValue("closure_date", val)
                         }
-                        dateFormat="dd/MM/yyyy"
+                        dateFormat="dd/MM/yyyy hh:mm aa"
                         placeholderText="Select Date"
                         className="border px-3 py-2 w-full input--icon"
                         minDate={now}
-                        disabled={!!editLog}
+                        disabled={editLog ? true : false}
                       />
                     </div>
                   </div>

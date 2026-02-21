@@ -16,7 +16,8 @@ import { FiPlus } from "react-icons/fi";
 import MemberCallLogs from "./MemberCallLogs";
 import CoinsList from "../components/CoinsList/CoinsList";
 
-const MemberProfile = () => {
+const MemberProfile = (props) => {
+  const { setLoading } = props;
   const { id } = useParams();
   const [activeTab, setActiveTab] = useState("Profile Details");
   const [member, setMember] = useState(null);
@@ -118,7 +119,7 @@ const MemberProfile = () => {
           {activeTab === "Service Card" && <ServiceCard details={member} />}
           {activeTab === "Order History" && <OrderHistory details={member} />}
           {activeTab === "Payment History" && (
-            <PaymentHistory details={member} />
+            <PaymentHistory details={member} setLoading={setLoading} />
           )}
           {activeTab === "Call Logs" && <MemberCallLogs details={member} />}
           {activeTab === "Appointments" && <Appointments details={member} />}

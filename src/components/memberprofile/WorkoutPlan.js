@@ -3,19 +3,12 @@ import AllExerciseList from "../WorkoutPlan/AllExerciseList";
 import Select from "react-select";
 import { customStyles } from "../../Helper/helper";
 import { useParams } from "react-router-dom";
-import {
-  TrainingList,
-  workoutTemplateHIIT,
-  workoutTemplatePushDay,
-  workoutTemplateWithExercises,
-} from "../../DummyData/DummyData";
 import { toast } from "react-toastify";
 import DatePicker from "react-datepicker";
 import { FiPlus } from "react-icons/fi";
 import AssignTemplateModal from "./AssignTemplateModal";
 import SaveWorkoutTemplate from "./SaveWorkoutTemplate";
 import { useSelector } from "react-redux";
-import axios from "axios";
 import { authAxios } from "../../config/config";
 
 const workoutTypeOptions = [
@@ -23,12 +16,21 @@ const workoutTypeOptions = [
   { value: "SINGLE", label: "Workout (One Day)" },
 ];
 
+const formatDate = (date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
 const WorkoutPlan = ({
   handleCancelWorkout,
   editingId,
   handleWorkoutUpdate,
+  minStartDate,
 }) => {
   console.log(editingId, "editingId");
+  console.log(minStartDate, "minStartDate");
   const { id } = useParams();
   const { user } = useSelector((state) => state.auth);
   const createdBy = user?.id;
@@ -39,8 +41,6 @@ const WorkoutPlan = ({
   });
 
   const [validationErrors, setValidationErrors] = useState({});
-  const [isFromTemplate, setIsFromTemplate] = useState(false);
-
   const [data, setData] = useState({
     plan: {
       id: null,
@@ -103,7 +103,7 @@ const WorkoutPlan = ({
     try {
       setLoading(true);
       const response = await authAxios().get(
-        `/member/workoutplan/${workoutId}`
+        `/member/workoutplan/${workoutId}`,
       );
 
       let data = response.data?.data || response.data || [];
@@ -220,13 +220,13 @@ const WorkoutPlan = ({
 
     const endDate = calculateEndDate(
       data.plan.start_date,
-      data.plan.no_of_days
+      data.plan.no_of_days,
     );
 
     const generatedDays = generateDaysWithDates(
       data.plan.start_date,
       data.plan.no_of_days,
-      data.days // ✅ preserve IDs if any
+      data.days, // ✅ preserve IDs if any
     );
 
     setData((prev) => ({
@@ -319,7 +319,7 @@ const WorkoutPlan = ({
         if (idx !== dayIdx) return day;
 
         const updatedExercises = day.exercises.map((ex, i) =>
-          i === exIdx ? { ...ex, [field]: value } : ex
+          i === exIdx ? { ...ex, [field]: value } : ex,
         );
 
         return { ...day, exercises: updatedExercises };
@@ -361,7 +361,7 @@ const WorkoutPlan = ({
 
     // Deep clone exercises and remove IDs to avoid conflicts
     const copiedExercises = JSON.parse(
-      JSON.stringify(dayToCopy.exercises || [])
+      JSON.stringify(dayToCopy.exercises || []),
     ).map((ex) => {
       // Remove id field to treat as new exercises
       const { id, ...exerciseWithoutId } = ex;
@@ -389,7 +389,7 @@ const WorkoutPlan = ({
             ex._ui?.type === "rest"
               ? { ...ex._ui, id: `rest-${Date.now()}-${idx}` }
               : { ...ex._ui, id: `${ex._ui?.id || "ex"}-${Date.now()}-${idx}` },
-        })
+        }),
       );
 
       updatedDays[dayIdx] = {
@@ -519,11 +519,6 @@ const WorkoutPlan = ({
         delete_actions: editingId ? deleteActions : undefined,
       };
 
-      // console.log("📦 Final payload:", payload);
-      // console.log(
-      //   "🧪 Day IDs:",
-      //   data.days.map((d) => ({ day_no: d.day_no, id: d.id }))
-      // );
       setLoading(true);
 
       if (editingId) {
@@ -587,7 +582,7 @@ const WorkoutPlan = ({
                         activeDayIndex,
                         exIdx,
                         "sets",
-                        sanitizeNumber(e.target.value)
+                        sanitizeNumber(e.target.value),
                       )
                     }
                     className="custom--input number--appearance-none w-full"
@@ -620,7 +615,7 @@ const WorkoutPlan = ({
                         activeDayIndex,
                         exIdx,
                         "reps",
-                        sanitizeNumber(e.target.value)
+                        sanitizeNumber(e.target.value),
                       )
                     }
                     className="custom--input number--appearance-none w-full"
@@ -653,7 +648,7 @@ const WorkoutPlan = ({
                         activeDayIndex,
                         exIdx,
                         "duration_mins",
-                        sanitizeNumber(e.target.value)
+                        sanitizeNumber(e.target.value),
                       )
                     }
                     className="custom--input number--appearance-none w-full"
@@ -686,7 +681,7 @@ const WorkoutPlan = ({
                         activeDayIndex,
                         exIdx,
                         "distance_mts",
-                        sanitizeNumber(e.target.value)
+                        sanitizeNumber(e.target.value),
                       )
                     }
                     className="custom--input number--appearance-none w-full"
@@ -719,7 +714,7 @@ const WorkoutPlan = ({
                         activeDayIndex,
                         exIdx,
                         "weight_kg",
-                        sanitizeNumber(e.target.value)
+                        sanitizeNumber(e.target.value),
                       )
                     }
                     className="custom--input number--appearance-none w-full"
@@ -752,7 +747,7 @@ const WorkoutPlan = ({
                         activeDayIndex,
                         exIdx,
                         "rest_secs",
-                        sanitizeNumber(e.target.value)
+                        sanitizeNumber(e.target.value),
                       )
                     }
                     className="custom--input number--appearance-none w-full"
@@ -783,7 +778,7 @@ const WorkoutPlan = ({
                       activeDayIndex,
                       exIdx,
                       "notes",
-                      e.target.value
+                      e.target.value,
                     )
                   }
                   className="custom--input w-full"
@@ -816,7 +811,7 @@ const WorkoutPlan = ({
 
       // 1️⃣ Fetch full workout plan
       const res = await authAxios().get(
-        `/workoutplan/${selectedTemplate.value}`
+        `/workoutplan/${selectedTemplate.value}`,
       );
 
       console.log("Template full data:", res.data);
@@ -861,7 +856,7 @@ const WorkoutPlan = ({
               hasDuration: ex.duration_mins !== null,
             },
           })),
-        }))
+        })),
       );
 
       // 4️⃣ Update state
@@ -879,8 +874,6 @@ const WorkoutPlan = ({
         },
         days: processedDays,
       }));
-
-      setIsFromTemplate(true);
 
       setActiveDayIndex(0);
       setShowConfiguration(true);
@@ -938,10 +931,22 @@ const WorkoutPlan = ({
       days: generateDaysWithDates(
         prev.plan.start_date,
         prev.plan.no_of_days,
-        prev.days // ✅ keep IDs
+        prev.days, // ✅ keep IDs
       ),
     }));
   }, [data.plan.start_date]);
+
+  useEffect(() => {
+    if (minStartDate && !editingId) {
+      setData((prev) => ({
+        ...prev,
+        plan: {
+          ...prev.plan,
+          start_date: formatDate(minStartDate),
+        },
+      }));
+    }
+  }, [minStartDate]);
 
   if (loading) {
     return (
@@ -995,7 +1000,7 @@ const WorkoutPlan = ({
                 <Select
                   options={workoutTypeOptions}
                   value={workoutTypeOptions.find(
-                    (opt) => opt.value === data.plan.workout_type
+                    (opt) => opt.value === data.plan.workout_type,
                   )}
                   onChange={(selectedOption) => {
                     setData((prev) => ({
@@ -1030,12 +1035,10 @@ const WorkoutPlan = ({
                         ...prev,
                         plan: {
                           ...prev.plan,
-                          start_date: date
-                            ? date.toISOString().split("T")[0]
-                            : "",
+                          start_date: date ? formatDate(date) : "",
                           end_date: calculateEndDate(
                             date,
-                            prev.plan.no_of_days
+                            prev.plan.no_of_days,
                           ),
                         },
                       }));
@@ -1043,7 +1046,7 @@ const WorkoutPlan = ({
                     dateFormat="dd MMM yyyy"
                     placeholderText="Start date"
                     className="custom--input w-full"
-                    minDate={new Date()}
+                    minDate={minStartDate || new Date()}
                   />
                 </div>
                 {errors.start_date && (
@@ -1079,7 +1082,7 @@ const WorkoutPlan = ({
                           no_of_days: isNaN(parsedValue) ? "" : parsedValue,
                           end_date: calculateEndDate(
                             prev.plan.start_date,
-                            parsedValue
+                            parsedValue,
                           ),
                         },
                       }));
@@ -1281,7 +1284,7 @@ const WorkoutPlan = ({
                       )}
 
                       {ungrouped.map((exercise) =>
-                        renderExercise(exercise, exercise.index)
+                        renderExercise(exercise, exercise.index),
                       )}
                     </>
                   );
@@ -1308,8 +1311,8 @@ const WorkoutPlan = ({
               {loading
                 ? "Saving..."
                 : editingId
-                ? "Update Workout"
-                : "Save Workout"}
+                  ? "Update Workout"
+                  : "Save Workout"}
             </button>
           </div>
         </div>

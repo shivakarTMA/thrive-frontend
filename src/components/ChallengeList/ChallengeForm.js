@@ -13,6 +13,7 @@ import { FaListCheck } from "react-icons/fa6";
 import Select from "react-select";
 import { customStyles, filterActiveItems } from "../../Helper/helper";
 import { PiImageFill } from "react-icons/pi";
+import { format } from "date-fns";
 
 const challengeType = [
   { label: "Steps", value: "STEPS" },
@@ -37,7 +38,7 @@ const ChallengeForm = ({ setShowModal, editingOption, formik }) => {
   const leadBoxRef = useRef();
   const [club, setClub] = useState([]);
 
-    // 👉 Local states for Terms of Play
+  // 👉 Local states for Terms of Play
   const [conditionList, setConditionList] = useState([]);
   const [tempCondition, setTempCondition] = useState("");
 
@@ -97,10 +98,14 @@ const ChallengeForm = ({ setShowModal, editingOption, formik }) => {
             position: exerciseData?.position || "",
             status: exerciseData?.status || "UPCOMING",
             join_in_between: exerciseData?.join_in_between || null,
-            winning_caption_heading: exerciseData?.winning_caption_heading || "",
-            winning_caption_subheading: exerciseData?.winning_caption_subheading || "",
-            progress_caption_heading: exerciseData?.progress_caption_heading || "",
-            progress_caption_subheading: exerciseData?.progress_caption_subheading || "",
+            winning_caption_heading:
+              exerciseData?.winning_caption_heading || "",
+            winning_caption_subheading:
+              exerciseData?.winning_caption_subheading || "",
+            progress_caption_heading:
+              exerciseData?.progress_caption_heading || "",
+            progress_caption_subheading:
+              exerciseData?.progress_caption_subheading || "",
           });
           try {
             setConditionList(JSON.parse(exerciseData?.condition || "[]"));
@@ -219,7 +224,7 @@ const ChallengeForm = ({ setShowModal, editingOption, formik }) => {
                           clubOptions.find(
                             (option) =>
                               option.value.toString() ===
-                              formik.values.club_id?.toString()
+                              formik.values.club_id?.toString(),
                           ) || null
                         }
                         options={clubOptions}
@@ -291,7 +296,8 @@ const ChallengeForm = ({ setShowModal, editingOption, formik }) => {
                         name="challenge_type"
                         value={
                           challengeType.find(
-                            (opt) => opt.value === formik.values?.challenge_type
+                            (opt) =>
+                              opt.value === formik.values?.challenge_type,
                           ) || null
                         }
                         options={challengeType}
@@ -329,10 +335,11 @@ const ChallengeForm = ({ setShowModal, editingOption, formik }) => {
                             : null
                         }
                         onChange={(date) =>
+                          // formik.setFieldValue("start_date_time", date)
                           formik.setFieldValue(
-                            "start_date_time",
-                            date ? date.toISOString() : ""
-                          )
+                          "start_date_time",
+                          format(date, "yyyy-MM-dd hh:mm aa")
+                        )
                         }
                         showTimeSelect
                         timeFormat="hh:mm aa"
@@ -366,9 +373,10 @@ const ChallengeForm = ({ setShowModal, editingOption, formik }) => {
                             : null
                         }
                         onChange={(date) =>
+                          // formik.setFieldValue("end_date_time", date)
                           formik.setFieldValue(
                             "end_date_time",
-                            date ? date.toISOString() : ""
+                            format(date, "yyyy-MM-dd hh:mm aa"),
                           )
                         }
                         showTimeSelect
@@ -401,7 +409,7 @@ const ChallengeForm = ({ setShowModal, editingOption, formik }) => {
                         name="frequency"
                         value={
                           frequencyType.find(
-                            (opt) => opt.value === formik.values?.frequency
+                            (opt) => opt.value === formik.values?.frequency,
                           ) || null
                         }
                         options={frequencyType}
@@ -591,7 +599,8 @@ const ChallengeForm = ({ setShowModal, editingOption, formik }) => {
 
                   <div>
                     <label className="mb-2 block">
-                      Winning caption heading<span className="text-red-500">*</span>
+                      Winning caption heading
+                      <span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
                       <input
@@ -613,7 +622,8 @@ const ChallengeForm = ({ setShowModal, editingOption, formik }) => {
 
                   <div>
                     <label className="mb-2 block">
-                      Winning caption subheading<span className="text-red-500">*</span>
+                      Winning caption subheading
+                      <span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
                       <input
@@ -635,7 +645,8 @@ const ChallengeForm = ({ setShowModal, editingOption, formik }) => {
 
                   <div>
                     <label className="mb-2 block">
-                      Progress caption heading<span className="text-red-500">*</span>
+                      Progress caption heading
+                      <span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
                       <input
@@ -657,7 +668,8 @@ const ChallengeForm = ({ setShowModal, editingOption, formik }) => {
 
                   <div>
                     <label className="mb-2 block">
-                      Progress caption subheading<span className="text-red-500">*</span>
+                      Progress caption subheading
+                      <span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
                       <input
@@ -718,8 +730,7 @@ const ChallengeForm = ({ setShowModal, editingOption, formik }) => {
                     </div>
                   </div>
 
-
-{/* ======================================
+                  {/* ======================================
                        TERMS OF PLAY (TODO LIST)
                   ======================================= */}
                   <div className="md:col-span-4">
@@ -743,11 +754,17 @@ const ChallengeForm = ({ setShowModal, editingOption, formik }) => {
                         onClick={() => {
                           if (!tempCondition.trim()) return;
 
-                          const updated = [...conditionList, tempCondition.trim()];
+                          const updated = [
+                            ...conditionList,
+                            tempCondition.trim(),
+                          ];
                           setConditionList(updated);
 
                           // Save to Formik as JSON string
-                          formik.setFieldValue("condition", JSON.stringify(updated));
+                          formik.setFieldValue(
+                            "condition",
+                            JSON.stringify(updated),
+                          );
 
                           setTempCondition("");
                         }}
@@ -759,15 +776,23 @@ const ChallengeForm = ({ setShowModal, editingOption, formik }) => {
                     {/* List display */}
                     <ul className="space-y-1">
                       {conditionList.map((rule, index) => (
-                        <li key={index} className="flex justify-between bg-gray-100 p-2 rounded gap-2">
+                        <li
+                          key={index}
+                          className="flex justify-between bg-gray-100 p-2 rounded gap-2"
+                        >
                           <span className="text-sm">{rule}</span>
                           <button
                             type="button"
                             className="text-red-500 text-sm"
                             onClick={() => {
-                              const updated = conditionList.filter((_, i) => i !== index);
+                              const updated = conditionList.filter(
+                                (_, i) => i !== index,
+                              );
                               setConditionList(updated);
-                              formik.setFieldValue("condition", JSON.stringify(updated));
+                              formik.setFieldValue(
+                                "condition",
+                                JSON.stringify(updated),
+                              );
                             }}
                           >
                             Remove
@@ -777,11 +802,11 @@ const ChallengeForm = ({ setShowModal, editingOption, formik }) => {
                     </ul>
 
                     {formik.touched.condition && formik.errors.condition && (
-                      <p className="text-red-500 text-sm">{formik.errors.condition}</p>
+                      <p className="text-red-500 text-sm">
+                        {formik.errors.condition}
+                      </p>
                     )}
                   </div>
-
-                  
                 </div>
               </div>
             </div>

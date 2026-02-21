@@ -2,13 +2,13 @@ import React, { useState, useEffect } from "react";
 import Select from "react-select";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { customStyles, formatAutoDate, formatIndianNumber, formatText } from "../../Helper/helper";
+import { formatAutoDate, formatIndianNumber, formatText } from "../../Helper/helper";
 import Tooltip from "../common/Tooltip";
 import { FaEye, FaPrint, FaShareSquare } from "react-icons/fa";
 import { authAxios } from "../../config/config";
 import { toast } from "react-toastify";
-import { addYears, subYears } from "date-fns";
-import { FaCalendarDays } from "react-icons/fa6";
+import { MdFileDownload } from "react-icons/md";
+import IsLoadingHOC from "../common/IsLoadingHOC";
 
 function toCapitalizedCase(inputString) {
   return inputString
@@ -18,7 +18,7 @@ function toCapitalizedCase(inputString) {
     .join(" "); // Join words back into a single string with spaces
 }
 
-const PaymentHistory = ({ details }) => {
+const PaymentHistory = ({ details, setLoading }) => {
   const [paymentHistory, setPaymentHistory] = useState([]);
   const [category, setCategory] = useState({ value: "All", label: "All" });
   const [dateFrom, setDateFrom] = useState(null);
@@ -97,6 +97,42 @@ const PaymentHistory = ({ details }) => {
   const confirmSend = (mode) => {
     alert(`Invoice sent to ${sendModalOrder.name} via ${mode}`);
     setSendModalOrder(null);
+  };
+
+  const downloadInvoice = async (row) => {
+    setLoading(true);
+    try {
+      const payload = {
+        order_id: row.order_id, // ⚠️ confirm correct key (id / order_id)
+        order_type: row.order_type, // SUBSCRIPTION | PACKAGE | PRODUCT
+      };
+
+      const res = await authAxios().post(
+        "/invoice/download",
+        payload,
+        { responseType: "blob" }, // 👈 IMPORTANT
+      );
+
+      // Create blob URL
+      const blob = new Blob([res.data], { type: "application/pdf" });
+      const url = window.URL.createObjectURL(blob);
+
+      // Auto-download
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `invoice_${payload.order_id}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+
+      // Cleanup
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      setLoading(false);
+    } catch (err) {
+      console.error("Invoice download failed", err);
+      toast.error("Failed to download invoice");
+      setLoading(false);
+    }
   };
 
   return (
@@ -199,10 +235,10 @@ const PaymentHistory = ({ details }) => {
                       </Tooltip> */}
                       <Tooltip content="Print Invoice">
                         <button
-                          onClick={() => handlePrintInvoice(order)}
+                          onClick={() => downloadInvoice(order)}
                           className="text-xl"
                         >
-                          <FaPrint />
+                          <MdFileDownload />
                         </button>
                       </Tooltip>
                       <Tooltip content="Send Invoice">
@@ -278,12 +314,12 @@ const PaymentHistory = ({ details }) => {
               >
                 Email
               </button>
-              <button
+              {/* <button
                 onClick={() => confirmSend("SMS")}
                 className="bg-green-500 text-white px-3 py-2 rounded"
               >
                 SMS
-              </button>
+              </button> */}
               <button
                 onClick={() => confirmSend("WhatsApp")}
                 className="bg-purple-500 text-white px-3 py-2 rounded"
@@ -306,4 +342,4 @@ const PaymentHistory = ({ details }) => {
   );
 };
 
-export default PaymentHistory;
+export default IsLoadingHOC(PaymentHistory);

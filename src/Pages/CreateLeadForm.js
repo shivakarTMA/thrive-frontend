@@ -24,6 +24,8 @@ import { authAxios, phoneAxios } from "../config/config";
 import { PiGenderIntersexBold } from "react-icons/pi";
 import CreatableSelect from "react-select/creatable";
 import MultiSelect from "react-multi-select-component";
+import { useClubDateTime } from "../hooks/useClubDateTime";
+import { useDateTimePicker } from "../hooks/useDateTimePicker";
 
 // Trainer assignment options
 const assignTrainers = [
@@ -98,6 +100,7 @@ const CreateLeadForm = ({
 
   const [club, setClub] = useState([]);
   const [staffList, setStaffList] = useState([]);
+  const [clubData, setClubData] = useState(null);
 
   const [selected, setSelected] = useState([]);
 
@@ -130,6 +133,18 @@ const CreateLeadForm = ({
     }
   }, [selectedLead]);
 
+  const fetchClubById = async (id) => {
+    try {
+      const res = await authAxios().get(`/club/${id}`);
+      const data = res.data?.data || res.data || null;
+      console.log("CLUB DATA:", data);
+      setClubData(data);
+    } catch (err) {
+      console.error("❌ Club API Error:", err.response?.data || err.message);
+      toast.error("Failed to fetch club details");
+    }
+  };
+
   // ✅ Initial form values
   const initialValues = {
     id: "",
@@ -160,7 +175,7 @@ const CreateLeadForm = ({
     initialValues,
     validationSchema,
     enableReinitialize: true, // 👈 ensures selectedLead values re-populate
-    
+
     onSubmit: async (values) => {
       if (duplicateError || duplicateEmailError) {
         setShowDuplicateEmailModal(!!duplicateEmailError);
@@ -175,7 +190,7 @@ const CreateLeadForm = ({
         let companyName = values.company_name?.trim() || "";
 
         const existingCompany = companyOptions.find(
-          (opt) => opt.label.toLowerCase() === companyName.toLowerCase()
+          (opt) => opt.label.toLowerCase() === companyName.toLowerCase(),
         );
 
         if (existingCompany) {
@@ -264,6 +279,23 @@ const CreateLeadForm = ({
     },
   });
 
+  useEffect(() => {
+    if (formik.values?.club_id) {
+      fetchClubById(formik.values.club_id);
+    }
+  }, [formik.values?.club_id]);
+
+  const { filterTime: followUpFilterTime } = useClubDateTime(
+    formik.values.schedule_date_time,
+    clubData,
+  );
+
+  const scheduleDT = useDateTimePicker(
+    formik,
+    "schedule_date_time",
+    followUpFilterTime,
+  );
+
   // ✅ Fetch lead details when selectedId changes
   useEffect(() => {
     if (!selectedLead) return;
@@ -335,7 +367,7 @@ const CreateLeadForm = ({
 
       // ✅ Filter only active companies
       const activeCompanies = data.filter(
-        (company) => company.status === "ACTIVE"
+        (company) => company.status === "ACTIVE",
       );
 
       // ✅ Convert to dropdown-friendly format
@@ -378,7 +410,7 @@ const CreateLeadForm = ({
 
       // ✅ FILTER ACTIVE STAFF HERE
       const staff = (res.data?.data || []).filter(
-        (item) => String(item?.status).toUpperCase() === "ACTIVE"
+        (item) => String(item?.status).toUpperCase() === "ACTIVE",
       );
 
       const foh = staff
@@ -579,11 +611,11 @@ const CreateLeadForm = ({
     } catch (error) {
       console.error(
         "Error checking phone uniqueness:",
-        error.response || error
+        error.response || error,
       );
       formik.setFieldError(
         "phoneFull",
-        "Unable to check phone number. Please try again."
+        "Unable to check phone number. Please try again.",
       );
     }
   };
@@ -622,11 +654,11 @@ const CreateLeadForm = ({
     } catch (error) {
       console.error(
         "Error checking phone uniqueness:",
-        error.response || error
+        error.response || error,
       );
       formik.setFieldError(
         "Email",
-        "Unable to check phone number. Please try again."
+        "Unable to check phone number. Please try again.",
       );
     }
   };
@@ -642,7 +674,7 @@ const CreateLeadForm = ({
       trainerAvailability[trainer.value]?.some((slot) => {
         const slotDt = new Date(slot.date_time);
         return slotDt.getTime() === selected.getTime();
-      })
+      }),
     );
   };
 
@@ -655,6 +687,18 @@ const CreateLeadForm = ({
   const handleLeadModal = () => {
     setLeadModal(false);
   };
+
+  useEffect(() => {
+    const clubId = formik.values?.club_id;
+
+    if (clubId) {
+      fetchClubById(clubId);
+    }
+
+    // ✅ Reset schedule when club changes
+    formik.setFieldValue("schedule_date_time", "");
+
+  }, [formik.values?.club_id]);
 
   return (
     <>
@@ -699,7 +743,7 @@ const CreateLeadForm = ({
                         <Select
                           name="club_id"
                           value={clubOptions.find(
-                            (opt) => opt.value === formik.values.club_id
+                            (opt) => opt.value === formik.values.club_id,
                           )}
                           onChange={(option) =>
                             formik.setFieldValue("club_id", option.value)
@@ -818,7 +862,7 @@ const CreateLeadForm = ({
                         <Select
                           name="gender"
                           value={genderOptions.find(
-                            (opt) => opt.value === formik.values.gender
+                            (opt) => opt.value === formik.values.gender,
                           )}
                           options={genderOptions}
                           onChange={(option) =>
@@ -847,14 +891,14 @@ const CreateLeadForm = ({
                             formik.values.company_id
                               ? companyOptions.find(
                                   (opt) =>
-                                    opt.value === formik.values.company_id
+                                    opt.value === formik.values.company_id,
                                 ) || null
                               : formik.values.company_name
-                              ? {
-                                  label: formik.values.company_name,
-                                  value: "__new__", // ✅ NEVER use string as ID
-                                }
-                              : null
+                                ? {
+                                    label: formik.values.company_name,
+                                    value: "__new__", // ✅ NEVER use string as ID
+                                  }
+                                : null
                           }
                           onChange={(option) => {
                             // Clear
@@ -869,7 +913,7 @@ const CreateLeadForm = ({
                               formik.setFieldValue("company_id", option.value);
                               formik.setFieldValue(
                                 "company_name",
-                                option.label
+                                option.label,
                               );
                               return;
                             }
@@ -984,7 +1028,7 @@ const CreateLeadForm = ({
                         <Select
                           name="lead_type"
                           value={leadTypes.find(
-                            (opt) => opt.value === formik.values.lead_type
+                            (opt) => opt.value === formik.values.lead_type,
                           )}
                           onChange={(option) =>
                             formik.setFieldValue("lead_type", option.value)
@@ -1032,8 +1076,8 @@ const CreateLeadForm = ({
                                 (opt) =>
                                   opt.value.toLowerCase() ===
                                   String(
-                                    formik.values.lead_source || ""
-                                  ).toLowerCase()
+                                    formik.values.lead_source || "",
+                                  ).toLowerCase(),
                               ) || null
                             }
                             onChange={(option) =>
@@ -1066,7 +1110,7 @@ const CreateLeadForm = ({
                           <Select
                             name="platform"
                             value={socialList.find(
-                              (opt) => opt.value === formik.values.platform
+                              (opt) => opt.value === formik.values.platform,
                             )}
                             onChange={(option) =>
                               formik.setFieldValue("platform", option.value)
@@ -1156,16 +1200,16 @@ const CreateLeadForm = ({
                                   onChange={(e) => {
                                     formik.setFieldValue(
                                       "schedule",
-                                      e.target.value
+                                      e.target.value,
                                     );
                                     // Reset assigned_staff_id and schedule_date_time when NOTRIAL is selected
                                     formik.setFieldValue(
                                       "assigned_staff_id",
-                                      ""
+                                      "",
                                     );
                                     formik.setFieldValue(
                                       "schedule_date_time",
-                                      ""
+                                      "",
                                     );
                                   }}
                                   className="w-4 h-4 mr-1"
@@ -1190,7 +1234,7 @@ const CreateLeadForm = ({
                               <span className="absolute z-[1] mt-[11px] ml-[15px]">
                                 <FaCalendarDays />
                               </span>
-                              <DatePicker
+                              {/* <DatePicker
                                 selected={
                                   formik.values.schedule_date_time
                                     ? new Date(formik.values.schedule_date_time)
@@ -1205,6 +1249,23 @@ const CreateLeadForm = ({
                                 minDate={now} // Disable past dates
                                 minTime={getMinTime(new Date())} // Calculate minTime for selected date dynamically
                                 maxTime={baseMaxTime} // 10:00 PM limit
+                                disabled={
+                                  !formik.values.schedule ||
+                                  formik.values.schedule === "NOTRIAL"
+                                }
+                              /> */}
+
+                              <DatePicker
+                                selected={scheduleDT.selected}
+                                onChange={scheduleDT.handleDateTime}
+                                onChangeRaw={scheduleDT.handleChangeRaw}
+                                showTimeSelect
+                                timeFormat="hh:mm aa"
+                                dateFormat={scheduleDT.dateFormat}
+                                placeholderText="Select date & time"
+                                minDate={new Date()}
+                                filterTime={followUpFilterTime}
+                                className="border px-3 py-2 w-full input--icon"
                                 disabled={
                                   !formik.values.schedule ||
                                   formik.values.schedule === "NOTRIAL"
@@ -1247,14 +1308,14 @@ const CreateLeadForm = ({
                                     .find(
                                       (opt) =>
                                         opt.value ===
-                                        formik.values.assigned_staff_id
+                                        formik.values.assigned_staff_id,
                                     ) || null
                                 }
                                 options={staffList} // grouped options
                                 onChange={(value) =>
                                   formik.setFieldValue(
                                     "assigned_staff_id",
-                                    value?.value
+                                    value?.value,
                                   )
                                 }
                                 placeholder="Select staff"

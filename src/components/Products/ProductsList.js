@@ -191,7 +191,11 @@ const ProductsList = () => {
           .required("Discount is required")
           .max(amount, "Discount cannot be greater than amount");
       }),
-    gst: Yup.string().required("GST is required"),
+    gst: Yup.number()
+      .typeError("GST must be a number")
+      .required("GST is required")
+      .min(2, "GST cannot be less than 2%")
+      .max(40, "GST cannot be greater than 40%"),
     stock_quantity: Yup.string().required("Stock Quantity is required"),
     earn_coin: Yup.string().required("Thrive Coins is required"),
     position: Yup.string().required("Position is required"),

@@ -2,21 +2,33 @@ import React, { useEffect, useRef } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import Select from "react-select";
-import { customStyles } from "../../Helper/helper";
+import {
+  blockInvalidNumberKeys,
+  customStyles,
+  durationValueInteger,
+} from "../../Helper/helper";
 import { IoCloseCircle } from "react-icons/io5";
 import { toast } from "react-toastify";
 import { phoneAxios } from "../../config/config";
+import { fetchOptionList } from "../../Redux/Reducers/optionListSlice";
+import { useDispatch, useSelector } from "react-redux";
 
 // Main component
 const AddCoins = ({ setCoinsModal, details, handleUpdateCoins }) => {
   console.log(details, "details Add coins");
   const leadBoxRef = useRef(null);
 
-  const sourceData = [
-    { value: "Challenges", label: "Challenges" },
-    { value: "Referral", label: "Referral" },
-    { value: "Compensation", label: "Compensation" },
-  ];
+  // Redux state
+  const dispatch = useDispatch();
+  const { lists } = useSelector((state) => state.optionList);
+
+  // Fetch option lists
+  useEffect(() => {
+    dispatch(fetchOptionList("COINS_REASONS"));
+  }, [dispatch]);
+
+  // Extract Redux lists
+  const leadsSources = lists["COINS_REASONS"] || [];
 
   // Formik setup
   const formik = useFormik({
@@ -85,7 +97,12 @@ const AddCoins = ({ setCoinsModal, details, handleUpdateCoins }) => {
                 type="number"
                 name="coins"
                 value={formik?.values?.coins}
-                onChange={formik.handleChange}
+                // onChange={formik.handleChange}
+                onKeyDown={blockInvalidNumberKeys} // ⛔ blocks typing -, e, etc.
+                onChange={(e) => {
+                  const cleanValue = durationValueInteger(e.target.value);
+                  formik.setFieldValue("coins", cleanValue);
+                }}
                 className="custom--input w-full"
               />
               {formik.errors.coins && formik.touched.coins && (
@@ -111,10 +128,10 @@ const AddCoins = ({ setCoinsModal, details, handleUpdateCoins }) => {
                 onChange={(selectedOption) =>
                   formik.setFieldValue(
                     "source",
-                    selectedOption ? selectedOption.value : ""
+                    selectedOption ? selectedOption.value : "",
                   )
                 }
-                options={sourceData}
+                options={leadsSources}
                 styles={customStyles}
               />
               {formik.errors.source && formik.touched.source && (

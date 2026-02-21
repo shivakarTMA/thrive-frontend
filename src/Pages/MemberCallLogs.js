@@ -17,6 +17,8 @@ import { BsExclamationCircle } from "react-icons/bs";
 import LeadContactHistory from "./LeadContactHistory";
 import { addYears, subYears } from "date-fns";
 import { useParams, useSearchParams, useNavigate } from "react-router-dom";
+import { useClubDateTime } from "../hooks/useClubDateTime";
+import { useDateTimePicker } from "../hooks/useDateTimePicker";
 
 // Validation schema with conditional required fields
 const validationSchema = Yup.object().shape({
@@ -59,7 +61,15 @@ const validationSchema = Yup.object().shape({
           "Busy Tone",
           "Future Prospect",
         ].includes(call_status),
-      then: (schema) => schema.required("Date & Time is required"),
+      then: (schema) =>
+        schema
+          .required("Date & Time is required")
+          .test("has-time", "Please select a time as well", (value) => {
+            if (!value) return false;
+            const date = new Date(value);
+            // ✅ If hours and minutes are both 0 → only date was selected, no time
+            return !(date.getHours() === 0 && date.getMinutes() === 0);
+          }),
       otherwise: (schema) => schema.nullable(),
     }),
 });
@@ -82,6 +92,7 @@ const MemberCallLogs = () => {
   const [callDataList, setCallDataList] = useState([]);
   const [memberEnquiry, setMemberEnquiry] = useState([]);
   const [editLog, setEditLog] = useState(null);
+  const [clubData, setClubData] = useState(null);
 
   const now = new Date();
   const minTime = new Date();
@@ -89,6 +100,18 @@ const MemberCallLogs = () => {
 
   const maxTime = new Date();
   maxTime.setHours(22, 0, 0, 0);
+
+  const fetchClubById = async (id) => {
+    try {
+      const res = await authAxios().get(`/club/${id}`);
+      const data = res.data?.data || res.data || null;
+      console.log("CLUB DATA:", data); // ← CHECK THIS in browser console
+      setClubData(data);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to fetch club details");
+    }
+  };
 
   const fetchMemberEnquiery = async (memberId, filters = {}) => {
     try {
@@ -160,6 +183,7 @@ const MemberCallLogs = () => {
       const data = res.data?.data || res.data || null;
       console.log(data, "data");
       setMemberDetails(data);
+      fetchClubById(data?.club_id);
     } catch (err) {
       console.error(err);
       toast.error("Failed to fetch member details");
@@ -241,6 +265,17 @@ const MemberCallLogs = () => {
       }
     },
   });
+
+  const { filterTime: followUpFilterTime } = useClubDateTime(
+    formik.values.follow_up_datetime,
+    clubData,
+  );
+
+  const followUpDT = useDateTimePicker(
+    formik,
+    "follow_up_datetime",
+    followUpFilterTime,
+  );
 
   useEffect(() => {
     let filtered = [];
@@ -351,19 +386,18 @@ const MemberCallLogs = () => {
     }
   }, [view]);
 
-useEffect(() => {
-  const logToEdit = callDataList.find(
-    (log) => String(log.id) === String(logId),
-  );
+  useEffect(() => {
+    const logToEdit = callDataList.find(
+      (log) => String(log.id) === String(logId),
+    );
 
-  if (logId) {
-    setEditLog(logToEdit);
-    setActiveTab("Member Logs");
-  } else{
-    setEditLog(null)
-  }
-}, [logId, callDataList]);
-
+    if (logId) {
+      setEditLog(logToEdit);
+      setActiveTab("Member Logs");
+    } else {
+      setEditLog(null);
+    }
+  }, [logId, callDataList]);
 
   return (
     <div className="">
@@ -517,21 +551,17 @@ useEffect(() => {
                             <FaCalendarDays />
                           </span>
                           <DatePicker
-                            selected={
-                              formik.values.follow_up_datetime
-                                ? new Date(formik.values.follow_up_datetime)
-                                : null
-                            }
-                            onChange={handleDateChange}
+                            selected={followUpDT.selected}
+                            onChange={followUpDT.handleDateTime}
+                            onChangeRaw={followUpDT.handleChangeRaw}
                             showTimeSelect
                             timeFormat="hh:mm aa"
-                            dateFormat="dd/MM/yyyy hh:mm aa"
+                            dateFormat={followUpDT.dateFormat}
                             placeholderText="Select date & time"
+                            minDate={new Date()}
+                            filterTime={followUpFilterTime}
                             className="border px-3 py-2 w-full input--icon"
-                            minDate={now}
-                            minTime={minTime}
-                            maxTime={maxTime}
-                            disabled={editLog ? true : false}
+                            disabled={!!editLog}
                           />
                         </div>
 
@@ -598,8 +628,9 @@ useEffect(() => {
                   {/* Submit Button */}
                   <div className="flex items-center justify-end gap-2 mt-3">
                     {editLog && (
-                      <p
-                        className="cursor-pointer text-[#009eb2] underline"
+                      <button
+                        type="button"
+                        className="px-4 py-2 bg-white text-black border border-black rounded"
                         onClick={() => {
                           formik.resetForm();
                           setEditLog(null);
@@ -607,7 +638,7 @@ useEffect(() => {
                         }}
                       >
                         Clear
-                      </p>
+                      </button>
                     )}
                     <button
                       type="submit"

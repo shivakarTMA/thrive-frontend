@@ -4,6 +4,7 @@ import { IoEyeOutline } from "react-icons/io5";
 import { RxUpdate } from "react-icons/rx";
 import { toast } from "react-toastify";
 import { FiUpload } from "react-icons/fi";
+import { MdOutlineFileDownload } from "react-icons/md";
 
 const KYCSubmission = ({ details }) => {
   const memberId = details?.id;
@@ -348,6 +349,50 @@ const handleSubmit = async () => {
               </div>
             );
           })}
+
+          <div class="bg-gray-50 rounded-lg p-6 w-full">
+            <label class="block text-lg font-semibold text-gray-700 mb-4">PAR-Q Information</label>
+            <div class="border rounded-lg p-4 bg-white">
+                <div class="flex items-start space-x-4">
+                  <div class="relative w-[100px] h-[80px]">
+                      <img alt="Aadhar Card (Front)" class="w-full h-full object-cover rounded border" src="https://asset-uat.s3.ap-south-1.amazonaws.com/uploads/kyc/1771585179655-img2.png" />
+                  </div>
+                  <div class="">
+                      <div class="flex space-x-2 mt-2">
+                        <button type="button" class="inline-flex items-center px-3 py-2 text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors">
+                            <IoEyeOutline />
+                        </button>
+                        <button type="button" class="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors">
+                            <MdOutlineFileDownload />
+                        </button>
+                      </div>
+                  </div>
+                </div>
+            </div>
+          </div>
+
+          <div class="bg-gray-50 rounded-lg p-6 w-full">
+            <label class="block text-lg font-semibold text-gray-700 mb-4">Terms & Conditions</label>
+            <div class="border rounded-lg p-4 bg-white">
+                <div class="flex items-start space-x-4">
+                  <div class="relative w-[100px] h-[80px]">
+                      <img alt="Aadhar Card (Front)" class="w-full h-full object-cover rounded border" src="https://asset-uat.s3.ap-south-1.amazonaws.com/uploads/kyc/1771585179655-img2.png" />
+                  </div>
+                  <div class="">
+                      <div class="flex space-x-2 mt-2">
+                        <button type="button" class="inline-flex items-center px-3 py-2 text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors">
+                            <IoEyeOutline />
+                        </button>
+                        <button type="button" class="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors">
+                            <MdOutlineFileDownload />
+                        </button>
+                      </div>
+                  </div>
+                </div>
+            </div>
+          </div>
+
+          
         </div>
 
         {/* Submit Button (Always Visible) */}

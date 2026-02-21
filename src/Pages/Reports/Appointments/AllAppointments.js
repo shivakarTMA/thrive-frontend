@@ -658,7 +658,9 @@ const AllAppointments = () => {
                     <th className="px-2 py-4 min-w-[170px]">
                       Current Status/Action
                     </th>
-                    <th className="px-2 py-4 min-w-[200px]">Remarks</th>
+                    <th className="px-2 py-4 min-w-[150px]">Remarks</th>
+                    <th className="px-2 py-4 min-w-[100px]">VAS Rating</th>
+                    <th className="px-2 py-4 min-w-[100px]">Rating</th>
                   </tr>
                 </thead>
 
@@ -743,6 +745,12 @@ const AllAppointments = () => {
                             ? row?.remarks
                             : "--"} */}
                             {row?.remarks ? row?.remarks : "--"}
+                        </td>
+                        <td className="px-2 py-4">
+                            {row?.vas_rating ? row?.vas_rating : "--"}
+                        </td>
+                        <td className="px-2 py-4">
+                            {row?.rating ? row?.rating : "--"}
                         </td>
                       </tr>
                     ))

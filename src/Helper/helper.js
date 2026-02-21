@@ -379,3 +379,35 @@ export const blockInvalidNumberKeys = (e) => {
     e.preventDefault();
   }
 };
+
+// Check Datetime past time
+// Check if two dates are the same calendar day
+export const isSameDay = (date1, date2) => {
+  return (
+    date1.getFullYear() === date2.getFullYear() &&
+    date1.getMonth() === date2.getMonth() &&
+    date1.getDate() === date2.getDate()
+  );
+};
+
+// Returns minimum selectable time
+export const getMinSelectableTime = (selectedDate) => {
+  const now = new Date();
+
+  if (!selectedDate) return new Date(0, 0, 0, 0, 0); // 12:00 AM
+
+  const selected = new Date(selectedDate);
+
+  // If selected date is today → restrict past time
+  if (isSameDay(selected, now)) {
+    return now;
+  }
+
+  // Future date → allow full day
+  return new Date(0, 0, 0, 0, 0); // 12:00 AM
+};
+
+// Returns maximum selectable time (example: 10:00 PM)
+export const getMaxSelectableTime = (hour = 22, minute = 0) => {
+  return new Date(0, 0, 0, hour, minute);
+};

@@ -32,20 +32,28 @@ const genderOptions = [
 
 const validationSchema = Yup.object({
   full_name: Yup.string().required("Full Name is required"),
-  mobile: Yup.string()
+  // mobile: Yup.string()
+  //   .required("Contact number is required")
+  //   .test("is-valid-phone", "Invalid phone number", function (value) {
+  //     const { country_code } = this.parent;
+  //     if (!value || !country_code) return false;
+
+  //     // Combine country code and number to full international format
+  //     const phoneNumberString = `+${country_code}${value}`;
+
+  //     // First check if the number is even possible (not just valid)
+  //     if (!isPossiblePhoneNumber(phoneNumberString)) return false;
+
+  //     // Parse and check validity strictly according to country
+  //     const phoneNumber = parsePhoneNumberFromString(phoneNumberString);
+  //     return phoneNumber?.isValid() || false;
+  //   }),
+  phoneFull: Yup.string()
     .required("Contact number is required")
     .test("is-valid-phone", "Invalid phone number", function (value) {
-      const { country_code } = this.parent;
-      if (!value || !country_code) return false;
+      if (!value) return false;
 
-      // Combine country code and number to full international format
-      const phoneNumberString = `+${country_code}${value}`;
-
-      // First check if the number is even possible (not just valid)
-      if (!isPossiblePhoneNumber(phoneNumberString)) return false;
-
-      // Parse and check validity strictly according to country
-      const phoneNumber = parsePhoneNumberFromString(phoneNumberString);
+      const phoneNumber = parsePhoneNumberFromString(value);
       return phoneNumber?.isValid() || false;
     }),
   date_of_birth: Yup.date().required("Date of birth is required"),
@@ -879,12 +887,17 @@ const ProfileDetails = ({ member }) => {
                     countryCallingCodeEditable={false}
                     className="custom--input w-full custom--phone"
                   />
-                  {((formik.errors?.mobile && formik.touched?.mobile) ||
+                  {/* {((formik.errors?.mobile && formik.touched?.mobile) ||
                     duplicateError) && (
                     <div className="text-red-500 text-sm">
                       {formik.errors?.mobile || duplicateError}
                     </div>
-                  )}
+                  )} */}
+                  {((formik.errors?.phoneFull && formik.touched?.phoneFull) || duplicateError) && (
+  <div className="text-red-500 text-sm">
+    {formik.errors?.phoneFull || duplicateError}
+  </div>
+)}
                 </div>
 
                 <div>
@@ -1457,18 +1470,6 @@ const ProfileDetails = ({ member }) => {
                 <div className="flex items-center space-x-3">
                   <div
                     className={`w-8 h-8 rounded-full flex items-center justify-center 
-                    ${member?.is_parq_submitted ? "bg--color" : "bg-[#D4D4D4]"}`}
-                  >
-                    <IoCheckmark className="w-5 h-5 text-white" />
-                  </div>
-                  <span className="text-sm font-medium text-gray-700">
-                    ParQ Information
-                  </span>
-                </div>
-
-                <div className="flex items-center space-x-3">
-                  <div
-                    className={`w-8 h-8 rounded-full flex items-center justify-center 
                     ${member?.is_kyc ? "bg--color" : "bg-[#D4D4D4]"}`}
                   >
                     <IoCheckmark className="w-5 h-5 text-white" />
@@ -1477,6 +1478,20 @@ const ProfileDetails = ({ member }) => {
                     KYC Submission
                   </span>
                 </div>
+
+                <div className="flex items-center space-x-3">
+                  <div
+                    className={`w-8 h-8 rounded-full flex items-center justify-center 
+                    ${member?.is_parq_submitted ? "bg--color" : "bg-[#D4D4D4]"}`}
+                  >
+                    <IoCheckmark className="w-5 h-5 text-white" />
+                  </div>
+                  <span className="text-sm font-medium text-gray-700">
+                   PAR-Q Information
+                  </span>
+                </div>
+
+                
               </div>
             </div>
           </div>

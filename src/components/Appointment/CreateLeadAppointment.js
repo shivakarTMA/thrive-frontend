@@ -79,7 +79,7 @@ const CreateLeadAppointment = ({
 
   const appointmentTypes = [
     ...(serviceList
-      ?.filter((item) => item.id !== 12)
+      ?.filter((item) => item.type !== "PRODUCT" && item.type !== "GROUP_CLASS")
       .map((item) => ({
         label: item.name,
         value: item.id,
@@ -117,7 +117,7 @@ const CreateLeadAppointment = ({
   // Formik setup
   const formik = useFormik({
     initialValues: {
-      club_id: null,
+      club_id: clubId,
       member_id: memberID,
       appointment_category: "complementary",
       service_id: null,
@@ -128,6 +128,7 @@ const CreateLeadAppointment = ({
     validationSchema: validationSchema,
     context: { memberType },
     onSubmit: async (values, { resetForm }) => {
+      console.log(values,'asdefasdf')
       const payload = {
         member_id: memberID,
         service_id: values.service_id,

@@ -125,7 +125,7 @@ const CreateMemberAppointment = ({
 
   const appointmentTypes = [
     ...(serviceList
-      ?.filter((item) => item.id !== 12)
+      ?.filter((item) => item.type !== "PRODUCT" && item.type !== "GROUP_CLASS")
       .map((item) => ({
         label: item.name,
         value: item.id,

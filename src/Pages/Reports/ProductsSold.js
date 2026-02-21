@@ -32,8 +32,8 @@ const dateFilterOptions = [
   { value: "custom", label: "Custom Date" },
 ];
 
-const ProductsSold = (props) => {
-  const { setLoading } = props;
+  const ProductsSold = (props) => {
+    const { setLoading } = props;
   const location = useLocation();
   const navigate = useNavigate();
   const [productSoldData, setProductSoldData] = useState([]);

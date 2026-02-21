@@ -678,6 +678,7 @@ const MemberList = () => {
                     <th className="px-2 py-4">Gender</th>
                     <th className="px-2 py-4">MemeberShip Duration</th>
                     <th className="px-2 py-4">Status</th>
+                    <th className="px-2 py-4">Start On</th>
                     <th className="px-2 py-4">Expired On</th>
                     <th className="px-2 py-4">Trainer Name</th>
                     <th className="px-2 py-4">App Downloaded</th>
@@ -754,6 +755,11 @@ const MemberList = () => {
                             ? "Inactive"
                             : "Active"}
                         </span>
+                      </td>
+                      <td className="px-2 py-4">
+                        {member?.subscription_start_date
+                          ? formatAutoDate(member?.subscription_start_date)
+                          : "--"}
                       </td>
                       <td className="px-2 py-4">
                         {member?.subscription_expiry_date

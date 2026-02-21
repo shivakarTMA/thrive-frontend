@@ -7,46 +7,56 @@ import "react-datepicker/dist/react-datepicker.css";
 import { customStyles, formatAutoDate, formatText } from "../../Helper/helper";
 import { authAxios } from "../../config/config";
 import { toast } from "react-toastify";
-import { addYears, subYears } from "date-fns";
+import { addYears, format, subYears } from "date-fns";
 import { FaCalendarDays } from "react-icons/fa6";
+import Pagination from "../common/Pagination";
 
 const coinsTypeOptions = [
-  { value: "All", label: "All" },
-  { value: "Credit", label: "Credit" },
-  { value: "Debit", label: "Debit" },
+  { value: "CREDIT", label: "Credit" },
+  { value: "DEBIT", label: "Debit" },
 ];
 
 const CoinsList = ({ details }) => {
   const [coinsList, setCoinsList] = useState([]);
-  const [coinsTypeFilter, setCoinsTypeFilter] = useState(coinsTypeOptions[0]);
+  const [coinsTypeFilter, setCoinsTypeFilter] = useState([]);
   const [dateFrom, setDateFrom] = useState(null);
   const [dateTo, setDateTo] = useState(null);
   const [coinsModal, setCoinsModal] = useState(false);
   const columns = ["Date", "Coins", "Source", "Remarks", "Transaction Type"];
 
+  const [page, setPage] = useState(1);
+  const [rowsPerPage] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+
   // Fetch coins with filters applied
-  const fetchMemberCoins = async (
-    source = "",
-    startDate = "",
-    endDate = ""
-  ) => {
+  const fetchMemberCoins = async (currentPage = page) => {
     try {
-      // Prepare query parameters based on the selected filters
       const params = {
-        source: source !== "All" ? source : "", // Exclude 'All' in the query
-        startDate: startDate ? startDate.toISOString().split("T")[0] : "",
-        endDate: endDate ? endDate.toISOString().split("T")[0] : "",
+        page: currentPage,
+        limit: rowsPerPage,
       };
+
+      if (coinsTypeFilter?.value) {
+        params.transaction_type = coinsTypeFilter.value;
+      }
+
+      if (dateFrom && dateTo) {
+        params.startDate = format(dateFrom, "yyyy-MM-dd");
+        params.endDate = format(dateTo, "yyyy-MM-dd");
+      }
 
       // Make the API call with query parameters
       const res = await authAxios().get(
         `/coin/transaction/list/${details?.id}`,
-        {
-          params: params,
-        }
+        { params },
       );
+      const responseData = res.data;
       const data = res.data?.data || [];
       setCoinsList(data);
+      setPage(responseData?.currentPage || 1);
+      setTotalPages(responseData?.totalPage || 1);
+      setTotalCount(responseData?.totalCount || data.length);
     } catch (err) {
       console.error(err);
       toast.error("Failed to fetch coins");
@@ -54,8 +64,15 @@ const CoinsList = ({ details }) => {
   };
 
   // Fetch coins whenever the component mounts or filters change
+
   useEffect(() => {
-    fetchMemberCoins(coinsTypeFilter.value, dateFrom, dateTo);
+    setPage(1);
+    // ✅ If one date selected but not both → do nothing
+    if ((dateFrom && !dateTo) || (!dateFrom && dateTo)) {
+      return;
+    }
+
+    fetchMemberCoins(1);
   }, [coinsTypeFilter, dateFrom, dateTo]);
 
   const handleUpdateCoins = () => {
@@ -73,9 +90,10 @@ const CoinsList = ({ details }) => {
             placeholder="Select Source"
             styles={customStyles}
             className="w-40"
+            isClearable
           />
 
-          {/* <div className="custom--date dob-format">
+          <div className="custom--date dob-format">
             <span className="absolute z-[1] mt-[11px] ml-[15px]">
               <FaCalendarDays />
             </span>
@@ -113,7 +131,7 @@ const CoinsList = ({ details }) => {
               className="custom--input w-full input--icon"
               disabled={!dateFrom}
             />
-          </div> */}
+          </div>
         </div>
 
         {/* Button to open the modal for adding coins */}
@@ -177,6 +195,17 @@ const CoinsList = ({ details }) => {
           </tbody>
         </table>
       </div>
+      <Pagination
+        page={page}
+        totalPages={totalPages}
+        rowsPerPage={rowsPerPage}
+        totalCount={totalCount}
+        currentDataLength={coinsList.length}
+        onPageChange={(newPage) => {
+          setPage(newPage);
+          fetchMemberCoins(newPage);
+        }}
+      />
 
       {/* AddCoins modal */}
       {coinsModal && (

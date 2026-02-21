@@ -15,6 +15,7 @@ const WorkoutApp = ({ member }) => {
   const [editingId, setEditingId] = useState(null);
   const [workoutTable, setWorkoutTable] = useState(true);
   const [workoutModal, setWorkoutModal] = useState(false);
+  const [nextAvailableStartDate, setNextAvailableStartDate] = useState(null);
 
   // Confirmation modal state
   const [confirmModal, setConfirmModal] = useState({
@@ -57,6 +58,24 @@ const WorkoutApp = ({ member }) => {
 
       let data = res.data?.data || res.data || [];
       setWorkouts(data);
+
+      if (data.length > 0) {
+      // Get latest end_date
+      const latestWorkout = data.reduce((latest, current) => {
+        return new Date(current.end_date) > new Date(latest.end_date)
+          ? current
+          : latest;
+      });
+
+      const lastEndDate = new Date(latestWorkout.end_date);
+
+      // Add 1 day
+      lastEndDate.setDate(lastEndDate.getDate() + 1);
+
+      setNextAvailableStartDate(lastEndDate);
+    } else {
+      setNextAvailableStartDate(new Date()); // if no workouts exist
+    }
     } catch (err) {
       console.error(err);
       toast.error("Failed to fetch workout plans");
@@ -136,7 +155,7 @@ const WorkoutApp = ({ member }) => {
       )}
       {/* ---------------------------------------------------- */}
 
-      {workoutTable && workouts.length === 0 && (
+      {!workoutModal && (
         <div className="flex justify-end items-end gap-2 mb-3 w-full">
           <button
             type="button"
@@ -230,6 +249,7 @@ const WorkoutApp = ({ member }) => {
           handleCancelWorkout={handleCancelWorkout}
           editingId={editingId}
           handleWorkoutUpdate={fetchWorkouts}
+          minStartDate={nextAvailableStartDate}
         />
       )}
     </div>

@@ -105,7 +105,9 @@ const PackagesList = () => {
         params.club_id = clubFilter.value;
       }
 
-      const res = await authAxios().get("/package/list?package_type=SESSION", { params });
+      const res = await authAxios().get("/package/list?package_type=SESSION", {
+        params,
+      });
       const responseData = res.data;
       const data = responseData?.data || [];
 
@@ -208,21 +210,6 @@ const PackagesList = () => {
             .oneOf(["PAID", "FREE"])
             .required("Booking Type is required"),
 
-          // amount: Yup.number()
-          //   .typeError("Amount must be a number")
-          //   .when("booking_type", {
-          //     is: "PAID",
-          //     then: (schema) => schema.required("Amount is required"),
-          //     otherwise: (schema) => schema.nullable(),
-          //   }),
-
-          // discount: Yup.number()
-          //   .typeError("Discount must be a number")
-          //   .when("booking_type", {
-          //     is: "PAID",
-          //     then: (schema) => schema.required("Discount is required"),
-          //     otherwise: (schema) => schema.nullable(),
-          //   }),
           amount: Yup.number()
             .typeError("Amount must be a number")
             .when("booking_type", {
@@ -258,10 +245,12 @@ const PackagesList = () => {
 
           gst: Yup.number()
             .typeError("GST must be a number")
+            .min(2, "GST cannot be less than 2%")
+            .max(40, "GST cannot be greater than 40%")
             .when("booking_type", {
               is: "PAID",
               then: (schema) => schema.required("GST is required"),
-              otherwise: (schema) => schema.nullable(),
+              otherwise: (schema) => schema.nullable().notRequired(),
             }),
         };
       }
@@ -320,12 +309,6 @@ const PackagesList = () => {
               session_duration: Yup.number()
                 .typeError("Session Duration must be a number")
                 .required("Session Duration is required"),
-              // amount: Yup.number()
-              //   .typeError("Amount must be a number")
-              //   .required("Amount is required"),
-              // discount: Yup.number()
-              //   .typeError("Discount must be a number")
-              //   .required("Discount is required"),
               amount: Yup.number()
                 .typeError("Amount must be a number")
                 .required("Amount is required")
@@ -349,7 +332,9 @@ const PackagesList = () => {
                 }),
               gst: Yup.number()
                 .typeError("GST must be a number")
-                .required("GST is required"),
+                .required("GST is required")
+                .min(2, "GST cannot be less than 2%")
+                .max(40, "GST cannot be greater than 40%"),
               earn_coin: Yup.number()
                 .typeError("Earn Coins must be a number")
                 .required("Earn Coins is required"),
