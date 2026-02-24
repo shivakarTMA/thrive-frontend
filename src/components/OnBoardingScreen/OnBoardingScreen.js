@@ -139,7 +139,7 @@ const OnBoardingScreen = () => {
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search by name or mobile"
+            placeholder="Search by title"
             className="custom--input w-full max-w-[210px]"
           />
           <div className="w-full max-w-[200px]">
