@@ -11,6 +11,8 @@ import { authAxios } from "../../config/config";
 import { IoSearchOutline } from "react-icons/io5";
 import Select from "react-select";
 import { customStyles, filterActiveItems } from "../../Helper/helper";
+import Pagination from "../common/Pagination";
+import { useSelector } from "react-redux";
 
 const SubscriptionPlan = () => {
   const [showModal, setShowModal] = useState(false);
@@ -19,9 +21,17 @@ const SubscriptionPlan = () => {
   const [clubFilter, setClubFilter] = useState(null);
   const [editingOption, setEditingOption] = useState(null);
   const leadBoxRef = useRef(null);
+  const { user } = useSelector((state) => state.auth);
+  const userRole = user.role;
 
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState(null);
+  const [planTypeFilter, setPlanTypeFilter] = useState(null);
+
+  const [page, setPage] = useState(1);
+  const [rowsPerPage] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
 
   const fetchClub = async (search = "") => {
     try {
@@ -40,19 +50,33 @@ const SubscriptionPlan = () => {
     }
   };
 
-  const fetchSubscription = async (search = "") => {
+  const fetchSubscription = async (search = searchTerm, currentPage = page) => {
     try {
-      const res = await authAxios().get("/subscription-plan/list", {
-        params: search ? { search } : {},
-      });
-      let data = res.data?.data || res.data || [];
+      const params = {
+        page: currentPage,
+        limit: rowsPerPage,
+      };
+      // Search param
+      if (search) params.search = search;
+
       if (statusFilter?.value) {
-        data = data.filter((item) => item.status === statusFilter.value);
+        params.status = statusFilter.value;
       }
-      if (clubFilter) {
-        data = data.filter((item) => item.club_id === clubFilter);
+      if (planTypeFilter?.value) {
+        params.plan_type = planTypeFilter.value;
       }
+      if (clubFilter?.value) {
+        params.club_id = clubFilter.value;
+      }
+
+      const res = await authAxios().get("/subscription-plan/list", { params });
+      const responseData = res.data;
+      let data = res.data?.data || res.data || [];
+
       setModule(data);
+      setPage(responseData?.currentPage || 1);
+      setTotalPages(responseData?.totalPage || 1);
+      setTotalCount(responseData?.totalCount || data.length);
     } catch (err) {
       console.error(err);
       toast.error("Failed to fetch subscription");
@@ -70,13 +94,15 @@ const SubscriptionPlan = () => {
       value: item.id, // Store club_id as ID
     })) || [];
 
+  // Fetch packages again when search or service filter changes
   useEffect(() => {
     const delayDebounce = setTimeout(() => {
-      fetchSubscription(searchTerm);
+      fetchSubscription(searchTerm, 1);
+      setPage(1);
     }, 300);
 
     return () => clearTimeout(delayDebounce);
-  }, [searchTerm, statusFilter, clubFilter]);
+  }, [searchTerm, statusFilter, clubFilter, planTypeFilter]);
 
   const handleOverlayClick = (e) => {
     if (leadBoxRef.current && !leadBoxRef.current.contains(e.target)) {
@@ -171,7 +197,14 @@ const SubscriptionPlan = () => {
     },
   });
 
-  console.log(module, "module");
+  useEffect(() => {
+    if (club.length > 0 && !clubFilter) {
+      setClubFilter({
+        label: club[0].name,
+        value: club[0].id,
+      });
+    }
+  }, [club]);
 
   return (
     <div className="page--content">
@@ -224,13 +257,26 @@ const SubscriptionPlan = () => {
             styles={customStyles}
           />
         </div>
+        <div className="w-full max-w-[200px]">
+          <Select
+            placeholder="Filter by Plan Type"
+            options={[
+              { value: "DLF", label: "DLF" },
+              { value: "NONDLF", label: "Non-DLF" },
+            ]}
+            value={planTypeFilter}
+            onChange={(option) => setPlanTypeFilter(option)}
+            isClearable
+            styles={customStyles}
+          />
+        </div>
         <div className="w-fit min-w-[180px]">
           <Select
             placeholder="Filter by club"
-            value={clubOptions.find((o) => o.value === clubFilter) || null}
             options={clubOptions}
-            onChange={(option) => setClubFilter(option?.value)}
-            isClearable
+            value={clubFilter}
+            onChange={setClubFilter}
+            isClearable={userRole === "ADMIN" ? true : false}
             styles={customStyles}
           />
         </div>
@@ -289,16 +335,15 @@ const SubscriptionPlan = () => {
                     <td className="px-2 py-4">{item?.plan_type}</td>
                     <td className="px-2 py-4">
                       <div
-                        className={`flex gap-1 items-center ${
-                          item?.status === "ACTIVE"
-                            ? "text-green-500"
-                            : "text-red-500"
-                        }`}
+                        className={`flex gap-1 items-center ${item?.status === "ACTIVE"
+                          ? "text-green-500"
+                          : "text-red-500"
+                          }`}
                       >
                         <FaCircle />
                         {item?.status
                           ? item.status.charAt(0) +
-                            item.status.slice(1).toLowerCase()
+                          item.status.slice(1).toLowerCase()
                           : ""}
                       </div>
                     </td>
@@ -329,6 +374,18 @@ const SubscriptionPlan = () => {
             </tbody>
           </table>
         </div>
+        {/* Pagination */}
+        <Pagination
+          page={page}
+          totalPages={totalPages}
+          rowsPerPage={rowsPerPage}
+          totalCount={totalCount}
+          currentDataLength={module.length}
+          onPageChange={(newPage) => {
+            setPage(newPage);
+            fetchSubscription(searchTerm, newPage);
+          }}
+        />
       </div>
 
       {showModal && (

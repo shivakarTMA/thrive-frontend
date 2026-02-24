@@ -62,16 +62,54 @@ const stepValidationSchemas = [
       .required("Email is required"),
     height: Yup.string().required("Height is required"),
     gender: Yup.string().required("Gender is required"),
+    // mobile: Yup.string()
+    //   .required("Contact number is required")
+    //   .test("is-valid-phone", "Invalid phone number", function (value) {
+    //     const { country_code } = this.parent;
+    //     if (!value || !country_code) return false;
+    //     const phoneNumber = parsePhoneNumberFromString(
+    //       "+" + country_code + value
+    //     );
+    //     return phoneNumber?.isValid() || false;
+    //   }),
+
     mobile: Yup.string()
       .required("Contact number is required")
       .test("is-valid-phone", "Invalid phone number", function (value) {
         const { country_code } = this.parent;
+
         if (!value || !country_code) return false;
+
+        // Remove spaces or non-digits just in case
+        const cleanedMobile = value.replace(/\D/g, "");
+
         const phoneNumber = parsePhoneNumberFromString(
-          "+" + country_code + value
+          "+" + country_code + cleanedMobile
         );
-        return phoneNumber?.isValid() || false;
+
+        // ❌ Not a valid number format for that country
+        if (!phoneNumber || !phoneNumber.isValid()) {
+          return false;
+        }
+
+        const nationalNumber = phoneNumber.nationalNumber;
+
+        // ❌ Block all same digits (1111111111, 5555555555)
+        if (/^(\d)\1+$/.test(nationalNumber)) {
+          return false;
+        }
+
+        // ❌ Block obvious fake sequences
+        if (
+          nationalNumber === "1234567890" ||
+          nationalNumber === "0123456789"
+        ) {
+          return false;
+        }
+
+        return true;
       }),
+
     date_of_birth: Yup.string()
       .nullable()
       .required("Date of birth is required")
@@ -90,15 +128,46 @@ const stepValidationSchemas = [
       .of(
         Yup.object({
           name: Yup.string().required("Name is required"),
+          // phone: Yup.string()
+          //   .required("Contact number is required")
+          //   .test("is-valid-phone", "Invalid phone number", function (value) {
+          //     return isValidPhoneNumber(value || "");
+          //   }),
           phone: Yup.string()
             .required("Contact number is required")
-            .test("is-valid-phone", "Invalid phone number", function (value) {
-              return isValidPhoneNumber(value || "");
+            .test("valid-phone", "Invalid phone number", function (value) {
+              if (!value) return false;
+
+              const phoneNumber = parsePhoneNumberFromString(value);
+
+              // ❌ Not parsable
+              if (!phoneNumber || !phoneNumber.isValid()) {
+                return false;
+              }
+
+              const nationalNumber = phoneNumber.nationalNumber;
+
+              // ❌ Block same digits (1111111111, 5555555555)
+              if (/^(\d)\1+$/.test(nationalNumber)) {
+                return false;
+              }
+
+              // ❌ Block simple sequences
+              if (
+                nationalNumber === "1234567890" ||
+                nationalNumber === "0123456789"
+              ) {
+                return false;
+              }
+
+              return true;
             }),
           relationship: Yup.string().required("Relationship is required"),
         })
       )
       .min(1, "At least one emergency contact is required"),
+
+
   }),
   Yup.object({
     plan_type: Yup.string().required("Plan Type is required"),
@@ -173,7 +242,7 @@ const ConvertMemberForm = ({
     email: "",
     gender: "",
     date_of_birth: "",
-    height:"",
+    height: "",
     address: "",
     location: "",
     company_name: "",
@@ -343,16 +412,16 @@ const ConvertMemberForm = ({
 
           const emergencyContacts =
             data.member_emergency_contact &&
-            data.member_emergency_contact.length > 0
+              data.member_emergency_contact.length > 0
               ? data.member_emergency_contact
               : [
-                  {
-                    id: null,
-                    name: "",
-                    phone: "",
-                    relationship: "",
-                  },
-                ];
+                {
+                  id: null,
+                  name: "",
+                  phone: "",
+                  relationship: "",
+                },
+              ];
 
           formik.setValues({
             id: data.id || "",
@@ -623,7 +692,7 @@ const ConvertMemberForm = ({
   //   }
   // };
 
-  
+
   const applyCoupon = async () => {
     if (!voucherInput.trim()) return;
 
@@ -831,26 +900,26 @@ const ConvertMemberForm = ({
   //   formik.setFieldValue("date_of_birth", date);
   // };
 
-   const handleDobChange = (date) => {
-      if (!date) return;
-      const today = new Date();
-      const birthDate = new Date(date);
-      const age =
-        today.getFullYear() -
-        date.getFullYear() -
-        (today < new Date(birthDate.setFullYear(today.getFullYear())) ? 1 : 0);
-  
-      if (age < 15) {
-        toast.error("Age must be at least 15 years");
-        return;
-      }
-      if (age >= 15 && age < 18) {
-        setPendingDob(date.toISOString());
-        setShowUnderageModal(true);
-      } else {
-        formik.setFieldValue("date_of_birth", date.toISOString()); // store ISO string
-      }
-    };
+  const handleDobChange = (date) => {
+    if (!date) return;
+    const today = new Date();
+    const birthDate = new Date(date);
+    const age =
+      today.getFullYear() -
+      date.getFullYear() -
+      (today < new Date(birthDate.setFullYear(today.getFullYear())) ? 1 : 0);
+
+    if (age < 15) {
+      toast.error("Age must be at least 15 years");
+      return;
+    }
+    if (age >= 15 && age < 18) {
+      setPendingDob(date.toISOString());
+      setShowUnderageModal(true);
+    } else {
+      formik.setFieldValue("date_of_birth", date.toISOString()); // store ISO string
+    }
+  };
 
   // const fifteenYearsAgo = new Date();
   // fifteenYearsAgo.setFullYear(fifteenYearsAgo.getFullYear() - 15);
@@ -1261,11 +1330,10 @@ const ConvertMemberForm = ({
                                 allItemsAreSelected: "All Interested Selected",
                                 // search: "Search",
                               }}
-                              className={`custom--input w-full input--icon multi--select--new !text-gray-500 ${
-                                selected
-                                  ? "cursor-not-allowed pointer-events-none !bg-gray-100"
-                                  : ""
-                              }`}
+                              className={`custom--input w-full input--icon multi--select--new !text-gray-500 ${selected
+                                ? "cursor-not-allowed pointer-events-none !bg-gray-100"
+                                : ""
+                                }`}
                               disabled={!!selected}
                             />
 
@@ -1575,14 +1643,14 @@ const ConvertMemberForm = ({
                             <div className="absolute top-0 right-[10px]">
                               {formik.values?.member_emergency_contact?.length >
                                 1 && (
-                                <button
-                                  type="button"
-                                  onClick={() => handleRemoveContact(phone.id)}
-                                  className="text-black font-bold"
-                                >
-                                  <IoIosCloseCircle className="text-2xl mt-2" />
-                                </button>
-                              )}
+                                  <button
+                                    type="button"
+                                    onClick={() => handleRemoveContact(phone.id)}
+                                    className="text-black font-bold"
+                                  >
+                                    <IoIosCloseCircle className="text-2xl mt-2" />
+                                  </button>
+                                )}
                             </div>
                           </div>
                         )
@@ -1776,13 +1844,12 @@ const ConvertMemberForm = ({
                               value={voucherInput}
                               onChange={(e) => setVoucherInput(e.target.value)}
                               placeholder="Enter voucher code"
-                              className={`input--icon !rounded-r-[0px] custom--input w-full ${
-                                voucherStatus === "success"
-                                  ? "border-green-500"
-                                  : voucherStatus === "error"
+                              className={`input--icon !rounded-r-[0px] custom--input w-full ${voucherStatus === "success"
+                                ? "border-green-500"
+                                : voucherStatus === "error"
                                   ? "border-red-500"
                                   : ""
-                              }`}
+                                }`}
                             />
                             <button
                               type="button"
@@ -1884,9 +1951,8 @@ const ConvertMemberForm = ({
                 </div>
               </div>
               <div
-                className={`flex gap-4 py-5 ${
-                  step > 0 ? "justify-between" : "justify-end"
-                }`}
+                className={`flex gap-4 py-5 ${step > 0 ? "justify-between" : "justify-end"
+                  }`}
               >
                 {step > 0 && (
                   <button

@@ -107,7 +107,7 @@ Highcharts.setOptions({
 });
 
 const FinanceManagerDashboard = () => {
-  
+
   const navigate = useNavigate();
   const days = ["Yesterday", "Today", "Tomorrow"];
   const [dashboardData, setDashboardData] = useState([]);
@@ -344,9 +344,9 @@ const FinanceManagerDashboard = () => {
   const maxValueLeads = Math.max(...leadSeries, 0);
 
   const leadsStatus = {
-     accessibility: {
-    enabled: false,
-  },
+    accessibility: {
+      enabled: false,
+    },
     chart: { type: "column", height: 300 },
     title: {
       text: "Enquiries",
@@ -436,9 +436,9 @@ const FinanceManagerDashboard = () => {
   const maxValue = Math.max(...productSeries, 0);
 
   const productStatus = {
-     accessibility: {
-    enabled: false,
-  },
+    accessibility: {
+      enabled: false,
+    },
     chart: {
       type: "column",
       height: 300,
@@ -604,9 +604,8 @@ const FinanceManagerDashboard = () => {
         <div className="flex gap-3">
           <div
             // type="button"
-            className={`px-4 py-2 rounded ${
-              activeTab === "Snapshot" ? "bg--color text-white" : ""
-            }`}
+            className={`px-4 py-2 rounded ${activeTab === "Snapshot" ? "bg--color text-white" : ""
+              }`}
             onClick={() => setActiveTab("Snapshot")}
           >
             Snapshot
@@ -624,44 +623,44 @@ const FinanceManagerDashboard = () => {
         <div className="flex items-center">
           <div className="w-fit flex items-center gap-2 border-r">
             <div className="text-md font-medium text-gray-600 flex gap-2 items-center">
-              <FaCircle className="text-[10px] text-[#009EB2]" /> Total Members
+              <FaCircle className="text-[10px] text-[#009EB2]" /> Total New Member
             </div>
             <div className="pr-2">
               <span className="text-md font-semibold">
-                {dashboardData?.snapshot?.total_members}
+                {dashboardData?.snapshot?.total_new_member}
               </span>
             </div>
           </div>
           <div className="w-fit flex items-center gap-2 border-r pl-2">
             <div className="text-md font-medium text-gray-600 flex gap-2 items-center">
               <FaCircle className="text-[10px] text-[#1F9254]" />
-              Active Members
+              Total Renewal Member
             </div>
             <div className="pr-2">
               <span className="text-md font-semibold">
-                {dashboardData?.snapshot?.active_members}
+                {dashboardData?.snapshot?.total_renewal_member}
               </span>
             </div>
           </div>
           <div className="w-fit flex items-center gap-2 border-r pl-2">
             <div className="text-md font-medium text-gray-600 flex gap-2 items-center">
               <FaCircle className="text-[10px] text-[#ff9900]" />
-              Inactive Members
+              Total Returning Member
             </div>
             <div className="pr-2">
               <span className="text-md font-semibold">
-                {dashboardData?.snapshot?.inactive_members}
+                {dashboardData?.snapshot?.total_returning_member}
               </span>
             </div>
           </div>
           <div className="w-fit flex items-center gap-2 pl-2">
             <div className="text-md font-medium text-gray-600 flex gap-2 items-center">
               <FaCircle className="text-[10px] text-[#FF0000]" />
-              Expired Members
+              Total Advanced Renewal Member
             </div>
             <div>
               <span className="text-md font-semibold">
-                {dashboardData?.snapshot?.expired_members}
+                {dashboardData?.snapshot?.total_advanced_renewal_member}
               </span>
             </div>
           </div>

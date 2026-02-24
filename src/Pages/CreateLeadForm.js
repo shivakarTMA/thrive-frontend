@@ -44,22 +44,51 @@ const genderOptions = [
 const validationSchema = Yup.object({
   club_id: Yup.string().required("Club Name is required"),
   full_name: Yup.string().required("Full Name is required"),
+  // mobile: Yup.string()
+  //   .required("Contact number is required")
+  //   .test("is-valid-phone", "Invalid phone number", function (value) {
+  //     const { country_code } = this.parent;
+  //     if (!value || !country_code) return false;
+
+  //     // Combine country code and number to full international format
+  //     const phoneNumberString = `+${country_code}${value}`;
+
+  //     // First check if the number is even possible (not just valid)
+  //     if (!isPossiblePhoneNumber(phoneNumberString)) return false;
+
+  //     // Parse and check validity strictly according to country
+  //     const phoneNumber = parsePhoneNumberFromString(phoneNumberString);
+  //     return phoneNumber?.isValid() || false;
+  //   }),
   mobile: Yup.string()
-    .required("Contact number is required")
-    .test("is-valid-phone", "Invalid phone number", function (value) {
-      const { country_code } = this.parent;
-      if (!value || !country_code) return false;
+  .required("Contact number is required")
+    .test("valid-phone", "Invalid phone number", function (value) {
+      if (!value) return false;
 
-      // Combine country code and number to full international format
-      const phoneNumberString = `+${country_code}${value}`;
+      const phoneNumber = parsePhoneNumberFromString(value);
 
-      // First check if the number is even possible (not just valid)
-      if (!isPossiblePhoneNumber(phoneNumberString)) return false;
+      // ❌ Not parsable
+      if (!phoneNumber || !phoneNumber.isValid()) {
+        return false;
+      }
 
-      // Parse and check validity strictly according to country
-      const phoneNumber = parsePhoneNumberFromString(phoneNumberString);
-      return phoneNumber?.isValid() || false;
-    }),
+      const nationalNumber = phoneNumber.nationalNumber;
+
+      // ❌ Block same digits (1111111111, 5555555555)
+      if (/^(\d)\1+$/.test(nationalNumber)) {
+        return false;
+      }
+
+      // ❌ Block simple sequences
+      if (
+        nationalNumber === "1234567890" ||
+        nationalNumber === "0123456789"
+      ) {
+        return false;
+      }
+
+      return true;
+  }),
   interested_in: Yup.array()
     .of(Yup.string())
     .min(1, "Please select at least one interest")

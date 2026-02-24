@@ -48,14 +48,53 @@ const validationSchema = Yup.object({
   //     const phoneNumber = parsePhoneNumberFromString(phoneNumberString);
   //     return phoneNumber?.isValid() || false;
   //   }),
-  phoneFull: Yup.string()
-    .required("Contact number is required")
-    .test("is-valid-phone", "Invalid phone number", function (value) {
-      if (!value) return false;
+  // phoneFull: Yup.string()
+  //   .required("Contact number is required")
+  //   .test("is-valid-phone", "Invalid phone number", function (value) {
+  //     if (!value) return false;
 
-      const phoneNumber = parsePhoneNumberFromString(value);
-      return phoneNumber?.isValid() || false;
-    }),
+  //     const phoneNumber = parsePhoneNumberFromString(value);
+  //     return phoneNumber?.isValid() || false;
+  //   }),
+  phoneFull: Yup.string()
+  .required("Contact number is required")
+  .test("valid-phone", "Invalid phone number", function (value) {
+    if (!value) return false;
+
+    const phoneNumber = parsePhoneNumberFromString(value);
+
+    // ❌ Not parsable or invalid for country
+    if (!phoneNumber || !phoneNumber.isValid()) {
+      return false;
+    }
+
+    const nationalNumber = phoneNumber.nationalNumber;
+
+    // ❌ 1. Block all same digits (1111111111)
+    if (/^(\d)\1+$/.test(nationalNumber)) {
+      return false;
+    }
+
+    // ❌ 2. Block simple increasing sequences
+    if (
+      nationalNumber === "1234567890" ||
+      nationalNumber === "0123456789"
+    ) {
+      return false;
+    }
+
+    // ❌ 3. Block repeating 2-digit patterns (1212121212, 9090909090)
+    if (/^(\d{2})\1+$/.test(nationalNumber)) {
+      return false;
+    }
+
+    // ❌ 4. Block repeating 3-digit patterns (1231231231 etc.)
+    if (/^(\d{3})\1+$/.test(nationalNumber)) {
+      return false;
+    }
+
+    return true;
+  }),
   date_of_birth: Yup.date().required("Date of birth is required"),
   email: Yup.string().required("Email is required"),
   // company_name: Yup.string().required("Company is required"),
@@ -790,13 +829,13 @@ const ProfileDetails = ({ member }) => {
                 <div className="text-lg font-bold text-gray-900">
                   Profile Completion
                 </div>
-                <div className="text-lg font-bold text-gray-900">40%</div>
+                <div className="text-lg font-bold text-gray-900">{member?.profile_completion}%</div>
               </div>
 
               <div className="progress--bar bg-[#E5E5E5] rounded-full h-[10px] w-full">
                 <div
                   className="bg--color w-full rounded-full h-full"
-                  style={{ width: "40%" }}
+                  style={{ width: `${member?.profile_completion}%` }}
                 ></div>
               </div>
             </div>
