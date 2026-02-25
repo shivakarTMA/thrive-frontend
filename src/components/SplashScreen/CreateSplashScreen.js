@@ -17,6 +17,16 @@ const SplashScreen = ({
   leadBoxRef,
   setFile,
 }) => {
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+
+    if (file) {
+      formik.setFieldValue("splash_file", file); // store actual file
+    } else {
+      formik.setFieldValue("splash_file", null);
+    }
+  };
+
   return (
     <div
       className="bg--blur create--lead--container overflow-auto hide--overflow fixed top-0 left-0 z-[999] w-full bg-black bg-opacity-60 h-full"
@@ -78,21 +88,20 @@ const SplashScreen = ({
                     <div className="relative">
                       <input
                         type="file"
-                        accept="image/*"
-                        onChange={(e) => {
-                          const file = e.target.files[0];
-                          if (file) {
-                            formik.setFieldValue("splash_file", file);
-                          }
-                        }}
+                        accept="image/png, image/jpeg, image/jpg, image/webp, image/gif"
+                        onChange={handleFileChange}
+                        onBlur={() =>
+                          formik.setFieldTouched("splash_file", true)
+                        }
                         className="custom--input w-full"
                       />
                     </div>
+
                     {formik.touched.splash_file &&
                       formik.errors.splash_file && (
-                        <p className="text-red-500 text-sm mt-1">
+                        <div className="text-red-500 text-sm">
                           {formik.errors.splash_file}
-                        </p>
+                        </div>
                       )}
                   </div>
 
@@ -128,40 +137,39 @@ const SplashScreen = ({
                   </div>
 
                   {/* Status */}
-                  {editingOption && (
-                    <div>
-                      <label className="mb-2 block">
-                        Status<span className="text-red-500">*</span>
-                      </label>
-                      <div className="relative">
-                        <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[10]">
-                          <LuPlug />
-                        </span>
-                        <Select
-                          name="status"
-                          value={{
-                            label: formik.values.status,
-                            value: formik.values.status,
-                          }}
-                          options={[
-                            { label: "Active", value: "ACTIVE" },
-                            { label: "Inactive", value: "INACTIVE" },
-                          ]}
-                          onChange={(option) =>
-                            formik.setFieldValue("status", option.value)
-                          }
-                          onBlur={() => formik.setFieldTouched("status", true)}
-                          styles={selectIcon}
-                          className="!capitalize"
-                        />
-                      </div>
-                      {formik.touched.status && formik.errors.status && (
-                        <p className="text-red-500 text-sm mt-1">
-                          {formik.errors.status}
-                        </p>
-                      )}
+
+                  <div>
+                    <label className="mb-2 block">
+                      Status<span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[10]">
+                        <LuPlug />
+                      </span>
+                      <Select
+                        name="status"
+                        value={{
+                          label: formik.values.status,
+                          value: formik.values.status,
+                        }}
+                        options={[
+                          { label: "Active", value: "ACTIVE" },
+                          { label: "Inactive", value: "INACTIVE" },
+                        ]}
+                        onChange={(option) =>
+                          formik.setFieldValue("status", option.value)
+                        }
+                        onBlur={() => formik.setFieldTouched("status", true)}
+                        styles={selectIcon}
+                        className="!capitalize"
+                      />
                     </div>
-                  )}
+                    {formik.touched.status && formik.errors.status && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {formik.errors.status}
+                      </p>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>

@@ -57,44 +57,41 @@ const validationSchema = Yup.object({
   //     return phoneNumber?.isValid() || false;
   //   }),
   phoneFull: Yup.string()
-  .required("Contact number is required")
-  .test("valid-phone", "Invalid phone number", function (value) {
-    if (!value) return false;
+    .required("Contact number is required")
+    .test("valid-phone", "Invalid phone number", function (value) {
+      if (!value) return false;
 
-    const phoneNumber = parsePhoneNumberFromString(value);
+      const phoneNumber = parsePhoneNumberFromString(value);
 
-    // ❌ Not parsable or invalid for country
-    if (!phoneNumber || !phoneNumber.isValid()) {
-      return false;
-    }
+      // ❌ Not parsable or invalid for country
+      if (!phoneNumber || !phoneNumber.isValid()) {
+        return false;
+      }
 
-    const nationalNumber = phoneNumber.nationalNumber;
+      const nationalNumber = phoneNumber.nationalNumber;
 
-    // ❌ 1. Block all same digits (1111111111)
-    if (/^(\d)\1+$/.test(nationalNumber)) {
-      return false;
-    }
+      // ❌ 1. Block all same digits (1111111111)
+      if (/^(\d)\1+$/.test(nationalNumber)) {
+        return false;
+      }
 
-    // ❌ 2. Block simple increasing sequences
-    if (
-      nationalNumber === "1234567890" ||
-      nationalNumber === "0123456789"
-    ) {
-      return false;
-    }
+      // ❌ 2. Block simple increasing sequences
+      if (nationalNumber === "1234567890" || nationalNumber === "0123456789") {
+        return false;
+      }
 
-    // ❌ 3. Block repeating 2-digit patterns (1212121212, 9090909090)
-    if (/^(\d{2})\1+$/.test(nationalNumber)) {
-      return false;
-    }
+      // ❌ 3. Block repeating 2-digit patterns (1212121212, 9090909090)
+      if (/^(\d{2})\1+$/.test(nationalNumber)) {
+        return false;
+      }
 
-    // ❌ 4. Block repeating 3-digit patterns (1231231231 etc.)
-    if (/^(\d{3})\1+$/.test(nationalNumber)) {
-      return false;
-    }
+      // ❌ 4. Block repeating 3-digit patterns (1231231231 etc.)
+      if (/^(\d{3})\1+$/.test(nationalNumber)) {
+        return false;
+      }
 
-    return true;
-  }),
+      return true;
+    }),
   date_of_birth: Yup.date().required("Date of birth is required"),
   email: Yup.string().required("Email is required"),
   // company_name: Yup.string().required("Company is required"),
@@ -116,6 +113,7 @@ const ProfileDetails = ({ member }) => {
   const [profileImage, setProfileImage] = useState("");
   const [staffList, setStaffList] = useState([]);
   const [trainerList, setTrainerList] = useState([]);
+  const [profileError, setProfileError] = useState("");
 
   const [initialValues, setInitialValues] = useState({
     profile_pic: DummyProfile,
@@ -603,12 +601,29 @@ const ProfileDetails = ({ member }) => {
 
   const handleImageUpload = (event) => {
     const file = event.target.files[0];
-    if (file) {
-      const imageUrl = URL.createObjectURL(file);
-      setProfileImage(imageUrl);
-      formik.setFieldValue("profile_pic", file);
-      setShowModal(false);
+
+    if (!file) {
+      setProfileError("Profile image is required");
+      return;
     }
+
+    const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+
+    // ❌ Invalid file type
+    if (!allowedTypes.includes(file.type)) {
+      setProfileError("Only JPG, PNG, or WEBP allowed");
+      event.target.value = null;
+      return;
+    }
+
+    // ✅ Valid file
+    setProfileError("");
+
+    const imageUrl = URL.createObjectURL(file);
+    setProfileImage(imageUrl);
+
+    formik.setFieldValue("profile_pic", file);
+    setShowModal(false);
   };
 
   const handlePhoneChange = (value) => {
@@ -782,7 +797,7 @@ const ProfileDetails = ({ member }) => {
               {/* Webcam Modal */}
               {showModal && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                  <div className="bg-white p-4 rounded-lg shadow-lg flex flex-col items-center">
+                  <div className="bg-white p-4 rounded-lg shadow-lg flex flex-col items-start">
                     {/* Webcam Preview */}
                     <Webcam
                       ref={webcamRef}
@@ -807,7 +822,7 @@ const ProfileDetails = ({ member }) => {
                           <FaRegImage /> Upload Image
                           <input
                             type="file"
-                            accept="image/*"
+                            accept="image/png, image/jpeg, image/webp"
                             onChange={handleImageUpload}
                             className="hidden"
                           />
@@ -815,12 +830,20 @@ const ProfileDetails = ({ member }) => {
                       </div>
 
                       <button
-                        onClick={() => setShowModal(false)}
+                        onClick={() => {
+                          setShowModal(false); // close the modal
+                          setProfileError(""); // clear the image error
+                        }}
                         className="px-4 py-2 bg-black text-white rounded flex items-center gap-2"
                       >
                         <IoClose /> Cancel
                       </button>
                     </div>
+                    {profileError && (
+                      <p className="text-red-500 text-sm mt-2">
+                        {profileError}
+                      </p>
+                    )}
                   </div>
                 </div>
               )}
@@ -829,7 +852,9 @@ const ProfileDetails = ({ member }) => {
                 <div className="text-lg font-bold text-gray-900">
                   Profile Completion
                 </div>
-                <div className="text-lg font-bold text-gray-900">{member?.profile_completion}%</div>
+                <div className="text-lg font-bold text-gray-900">
+                  {member?.profile_completion}%
+                </div>
               </div>
 
               <div className="progress--bar bg-[#E5E5E5] rounded-full h-[10px] w-full">
@@ -932,11 +957,12 @@ const ProfileDetails = ({ member }) => {
                       {formik.errors?.mobile || duplicateError}
                     </div>
                   )} */}
-                  {((formik.errors?.phoneFull && formik.touched?.phoneFull) || duplicateError) && (
-  <div className="text-red-500 text-sm">
-    {formik.errors?.phoneFull || duplicateError}
-  </div>
-)}
+                  {((formik.errors?.phoneFull && formik.touched?.phoneFull) ||
+                    duplicateError) && (
+                    <div className="text-red-500 text-sm">
+                      {formik.errors?.phoneFull || duplicateError}
+                    </div>
+                  )}
                 </div>
 
                 <div>
@@ -1526,11 +1552,9 @@ const ProfileDetails = ({ member }) => {
                     <IoCheckmark className="w-5 h-5 text-white" />
                   </div>
                   <span className="text-sm font-medium text-gray-700">
-                   PAR-Q Information
+                    PAR-Q Information
                   </span>
                 </div>
-
-                
               </div>
             </div>
           </div>

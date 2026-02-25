@@ -18,7 +18,7 @@ const CreatePackageCategory = ({
   formik,
   handleOverlayClick,
   leadBoxRef,
-  clubOptions
+  clubOptions,
 }) => {
   // ✅ Fetch role details when selectedId changes
   useEffect(() => {
@@ -33,7 +33,7 @@ const CreatePackageCategory = ({
           // ✅ Prefill formik fields with fetched data
           formik.setValues({
             title: data.title || "",
-            icon: data.icon || "",
+            icon: data.icon || null,
             position: data.position || "",
             status: data.status || "",
             club_id: data.club_id || "",
@@ -50,11 +50,11 @@ const CreatePackageCategory = ({
 
   const handleLogoChange = (e) => {
     const file = e.target.files[0];
-    if (file) {
-      const previewURL = URL.createObjectURL(file);
 
-      formik.setFieldValue("icon", previewURL); // for preview
-      formik.setFieldValue("iconFile", file); // actual file to upload
+    if (file) {
+      formik.setFieldValue("icon", file); // store actual file
+    } else {
+      formik.setFieldValue("icon", null);
     }
   };
 
@@ -93,7 +93,11 @@ const CreatePackageCategory = ({
                       <div className="bg-gray-100 rounded-lg w-[80px] h-[80px] overflow-hidden p-2">
                         {formik.values?.icon ? (
                           <img
-                            src={formik.values?.icon}
+                            src={
+                              typeof formik.values.icon === "string"
+                                ? formik.values.icon
+                                : URL.createObjectURL(formik.values.icon)
+                            }
                             alt="Preview"
                             className="w-full h-full object-cover"
                           />

@@ -20,11 +20,11 @@ const CreateOnBoardingScreen = ({
 }) => {
   const handleLogoChange = (e) => {
     const file = e.target.files[0];
-    if (file) {
-      const previewURL = URL.createObjectURL(file);
 
-      formik.setFieldValue("screen_image", previewURL); // for preview
-      formik.setFieldValue("screen_imageFile", file); // actual file to upload
+    if (file) {
+      formik.setFieldValue("screen_image", file); // store actual file
+    } else {
+      formik.setFieldValue("screen_image", null);
     }
   };
 
@@ -34,7 +34,7 @@ const CreateOnBoardingScreen = ({
       onClick={handleOverlayClick}
     >
       <div
-        className="min-h-[70vh] w-[95%] max-w-xl mx-auto mt-[100px] mb-[100px] container--leadbox rounded-[10px] flex flex-col"
+        className="min-h-[70vh] w-[95%] max-w-[600px] mx-auto mt-[100px] mb-[100px] container--leadbox rounded-[10px] flex flex-col"
         ref={leadBoxRef}
         onClick={(e) => e.stopPropagation()}
       >
@@ -57,43 +57,46 @@ const CreateOnBoardingScreen = ({
           <form onSubmit={formik.handleSubmit} className="p-0 space-y-0">
             <div className="flex bg-white rounded-b-[10px]">
               <div className="p-6 flex-1">
-                <div className="grid md:grid-cols-2 grid-cols-1 gap-4 gap-y-2">
+                <div className="grid grid-cols-2 gap-4">
                   {/* Image Preview */}
-                  <div className="md:row-span-3">
-                    <div className="w-full bg-gray-100 rounded-lg mx-auto overflow-hidden relative group">
-                      {formik.values?.screen_image ? (
-                        <img
-                          src={formik.values?.screen_image}
-                          alt="Preview"
-                          className="w-full h-[250px] object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-[250px] flex flex-col items-center justify-center">
-                          <PiImageFill className="text-gray-300 text-7xl" />
-                          <span className="text-gray-500 text-sm mt-2">
-                            Upload Image
-                          </span>
+                  <div>
+                    <div className="flex gap-2">
+                      <div className="bg-gray-100 rounded-lg w-[80px] h-[80px] overflow-hidden p-2">
+                        {formik.values?.screen_image ? (
+                          <img
+                            src={
+                              typeof formik.values.screen_image === "string"
+                                ? formik.values.screen_image
+                                : URL.createObjectURL(
+                                    formik.values.screen_image,
+                                  )
+                            }
+                            alt="Preview"
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex flex-col items-center justify-center">
+                            <PiImageFill className="text-gray-300 text-7xl" />
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <label className="mb-2 block">
+                          Icon<span className="text-red-500">*</span>
+                        </label>
+                        <div className="relative">
+                          <input
+                            type="file"
+                            accept="image/png, image/jpeg, image/jpg, image/webp"
+                            onChange={handleLogoChange}
+                            onBlur={() =>
+                              formik.setFieldTouched("screen_image", true)
+                            }
+                            className="custom--input w-full"
+                          />
                         </div>
-                      )}
-
-                      {/* Hover overlay for file input */}
-                      <label className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-25 opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity duration-300">
-                        <input
-                          type="file"
-                          name="screen_image"
-                          accept="image/*"
-                          onChange={handleLogoChange}
-                          onBlur={() =>
-                            formik.setFieldTouched("screen_image", true)
-                          }
-                          className="absolute w-full h-full opacity-0 cursor-pointer"
-                        />
-                        <div className="bg-white bg-opacity-25 w-[60px] h-[60px] flex items-center justify-center rounded-full">
-                          <CiCamera className="text-white text-4xl" />
-                        </div>
-                      </label>
+                      </div>
                     </div>
-                    {/* Validation error */}
                     {formik.touched.screen_image &&
                       formik.errors.screen_image && (
                         <p className="text-red-500 text-sm mt-1">

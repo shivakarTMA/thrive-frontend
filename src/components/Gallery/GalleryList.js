@@ -127,7 +127,16 @@ const GalleryList = () => {
       position: "",
     },
     validationSchema: Yup.object({
-      image: Yup.string().required("Image is required"),
+      image: Yup.mixed()
+        .required("Image is required")
+        .test("fileType", "Only JPG, PNG, or WEBP allowed", (value) => {
+          if (!value) return false;
+
+          // If editing and already have image URL
+          if (typeof value === "string") return true;
+
+          return ["image/jpeg", "image/png", "image/webp"].includes(value.type);
+        }),
       title: Yup.string().required("Title is required"),
       club_id: Yup.string().required("Club is required"),
       position: Yup.string().required("Position is required"),
@@ -137,9 +146,9 @@ const GalleryList = () => {
       try {
         const formData = new FormData();
         Object.keys(values).forEach((key) => {
-          if (key === "imageFile") {
-            if (values.imageFile && typeof values.imageFile !== "string") {
-              formData.append("image", values.imageFile);
+          if (key === "image") {
+            if (values.image && typeof values.image !== "string") {
+              formData.append("image", values.image);
             }
           } else {
             formData.append(key, values[key]);

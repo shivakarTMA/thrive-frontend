@@ -62,16 +62,32 @@ const SplashScreen = () => {
   const formik = useFormik({
     initialValues: {
       title: "",
-      splash_file: "",
+      splash_file: null,
       position: null,
       status: "",
     },
     validationSchema: Yup.object({
       title: Yup.string().required("Title is required"),
-      splash_file: Yup.string().required("Screen image is required"),
+      splash_file: Yup.mixed()
+        .required("Screen image is required")
+        .test("fileType", "Only JPG, PNG, WEBP, or GIF allowed", (value) => {
+          if (!value) return false;
+
+          // If editing and already have image URL
+          if (typeof value === "string") return true;
+
+          return [
+            "image/jpeg",
+            "image/png",
+            "image/webp",
+            "image/gif",
+          ].includes(value.type);
+        }),
       position: Yup.number().required("Position is required"),
       status: Yup.string().required("Status is required"),
     }),
+    validateOnChange: true,
+    validateOnBlur: true,
     onSubmit: async (values, { resetForm }) => {
       try {
         const formData = new FormData();
@@ -86,9 +102,13 @@ const SplashScreen = () => {
 
         if (editingOption && editingOption.id) {
           // Update
-          await authAxios().put(`/splash-screen/${editingOption.id}`, formData, {
-            headers: { "Content-Type": "multipart/form-data" },
-          });
+          await authAxios().put(
+            `/splash-screen/${editingOption.id}`,
+            formData,
+            {
+              headers: { "Content-Type": "multipart/form-data" },
+            },
+          );
           toast.success("Updated Successfully");
         } else {
           // Create
@@ -117,21 +137,20 @@ const SplashScreen = () => {
           <p className="text-sm">{`Home > All Splash Screen`}</p>
           <h1 className="text-3xl font-semibold">All Splash Screen</h1>
         </div>
-        {module.length > 0 ? null : (
-          <div className="flex items-end gap-2">
-            <button
-              type="button"
-              className="px-4 py-2 bg-black text-white rounded flex items-center gap-2"
-              onClick={() => {
-                setEditingOption(null);
-                formik.resetForm();
-                setShowModal(true);
-              }}
-            >
-              <FiPlus /> Create Splash Screen
-            </button>
-          </div>
-        )}
+
+        {/* <div className="flex items-end gap-2">
+          <button
+            type="button"
+            className="px-4 py-2 bg-black text-white rounded flex items-center gap-2"
+            onClick={() => {
+              setEditingOption(null);
+              formik.resetForm();
+              setShowModal(true);
+            }}
+          >
+            <FiPlus /> Create Splash Screen
+          </button>
+        </div> */}
       </div>
 
       {/* <div className="flex gap-3 mb-4">

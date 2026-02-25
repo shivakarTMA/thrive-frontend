@@ -22,22 +22,14 @@ import Pagination from "../common/Pagination";
 
 // Main Services component
 const Services = () => {
-  // State to control modal visibility
   const [showModal, setShowModal] = useState(false);
-  // State to hold list of services
   const [module, setModule] = useState([]);
-  // State to hold list of clubs
   const [club, setClub] = useState([]);
   const [clubFilter, setClubFilter] = useState(null);
-  // State to hold list of studios
   const [studio, setStudio] = useState([]);
-  // State to hold editing option data
   const [editingOption, setEditingOption] = useState(null);
-  // Ref to handle modal close on outside click
   const leadBoxRef = useRef(null);
-  // State for search input
   const [searchTerm, setSearchTerm] = useState("");
-  // State for status filter
   const [statusFilter, setStatusFilter] = useState(null);
   const { user } = useSelector((state) => state.auth);
   const currentUserRole = user?.role; // Example, dynamically from user info
@@ -163,16 +155,16 @@ const Services = () => {
       status: "ACTIVE",
     },
     validationSchema: Yup.object({
-      image: Yup.mixed().test(
-        "required-image",
-        "Image is required",
-        function (value) {
-          if (!editingOption) {
-            return value !== null;
-          }
-          return true;
-        },
-      ),
+      image: Yup.mixed()
+        .required("Image is required")
+        .test("fileType", "Only JPG, PNG, or WEBP allowed", (value) => {
+          if (!value) return false;
+
+          // If editing and already have image URL
+          if (typeof value === "string") return true;
+
+          return ["image/jpeg", "image/png", "image/webp"].includes(value.type);
+        }),
       name: Yup.string().required("Title is required"),
       club_id: Yup.string().required("Club is required"),
       // studio_id: Yup.string().required("Studio is required"),
@@ -187,9 +179,9 @@ const Services = () => {
 
         Object.keys(values).forEach((key) => {
           // Only append image if it's a new file
-          if (key === "imageFile") {
-            if (values.imageFile && typeof values.imageFile !== "string") {
-              formData.append("image", values.imageFile);
+          if (key === "image") {
+            if (values.image && typeof values.image !== "string") {
+              formData.append("image", values.image);
             }
           } else {
             formData.append(key, values[key]);

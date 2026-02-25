@@ -8,7 +8,12 @@ import { LuPlug } from "react-icons/lu";
 // Import select component
 import Select from "react-select";
 // Import custom styles for select input
-import { blockInvalidNumberKeys, handleTextOnlyChange, sanitizePositiveInteger, selectIcon } from "../../Helper/helper";
+import {
+  blockInvalidNumberKeys,
+  handleTextOnlyChange,
+  sanitizePositiveInteger,
+  selectIcon,
+} from "../../Helper/helper";
 import { PiImageFill } from "react-icons/pi";
 import { toast } from "react-toastify";
 import { authAxios } from "../../config/config";
@@ -21,17 +26,15 @@ const RecoveryServices = ({
   handleOverlayClick,
   leadBoxRef,
   servicesOptions,
-  clubOptions
+  clubOptions,
 }) => {
-
-
   // Fetch exercise by ID when editingExercise changes
   useEffect(() => {
     const fetchRecoveryServiceById = async () => {
       if (editingOption) {
         try {
           const response = await authAxios().get(
-            `/ourservices/${editingOption}`
+            `/ourservices/${editingOption}`,
           );
           const data = response.data?.data || response.data || null;
 
@@ -59,11 +62,11 @@ const RecoveryServices = ({
 
   const handleLogoChange = (e) => {
     const file = e.target.files[0];
-    if (file) {
-      const previewURL = URL.createObjectURL(file);
 
-      formik.setFieldValue("image", previewURL); // for preview
-      formik.setFieldValue("imageFile", file); // actual file to upload
+    if (file) {
+      formik.setFieldValue("image", file); // store actual file
+    } else {
+      formik.setFieldValue("image", null);
     }
   };
 
@@ -82,7 +85,9 @@ const RecoveryServices = ({
         {/* Modal header */}
         <div className="bg-white rounded-t-[10px] flex gap-3 items-center justify-between py-4 px-4 border-b">
           <h2 className="text-xl font-semibold">
-            {editingOption ? "Edit Recovery Service" : "Create Recovery Service"}
+            {editingOption
+              ? "Edit Recovery Service"
+              : "Create Recovery Service"}
           </h2>
           <div
             className="close--lead cursor-pointer"
@@ -106,7 +111,11 @@ const RecoveryServices = ({
                     <div className="bg-gray-100 rounded-lg w-full h-[200px] overflow-hidden">
                       {formik.values?.image ? (
                         <img
-                          src={formik.values?.image}
+                          src={
+                            typeof formik.values.image === "string"
+                              ? formik.values.image
+                              : URL.createObjectURL(formik.values.image)
+                          }
                           alt="Preview"
                           className="w-full h-full object-cover"
                         />
@@ -137,8 +146,7 @@ const RecoveryServices = ({
                     </div>
                     {formik.touched.image && formik.errors.image && (
                       <p className="text-red-500 text-sm mt-1">
-                        {/* {formik.errors.image} */}
-                        Image is required
+                        {formik.errors.image}
                       </p>
                     )}
                   </div>
@@ -158,7 +166,7 @@ const RecoveryServices = ({
                           clubOptions.find(
                             (option) =>
                               option.value.toString() ===
-                              formik.values.club_id?.toString()
+                              formik.values.club_id?.toString(),
                           ) || null
                         }
                         options={clubOptions}
@@ -290,8 +298,6 @@ const RecoveryServices = ({
                     )}
                   </div> */}
 
-                  
-
                   {/* Position Input */}
                   <div>
                     <label className="mb-2 block">
@@ -377,11 +383,12 @@ const RecoveryServices = ({
                         className="custom--input w-full"
                       />
                     </div>
-                    {formik.touched.description && formik.errors.description && (
-                      <p className="text-red-500 text-sm mt-1">
-                        {formik.errors.description}
-                      </p>
-                    )}
+                    {formik.touched.description &&
+                      formik.errors.description && (
+                        <p className="text-red-500 text-sm mt-1">
+                          {formik.errors.description}
+                        </p>
+                      )}
                   </div>
                 </div>
               </div>

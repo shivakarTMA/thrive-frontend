@@ -65,11 +65,11 @@ const CreateGallery = ({
 
   const handleLogoChange = (e) => {
     const file = e.target.files[0];
-    if (file) {
-      const previewURL = URL.createObjectURL(file);
 
-      formik.setFieldValue("image", previewURL); // for preview
-      formik.setFieldValue("imageFile", file); // actual file to upload
+    if (file) {
+      formik.setFieldValue("image", file); // store actual file
+    } else {
+      formik.setFieldValue("image", null);
     }
   };
 
@@ -112,7 +112,11 @@ const CreateGallery = ({
                     <div className="w-full bg-gray-100 h-full rounded-lg mx-auto overflow-hidden relative group">
                       {formik.values?.image ? (
                         <img
-                          src={formik.values?.image}
+                          src={
+                            typeof formik.values.image === "string"
+                              ? formik.values.image
+                              : URL.createObjectURL(formik.values.image)
+                          }
                           alt="Preview"
                           className="w-full h-full object-cover"
                         />
@@ -125,12 +129,6 @@ const CreateGallery = ({
                         </div>
                       )}
                     </div>
-                    {/* Validation error */}
-                    {formik.touched.image && formik.errors.image && (
-                      <p className="text-red-500 text-sm mt-1">
-                        {formik.errors.image}
-                      </p>
-                    )}
                   </div>
 
                   {/* Image Upload */}

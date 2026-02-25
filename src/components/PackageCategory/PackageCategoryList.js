@@ -44,7 +44,7 @@ const PackageCategoryList = () => {
       toast.error("Failed to fetch companies");
     }
   };
-  
+
   useEffect(() => {
     fetchClub();
   }, []);
@@ -101,14 +101,23 @@ const PackageCategoryList = () => {
     initialValues: {
       club_id: "",
       title: "",
-      icon: "",
+      icon: null,
       position: null,
-      status: "ACTIVE",
+      status: "",
     },
     validationSchema: Yup.object({
       club_id: Yup.string().required("Club is required"),
       title: Yup.string().required("Title is required"),
-      icon: Yup.string().required("Icon is required"),
+      icon: Yup.mixed()
+        .required("Icon is required")
+        .test("fileType", "Only JPG, PNG, or WEBP allowed", (value) => {
+          if (!value) return false;
+
+          // If editing and already have image URL
+          if (typeof value === "string") return true;
+
+          return ["image/jpeg", "image/png", "image/webp"].includes(value.type);
+        }),
       position: Yup.number().required("Position is required"),
       status: Yup.string().required("Status is required"),
     }),
@@ -121,8 +130,8 @@ const PackageCategoryList = () => {
         formData.append("status", values.status);
 
         // if file exists, append it (instead of just file name)
-        if (values.iconFile instanceof File) {
-          formData.append("file", values.iconFile);
+        if (values.icon instanceof File) {
+          formData.append("file", values.icon);
         }
 
         if (editingOption && editingOption) {

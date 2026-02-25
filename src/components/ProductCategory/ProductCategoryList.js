@@ -64,7 +64,7 @@ const ProductCategoryList = () => {
 
       const res = await authAxios().get("/product/category/list", { params });
       let data = res.data?.data || res.data || [];
-      console.log(res.data,'res.data')
+      console.log(res.data, "res.data");
       setPackages(data);
       setPage(res.data?.currentPage || 1);
       setTotalPages(res.data?.totalPage || 1);
@@ -104,14 +104,25 @@ const ProductCategoryList = () => {
   const formik = useFormik({
     initialValues: {
       title: "",
-      icon: "",
+      icon: null,
       position: "",
       status: "ACTIVE",
       club_id: "",
     },
     validationSchema: Yup.object({
       title: Yup.string().required("Title is required"),
-      icon: Yup.string().required("Icon is required"),
+      icon: Yup.mixed()
+        .required("Icon is required")
+        .test("fileType", "Only JPG, PNG, or WEBP allowed", (value) => {
+          if (!value) return false;
+
+          if (typeof value === "string") return true;
+
+          return (
+            value.type.startsWith("image/") &&
+            ["image/jpeg", "image/png", "image/webp"].includes(value.type)
+          );
+        }),
       position: Yup.number().required("Position is required"),
       status: Yup.string().required("Status is required"),
       club_id: Yup.string().required("Club is required"),
@@ -125,8 +136,8 @@ const ProductCategoryList = () => {
         formData.append("club_id", values.club_id);
 
         // if file exists, append it (instead of just file name)
-        if (values.iconFile instanceof File) {
-          formData.append("file", values.iconFile);
+        if (values.icon instanceof File) {
+          formData.append("file", values.icon);
         }
 
         if (editingOption && editingOption) {
@@ -257,7 +268,9 @@ const ProductCategoryList = () => {
                       </div>
                     </td>
                     <td className="px-2 py-4">{item?.title}</td>
-                    <td className="px-2 py-4">{item?.club_name ? item?.club_name : "--"}</td>
+                    <td className="px-2 py-4">
+                      {item?.club_name ? item?.club_name : "--"}
+                    </td>
                     <td>{item.position}</td>
                     <td className="px-2 py-4">
                       <div

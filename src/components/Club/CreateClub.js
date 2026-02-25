@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   IoCloseCircle,
   IoDocumentTextOutline,
@@ -13,7 +13,12 @@ import {
 import { GrDocument } from "react-icons/gr";
 import { LuPlug } from "react-icons/lu";
 import Select from "react-select";
-import { blockInvalidNumberKeys, multiRowStyles, sanitizePositiveInteger, selectIcon } from "../../Helper/helper";
+import {
+  blockInvalidNumberKeys,
+  multiRowStyles,
+  sanitizePositiveInteger,
+  selectIcon,
+} from "../../Helper/helper";
 import PhoneInput from "react-phone-number-input";
 import { authAxios } from "../../config/config";
 import { toast } from "react-toastify";
@@ -32,6 +37,7 @@ const CreateClub = ({
   handlePhoneChange,
   indianStates,
 }) => {
+  const [logoError, setLogoError] = useState("");
   // Remove leading/trailing double quotes, single quotes and whitespace
   const sanitizeServiceString = (s) => {
     if (typeof s !== "string") return s;
@@ -141,7 +147,7 @@ const CreateClub = ({
           );
           // ✅ Prefill formik fields with fetched data
           formik.setValues({
-            logo: data?.logo || "",
+            logo: data?.logo || null,
             name: data?.name || "",
             email: data?.email || "",
             phone: "+" + data?.phone || "",
@@ -207,14 +213,43 @@ const CreateClub = ({
     (Array.isArray(arr) ? arr : []).map((s) => ({ label: s, value: s }));
 
   const handleLogoChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const previewURL = URL.createObjectURL(file);
+  const file = e.target.files[0];
 
-      formik.setFieldValue("logo", previewURL); // for preview
-      formik.setFieldValue("logoFile", file); // actual file to upload
-    }
-  };
+  if (!file) {
+    setLogoError("Logo is required");
+    formik.setFieldValue("logo", null);
+    formik.setFieldValue("logoFile", null);
+    return;
+  }
+
+  const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+  const maxSize = 2 * 1024 * 1024; // 2MB
+
+  // ❌ Invalid type
+  if (!allowedTypes.includes(file.type)) {
+    setLogoError("Only JPG, PNG, or WEBP files are allowed");
+    formik.setFieldValue("logo", null);
+    formik.setFieldValue("logoFile", null);
+    e.target.value = null;
+    return;
+  }
+
+  // ❌ Invalid size
+  // if (file.size > maxSize) {
+  //   setLogoError("Image size must be less than 2MB");
+  //   formik.setFieldValue("logo", null);
+  //   formik.setFieldValue("logoFile", null);
+  //   e.target.value = null;
+  //   return;
+  // }
+
+  // ✅ Valid file
+  setLogoError("");
+  const previewURL = URL.createObjectURL(file);
+
+  formik.setFieldValue("logo", previewURL);
+  formik.setFieldValue("logoFile", file);
+};
 
   return (
     <div
@@ -268,11 +303,14 @@ const CreateClub = ({
                     <label className="mb-2 block">Club Logo</label>
                     <input
                       type="file"
-                      accept="image/*"
+                      accept="image/png, image/jpeg, image/webp"
                       onChange={handleLogoChange}
                       onBlur={() => formik.setFieldTouched("logo", true)}
                       className="custom--input w-full"
                     />
+                    {logoError && (
+                      <p className="text-red-500 text-sm mt-1">{logoError}</p>
+                    )}
                   </div>
                   {/* Company Name */}
                   <div>

@@ -27,7 +27,6 @@ const Login = (props) => {
   const [step, setStep] = useState(1);
   const [currentUser, setCurrentUser] = useState(null);
   const [timer, setTimer] = useState(0);
-  const [isResending, setIsResending] = useState(false);
 
   // Redirect to home if already logged in
   useEffect(() => {
@@ -36,13 +35,27 @@ const Login = (props) => {
     }
   }, [accessToken]);
 
-  // Handle input change
-  const handleChange = (e) => {
+
+  // ✅ Common numeric input handler
+  const handleNumericInput = (e, maxLength) => {
     const { name, value } = e.target;
-    setData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+
+    // Remove everything except digits
+    const numericValue = value.replace(/\D/g, "");
+
+    // Limit length
+    if (numericValue.length <= maxLength) {
+      setData((prev) => ({
+        ...prev,
+        [name]: numericValue,
+      }));
+    }
+  };
+
+  const blockInvalidKeys = (e) => {
+    if (["e", "E", "+", "-", "."].includes(e.key)) {
+      e.preventDefault();
+    }
   };
 
   // Handle submit for login and OTP verification
@@ -108,7 +121,6 @@ const Login = (props) => {
 
   const handleResendOtp = async () => {
     try {
-      setIsResending(true);
       setLoading(true);
 
       const response = await authAxios().post("staff/login", {
@@ -124,7 +136,6 @@ const Login = (props) => {
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to resend OTP");
     } finally {
-      setIsResending(false);
       setLoading(false);
     }
   };
@@ -176,7 +187,8 @@ const Login = (props) => {
                     name="identifier"
                     type="number"
                     value={data.identifier}
-                    onChange={handleChange}
+                    onChange={(e) => handleNumericInput(e, 10)}
+                    onKeyDown={blockInvalidKeys}
                     required
                     minLength={10} // Minimum 10 characters
                     maxLength={10} // Maximum 10 characters
@@ -206,12 +218,13 @@ const Login = (props) => {
                   <input
                     id="otp"
                     name="otp"
-                    type="tel"
+                    type="number"
                     inputMode="numeric"
                     pattern="[0-9]{6}"
                     maxLength={6}
                     value={data.otp}
-                    onChange={handleChange}
+                    onChange={(e) => handleNumericInput(e, 6)}
+                    onKeyDown={blockInvalidKeys}
                     required
                     className="number--appearance-none block w-full rounded-md border-0 py-1.5 px-4 text-gray-900 focus:outline-none sm:text-sm"
                     placeholder="Enter 6 digit OTP"
@@ -230,7 +243,9 @@ const Login = (props) => {
                   </p>
                 ) : (
                   <p className="text-sm ">
-                    <span className="text-gray-400">Didn’t receive the code?</span>{" "}
+                    <span className="text-gray-400">
+                      Didn’t receive the code?
+                    </span>{" "}
                     <button
                       type="button"
                       onClick={handleResendOtp}

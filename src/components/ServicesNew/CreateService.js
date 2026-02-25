@@ -1,13 +1,8 @@
-// Import React
 import React, { useEffect } from "react";
-// Import close icon
 import { IoCloseCircle } from "react-icons/io5";
-// Import icons for input fields
 import { FaListUl } from "react-icons/fa6";
 import { LuPlug } from "react-icons/lu";
-// Import select component
 import Select from "react-select";
-// Import custom styles for select input
 import {
   blockInvalidNumberKeys,
   handleTextOnlyChange,
@@ -18,7 +13,6 @@ import { PiImageFill } from "react-icons/pi";
 import { authAxios } from "../../config/config";
 import { toast } from "react-toastify";
 
-// CreateService component
 const CreateService = ({
   setShowModal,
   editingOption,
@@ -28,7 +22,6 @@ const CreateService = ({
   clubOptions,
   studioOptions,
 }) => {
-  // Predefined services type options
   const servicesType = [
     { label: "Group Classes", value: "GROUP_CLASS" },
     { label: "Personal Trainer", value: "PERSONAL_TRAINER" },
@@ -67,11 +60,11 @@ const CreateService = ({
 
   const handleLogoChange = (e) => {
     const file = e.target.files[0];
-    if (file) {
-      const previewURL = URL.createObjectURL(file);
 
-      formik.setFieldValue("image", previewURL); // for preview
-      formik.setFieldValue("imageFile", file); // actual file to upload
+    if (file) {
+      formik.setFieldValue("image", file); // store actual file
+    } else {
+      formik.setFieldValue("image", null);
     }
   };
 
@@ -114,7 +107,11 @@ const CreateService = ({
                     <div className="bg-gray-100 rounded-lg w-full h-full overflow-hidden">
                       {formik.values?.image ? (
                         <img
-                          src={formik.values?.image}
+                          src={
+                            typeof formik.values.image === "string"
+                              ? formik.values.image
+                              : URL.createObjectURL(formik.values.image)
+                          }
                           alt="Preview"
                           className="w-full h-full object-cover"
                         />
@@ -145,7 +142,7 @@ const CreateService = ({
                     </div>
                     {formik.touched.image && formik.errors.image && (
                       <p className="text-red-500 text-sm mt-1">
-                        Image is required
+                        {formik.errors.image}
                       </p>
                     )}
                   </div>
@@ -310,9 +307,7 @@ const CreateService = ({
                   {/* Status Dropdown */}
                   {editingOption && (
                     <div>
-                      <label className="mb-2 block">
-                        Status
-                      </label>
+                      <label className="mb-2 block">Status</label>
                       <div className="relative">
                         <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[10]">
                           <LuPlug />

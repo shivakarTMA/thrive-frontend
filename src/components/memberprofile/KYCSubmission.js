@@ -3,10 +3,11 @@ import { authAxios } from "../../config/config";
 import { IoEyeOutline } from "react-icons/io5";
 import { RxUpdate } from "react-icons/rx";
 import { toast } from "react-toastify";
-import { FiUpload } from "react-icons/fi";
+import { FiDownload, FiUpload } from "react-icons/fi";
 import { MdOutlineFileDownload } from "react-icons/md";
+import IsLoadingHOC from "../common/IsLoadingHOC";
 
-const KYCSubmission = ({ details }) => {
+const KYCSubmission = ({ details, setLoading }) => {
   const memberId = details?.id;
   const [errors, setErrors] = useState({});
 
@@ -43,7 +44,9 @@ const KYCSubmission = ({ details }) => {
   useEffect(() => {
     const fetchKycDocuments = async () => {
       try {
-        const response = await authAxios().get(`/kyc/document/list/${memberId}`);
+        const response = await authAxios().get(
+          `/kyc/document/list/${memberId}`,
+        );
         if (response.data.status && response.data.data) {
           const data = response.data.data;
           const aadhar = data.find((d) => d.document_type === "ID_PROOF");
@@ -112,96 +115,99 @@ const KYCSubmission = ({ details }) => {
   };
 
   // Handle submit for all documents
-const handleSubmit = async () => {
-  let hasError = false;
-  const newErrors = {};
+  const handleSubmit = async () => {
+    let hasError = false;
+    const newErrors = {};
 
-  // Validation for Aadhar Front and Back using uploaded flag or preview
-  if (
-    (!documents.aadharFront?.file && !documents.aadharFront?.uploaded) ||
-    !documents.aadharFront?.preview
-  ) {
-    newErrors.aadharFront = "Please upload your Aadhar Front image.";
-    hasError = true;
-  }
-
-  if (
-    (!documents.aadharBack?.file && !documents.aadharBack?.uploaded) ||
-    !documents.aadharBack?.preview
-  ) {
-    newErrors.aadharBack = "Please upload your Aadhar Back image.";
-    hasError = true;
-  }
-
-  // Validation for Corporate ID
-  if (
-    (!documents.corporateId?.file && !documents.corporateId?.uploaded) ||
-    !documents.corporateId?.preview
-  ) {
-    newErrors.corporateId = "Please upload your Corporate ID image.";
-    hasError = true;
-  }
-
-  if (hasError) {
-    setErrors(newErrors);
-    return;
-  }
-
-  setErrors({});
-
-  try {
-    // Upload or update Aadhar documents (ID_PROOF)
-    if (documents.aadharFront || documents.aadharBack) {
-      const formData = new FormData();
-      formData.append("member_id", memberId);
-      formData.append("document_type", "ID_PROOF");
-
-      if (documents.aadharFront?.file)
-        formData.append("document_front_file", documents.aadharFront.file);
-      if (documents.aadharBack?.file)
-        formData.append("document_back_file", documents.aadharBack.file);
-
-      // Use existing id if available (prefer aadharFront id first)
-      const id = documents.aadharFront?.id || documents.aadharBack?.id;
-
-      if (id) {
-        await authAxios().put(`/kyc/document/${id}`, formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
-      } else {
-        await authAxios().post(`/kyc/document/create`, formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
-      }
+    // Validation for Aadhar Front and Back using uploaded flag or preview
+    if (
+      (!documents.aadharFront?.file && !documents.aadharFront?.uploaded) ||
+      !documents.aadharFront?.preview
+    ) {
+      newErrors.aadharFront = "Please upload your Aadhar Front image.";
+      hasError = true;
     }
 
-    // Upload or update Corporate ID (PHOTO)
-    if (documents.corporateId) {
-      const formData = new FormData();
-      formData.append("member_id", memberId);
-      formData.append("document_type", "PHOTO");
-
-      if (documents.corporateId?.file)
-        formData.append("document_front_file", documents.corporateId.file);
-
-      if (documents.corporateId?.id) {
-        await authAxios().put(`/kyc/document/${documents.corporateId.id}`, formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
-      } else {
-        await authAxios().post(`/kyc/document/create`, formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
-      }
+    if (
+      (!documents.aadharBack?.file && !documents.aadharBack?.uploaded) ||
+      !documents.aadharBack?.preview
+    ) {
+      newErrors.aadharBack = "Please upload your Aadhar Back image.";
+      hasError = true;
     }
 
-    toast.success("Documents submitted successfully!");
-  } catch (error) {
-    console.error("Error uploading documents:", error);
-    toast.error("Upload failed. Check console for details.");
-  }
-};
+    // Validation for Corporate ID
+    if (
+      (!documents.corporateId?.file && !documents.corporateId?.uploaded) ||
+      !documents.corporateId?.preview
+    ) {
+      newErrors.corporateId = "Please upload your Corporate ID image.";
+      hasError = true;
+    }
 
+    if (hasError) {
+      setErrors(newErrors);
+      return;
+    }
+
+    setErrors({});
+
+    try {
+      // Upload or update Aadhar documents (ID_PROOF)
+      if (documents.aadharFront || documents.aadharBack) {
+        const formData = new FormData();
+        formData.append("member_id", memberId);
+        formData.append("document_type", "ID_PROOF");
+
+        if (documents.aadharFront?.file)
+          formData.append("document_front_file", documents.aadharFront.file);
+        if (documents.aadharBack?.file)
+          formData.append("document_back_file", documents.aadharBack.file);
+
+        // Use existing id if available (prefer aadharFront id first)
+        const id = documents.aadharFront?.id || documents.aadharBack?.id;
+
+        if (id) {
+          await authAxios().put(`/kyc/document/${id}`, formData, {
+            headers: { "Content-Type": "multipart/form-data" },
+          });
+        } else {
+          await authAxios().post(`/kyc/document/create`, formData, {
+            headers: { "Content-Type": "multipart/form-data" },
+          });
+        }
+      }
+
+      // Upload or update Corporate ID (PHOTO)
+      if (documents.corporateId) {
+        const formData = new FormData();
+        formData.append("member_id", memberId);
+        formData.append("document_type", "PHOTO");
+
+        if (documents.corporateId?.file)
+          formData.append("document_front_file", documents.corporateId.file);
+
+        if (documents.corporateId?.id) {
+          await authAxios().put(
+            `/kyc/document/${documents.corporateId.id}`,
+            formData,
+            {
+              headers: { "Content-Type": "multipart/form-data" },
+            },
+          );
+        } else {
+          await authAxios().post(`/kyc/document/create`, formData, {
+            headers: { "Content-Type": "multipart/form-data" },
+          });
+        }
+      }
+
+      toast.success("Documents submitted successfully!");
+    } catch (error) {
+      console.error("Error uploading documents:", error);
+      toast.error("Upload failed. Check console for details.");
+    }
+  };
 
   const handleDrop = (event, documentType) => {
     event.preventDefault();
@@ -221,8 +227,103 @@ const handleSubmit = async () => {
     if (ref.current) ref.current.click();
   };
 
+const downloadAndOpenParqForm = async () => {
+  try {
+    setLoading(true);
+
+    // Fetch the file as a blob
+    const res = await authAxios().post(
+      `/member/parqform/download/${details?.id}`,
+      {},
+      { responseType: "blob" } // important for binary PDF
+    );
+
+    // Create a Blob URL
+    const blob = new Blob([res.data], { type: "application/pdf" });
+    const url = window.URL.createObjectURL(blob);
+
+    // ✅ 1. Trigger automatic download
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "PAR-Q.pdf"; // filename for download
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+
+    // ✅ 2. Open PDF in new tab for viewing
+    window.open(url, "_blank");
+
+    // Optional cleanup after some time
+    setTimeout(() => window.URL.revokeObjectURL(url), 5000);
+
+    toast.success("PAR-Q file downloaded successfully");
+
+  } catch (error) {
+    console.error("Failed to download and open PAR-Q form:", error);
+    toast.error("Failed to download and open PAR-Q form");
+  } finally {
+    setLoading(false);
+  }
+};
+
+const downloadAndOpenTerms = async () => {
+  try {
+    setLoading(true);
+
+    // Fetch the file as a blob
+    const res = await authAxios().post(
+      `/member/terms/condition/download/${details?.id}`,
+      {},
+      { responseType: "blob" } // important for binary PDF
+    );
+
+    // Create a Blob URL
+    const blob = new Blob([res.data], { type: "application/pdf" });
+    const url = window.URL.createObjectURL(blob);
+
+    // ✅ 1. Trigger automatic download
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "T&C.pdf"; // filename for download
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+
+    // ✅ 2. Open PDF in new tab for viewing
+    window.open(url, "_blank");
+
+    // Optional cleanup after some time
+    setTimeout(() => window.URL.revokeObjectURL(url), 5000);
+
+    toast.success("T&C file downloaded successfully");
+
+  } catch (error) {
+    console.error("Failed to download T&C form:", error);
+    toast.error("Failed to download T&C form");
+  } finally {
+    setLoading(false);
+  }
+};
+
   return (
     <div className="bg-white p-4 rounded-[10px] w-full box--shadow">
+      <div className="flex items-center w-full justify-end mb-5 gap-3">
+        <button
+          type="button"
+          onClick={downloadAndOpenTerms}
+          className="px-4 py-2 text-black bg-white border border-black rounded flex items-center gap-2"
+        >
+          <span>Download T&C</span> <FiDownload />
+        </button>
+        <button
+          type="button"
+          onClick={downloadAndOpenParqForm}
+          className="px-4 py-2 text-white bg-black border border-black rounded flex items-center gap-2"
+        >
+          <span>Download PAR-Q</span> <FiDownload />
+        </button>
+      </div>
+
       <div className="space-y-6">
         {/* Document Cards */}
         <div className="grid grid-cols-3 gap-3">
@@ -349,50 +450,6 @@ const handleSubmit = async () => {
               </div>
             );
           })}
-
-          <div class="bg-gray-50 rounded-lg p-6 w-full">
-            <label class="block text-lg font-semibold text-gray-700 mb-4">PAR-Q Information</label>
-            <div class="border rounded-lg p-4 bg-white">
-                <div class="flex items-start space-x-4">
-                  <div class="relative w-[100px] h-[80px]">
-                      <img alt="Aadhar Card (Front)" class="w-full h-full object-cover rounded border" src="https://asset-uat.s3.ap-south-1.amazonaws.com/uploads/kyc/1771585179655-img2.png" />
-                  </div>
-                  <div class="">
-                      <div class="flex space-x-2 mt-2">
-                        <button type="button" class="inline-flex items-center px-3 py-2 text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors">
-                            <IoEyeOutline />
-                        </button>
-                        <button type="button" class="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors">
-                            <MdOutlineFileDownload />
-                        </button>
-                      </div>
-                  </div>
-                </div>
-            </div>
-          </div>
-
-          <div class="bg-gray-50 rounded-lg p-6 w-full">
-            <label class="block text-lg font-semibold text-gray-700 mb-4">Terms & Conditions</label>
-            <div class="border rounded-lg p-4 bg-white">
-                <div class="flex items-start space-x-4">
-                  <div class="relative w-[100px] h-[80px]">
-                      <img alt="Aadhar Card (Front)" class="w-full h-full object-cover rounded border" src="https://asset-uat.s3.ap-south-1.amazonaws.com/uploads/kyc/1771585179655-img2.png" />
-                  </div>
-                  <div class="">
-                      <div class="flex space-x-2 mt-2">
-                        <button type="button" class="inline-flex items-center px-3 py-2 text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors">
-                            <IoEyeOutline />
-                        </button>
-                        <button type="button" class="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors">
-                            <MdOutlineFileDownload />
-                        </button>
-                      </div>
-                  </div>
-                </div>
-            </div>
-          </div>
-
-          
         </div>
 
         {/* Submit Button (Always Visible) */}
@@ -435,4 +492,4 @@ const handleSubmit = async () => {
   );
 };
 
-export default KYCSubmission;
+export default IsLoadingHOC(KYCSubmission);

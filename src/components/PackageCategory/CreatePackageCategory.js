@@ -36,7 +36,7 @@ const CreatePackageCategory = ({
           formik.setValues({
             title: data.title || "",
             club_id: data.club_id || "",
-            icon: data.icon || "",
+            icon: data.icon || null,
             position: data.position || "",
             status: data.status || "",
           });
@@ -52,11 +52,11 @@ const CreatePackageCategory = ({
 
   const handleLogoChange = (e) => {
     const file = e.target.files[0];
-    if (file) {
-      const previewURL = URL.createObjectURL(file);
 
-      formik.setFieldValue("icon", previewURL); // for preview
-      formik.setFieldValue("iconFile", file); // actual file to upload
+    if (file) {
+      formik.setFieldValue("icon", file); // store actual file
+    } else {
+      formik.setFieldValue("icon", null);
     }
   };
 
@@ -95,7 +95,11 @@ const CreatePackageCategory = ({
                       <div className="bg-gray-100 rounded-lg w-[80px] h-[80px] overflow-hidden p-2">
                         {formik.values?.icon ? (
                           <img
-                            src={formik.values?.icon}
+                            src={
+                              typeof formik.values.icon === "string"
+                                ? formik.values.icon
+                                : URL.createObjectURL(formik.values.icon)
+                            }
                             alt="Preview"
                             className="w-full h-full object-cover"
                           />
@@ -112,7 +116,7 @@ const CreatePackageCategory = ({
                         <div className="relative">
                           <input
                             type="file"
-                            accept="image/*"
+                            accept="image/png, image/jpeg, image/jpg, image/webp"
                             onChange={handleLogoChange}
                             onBlur={() => formik.setFieldTouched("icon", true)}
                             className="custom--input w-full"

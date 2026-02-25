@@ -8,7 +8,6 @@ import { LiaEdit } from "react-icons/lia";
 import { FaCircle } from "react-icons/fa6";
 import CreatePackage from "./CreatePackage";
 import { authAxios } from "../../config/config";
-import { IoIosSearch } from "react-icons/io";
 import Pagination from "../common/Pagination";
 import { IoSearchOutline } from "react-icons/io5";
 import Select from "react-select";
@@ -157,11 +156,15 @@ const PackagesList = () => {
         image: Yup.mixed()
           .required("Image is required")
           .test("fileType", "Only JPG, PNG, or WEBP allowed", (value) => {
-            if (!value || typeof value === "string") return true;
+            if (!value) return false;
+
+            // If editing and already have image URL
+            if (typeof value === "string") return true;
+
             return ["image/jpeg", "image/png", "image/webp"].includes(
               value.type,
             );
-          }),
+        }),
         service_id: Yup.number().required("Service is required"),
         club_id: Yup.number().required("Club is required"),
         session_level: Yup.string().required("Level is required"),
@@ -475,12 +478,6 @@ const PackagesList = () => {
       }
     },
   });
-
-  useEffect(() => {
-    if (sessionLevelValue === "GROUP_CLASS") {
-      formik.setFieldValue("caption", "");
-    }
-  }, [sessionLevelValue]);
 
   const createPackageVariation = async (packageId, variation) => {
     const fd = new FormData();

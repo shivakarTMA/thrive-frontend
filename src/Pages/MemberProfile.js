@@ -115,7 +115,7 @@ const MemberProfile = (props) => {
           {activeTab === "Profile Details" && (
             <ProfileDetails member={member} />
           )}
-          {activeTab === "Kyc Submission" && <KYCSubmission details={member} />}
+          {activeTab === "Kyc Submission" && <KYCSubmission details={member} setLoading={setLoading} />}
           {activeTab === "Service Card" && <ServiceCard details={member} />}
           {activeTab === "Order History" && <OrderHistory details={member} />}
           {activeTab === "Payment History" && (

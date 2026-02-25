@@ -9,7 +9,6 @@ import Tooltip from "../common/Tooltip";
 import { LiaEdit } from "react-icons/lia";
 import { FaCircle } from "react-icons/fa6";
 import CreateClub from "./CreateClub";
-import axios from "axios";
 import { authAxios } from "../../config/config";
 import { IoSearchOutline } from "react-icons/io5";
 import Select from "react-select";
@@ -222,6 +221,7 @@ const ClubList = () => {
         );
 
         formData.append("trial_duration", values.trial_duration);
+        formData.append("description", values.description);
 
         // ✅ Append logo only if it's a file
         if (values.logoFile instanceof File) {

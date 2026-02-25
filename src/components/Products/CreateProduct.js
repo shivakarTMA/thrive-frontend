@@ -104,11 +104,11 @@ const CreateProduct = ({
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
-    if (file) {
-      const previewURL = URL.createObjectURL(file);
 
-      formik.setFieldValue("image", previewURL); // for preview
-      formik.setFieldValue("imageFile", file); // actual file to upload
+    if (file) {
+      formik.setFieldValue("image", file); // store actual file
+    } else {
+      formik.setFieldValue("image", null);
     }
   };
 
@@ -156,7 +156,11 @@ const CreateProduct = ({
                     <div className="bg-gray-100 rounded-lg w-full h-[160px] overflow-hidden">
                       {formik.values?.image ? (
                         <img
-                          src={formik.values?.image}
+                          src={
+                              typeof formik.values.image === "string"
+                                ? formik.values.image
+                                : URL.createObjectURL(formik.values.image)
+                            }
                           className="w-full h-full object-cover"
                         />
                       ) : (

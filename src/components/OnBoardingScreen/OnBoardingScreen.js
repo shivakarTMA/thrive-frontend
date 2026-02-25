@@ -58,13 +58,22 @@ const OnBoardingScreen = () => {
   const formik = useFormik({
     initialValues: {
       title: "",
-      screen_image: "",
+      screen_image: null,
       position: null,
       status: "",
     },
     validationSchema: Yup.object({
       title: Yup.string().required("Title is required"),
-      screen_image: Yup.string().required("Screen image is required"),
+      screen_image: Yup.mixed()
+        .required("Image is required")
+        .test("fileType", "Only JPG, PNG, or WEBP allowed", (value) => {
+          if (!value) return false;
+
+          // If editing and already have image URL
+          if (typeof value === "string") return true;
+
+          return ["image/jpeg", "image/png", "image/webp"].includes(value.type);
+        }),
       position: Yup.number().required("Position is required"),
       status: Yup.string().required("Status is required"),
     }),
@@ -76,8 +85,8 @@ const OnBoardingScreen = () => {
         formData.append("status", values.status);
 
         // if file exists, append it (instead of just file name)
-        if (values.screen_imageFile instanceof File) {
-          formData.append("file", values.screen_imageFile);
+        if (values.screen_image instanceof File) {
+          formData.append("file", values.screen_image);
         }
 
         if (editingOption && editingOption.id) {

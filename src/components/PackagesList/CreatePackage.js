@@ -391,11 +391,11 @@ const CreatePackage = ({
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
-    if (file) {
-      const previewURL = URL.createObjectURL(file);
 
-      formik.setFieldValue("image", previewURL); // for preview
-      formik.setFieldValue("imageFile", file); // actual file to upload
+    if (file) {
+      formik.setFieldValue("image", file); // store actual file
+    } else {
+      formik.setFieldValue("image", null);
     }
   };
 
@@ -455,7 +455,11 @@ const CreatePackage = ({
                       <div className="bg-gray-100 rounded-lg w-full h-[160px] overflow-hidden">
                         {formik.values?.image ? (
                           <img
-                            src={formik.values?.image}
+                            src={
+                              typeof formik.values.image === "string"
+                                ? formik.values.image
+                                : URL.createObjectURL(formik.values.image)
+                            }
                             className="w-full h-full object-cover"
                           />
                         ) : (
@@ -478,6 +482,7 @@ const CreatePackage = ({
                         <input
                           type="file"
                           name="image"
+                          accept="image/png, image/jpeg, image/jpg, image/webp"
                           onChange={handleFileChange} // ✅ no value prop here
                           onBlur={() => formik.setFieldTouched("image", true)}
                           className="custom--input w-full"
@@ -580,7 +585,6 @@ const CreatePackage = ({
                             )}
                         </div>
                       )}
-
 
                     {/* Name */}
                     <div>
@@ -1528,7 +1532,9 @@ const CreatePackage = ({
                                 }
                                 onKeyDown={blockInvalidNumberKeys}
                                 onChange={(e) => {
-                                  const cleanValue = sanitizePositiveInteger(e.target.value);
+                                  const cleanValue = sanitizePositiveInteger(
+                                    e.target.value,
+                                  );
                                   formik.setFieldValue(
                                     `variation[${index}].no_of_sessions`,
                                     cleanValue,
@@ -1566,7 +1572,9 @@ const CreatePackage = ({
                                 // onChange={formik.handleChange}
                                 onKeyDown={blockInvalidNumberKeys}
                                 onChange={(e) => {
-                                  const cleanValue = sanitizePositiveInteger(e.target.value);
+                                  const cleanValue = sanitizePositiveInteger(
+                                    e.target.value,
+                                  );
                                   formik.setFieldValue(
                                     `variation[${index}].session_duration`,
                                     cleanValue,
@@ -1603,7 +1611,9 @@ const CreatePackage = ({
                                 // onChange={formik.handleChange}
                                 onKeyDown={blockInvalidNumberKeys}
                                 onChange={(e) => {
-                                  const cleanValue = sanitizePositiveInteger(e.target.value);
+                                  const cleanValue = sanitizePositiveInteger(
+                                    e.target.value,
+                                  );
                                   formik.setFieldValue(
                                     `variation[${index}].session_validity`,
                                     cleanValue,
@@ -1640,7 +1650,9 @@ const CreatePackage = ({
                                 // onChange={formik.handleChange}
                                 onKeyDown={blockInvalidNumberKeys}
                                 onChange={(e) => {
-                                  const cleanValue = sanitizePositiveInteger(e.target.value);
+                                  const cleanValue = sanitizePositiveInteger(
+                                    e.target.value,
+                                  );
                                   formik.setFieldValue(
                                     `variation[${index}].amount`,
                                     cleanValue,
@@ -1672,7 +1684,9 @@ const CreatePackage = ({
                                 // onChange={formik.handleChange}
                                 onKeyDown={blockInvalidNumberKeys}
                                 onChange={(e) => {
-                                  const cleanValue = sanitizePositiveInteger(e.target.value);
+                                  const cleanValue = sanitizePositiveInteger(
+                                    e.target.value,
+                                  );
                                   formik.setFieldValue(
                                     `variation[${index}].discount`,
                                     cleanValue,
@@ -1703,7 +1717,9 @@ const CreatePackage = ({
                                 // onChange={formik.handleChange}
                                 onKeyDown={blockInvalidNumberKeys}
                                 onChange={(e) => {
-                                  const cleanValue = sanitizePositiveInteger(e.target.value);
+                                  const cleanValue = sanitizePositiveInteger(
+                                    e.target.value,
+                                  );
                                   formik.setFieldValue(
                                     `variation[${index}].gst`,
                                     cleanValue,
@@ -1735,7 +1751,9 @@ const CreatePackage = ({
                                 // onChange={formik.handleChange}
                                 onKeyDown={blockInvalidNumberKeys}
                                 onChange={(e) => {
-                                  const cleanValue = sanitizePositiveInteger(e.target.value);
+                                  const cleanValue = sanitizePositiveInteger(
+                                    e.target.value,
+                                  );
                                   formik.setFieldValue(
                                     `variation[${index}].earn_coin`,
                                     cleanValue,
@@ -1766,7 +1784,9 @@ const CreatePackage = ({
                                 // onChange={formik.handleChange}
                                 onKeyDown={blockInvalidNumberKeys}
                                 onChange={(e) => {
-                                  const cleanValue = sanitizePositiveInteger(e.target.value);
+                                  const cleanValue = sanitizePositiveInteger(
+                                    e.target.value,
+                                  );
                                   formik.setFieldValue(
                                     `variation[${index}].position`,
                                     cleanValue,

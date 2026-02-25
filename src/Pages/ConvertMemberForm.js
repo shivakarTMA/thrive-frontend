@@ -5,7 +5,12 @@ import "react-datepicker/dist/react-datepicker.css";
 import "react-phone-number-input/style.css";
 import PhoneInput, { isValidPhoneNumber } from "react-phone-number-input";
 import { parsePhoneNumberFromString } from "libphonenumber-js";
-import { blockInvalidNumberKeys, formatText, sanitizePositiveInteger, selectIcon } from "../Helper/helper";
+import {
+  blockInvalidNumberKeys,
+  formatText,
+  sanitizePositiveInteger,
+  selectIcon,
+} from "../Helper/helper";
 import { IoBan, IoCloseCircle } from "react-icons/io5";
 import { PiGenderIntersex, PiGenderIntersexBold } from "react-icons/pi";
 import { useFormik } from "formik";
@@ -84,7 +89,7 @@ const stepValidationSchemas = [
         const cleanedMobile = value.replace(/\D/g, "");
 
         const phoneNumber = parsePhoneNumberFromString(
-          "+" + country_code + cleanedMobile
+          "+" + country_code + cleanedMobile,
         );
 
         // ❌ Not a valid number format for that country
@@ -163,11 +168,9 @@ const stepValidationSchemas = [
               return true;
             }),
           relationship: Yup.string().required("Relationship is required"),
-        })
+        }),
       )
       .min(1, "At least one emergency contact is required"),
-
-
   }),
   Yup.object({
     plan_type: Yup.string().required("Plan Type is required"),
@@ -210,6 +213,7 @@ const ConvertMemberForm = ({
     useState(false);
   const [showUnderageModal, setShowUnderageModal] = useState(false);
   const [pendingDob, setPendingDob] = useState(null);
+  const [profileError, setProfileError] = useState("");
 
   // Redux state
   const dispatch = useDispatch();
@@ -309,7 +313,7 @@ const ConvertMemberForm = ({
           const memberResponse = await authAxios().put(
             `/member/convert/lead/${selectedLeadMember}`,
             formData,
-            { headers: { "Content-Type": "multipart/form-data" } }
+            { headers: { "Content-Type": "multipart/form-data" } },
           );
 
           // // ✅ Get member_id from response (or use selectedLeadMember.id if API doesn't return)
@@ -337,7 +341,7 @@ const ConvertMemberForm = ({
                     name: contact.name,
                     relationship: contact.relationship,
                     phone: contact.phone,
-                  }
+                  },
                 );
               }
             }
@@ -361,7 +365,7 @@ const ConvertMemberForm = ({
 
             const res = await authAxios().post(
               "/payment/proceed",
-              paymentPayload
+              paymentPayload,
             );
 
             if (res.data?.status) {
@@ -412,16 +416,16 @@ const ConvertMemberForm = ({
 
           const emergencyContacts =
             data.member_emergency_contact &&
-              data.member_emergency_contact.length > 0
+            data.member_emergency_contact.length > 0
               ? data.member_emergency_contact
               : [
-                {
-                  id: null,
-                  name: "",
-                  phone: "",
-                  relationship: "",
-                },
-              ];
+                  {
+                    id: null,
+                    name: "",
+                    phone: "",
+                    relationship: "",
+                  },
+                ];
 
           formik.setValues({
             id: data.id || "",
@@ -499,7 +503,7 @@ const ConvertMemberForm = ({
 
       // ✅ Filter only active companies
       const activeCompanies = data.filter(
-        (company) => company.status === "ACTIVE"
+        (company) => company.status === "ACTIVE",
       );
 
       // ✅ Convert to dropdown-friendly format
@@ -548,12 +552,38 @@ const ConvertMemberForm = ({
   // Handle file upload
   const handleImageUpload = (event) => {
     const file = event.target.files[0];
-    if (file) {
-      const imageUrl = URL.createObjectURL(file);
-      setProfileImage(imageUrl);
-      formik.setFieldValue("profile_pic", file);
-      setShowModal(false);
+
+    if (!file) {
+      setProfileError("Profile image is required");
+      return;
     }
+
+    const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+
+    // const maxSize = 2 * 1024 * 1024; // 2MB
+
+    // ❌ Invalid file type
+    if (!allowedTypes.includes(file.type)) {
+      setProfileError("Only JPG, PNG, or WEBP allowed");
+      event.target.value = null;
+      return;
+    }
+
+    // ❌ File too large
+    // if (file.size > maxSize) {
+    //   setProfileError("Image size must be less than 2MB");
+    //   event.target.value = null;
+    //   return;
+    // }
+
+    // ✅ Valid file
+    setProfileError("");
+
+    const imageUrl = URL.createObjectURL(file);
+    setProfileImage(imageUrl);
+
+    formik.setFieldValue("profile_pic", file);
+    setShowModal(false);
   };
 
   const handleNextStep = async () => {
@@ -692,7 +722,6 @@ const ConvertMemberForm = ({
   //   }
   // };
 
-
   const applyCoupon = async () => {
     if (!voucherInput.trim()) return;
 
@@ -749,7 +778,6 @@ const ConvertMemberForm = ({
       // toast.success(response?.message || "Coupon applied successfully");
       setVoucherMessage(response?.message);
     } catch (err) {
-
       setVoucherStatus("error");
       setVoucherMessage(err?.message || "Invalid or expired coupon");
 
@@ -783,7 +811,7 @@ const ConvertMemberForm = ({
   const handleRemoveContact = async (contactId) => {
     // Find the contact
     const contact = formik.values.member_emergency_contact.find(
-      (c) => c.id === contactId
+      (c) => c.id === contactId,
     );
 
     // Delete from DB if exists
@@ -799,14 +827,14 @@ const ConvertMemberForm = ({
 
     // Remove from Formik state (FILTER by id)
     const updatedContacts = formik.values.member_emergency_contact.filter(
-      (c) => c.id !== contactId
+      (c) => c.id !== contactId,
     );
 
     formik.setFieldValue(
       "member_emergency_contact",
       updatedContacts.length > 0
         ? updatedContacts
-        : [{ id: null, name: "", phone: "", relationship: "" }]
+        : [{ id: null, name: "", phone: "", relationship: "" }],
     );
   };
 
@@ -882,11 +910,11 @@ const ConvertMemberForm = ({
     } catch (error) {
       console.error(
         "Error checking phone uniqueness:",
-        error.response || error
+        error.response || error,
       );
       formik.setFieldError(
         "Email",
-        "Unable to check phone number. Please try again."
+        "Unable to check phone number. Please try again.",
       );
     }
   };
@@ -1044,7 +1072,7 @@ const ConvertMemberForm = ({
                         {/* Webcam Modal */}
                         {showModal && (
                           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                            <div className="bg-white p-4 rounded-lg shadow-lg flex flex-col items-center">
+                            <div className="bg-white p-4 rounded-lg shadow-lg flex flex-col">
                               {/* Webcam Preview */}
                               <Webcam
                                 ref={webcamRef}
@@ -1069,7 +1097,7 @@ const ConvertMemberForm = ({
                                     <FaRegImage /> Upload Image
                                     <input
                                       type="file"
-                                      accept="image/*"
+                                      accept="image/png, image/jpeg, image/webp"
                                       onChange={handleImageUpload}
                                       className="hidden"
                                     />
@@ -1077,12 +1105,20 @@ const ConvertMemberForm = ({
                                 </div>
 
                                 <button
-                                  onClick={() => setShowModal(false)}
+                                  onClick={() => {
+                                    setShowModal(false); // close the modal
+                                    setProfileError(""); // clear the image error
+                                  }}
                                   className="px-4 py-2 bg-black text-white rounded flex items-center gap-2"
                                 >
                                   <IoClose /> Cancel
                                 </button>
                               </div>
+                              {profileError && (
+                                <p className="text-red-500 text-sm mt-2">
+                                  {profileError}
+                                </p>
+                              )}
                             </div>
                           </div>
                         )}
@@ -1180,7 +1216,7 @@ const ConvertMemberForm = ({
                               <Select
                                 name="gender"
                                 value={genderOptions.find(
-                                  (opt) => opt.value === formik.values.gender
+                                  (opt) => opt.value === formik.values.gender,
                                 )}
                                 options={genderOptions}
                                 onChange={(option) =>
@@ -1318,7 +1354,7 @@ const ConvertMemberForm = ({
                               onChange={(serviceList) => {
                                 setSelected(serviceList); // UI needs objects
                                 const values = serviceList.map(
-                                  (opt) => opt.value
+                                  (opt) => opt.value,
                                 );
                                 formik.setFieldValue("interested_in", values); // Formik stores strings
                               }}
@@ -1330,10 +1366,11 @@ const ConvertMemberForm = ({
                                 allItemsAreSelected: "All Interested Selected",
                                 // search: "Search",
                               }}
-                              className={`custom--input w-full input--icon multi--select--new !text-gray-500 ${selected
-                                ? "cursor-not-allowed pointer-events-none !bg-gray-100"
-                                : ""
-                                }`}
+                              className={`custom--input w-full input--icon multi--select--new !text-gray-500 ${
+                                selected
+                                  ? "cursor-not-allowed pointer-events-none !bg-gray-100"
+                                  : ""
+                              }`}
                               disabled={!!selected}
                             />
 
@@ -1370,7 +1407,7 @@ const ConvertMemberForm = ({
                             <Select
                               name="lead_type"
                               value={leadTypes.find(
-                                (opt) => opt.value === formik.values.lead_type
+                                (opt) => opt.value === formik.values.lead_type,
                               )}
                               onChange={(option) =>
                                 formik.setFieldValue("lead_type", option.value)
@@ -1425,7 +1462,7 @@ const ConvertMemberForm = ({
                               <Select
                                 name="platform"
                                 value={socialList.find(
-                                  (opt) => opt.value === formik.values.platform
+                                  (opt) => opt.value === formik.values.platform,
                                 )}
                                 onChange={(option) =>
                                   formik.setFieldValue("platform", option.value)
@@ -1480,7 +1517,7 @@ const ConvertMemberForm = ({
                               value={
                                 companyOptions.find(
                                   (opt) =>
-                                    opt.value === formik.values.company_name
+                                    opt.value === formik.values.company_name,
                                 ) ||
                                 (formik.values.company_name && {
                                   value: formik.values.company_name,
@@ -1490,7 +1527,7 @@ const ConvertMemberForm = ({
                               onChange={(option) => {
                                 formik.setFieldValue(
                                   "company_name",
-                                  option.value
+                                  option.value,
                                 );
                               }}
                               options={companyOptions}
@@ -1612,12 +1649,12 @@ const ConvertMemberForm = ({
                                 <Select
                                   name={`member_emergency_contact.${index}.relationship`}
                                   value={relationList.find(
-                                    (opt) => opt.value === phone.relationship
+                                    (opt) => opt.value === phone.relationship,
                                   )}
                                   onChange={(option) =>
                                     formik.setFieldValue(
                                       `member_emergency_contact.${index}.relationship`,
-                                      option.value
+                                      option.value,
                                     )
                                   }
                                   options={relationList}
@@ -1643,17 +1680,17 @@ const ConvertMemberForm = ({
                             <div className="absolute top-0 right-[10px]">
                               {formik.values?.member_emergency_contact?.length >
                                 1 && (
-                                  <button
-                                    type="button"
-                                    onClick={() => handleRemoveContact(phone.id)}
-                                    className="text-black font-bold"
-                                  >
-                                    <IoIosCloseCircle className="text-2xl mt-2" />
-                                  </button>
-                                )}
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveContact(phone.id)}
+                                  className="text-black font-bold"
+                                >
+                                  <IoIosCloseCircle className="text-2xl mt-2" />
+                                </button>
+                              )}
                             </div>
                           </div>
-                        )
+                        ),
                       )}
 
                       <button
@@ -1757,7 +1794,7 @@ const ConvertMemberForm = ({
                             <Select
                               name="plan_type"
                               value={planTypeOption.find(
-                                (opt) => opt.value === formik.values.plan_type
+                                (opt) => opt.value === formik.values.plan_type,
                               )}
                               options={planTypeOption}
                               onChange={(option) =>
@@ -1844,12 +1881,13 @@ const ConvertMemberForm = ({
                               value={voucherInput}
                               onChange={(e) => setVoucherInput(e.target.value)}
                               placeholder="Enter voucher code"
-                              className={`input--icon !rounded-r-[0px] custom--input w-full ${voucherStatus === "success"
-                                ? "border-green-500"
-                                : voucherStatus === "error"
-                                  ? "border-red-500"
-                                  : ""
-                                }`}
+                              className={`input--icon !rounded-r-[0px] custom--input w-full ${
+                                voucherStatus === "success"
+                                  ? "border-green-500"
+                                  : voucherStatus === "error"
+                                    ? "border-red-500"
+                                    : ""
+                              }`}
                             />
                             <button
                               type="button"
@@ -1951,8 +1989,9 @@ const ConvertMemberForm = ({
                 </div>
               </div>
               <div
-                className={`flex gap-4 py-5 ${step > 0 ? "justify-between" : "justify-end"
-                  }`}
+                className={`flex gap-4 py-5 ${
+                  step > 0 ? "justify-between" : "justify-end"
+                }`}
               >
                 {step > 0 && (
                   <button
@@ -2059,7 +2098,7 @@ const ConvertMemberForm = ({
               <button
                 onClick={() => {
                   setPaymentModalOpen(false);
-                  setMemberModal(false)
+                  setMemberModal(false);
                   formik.resetForm(); // optional
                 }}
                 className="px-4 py-2 border rounded"

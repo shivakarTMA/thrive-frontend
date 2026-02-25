@@ -85,7 +85,7 @@ const RecoveryServicesList = () => {
         params.status = statusFilter.value;
       }
 
-      const res = await authAxios().get("/ourservices/list", {params});
+      const res = await authAxios().get("/ourservices/list", { params });
 
       let data = res.data?.data || res.data || [];
 
@@ -153,16 +153,16 @@ const RecoveryServicesList = () => {
     },
     validationSchema: Yup.object({
       club_id: Yup.string().required("Club is required"),
-      image: Yup.mixed().test(
-        "required-image",
-        "Image is required",
-        function (value) {
-          if (!editingOption) {
-            return value !== null;
-          }
-          return true;
-        },
-      ),
+      image: Yup.mixed()
+        .required("Image is required")
+        .test("fileType", "Only JPG, PNG, or WEBP allowed", (value) => {
+          if (!value) return false;
+
+          // If editing and already have image URL
+          if (typeof value === "string") return true;
+
+          return ["image/jpeg", "image/png", "image/webp"].includes(value.type);
+        }),
       name: Yup.string().required("Title is required"),
       service_id: Yup.string().required("Service is required"),
       // package_id: Yup.string().required("Package is required"),
@@ -178,9 +178,9 @@ const RecoveryServicesList = () => {
 
         Object.keys(values).forEach((key) => {
           // Only append image if it's a new file
-          if (key === "imageFile") {
-            if (values.imageFile && typeof values.imageFile !== "string") {
-              formData.append("image", values.imageFile);
+          if (key === "image") {
+            if (values.image && typeof values.image !== "string") {
+              formData.append("image", values.image);
             }
           } else {
             formData.append(key, values[key]);
@@ -201,7 +201,7 @@ const RecoveryServicesList = () => {
         fetchRecoveryServices();
       } catch (err) {
         console.error("API Error:", err.response?.data || err.message);
-        toast.error("Failed to save onboarding");
+        toast.error("Failed to save recovery service");
       }
 
       resetForm();
@@ -264,17 +264,16 @@ const RecoveryServicesList = () => {
         </div>
 
         <div className="w-fit min-w-[200px]">
-                    <Select
-                      placeholder="Filter by club"
-                      value={clubFilter}
-                      options={clubOptions}
-                      onChange={(option) => setClubFilter(option)}
-                      isClearable={currentUserRole === "ADMIN" ? true : false}
-                      styles={customStyles}
-                      className="w-full"
-                    />
-                  </div>
-        
+          <Select
+            placeholder="Filter by club"
+            value={clubFilter}
+            options={clubOptions}
+            onChange={(option) => setClubFilter(option)}
+            isClearable={currentUserRole === "ADMIN" ? true : false}
+            styles={customStyles}
+            className="w-full"
+          />
+        </div>
       </div>
 
       {/* Table Section */}
