@@ -106,7 +106,7 @@ const ProductCategoryList = () => {
       title: "",
       icon: null,
       position: "",
-      status: "ACTIVE",
+      status: "",
       club_id: "",
     },
     validationSchema: Yup.object({

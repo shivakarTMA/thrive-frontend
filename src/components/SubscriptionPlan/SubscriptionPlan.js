@@ -125,7 +125,7 @@ const SubscriptionPlan = () => {
       gst: "",
       earn_coin: "",
       is_spouse_plan: "",
-      status: "ACTIVE",
+      status: "",
       position: "",
     },
     validationSchema: Yup.object({
@@ -169,7 +169,8 @@ const SubscriptionPlan = () => {
         .min(2, "GST cannot be less than 2%")
         .max(40, "GST cannot be greater than 40%"),
       earn_coin: Yup.string().required("Earn Coins is required"),
-      // status: Yup.string().required("Status is required"),
+      is_spouse_plan: Yup.string().required("Is Spouse Plan is required"),
+      status: Yup.string().required("Status is required"),
       position: Yup.number().required("Position is required"),
     }),
     enableReinitialize: true,
