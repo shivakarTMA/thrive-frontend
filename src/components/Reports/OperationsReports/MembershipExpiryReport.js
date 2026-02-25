@@ -17,6 +17,7 @@ import { useSelector } from "react-redux";
 import Pagination from "../../common/Pagination";
 import { FaCircle } from "react-icons/fa";
 import MemberSendPaymentLink from "../../../Pages/MemberSendPaymentLink";
+import { useLocation, useNavigate } from "react-router-dom";
 
 const dateFilterOptions = [
   { value: "today", label: "Today" },
@@ -42,6 +43,10 @@ const MembershipExpiryReport = () => {
   const [customFrom, setCustomFrom] = useState(null);
   const [customTo, setCustomTo] = useState(null);
 
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [filtersInitialized, setFiltersInitialized] = useState(false);
+
   const [page, setPage] = useState(1);
   const [rowsPerPage] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
@@ -56,11 +61,6 @@ const MembershipExpiryReport = () => {
       const data = response.data?.data || [];
       const activeOnly = filterActiveItems(data);
       setClubList(activeOnly);
-
-      // ✅ Set default club (index 0) ONLY if not already set
-      if (!clubFilter && activeOnly.length > 0) {
-        setClubFilter(activeOnly[0].id);
-      }
     } catch (error) {
       toast.error("Failed to fetch clubs");
     }
@@ -76,6 +76,33 @@ const MembershipExpiryReport = () => {
     value: item.id,
   }));
 
+  const selectedClub =
+    clubOptions.find((opt) => opt.value === clubFilter?.value) || null;
+
+  // ---------------------------
+  // UPDATE URL WITH PARAMS
+  // ---------------------------
+  const updateURLParams = () => {
+    const params = new URLSearchParams();
+
+    // Date filter
+    if (dateFilter?.value && dateFilter.value !== "custom") {
+      params.set("dateFilter", dateFilter.value);
+    }
+
+    if (dateFilter?.value === "custom" && customFrom && customTo) {
+      params.set("startDate", format(customFrom, "yyyy-MM-dd"));
+      params.set("endDate", format(customTo, "yyyy-MM-dd"));
+    }
+
+    // Club filter
+    if (clubFilter?.value) {
+      params.set("club_id", clubFilter.value);
+    }
+
+    navigate(`?${params.toString()}`, { replace: true });
+  };
+
   const fetchMembershipExpiryReport = async (currentPage = page) => {
     try {
       const params = {
@@ -84,8 +111,8 @@ const MembershipExpiryReport = () => {
       };
 
       // Club filter
-      if (clubFilter) {
-        params.club_id = clubFilter;
+      if (clubFilter?.value) {
+        params.club_id = clubFilter.value;
       }
 
       // Date filter
@@ -116,16 +143,90 @@ const MembershipExpiryReport = () => {
     }
   };
 
+  // ---------------------------
+  // INITIALIZE FROM URL
+  // ---------------------------
+
   useEffect(() => {
-    if (dateFilter?.value === "custom") {
-      if (customFrom && customTo) {
-        fetchMembershipExpiryReport(1);
+    if (clubList.length === 0) return;
+    if (filtersInitialized) return;
+
+    const params = new URLSearchParams(location.search);
+
+    // ---- Date filter ----
+    const dateFilterValue = params.get("dateFilter");
+    if (dateFilterValue) {
+      const matchedDate = dateFilterOptions.find(
+        (opt) => opt.value === dateFilterValue,
+      );
+      if (matchedDate) {
+        setDateFilter(matchedDate);
       }
+    }
+
+    // ---- Custom date ----
+    const startDate = params.get("startDate");
+    const endDate = params.get("endDate");
+    if (startDate && endDate) {
+      setDateFilter(dateFilterOptions.find((d) => d.value === "custom"));
+      setCustomFrom(new Date(startDate));
+      setCustomTo(new Date(endDate));
+    }
+
+    // ---- Club filter ----
+    const clubId = params.get("club_id");
+
+    // if (clubId) {
+    //   const club = clubList.find((c) => c.id === Number(clubId));
+    //   if (club) {
+    //     setClubFilter({ label: club.name, value: club.id });
+    //   }
+    // } else {
+    //   // ✅ default only when URL does NOT have club_id
+    //   setClubFilter({
+    //     label: clubList[0].name,
+    //     value: clubList[0].id,
+    //   });
+    // }
+
+    if (!clubFilter) {
+      if (clubId) {
+        const club = clubList.find((c) => c.id === Number(clubId));
+        if (club) {
+          setClubFilter({ label: club.name, value: club.id });
+        }
+      } else {
+        setClubFilter({
+          label: clubList[0].name,
+          value: clubList[0].id,
+        });
+      }
+    }
+
+    setFiltersInitialized(true);
+  }, [clubList, location.search]);
+
+  // ---------------------------
+  // FETCH WHEN FILTERS CHANGE
+  // ---------------------------
+  useEffect(() => {
+    if (!filtersInitialized) return;
+
+    // 🚫 wait until both dates are selected for custom range
+    if (dateFilter?.value === "custom" && (!customFrom || !customTo)) {
       return;
     }
+
     setPage(1);
     fetchMembershipExpiryReport(1);
-  }, [dateFilter, customFrom, customTo, clubFilter]);
+    updateURLParams();
+  }, [
+    filtersInitialized,
+    dateFilter?.value,
+    customFrom,
+    customTo,
+    clubFilter?.value,
+  ]);
 
   return (
     <div className="page--content">
@@ -173,7 +274,7 @@ const MembershipExpiryReport = () => {
                   placeholderText="From Date"
                   className="custom--input w-full input--icon"
                   minDate={subYears(new Date(), 20)}
-                  maxDate={addYears(new Date(), 0)}
+                  // maxDate={addYears(new Date(), 0)}
                   dateFormat="dd-MM-yyyy"
                   showMonthDropdown
                   showYearDropdown
@@ -204,12 +305,12 @@ const MembershipExpiryReport = () => {
           <div className="w-fit min-w-[200px]">
             <Select
               placeholder="Filter by club"
-              value={clubOptions.find((o) => o.value === clubFilter) || null}
+              value={selectedClub}
               options={clubOptions}
-              onChange={(option) => setClubFilter(option?.value)}
+              onChange={(option) => setClubFilter(option)}
               styles={customStyles}
-              className="w-full"
               isClearable={userRole === "ADMIN" ? true : false}
+              className="w-full"
             />
           </div>
         </div>
@@ -291,7 +392,7 @@ const MembershipExpiryReport = () => {
                         onClick={() => {
                           setSelectedLeadMember(row.id);
                           setSendPaymentModal(true);
-                          setSelectedLeadClub(row?.club_id)
+                          setSelectedLeadClub(row?.club_id);
                         }}
                         className="px-3 py-1 bg-black text-white rounded flex items-center gap-2 !text-[13px]"
                       >

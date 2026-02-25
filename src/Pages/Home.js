@@ -18,7 +18,7 @@ import {
   filterActiveItems,
   formatIndianNumber,
 } from "../Helper/helper";
-import { addYears, format, subYears } from "date-fns";
+import { addYears, format, subYears, addDays } from "date-fns";
 import { Link, useNavigate } from "react-router-dom";
 import HighchartsReact from "highcharts-react-official";
 import Highcharts from "highcharts";
@@ -107,9 +107,12 @@ Highcharts.setOptions({
 });
 
 const Home = () => {
-  
   const navigate = useNavigate();
-  const days = ["Yesterday", "Today", "Tomorrow"];
+  const days = [
+    { label: "Yesterday", value: "yesterday" },
+    { label: "Today", value: "today" },
+    { label: "Tomorrow", value: "tomorrow" },
+  ];
   const [dashboardData, setDashboardData] = useState([]);
   const [currentDayIndex, setCurrentDayIndex] = useState(1); // Default to Today
   const [activeTab, setActiveTab] = useState("Snapshot");
@@ -129,43 +132,79 @@ const Home = () => {
   const [leadSeries, setLeadSeries] = useState([]);
   const [totalLeads, setTotalLeads] = useState(0);
 
-  const [orders, setOrders] = useState([
-    {
-      id: "ORD001",
-      member: "John Doe",
-      items: "Latte & Salad",
-      placedOn: "2025-04-28",
-      isDone: false,
-    },
-    {
-      id: "ORD002",
-      member: "Jane Smith",
-      items: "Black Coffice",
-      placedOn: "2025-04-27",
-      isDone: false,
-    },
-    {
-      id: "ORD003",
-      member: "Jane Smith",
-      items: "Espresso",
-      placedOn: "2025-04-27",
-      isDone: false,
-    },
-    {
-      id: "ORD004",
-      member: "Jane Smith",
-      items: "Americano",
-      placedOn: "2025-04-27",
-      isDone: false,
-    },
-    {
-      id: "ORD005",
-      member: "Jane Smith",
-      items: "Broccoli Soup",
-      placedOn: "2025-04-27",
-      isDone: false,
-    },
-  ]);
+  // Pending Orders
+  const [orders, setOrders] = useState([]);
+
+  // Summary Data
+  const [summaryData, setSummaryData] = useState({});
+
+  const fetchSummaryReport = useCallback(async () => {
+    try {
+      const params = {
+        dateFilter: days[currentDayIndex].value, // today/yesterday/tomorrow
+      };
+
+      if (clubFilter?.value) {
+        params.club_id = clubFilter.value;
+      }
+
+      const response = await authAxios().get("/dashboard/summary/report", {
+        params,
+      });
+
+      const apiSummary = response.data?.data?.summary || {};
+
+      // 🔥 Transform API response to match your UI format
+      const formattedSummary = {
+        FollowUps: `${apiSummary.follow_ups?.completed ?? 0}/${apiSummary.follow_ups?.total ?? 0}`,
+        "Tour/Trials": `${apiSummary.tour_trials?.completed ?? 0}/${apiSummary.tour_trials?.total ?? 0}`,
+        Appointments: `${apiSummary.appointments?.completed ?? 0}/${apiSummary.appointments?.total ?? 0}`,
+        Classes: `${apiSummary.classes?.completed ?? 0}/${apiSummary.classes?.total ?? 0}`,
+        MembershipExpiry: apiSummary.membership_expiry ?? 0,
+        ServiceExpiry: apiSummary.service_expiry ?? 0,
+        ClientBirthdays: apiSummary.client_birthdays ?? 0,
+        ClientAnniversaries: apiSummary.client_anniversaries ?? 0,
+      };
+
+      console.log(formattedSummary, "formattedSummary");
+
+      setSummaryData(formattedSummary);
+    } catch (error) {
+      console.error("Failed to fetch summary report:", error);
+    }
+  }, [clubFilter, currentDayIndex]);
+
+  const fetchPendingOrdersData = async () => {
+    try {
+      const params = {};
+      // Date filter (non-custom)
+      if (dateFilter?.value && dateFilter.value !== "custom") {
+        params.dateFilter = dateFilter.value;
+      }
+
+      // Custom date filter
+      if (dateFilter?.value === "custom" && customFrom && customTo) {
+        params.startDate = format(customFrom, "yyyy-MM-dd");
+        params.endDate = format(customTo, "yyyy-MM-dd");
+      }
+
+      // Club filter
+      if (clubFilter?.value) {
+        params.club_id = clubFilter.value;
+      }
+
+      const res = await authAxios().get(
+        "/dashboard/product/pending/order/list?fulfilment_status=PLACED",
+        { params },
+      );
+      let data = res.data?.data || res.data || [];
+
+      setOrders(data);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to fetch companies");
+    }
+  };
 
   const fetchDashboardData = async () => {
     try {
@@ -303,15 +342,20 @@ const Home = () => {
       toast.error("Failed to fetch clubs");
     }
   };
-  // Function to fetch role list
-
-  // useEffect(() => {
-  //   fetchDashboardData();
-  // }, [dateFilter, customFrom, customTo, clubFilter]);
 
   useEffect(() => {
     fetchClub();
   }, []);
+
+  useEffect(() => {
+    fetchSummaryReport();
+  }, [fetchSummaryReport]);
+
+  useEffect(() => {
+    if (dateFilter?.value !== "custom" || (customFrom && customTo)) {
+      fetchPendingOrdersData();
+    }
+  }, [dateFilter, customFrom, customTo, clubFilter]);
 
   useEffect(() => {
     if (dateFilter?.value !== "custom" || (customFrom && customTo)) {
@@ -344,9 +388,9 @@ const Home = () => {
   const maxValueLeads = Math.max(...leadSeries, 0);
 
   const leadsStatus = {
-     accessibility: {
-    enabled: false,
-  },
+    accessibility: {
+      enabled: false,
+    },
     chart: { type: "column", height: 300 },
     title: {
       text: "Enquiries",
@@ -436,9 +480,9 @@ const Home = () => {
   const maxValue = Math.max(...productSeries, 0);
 
   const productStatus = {
-     accessibility: {
-    enabled: false,
-  },
+    accessibility: {
+      enabled: false,
+    },
     chart: {
       type: "column",
       height: 300,
@@ -544,8 +588,10 @@ const Home = () => {
     }
   };
 
-  const currentDay = days[currentDayIndex];
-  const currentData = summaryData[currentDay];
+  const currentDay = days[currentDayIndex].label;
+  const currentData = summaryData;
+
+  // console.log(currentData,'currentData')
 
   // Memoize the URL generation
   const generateUrl = useCallback(
@@ -575,6 +621,36 @@ const Home = () => {
         : baseUrl;
     },
     [clubFilter, dateFilter, customFrom, customTo],
+  );
+
+  const buildFilteredUrl = useCallback(
+    (baseUrl) => {
+      const params = new URLSearchParams();
+
+      // Add club filter
+      if (clubFilter?.value) {
+        params.append("club_id", clubFilter.value);
+      }
+
+      const selectedDay = days[currentDayIndex].value;
+
+      if (selectedDay === "today") {
+        // Today → use dateFilter
+        params.append("dateFilter", "today");
+      } else {
+        // Yesterday / Tomorrow → use startDate & endDate
+        const offset = selectedDay === "yesterday" ? -1 : 1;
+        const targetDate = addDays(new Date(), offset);
+        const formattedDate = format(targetDate, "yyyy-MM-dd");
+
+        params.append("startDate", formattedDate);
+        params.append("endDate", formattedDate);
+      }
+
+      const separator = baseUrl.includes("?") ? "&" : "?";
+      return `${baseUrl}${separator}${params.toString()}`;
+    },
+    [clubFilter, currentDayIndex],
   );
 
   return (
@@ -624,7 +700,8 @@ const Home = () => {
         <div className="flex items-center">
           <div className="w-fit flex items-center gap-2 border-r">
             <div className="text-md font-medium text-gray-600 flex gap-2 items-center">
-              <FaCircle className="text-[10px] text-[#009EB2]" /> Total New Member
+              <FaCircle className="text-[10px] text-[#009EB2]" /> Total New
+              Member
             </div>
             <div className="pr-2">
               <span className="text-md font-semibold">
@@ -635,7 +712,7 @@ const Home = () => {
           <div className="w-fit flex items-center gap-2 border-r pl-2">
             <div className="text-md font-medium text-gray-600 flex gap-2 items-center">
               <FaCircle className="text-[10px] text-[#1F9254]" />
-             Total Renewal Member
+              Total Renewal Member
             </div>
             <div className="pr-2">
               <span className="text-md font-semibold">
@@ -1013,7 +1090,7 @@ const Home = () => {
               <SummaryDashboard
                 data={currentData}
                 routeMap={routeMap}
-                generateUrl={generateUrl}
+                generateUrl={buildFilteredUrl}
               />
             </div>
           </div>
@@ -1026,11 +1103,18 @@ const Home = () => {
       <div className="rounded-[15px] p-4 w-full mt-2 box--shadow bg-white">
         <div className="flex justify-between items-center mb-4">
           <h2 className="font-semibold">Pending Orders</h2>
-          <a href="#" className="text-[#009EB2] underline text-sm">
+          <a
+            href={generateUrl(`/nourish-orders?`)}
+            className="text-[#009EB2] underline text-sm"
+          >
             View All
           </a>
         </div>
-        <PendingOrderTable setOrders={setOrders} orders={orders} />
+        <PendingOrderTable
+          setOrders={setOrders}
+          orders={orders}
+          fetchOrders={fetchPendingOrdersData}
+        />
       </div>
     </div>
   );

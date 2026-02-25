@@ -62,32 +62,29 @@ const validationSchema = Yup.object({
   //   }),
   mobile: Yup.string()
   .required("Contact number is required")
-    .test("valid-phone", "Invalid phone number", function (value) {
-      if (!value) return false;
+  .test("valid-phone", "Invalid phone number", function (value) {
+    if (!value) return false;
 
-      const phoneNumber = parsePhoneNumberFromString(value);
+    // Add default country "IN"
+    const phoneNumber = parsePhoneNumberFromString(value, "IN");
 
-      // ❌ Not parsable
-      if (!phoneNumber || !phoneNumber.isValid()) {
-        return false;
-      }
+    if (!phoneNumber || !phoneNumber.isValid()) {
+      return false;
+    }
 
-      const nationalNumber = phoneNumber.nationalNumber;
+    const nationalNumber = phoneNumber.nationalNumber;
 
-      // ❌ Block same digits (1111111111, 5555555555)
-      if (/^(\d)\1+$/.test(nationalNumber)) {
-        return false;
-      }
+    // Block repeated digits like 1111111111
+    if (/^(\d)\1+$/.test(nationalNumber)) {
+      return false;
+    }
 
-      // ❌ Block simple sequences
-      if (
-        nationalNumber === "1234567890" ||
-        nationalNumber === "0123456789"
-      ) {
-        return false;
-      }
+    // Block simple sequences
+    if (nationalNumber === "1234567890" || nationalNumber === "0123456789") {
+      return false;
+    }
 
-      return true;
+    return true;
   }),
   interested_in: Yup.array()
     .of(Yup.string())
@@ -597,7 +594,8 @@ const CreateLeadForm = ({
       formik.setFieldValue("country_code", "");
       return;
     }
-    const phoneNumber = parsePhoneNumberFromString(value);
+    // const phoneNumber = parsePhoneNumberFromString(value);
+    const phoneNumber = parsePhoneNumberFromString(value, "IN");
     if (phoneNumber) {
       formik.setFieldValue("mobile", phoneNumber.nationalNumber);
       formik.setFieldValue("country_code", phoneNumber.countryCallingCode);
@@ -614,7 +612,7 @@ const CreateLeadForm = ({
       return;
     }
 
-    const phoneNumber = parsePhoneNumberFromString(rawPhone);
+    const phoneNumber = parsePhoneNumberFromString(rawPhone, "IN");
     if (!phoneNumber || !phoneNumber.isValid()) {
       formik.setFieldError("phoneFull", "Invalid phone number");
       return;

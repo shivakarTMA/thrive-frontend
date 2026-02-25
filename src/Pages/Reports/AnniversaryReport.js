@@ -13,7 +13,7 @@ import {
 import { authAxios } from "../../config/config";
 import { toast } from "react-toastify";
 import { useSelector } from "react-redux";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import Pagination from "../../components/common/Pagination";
 
 const dateFilterOptions = [
@@ -24,7 +24,6 @@ const dateFilterOptions = [
 ];
 
 const AnniversaryReport = () => {
-  const location = useLocation();
   const { user } = useSelector((state) => state.auth);
   const userRole = user.role;
   const [anniversaryList, setAnniversaryList] = useState([]);
@@ -34,6 +33,10 @@ const AnniversaryReport = () => {
   const [dateFilter, setDateFilter] = useState(dateFilterOptions[1]);
   const [customFrom, setCustomFrom] = useState(null);
   const [customTo, setCustomTo] = useState(null);
+
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [filtersInitialized, setFiltersInitialized] = useState(false);
 
   const [page, setPage] = useState(1);
   const [rowsPerPage] = useState(10);
@@ -66,6 +69,30 @@ const AnniversaryReport = () => {
 
   const selectedClub =
     clubOptions.find((opt) => opt.value === clubFilter?.value) || null;
+
+  // ---------------------------
+  // UPDATE URL WITH PARAMS
+  // ---------------------------
+  const updateURLParams = () => {
+    const params = new URLSearchParams();
+
+    // Date filter
+    if (dateFilter?.value && dateFilter.value !== "custom") {
+      params.set("dateFilter", dateFilter.value);
+    }
+
+    if (dateFilter?.value === "custom" && customFrom && customTo) {
+      params.set("startDate", format(customFrom, "yyyy-MM-dd"));
+      params.set("endDate", format(customTo, "yyyy-MM-dd"));
+    }
+
+    // Club filter
+    if (clubFilter?.value) {
+      params.set("club_id", clubFilter.value);
+    }
+
+    navigate(`?${params.toString()}`, { replace: true });
+  };
 
   const fetchMemberAnniversaryReport = async (currentPage = page) => {
     try {
@@ -102,24 +129,52 @@ const AnniversaryReport = () => {
       toast.error("data not found");
     }
   };
-  useEffect(() => {
-    if (dateFilter?.value === "custom") {
-      if (customFrom && customTo) {
-        fetchMemberAnniversaryReport(1);
-      }
-      return;
-    }
-
-    fetchMemberAnniversaryReport(1);
-  }, [dateFilter, customFrom, customTo, clubFilter]);
+  // ---------------------------
+  // INITIALIZE FROM URL
+  // ---------------------------
 
   useEffect(() => {
-    // Wait for clubList to be loaded
     if (clubList.length === 0) return;
+    if (filtersInitialized) return;
 
     const params = new URLSearchParams(location.search);
 
+    // ---- Date filter ----
+    const dateFilterValue = params.get("dateFilter");
+    if (dateFilterValue) {
+      const matchedDate = dateFilterOptions.find(
+        (opt) => opt.value === dateFilterValue,
+      );
+      if (matchedDate) {
+        setDateFilter(matchedDate);
+      }
+    }
+
+    // ---- Custom date ----
+    const startDate = params.get("startDate");
+    const endDate = params.get("endDate");
+    if (startDate && endDate) {
+      setDateFilter(dateFilterOptions.find((d) => d.value === "custom"));
+      setCustomFrom(new Date(startDate));
+      setCustomTo(new Date(endDate));
+    }
+
+    // ---- Club filter ----
     const clubId = params.get("club_id");
+
+    // if (clubId) {
+    //   const club = clubList.find((c) => c.id === Number(clubId));
+    //   if (club) {
+    //     setClubFilter({ label: club.name, value: club.id });
+    //   }
+    // } else {
+    //   // ✅ default only when URL does NOT have club_id
+    //   setClubFilter({
+    //     label: clubList[0].name,
+    //     value: clubList[0].id,
+    //   });
+    // }
+
     if (!clubFilter) {
       if (clubId) {
         const club = clubList.find((c) => c.id === Number(clubId));
@@ -133,7 +188,31 @@ const AnniversaryReport = () => {
         });
       }
     }
-  }, [clubList]);
+
+    setFiltersInitialized(true);
+  }, [clubList, location.search]);
+
+  // ---------------------------
+  // FETCH WHEN FILTERS CHANGE
+  // ---------------------------
+  useEffect(() => {
+    if (!filtersInitialized) return;
+
+    // 🚫 wait until both dates are selected for custom range
+    if (dateFilter?.value === "custom" && (!customFrom || !customTo)) {
+      return;
+    }
+
+    setPage(1);
+    fetchMemberAnniversaryReport(1);
+    updateURLParams();
+  }, [
+    filtersInitialized,
+    dateFilter?.value,
+    customFrom,
+    customTo,
+    clubFilter?.value,
+  ]);
 
   return (
     <div className="page--content">

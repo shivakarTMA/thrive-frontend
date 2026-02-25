@@ -7,6 +7,7 @@ import { SlCalender } from "react-icons/sl";
 import {
   IoBarChartOutline,
   IoDocumentTextOutline,
+  IoFastFoodOutline,
   IoSettingsOutline,
 } from "react-icons/io5";
 import { GoTools } from "react-icons/go";
@@ -249,6 +250,15 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
             >
               <FaReact className="menu--icon" />
               <span className="nav-text">Group Class</span>
+            </Link>
+            <Link
+              to="/nourish-orders"
+              className={`nav-link mb-2 ${
+                location.pathname === "/nourish-orders" ? "active" : ""
+              }`}
+            >
+              <IoFastFoodOutline className="menu--icon" />
+              <span className="nav-text">Nourish Orders</span>
             </Link>
 
             <div

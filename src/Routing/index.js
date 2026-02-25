@@ -111,6 +111,7 @@ import GroupClassParticipants from "../components/GroupClassesList/GroupClassPar
 import BirthdayReport from "../Pages/Reports/BirthdayReport";
 import AnniversaryReport from "../Pages/Reports/AnniversaryReport";
 import ExerciesCategoryList from "../components/ExerciesCategory/ExerciesCategoryList";
+import NourishOrders from "../Pages/NourishOrders";
 
 // Role-based route wrapper component
 const RoleProtectedRoute = ({ children, path, skipPrivateRoute = false }) => {
@@ -330,6 +331,14 @@ export default function Routing() {
           element={
             <RoleProtectedRoute path="/reports/all-orders">
               <ProductsSold />
+            </RoleProtectedRoute>
+          }
+        />
+        <Route
+          path="/nourish-orders"
+          element={
+            <RoleProtectedRoute path="/nourish-orders">
+              <NourishOrders />
             </RoleProtectedRoute>
           }
         />

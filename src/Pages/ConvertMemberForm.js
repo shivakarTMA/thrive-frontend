@@ -80,31 +80,24 @@ const stepValidationSchemas = [
 
     mobile: Yup.string()
       .required("Contact number is required")
-      .test("is-valid-phone", "Invalid phone number", function (value) {
-        const { country_code } = this.parent;
+      .test("valid-phone", "Invalid phone number", function (value) {
+        if (!value) return false;
 
-        if (!value || !country_code) return false;
+        // Add default country "IN"
+        const phoneNumber = parsePhoneNumberFromString(value, "IN");
 
-        // Remove spaces or non-digits just in case
-        const cleanedMobile = value.replace(/\D/g, "");
-
-        const phoneNumber = parsePhoneNumberFromString(
-          "+" + country_code + cleanedMobile,
-        );
-
-        // ❌ Not a valid number format for that country
         if (!phoneNumber || !phoneNumber.isValid()) {
           return false;
         }
 
         const nationalNumber = phoneNumber.nationalNumber;
 
-        // ❌ Block all same digits (1111111111, 5555555555)
+        // Block repeated digits like 1111111111
         if (/^(\d)\1+$/.test(nationalNumber)) {
           return false;
         }
 
-        // ❌ Block obvious fake sequences
+        // Block simple sequences
         if (
           nationalNumber === "1234567890" ||
           nationalNumber === "0123456789"
@@ -186,6 +179,7 @@ const ConvertMemberForm = ({
   selectedLeadMember,
   onLeadUpdate,
 }) => {
+  console.log(selectedLeadMember, "selectedLeadMember");
   const [allLeads, setAllLeads] = useState([]);
   const [profileImage, setProfileImage] = useState("");
   const [showModal, setShowModal] = useState(false);
@@ -851,7 +845,7 @@ const ConvertMemberForm = ({
       formik.setFieldValue("country_code", "");
       return;
     }
-    const phoneNumber = parsePhoneNumberFromString(value);
+    const phoneNumber = parsePhoneNumberFromString(value, "IN");
     if (phoneNumber) {
       formik.setFieldValue("mobile", phoneNumber.nationalNumber);
       formik.setFieldValue("country_code", phoneNumber.countryCallingCode);
@@ -859,21 +853,48 @@ const ConvertMemberForm = ({
     setDuplicateError(false);
   };
 
-  const handlePhoneBlur = () => {
-    const { id, mobile, country_code } = formik.values;
-    if (!mobile || !country_code) return;
+  const handlePhoneBlur = async () => {
+    formik.setFieldTouched("phoneFull", true);
 
-    const inputCode = country_code.replace("+", "");
-    const inputMobile = mobile.replace(/\s/g, "");
+    const rawPhone = formik.values.phoneFull;
+    if (!rawPhone) {
+      formik.setFieldError("phoneFull", "Phone number is required");
+      return;
+    }
 
-    const matches = allLeads.filter((user) => {
-      if (user.id === id) return false; // Skip current member
-      const userCode = (user.country_code || "").replace("+", "");
-      const userMobile = (user.mobile || "").replace(/\s/g, "");
-      return userCode === inputCode && userMobile === inputMobile;
-    });
+    const phoneNumber = parsePhoneNumberFromString(rawPhone, "IN");
+    if (!phoneNumber || !phoneNumber.isValid()) {
+      formik.setFieldError("phoneFull", "Invalid phone number");
+      return;
+    }
 
-    if (matches.length > 0) setDuplicateError(true);
+    const payload = {
+      mobile: phoneNumber.nationalNumber,
+    };
+
+    try {
+      // ✅ Use POST method
+      const endpoint = selectedLeadMember
+        ? `/lead/verify/availability/${selectedLeadMember}` // If lead is selected, use verification endpoint
+        : "/lead/check/unique";
+
+      const response = await phoneAxios.post(endpoint, payload);
+
+      if (response?.data?.status === true) {
+        setDuplicateError(response?.data?.message);
+      } else {
+        setDuplicateError("");
+      }
+    } catch (error) {
+      console.error(
+        "Error checking phone uniqueness:",
+        error.response || error,
+      );
+      formik.setFieldError(
+        "phoneFull",
+        "Unable to check phone number. Please try again.",
+      );
+    }
   };
 
   const handleEmailBlur = async () => {
@@ -1140,18 +1161,13 @@ const ConvertMemberForm = ({
                               className="custom--input w-full custom--phone"
                             />
 
-                            {duplicateError && showDuplicateModal && (
+                            {((formik.errors?.mobile &&
+                              formik.touched?.mobile) ||
+                              duplicateError) && (
                               <div className="text-red-500 text-sm">
-                                Duplicate Entry
+                                {formik.errors?.mobile || duplicateError}
                               </div>
                             )}
-
-                            {formik.errors?.mobile &&
-                              formik.touched?.mobile && (
-                                <div className="text-red-500 text-sm">
-                                  {formik.errors.mobile}
-                                </div>
-                              )}
                           </div>
                           <div>
                             <label className="mb-2 block">

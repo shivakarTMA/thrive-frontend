@@ -42,6 +42,7 @@ export const ROUTE_PERMISSIONS = {
   '/reports/appointments/all-trial-appointments': ['ADMIN', 'FOH', 'TRAINER', 'CLUB_MANAGER'],
   '/reports/all-bookings': ['ADMIN', 'FOH', 'TRAINER', 'CLUB_MANAGER'],
   '/reports/all-orders': ['ADMIN', 'FOH', 'TRAINER', 'MARKETING_MANAGER', 'FINANCE_MANAGER', 'CLUB_MANAGER'],
+  '/nourish-orders': ['ADMIN', 'FOH', 'TRAINER', 'MARKETING_MANAGER', 'FINANCE_MANAGER', 'CLUB_MANAGER'],
   
   // Products & Companies
   '/products': ['ADMIN', 'FINANCE_MANAGER', 'CLUB_MANAGER'],

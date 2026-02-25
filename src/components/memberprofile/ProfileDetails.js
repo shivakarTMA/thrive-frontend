@@ -61,32 +61,22 @@ const validationSchema = Yup.object({
     .test("valid-phone", "Invalid phone number", function (value) {
       if (!value) return false;
 
-      const phoneNumber = parsePhoneNumberFromString(value);
+      // Add default country "IN"
+      const phoneNumber = parsePhoneNumberFromString(value, "IN");
 
-      // ❌ Not parsable or invalid for country
       if (!phoneNumber || !phoneNumber.isValid()) {
         return false;
       }
 
       const nationalNumber = phoneNumber.nationalNumber;
 
-      // ❌ 1. Block all same digits (1111111111)
+      // Block repeated digits like 1111111111
       if (/^(\d)\1+$/.test(nationalNumber)) {
         return false;
       }
 
-      // ❌ 2. Block simple increasing sequences
+      // Block simple sequences
       if (nationalNumber === "1234567890" || nationalNumber === "0123456789") {
-        return false;
-      }
-
-      // ❌ 3. Block repeating 2-digit patterns (1212121212, 9090909090)
-      if (/^(\d{2})\1+$/.test(nationalNumber)) {
-        return false;
-      }
-
-      // ❌ 4. Block repeating 3-digit patterns (1231231231 etc.)
-      if (/^(\d{3})\1+$/.test(nationalNumber)) {
         return false;
       }
 
@@ -633,7 +623,7 @@ const ProfileDetails = ({ member }) => {
       formik.setFieldValue("country_code", "");
       return;
     }
-    const phoneNumber = parsePhoneNumberFromString(value);
+    const phoneNumber = parsePhoneNumberFromString(value, "IN");
     if (phoneNumber) {
       formik.setFieldValue("mobile", phoneNumber.nationalNumber);
       formik.setFieldValue("country_code", phoneNumber.countryCallingCode);
@@ -650,7 +640,7 @@ const ProfileDetails = ({ member }) => {
       return;
     }
 
-    const phoneNumber = parsePhoneNumberFromString(rawPhone);
+    const phoneNumber = parsePhoneNumberFromString(rawPhone, "IN");
     if (!phoneNumber || !phoneNumber.isValid()) {
       formik.setFieldError("phoneFull", "Invalid phone number");
       return;

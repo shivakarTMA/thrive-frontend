@@ -518,7 +518,7 @@ const TrialAppointments = () => {
                     placeholderText="From Date"
                     className="custom--input w-full input--icon"
                     minDate={subYears(new Date(), 20)}
-                    maxDate={addYears(new Date(), 0)}
+                    // maxDate={addYears(new Date(), 0)}
                     dateFormat="dd-MM-yyyy"
                     showMonthDropdown
                     showYearDropdown
@@ -535,7 +535,7 @@ const TrialAppointments = () => {
                     placeholderText="To Date"
                     className="custom--input w-full input--icon"
                     minDate={customFrom || subYears(new Date(), 20)}
-                    maxDate={addYears(new Date(), 0)}
+                    // maxDate={addYears(new Date(), 0)}
                     showMonthDropdown
                     showYearDropdown
                     dropdownMode="select"

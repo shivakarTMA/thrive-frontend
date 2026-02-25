@@ -143,21 +143,46 @@ const StaffList = () => {
   const validationSchema = Yup.object({
     name: Yup.string().required("Full Name is required"),
     email: Yup.string().email("Invalid email").required("Email is required"),
+    // mobile: Yup.string()
+    //   .required("Contact number is required")
+    //   .test("is-valid-phone", "Invalid phone number", function (value) {
+    //     const { country_code } = this.parent;
+    //     if (!value || !country_code) return false;
+
+    //     // Combine country code and number to full international format
+    //     const phoneNumberString = `+${country_code}${value}`;
+
+    //     // First check if the number is even possible (not just valid)
+    //     if (!isPossiblePhoneNumber(phoneNumberString)) return false;
+
+    //     // Parse and check validity strictly according to country
+    //     const phoneNumber = parsePhoneNumberFromString(phoneNumberString);
+    //     return phoneNumber?.isValid() || false;
+    //   }),
     mobile: Yup.string()
       .required("Contact number is required")
       .test("is-valid-phone", "Invalid phone number", function (value) {
         const { country_code } = this.parent;
         if (!value || !country_code) return false;
 
-        // Combine country code and number to full international format
         const phoneNumberString = `+${country_code}${value}`;
+        const phoneNumber = parsePhoneNumberFromString(phoneNumberString, "IN");
 
-        // First check if the number is even possible (not just valid)
-        if (!isPossiblePhoneNumber(phoneNumberString)) return false;
+        if (!phoneNumber || !phoneNumber.isValid()) return false;
 
-        // Parse and check validity strictly according to country
-        const phoneNumber = parsePhoneNumberFromString(phoneNumberString);
-        return phoneNumber?.isValid() || false;
+        const nationalNumber = phoneNumber.nationalNumber;
+
+        // ✅ Must start with 6, 7, 8, or 9 for Indian mobile numbers
+        if (!/^[6-9]\d{9}$/.test(nationalNumber)) return false;
+
+        // Optional: block repeated digits like 1111111111
+        if (/^(\d)\1+$/.test(nationalNumber)) return false;
+
+        // Optional: block simple sequences
+        if (nationalNumber === "1234567890" || nationalNumber === "0123456789")
+          return false;
+
+        return true;
       }),
     gender: Yup.string().required("Gender is required"),
     experience: Yup.string().required("Experience is required"),
@@ -323,7 +348,6 @@ const StaffList = () => {
     setStaffToDelete(null);
     setShowConfirmPopup(false);
   };
-
 
   return (
     <div className="page--content">

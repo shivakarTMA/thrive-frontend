@@ -27,22 +27,31 @@ const validationSchema = Yup.object({
   full_name: Yup.string().required("Full Name is required"),
 
   // mobile: Yup.string().required("Contact number is required"),
-    mobile: Yup.string()
-      .required("Contact number is required")
-      .test("is-valid-phone", "Invalid phone number", function (value) {
-        const { country_code } = this.parent;
-        if (!value || !country_code) return false;
-  
-        // Combine country code and number to full international format
-        const phoneNumberString = `+${country_code}${value}`;
-  
-        // First check if the number is even possible (not just valid)
-        if (!isPossiblePhoneNumber(phoneNumberString)) return false;
-  
-        // Parse and check validity strictly according to country
-        const phoneNumber = parsePhoneNumberFromString(phoneNumberString);
-        return phoneNumber?.isValid() || false;
-      }),
+  mobile: Yup.string()
+    .required("Contact number is required")
+    .test("is-valid-phone", "Invalid phone number", function (value) {
+      const { country_code } = this.parent;
+      if (!value || !country_code) return false;
+
+      const phoneNumberString = `+${country_code}${value}`;
+      const phoneNumber = parsePhoneNumberFromString(phoneNumberString, "IN");
+
+      if (!phoneNumber || !phoneNumber.isValid()) return false;
+
+      const nationalNumber = phoneNumber.nationalNumber;
+
+      // ✅ Must start with 6, 7, 8, or 9 for Indian mobile numbers
+      if (!/^[6-9]\d{9}$/.test(nationalNumber)) return false;
+
+      // Optional: block repeated digits like 1111111111
+      if (/^(\d)\1+$/.test(nationalNumber)) return false;
+
+      // Optional: block simple sequences
+      if (nationalNumber === "1234567890" || nationalNumber === "0123456789")
+        return false;
+
+      return true;
+    }),
 
   country_code: Yup.string().required(),
 
@@ -123,7 +132,7 @@ const Relations = ({ details }) => {
       } catch (error) {
         toast.error(
           error?.response?.data?.message ||
-            "Something went wrong. Please try again."
+            "Something went wrong. Please try again.",
         );
       }
     },
@@ -137,7 +146,7 @@ const Relations = ({ details }) => {
     <div className="p-4 bg-white rounded shadow">
       <div className="flex justify-end mb-3">
         <button
-         onClick={() => {
+          onClick={() => {
             setIsModalOpen(true);
             formik.resetForm();
           }}
@@ -250,7 +259,7 @@ const Relations = ({ details }) => {
                       formik.setFieldValue("mobile", phone.nationalNumber);
                       formik.setFieldValue(
                         "country_code",
-                        phone.countryCallingCode
+                        phone.countryCallingCode,
                       );
                     }
                   }}
@@ -289,7 +298,7 @@ const Relations = ({ details }) => {
                   <Select
                     options={relationshipOptions}
                     value={relationshipOptions.find(
-                      (o) => o.value === formik.values.referrer_relationship
+                      (o) => o.value === formik.values.referrer_relationship,
                     )}
                     onChange={(opt) =>
                       formik.setFieldValue("referrer_relationship", opt.value)
