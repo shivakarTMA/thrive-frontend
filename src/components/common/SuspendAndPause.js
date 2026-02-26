@@ -14,7 +14,7 @@ const SuspendAndPause = ({ setSuspendPause, actionType }) => {
   const getTitle = () => {
     switch (actionType) {
       case "suspend":
-        return "Suspend Membership";
+        return "Cancel Membership";
       case "pause":
         return "Pause Membership";
       default:

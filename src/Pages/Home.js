@@ -24,45 +24,9 @@ import HighchartsReact from "highcharts-react-official";
 import Highcharts from "highcharts";
 import SummaryDashboard from "../components/common/SummaryDashboard";
 import { LiaAngleLeftSolid, LiaAngleRightSolid } from "react-icons/lia";
-import SolidGaugeChart from "../components/ClubManagerChild/SolidGaugeChart";
 import { authAxios } from "../config/config";
 import { toast } from "react-toastify";
-
-const summaryData = {
-  Yesterday: {
-    FollowUps: "10/50",
-    "Tour/Trials": "10/50",
-    Appointments: "0/0",
-    Classes: "4/5",
-    MembershipExpiry: 12,
-    ServiceExpiry: 3,
-
-    ClientBirthdays: 1,
-    ClientAnniversaries: 0,
-  },
-  Today: {
-    FollowUps: "17/50",
-    "Tour/Trials": "10/50",
-    Appointments: "0/0",
-    Classes: "5/5",
-    MembershipExpiry: 11,
-    ServiceExpiry: 2,
-
-    ClientBirthdays: 3,
-    ClientAnniversaries: 0,
-  },
-  Tomorrow: {
-    FollowUps: "8/50",
-    "Tour/Trials": "10/50",
-    Appointments: "1/2",
-    Classes: "2/5",
-    MembershipExpiry: 10,
-    ServiceExpiry: 1,
-
-    ClientBirthdays: 0,
-    ClientAnniversaries: 1,
-  },
-};
+import SolidGaugeChart from "../components/ClubManagerChild/SolidGaugeChart";
 
 const routeMap = {
   FollowUps: "/my-follow-ups",
@@ -82,24 +46,6 @@ const dateFilterOptions = [
   { value: "custom", label: "Custom Date" },
 ];
 
-const classPerformance = [
-  {
-    id: 1,
-    classType: "Group Classes",
-    bookings: 4,
-    reservations: 95,
-    cancellations: 3,
-    url: "/group-class",
-  },
-  {
-    id: 2,
-    classType: "Sessions",
-    bookings: 10,
-    reservations: 10,
-    cancellations: 0,
-    url: "/reports/all-bookings",
-  },
-];
 Highcharts.setOptions({
   accessibility: {
     enabled: false,
@@ -107,7 +53,6 @@ Highcharts.setOptions({
 });
 
 const Home = () => {
-  const navigate = useNavigate();
   const days = [
     { label: "Yesterday", value: "yesterday" },
     { label: "Today", value: "today" },
@@ -137,6 +82,66 @@ const Home = () => {
 
   // Summary Data
   const [summaryData, setSummaryData] = useState({});
+
+  // Class Performance
+  const [classPerformance, setClassPerformance] = useState([]);
+
+  const fetchClassPerformanceData = async () => {
+    try {
+      const params = {};
+      // Date filter (non-custom)
+      if (dateFilter?.value && dateFilter.value !== "custom") {
+        params.dateFilter = dateFilter.value;
+      }
+
+      // Custom date filter
+      if (dateFilter?.value === "custom" && customFrom && customTo) {
+        params.startDate = format(customFrom, "yyyy-MM-dd");
+        params.endDate = format(customTo, "yyyy-MM-dd");
+      }
+
+      // Club filter
+      if (clubFilter?.value) {
+        params.club_id = clubFilter.value;
+      }
+
+      const res = await authAxios().get(
+        "/dashboard/class/performances/overview",
+        { params },
+      );
+      const overview = res.data?.data?.overview;
+
+      if (!overview) {
+        setClassPerformance([]);
+        return;
+      }
+
+      // 🔥 Transform object → array
+      const formattedData = [
+        {
+          id: 1,
+          classType: "Group Classes",
+          scheduled: overview.group_classes?.scheduled || 0,
+          active: overview.group_classes?.active || 0,
+          canceled: overview.group_classes?.canceled || 0,
+          url: "/group-class",
+        },
+        {
+          id: 2,
+          classType: "Sessions",
+          scheduled: overview.sessions?.scheduled || 0,
+          active: overview.sessions?.active || 0,
+          canceled: overview.sessions?.canceled || 0,
+          url: "/reports/all-bookings",
+        },
+      ];
+
+      setClassPerformance(formattedData);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to fetch class performances");
+    }
+  };
 
   const fetchSummaryReport = useCallback(async () => {
     try {
@@ -353,6 +358,12 @@ const Home = () => {
 
   useEffect(() => {
     if (dateFilter?.value !== "custom" || (customFrom && customTo)) {
+      fetchClassPerformanceData();
+    }
+  }, [dateFilter, customFrom, customTo, clubFilter]);
+
+  useEffect(() => {
+    if (dateFilter?.value !== "custom" || (customFrom && customTo)) {
       fetchPendingOrdersData();
     }
   }, [dateFilter, customFrom, customTo, clubFilter]);
@@ -374,6 +385,8 @@ const Home = () => {
       fetchLeadStatus();
     }
   }, [dateFilter, customFrom, customTo, clubFilter]);
+
+  console.log(classPerformance, "classPerformance");
 
   const clubOptions = clubList.map((item) => ({
     label: item.name,
@@ -590,8 +603,6 @@ const Home = () => {
 
   const currentDay = days[currentDayIndex].label;
   const currentData = summaryData;
-
-  // console.log(currentData,'currentData')
 
   // Memoize the URL generation
   const generateUrl = useCallback(
@@ -1017,7 +1028,7 @@ const Home = () => {
             </div>
           </div>
 
-          <div className="border border-[#D4D4D4] rounded-[5px] bg-white p-2 pb-1 w-full relative mt-3">
+          <div className="border border-[#D4D4D4] rounded-[5px] bg-white p-4 pb-1 w-full relative mt-3">
             <div className="flex justify-between items-center mb-4">
               <h2 className="font-semibold">Class Performances Overview</h2>
             </div>
@@ -1026,28 +1037,35 @@ const Home = () => {
                 <thead className="bg-[#F1F1F1]">
                   <tr>
                     <th className="p-2">Class Type</th>
-                    <th className="p-2">Scheduled</th>
-                    <th className="p-2">Bookings</th>
-                    <th className="p-2">Cancellations</th>
+                    <th className="p-2 text-center">Scheduled</th>
+                    <th className="p-2 text-center">Bookings</th>
+                    <th className="p-2 text-center">Cancellations</th>
                     <th className="p-2">Action</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {classPerformance.map((item, index) => (
+                  {classPerformance.map((item) => (
                     <tr key={item.id} className="border-t">
-                      <td className="p-2">{item.classType}</td>
-                      <td className="p-2">
-                        {String(item.bookings).padStart(2, "0")}
+                      <td className="p-2">{item?.classType}</td>
+
+                      {/* Scheduled */}
+                      <td className="p-2 text-center">
+                        {item?.scheduled}
                       </td>
-                      <td className="p-2">
-                        {String(item.reservations).padStart(2, "0")}
+
+                      {/* Bookings (Active) */}
+                      <td className="p-2 text-center">
+                        {item?.active}
                       </td>
-                      <td className="p-2">
-                        {String(item.cancellations).padStart(2, "0")}
+
+                      {/* Cancellations */}
+                      <td className="p-2 text-center">
+                        {item?.canceled}
                       </td>
+
                       <td className="p-2">
                         <Link
-                          to={generateUrl(item.url)}
+                          to={generateUrl(item?.url)}
                           className="bg-[#F1F1F1] border border-[#D4D4D4] rounded-[5px] w-[32px] h-[32px] flex items-center justify-center cursor-pointer"
                         >
                           <img src={eyeIcon} />

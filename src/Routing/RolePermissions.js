@@ -22,9 +22,9 @@ export const ROUTE_PERMISSIONS = {
   '/my-follow-ups': ['ADMIN', 'FOH', 'CLUB_MANAGER', 'MARKETING_MANAGER'],
   
   // Member Management
-  '/all-members': ['ADMIN', 'FOH', 'TRAINER', 'CLUB_MANAGER'],
-  '/all-members/:id': ['ADMIN', 'FOH', 'TRAINER', 'CLUB_MANAGER'],
-  '/member/:id': ['ADMIN', 'FOH', 'TRAINER', 'CLUB_MANAGER'],
+  '/all-members': ['ADMIN', 'FOH', 'TRAINER', 'CLUB_MANAGER', 'FINANCE_MANAGER', 'MARKETING_MANAGER'],
+  '/all-members/:id': ['ADMIN', 'FOH', 'TRAINER', 'CLUB_MANAGER', 'FINANCE_MANAGER', 'MARKETING_MANAGER'],
+  '/member/:id': ['ADMIN', 'FOH', 'TRAINER', 'CLUB_MANAGER', 'FINANCE_MANAGER', 'MARKETING_MANAGER'],
   '/member-follow-up/:id': ['ADMIN', 'FOH'],
   '/book-service/:id': ['ADMIN', 'FOH'],
   
@@ -39,7 +39,7 @@ export const ROUTE_PERMISSIONS = {
   '/lost-found': ['ADMIN', 'FOH', 'CLUB_MANAGER'],
   
   // Appointments & Bookings
-  '/reports/appointments/all-trial-appointments': ['ADMIN', 'FOH', 'TRAINER', 'CLUB_MANAGER'],
+  '/reports/appointments/all-trial-appointments': ['ADMIN', 'FOH', 'TRAINER', 'CLUB_MANAGER', 'FINANCE_MANAGER', 'MARKETING_MANAGER'],
   '/reports/all-bookings': ['ADMIN', 'FOH', 'TRAINER', 'CLUB_MANAGER'],
   '/reports/all-orders': ['ADMIN', 'FOH', 'TRAINER', 'MARKETING_MANAGER', 'FINANCE_MANAGER', 'CLUB_MANAGER'],
   '/nourish-orders': ['ADMIN', 'FOH', 'TRAINER', 'MARKETING_MANAGER', 'FINANCE_MANAGER', 'CLUB_MANAGER'],
@@ -81,8 +81,8 @@ export const ROUTE_PERMISSIONS = {
   '/recovery-services': ['ADMIN', 'CLUB_MANAGER'],
   '/package-category': ['ADMIN', 'CLUB_MANAGER'],
   '/packages': ['ADMIN', 'FINANCE_MANAGER', 'CLUB_MANAGER'],
-  '/group-class': ['ADMIN', 'FINANCE_MANAGER', 'CLUB_MANAGER'],
-  '/group-class/:id': ['ADMIN', 'FINANCE_MANAGER', 'CLUB_MANAGER'],
+  '/group-class': ['ADMIN', 'FINANCE_MANAGER', 'CLUB_MANAGER', 'FOH'],
+  '/group-class/:id': ['ADMIN', 'FINANCE_MANAGER', 'CLUB_MANAGER', 'FOH'],
   '/product-category': ['ADMIN', 'FINANCE_MANAGER', 'CLUB_MANAGER'],
   '/subscription-plan': ['ADMIN', 'FINANCE_MANAGER', 'CLUB_MANAGER'],
   '/staff': ['ADMIN', 'CLUB_MANAGER'],
@@ -101,7 +101,7 @@ export const ROUTE_PERMISSIONS = {
   
   // Sales Reports
   '/reports/sales-reports/membership-sales-report': ['ADMIN', 'MARKETING_MANAGER', 'FINANCE_MANAGER', 'FOH', 'CLUB_MANAGER'],
-  '/reports/sales-reports/all-enquiries-report': ['ADMIN', 'MARKETING_MANAGER', 'CLUB_MANAGER'],
+  '/reports/sales-reports/all-enquiries-report': ['ADMIN', 'MARKETING_MANAGER', 'CLUB_MANAGER', 'FOH', 'FINANCE_MANAGER'],
   '/reports/sales-reports/active-member-report': ['ADMIN', 'FOH', 'CLUB_MANAGER'],
   '/reports/sales-reports/pt-revenue-report': ['ADMIN', 'FINANCE_MANAGER', 'TRAINER', 'CLUB_MANAGER'],
   '/reports/sales-reports/pt-revenue-report-list/:id': ['ADMIN', 'FINANCE_MANAGER', 'TRAINER', 'CLUB_MANAGER'],
@@ -121,10 +121,10 @@ export const ROUTE_PERMISSIONS = {
   '/reports/finance-reports/refund-requests': ['ADMIN', 'FINANCE_MANAGER'],
   
   // Operations Reports
-  '/reports/operations-reports/member-checkins-report': ['ADMIN', 'FOH', 'TRAINER', 'CLUB_MANAGER'],
-  '/reports/operations-reports/member-checkins-report/:id': ['ADMIN', 'FOH', 'TRAINER', 'CLUB_MANAGER'],
+  '/reports/operations-reports/member-checkins-report': ['ADMIN', 'FOH', 'TRAINER', 'CLUB_MANAGER', 'FINANCE_MANAGER', 'MARKETING_MANAGER'],
+  '/reports/operations-reports/member-checkins-report/:id': ['ADMIN', 'FOH', 'TRAINER', 'CLUB_MANAGER', 'FINANCE_MANAGER', 'MARKETING_MANAGER'],
   '/reports/operations-reports/membership-expiry-report': ['ADMIN', 'FOH', 'CLUB_MANAGER'],
-  '/reports/operations-reports/service-expiry-report': ['ADMIN', 'TRAINER', 'CLUB_MANAGER'],
+  '/reports/operations-reports/service-expiry-report': ['ADMIN', 'TRAINER', 'CLUB_MANAGER', 'FOH'],
   '/reports/operations-reports/irregular-members-report': ['ADMIN'],
   '/reports/operations-reports/active-client-report': ['ADMIN', 'FOH', 'TRAINER', 'CLUB_MANAGER'],
   '/reports/operations-reports/inactive-client-report': ['ADMIN', 'TRAINER', 'CLUB_MANAGER'],

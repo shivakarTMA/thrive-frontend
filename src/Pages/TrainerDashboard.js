@@ -6,10 +6,10 @@ import renewalIcon from "../assets/images/icons/renewal.png";
 import enquiriesIcon from "../assets/images/icons/conversion.png";
 import trialIcon from "../assets/images/icons/trial.png";
 import checkInIcon from "../assets/images/icons/checkin.png";
-import eyeIcon from "../assets/images/icons/eye.svg";
 import dutyIcon from "../assets/images/icons/duty.svg";
 import lunchIcon from "../assets/images/icons/lunch.svg";
 import offDayIcon from "../assets/images/icons/offday.svg";
+import eyeIcon from "../assets/images/icons/eye.svg";
 import PendingOrderTable from "../components/PendingOrderTable";
 import { FaCircle } from "react-icons/fa";
 import { FaCalendarDays } from "react-icons/fa6";
@@ -21,52 +21,16 @@ import {
   filterActiveItems,
   formatIndianNumber,
 } from "../Helper/helper";
-import { addYears, format, subYears } from "date-fns";
+import { addYears, format, subYears, addDays } from "date-fns";
 import { Link, useNavigate } from "react-router-dom";
 import HighchartsReact from "highcharts-react-official";
 import Highcharts from "highcharts";
 import SummaryDashboard from "../components/common/SummaryDashboard";
 import { LiaAngleLeftSolid, LiaAngleRightSolid } from "react-icons/lia";
-import SolidGaugeChart from "../components/ClubManagerChild/SolidGaugeChart";
 import { authAxios } from "../config/config";
 import { toast } from "react-toastify";
+import SolidGaugeChart from "../components/ClubManagerChild/SolidGaugeChart";
 import CalendarView from "../components/TrainerDashboardChild/CalendarView";
-
-const summaryData = {
-  Yesterday: {
-    FollowUps: "10/50",
-    "Tour/Trials": "10/50",
-    Appointments: "0/0",
-    Classes: "4/5",
-    MembershipExpiry: 12,
-    ServiceExpiry: 3,
-
-    ClientBirthdays: 1,
-    ClientAnniversaries: 0,
-  },
-  Today: {
-    FollowUps: "17/50",
-    "Tour/Trials": "10/50",
-    Appointments: "0/0",
-    Classes: "5/5",
-    MembershipExpiry: 11,
-    ServiceExpiry: 2,
-
-    ClientBirthdays: 3,
-    ClientAnniversaries: 0,
-  },
-  Tomorrow: {
-    FollowUps: "8/50",
-    "Tour/Trials": "10/50",
-    Appointments: "1/2",
-    Classes: "2/5",
-    MembershipExpiry: 10,
-    ServiceExpiry: 1,
-
-    ClientBirthdays: 0,
-    ClientAnniversaries: 1,
-  },
-};
 
 const routeMap = {
   FollowUps: "/my-follow-ups",
@@ -86,49 +50,18 @@ const dateFilterOptions = [
   { value: "custom", label: "Custom Date" },
 ];
 
-const classPerformance = [
-  {
-    id: 1,
-    classType: "Group Classes",
-    bookings: 4,
-    reservations: 95,
-    cancellations: 3,
-    url: "#",
-  },
-  {
-    id: 2,
-    classType: "Pilates",
-    bookings: 10,
-    reservations: 10,
-    cancellations: 0,
-    url: "#",
-  },
-  {
-    id: 3,
-    classType: "Recovery",
-    bookings: 5,
-    reservations: 5,
-    cancellations: 1,
-    url: "#",
-  },
-  {
-    id: 4,
-    classType: "Personal Training",
-    bookings: 8,
-    reservations: 8,
-    cancellations: 2,
-    url: "#",
-  },
-];
 Highcharts.setOptions({
   accessibility: {
     enabled: false,
   },
 });
 
-const TrainerDashboard = () => {
-  const navigate = useNavigate();
-  const days = ["Yesterday", "Today", "Tomorrow"];
+const FohDashboard = () => {
+  const days = [
+    { label: "Yesterday", value: "yesterday" },
+    { label: "Today", value: "today" },
+    { label: "Tomorrow", value: "tomorrow" },
+  ];
   const [dashboardData, setDashboardData] = useState([]);
   const [currentDayIndex, setCurrentDayIndex] = useState(1); // Default to Today
   const [activeTab, setActiveTab] = useState("Snapshot");
@@ -148,43 +81,139 @@ const TrainerDashboard = () => {
   const [leadSeries, setLeadSeries] = useState([]);
   const [totalLeads, setTotalLeads] = useState(0);
 
-  const [orders, setOrders] = useState([
-    {
-      id: "ORD001",
-      member: "John Doe",
-      items: "Latte & Salad",
-      placedOn: "2025-04-28",
-      isDone: false,
-    },
-    {
-      id: "ORD002",
-      member: "Jane Smith",
-      items: "Black Coffice",
-      placedOn: "2025-04-27",
-      isDone: false,
-    },
-    {
-      id: "ORD003",
-      member: "Jane Smith",
-      items: "Espresso",
-      placedOn: "2025-04-27",
-      isDone: false,
-    },
-    {
-      id: "ORD004",
-      member: "Jane Smith",
-      items: "Americano",
-      placedOn: "2025-04-27",
-      isDone: false,
-    },
-    {
-      id: "ORD005",
-      member: "Jane Smith",
-      items: "Broccoli Soup",
-      placedOn: "2025-04-27",
-      isDone: false,
-    },
-  ]);
+  // Pending Orders
+  const [orders, setOrders] = useState([]);
+
+  // Summary Data
+  const [summaryData, setSummaryData] = useState({});
+
+  // Class Performance
+  const [classPerformance, setClassPerformance] = useState([]);
+
+  const fetchClassPerformanceData = async () => {
+    try {
+      const params = {};
+      // Date filter (non-custom)
+      if (dateFilter?.value && dateFilter.value !== "custom") {
+        params.dateFilter = dateFilter.value;
+      }
+
+      // Custom date filter
+      if (dateFilter?.value === "custom" && customFrom && customTo) {
+        params.startDate = format(customFrom, "yyyy-MM-dd");
+        params.endDate = format(customTo, "yyyy-MM-dd");
+      }
+
+      // Club filter
+      if (clubFilter?.value) {
+        params.club_id = clubFilter.value;
+      }
+
+      const res = await authAxios().get(
+        "/dashboard/class/performances/overview",
+        { params },
+      );
+      const overview = res.data?.data?.overview;
+
+      if (!overview) {
+        setClassPerformance([]);
+        return;
+      }
+
+      // 🔥 Transform object → array
+      const formattedData = [
+        {
+          id: 1,
+          classType: "Group Classes",
+          scheduled: overview.group_classes?.scheduled || 0,
+          active: overview.group_classes?.active || 0,
+          canceled: overview.group_classes?.canceled || 0,
+          url: "/group-class",
+        },
+        {
+          id: 2,
+          classType: "Sessions",
+          scheduled: overview.sessions?.scheduled || 0,
+          active: overview.sessions?.active || 0,
+          canceled: overview.sessions?.canceled || 0,
+          url: "/reports/all-bookings",
+        },
+      ];
+
+      setClassPerformance(formattedData);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to fetch class performances");
+    }
+  };
+
+  const fetchSummaryReport = useCallback(async () => {
+    try {
+      const params = {
+        dateFilter: days[currentDayIndex].value, // today/yesterday/tomorrow
+      };
+
+      if (clubFilter?.value) {
+        params.club_id = clubFilter.value;
+      }
+
+      const response = await authAxios().get("/dashboard/summary/report", {
+        params,
+      });
+
+      const apiSummary = response.data?.data?.summary || {};
+
+      // 🔥 Transform API response to match your UI format
+      const formattedSummary = {
+        FollowUps: `${apiSummary.follow_ups?.completed ?? 0}/${apiSummary.follow_ups?.total ?? 0}`,
+        "Tour/Trials": `${apiSummary.tour_trials?.completed ?? 0}/${apiSummary.tour_trials?.total ?? 0}`,
+        Appointments: `${apiSummary.appointments?.completed ?? 0}/${apiSummary.appointments?.total ?? 0}`,
+        Classes: `${apiSummary.classes?.completed ?? 0}/${apiSummary.classes?.total ?? 0}`,
+        MembershipExpiry: apiSummary.membership_expiry ?? 0,
+        ServiceExpiry: apiSummary.service_expiry ?? 0,
+        ClientBirthdays: apiSummary.client_birthdays ?? 0,
+        ClientAnniversaries: apiSummary.client_anniversaries ?? 0,
+      };
+
+      console.log(formattedSummary, "formattedSummary");
+
+      setSummaryData(formattedSummary);
+    } catch (error) {
+      console.error("Failed to fetch summary report:", error);
+    }
+  }, [clubFilter, currentDayIndex]);
+
+  const fetchPendingOrdersData = async () => {
+    try {
+      const params = {};
+      // Date filter (non-custom)
+      if (dateFilter?.value && dateFilter.value !== "custom") {
+        params.dateFilter = dateFilter.value;
+      }
+
+      // Custom date filter
+      if (dateFilter?.value === "custom" && customFrom && customTo) {
+        params.startDate = format(customFrom, "yyyy-MM-dd");
+        params.endDate = format(customTo, "yyyy-MM-dd");
+      }
+
+      // Club filter
+      if (clubFilter?.value) {
+        params.club_id = clubFilter.value;
+      }
+
+      const res = await authAxios().get(
+        "/dashboard/product/pending/order/list?fulfilment_status=PLACED",
+        { params },
+      );
+      let data = res.data?.data || res.data || [];
+
+      setOrders(data);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to fetch companies");
+    }
+  };
 
   const fetchDashboardData = async () => {
     try {
@@ -322,15 +351,26 @@ const TrainerDashboard = () => {
       toast.error("Failed to fetch clubs");
     }
   };
-  // Function to fetch role list
-
-  // useEffect(() => {
-  //   fetchDashboardData();
-  // }, [dateFilter, customFrom, customTo, clubFilter]);
 
   useEffect(() => {
     fetchClub();
   }, []);
+
+  useEffect(() => {
+    fetchSummaryReport();
+  }, [fetchSummaryReport]);
+
+  useEffect(() => {
+    if (dateFilter?.value !== "custom" || (customFrom && customTo)) {
+      fetchClassPerformanceData();
+    }
+  }, [dateFilter, customFrom, customTo, clubFilter]);
+
+  useEffect(() => {
+    if (dateFilter?.value !== "custom" || (customFrom && customTo)) {
+      fetchPendingOrdersData();
+    }
+  }, [dateFilter, customFrom, customTo, clubFilter]);
 
   useEffect(() => {
     if (dateFilter?.value !== "custom" || (customFrom && customTo)) {
@@ -563,8 +603,8 @@ const TrainerDashboard = () => {
     }
   };
 
-  const currentDay = days[currentDayIndex];
-  const currentData = summaryData[currentDay];
+  const currentDay = days[currentDayIndex].label;
+  const currentData = summaryData;
 
   // Memoize the URL generation
   const generateUrl = useCallback(
@@ -596,6 +636,36 @@ const TrainerDashboard = () => {
     [clubFilter, dateFilter, customFrom, customTo],
   );
 
+  const buildFilteredUrl = useCallback(
+    (baseUrl) => {
+      const params = new URLSearchParams();
+
+      // Add club filter
+      if (clubFilter?.value) {
+        params.append("club_id", clubFilter.value);
+      }
+
+      const selectedDay = days[currentDayIndex].value;
+
+      if (selectedDay === "today") {
+        // Today → use dateFilter
+        params.append("dateFilter", "today");
+      } else {
+        // Yesterday / Tomorrow → use startDate & endDate
+        const offset = selectedDay === "yesterday" ? -1 : 1;
+        const targetDate = addDays(new Date(), offset);
+        const formattedDate = format(targetDate, "yyyy-MM-dd");
+
+        params.append("startDate", formattedDate);
+        params.append("endDate", formattedDate);
+      }
+
+      const separator = baseUrl.includes("?") ? "&" : "?";
+      return `${baseUrl}${separator}${params.toString()}`;
+    },
+    [clubFilter, currentDayIndex],
+  );
+
   return (
     <div className="page--content">
       <div className=" flex items-end justify-between gap-2 mb-5">
@@ -623,8 +693,9 @@ const TrainerDashboard = () => {
         <div className="flex gap-3">
           <div
             // type="button"
-            className={`px-4 py-2 rounded ${activeTab === "Snapshot" ? "bg--color text-white" : ""
-              }`}
+            className={`px-4 py-2 rounded ${
+              activeTab === "Snapshot" ? "bg--color text-white" : ""
+            }`}
             onClick={() => setActiveTab("Snapshot")}
           >
             Snapshot
@@ -642,7 +713,8 @@ const TrainerDashboard = () => {
         <div className="flex items-center">
           <div className="w-fit flex items-center gap-2 border-r">
             <div className="text-md font-medium text-gray-600 flex gap-2 items-center">
-              <FaCircle className="text-[10px] text-[#009EB2]" /> Total New Member
+              <FaCircle className="text-[10px] text-[#009EB2]" /> Total New
+              Member
             </div>
             <div className="pr-2">
               <span className="text-md font-semibold">
@@ -853,7 +925,7 @@ const TrainerDashboard = () => {
               />
             </div>
 
-            <div className="border border-[#D4D4D4] rounded-[5px] bg-white p-2 pb-1 w-full relative mt-3">
+            <div className="border border-[#D4D4D4] rounded-[5px] bg-white p-4 pb-1 w-full relative mt-3">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="font-semibold">Class Performances Overview</h2>
               </div>
@@ -862,28 +934,29 @@ const TrainerDashboard = () => {
                   <thead className="bg-[#F1F1F1]">
                     <tr>
                       <th className="p-2">Class Type</th>
-                      <th className="p-2">No of Classes</th>
+                      <th className="p-2">Scheduled</th>
                       <th className="p-2">Bookings</th>
                       <th className="p-2">Cancellations</th>
                       <th className="p-2">Action</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {classPerformance.map((item, index) => (
+                    {classPerformance.map((item) => (
                       <tr key={item.id} className="border-t">
-                        <td className="p-2">{item.classType}</td>
-                        <td className="p-2">
-                          {String(item.bookings).padStart(2, "0")}
-                        </td>
-                        <td className="p-2">
-                          {String(item.reservations).padStart(2, "0")}
-                        </td>
-                        <td className="p-2">
-                          {String(item.cancellations).padStart(2, "0")}
-                        </td>
+                        <td className="p-2">{item?.classType}</td>
+
+                        {/* Scheduled */}
+                        <td className="p-2">{item?.scheduled}</td>
+
+                        {/* Bookings (Active) */}
+                        <td className="p-2">{item?.active}</td>
+
+                        {/* Cancellations */}
+                        <td className="p-2">{item?.canceled}</td>
+
                         <td className="p-2">
                           <Link
-                            to={generateUrl(item.url)}
+                            to={generateUrl(item?.url)}
                             className="bg-[#F1F1F1] border border-[#D4D4D4] rounded-[5px] w-[32px] h-[32px] flex items-center justify-center cursor-pointer"
                           >
                             <img src={eyeIcon} />
@@ -896,8 +969,12 @@ const TrainerDashboard = () => {
               </div>
             </div>
           </div>
+
+          {/* Calender View */}
           <CalendarView />
+          {/* Calender View end */}
         </div>
+
         <div className="w-[25%]">
           <div className="rounded-[15px] p-4 box--shadow bg-white">
             <div>
@@ -906,8 +983,9 @@ const TrainerDashboard = () => {
                 <button
                   onClick={handlePrevious}
                   disabled={currentDayIndex === 0}
-                  className={`${currentDayIndex === 0 ? "opacity-0 invisible" : ""
-                    }`}
+                  className={`${
+                    currentDayIndex === 0 ? "opacity-0 invisible" : ""
+                  }`}
                 >
                   <LiaAngleLeftSolid />
                 </button>
@@ -915,10 +993,11 @@ const TrainerDashboard = () => {
                 <button
                   onClick={handleNext}
                   disabled={currentDayIndex === days.length - 1}
-                  className={`${currentDayIndex === days.length - 1
+                  className={`${
+                    currentDayIndex === days.length - 1
                       ? "opacity-0 invisible"
                       : ""
-                    }`}
+                  }`}
                 >
                   <LiaAngleRightSolid />
                 </button>
@@ -926,13 +1005,14 @@ const TrainerDashboard = () => {
               <SummaryDashboard
                 data={currentData}
                 routeMap={routeMap}
-                generateUrl={generateUrl}
+                generateUrl={buildFilteredUrl}
               />
             </div>
           </div>
           {/* <div className="rounded-[15px] p-4 box--shadow bg-white mt-4">
             <SolidGaugeChart />
           </div> */}
+
           <div className="rounded-[15px] p-4 box--shadow bg-white mt-4">
             <p className="text-lg font-[600] mb-3 text-center mt-3">
               My Roster{" "}
@@ -972,18 +1052,8 @@ const TrainerDashboard = () => {
           </div>
         </div>
       </div>
-
-      {/* <div className="rounded-[15px] p-4 w-full mt-2 box--shadow bg-white">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="font-semibold">Pending Orders</h2>
-          <a href="#" className="text-[#009EB2] underline text-sm">
-            View All
-          </a>
-        </div>
-        <PendingOrderTable setOrders={setOrders} orders={orders} />
-      </div> */}
     </div>
   );
 };
 
-export default TrainerDashboard;
+export default FohDashboard;

@@ -848,6 +848,37 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
 
         {accessToken && userType === "MARKETING_MANAGER" && (
           <>
+            
+            <Link
+              to="/all-members"
+              className={`nav-link mb-2 ${
+                location.pathname === "/all-members" ? "active" : ""
+              }`}
+            >
+              <FiUsers className="menu--icon" />
+              <span className="nav-text">All Members</span>
+            </Link>
+            <Link
+              to="/reports/appointments/all-trial-appointments"
+              className={`nav-link mb-2 ${
+                location.pathname ===
+                "/reports/appointments/all-trial-appointments"
+                  ? "active"
+                  : ""
+              }`}
+            >
+              <SlCalender className="menu--icon" />
+              <span className="nav-text">Trial Appointments</span>
+            </Link>
+            <Link
+              to="/reports/all-orders"
+              className={`nav-link mb-2 ${
+                location.pathname === "/reports/all-orders" ? "active" : ""
+              }`}
+            >
+              <AiOutlineProduct className="menu--icon" />
+              <span className="nav-text">All Orders</span>
+            </Link>
             <Link
               to="/birthday-report"
               className={`nav-link mb-2 ${
@@ -958,14 +989,6 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                 <div className="absolute h-[calc(100%-15px)] w-[2px] bg-white left-[23px] top-[8px]"></div>
 
                 <Link
-                  to="/reports/all-orders"
-                  className="text-white flex items-center gap-[5px] mb-2 text-sm"
-                >
-                  <FaCircle className="menu--icon !text-[10px]" />
-                  <span className="nav-text">Products Sold</span>
-                </Link>
-
-                <Link
                   to="/reports/sales-reports/membership-sales-report"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
                 >
@@ -978,6 +1001,13 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                 >
                   <FaCircle className="menu--icon !text-[10px]" />
                   <span className="nav-text">All Enquiries Report</span>
+                </Link>
+                <Link
+                  to="/reports/operations-reports/member-checkins-report"
+                  className="text-white flex items-center gap-[5px] mb-2 text-sm"
+                >
+                  <FaCircle className="menu--icon !text-[10px]" />
+                  Member Checkins
                 </Link>
                 <Link
                   to="/reports/marketing-reports/lead-source-performance"
@@ -1050,6 +1080,27 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
         {accessToken && userType === "FINANCE_MANAGER" && (
           <>
             <Link
+              to="/all-members"
+              className={`nav-link mb-2 ${
+                location.pathname === "/all-members" ? "active" : ""
+              }`}
+            >
+              <FiUsers className="menu--icon" />
+              <span className="nav-text">All Members</span>
+            </Link>
+            <Link
+              to="/reports/appointments/all-trial-appointments"
+              className={`nav-link mb-2 ${
+                location.pathname ===
+                "/reports/appointments/all-trial-appointments"
+                  ? "active"
+                  : ""
+              }`}
+            >
+              <SlCalender className="menu--icon" />
+              <span className="nav-text">Trial Appointments</span>
+            </Link>
+            <Link
               to="/birthday-report"
               className={`nav-link mb-2 ${
                 location.pathname === "/birthday-report" ? "active" : ""
@@ -1066,6 +1117,33 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
             >
               <LuPartyPopper className="menu--icon" />
               <span className="nav-text">Client Anniversary</span>
+            </Link>
+            <Link
+              to="/reports/all-orders"
+              className={`nav-link mb-2 ${
+                location.pathname === "/reports/all-orders" ? "active" : ""
+              }`}
+            >
+              <AiOutlineProduct className="menu--icon" />
+              <span className="nav-text">All Orders</span>
+            </Link>
+            <Link
+              to="/group-class"
+              className={`nav-link mb-2 ${
+                location.pathname === "/group-class" ? "active" : ""
+              }`}
+            >
+              <FaReact className="menu--icon" />
+              <span className="nav-text">Group Class</span>
+            </Link>
+            <Link
+              to="/nourish-orders"
+              className={`nav-link mb-2 ${
+                location.pathname === "/nourish-orders" ? "active" : ""
+              }`}
+            >
+              <IoFastFoodOutline className="menu--icon" />
+              <span className="nav-text">Nourish Orders</span>
             </Link>
             <div
               className="nav-link d-flex justify-between align-items-center mb-2"
@@ -1175,19 +1253,25 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                 <div className="absolute h-[calc(100%-15px)] w-[2px] bg-white left-[23px] top-[8px]"></div>
 
                 <Link
-                  to="/reports/all-orders"
-                  className="text-white flex items-center gap-[5px] mb-2 text-sm"
-                >
-                  <FaCircle className="menu--icon !text-[10px]" />
-                  <span className="nav-text">Products Sold</span>
-                </Link>
-
-                <Link
                   to="/reports/sales-reports/membership-sales-report"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
                 >
                   <FaCircle className="menu--icon !text-[10px]" />
                   <span className="nav-text">Membership Sales Report</span>
+                </Link>
+                <Link
+                  to="/reports/sales-reports/all-enquiries-report"
+                  className="text-white flex items-center gap-[5px] mb-2 text-sm"
+                >
+                  <FaCircle className="menu--icon !text-[10px]" />
+                  All Enquiries Report
+                </Link>
+                <Link
+                  to="/reports/operations-reports/member-checkins-report"
+                  className="text-white flex items-center gap-[5px] mb-2 text-sm"
+                >
+                  <FaCircle className="menu--icon !text-[10px]" />
+                  Member Checkins
                 </Link>
                 <Link
                   to="/reports/sales-reports/pt-revenue-report"
@@ -1218,7 +1302,7 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                   <FaCircle className="menu--icon !text-[10px]" />
                   <span className="nav-text">Cancelled Paid Invoices</span>
                 </Link>
-                
+
                 <Link
                   to="/reports/finance-reports/collection-report"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
@@ -1240,7 +1324,6 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                   <FaCircle className="menu--icon !text-[10px]" />
                   <span className="nav-text">Membership Frozen Report</span>
                 </Link> */}
-                
 
                 <Link
                   to="/reports/marketing-reports/discount-codes-performance"
@@ -1312,6 +1395,24 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
             >
               <AiOutlineProduct className="menu--icon" />
               <span className="nav-text">All Orders</span>
+            </Link>
+            <Link
+              to="/group-class"
+              className={`nav-link mb-2 ${
+                location.pathname === "/group-class" ? "active" : ""
+              }`}
+            >
+              <FaReact className="menu--icon" />
+              <span className="nav-text">Group Class</span>
+            </Link>
+            <Link
+              to="/nourish-orders"
+              className={`nav-link mb-2 ${
+                location.pathname === "/nourish-orders" ? "active" : ""
+              }`}
+            >
+              <IoFastFoodOutline className="menu--icon" />
+              <span className="nav-text">Nourish Orders</span>
             </Link>
             <Link
               to="/lost-found"
@@ -1390,6 +1491,13 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                 >
                   <FaCircle className="menu--icon !text-[10px]" />
                   Membership Expiry Report
+                </Link>
+                <Link
+                  to="/reports/sales-reports/all-enquiries-report"
+                  className="text-white flex items-center gap-[5px] mb-2 text-sm"
+                >
+                  <FaCircle className="menu--icon !text-[10px]" />
+                  All Enquiries Report
                 </Link>
               </div>
             )}
@@ -1588,6 +1696,24 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
             >
               <AiOutlineProduct className="menu--icon" />
               <span className="nav-text">All Orders</span>
+            </Link>
+            <Link
+              to="/group-class"
+              className={`nav-link mb-2 ${
+                location.pathname === "/group-class" ? "active" : ""
+              }`}
+            >
+              <FaReact className="menu--icon" />
+              <span className="nav-text">Group Class</span>
+            </Link>
+            <Link
+              to="/nourish-orders"
+              className={`nav-link mb-2 ${
+                location.pathname === "/nourish-orders" ? "active" : ""
+              }`}
+            >
+              <IoFastFoodOutline className="menu--icon" />
+              <span className="nav-text">Nourish Orders</span>
             </Link>
             <Link
               to="/lost-found"

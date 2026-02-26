@@ -305,6 +305,30 @@ const ProfileDetails = ({ member }) => {
     initialValues.interested_in.includes(item.value),
   );
 
+  const isValidEmergancyPhone = (value) => {
+    if (!value) return false;
+
+    const phoneNumber = parsePhoneNumberFromString(value, "IN");
+
+    if (!phoneNumber || !phoneNumber.isValid()) {
+      return false;
+    }
+
+    const nationalNumber = phoneNumber.nationalNumber;
+
+    // Block repeated digits (1111111111)
+    if (/^(\d)\1+$/.test(nationalNumber)) {
+      return false;
+    }
+
+    // Block simple sequences
+    if (nationalNumber === "1234567890" || nationalNumber === "0123456789") {
+      return false;
+    }
+
+    return true;
+  };
+
   // ✅ Validate all emergency contacts
   const validateEmergencyContacts = () => {
     const errors = {
@@ -333,8 +357,15 @@ const ProfileDetails = ({ member }) => {
         isValid = false;
       }
 
-      if (!contact.phone?.trim()) {
+      // if (!contact.phone?.trim()) {
+      //   contactErrors.phone = "Phone is required";
+      //   isValid = false;
+      // }
+      if (!contact.phone) {
         contactErrors.phone = "Phone is required";
+        isValid = false;
+      } else if (!isValidEmergancyPhone(contact.phone)) {
+        contactErrors.phone = "Invalid phone number";
         isValid = false;
       }
 
@@ -1264,7 +1295,7 @@ const ProfileDetails = ({ member }) => {
                     className="relative flex items-center gap-2"
                     key={contact.id ?? index}
                   >
-                    <div className="grid grid-cols-4 gap-3 mb-3 items-end relative">
+                    <div className="grid grid-cols-4 gap-3 mb-3 items-start relative">
                       <div>
                         <label className="block text-sm font-medium text-black mb-2">
                           Name<span className="text-red-500">*</span>

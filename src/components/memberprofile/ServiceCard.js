@@ -1,9 +1,8 @@
-import React, { useEffect, useState } from "react";
-import { HiChevronDown } from "react-icons/hi2";
+import React, { useEffect, useMemo, useState } from "react";
 import Coins from "../../assets/images/coins.svg";
 import { FaCirclePlus } from "react-icons/fa6";
 import DummyProfile from "../../assets/images/dummy-profile.png";
-import { customStyles } from "../../Helper/helper";
+import { customStyles, formatText } from "../../Helper/helper";
 import Select from "react-select";
 import RenewUpgradeService from "../../Pages/RenewUpgradeService";
 import AddCoins from "../CoinsList/AddCoins";
@@ -18,82 +17,40 @@ const statusOptions = [
 ];
 
 const ServiceCard = ({ details }) => {
-  console.log(details, "details");
-
+  console.log(details?.club_id, "aishdf9ahsd9fih");
+  const clubId = details?.club_id;
   const [membershipData, setMembershipData] = useState([]);
-
-  // const membershipData = {
-  //   membershipId: "TL317432",
-  //   relationshipSince: "19 Apr, 2024",
-  //   planStarted: "15 Jun, 2025",
-  //   expiryDate: "15 Nov, 2025",
-  //   nextBillingDate: "16 Nov, 2025",
-  //   daysRemaining: 120,
-  //   duration: "6 months",
-  //   status: "Active",
-  //   coins: 250,
-  // };
-
-  const purchasedServices = [
-    {
-      id: 1,
-      name: "Membership",
-      variation: "Personal Training",
-      duration: "3 months",
-      sessions: "10/12",
-      lastVisited: "24 Aug, 2025",
-      status: "expired",
-      startDate: {
-        day: 15,
-        month: "Jul, 2025",
-        dayName: "Tuesday",
-      },
-      endDate: {
-        day: 15,
-        month: "Oct, 2025",
-        dayName: "Wednesday",
-      },
-      countdown: 0,
-    },
-    {
-      id: 2,
-      name: "Beginner's Strength",
-      variation: "Personal Training",
-      duration: "3 months",
-      sessions: "10/12",
-      lastVisited: "24 Aug, 2025",
-      status: "active",
-      startDate: {
-        day: 15,
-        month: "Jul, 2025",
-        dayName: "Tuesday",
-      },
-      endDate: {
-        day: 15,
-        month: "Oct, 2025",
-        dayName: "Wednesday",
-      },
-      countdown: 30,
-    },
-  ];
+  const [purchasedServicesCount, setPurchasedServicesCount] = useState(null);
+  const [purchasedServices, setPurchasedServices] = useState([]);
 
   // State to store selected status option, default is "active"
   const [selectedStatus, setSelectedStatus] = useState(statusOptions[0]);
   const [invoiceModal, setInvoiceModal] = useState(false);
-  const [coinsList, setCoinsList] = useState([]);
   const [coinsModal, setCoinsModal] = useState(false);
   const [appointmentModal, setAppointmentModal] = useState(false);
+  const [staffList, setStaffList] = useState([]);
+  const [confirmModal, setConfirmModal] = useState(false);
+  const [selectedTrainerData, setSelectedTrainerData] = useState(null);
 
   const [upgradePlan, setUpgradePlan] = useState(null);
   const [renewPlan, setRenewPlan] = useState(null);
 
   const [suspendPauseModal, setSuspendPauseModal] = useState(false);
   const [membershipActionType, setMembershipActionType] = useState(null);
+  const [trainerSelections, setTrainerSelections] = useState({});
 
-  // Filter purchased services based on selected status
-  const filteredServices = purchasedServices.filter(
-    (service) => service.status === selectedStatus.value
-  );
+  const fetchStaff = async (clubIdParam = null) => {
+    try {
+      const params = {};
+      if (clubIdParam) params.club_id = clubIdParam;
+
+      const res = await authAxios().get("/staff/list?role=TRAINER", { params });
+      const data = res.data?.data || res?.data || [];
+      setStaffList(data.filter((item) => item?.status === "ACTIVE"));
+    } catch {
+      toast.error("Failed to fetch staff");
+    }
+  };
 
   // Fetch coins with filters applied
   const fetchMemberServiceCard = async () => {
@@ -108,13 +65,72 @@ const ServiceCard = ({ details }) => {
     }
   };
 
+  // Fetch coins with filters applied
+  const fetchParchaseServices = async () => {
+    try {
+      // Make the API call with query parameters
+      const res = await authAxios().get(
+        `/member/package/booking/list/${details?.id}`,
+      );
+      const dataCount = res.data?.totalCount || null;
+      const data = res.data?.data || [];
+      setPurchasedServices(data);
+      setPurchasedServicesCount(dataCount);
+      console.log(dataCount, "dataCount");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to fetch coins");
+    }
+  };
+
+  const handleAssignTrainer = async (trainerId, packageBookingId) => {
+    try {
+      const payload = {
+        trainer_id: trainerId,
+        package_booking_id: packageBookingId,
+      };
+
+      await authAxios().put("/member/assign/trainer", payload);
+
+      toast.success("Trainer assigned successfully");
+
+      // ✅ clear select value after success
+      setTrainerSelections((prev) => ({
+        ...prev,
+        [packageBookingId]: null,
+      }));
+
+      // Refresh purchased services list after update
+      fetchParchaseServices();
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to assign trainer");
+    }
+  };
+
   useEffect(() => {
     fetchMemberServiceCard();
+    fetchParchaseServices();
   }, []);
+
+  useEffect(() => {
+    // Fetch services and staff based on clubId if provided
+    fetchStaff(clubId);
+  }, [clubId]); // <-- dependency added
+
+  const baseStaffOptions = useMemo(
+    () =>
+      staffList?.map((item) => ({
+        label: item.name,
+        value: item.id,
+      })) || [],
+    [staffList],
+  );
 
   // This will be passed to AddCoins to update the list
   const handleUpdateCoins = () => {
     fetchMemberServiceCard(); // Refreshes the coins list
+    fetchParchaseServices();
   };
 
   const formatDate = (date) => {
@@ -127,6 +143,57 @@ const ServiceCard = ({ details }) => {
     const year = d.getFullYear();
 
     return `${day} ${month}, ${year}`;
+  };
+
+  const formatDatePurchaseService = (dateString) => {
+    if (!dateString) return { day: "", monthYear: "", weekday: "" };
+    const date = new Date(dateString);
+    return {
+      day: String(date.getDate()).padStart(2, "0"),
+      monthYear: date.toLocaleDateString("en-GB", {
+        month: "short",
+        year: "numeric",
+      }),
+      weekday: date.toLocaleDateString("en-GB", {
+        weekday: "long",
+      }),
+    };
+  };
+
+  const confirmAssignTrainer = (
+    trainerId,
+    trainerName,
+    packageBookingId,
+    hasTrainer,
+  ) => {
+    setSelectedTrainerData({
+      trainerId,
+      trainerName,
+      packageBookingId,
+      hasTrainer,
+    });
+    setConfirmModal(true);
+  };
+
+  const handleConfirmAssign = async () => {
+    if (!selectedTrainerData) return;
+    await handleAssignTrainer(
+      selectedTrainerData.trainerId,
+      selectedTrainerData.packageBookingId,
+    );
+    setConfirmModal(false);
+    setSelectedTrainerData(null);
+  };
+
+  const handleCancelAssign = () => {
+    if (selectedTrainerData?.packageBookingId) {
+      setTrainerSelections((prev) => ({
+        ...prev,
+        [selectedTrainerData.packageBookingId]: null, // <-- clear select on NO
+      }));
+    }
+    setConfirmModal(false);
+    setSelectedTrainerData(null);
   };
 
   return (
@@ -158,7 +225,7 @@ const ServiceCard = ({ details }) => {
         </div>
 
         {/* Membership Card */}
-        <div className="grid grid-cols-4 gap-3 border-b border-b-[#D4D4D4] pb-5 mb-5">
+        <div className={`grid grid-cols-4 gap-3 ${purchasedServices.length > 0 ? "border-b border-b-[#D4D4D4] pb-5 mb-5" : ""}`}>
           {/* <div className="grid grid-cols-4 gap-3 pb-5 mb-5"> */}
           <div className="bg-white rounded-lg shadow-sm border col-span-2">
             {/* Header with gradient */}
@@ -209,9 +276,9 @@ const ServiceCard = ({ details }) => {
                       setSuspendPauseModal(true);
                     }}
                   >
-                    Suspend Membership
+                    Cancel Membership
                   </button>
-                  <button
+                  {/* <button
                     onClick={() => {
                       setMembershipActionType("pause");
                       setSuspendPauseModal(true);
@@ -219,7 +286,7 @@ const ServiceCard = ({ details }) => {
                     className="px-3 py-2 bg-white text-black rounded flex items-center gap-2 border border-black text-sm"
                   >
                     Pause Membership
-                  </button>
+                  </button> */}
 
                   {/* <button
                     className="px-4 py-2 bg-black text-white rounded flex items-center gap-2 border border-black text-sm"
@@ -267,138 +334,194 @@ const ServiceCard = ({ details }) => {
         </div>
 
         {/* Purchased Services */}
-        <div className="bg-white rounded-lg shadow-sm">
-          <div className="p-4 px-0">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-bold text-gray-900">
-                Purchased Services (0{filteredServices.length})
-              </h2>
-              <Select
-                name="status"
-                value={selectedStatus} // Controlled value
-                options={statusOptions}
-                styles={customStyles}
-                className="!capitalize"
-                onChange={(selectedOption) => setSelectedStatus(selectedOption)} // Update state on change
-              />
+        {purchasedServices.length > 0 && (
+          <div className="bg-white rounded-lg shadow-sm">
+            <div className="p-4 px-0">
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-bold text-gray-900">
+                  Purchased Services ({purchasedServicesCount})
+                </h2>
+                <Select
+                  name="status"
+                  value={selectedStatus} // Controlled value
+                  options={statusOptions}
+                  styles={customStyles}
+                  className="!capitalize"
+                  onChange={(selectedOption) => setSelectedStatus(selectedOption)} // Update state on change
+                />
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              {purchasedServices.map((service) => {
+                const filteredStaffOptions = baseStaffOptions.filter(
+                  (opt) => opt.value !== service?.assigned_staff_id,
+                );
+
+                return (
+                  <div
+                    key={service?.id}
+                    className="border border-[#D4D4D4] rounded-lg overflow-hidden"
+                  >
+                    <div className="flex items-start justify-between bg-[#F1F1F1] p-4">
+                      <div className="flex items-center">
+                        <div className="w-2 h-2 bg-green-500 rounded-full mr-3 mt-1" />
+                        <h3 className="font-medium text-gray-900">
+                          {service?.package_name}
+                        </h3>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-4 p-4 justify-between">
+                      <div className="space-y-2 flex-1">
+                        {service?.service_name === "RECOVERY" && (
+                          <div>
+                            <span className="text-sm text-black">Variation:</span>
+                            <span className="ml-2 text-sm text-[#6F6F6F]">
+                              {formatText(service?.package_variation_name)}
+                            </span>
+                          </div>
+                        )}
+
+                        <div>
+                          <span className="text-sm text-black">Sessions:</span>
+                          <span className="ml-2 text-sm text-[#6F6F6F]">
+                            {service.no_of_sessions -
+                              service.available_no_of_sessions}
+                            /{service?.no_of_sessions}
+                          </span>
+                        </div>
+
+                        <div>
+                          <span className="text-sm text-black">
+                            Trainer Name:
+                          </span>
+                          <span className="ml-2 text-sm text-[#6F6F6F]">
+                            {service?.assigned_staff_name || "--"}
+                          </span>
+                        </div>
+
+                        <div className="w-fit min-w-[150px]">
+                          <Select
+                      options={filteredStaffOptions}
+                      value={trainerSelections[service?.id] || null} // <-- controlled value
+                      placeholder={
+                        service?.assigned_staff_name
+                          ? "Change trainer"
+                          : "Assign trainer"
+                      }
+                      onChange={(selectedOption) => {
+                        setTrainerSelections((prev) => ({
+                          ...prev,
+                          [service?.id]: selectedOption,
+                        }));
+
+                        confirmAssignTrainer(
+                          selectedOption.value,
+                          selectedOption.label,
+                          service?.id,
+                          !!service?.assigned_staff_name
+                        );
+                      }}
+                      styles={{
+                        ...customStyles,
+                        menuPortal: (base) => ({
+                          ...base,
+                          zIndex: 9999,
+                        }),
+                      }}
+                      menuPortalTarget={document.body}
+                      menuPosition="fixed"
+                    />
+                        </div>
+                        {/* <div className="flex flex-wrap gap-2 pt-2">
+                          {service?.status === "active" ? (
+                            <>
+                              <button
+                                className="px-3 py-2 bg-white text-black rounded flex items-center gap-2 border border-black text-sm"
+                                onClick={() => setAppointmentModal(true)}
+                              >
+                                Add Appontment
+                              </button>
+                            </>
+                          ) : (
+                            <>
+                              <button
+                                className="px-3 py-2 bg-black text-white rounded flex items-center gap-2 border border-black text-sm"
+                                onClick={() => {
+                                  setRenewPlan(membershipData.membershipId);
+                                  setInvoiceModal(true);
+                                }}
+                              >
+                                RENEW
+                              </button>
+                            </>
+                          )}
+                        </div> */}
+                      </div>
+
+                      <div className="rounded-lg bg--color p-[2px]">
+                        <div className="flex h-full rounded-lg bg-white overflow-hidden">
+                          <div className="text-center border-r">
+                            <p className="text-md font-[500] text-black mb-1 border-b p-3">
+                              Countdown
+                            </p>
+                            <div className="p-2">
+                              <p className="text-2xl font-bold text-gray-900 mb-1">
+                                {service?.countdown}
+                              </p>
+                              <p className="text-xs text-[#6F6F6F]">
+                                days remaining
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="text-center border-r">
+                            <p className="text-md font-[500] text-black mb-1 border-b p-3">
+                              Start Date
+                            </p>
+                            <div className="p-2">
+                              {(() => {
+                                const { day, monthYear, weekday } =
+                                  formatDatePurchaseService(service?.start_date);
+                                return (
+                                  <>
+                                    <p className="text-2xl font-bold text-gray-900 mb-1">
+                                      {day}
+                                    </p>
+                                    <p className="text-xs text-[#6F6F6F]">
+                                      {monthYear} {weekday}
+                                    </p>
+                                  </>
+                                );
+                              })()}
+                            </div>
+                          </div>
+
+                          <div className="text-center">
+                            <p className="text-md font-[500] text-black mb-1 border-b p-3">
+                              End Date
+                            </p>
+                            <div className="p-2">
+                              <p className="text-2xl font-bold text-gray-900 mb-1">
+                                {service?.endDate?.day}
+                              </p>
+                              <p className="text-xs text-[#6F6F6F]">
+                                {service?.endDate?.month}{" "}
+                                {service?.endDate?.dayName}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
+        )}
 
-          <div className="divide-y">
-            {filteredServices.map((service) => (
-              <div
-                key={service.id}
-                className="border border-[#D4D4D4] rounded-lg overflow-hidden mb-3"
-              >
-                <div className="flex items-start justify-between bg-[#F1F1F1] p-4">
-                  <div className="flex items-center">
-                    <div className="w-2 h-2 bg-green-500 rounded-full mr-3 mt-1"></div>
-                    <h3 className="font-medium text-gray-900">
-                      {service.name}
-                    </h3>
-                  </div>
-                  <p className="text-sm text-[#6F6F6F] italic">
-                    Last visited on: {service.lastVisited}
-                  </p>
-                </div>
-
-                <div className="flex gap-4 p-4 justify-between">
-                  <div className="space-y-1">
-                    <div>
-                      <span className="text-sm text-black">Variation:</span>
-                      <span className="ml-2 text-sm text-[#6F6F6F]">
-                        {service.variation}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-sm text-black">Duration:</span>
-                      <span className="ml-2 text-sm text-[#6F6F6F]">
-                        {service.duration}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-sm text-black">Sessions:</span>
-                      <span className="ml-2 text-sm text-[#6F6F6F]">
-                        {service.sessions}
-                      </span>
-                    </div>
-                    <div className="flex flex-wrap gap-2 pt-2">
-                      {service.status === "active" ? (
-                        <>
-                          <button
-                            className="px-3 py-2 bg-white text-black rounded flex items-center gap-2 border border-black text-sm"
-                            onClick={() => setAppointmentModal(true)}
-                          >
-                            Add Appontment
-                          </button>
-                        </>
-                      ) : (
-                        <>
-                          <button
-                            className="px-3 py-2 bg-black text-white rounded flex items-center gap-2 border border-black text-sm"
-                            onClick={() => {
-                              setRenewPlan(membershipData.membershipId);
-                              setInvoiceModal(true);
-                            }}
-                          >
-                            RENEW
-                          </button>
-                        </>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="rounded-lg bg--color p-[2px]">
-                    <div className="flex gap-0 h-full rounded-lg bg-white overflow-hidden">
-                      <div className="text-center border-r">
-                        <p className="text-md font-[500] text-black mb-1 border-b p-3">
-                          Countdown
-                        </p>
-                        <div className="p-2">
-                          <p className="text-2xl font-bold text-gray-900 mb-1">
-                            {service.countdown}
-                          </p>
-                          <p className="text-xs text-[#6F6F6F]">
-                            days remaining
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="text-center border-r">
-                        <p className="text-md font-[500] text-black mb-1 border-b p-3">
-                          Start Date
-                        </p>
-                        <div className="p-2">
-                          <p className="text-2xl font-bold text-gray-900 mb-1">
-                            {service.startDate.day}
-                          </p>
-                          <p className="text-xs text-[#6F6F6F]">
-                            {service.startDate.month}{" "}
-                            {service.startDate.dayName}
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="text-center">
-                        <p className="text-md font-[500] text-black mb-1 border-b p-3">
-                          End Date
-                        </p>
-                        <div className="p-2">
-                          <p className="text-2xl font-bold text-gray-900 mb-1">
-                            {service.endDate.day}
-                          </p>
-                          <p className="text-xs text-[#6F6F6F]">
-                            {service.endDate.month} {service.endDate.dayName}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
       </div>
       {invoiceModal && (
         <RenewUpgradeService
@@ -425,6 +548,37 @@ const ServiceCard = ({ details }) => {
           setSuspendPause={setSuspendPauseModal}
           actionType={membershipActionType} // ✅ pass action type
         />
+      )}
+      {confirmModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded shadow-lg text-center max-w-sm w-full">
+            <p className="mb-2 text-lg font-semibold">
+              {selectedTrainerData?.hasTrainer
+                ? "Change Trainer"
+                : "Assign Trainer"}
+            </p>
+            <p className="mb-4 text-sm text-gray-600">
+              {selectedTrainerData?.hasTrainer
+                ? `Are you sure you want to change to ${selectedTrainerData?.trainerName}?`
+                : `Are you sure you want to assign ${selectedTrainerData?.trainerName}?`}
+            </p>
+
+            <div className="flex justify-center gap-4">
+              <button
+                onClick={handleConfirmAssign}
+                className="bg-black text-white px-4 py-2 rounded w-full max-w-[100px]"
+              >
+                Yes
+              </button>
+              <button
+                onClick={handleCancelAssign}
+                className="bg-gray-300 text-black px-4 py-2 rounded w-full max-w-[100px]"
+              >
+                No
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </>
   );

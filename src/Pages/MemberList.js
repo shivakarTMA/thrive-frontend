@@ -797,10 +797,10 @@ const MemberList = () => {
                         </div>
 
                         {/* Member Action */}
-                        {(userRole === "CLUB_MANAGER" ||
+                        {/* {(userRole === "CLUB_MANAGER" ||
                           userRole === "GENERAL_MANAGER" ||
                           userRole === "ADMIN" ||
-                          userRole === "FOH") && (
+                          userRole === "FOH") && ( */}
                           <div className="absolute hidden group-hover:flex gap-2 right-0 h-full top-0 w-[50%] items-center justify-end bg-[linear-gradient(269deg,_#ffffff_30%,_transparent)] pr-5 transition duration-700">
                             <div className="flex gap-1">
                               <Tooltip
@@ -853,7 +853,7 @@ const MemberList = () => {
                               </Tooltip>
                             </div>
                           </div>
-                        )}
+                        {/* // )} */}
                         {userRole === "TRAINER" && (
                           <div className="absolute hidden group-hover:flex gap-2 right-0 h-full top-0 w-[50%] items-center justify-end bg-[linear-gradient(269deg,_#ffffff_30%,_transparent)] pr-5 transition duration-700">
                             <div className="flex gap-1">

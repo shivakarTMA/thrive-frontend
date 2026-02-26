@@ -428,10 +428,10 @@ const NourishOrders = () => {
                     </td>
                     <td className="px-2 py-4">
                       <button
-                        className={` ${order?.fulfilment_status === "PLACED" ? "bg-gray-300 text-gray-500 cursor-not-allowed" : "bg-black text-white cursor-pointer"}  px-3 py-1 rounded `}
+                        className={` ${order?.fulfilment_status === "DELIVERED" ? "bg-gray-300 text-gray-500 cursor-not-allowed" : "bg-black text-white cursor-pointer"}  px-3 py-1 rounded `}
                         onClick={() => handleMarkDeliveredClick(order.id)}
                         disabled={
-                          order?.fulfilment_status === "PLACED" ? true : false
+                          order?.fulfilment_status === "DELIVERED" ? true : false
                         }
                       >
                         Mark Delivered
