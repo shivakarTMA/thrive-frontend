@@ -98,16 +98,14 @@ const Appointments = ({ details }) => {
     fetchService(clubId);
   }, [clubId]); // <-- dependency added
 
-  console.log(services,'asdfasdfasd')
-
   const appointmentTypeOptions = [
     {
-      label: "Club",
+      label: "Trial/Tour",
       value: "CLUB",
       filterKey: "appointment_type",
     },
     ...(services
-      ?.filter((item) => item.type !== "PRODUCT" && item.type !== "GROUP_CLASS")
+      ?.filter((item) => item.type !== "PRODUCT")
       ?.map((item) => ({
         label: item.name,
         value: item.name,
@@ -244,7 +242,7 @@ const Appointments = ({ details }) => {
                     </td>
                     <td className="border px-3 py-2">
                       {appt?.appointment_type === "CLUB"
-                        ? "Trial/test"
+                        ? "Trial/Tour"
                         : appt?.service_name}
                     </td>
                     <td className="border px-3 py-2">

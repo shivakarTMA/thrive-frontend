@@ -177,7 +177,7 @@ const ProductsList = () => {
     amount: Yup.number()
       .typeError("Amount must be a number")
       .required("Amount is required")
-      .min(0, "Amount cannot be negative"),
+      .min(1, "Amount must be greater than 0"),
 
     discount: Yup.number()
       .typeError("Discount must be a number")

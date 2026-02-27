@@ -84,7 +84,6 @@ const CreatePackage = ({
       const res = await authAxios().get("/service/list", { params });
       let data = res.data?.data || res.data || [];
       const activeService = data.filter((item) => item.status === "ACTIVE");
-      console.log(activeService, "activeService");
       setService(activeService);
     } catch (err) {
       console.error(err);
@@ -99,7 +98,6 @@ const CreatePackage = ({
       const res = await authAxios().get("/staff/list?role=TRAINER", { params });
       let data = res.data?.data || res.data || [];
       const activeService = data.filter((item) => item.status === "ACTIVE");
-      console.log(activeService, "activeService");
       setStaffList(activeService);
     } catch (err) {
       console.error(err);
@@ -307,8 +305,6 @@ const CreatePackage = ({
     formik.values?.service_id,
     serviceOptions,
   );
-
-  console.log("service_type_check", service_type_check);
 
   useEffect(() => {
     if (
@@ -846,229 +842,6 @@ const CreatePackage = ({
                         </div>
                       )}
 
-                    {service_type_check &&
-                    service_type_check === "GROUP_CLASS" ? (
-                      <>
-                        {/* Start Date Field */}
-                        <div>
-                          <label className="mb-2 block">
-                            Start Date<span className="text-red-500">*</span>
-                          </label>
-                          <div className="custom--date relative">
-                            {/* Calendar Icon */}
-                            <span className="absolute z-[1] mt-[11px] ml-[15px]">
-                              <FaCalendarDays />
-                            </span>
-                            <DatePicker
-                              selected={
-                                formik.values.start_date
-                                  ? new Date(formik.values.start_date) // ✅ Ensure valid Date object
-                                  : null
-                              }
-                              onChange={
-                                (date) =>
-                                  formik.setFieldValue(
-                                    "start_date",
-                                    // date.toISOString().split("T")[0]
-                                    date.toLocaleDateString("en-CA"),
-                                  ) // ✅ Save as YYYY-MM-DD
-                              }
-                              onBlur={() =>
-                                formik.setFieldTouched("start_date", true)
-                              }
-                              dateFormat="dd-MM-yyyy"
-                              minDate={new Date()} // ✅ Prevent selecting past dates
-                              className="custom--input w-full input--icon"
-                            />
-                          </div>
-                          {/* Display validation error if any */}
-                          {formik.touched.start_date &&
-                            formik.errors.start_date && (
-                              <div className="text-red-500 text-sm">
-                                {formik.errors.start_date}
-                              </div>
-                            )}
-                        </div>
-
-                        {/* Start Time Field */}
-                        <div>
-                          <label className="mb-2 block">
-                            Start Time<span className="text-red-500">*</span>
-                          </label>
-                          <div className="custom--date relative">
-                            {/* Clock Icon */}
-                            <span className="absolute z-[1] mt-[11px] ml-[15px]">
-                              <FiClock />
-                            </span>
-                            <DatePicker
-                              selected={
-                                formik.values.start_time
-                                  ? parseTime(formik.values.start_time)
-                                  : null
-                              }
-                              onChange={(date) =>
-                                formik.setFieldValue(
-                                  "start_time",
-                                  date.toLocaleTimeString([], {
-                                    hour: "2-digit",
-                                    minute: "2-digit",
-                                    hour12: false,
-                                  }),
-                                )
-                              }
-                              showTimeSelect
-                              showTimeSelectOnly
-                              timeIntervals={30}
-                              dateFormat="hh:mm aa"
-                              className="custom--input w-full input--icon"
-                              minTime={
-                                formik.values.start_date &&
-                                new Date(
-                                  formik.values.start_date,
-                                ).toDateString() === new Date().toDateString()
-                                  ? new Date()
-                                  : new Date(0, 0, 0, 0, 0)
-                              }
-                              maxTime={new Date(0, 0, 0, 23, 59)}
-                            />
-                          </div>
-                          {/* Display validation error if any */}
-                          {formik.touched.start_time &&
-                            formik.errors.start_time && (
-                              <div className="text-red-500 text-sm">
-                                {formik.errors.start_time}
-                              </div>
-                            )}
-                        </div>
-
-                        {/* End Time Field */}
-                        <div>
-                          <label className="mb-2 block">
-                            End Time<span className="text-red-500">*</span>
-                          </label>
-                          <div className="custom--date relative">
-                            {/* Clock Icon */}
-                            <span className="absolute z-[1] mt-[11px] ml-[15px]">
-                              <FiClock />
-                            </span>
-                            <DatePicker
-                              selected={
-                                formik.values.end_time
-                                  ? parseTime(formik.values.end_time)
-                                  : null
-                              }
-                              onChange={(date) =>
-                                formik.setFieldValue(
-                                  "end_time",
-                                  date.toLocaleTimeString([], {
-                                    hour: "2-digit",
-                                    minute: "2-digit",
-                                    hour12: false,
-                                  }),
-                                )
-                              }
-                              onBlur={() =>
-                                formik.setFieldTouched("end_time", true)
-                              }
-                              showTimeSelect
-                              showTimeSelectOnly
-                              timeIntervals={30}
-                              timeCaption="Time"
-                              dateFormat="hh:mm aa"
-                              className="custom--input w-full input--icon"
-                              minTime={
-                                formik.values.start_time
-                                  ? parseTime(formik.values.start_time)
-                                  : new Date(0, 0, 0, 0, 0)
-                              }
-                              maxTime={new Date(0, 0, 0, 23, 59)}
-                            />
-                          </div>
-                          {/* Display validation error if any */}
-                          {formik.touched.end_time &&
-                            formik.errors.end_time && (
-                              <div className="text-red-500 text-sm">
-                                {formik.errors.end_time}
-                              </div>
-                            )}
-                        </div>
-                        {/* Max Capacity Field */}
-                        <div>
-                          <label className="mb-2 block">
-                            Max Capacity
-                            <span className="text-red-500">*</span>
-                          </label>
-                          <div className="relative">
-                            <input
-                              type="number"
-                              name="max_capacity"
-                              value={
-                                formik.values.max_capacity !== null
-                                  ? formik.values.max_capacity
-                                  : ""
-                              }
-                              // onChange={formik.handleChange}
-                              onKeyDown={blockInvalidNumberKeys} // ⛔ blocks typing -, e, etc.
-                              onChange={(e) => {
-                                const cleanValue = sanitizePositiveInteger(
-                                  e.target.value,
-                                );
-                                formik.setFieldValue(
-                                  "max_capacity",
-                                  cleanValue,
-                                );
-                              }}
-                              onBlur={formik.handleBlur}
-                              className="custom--input w-full number--appearance-none"
-                            />
-                          </div>
-                          {formik.touched.max_capacity &&
-                            formik.errors.max_capacity && (
-                              <div className="text-red-500 text-sm">
-                                {formik.errors.max_capacity}
-                              </div>
-                            )}
-                        </div>
-                        {/* Waitlist Capacity Field */}
-                        <div>
-                          <label className="mb-2 block">
-                            Waitlist Capacity
-                            <span className="text-red-500">*</span>
-                          </label>
-                          <div className="relative">
-                            <input
-                              type="number"
-                              name="waitlist_capacity"
-                              value={
-                                formik.values.waitlist_capacity !== null
-                                  ? formik.values.waitlist_capacity
-                                  : ""
-                              }
-                              // onChange={formik.handleChange}
-                              onKeyDown={blockInvalidNumberKeys} // ⛔ blocks typing -, e, etc.
-                              onChange={(e) => {
-                                const cleanValue = sanitizePositiveInteger(
-                                  e.target.value,
-                                );
-                                formik.setFieldValue(
-                                  "waitlist_capacity",
-                                  cleanValue,
-                                );
-                              }}
-                              onBlur={formik.handleBlur}
-                              className="custom--input w-full number--appearance-none"
-                            />
-                          </div>
-                          {formik.touched.waitlist_capacity &&
-                            formik.errors.waitlist_capacity && (
-                              <div className="text-red-500 text-sm">
-                                {formik.errors.waitlist_capacity}
-                              </div>
-                            )}
-                        </div>
-                      </>
-                    ) : null}
-
                     {/* Booking Type */}
                     {service_type_check !== "RECOVERY" && (
                       <div>
@@ -1214,41 +987,6 @@ const CreatePackage = ({
                         </div>
                       )}
 
-                    {service_type_check &&
-                      service_type_check === "GROUP_CLASS" && (
-                        <div>
-                          <label className="mb-2 block">
-                            Featured Event
-                            <span className="text-red-500">*</span>
-                          </label>
-                          <div className="relative">
-                            <Select
-                              name="is_featured"
-                              value={featureType.find(
-                                (opt) =>
-                                  opt.value === formik.values.is_featured,
-                              )}
-                              options={featureType}
-                              onChange={(option) =>
-                                formik.setFieldValue(
-                                  "is_featured",
-                                  option?.value ?? null,
-                                )
-                              }
-                              onBlur={() =>
-                                formik.setFieldTouched("is_featured", true)
-                              }
-                              styles={customStyles}
-                            />
-                          </div>
-                          {formik.touched.is_featured &&
-                            formik.errors.is_featured && (
-                              <div className="text-red-500 text-sm">
-                                {formik.errors.is_featured}
-                              </div>
-                            )}
-                        </div>
-                      )}
                     {/* HSN SAC Code */}
                     <div>
                       <label className="mb-2 block">HSN SAC Code</label>
@@ -1340,38 +1078,35 @@ const CreatePackage = ({
                     )}
 
                     {/* Status */}
-                    {editingOption && editingOption && (
-                      <div>
-                        <label className="mb-2 block">Status</label>
-                        <div className="relative">
-                          <Select
-                            name="status"
-                            value={
-                              statusType.find(
-                                (opt) => opt.value === formik.values.status,
-                              ) || null
-                            }
-                            options={statusType}
-                            onChange={(option) =>
-                              formik.setFieldValue(
-                                "status",
-                                option ? option.value : "",
-                              )
-                            }
-                            onBlur={() =>
-                              formik.setFieldTouched("status", true)
-                            }
-                            styles={customStyles}
-                            placeholder="Select Status"
-                          />
-                        </div>
-                        {formik.touched.status && formik.errors.status && (
-                          <div className="text-red-500 text-sm">
-                            {formik.errors.status}
-                          </div>
-                        )}
+
+                    <div>
+                      <label className="mb-2 block">Status</label>
+                      <div className="relative">
+                        <Select
+                          name="status"
+                          value={
+                            statusType.find(
+                              (opt) => opt.value === formik.values.status,
+                            ) || null
+                          }
+                          options={statusType}
+                          onChange={(option) =>
+                            formik.setFieldValue(
+                              "status",
+                              option ? option.value : "",
+                            )
+                          }
+                          onBlur={() => formik.setFieldTouched("status", true)}
+                          styles={customStyles}
+                          placeholder="Select Status"
+                        />
                       </div>
-                    )}
+                      {formik.touched.status && formik.errors.status && (
+                        <div className="text-red-500 text-sm">
+                          {formik.errors.status}
+                        </div>
+                      )}
+                    </div>
                   </div>
                   {/* </div> */}
                   {service_type_check === "RECOVERY" && (

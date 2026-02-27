@@ -164,7 +164,7 @@ const PackagesList = () => {
             return ["image/jpeg", "image/png", "image/webp"].includes(
               value.type,
             );
-        }),
+          }),
         service_id: Yup.number().required("Service is required"),
         club_id: Yup.number().required("Club is required"),
         session_level: Yup.string().required("Level is required"),
@@ -174,36 +174,14 @@ const PackagesList = () => {
             ? Yup.string() // not required if editing
             : Yup.string().required("Caption is required"),
         tags: Yup.string().required("Tags is required"),
-
-        // trainer_id: Yup.string().required("Staff is required"),
         trainer_id:
           service_type !== "GROUP_CLASS"
             ? Yup.string() // not required if editing
             : Yup.string().required("Trainer Name is required"),
         position: Yup.string().required("Position is required"),
-        // status: editingOption
-        //   ? Yup.string() // not required if editing
-        //   : Yup.string().required("Status is required"),
+        status: Yup.string().required("Status is required"),
         description: Yup.string().required("Description is required"),
       };
-
-      if (service_type === "GROUP_CLASS") {
-        schema = {
-          ...schema,
-          package_category_id: Yup.number().required("Category is required"),
-          start_date: Yup.string().required("Start Date is required"),
-          start_time: Yup.string().required("Start Time is required"),
-          end_time: Yup.string().required("End Time is required"),
-          max_capacity: Yup.string().required("Max Capacity is required"),
-          earn_coin: Yup.number()
-            .typeError("Earn Coins must be a number")
-            .required("Earn Coins is required"),
-          waitlist_capacity: Yup.string().required(
-            "Waitlist Capacity is required",
-          ),
-          is_featured: Yup.string().required("Featured Event is required"),
-        };
-      }
 
       if (service_type !== "RECOVERY") {
         schema = {
@@ -220,7 +198,7 @@ const PackagesList = () => {
               then: (schema) =>
                 schema
                   .required("Amount is required")
-                  .min(0, "Amount cannot be negative"),
+                  .min(1, "Amount must be greater than 0"),
               otherwise: (schema) => schema.nullable(),
             }),
 
@@ -264,19 +242,19 @@ const PackagesList = () => {
       ) {
         schema = {
           ...schema,
-          session_duration: Yup.number().required(
-            "Session duration is required",
-          ),
-          session_validity: Yup.number().required("Validity is required"),
-          no_of_sessions: Yup.number().required("No. of Sessions is required"),
+          session_duration: Yup.number()
+            .required("Session duration is required")
+            .min(1, "duration must be greater than 0"),
+          session_validity: Yup.number()
+            .required("Validity is required")
+            .min(1, "Validity must be greater than 0"),
+          no_of_sessions: Yup.number()
+            .required("No. of Sessions is required")
+            .min(1, "Sessions must be greater than 0")
+            .min(1, "Sessions must be greater than 0"),
         };
       }
-      if (service_type === "RECOVERY" || service_type === "GROUP_CLASS") {
-        schema = {
-          ...schema,
-          studio_id: Yup.string().required("Studio is required"),
-        };
-      }
+
       if (service_type === "PERSONAL_TRAINER") {
         schema = {
           ...schema,
@@ -290,6 +268,7 @@ const PackagesList = () => {
       if (service_type === "RECOVERY") {
         schema = {
           ...schema,
+          studio_id: Yup.string().required("Studio is required"),
           variation: Yup.array().of(
             Yup.object({
               name: Yup.string().required("Name is required"),
@@ -308,14 +287,20 @@ const PackagesList = () => {
               description: Yup.string().required("Description is required"),
               no_of_sessions: Yup.number()
                 .typeError("No. of Sessions must be a number")
-                .required("No. of Sessions is required"),
+                .required("No. of Sessions is required")
+                .min(1, "Sessions must be greater than 0"),
               session_duration: Yup.number()
                 .typeError("Session Duration must be a number")
-                .required("Session Duration is required"),
+                .required("Session Duration is required")
+                .min(1, "Duration must be greater than 0"),
+              session_validity: Yup.number()
+                .typeError("Validity must be a number")
+                .required("Validity is required")
+                .min(1, "Validity must be greater than 0"),
               amount: Yup.number()
                 .typeError("Amount must be a number")
                 .required("Amount is required")
-                .min(0, "Amount cannot be negative"),
+                .min(1, "Amount must be greater than 0"),
 
               discount: Yup.number()
                 .typeError("Discount must be a number")
@@ -341,7 +326,6 @@ const PackagesList = () => {
               earn_coin: Yup.number()
                 .typeError("Earn Coins must be a number")
                 .required("Earn Coins is required"),
-              session_validity: Yup.string().required("Validity is required"),
               position: Yup.number()
                 .typeError("Position must be a number")
                 .required("Position is required"),
@@ -409,7 +393,6 @@ const PackagesList = () => {
     validateOnChange: true,
     validateOnBlur: true,
     onSubmit: async (values, { resetForm }) => {
-      console.log(values, "values");
       try {
         const formData = new FormData();
 
@@ -591,35 +574,6 @@ const PackagesList = () => {
         is_featured: "",
         variation:
           type === "PERSONAL_TRAINER"
-            ? [
-                {
-                  name: "",
-                  image: "",
-                  recovery_goals: "",
-                  caption: "",
-                  description: "",
-                  no_of_sessions: "",
-                  session_duration: "",
-                  session_validity: "",
-                  amount: "",
-                  discount: "",
-                  gst: "",
-                  earn_coin: "",
-                  position: "",
-                },
-              ]
-            : formik.values.variation,
-      });
-    }
-
-    if (type === "GROUP_CLASS") {
-      formik.setValues({
-        ...formik.values,
-        buddy_pt: "",
-        session_duration: "",
-        session_validity: "",
-        variation:
-          type === "GROUP_CLASS"
             ? [
                 {
                   name: "",
