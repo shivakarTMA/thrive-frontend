@@ -752,17 +752,17 @@ const CreateNewInvoice = ({ setInvoiceModal, selectedLeadMember, clubId }) => {
                               disabled={!formik.values.start_date}
                               showTimeSelect
                               showTimeSelectOnly
-                              timeIntervals={60}
+                              timeIntervals={30}
                               dateFormat="hh:mm aa"
                               placeholderText="Select time"
                               isClearable
-                              /* ✅ 3. Time range 9:00 AM – 8:00 PM */
+                              /* ✅ CHANGE TIME RANGE */
                               minTime={
                                 isToday(formik.values.start_date)
-                                  ? roundUpToNextInterval(new Date())
-                                  : getTodayAtTime(9, 0)
+                                  ? roundUpToNextInterval(new Date(), 30)
+                                  : getTodayAtTime(6, 0) // 6:00 AM
                               }
-                              maxTime={getTodayAtTime(20, 0)}
+                              maxTime={getTodayAtTime(22, 0)} // 10:00 PM
                               /* Optional: prevent selecting past times even if user clicks */
                               filterTime={(time) => {
                                 if (!isToday(formik.values.start_date))

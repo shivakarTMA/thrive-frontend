@@ -4,16 +4,14 @@ import { FaCirclePlus } from "react-icons/fa6";
 import DummyProfile from "../../assets/images/dummy-profile.png";
 import { customStyles, formatText } from "../../Helper/helper";
 import Select from "react-select";
-import RenewUpgradeService from "../../Pages/RenewUpgradeService";
 import AddCoins from "../CoinsList/AddCoins";
-import CreateMemberAppointment from "../Appointment/CreateMemberAppointment";
 import SuspendAndPause from "../common/SuspendAndPause";
 import { authAxios } from "../../config/config";
 import { toast } from "react-toastify";
 
 const statusOptions = [
-  { value: "active", label: "Active" },
-  { value: "expired", label: "Expired" },
+  { value: "ACTIVE", label: "Active" },
+  { value: "INACTIVE", label: "Expired" },
 ];
 
 const ServiceCard = ({ details }) => {
@@ -25,15 +23,10 @@ const ServiceCard = ({ details }) => {
 
   // State to store selected status option, default is "active"
   const [selectedStatus, setSelectedStatus] = useState(statusOptions[0]);
-  const [invoiceModal, setInvoiceModal] = useState(false);
   const [coinsModal, setCoinsModal] = useState(false);
-  const [appointmentModal, setAppointmentModal] = useState(false);
   const [staffList, setStaffList] = useState([]);
   const [confirmModal, setConfirmModal] = useState(false);
   const [selectedTrainerData, setSelectedTrainerData] = useState(null);
-
-  const [upgradePlan, setUpgradePlan] = useState(null);
-  const [renewPlan, setRenewPlan] = useState(null);
 
   const [suspendPauseModal, setSuspendPauseModal] = useState(false);
   const [membershipActionType, setMembershipActionType] = useState(null);
@@ -68,10 +61,15 @@ const ServiceCard = ({ details }) => {
   // Fetch coins with filters applied
   const fetchParchaseServices = async () => {
     try {
+
+      const params = {}
+
+      if(selectedStatus?.value){
+        params.package_status = selectedStatus.value
+      }
+
       // Make the API call with query parameters
-      const res = await authAxios().get(
-        `/member/package/booking/list/${details?.id}`,
-      );
+      const res = await authAxios().get(`/member/package/booking/list/${details?.id}`, {params});
       const dataCount = res.data?.totalCount || null;
       const data = res.data?.data || [];
       setPurchasedServices(data);
@@ -110,8 +108,11 @@ const ServiceCard = ({ details }) => {
 
   useEffect(() => {
     fetchMemberServiceCard();
-    fetchParchaseServices();
   }, []);
+
+  useEffect(() => {
+    fetchParchaseServices();
+  }, [selectedStatus]);
 
   useEffect(() => {
     // Fetch services and staff based on clubId if provided
@@ -225,7 +226,9 @@ const ServiceCard = ({ details }) => {
         </div>
 
         {/* Membership Card */}
-        <div className={`grid grid-cols-4 gap-3 ${purchasedServices.length > 0 ? "border-b border-b-[#D4D4D4] pb-5 mb-5" : ""}`}>
+        <div
+          className={`grid grid-cols-4 gap-3 ${purchasedServices.length > 0 ? "border-b border-b-[#D4D4D4] pb-5 mb-5" : ""}`}
+        >
           {/* <div className="grid grid-cols-4 gap-3 pb-5 mb-5"> */}
           <div className="bg-white rounded-lg shadow-sm border col-span-2">
             {/* Header with gradient */}
@@ -347,12 +350,14 @@ const ServiceCard = ({ details }) => {
                   options={statusOptions}
                   styles={customStyles}
                   className="!capitalize"
-                  onChange={(selectedOption) => setSelectedStatus(selectedOption)} // Update state on change
+                  onChange={(selectedOption) =>
+                    setSelectedStatus(selectedOption)
+                  } // Update state on change
                 />
               </div>
             </div>
 
-            <div className="space-y-3">
+            <div className="grid grid-cols-2 gap-3">
               {purchasedServices.map((service) => {
                 const filteredStaffOptions = baseStaffOptions.filter(
                   (opt) => opt.value !== service?.assigned_staff_id,
@@ -376,7 +381,9 @@ const ServiceCard = ({ details }) => {
                       <div className="space-y-2 flex-1">
                         {service?.service_name === "RECOVERY" && (
                           <div>
-                            <span className="text-sm text-black">Variation:</span>
+                            <span className="text-sm text-black">
+                              Variation:
+                            </span>
                             <span className="ml-2 text-sm text-[#6F6F6F]">
                               {formatText(service?.package_variation_name)}
                             </span>
@@ -403,45 +410,46 @@ const ServiceCard = ({ details }) => {
 
                         <div className="w-fit min-w-[150px]">
                           <Select
-                      options={filteredStaffOptions}
-                      value={trainerSelections[service?.id] || null} // <-- controlled value
-                      placeholder={
-                        service?.assigned_staff_name
-                          ? "Change trainer"
-                          : "Assign trainer"
-                      }
-                      onChange={(selectedOption) => {
-                        setTrainerSelections((prev) => ({
-                          ...prev,
-                          [service?.id]: selectedOption,
-                        }));
+                            options={filteredStaffOptions}
+                            value={trainerSelections[service?.id] || null} // <-- controlled value
+                            placeholder={
+                              service?.assigned_staff_name
+                                ? "Change trainer"
+                                : "Assign trainer"
+                            }
+                            onChange={(selectedOption) => {
+                              setTrainerSelections((prev) => ({
+                                ...prev,
+                                [service?.id]: selectedOption,
+                              }));
 
-                        confirmAssignTrainer(
-                          selectedOption.value,
-                          selectedOption.label,
-                          service?.id,
-                          !!service?.assigned_staff_name
-                        );
-                      }}
-                      styles={{
-                        ...customStyles,
-                        menuPortal: (base) => ({
-                          ...base,
-                          zIndex: 9999,
-                        }),
-                      }}
-                      menuPortalTarget={document.body}
-                      menuPosition="fixed"
-                    />
+                              confirmAssignTrainer(
+                                selectedOption.value,
+                                selectedOption.label,
+                                service?.id,
+                                !!service?.assigned_staff_name,
+                              );
+                            }}
+                            styles={{
+                              ...customStyles,
+                              menuPortal: (base) => ({
+                                ...base,
+                                zIndex: 9999,
+                              }),
+                            }}
+                            menuPortalTarget={document.body}
+                            menuPosition="fixed"
+                            isDisabled={service?.package_status !== "ACTIVE" ? true : false}
+                          />
                         </div>
                         {/* <div className="flex flex-wrap gap-2 pt-2">
-                          {service?.status === "active" ? (
+                          {service?.package_status === "ACTIVE" ? (
                             <>
                               <button
-                                className="px-3 py-2 bg-white text-black rounded flex items-center gap-2 border border-black text-sm"
+                                className="px-3 py-2 bg-black text-white rounded flex items-center gap-2 border border-black text-sm"
                                 onClick={() => setAppointmentModal(true)}
                               >
-                                Add Appontment
+                                Add Appointment
                               </button>
                             </>
                           ) : (
@@ -468,7 +476,7 @@ const ServiceCard = ({ details }) => {
                             </p>
                             <div className="p-2">
                               <p className="text-2xl font-bold text-gray-900 mb-1">
-                                {service?.countdown}
+                                {service?.remaining_days}
                               </p>
                               <p className="text-xs text-[#6F6F6F]">
                                 days remaining
@@ -483,7 +491,9 @@ const ServiceCard = ({ details }) => {
                             <div className="p-2">
                               {(() => {
                                 const { day, monthYear, weekday } =
-                                  formatDatePurchaseService(service?.start_date);
+                                  formatDatePurchaseService(
+                                    service?.start_date,
+                                  );
                                 return (
                                   <>
                                     <p className="text-2xl font-bold text-gray-900 mb-1">
@@ -503,13 +513,20 @@ const ServiceCard = ({ details }) => {
                               End Date
                             </p>
                             <div className="p-2">
-                              <p className="text-2xl font-bold text-gray-900 mb-1">
-                                {service?.endDate?.day}
-                              </p>
-                              <p className="text-xs text-[#6F6F6F]">
-                                {service?.endDate?.month}{" "}
-                                {service?.endDate?.dayName}
-                              </p>
+                              {(() => {
+                                const { day, monthYear, weekday } =
+                                  formatDatePurchaseService(service?.end_date);
+                                return (
+                                  <>
+                                    <p className="text-2xl font-bold text-gray-900 mb-1">
+                                      {day}
+                                    </p>
+                                    <p className="text-xs text-[#6F6F6F]">
+                                      {monthYear} {weekday}
+                                    </p>
+                                  </>
+                                );
+                              })()}
                             </div>
                           </div>
                         </div>
@@ -521,26 +538,12 @@ const ServiceCard = ({ details }) => {
             </div>
           </div>
         )}
-
       </div>
-      {invoiceModal && (
-        <RenewUpgradeService
-          setInvoiceModal={setInvoiceModal}
-          upgradePlan={upgradePlan}
-          renewPlan={renewPlan}
-        />
-      )}
       {coinsModal && (
         <AddCoins
           setCoinsModal={setCoinsModal}
           handleUpdateCoins={handleUpdateCoins}
           details={details}
-        />
-      )}
-      {appointmentModal && (
-        <CreateMemberAppointment
-          setAppointmentModal={setAppointmentModal}
-          memberID={details?.id}
         />
       )}
       {suspendPauseModal && (
