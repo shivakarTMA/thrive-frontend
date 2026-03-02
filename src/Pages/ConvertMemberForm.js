@@ -1144,7 +1144,7 @@ const ConvertMemberForm = ({
                           </div>
                         )}
 
-                        <div className="grid grid-cols-3 gap-4">
+                        <div className="grid grid-cols-3 gap-4 w-full">
                           <div className="relative">
                             <label className="mb-2 block">
                               Contact Number

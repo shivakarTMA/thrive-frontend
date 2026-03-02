@@ -10,6 +10,8 @@ import { authAxios } from "../../config/config";
 import { toast } from "react-toastify";
 import CreateNewInvoice from "../../Pages/CreateNewInvoice";
 import MemberSendPaymentLink from "../../Pages/MemberSendPaymentLink";
+import { FiPlusCircle } from "react-icons/fi";
+import Tooltip from "../common/Tooltip";
 
 const statusOptions = [
   { value: "ACTIVE", label: "Active" },
@@ -32,6 +34,7 @@ const ServiceCard = ({ details }) => {
     useState(null);
   const [purchasedMemberships, setPurchasedMemberships] = useState([]);
   const [activeTab, setActiveTab] = useState("Purchased Services");
+  const [hasUpcomingMembership, setHasUpcomingMembership] = useState(false);
 
   const [renewPlanService, setRenewService] = useState(null);
   const [invoiceModal, setInvoiceModal] = useState(false);
@@ -98,16 +101,27 @@ const ServiceCard = ({ details }) => {
       if (!response) {
         setPurchasedMemberships([]);
         setPurchasedMembershipsCount(0);
+        setHasUpcomingMembership(false); // ✅ reset
         return;
       }
 
-      setPurchasedMemberships(response?.data || []);
+      const memberships = response?.data || [];
+
+      setPurchasedMemberships(memberships);
       setPurchasedMembershipsCount(response?.totalCount || 0);
+
+      // ✅ CHECK IF ANY UPCOMING EXISTS
+      const upcomingExists = memberships.some(
+        (item) => item.booking_status === "UPCOMING",
+      );
+
+      setHasUpcomingMembership(upcomingExists);
     } catch (err) {
       console.error("Membership Fetch Error:", err);
       toast.error("Failed to fetch memberships");
       setPurchasedMemberships([]);
       setPurchasedMembershipsCount(0);
+      setHasUpcomingMembership(false);
     }
   };
 
@@ -180,9 +194,9 @@ const ServiceCard = ({ details }) => {
   useEffect(() => {
     if (!details?.id) return;
 
-    if (activeTab === "Purchased Memberships") {
-      fetchPurchasedMemberships();
-    }
+    // if (activeTab === "Purchased Memberships") {
+    fetchPurchasedMemberships();
+    // }
   }, [selectedMembershipStatus, activeTab, details?.id]);
 
   useEffect(() => {
@@ -307,15 +321,48 @@ const ServiceCard = ({ details }) => {
                 {formatDate(membershipData?.relationship_since)}
               </p>
             </div>
-            <div
-              className="flex items-center bg-white rounded-full px-2 py-1 border border-[#D4D4D4] border-[2px]"
-              onClick={() => setCoinsModal(true)}
-            >
-              <img src={Coins} className="mr-1" />
-              <span className="text-lg font-medium text-black mr-3">
-                {membershipData?.earn_coins}
-              </span>
-              <FaCirclePlus className="text-black text-2xl cursor-pointer" />
+            <div className="flex gap-2 items-center">
+              {hasUpcomingMembership ? (
+                <Tooltip
+                id={`tooltip-membership-buy`}
+                content="You already have an upcoming membership."
+                place="top"
+              >
+                <button
+                  className={`px-3 py-2 rounded-full flex items-center gap-2 border text-sm bg-gray-300 border-gray-300 cursor-not-allowed text-gray-500`}
+                  disabled={hasUpcomingMembership}
+                  onClick={() => {
+                    if (hasUpcomingMembership) return;
+                    setSendPaymentModal(true);
+                  }}
+                >
+                  <FiPlusCircle className="text-lg" />
+                  <span>Buy Membership</span>
+                </button>
+              </Tooltip>
+              ) : (
+                <button
+                  className={`px-3 py-2 rounded-full flex items-center gap-2 border text-sm bg-black border-black text-white`}
+                  onClick={() => {
+                    setSendPaymentModal(true);
+                  }}
+                >
+                  <FiPlusCircle className="text-lg" />
+                  <span>Buy Membership</span>
+                </button>
+              )}
+              
+
+              <div
+                className="flex items-center bg-white rounded-full px-2 py-1 border-[#D4D4D4] border-[2px]"
+                onClick={() => setCoinsModal(true)}
+              >
+                <img src={Coins} className="mr-1" />
+                <span className="text-lg font-medium text-black mr-3">
+                  {membershipData?.earn_coins}
+                </span>
+                <FaCirclePlus className="text-black text-2xl cursor-pointer" />
+              </div>
             </div>
           </div>
         </div>
@@ -721,70 +768,70 @@ const ServiceCard = ({ details }) => {
                             )}
                           </div>
                           <div className="rounded-lg bg--color p-[2px] w-full">
-                              <div className="grid grid-cols-3 h-full rounded-lg bg-white overflow-hidden">
-                                <div className="text-center border-r">
-                                  <p className="text-sm font-[500] text-black mb-1 border-b p-1 py-2">
-                                    Countdown
+                            <div className="grid grid-cols-3 h-full rounded-lg bg-white overflow-hidden">
+                              <div className="text-center border-r">
+                                <p className="text-sm font-[500] text-black mb-1 border-b p-1 py-2">
+                                  Countdown
+                                </p>
+                                <div className="p-1 py-2">
+                                  <p className="text-xl font-bold text-gray-900 mb-1">
+                                    {membership?.remaining_days}
                                   </p>
-                                  <div className="p-1 py-2">
-                                    <p className="text-xl font-bold text-gray-900 mb-1">
-                                      {membership?.remaining_days}
-                                    </p>
-                                    <p className="text-xs text-[#6F6F6F]">
-                                      days remaining
-                                    </p>
-                                  </div>
+                                  <p className="text-xs text-[#6F6F6F]">
+                                    days remaining
+                                  </p>
                                 </div>
+                              </div>
 
-                                <div className="text-center border-r">
-                                  <p className="text-sm font-[500] text-black mb-1 border-b p-1 py-2">
-                                    Start Date
-                                  </p>
-                                  <div className="p-1 py-2">
-                                    {(() => {
-                                      const { day, monthYear, weekday } =
-                                        formatDatePurchaseMembership(
-                                          membership?.start_date,
-                                        );
-                                      return (
-                                        <>
-                                          <p className="text-xl font-bold text-gray-900 mb-1">
-                                            {day}
-                                          </p>
-                                          <p className="text-xs text-[#6F6F6F]">
-                                            {monthYear} {weekday}
-                                          </p>
-                                        </>
+                              <div className="text-center border-r">
+                                <p className="text-sm font-[500] text-black mb-1 border-b p-1 py-2">
+                                  Start Date
+                                </p>
+                                <div className="p-1 py-2">
+                                  {(() => {
+                                    const { day, monthYear, weekday } =
+                                      formatDatePurchaseMembership(
+                                        membership?.start_date,
                                       );
-                                    })()}
-                                  </div>
+                                    return (
+                                      <>
+                                        <p className="text-xl font-bold text-gray-900 mb-1">
+                                          {day}
+                                        </p>
+                                        <p className="text-xs text-[#6F6F6F]">
+                                          {monthYear} {weekday}
+                                        </p>
+                                      </>
+                                    );
+                                  })()}
                                 </div>
+                              </div>
 
-                                <div className="text-center">
-                                  <p className="text-sm font-[500] text-black mb-1 border-b p-1 py-2">
-                                    End Date
-                                  </p>
-                                  <div className="p-1 py-2">
-                                    {(() => {
-                                      const { day, monthYear, weekday } =
-                                        formatDatePurchaseMembership(
-                                          membership?.end_date,
-                                        );
-                                      return (
-                                        <>
-                                          <p className="text-xl font-bold text-gray-900 mb-1">
-                                            {day}
-                                          </p>
-                                          <p className="text-xs text-[#6F6F6F]">
-                                            {monthYear} {weekday}
-                                          </p>
-                                        </>
+                              <div className="text-center">
+                                <p className="text-sm font-[500] text-black mb-1 border-b p-1 py-2">
+                                  End Date
+                                </p>
+                                <div className="p-1 py-2">
+                                  {(() => {
+                                    const { day, monthYear, weekday } =
+                                      formatDatePurchaseMembership(
+                                        membership?.end_date,
                                       );
-                                    })()}
-                                  </div>
+                                    return (
+                                      <>
+                                        <p className="text-xl font-bold text-gray-900 mb-1">
+                                          {day}
+                                        </p>
+                                        <p className="text-xs text-[#6F6F6F]">
+                                          {monthYear} {weekday}
+                                        </p>
+                                      </>
+                                    );
+                                  })()}
                                 </div>
                               </div>
                             </div>
+                          </div>
                         </div>
                       </div>
                     );
@@ -831,6 +878,7 @@ const ServiceCard = ({ details }) => {
             if (!val) setRenewMembership(null);
           }}
           selectedLeadMember={details?.id}
+          startDateNext={membershipData?.end_date}
           clubId={clubId}
           renewPlanMembership={renewPlanMembership}
           key={modalKey} // ✅ always forces full remount

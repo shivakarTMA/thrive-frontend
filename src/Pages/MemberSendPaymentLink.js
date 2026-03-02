@@ -25,9 +25,11 @@ const MemberSendPaymentLink = ({
   setSendPaymentModal,
   selectedLeadMember,
   clubId,
-  renewPlanMembership
+  renewPlanMembership,
+  startDateNext,
 }) => {
   const [showProductModal, setShowProductModal] = useState(false);
+  const [minStartDate, setMinStartDate] = useState(new Date());
 
   const [voucherInput, setVoucherInput] = useState("");
   const [voucherStatus, setVoucherStatus] = useState(null); // "success", "error", or null
@@ -39,7 +41,7 @@ const MemberSendPaymentLink = ({
   const [orderNo, setOrderNo] = useState("");
 
   const leadBoxRef = useRef(null);
-const isRenewingRef = useRef(!!renewPlanMembership);
+  const isRenewingRef = useRef(!!renewPlanMembership);
 
   const initialValues = {
     id: "",
@@ -104,114 +106,137 @@ const isRenewingRef = useRef(!!renewPlanMembership);
 
   // ✅ Fetch lead details when selectedId changes
   // ✅ Fetch lead details when selectedId changes
-// ✅ Fetch member id and club_id only
-useEffect(() => {
-  if (!selectedLeadMember) return;
+  // ✅ Fetch member id and club_id only
+  useEffect(() => {
+    if (!selectedLeadMember) return;
 
-  const fetchMemberID = async () => {
-    try {
-      const res = await authAxios().get(`/member/${selectedLeadMember}`);
-      const data = res.data?.data || res.data || null;
-      if (data) {
-        formik.setFieldValue("id", data.id || "");
-        formik.setFieldValue("club_id", data.club_id || null);
+    const fetchMemberID = async () => {
+      try {
+        const res = await authAxios().get(`/member/${selectedLeadMember}`);
+        const data = res.data?.data || res.data || null;
+        if (data) {
+          formik.setFieldValue("id", data.id || "");
+          formik.setFieldValue("club_id", data.club_id || null);
+        }
+      } catch (err) {
+        console.error(err);
+        toast.error("Failed to fetch module details");
       }
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to fetch module details");
-    }
-  };
+    };
 
-  fetchMemberID();
-}, [selectedLeadMember]);
+    fetchMemberID();
+  }, [selectedLeadMember]);
 
-// ✅ plan_type change resets productDetails ONLY when user manually changes it
-useEffect(() => {
-  if (!formik.values.plan_type) return;
-  if (isRenewingRef.current) return; // ✅ skip during auto-fill
+  // ✅ plan_type change resets productDetails ONLY when user manually changes it
+  useEffect(() => {
+    if (!formik.values.plan_type) return;
+    if (isRenewingRef.current) return; // ✅ skip during auto-fill
 
-  formik.setValues((prev) => ({
-    ...prev,
-    productDetails: {
-      id: null,
-      title: "",
-      duration_value: 0,
-      duration_type: "",
-      amount: 0,
-      discount: 0,
-      total_amount: 0,
-      gst: 0,
-      gst_amount: 0,
+    formik.setValues((prev) => ({
+      ...prev,
+      productDetails: {
+        id: null,
+        title: "",
+        duration_value: 0,
+        duration_type: "",
+        amount: 0,
+        discount: 0,
+        total_amount: 0,
+        gst: 0,
+        gst_amount: 0,
+        final_amount: 0,
+      },
+      coupon: "",
+      discountAmount: 0,
       final_amount: 0,
-    },
-    coupon: "",
-    discountAmount: 0,
-    final_amount: 0,
-    amount_pay: 0,
-  }));
+      amount_pay: 0,
+    }));
 
-  setVoucherInput("");
-  setVoucherStatus(null);
-  setSelectedVoucher(null);
-}, [formik.values.plan_type]);
+    setVoucherInput("");
+    setVoucherStatus(null);
+    setSelectedVoucher(null);
+  }, [formik.values.plan_type]);
 
-// ✅ Auto-fill when renewPlanMembership is provided
+  console.log(startDateNext, "startDateNext");
+
+  // ✅ Step 1: Calculate next allowed start date
 useEffect(() => {
-  if (!renewPlanMembership) return;
+  if (!startDateNext) {
+    setMinStartDate(new Date());
+    return;
+  }
 
-  const {
-    subscription_plan_id,
-    subscription_title,
-    plan_type,
-    end_date,
-  } = renewPlanMembership;
+  const nextDate = new Date(startDateNext);
+  nextDate.setDate(nextDate.getDate() + 1);
 
-  const nextStartDate = new Date(end_date + "T00:00:00");
+  setMinStartDate(nextDate);
+
+  // 🔥 Also update formik value in real time
+  formik.setFieldValue("start_date", nextDate);
+
+}, [startDateNext]);
+
+  // ✅ Auto-fill when renewPlanMembership is provided
+  useEffect(() => {
+    if (!renewPlanMembership) return;
+
+    const { subscription_plan_id, subscription_title, plan_type, end_date } =
+      renewPlanMembership;
+
+let nextStartDate = new Date();
+
+if (startDateNext) {
+  nextStartDate = new Date(startDateNext);
   nextStartDate.setDate(nextStartDate.getDate() + 1);
+}
 
-  const fetchSubscriptionPlan = async () => {
-    try {
-      const res = await authAxios().get(`/subscription-plan/${subscription_plan_id}`);
-      const plan = res.data?.data || null;
+    const fetchSubscriptionPlan = async () => {
+      try {
+        const res = await authAxios().get(
+          `/subscription-plan/${subscription_plan_id}`,
+        );
+        const plan = res.data?.data || null;
 
-      if (plan) {
-        const amount = Number(plan.amount) || 0;
-        const discount = Number(plan.discount) || 0;
-        const gstPercent = Number(plan.gst) || 0;
-        const totalAmount = Number(plan.total_amount) || amount - discount;
-        const gstAmount = Number(plan.gst_amount) || (totalAmount * gstPercent) / 100;
-        const finalAmount = Number(plan.final_amount) || totalAmount + gstAmount;
+        if (plan) {
+          const amount = Number(plan.amount) || 0;
+          const discount = Number(plan.discount) || 0;
+          const gstPercent = Number(plan.gst) || 0;
+          const totalAmount = Number(plan.total_amount) || amount - discount;
+          const gstAmount =
+            Number(plan.gst_amount) || (totalAmount * gstPercent) / 100;
+          const finalAmount =
+            Number(plan.final_amount) || totalAmount + gstAmount;
 
-        formik.setValues((prev) => ({
-          ...prev,
-          plan_type,
-          start_date: nextStartDate,
-          productDetails: {
-            id: plan.id,
-            title: plan.title || subscription_title,
-            duration_value: plan.duration_value,
-            duration_type: plan.duration_type,
-            amount,
-            discount,
-            total_amount: totalAmount,
-            gst: gstPercent,
-            gst_amount: gstAmount,
+          formik.setValues((prev) => ({
+            ...prev,
+            plan_type,
+            start_date: nextStartDate,
+            productDetails: {
+              id: plan.id,
+              title: plan.title || subscription_title,
+              duration_value: plan.duration_value,
+              duration_type: plan.duration_type,
+              amount,
+              discount,
+              total_amount: totalAmount,
+              gst: gstPercent,
+              gst_amount: gstAmount,
+              final_amount: finalAmount,
+            },
             final_amount: finalAmount,
-          },
-          final_amount: finalAmount,
-          amount_pay: finalAmount,
-        }));
+            amount_pay: finalAmount,
+          }));
+        }
+      } catch (err) {
+        console.error(err);
+        toast.error("Failed to fetch subscription plan details");
+      } finally {
+        isRenewingRef.current = false; // ✅ allow manual plan_type changes after fill
       }
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to fetch subscription plan details");
-    } finally {
-      isRenewingRef.current = false; // ✅ allow manual plan_type changes after fill
-    }
-  };
+    };
 
-  fetchSubscriptionPlan();
-}, [renewPlanMembership]);
+    fetchSubscriptionPlan();
+  }, [renewPlanMembership]);
 
   const handleOverlayClick = (e) => {
     if (leadBoxRef.current && !leadBoxRef.current.contains(e.target)) {
@@ -336,9 +361,7 @@ useEffect(() => {
     applyCoupon();
   };
 
-  
-
-console.log(formik.values,'membership paln value')
+  console.log(formik.values, "membership paln value");
   return (
     <>
       <div
@@ -440,15 +463,7 @@ console.log(formik.values,'membership paln value')
                           formik.setFieldValue("start_date", date)
                         }
                         // minDate={new Date()} // ❌ disables past dates
-                        minDate={
-                          renewPlanMembership
-                            ? (() => {
-                                const d = new Date(renewPlanMembership.end_date);
-                                d.setDate(d.getDate() + 1);
-                                return d;
-                              })()
-                            : new Date()
-                        }
+                        minDate={minStartDate}
                         dateFormat="dd MMM yyyy"
                         yearDropdownItemNumber={100}
                         placeholderText="Select date"
