@@ -114,7 +114,7 @@ const validationSchema = Yup.object().shape({
     }),
 
   // Always required
-  remark: Yup.string().required("Discussion is required"),
+  remark: Yup.string().required("Remarks is required"),
 });
 
 const LeadCallLogs = () => {
@@ -741,7 +741,7 @@ const LeadCallLogs = () => {
 
             <div className="mb-3 mt-3">
               <label className="mb-2 block">
-                Discussion Details<span className="text-red-500">*</span>
+                Remarks<span className="text-red-500">*</span>
               </label>
               <textarea
                 name="remark"
