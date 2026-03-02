@@ -689,11 +689,11 @@ const FohDashboard = () => {
 
       {/* end title */}
 
-      <div className="w-full bg-white box--shadow rounded-[10px] px-3 py-3 flex gap-3 justify-between items-center mb-4">
+      <div className="w-full bg-white box--shadow rounded-[10px] px-2 py-2 flex gap-3 justify-between items-center mb-4">
         <div className="flex gap-3">
           <div
             // type="button"
-            className={`px-4 py-2 rounded ${
+            className={`px-4 py-2 rounded text-sm ${
               activeTab === "Snapshot" ? "bg--color text-white" : ""
             }`}
             onClick={() => setActiveTab("Snapshot")}
@@ -712,45 +712,45 @@ const FohDashboard = () => {
         </div>
         <div className="flex items-center">
           <div className="w-fit flex items-center gap-2 border-r">
-            <div className="text-md font-medium text-gray-600 flex gap-2 items-center">
+            <div className="text-sm font-medium text-gray-600 flex gap-2 items-center">
               <FaCircle className="text-[10px] text-[#009EB2]" /> Total New
               Member
             </div>
             <div className="pr-2">
-              <span className="text-md font-semibold">
+              <span className="text-sm font-semibold">
                 {dashboardData?.snapshot?.total_new_member}
               </span>
             </div>
           </div>
           <div className="w-fit flex items-center gap-2 border-r pl-2">
-            <div className="text-md font-medium text-gray-600 flex gap-2 items-center">
+            <div className="text-sm font-medium text-gray-600 flex gap-2 items-center">
               <FaCircle className="text-[10px] text-[#1F9254]" />
               Total Renewal Member
             </div>
             <div className="pr-2">
-              <span className="text-md font-semibold">
+              <span className="text-sm font-semibold">
                 {dashboardData?.snapshot?.total_renewal_member}
               </span>
             </div>
           </div>
           <div className="w-fit flex items-center gap-2 border-r pl-2">
-            <div className="text-md font-medium text-gray-600 flex gap-2 items-center">
+            <div className="text-sm font-medium text-gray-600 flex gap-2 items-center">
               <FaCircle className="text-[10px] text-[#ff9900]" />
               Total Returning Member
             </div>
             <div className="pr-2">
-              <span className="text-md font-semibold">
+              <span className="text-sm font-semibold">
                 {dashboardData?.snapshot?.total_returning_member}
               </span>
             </div>
           </div>
           <div className="w-fit flex items-center gap-2 pl-2">
-            <div className="text-md font-medium text-gray-600 flex gap-2 items-center">
+            <div className="text-sm font-medium text-gray-600 flex gap-2 items-center">
               <FaCircle className="text-[10px] text-[#FF0000]" />
               Total Advanced Renewal Member
             </div>
             <div>
-              <span className="text-md font-semibold">
+              <span className="text-sm font-semibold">
                 {dashboardData?.snapshot?.total_advanced_renewal_member}
               </span>
             </div>
@@ -760,7 +760,7 @@ const FohDashboard = () => {
 
       <div className="flex gap-3">
         <div className="w-[75%]">
-          <div className="rounded-[15px] p-4 box--shadow bg-white">
+          <div className="rounded-[15px] p-3 box--shadow bg-white">
             <div className="flex gap-2 w-full mb-4">
               <div className="max-w-[180px] w-full">
                 <Select
@@ -925,7 +925,7 @@ const FohDashboard = () => {
               />
             </div>
 
-            <div className="border border-[#D4D4D4] rounded-[5px] bg-white p-4 pb-1 w-full relative mt-3">
+            <div className="border border-[#D4D4D4] rounded-[5px] bg-white p-3 pb-1 w-full relative mt-3">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="font-semibold">Class Performances Overview</h2>
               </div>
@@ -976,7 +976,7 @@ const FohDashboard = () => {
         </div>
 
         <div className="w-[25%]">
-          <div className="rounded-[15px] p-4 box--shadow bg-white">
+          <div className="rounded-[15px] p-3 box--shadow bg-white">
             <div>
               <p className="text-lg font-[600] mb-3 text-center">Summary </p>
               <div className="flex justify-between gap-3 items-center rounded-full bg-[#F1F1F1] px-3 py-2">
@@ -1013,7 +1013,7 @@ const FohDashboard = () => {
             <SolidGaugeChart />
           </div> */}
 
-          <div className="rounded-[15px] p-4 box--shadow bg-white mt-4">
+          <div className="rounded-[15px] p-3 box--shadow bg-white mt-4">
             <p className="text-lg font-[600] mb-3 text-center mt-3">
               My Roster{" "}
             </p>

@@ -25,6 +25,7 @@ const MemberSendPaymentLink = ({
   setSendPaymentModal,
   selectedLeadMember,
   clubId,
+  renewPlanMembership
 }) => {
   const [showProductModal, setShowProductModal] = useState(false);
 
@@ -38,6 +39,7 @@ const MemberSendPaymentLink = ({
   const [orderNo, setOrderNo] = useState("");
 
   const leadBoxRef = useRef(null);
+const isRenewingRef = useRef(!!renewPlanMembership);
 
   const initialValues = {
     id: "",
@@ -101,30 +103,115 @@ const MemberSendPaymentLink = ({
   });
 
   // ✅ Fetch lead details when selectedId changes
-  useEffect(() => {
-    if (!selectedLeadMember) return;
+  // ✅ Fetch lead details when selectedId changes
+// ✅ Fetch member id and club_id only
+useEffect(() => {
+  if (!selectedLeadMember) return;
 
-    const fetchMemberID = async (id) => {
-      try {
-        const res = await authAxios().get(`/member/${id}`);
-        const data = res.data?.data || res.data || null;
-
-        if (data) {
-          formik.setValues({
-            id: data.id || "",
-            club_id: data.club_id || null,
-            productType: "MEMBERSHIP_PLAN",
-            start_date: formik.values.start_date || new Date(),
-          });
-        }
-      } catch (err) {
-        console.error(err);
-        toast.error("Failed to fetch module details");
+  const fetchMemberID = async () => {
+    try {
+      const res = await authAxios().get(`/member/${selectedLeadMember}`);
+      const data = res.data?.data || res.data || null;
+      if (data) {
+        formik.setFieldValue("id", data.id || "");
+        formik.setFieldValue("club_id", data.club_id || null);
       }
-    };
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to fetch module details");
+    }
+  };
 
-    fetchMemberID(selectedLeadMember);
-  }, [selectedLeadMember]);
+  fetchMemberID();
+}, [selectedLeadMember]);
+
+// ✅ plan_type change resets productDetails ONLY when user manually changes it
+useEffect(() => {
+  if (!formik.values.plan_type) return;
+  if (isRenewingRef.current) return; // ✅ skip during auto-fill
+
+  formik.setValues((prev) => ({
+    ...prev,
+    productDetails: {
+      id: null,
+      title: "",
+      duration_value: 0,
+      duration_type: "",
+      amount: 0,
+      discount: 0,
+      total_amount: 0,
+      gst: 0,
+      gst_amount: 0,
+      final_amount: 0,
+    },
+    coupon: "",
+    discountAmount: 0,
+    final_amount: 0,
+    amount_pay: 0,
+  }));
+
+  setVoucherInput("");
+  setVoucherStatus(null);
+  setSelectedVoucher(null);
+}, [formik.values.plan_type]);
+
+// ✅ Auto-fill when renewPlanMembership is provided
+useEffect(() => {
+  if (!renewPlanMembership) return;
+
+  const {
+    subscription_plan_id,
+    subscription_title,
+    plan_type,
+    end_date,
+  } = renewPlanMembership;
+
+  const nextStartDate = new Date(end_date + "T00:00:00");
+  nextStartDate.setDate(nextStartDate.getDate() + 1);
+
+  const fetchSubscriptionPlan = async () => {
+    try {
+      const res = await authAxios().get(`/subscription-plan/${subscription_plan_id}`);
+      const plan = res.data?.data || null;
+
+      if (plan) {
+        const amount = Number(plan.amount) || 0;
+        const discount = Number(plan.discount) || 0;
+        const gstPercent = Number(plan.gst) || 0;
+        const totalAmount = Number(plan.total_amount) || amount - discount;
+        const gstAmount = Number(plan.gst_amount) || (totalAmount * gstPercent) / 100;
+        const finalAmount = Number(plan.final_amount) || totalAmount + gstAmount;
+
+        formik.setValues((prev) => ({
+          ...prev,
+          plan_type,
+          start_date: nextStartDate,
+          productDetails: {
+            id: plan.id,
+            title: plan.title || subscription_title,
+            duration_value: plan.duration_value,
+            duration_type: plan.duration_type,
+            amount,
+            discount,
+            total_amount: totalAmount,
+            gst: gstPercent,
+            gst_amount: gstAmount,
+            final_amount: finalAmount,
+          },
+          final_amount: finalAmount,
+          amount_pay: finalAmount,
+        }));
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to fetch subscription plan details");
+    } finally {
+      isRenewingRef.current = false; // ✅ allow manual plan_type changes after fill
+    }
+  };
+
+  fetchSubscriptionPlan();
+}, [renewPlanMembership]);
 
   const handleOverlayClick = (e) => {
     if (leadBoxRef.current && !leadBoxRef.current.contains(e.target)) {
@@ -249,34 +336,9 @@ const MemberSendPaymentLink = ({
     applyCoupon();
   };
 
-  useEffect(() => {
-    if (!formik.values.plan_type) return;
+  
 
-    formik.setValues({
-      ...formik.values,
-      productDetails: {
-        id: null,
-        title: "",
-        duration_value: 0,
-        duration_type: "",
-        amount: 0,
-        discount: 0,
-        total_amount: 0,
-        gst: 0,
-        gst_amount: 0,
-        final_amount: 0,
-      },
-      coupon: "",
-      discountAmount: 0,
-      final_amount: 0,
-      amount_pay: 0,
-    });
-
-    // reset local UI state
-    setVoucherInput("");
-    setVoucherStatus(null);
-    setSelectedVoucher(null);
-  }, [formik.values.plan_type]);
+console.log(formik.values,'membership paln value')
   return (
     <>
       <div
@@ -377,7 +439,16 @@ const MemberSendPaymentLink = ({
                         onChange={(date) =>
                           formik.setFieldValue("start_date", date)
                         }
-                        minDate={new Date()} // ❌ disables past dates
+                        // minDate={new Date()} // ❌ disables past dates
+                        minDate={
+                          renewPlanMembership
+                            ? (() => {
+                                const d = new Date(renewPlanMembership.end_date);
+                                d.setDate(d.getDate() + 1);
+                                return d;
+                              })()
+                            : new Date()
+                        }
                         dateFormat="dd MMM yyyy"
                         yearDropdownItemNumber={100}
                         placeholderText="Select date"

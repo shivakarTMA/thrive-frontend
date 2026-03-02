@@ -100,7 +100,7 @@ const MemberProfile = (props) => {
                   className={`w-fit min-w-[fit-content] cursor-pointer
                       ${activeTab === item ? "btn--tab" : ""}`}
                 >
-                  <div className="px-4 py-3 z-[1] relative text-[14px]">
+                  <div className="px-3 py-3 z-[1] relative text-[13px]">
                     {item}
                   </div>
                 </div>

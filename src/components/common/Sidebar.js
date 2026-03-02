@@ -70,7 +70,7 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
     <div className={`sidebar ${toggleMenuBar ? "activetoggle" : ""}`}>
       <div className="sidebar-logo d-flex align-items-center">
         <Link to="/">
-          <img src={TopLogo} alt="logo" width="180px" height="50px" />
+          <img src={TopLogo} alt="logo" width="150px" height="50px" />
         </Link>
       </div>
 

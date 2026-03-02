@@ -2,7 +2,7 @@
   background: linear-gradient(180deg, #000000 0%, #474747 100%);
   min-height: 100vh;
   position: fixed;
-  width: 250px;
+  width: 220px;
   transition: 0.3s;
 
   @media (max-width: 1200px) {
@@ -22,7 +22,7 @@
   }
 
   .menu--head {
-    font-size: 12px;
+    font-size: 10px;
     text-transform: uppercase;
   }
 
@@ -33,6 +33,7 @@
     align-items: center;
     border-radius: 5px;
     transition: 0.3s;
+    font-size: 14px;
     &:hover {
       color: white;
       background-color: rgba(255, 255, 255, 0.1);

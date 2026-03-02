@@ -618,7 +618,7 @@ const AllLeads = () => {
         />
         <div
           className={`${
-            toggleMenuBar ? "w-[calc(100%-100px)]" : "w-[calc(100%-250px)]"
+            toggleMenuBar ? "w-[calc(100%-100px)]" : "w-[calc(100%-220px)]"
           } ml-[auto] side--content--area transition duration-150]`}
         >
           <Topbar
@@ -942,7 +942,7 @@ const AllLeads = () => {
                                     <Tooltip
                                       id={`tooltip-edit-${row.id}`}
                                       content="Edit Lead"
-                                      place="top"
+                                      place="left"
                                     >
                                       <div
                                         onClick={() => {
@@ -957,7 +957,7 @@ const AllLeads = () => {
                                     <Tooltip
                                       id={`tooltip-call-${row.id}`}
                                       content="Add Call log"
-                                      place="top"
+                                      place="left"
                                     >
                                       <div className="p-1 cursor-pointer">
                                         <Link
@@ -971,7 +971,7 @@ const AllLeads = () => {
                                     <Tooltip
                                       id={`tooltip-convert-${row.id}`}
                                       content="Convert to member"
-                                      place="top"
+                                      place="left"
                                     >
                                       <div
                                         onClick={() => {
@@ -986,7 +986,7 @@ const AllLeads = () => {
                                     <Tooltip
                                       id={`tooltip-schedule-${row.id}`}
                                       content="Schedule Trial"
-                                      place="top"
+                                      place="left"
                                     >
                                       <div className="p-1 cursor-pointer">
                                         <Link
@@ -1001,7 +1001,7 @@ const AllLeads = () => {
                                     <Tooltip
                                       id={`tooltip-appointment-${row.id}`}
                                       content="Add Appointment"
-                                      place="top"
+                                      place="left"
                                     >
                                       <div
                                         onClick={() => {

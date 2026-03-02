@@ -38,11 +38,20 @@ export const customStyles = {
     "&:hover": {
       borderColor: "black",
     },
-    minHeight: "40px",
+    minHeight: "28px",
     borderRadius: "5px",
     paddingLeft: "3px",
     backgroundColor: state.isDisabled ? "#f3f4f6" : "#fff", // Added disabled background
     cursor: state.isDisabled ? "not-allowed" : "default", // Optional: change cursor
+  }),
+  dropdownIndicator: (base) => ({
+    ...base,
+    color: "#666",
+    padding: "4px",
+    svg: {
+      width: "14px",
+      height: "14px",
+    },
   }),
   multiValue: (base) => ({
     ...base,
@@ -65,7 +74,7 @@ export const customStyles = {
     backgroundColor: state.isFocused ? "#000000" : "#ffffff", // Hover background
     color: state.isFocused ? "#ffffff" : "#000000", // Hover text color
     cursor: "pointer",
-    fontSize: "14px",
+    fontSize: "13px",
   }),
   menu: (base) => ({
     ...base,
@@ -130,11 +139,20 @@ export const selectIcon = {
     "&:hover": {
       borderColor: "black",
     },
-    minHeight: "40px",
+    minHeight: "28px",
     borderRadius: "5px",
     paddingLeft: "30px",
     backgroundColor: state.isDisabled ? "#f3f4f6" : "#fff", // Added disabled background
     cursor: state.isDisabled ? "not-allowed" : "default", // Optional: change cursor
+  }),
+    dropdownIndicator: (base) => ({
+    ...base,
+    color: "#666",
+    padding: "4px",
+    svg: {
+      width: "14px",
+      height: "14px",
+    },
   }),
   multiValue: (base) => ({
     ...base,
@@ -206,7 +224,7 @@ export const formatTimeAppointment = (timeString) => {
   const hour12 = hour % 12 || 12; // convert 0 -> 12, 13->1, etc.
 
   return `${hour12}:${minute.toString().padStart(2, "0")} ${period}`;
-}
+};
 
 export const convertToISODate = (dateString) => {
   if (dateString instanceof Date) {
@@ -333,7 +351,7 @@ export const filterActiveItems = (data) => {
   if (!Array.isArray(data)) return [];
 
   return data.filter(
-    (item) => String(item?.status || "").toUpperCase() === "ACTIVE"
+    (item) => String(item?.status || "").toUpperCase() === "ACTIVE",
   );
 };
 

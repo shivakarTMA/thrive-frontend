@@ -8,21 +8,43 @@ import AddCoins from "../CoinsList/AddCoins";
 import SuspendAndPause from "../common/SuspendAndPause";
 import { authAxios } from "../../config/config";
 import { toast } from "react-toastify";
+import CreateNewInvoice from "../../Pages/CreateNewInvoice";
+import MemberSendPaymentLink from "../../Pages/MemberSendPaymentLink";
 
 const statusOptions = [
   { value: "ACTIVE", label: "Active" },
   { value: "INACTIVE", label: "Expired" },
 ];
 
+const statusMemberOptions = [
+  { value: "UPCOMING", label: "Upcoming" },
+  { value: "EXPIRED", label: "Expired" },
+];
+
+const tabs = ["Purchased Services", "Purchased Memberships"];
+
 const ServiceCard = ({ details }) => {
-  console.log(details?.club_id, "aishdf9ahsd9fih");
   const clubId = details?.club_id;
   const [membershipData, setMembershipData] = useState([]);
   const [purchasedServicesCount, setPurchasedServicesCount] = useState(null);
   const [purchasedServices, setPurchasedServices] = useState([]);
+  const [purchasedMembershipsCount, setPurchasedMembershipsCount] =
+    useState(null);
+  const [purchasedMemberships, setPurchasedMemberships] = useState([]);
+  const [activeTab, setActiveTab] = useState("Purchased Services");
+
+  const [renewPlanService, setRenewService] = useState(null);
+  const [invoiceModal, setInvoiceModal] = useState(false);
+
+  const [modalKey, setModalKey] = useState(0);
+  const [renewPlanMembership, setRenewMembership] = useState(null);
+  const [sendPaymentModal, setSendPaymentModal] = useState(false);
 
   // State to store selected status option, default is "active"
   const [selectedStatus, setSelectedStatus] = useState(statusOptions[0]);
+  const [selectedMembershipStatus, setSelectedMembershipStatus] = useState(
+    statusMemberOptions[0],
+  );
   const [coinsModal, setCoinsModal] = useState(false);
   const [staffList, setStaffList] = useState([]);
   const [confirmModal, setConfirmModal] = useState(false);
@@ -58,26 +80,61 @@ const ServiceCard = ({ details }) => {
     }
   };
 
-  // Fetch coins with filters applied
-  const fetchParchaseServices = async () => {
+  const fetchPurchasedMemberships = async () => {
+    if (!details?.id) return;
+
     try {
+      const params = {
+        booking_status: selectedMembershipStatus?.value,
+      };
 
-      const params = {}
+      const res = await authAxios().get(
+        `/member/subscription/booking/list/${details.id}`,
+        { params },
+      );
 
-      if(selectedStatus?.value){
-        params.package_status = selectedStatus.value
+      const response = res?.data;
+
+      if (!response) {
+        setPurchasedMemberships([]);
+        setPurchasedMembershipsCount(0);
+        return;
       }
 
-      // Make the API call with query parameters
-      const res = await authAxios().get(`/member/package/booking/list/${details?.id}`, {params});
+      setPurchasedMemberships(response?.data || []);
+      setPurchasedMembershipsCount(response?.totalCount || 0);
+    } catch (err) {
+      console.error("Membership Fetch Error:", err);
+      toast.error("Failed to fetch memberships");
+      setPurchasedMemberships([]);
+      setPurchasedMembershipsCount(0);
+    }
+  };
+
+  // Fetch coins with filters applied
+  const fetchPurchaseServices = async () => {
+    try {
+      const params = {};
+
+      if (selectedStatus?.value) {
+        params.package_status = selectedStatus.value;
+      }
+
+      const res = await authAxios().get(
+        `/member/package/booking/list/${details?.id}`,
+        { params },
+      );
+
       const dataCount = res.data?.totalCount || null;
       const data = res.data?.data || [];
+
+      console.log(data, "shivakar");
+
       setPurchasedServices(data);
       setPurchasedServicesCount(dataCount);
-      console.log(dataCount, "dataCount");
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch coins");
+      toast.error("Failed to fetch services");
     }
   };
 
@@ -99,7 +156,7 @@ const ServiceCard = ({ details }) => {
       }));
 
       // Refresh purchased services list after update
-      fetchParchaseServices();
+      fetchPurchaseServices();
     } catch (error) {
       console.error(error);
       toast.error("Failed to assign trainer");
@@ -107,12 +164,26 @@ const ServiceCard = ({ details }) => {
   };
 
   useEffect(() => {
-    fetchMemberServiceCard();
-  }, []);
+    if (details?.id) {
+      fetchMemberServiceCard();
+    }
+  }, [details?.id]);
 
   useEffect(() => {
-    fetchParchaseServices();
-  }, [selectedStatus]);
+    if (!details?.id) return;
+
+    if (activeTab === "Purchased Services") {
+      fetchPurchaseServices();
+    }
+  }, [selectedStatus, activeTab, details?.id]);
+
+  useEffect(() => {
+    if (!details?.id) return;
+
+    if (activeTab === "Purchased Memberships") {
+      fetchPurchasedMemberships();
+    }
+  }, [selectedMembershipStatus, activeTab, details?.id]);
 
   useEffect(() => {
     // Fetch services and staff based on clubId if provided
@@ -131,7 +202,7 @@ const ServiceCard = ({ details }) => {
   // This will be passed to AddCoins to update the list
   const handleUpdateCoins = () => {
     fetchMemberServiceCard(); // Refreshes the coins list
-    fetchParchaseServices();
+    fetchPurchaseServices();
   };
 
   const formatDate = (date) => {
@@ -149,6 +220,24 @@ const ServiceCard = ({ details }) => {
   const formatDatePurchaseService = (dateString) => {
     if (!dateString) return { day: "", monthYear: "", weekday: "" };
     const date = new Date(dateString);
+    return {
+      day: String(date.getDate()).padStart(2, "0"),
+      monthYear: date.toLocaleDateString("en-GB", {
+        month: "short",
+        year: "numeric",
+      }),
+      weekday: date.toLocaleDateString("en-GB", {
+        weekday: "long",
+      }),
+    };
+  };
+
+  const formatDatePurchaseMembership = (dateString) => {
+    if (!dateString) return { day: "", monthYear: "", weekday: "" };
+
+    // ✅ Prevent timezone shifting issue
+    const date = new Date(dateString + "T00:00:00");
+
     return {
       day: String(date.getDate()).padStart(2, "0"),
       monthYear: date.toLocaleDateString("en-GB", {
@@ -197,6 +286,12 @@ const ServiceCard = ({ details }) => {
     setSelectedTrainerData(null);
   };
 
+  const handleTabClick = (tab) => {
+    setActiveTab(tab);
+  };
+
+  console.log(purchasedServices, "asdfasdf");
+
   return (
     <>
       <div className="bg-white p-4 rounded-[10px] w-full box--shadow">
@@ -204,10 +299,10 @@ const ServiceCard = ({ details }) => {
         <div className="mb-4">
           <div className="flex items-center justify-between mb-2">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">
+              <h1 className="text-lg font-bold text-gray-900">
                 Membership Plan
               </h1>
-              <p className="text-lg text-[#6F6F6F] italic font-[300]">
+              <p className="text-md text-[#6F6F6F] italic font-[300]">
                 Relationship since:{" "}
                 {formatDate(membershipData?.relationship_since)}
               </p>
@@ -217,7 +312,7 @@ const ServiceCard = ({ details }) => {
               onClick={() => setCoinsModal(true)}
             >
               <img src={Coins} className="mr-1" />
-              <span className="text-xl font-medium text-black mr-3">
+              <span className="text-lg font-medium text-black mr-3">
                 {membershipData?.earn_coins}
               </span>
               <FaCirclePlus className="text-black text-2xl cursor-pointer" />
@@ -226,13 +321,11 @@ const ServiceCard = ({ details }) => {
         </div>
 
         {/* Membership Card */}
-        <div
-          className={`grid grid-cols-4 gap-3 ${purchasedServices.length > 0 ? "border-b border-b-[#D4D4D4] pb-5 mb-5" : ""}`}
-        >
+        <div className={`grid grid-cols-4 gap-3 pb-3 mb-2`}>
           {/* <div className="grid grid-cols-4 gap-3 pb-5 mb-5"> */}
           <div className="bg-white rounded-lg shadow-sm border col-span-2">
             {/* Header with gradient */}
-            <div className="bg--color p-4 py-3 rounded-t-lg">
+            <div className="bg--color p-2 py-3 rounded-t-lg">
               <div className="flex items-center justify-between flex-wrap gap-2">
                 <div className="flex items-center">
                   <div className="w-10 h-10 bg-white rounded-full mr-3 flex items-center justify-center overflow-hidden">
@@ -266,14 +359,14 @@ const ServiceCard = ({ details }) => {
               {/* Plan Started */}
               <div className="flex items-end gap-2 justify-between flex-wrap">
                 <div>
-                  <h3 className="text-2xl font-bold text-gray-900 mb-1">
+                  <h3 className="text-lg font-bold text-gray-900 mb-0">
                     {formatDate(membershipData?.start_date)}
                   </h3>
-                  <p className="text-sm text-gray-500">Relationship since</p>
+                  <p className="text-md text-gray-500">Relationship since</p>
                 </div>
                 <div className="flex space-x-2">
                   <button
-                    className="px-4 py-2 bg-black text-white rounded flex items-center gap-2 border border-black text-sm"
+                    className="px-3 py-2 bg-black text-white rounded flex items-center gap-2 border border-black text-sm"
                     onClick={() => {
                       setMembershipActionType("suspend");
                       setSuspendPauseModal(true);
@@ -310,7 +403,7 @@ const ServiceCard = ({ details }) => {
             <div className="bg-white rounded-lg h-full flex flex-col justify-between gap-2 p-4">
               <p className="text-lg text-black font-[500]">Countdown</p>
               <div>
-                <p className="text-2xl font-bold text-gray-900">
+                <p className="text-lg font-bold text-gray-900">
                   {membershipData?.countdown}
                 </p>
                 <p className="text-md text-[#6F6F6F]">
@@ -325,7 +418,7 @@ const ServiceCard = ({ details }) => {
             <div className="bg-white rounded-lg h-full flex flex-col justify-between gap-2 p-4">
               <p className="text-lg text-black font-[500]">Expiry On</p>
               <div>
-                <p className="text-2xl font-bold text-gray-900">
+                <p className="text-lg font-bold text-gray-900">
                   {formatDate(membershipData?.end_date)}
                 </p>
                 {/* <p className="text-md text-[#6F6F6F]">
@@ -336,209 +429,375 @@ const ServiceCard = ({ details }) => {
           </div>
         </div>
 
-        {/* Purchased Services */}
-        {purchasedServices.length > 0 && (
-          <div className="bg-white rounded-lg shadow-sm">
-            <div className="p-4 px-0">
-              <div className="flex items-center justify-between">
-                <h2 className="text-lg font-bold text-gray-900">
-                  Purchased Services ({purchasedServicesCount})
-                </h2>
-                <Select
-                  name="status"
-                  value={selectedStatus} // Controlled value
-                  options={statusOptions}
-                  styles={customStyles}
-                  className="!capitalize"
-                  onChange={(selectedOption) =>
-                    setSelectedStatus(selectedOption)
-                  } // Update state on change
-                />
+        <div className="flex gap-1">
+          {tabs.map((item, index) => (
+            <div
+              key={index}
+              onClick={() => handleTabClick(item)}
+              className={`w-fit min-w-[fit-content] cursor-pointer rounded-[5px] ${activeTab === item ? "bg--color text-white" : "bg-white text-black"}`}
+            >
+              <div className="px-3 py-2 z-[1] relative text-[14px]">{item}</div>
+            </div>
+          ))}
+        </div>
+
+        <div className="border p-3 rounded-[10px] mt-2">
+          {/* Purchased Services */}
+          {activeTab === "Purchased Services" && (
+            <div className="bg-white rounded-lg">
+              <div className="p-4 px-0 pt-0">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-lg font-bold text-gray-900">
+                    Total Services ({purchasedServicesCount})
+                  </h2>
+                  <Select
+                    name="status"
+                    value={selectedStatus} // Controlled value
+                    options={statusOptions}
+                    styles={customStyles}
+                    className="!capitalize"
+                    onChange={(selectedOption) =>
+                      setSelectedStatus(selectedOption)
+                    } // Update state on change
+                  />
+                </div>
               </div>
-            </div>
+              {purchasedServices.length > 0 ? (
+                <div className="grid grid-cols-1 gap-3">
+                  {purchasedServices.map((service) => {
+                    const filteredStaffOptions = baseStaffOptions.filter(
+                      (opt) => opt.value !== service?.assigned_staff_id,
+                    );
 
-            <div className="grid grid-cols-2 gap-3">
-              {purchasedServices.map((service) => {
-                const filteredStaffOptions = baseStaffOptions.filter(
-                  (opt) => opt.value !== service?.assigned_staff_id,
-                );
-
-                return (
-                  <div
-                    key={service?.id}
-                    className="border border-[#D4D4D4] rounded-lg overflow-hidden"
-                  >
-                    <div className="flex items-start justify-between bg-[#F1F1F1] p-4">
-                      <div className="flex items-center">
-                        <div className="w-2 h-2 bg-green-500 rounded-full mr-3 mt-1" />
-                        <h3 className="font-medium text-gray-900">
-                          {service?.package_name}
-                        </h3>
-                      </div>
-                    </div>
-
-                    <div className="flex gap-4 p-4 justify-between">
-                      <div className="space-y-2 flex-1">
-                        {service?.service_name === "RECOVERY" && (
-                          <div>
-                            <span className="text-sm text-black">
-                              Variation:
-                            </span>
-                            <span className="ml-2 text-sm text-[#6F6F6F]">
-                              {formatText(service?.package_variation_name)}
-                            </span>
+                    return (
+                      <div
+                        key={service?.id}
+                        className="border border-[#D4D4D4] rounded-lg overflow-hidden"
+                      >
+                        <div className="flex items-start justify-between bg-[#F1F1F1] p-4">
+                          <div className="flex items-center">
+                            <div className="w-2 h-2 bg-green-500 rounded-full mr-3 mt-1" />
+                            <h3 className="font-medium text-gray-900">
+                              {service?.package_name}
+                            </h3>
                           </div>
-                        )}
-
-                        <div>
-                          <span className="text-sm text-black">Sessions:</span>
-                          <span className="ml-2 text-sm text-[#6F6F6F]">
-                            {service.no_of_sessions -
-                              service.available_no_of_sessions}
-                            /{service?.no_of_sessions}
-                          </span>
                         </div>
 
-                        <div>
-                          <span className="text-sm text-black">
-                            Trainer Name:
-                          </span>
-                          <span className="ml-2 text-sm text-[#6F6F6F]">
-                            {service?.assigned_staff_name || "--"}
-                          </span>
-                        </div>
+                        <div className="flex gap-4 p-3 justify-between items-start">
+                          <div className="space-y-2 w-full">
+                            {service?.service_name === "RECOVERY" && (
+                              <div>
+                                <span className="text-sm text-black">
+                                  Variation:
+                                </span>
+                                <span className="ml-2 text-sm text-[#6F6F6F]">
+                                  {formatText(service?.package_variation_name)}
+                                </span>
+                              </div>
+                            )}
 
-                        <div className="w-fit min-w-[150px]">
-                          <Select
-                            options={filteredStaffOptions}
-                            value={trainerSelections[service?.id] || null} // <-- controlled value
-                            placeholder={
-                              service?.assigned_staff_name
-                                ? "Change trainer"
-                                : "Assign trainer"
-                            }
-                            onChange={(selectedOption) => {
-                              setTrainerSelections((prev) => ({
-                                ...prev,
-                                [service?.id]: selectedOption,
-                              }));
-
-                              confirmAssignTrainer(
-                                selectedOption.value,
-                                selectedOption.label,
-                                service?.id,
-                                !!service?.assigned_staff_name,
-                              );
-                            }}
-                            styles={{
-                              ...customStyles,
-                              menuPortal: (base) => ({
-                                ...base,
-                                zIndex: 9999,
-                              }),
-                            }}
-                            menuPortalTarget={document.body}
-                            menuPosition="fixed"
-                            isDisabled={service?.package_status !== "ACTIVE" ? true : false}
-                          />
-                        </div>
-                        {/* <div className="flex flex-wrap gap-2 pt-2">
-                          {service?.package_status === "ACTIVE" ? (
-                            <>
-                              <button
-                                className="px-3 py-2 bg-black text-white rounded flex items-center gap-2 border border-black text-sm"
-                                onClick={() => setAppointmentModal(true)}
-                              >
-                                Add Appointment
-                              </button>
-                            </>
-                          ) : (
-                            <>
-                              <button
-                                className="px-3 py-2 bg-black text-white rounded flex items-center gap-2 border border-black text-sm"
-                                onClick={() => {
-                                  setRenewPlan(membershipData.membershipId);
-                                  setInvoiceModal(true);
-                                }}
-                              >
-                                RENEW
-                              </button>
-                            </>
-                          )}
-                        </div> */}
-                      </div>
-
-                      <div className="rounded-lg bg--color p-[2px]">
-                        <div className="flex h-full rounded-lg bg-white overflow-hidden">
-                          <div className="text-center border-r">
-                            <p className="text-md font-[500] text-black mb-1 border-b p-3">
-                              Countdown
-                            </p>
-                            <div className="p-2">
-                              <p className="text-2xl font-bold text-gray-900 mb-1">
-                                {service?.remaining_days}
-                              </p>
-                              <p className="text-xs text-[#6F6F6F]">
-                                days remaining
-                              </p>
+                            <div>
+                              <span className="text-sm text-black">
+                                Sessions:
+                              </span>
+                              <span className="ml-2 text-sm text-[#6F6F6F]">
+                                {service.no_of_sessions -
+                                  service.available_no_of_sessions}
+                                /{service?.no_of_sessions}
+                              </span>
                             </div>
-                          </div>
 
-                          <div className="text-center border-r">
-                            <p className="text-md font-[500] text-black mb-1 border-b p-3">
-                              Start Date
-                            </p>
-                            <div className="p-2">
-                              {(() => {
-                                const { day, monthYear, weekday } =
-                                  formatDatePurchaseService(
-                                    service?.start_date,
+                            <div>
+                              <span className="text-sm text-black">
+                                Trainer Name:
+                              </span>
+                              <span className="ml-2 text-sm text-[#6F6F6F]">
+                                {service?.assigned_staff_name || "--"}
+                              </span>
+                            </div>
+
+                            <div className="w-fit min-w-[150px]">
+                              <Select
+                                options={filteredStaffOptions}
+                                value={trainerSelections[service?.id] || null} // <-- controlled value
+                                placeholder={
+                                  service?.assigned_staff_name
+                                    ? "Change trainer"
+                                    : "Assign trainer"
+                                }
+                                onChange={(selectedOption) => {
+                                  setTrainerSelections((prev) => ({
+                                    ...prev,
+                                    [service?.id]: selectedOption,
+                                  }));
+
+                                  confirmAssignTrainer(
+                                    selectedOption.value,
+                                    selectedOption.label,
+                                    service?.id,
+                                    !!service?.assigned_staff_name,
                                   );
-                                return (
-                                  <>
-                                    <p className="text-2xl font-bold text-gray-900 mb-1">
-                                      {day}
-                                    </p>
-                                    <p className="text-xs text-[#6F6F6F]">
-                                      {monthYear} {weekday}
-                                    </p>
-                                  </>
-                                );
-                              })()}
+                                }}
+                                styles={{
+                                  ...customStyles,
+                                  menuPortal: (base) => ({
+                                    ...base,
+                                    zIndex: 9999,
+                                  }),
+                                }}
+                                menuPortalTarget={document.body}
+                                menuPosition="fixed"
+                                isDisabled={
+                                  service?.package_status !== "ACTIVE"
+                                    ? true
+                                    : false
+                                }
+                              />
                             </div>
+
+                            {service?.package_status !== "ACTIVE" && (
+                              <div>
+                                <button
+                                  className="px-3 py-2 bg-black text-white rounded flex items-center gap-2 border border-black text-sm"
+                                  onClick={() => {
+                                    setRenewService(service);
+                                    setInvoiceModal(true);
+                                  }}
+                                >
+                                  RENEW
+                                </button>
+                              </div>
+                            )}
                           </div>
 
-                          <div className="text-center">
-                            <p className="text-md font-[500] text-black mb-1 border-b p-3">
-                              End Date
-                            </p>
-                            <div className="p-2">
-                              {(() => {
-                                const { day, monthYear, weekday } =
-                                  formatDatePurchaseService(service?.end_date);
-                                return (
-                                  <>
-                                    <p className="text-2xl font-bold text-gray-900 mb-1">
-                                      {day}
-                                    </p>
-                                    <p className="text-xs text-[#6F6F6F]">
-                                      {monthYear} {weekday}
-                                    </p>
-                                  </>
-                                );
-                              })()}
+                          <div className="rounded-lg bg--color p-[2px] w-full">
+                            <div className="grid grid-cols-3 h-full rounded-lg bg-white overflow-hidden">
+                              <div className="text-center border-r">
+                                <p className="text-sm font-[500] text-black mb-1 border-b p-1 py-2">
+                                  Countdown
+                                </p>
+                                <div className="p-1 py-2">
+                                  <p className="text-xl font-bold text-gray-900 mb-1">
+                                    {service?.remaining_days}
+                                  </p>
+                                  <p className="text-xs text-[#6F6F6F]">
+                                    days remaining
+                                  </p>
+                                </div>
+                              </div>
+
+                              <div className="text-center border-r">
+                                <p className="text-sm font-[500] text-black mb-1 border-b p-1 py-2">
+                                  Start Date
+                                </p>
+                                <div className="p-1 py-2">
+                                  {(() => {
+                                    const { day, monthYear, weekday } =
+                                      formatDatePurchaseService(
+                                        service?.start_date,
+                                      );
+                                    return (
+                                      <>
+                                        <p className="text-xl font-bold text-gray-900 mb-1">
+                                          {day}
+                                        </p>
+                                        <p className="text-xs text-[#6F6F6F]">
+                                          {monthYear} {weekday}
+                                        </p>
+                                      </>
+                                    );
+                                  })()}
+                                </div>
+                              </div>
+
+                              <div className="text-center">
+                                <p className="text-sm font-[500] text-black mb-1 border-b p-1 py-2">
+                                  End Date
+                                </p>
+                                <div className="p-1 py-2">
+                                  {(() => {
+                                    const { day, monthYear, weekday } =
+                                      formatDatePurchaseService(
+                                        service?.end_date,
+                                      );
+                                    return (
+                                      <>
+                                        <p className="text-xl font-bold text-gray-900 mb-1">
+                                          {day}
+                                        </p>
+                                        <p className="text-xs text-[#6F6F6F]">
+                                          {monthYear} {weekday}
+                                        </p>
+                                      </>
+                                    );
+                                  })()}
+                                </div>
+                              </div>
                             </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  </div>
-                );
-              })}
+                    );
+                  })}
+                </div>
+              ) : (
+                <div>No purchased data</div>
+              )}
             </div>
-          </div>
-        )}
+          )}
+          {/* Purchased Memberships */}
+          {activeTab === "Purchased Memberships" && (
+            <div className="bg-white rounded-lg">
+              <div className="p-4 px-0 pt-0">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-lg font-bold text-gray-900">
+                    Total Memberships ({purchasedMembershipsCount})
+                  </h2>
+                  <Select
+                    name="status"
+                    value={selectedMembershipStatus} // Controlled value
+                    options={statusMemberOptions}
+                    styles={customStyles}
+                    className="!capitalize"
+                    onChange={(selectedOption) =>
+                      setSelectedMembershipStatus(selectedOption)
+                    } // Update state on change
+                  />
+                </div>
+              </div>
+
+              {purchasedMemberships.length > 0 ? (
+                <div className="grid grid-cols-1 gap-3">
+                  {purchasedMemberships.map((membership) => {
+                    return (
+                      <div
+                        key={membership?.id}
+                        className="border border-[#D4D4D4] rounded-lg overflow-hidden"
+                      >
+                        <div className="flex items-start justify-between bg-[#F1F1F1] p-4">
+                          <div className="flex items-center">
+                            <div className="w-2 h-2 bg-green-500 rounded-full mr-3 mt-1" />
+                            <h3 className="font-medium text-gray-900">
+                              {membership?.subscription_title}
+                            </h3>
+                          </div>
+                        </div>
+
+                        <div className="flex gap-4 p-4 justify-between items-start">
+                          <div className="space-y-2 w-full">
+                            <div>
+                              <span className="text-sm text-black">
+                                Duration:
+                              </span>
+                              <span className="ml-2 text-sm text-[#6F6F6F]">
+                                {membership?.subscription_plan
+                                  ? membership?.subscription_plan
+                                  : "--"}
+                              </span>
+                            </div>
+
+                            <div>
+                              <span className="text-sm text-black">
+                                Plan Type:
+                              </span>
+                              <span className="ml-2 text-sm text-[#6F6F6F]">
+                                {membership?.plan_type}
+                              </span>
+                            </div>
+
+                            {membership?.booking_status !== "UPCOMING" && (
+                              <div>
+                                <button
+                                  className="px-3 py-2 bg-black text-white rounded flex items-center gap-2 border border-black text-sm"
+                                  onClick={() => {
+                                    setRenewMembership(membership);
+                                    setModalKey((prev) => prev + 1); // ✅ always unique key
+                                    setSendPaymentModal(true);
+                                  }}
+                                >
+                                  RENEW
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                          <div className="rounded-lg bg--color p-[2px] w-full">
+                              <div className="grid grid-cols-3 h-full rounded-lg bg-white overflow-hidden">
+                                <div className="text-center border-r">
+                                  <p className="text-sm font-[500] text-black mb-1 border-b p-1 py-2">
+                                    Countdown
+                                  </p>
+                                  <div className="p-1 py-2">
+                                    <p className="text-xl font-bold text-gray-900 mb-1">
+                                      {membership?.remaining_days}
+                                    </p>
+                                    <p className="text-xs text-[#6F6F6F]">
+                                      days remaining
+                                    </p>
+                                  </div>
+                                </div>
+
+                                <div className="text-center border-r">
+                                  <p className="text-sm font-[500] text-black mb-1 border-b p-1 py-2">
+                                    Start Date
+                                  </p>
+                                  <div className="p-1 py-2">
+                                    {(() => {
+                                      const { day, monthYear, weekday } =
+                                        formatDatePurchaseMembership(
+                                          membership?.start_date,
+                                        );
+                                      return (
+                                        <>
+                                          <p className="text-xl font-bold text-gray-900 mb-1">
+                                            {day}
+                                          </p>
+                                          <p className="text-xs text-[#6F6F6F]">
+                                            {monthYear} {weekday}
+                                          </p>
+                                        </>
+                                      );
+                                    })()}
+                                  </div>
+                                </div>
+
+                                <div className="text-center">
+                                  <p className="text-sm font-[500] text-black mb-1 border-b p-1 py-2">
+                                    End Date
+                                  </p>
+                                  <div className="p-1 py-2">
+                                    {(() => {
+                                      const { day, monthYear, weekday } =
+                                        formatDatePurchaseMembership(
+                                          membership?.end_date,
+                                        );
+                                      return (
+                                        <>
+                                          <p className="text-xl font-bold text-gray-900 mb-1">
+                                            {day}
+                                          </p>
+                                          <p className="text-xs text-[#6F6F6F]">
+                                            {monthYear} {weekday}
+                                          </p>
+                                        </>
+                                      );
+                                    })()}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div>No memberships data</div>
+              )}
+            </div>
+          )}
+        </div>
       </div>
+
       {coinsModal && (
         <AddCoins
           setCoinsModal={setCoinsModal}
@@ -552,6 +811,32 @@ const ServiceCard = ({ details }) => {
           actionType={membershipActionType} // ✅ pass action type
         />
       )}
+
+      {invoiceModal && (
+        <CreateNewInvoice
+          setInvoiceModal={(val) => {
+            setInvoiceModal(val);
+            if (!val) setRenewService(null); // ✅ reset after close
+          }}
+          selectedLeadMember={details?.id}
+          clubId={clubId}
+          renewPlanService={renewPlanService}
+        />
+      )}
+
+      {sendPaymentModal && (
+        <MemberSendPaymentLink
+          setSendPaymentModal={(val) => {
+            setSendPaymentModal(val);
+            if (!val) setRenewMembership(null);
+          }}
+          selectedLeadMember={details?.id}
+          clubId={clubId}
+          renewPlanMembership={renewPlanMembership}
+          key={modalKey} // ✅ always forces full remount
+        />
+      )}
+
       {confirmModal && (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded shadow-lg text-center max-w-sm w-full">

@@ -419,7 +419,7 @@ const Home = () => {
       categories: leadCategories,
       labels: {
         style: {
-          fontSize: "13px",
+          fontSize: "12px",
           fontWeight: "700",
           fontFamily: "Roboto, sans-serif",
         },
@@ -446,7 +446,7 @@ const Home = () => {
     },
     plotOptions: {
       column: {
-        pointWidth: 40,
+        pointWidth: 30,
         borderWidth: 0,
         pointPadding: 0.1,
         groupPadding: 0.05,
@@ -514,7 +514,7 @@ const Home = () => {
       categories: productCategories,
       labels: {
         style: {
-          fontSize: "13px",
+          fontSize: "12px",
           fontWeight: "700",
           fontFamily: "Roboto, sans-serif",
         },
@@ -547,7 +547,7 @@ const Home = () => {
 
     plotOptions: {
       column: {
-        pointWidth: 40,
+        pointWidth: 30,
         borderWidth: 0,
         color: {
           linearGradient: { x1: 0, y1: 0, x2: 0, y2: 1 },
@@ -687,11 +687,11 @@ const Home = () => {
 
       {/* end title */}
 
-      <div className="w-full bg-white box--shadow rounded-[10px] px-3 py-3 flex gap-3 justify-between items-center mb-4">
+      <div className="w-full bg-white box--shadow rounded-[10px] px-2 py-2 flex gap-3 justify-between items-center mb-4">
         <div className="flex gap-3">
           <div
             // type="button"
-            className={`px-4 py-2 rounded ${
+            className={`px-4 py-2 rounded text-sm ${
               activeTab === "Snapshot" ? "bg--color text-white" : ""
             }`}
             onClick={() => setActiveTab("Snapshot")}
@@ -710,45 +710,45 @@ const Home = () => {
         </div>
         <div className="flex items-center">
           <div className="w-fit flex items-center gap-2 border-r">
-            <div className="text-md font-medium text-gray-600 flex gap-2 items-center">
+            <div className="text-sm font-medium text-gray-600 flex gap-2 items-center">
               <FaCircle className="text-[10px] text-[#009EB2]" /> Total New
               Member
             </div>
             <div className="pr-2">
-              <span className="text-md font-semibold">
+              <span className="text-sm font-semibold">
                 {dashboardData?.snapshot?.total_new_member}
               </span>
             </div>
           </div>
           <div className="w-fit flex items-center gap-2 border-r pl-2">
-            <div className="text-md font-medium text-gray-600 flex gap-2 items-center">
+            <div className="text-sm font-medium text-gray-600 flex gap-2 items-center">
               <FaCircle className="text-[10px] text-[#1F9254]" />
               Total Renewal Member
             </div>
             <div className="pr-2">
-              <span className="text-md font-semibold">
+              <span className="text-sm font-semibold">
                 {dashboardData?.snapshot?.total_renewal_member}
               </span>
             </div>
           </div>
           <div className="w-fit flex items-center gap-2 border-r pl-2">
-            <div className="text-md font-medium text-gray-600 flex gap-2 items-center">
+            <div className="text-sm font-medium text-gray-600 flex gap-2 items-center">
               <FaCircle className="text-[10px] text-[#ff9900]" />
               Total Returning Member
             </div>
             <div className="pr-2">
-              <span className="text-md font-semibold">
+              <span className="text-sm font-semibold">
                 {dashboardData?.snapshot?.total_returning_member}
               </span>
             </div>
           </div>
           <div className="w-fit flex items-center gap-2 pl-2">
-            <div className="text-md font-medium text-gray-600 flex gap-2 items-center">
+            <div className="text-sm font-medium text-gray-600 flex gap-2 items-center">
               <FaCircle className="text-[10px] text-[#FF0000]" />
               Total Advanced Renewal Member
             </div>
             <div>
-              <span className="text-md font-semibold">
+              <span className="text-sm font-semibold">
                 {dashboardData?.snapshot?.total_advanced_renewal_member}
               </span>
             </div>
@@ -757,7 +757,7 @@ const Home = () => {
       </div>
 
       <div className="flex gap-3">
-        <div className="rounded-[15px] p-4 box--shadow bg-white w-[75%]">
+        <div className="rounded-[15px] p-3 box--shadow bg-white w-[75%]">
           <div className="flex gap-2 w-full mb-4">
             <div className="max-w-[180px] w-full">
               <Select
@@ -1011,7 +1011,7 @@ const Home = () => {
             />
           </div>
           <div className="mt-3 w-full grid grid-cols-8 gap-3">
-            <div className="border border-[#D4D4D4] rounded-[5px] bg-white p-2 pb-1 w-full relative col-span-4">
+            <div className="border border-[#D4D4D4] rounded-[5px] bg-white p-1 pb-1 w-full relative col-span-4">
               <span className="absolute top-[10px] right-[20px] z-[2] text-lg font-bold">
                 {totalProductValue}
               </span>
@@ -1020,7 +1020,7 @@ const Home = () => {
                 options={productStatus}
               />
             </div>
-            <div className="border border-[#D4D4D4] rounded-[5px] bg-white p-2 pb-1 w-full relative col-span-4">
+            <div className="border border-[#D4D4D4] rounded-[5px] bg-white p-1 pb-1 w-full relative col-span-4">
               <span className="absolute top-[10px] right-[20px] z-[2] text-lg font-bold">
                 {totalLeads}
               </span>
@@ -1079,7 +1079,7 @@ const Home = () => {
           </div>
         </div>
         <div className="w-[25%]">
-          <div className="rounded-[15px] p-4 box--shadow bg-white">
+          <div className="rounded-[15px] p-3 box--shadow bg-white">
             <div>
               <p className="text-lg font-[600] mb-3 text-center">Summary </p>
               <div className="flex justify-between gap-3 items-center rounded-full bg-[#F1F1F1] px-3 py-2">
@@ -1118,7 +1118,7 @@ const Home = () => {
         </div>
       </div>
 
-      <div className="rounded-[15px] p-4 w-full mt-2 box--shadow bg-white">
+      <div className="rounded-[15px] p-3 w-full mt-2 box--shadow bg-white">
         <div className="flex justify-between items-center mb-4">
           <h2 className="font-semibold">Pending Orders</h2>
           <a

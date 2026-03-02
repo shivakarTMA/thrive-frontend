@@ -671,18 +671,18 @@ const MemberList = () => {
                   <tr>
                     {(userRole === "CLUB_MANAGER" ||
                       userRole === "GENERAL_MANAGER" ||
-                      userRole === "ADMIN") && <th className="px-2 py-4">#</th>}
-                    <th className="px-2 py-4">Profile Image</th>
-                    <th className="px-2 py-4">Name</th>
-                    <th className="px-2 py-4">Club Name</th>
-                    <th className="px-2 py-4">Gender</th>
-                    <th className="px-2 py-4">MemeberShip Duration</th>
-                    <th className="px-2 py-4">Status</th>
-                    <th className="px-2 py-4">Start On</th>
-                    <th className="px-2 py-4">Expired On</th>
-                    <th className="px-2 py-4">Trainer Name</th>
-                    <th className="px-2 py-4">App Downloaded</th>
-                    <th className="px-2 py-4">Profile Completion</th>
+                      userRole === "ADMIN") && <th className="px-2 py-4 min-w-[50px]">#</th>}
+                    <th className="px-2 py-4 min-w-[120px]">Profile Image</th>
+                    <th className="px-2 py-4 min-w-[130px]">Name</th>
+                    <th className="px-2 py-4 min-w-[120px]">Club Name</th>
+                    <th className="px-2 py-4 min-w-[70px]">Gender</th>
+                    <th className="px-2 py-4 min-w-[160px]">MemeberShip Duration</th>
+                    <th className="px-2 py-4 min-w-[90px]">Status</th>
+                    <th className="px-2 py-4 min-w-[90px]">Start On</th>
+                    <th className="px-2 py-4 min-w-[90px]">Expired On</th>
+                    <th className="px-2 py-4 min-w-[130px]">Trainer Name</th>
+                    <th className="px-2 py-4 min-w-[130px]">App Downloaded</th>
+                    <th className="px-2 py-4 min-w-[150px]">Profile Completion</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -806,7 +806,7 @@ const MemberList = () => {
                               <Tooltip
                                 id={`edit-member-${member?.id}`}
                                 content="Edit Member"
-                                place="top"
+                                place="left"
                               >
                                 <div className="p-1 cursor-pointer">
                                   <Link
@@ -821,7 +821,7 @@ const MemberList = () => {
                               <Tooltip
                                 id={`member-call-${member?.id}`}
                                 content="Call Logs"
-                                place="top"
+                                place="left"
                               >
                                 <div className="p-1 cursor-pointer">
                                   <Link
@@ -836,7 +836,7 @@ const MemberList = () => {
                               <Tooltip
                                 id={`send-payment-${member?.id}`}
                                 content="Buy services"
-                                place="top"
+                                place="left"
                               >
                                 <div
                                   className="p-1 cursor-pointer"
@@ -860,7 +860,7 @@ const MemberList = () => {
                               <Tooltip
                                 id={`edit-member-${member?.id}`}
                                 content="View Profile"
-                                place="top"
+                                place="left"
                               >
                                 <div className="p-1 cursor-pointer">
                                   <Link
@@ -875,7 +875,7 @@ const MemberList = () => {
                               <Tooltip
                                 id={`member-call-${member?.id}`}
                                 content="Call Logs"
-                                place="top"
+                                place="left"
                               >
                                 <div className="p-1 cursor-pointer">
                                   <Link

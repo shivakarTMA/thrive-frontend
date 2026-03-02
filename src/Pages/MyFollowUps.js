@@ -321,8 +321,8 @@ const MyFollowUps = () => {
               <tr>
                 <th className="px-2 py-4 min-w-[50px]">S.no</th>
                 <th className="px-2 py-4 min-w-[130px]">Club Name</th>
-                <th className="px-2 py-4 min-w-[100px]">Scheduled Date</th>
-                <th className="px-2 py-4 min-w-[100px]">Scheduled Time</th>
+                <th className="px-2 py-4 min-w-[150px]">Scheduled Date</th>
+                <th className="px-2 py-4 min-w-[150px]">Scheduled Time</th>
                 <th className="px-2 py-4 min-w-[100px]">Call Type</th>
                 <th className="px-2 py-4 min-w-[100px]">Member Type</th>
                 <th className="px-2 py-4 min-w-[130px]">Name</th>

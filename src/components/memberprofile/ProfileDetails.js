@@ -795,7 +795,7 @@ const ProfileDetails = ({ member }) => {
     <div className="min-h-screen">
       <form onSubmit={formik.handleSubmit} className="flex gap-5">
         {/* Left Sidebar */}
-        <div className="w-full max-w-[280px]">
+        <div className="w-full max-w-[260px]">
           <div className="bg-white p-4 rounded-[10px] w-full box--shadow">
             {/* Profile Image and Progress */}
             <div className="text-center mb-6">
@@ -803,7 +803,7 @@ const ProfileDetails = ({ member }) => {
                 <img
                   src={profileImage || formik?.values?.profile_pic}
                   alt="Profile"
-                  className="w-full h-[300px] object-cover"
+                  className="w-full h-[240px] object-cover"
                 />
                 <div
                   className="bg-black bg-opacity-25 flex items-center justify-center absolute w-full h-full top-0 left-0 opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity duration-300"
@@ -870,10 +870,10 @@ const ProfileDetails = ({ member }) => {
               )}
 
               <div className="mb-4 flex items-center gap-2 justify-between">
-                <div className="text-lg font-bold text-gray-900">
+                <div className="text-[16px] font-bold text-gray-900">
                   Profile Completion
                 </div>
-                <div className="text-lg font-bold text-gray-900">
+                <div className="text-[16px] font-bold text-gray-900">
                   {member?.profile_completion}%
                 </div>
               </div>
@@ -893,10 +893,10 @@ const ProfileDetails = ({ member }) => {
               </div>
               <div className="space-y-1">
                 <div className="flex justify-between">
-                  <span className="text-[#6F6F6F] font-[500] text-[15px]">
+                  <span className="text-[#6F6F6F] font-[500] text-[13px]">
                     Membership ID:
                   </span>
-                  <span className="text-[#6F6F6F] font-[500] text-[15px]">
+                  <span className="text-[#6F6F6F] font-[500] text-[13px]">
                     {member?.membership_number || "N/A"}
                   </span>
                 </div>
@@ -909,10 +909,10 @@ const ProfileDetails = ({ member }) => {
                   </span>
                 </div> */}
                 <div className="flex justify-between">
-                  <span className="text-[#6F6F6F] font-[500] text-[15px]">
+                  <span className="text-[#6F6F6F] font-[500] text-[13px]">
                     Centre Name:
                   </span>
-                  <span className="text-[#6F6F6F] font-[500] text-[15px]">
+                  <span className="text-[#6F6F6F] font-[500] text-[13px]">
                     {member?.club_name || "N/A"}
                   </span>
                 </div>
@@ -927,18 +927,18 @@ const ProfileDetails = ({ member }) => {
                 </div>
                 <div className="space-y-1">
                   <div className="flex justify-between">
-                    <span className="text-[#6F6F6F] font-[500] text-[15px]">
+                    <span className="text-[#6F6F6F] font-[500] text-[13px]">
                       Name:
                     </span>
-                    <span className="text-[#6F6F6F] font-[500] text-[15px]">
+                    <span className="text-[#6F6F6F] font-[500] text-[13px]">
                       {member?.referrer_name || "N/A"}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-[#6F6F6F] font-[500] text-[15px]">
+                    <span className="text-[#6F6F6F] font-[500] text-[13px]">
                       Referrer ID:
                     </span>
-                    <span className="text-[#6F6F6F] font-[500] text-[15px]">
+                    <span className="text-[#6F6F6F] font-[500] text-[13px]">
                       {member?.referrer_id || "N/A"}
                     </span>
                   </div>
@@ -950,10 +950,10 @@ const ProfileDetails = ({ member }) => {
 
         {/* Main Content */}
         <div className="w-full">
-          <div className="bg-white p-6 rounded-[10px] box--shadow w-full">
+          <div className="bg-white p-4 rounded-[10px] box--shadow w-full">
             {/* Basic Information */}
             <div className="border-b border-b[#D4D4D4] pb-5">
-              <h2 className="text-xl font-semibold text-gray-900 mb-6">
+              <h2 className="text-lg font-semibold text-gray-900 mb-6">
                 Basic Information
               </h2>
 
@@ -1102,7 +1102,7 @@ const ProfileDetails = ({ member }) => {
 
             {/* Lead Information */}
             <div className="border-b border-b[#D4D4D4] pb-5 pt-5">
-              <h2 className="text-xl font-semibold text-gray-900 mb-6">
+              <h2 className="text-lg font-semibold text-gray-900 mb-6">
                 Member Information
               </h2>
 
@@ -1173,7 +1173,7 @@ const ProfileDetails = ({ member }) => {
                       selectSomeItems: "Select Interested...",
                       allItemsAreSelected: "All Interested Selected",
                     }}
-                    className="custom--input w-full cursor-not-allowed pointer-events-none !bg-gray-100 !text-gray-500"
+                    className="w-full cursor-not-allowed pointer-events-none !bg-gray-100 border border-[#c5c5c5] !text-gray-500 rounded-[5px] px-[10px] py-[4px] text-[13px]"
                     disabled
                   />
                 </div>
@@ -1208,7 +1208,7 @@ const ProfileDetails = ({ member }) => {
 
             {/* Professional Information */}
             <div className="border-b border-b[#D4D4D4] pb-5 pt-5">
-              <h2 className="text-xl font-semibold text-gray-900 mb-6">
+              <h2 className="text-lg font-semibold text-gray-900 mb-6">
                 Professional Information
               </h2>
 
@@ -1275,7 +1275,7 @@ const ProfileDetails = ({ member }) => {
 
             {/* Emergency Contact */}
             <div className="pb-5 pt-5">
-              <h2 className="text-xl font-semibold text-gray-900 mb-6">
+              <h2 className="text-lg font-semibold text-gray-900 mb-6">
                 Emergency Contact
               </h2>
               {emergencyErrors?.global && (
@@ -1516,61 +1516,61 @@ const ProfileDetails = ({ member }) => {
               <button
                 type="button"
                 onClick={addNewEmergencyForm}
-                className="px-4 py-2 bg-gray-800 text-white rounded flex items-center gap-2 mb-4"
+                className="px-3 py-2 bg-gray-800 text-white rounded flex items-center gap-2 mb-4"
               >
                 <IoIosAddCircle className="text-2xl" /> Add More
               </button>
             </div>
 
             {/* Profile Completion */}
-            <div className="bg-[#F1F1F1] p-5 mt-5 rounded-[10px]">
-              <h2 className="text-xl font-semibold text-gray-900 mb-6 border-b border-b-[#D4D4D4] pb-3">
+            <div className="bg-[#F1F1F1] p-3 mt-5 rounded-[10px]">
+              <h2 className="text-lg font-semibold text-gray-900 mb-6 border-b border-b-[#D4D4D4] pb-3">
                 Profile Completion
               </h2>
 
-              <div className="grid grid-cols-4 gap-6">
-                <div className="flex items-center space-x-3">
+              <div className="grid grid-cols-4 gap-2">
+                <div className="flex items-center space-x-2">
                   <div
-                    className={`w-8 h-8 rounded-full flex items-center justify-center 
+                    className={`w-6 h-6 rounded-full flex items-center justify-center 
                     ${member?.personal_information ? "bg--color" : "bg-[#D4D4D4]"}`}
                   >
-                    <IoCheckmark className="w-5 h-5 text-white" />
+                    <IoCheckmark className="w-4 h-4 text-white" />
                   </div>
                   <span className="text-sm font-medium text-gray-700">
                     Personal Information
                   </span>
                 </div>
 
-                <div className="flex items-center space-x-3">
+                <div className="flex items-center space-x-2">
                   <div
-                    className={`w-8 h-8 rounded-full flex items-center justify-center 
+                    className={`w-6 h-6 rounded-full flex items-center justify-center 
                     ${member?.terms_submitted ? "bg--color" : "bg-[#D4D4D4]"}`}
                   >
-                    <IoCheckmark className="w-5 h-5 text-white" />
+                    <IoCheckmark className="w-4 h-4 text-white" />
                   </div>
                   <span className="text-sm font-medium text-gray-700">
                     Consent on terms
                   </span>
                 </div>
 
-                <div className="flex items-center space-x-3">
+                <div className="flex items-center space-x-2">
                   <div
-                    className={`w-8 h-8 rounded-full flex items-center justify-center 
+                    className={`w-6 h-6 rounded-full flex items-center justify-center 
                     ${member?.is_kyc ? "bg--color" : "bg-[#D4D4D4]"}`}
                   >
-                    <IoCheckmark className="w-5 h-5 text-white" />
+                    <IoCheckmark className="w-4 h-4 text-white" />
                   </div>
                   <span className="text-sm font-medium text-gray-700">
                     KYC Submission
                   </span>
                 </div>
 
-                <div className="flex items-center space-x-3">
+                <div className="flex items-center space-x-2">
                   <div
-                    className={`w-8 h-8 rounded-full flex items-center justify-center 
+                    className={`w-6 h-6 rounded-full flex items-center justify-center 
                     ${member?.is_parq_submitted ? "bg--color" : "bg-[#D4D4D4]"}`}
                   >
-                    <IoCheckmark className="w-5 h-5 text-white" />
+                    <IoCheckmark className="w-4 h-4 text-white" />
                   </div>
                   <span className="text-sm font-medium text-gray-700">
                     PAR-Q Information

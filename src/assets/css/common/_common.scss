@@ -1,3 +1,14 @@
+.text-sm {
+    font-size: 14px;
+}
+.title--breadcrumbs h1 {
+    font-size: 29px;
+}
+td,th {
+    font-size: 12px;
+    padding-top: 10px !important;
+    padding-bottom: 10px !important;
+}
 .logo--login {
   padding-left: 15px;
   padding-bottom: 15px;
@@ -59,11 +70,11 @@ input.number--appearance-none[type="number"]::-webkit-outer-spin-button {
 }
 
 .custom--input {
-  border: 1px solid #c5c5c5;
-  padding: 8px 15px;
-  border-radius: 5px;
-  font-size: 15px;
-      background: #fff
+border: 1px solid #c5c5c5;
+    padding: 6px 10px;
+    border-radius: 5px;
+    font-size: 13px;
+    background: #fff;
 }
 
 .custom--date .react-datepicker-wrapper {
@@ -79,11 +90,12 @@ input.number--appearance-none[type="number"]::-webkit-outer-spin-button {
 }
 
 .custom--date .react-datepicker-wrapper input {
-  width: 100%;
-  border: 1px solid #c5c5c5;
-  padding: 7px 15px;
-  border-radius: 5px;
-  min-height: 40px;
+    width: 100%;
+    border: 1px solid #c5c5c5;
+    padding: 6px 10px;
+    border-radius: 5px;
+    min-height: 32px;
+    font-size: 13px;
 }
 
 .custom--phone input:focus-visible {
@@ -703,4 +715,10 @@ border-radius: 5px !important;
 
 .title--breadcrumbs p.text-sm {
     display: none;
+}
+
+@media(max-width:1280px){
+  .text-sm {
+      font-size: 13px;
+  }
 }

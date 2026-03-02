@@ -108,7 +108,12 @@ const buildPaymentPayload = ({ values, user, selectedPackageType }) => {
   return payload;
 };
 
-const CreateNewInvoice = ({ setInvoiceModal, selectedLeadMember, clubId }) => {
+const CreateNewInvoice = ({
+  setInvoiceModal,
+  selectedLeadMember,
+  clubId,
+  renewPlanService,
+}) => {
   const { user } = useSelector((state) => state.auth);
 
   const [service, setService] = useState([]);
@@ -509,10 +514,87 @@ const CreateNewInvoice = ({ setInvoiceModal, selectedLeadMember, clubId }) => {
     }
   };
 
+  useEffect(() => {
+  if (!renewPlanService) return;
+
+  const {
+    service_id,
+    service_name,
+    package_id,
+    package_name,
+    package_type,
+    session_duration,
+    amount,
+    discount,
+    gst,
+    gst_amount,
+    total_amount,
+    booking_amount,
+    package_variation_id,
+  } = renewPlanService;
+
+  const parsedAmount = Number(amount) || 0;
+  const parsedDiscount = Number(discount) || 0;
+  const parsedGst = Number(gst) || 0;
+  const parsedGstAmount = Number(gst_amount) || 0;
+  const parsedTotal = Number(total_amount) || 0;
+  const parsedFinal = Number(booking_amount) || 0;
+
+  formik.setFieldValue("product_type", service_id);
+  formik.setFieldValue("service_name", service_name);
+  setSelectedPackageType(package_type || "SESSION");
+
+  formik.setFieldValue("productDetails", {
+    id: package_id,
+    title: package_name,
+    duration_value: session_duration,
+    duration_type: "minutes",
+    amount: parsedAmount,
+    discount: parsedDiscount,
+    total_amount: parsedTotal,
+    gst: parsedGst,
+    gst_amount: parsedGstAmount,
+    final_amount: parsedFinal,
+  });
+
+  formik.setFieldValue("final_amount", parsedFinal);
+  formik.setFieldValue("amount_pay", parsedFinal);
+
+  // ✅ Fetch variation details by package_variation_id
+  if (
+    service_name?.toUpperCase() === "RECOVERY" &&
+    package_variation_id &&
+    package_variation_id !== 0
+  ) {
+    const fetchVariationById = async () => {
+      try {
+        const res = await authAxios().get(`/package/variation/${package_variation_id}`);
+        const variation = res.data?.data || res.data || null;
+
+        if (variation) {
+          formik.setFieldValue("variation", {
+            id: variation.id,
+            name: variation.name,
+            no_of_sessions: variation.no_of_sessions,
+            session_duration: variation.session_duration,
+            session_validity: variation.session_validity,
+          });
+        }
+      } catch (err) {
+        console.error(err);
+        toast.error("Failed to fetch variation details");
+      }
+    };
+
+    fetchVariationById();
+  }
+
+}, [renewPlanService]);
+
   // useEffect(() => {
   //   console.log("Formik Errors:", formik.errors);
   //   console.log("Formik Touched:", formik.touched);
-  //   console.log("Formik Values:", formik.values);
+  console.log("Formik Values:", formik.values);
   // }, [formik.errors, formik.touched, formik.values]);
 
   return (
