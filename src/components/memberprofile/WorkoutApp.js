@@ -125,13 +125,13 @@ const WorkoutApp = ({ member }) => {
           <div className="bg-white rounded shadow-lg p-6 w-[350px]">
             <h2 className="text-lg font-semibold mb-3">
               {confirmModal.action === "delete"
-                ? "Delete Workout?"
+                ? "Delete Assigned Workout Plan?"
                 : "Cancel Workout?"}
             </h2>
 
             <p className="text-sm text-gray-600 mb-4">
               {confirmModal.action === "delete"
-                ? "This action will permanently delete the workout. Continue?"
+                ? "This will remove the workout plan from this member’s profile."
                 : "This will mark the workout as cancelled. Continue?"}
             </p>
 

@@ -16,7 +16,7 @@ const AddNewItemModal = ({
   onClose,
   clubOptions,
   editingOption,
-  fetchLostFoundList
+  fetchLostFoundList,
 }) => {
   const leadBoxRef = useRef(null);
   const { user } = useSelector((state) => state.auth);
@@ -28,7 +28,7 @@ const AddNewItemModal = ({
       category: null,
       description: "",
       found_at_location: null,
-      found_date_time: new Date(),
+      found_date_time: null,
       loggedBy: user?.name,
       verification_notes: "",
       status: "AVAILABLE",
@@ -72,7 +72,7 @@ const AddNewItemModal = ({
             category: data?.category || null,
             description: data?.description || "",
             found_at_location: data?.found_at_location || null,
-            found_date_time: data?.found_date_time || new Date(),
+            found_date_time: data?.found_date_time ? new Date(data.found_date_time) : null,
             loggedBy: data?.loggedBy || user?.name,
             verification_notes: data?.verification_notes || "",
             status: data?.status || "AVAILABLE",
@@ -113,6 +113,14 @@ const AddNewItemModal = ({
     }
   };
 
+  const now = new Date();
+
+  const minTimeDefault = new Date();
+  minTimeDefault.setHours(6, 0, 0, 0); // optional, earliest allowed time of the day
+
+  const maxTimeToday = new Date();
+  maxTimeToday.setHours(now.getHours(), now.getMinutes(), 0, 0); // current time
+
   return (
     <div
       className="bg--blur create--lead--container overflow-auto hide--overflow fixed top-0 left-0 z-[999] w-full bg-black bg-opacity-60 h-full"
@@ -150,7 +158,7 @@ const AddNewItemModal = ({
                         clubOptions.find(
                           (option) =>
                             option.value.toString() ===
-                            formik.values.club_id?.toString()
+                            formik.values.club_id?.toString(),
                         ) || null
                       }
                       options={clubOptions}
@@ -201,13 +209,13 @@ const AddNewItemModal = ({
                     name="category"
                     value={
                       lostCategory.find(
-                        (option) => option.value === formik.values.category
+                        (option) => option.value === formik.values.category,
                       ) || null
                     }
                     onChange={(option) =>
                       formik.setFieldValue(
                         "category",
-                        option ? option.value : ""
+                        option ? option.value : "",
                       )
                     }
                     options={lostCategory}
@@ -230,13 +238,13 @@ const AddNewItemModal = ({
                     value={
                       foundLocation.find(
                         (option) =>
-                          option.value === formik.values.found_at_location
+                          option.value === formik.values.found_at_location,
                       ) || null
                     }
                     onChange={(option) =>
                       formik.setFieldValue(
                         "found_at_location",
-                        option ? option.value : ""
+                        option ? option.value : "",
                       )
                     }
                     options={foundLocation}
@@ -259,7 +267,7 @@ const AddNewItemModal = ({
                     <span className="absolute z-[1] mt-[11px] ml-[15px]">
                       <FaCalendarDays />
                     </span>
-                    <DatePicker
+                    {/* <DatePicker
                       selected={
                         formik.values.found_date_time
                           ? new Date(formik.values.found_date_time)
@@ -272,6 +280,40 @@ const AddNewItemModal = ({
                       placeholderText="Select date & time"
                       className="border px-3 py-2 w-full input--icon"
                       maxDate={new Date()}
+                      disabled={editingOption}
+                    /> */}
+                    <DatePicker
+                      selected={formik.values.found_date_time}
+                      onChange={(date) => {
+                        if (!date) {
+                          formik.setFieldValue("found_date_time", null);
+                          return;
+                        }
+
+                        // Make sure time doesn't go into the future
+                        const newDate = new Date(date);
+                        if (newDate.getTime() > now.getTime()) {
+                          toast.error("Future date & time is not allowed.");
+                          return;
+                        }
+
+                        formik.setFieldValue("found_date_time", newDate);
+                      }}
+                      showTimeSelect
+                      timeFormat="hh:mm aa"
+                      dateFormat="dd/MM/yyyy hh:mm aa"
+                      timeIntervals={30} // 30-minute slots
+                      placeholderText="Select date & time"
+                      maxDate={now} // no future date
+                      minTime={minTimeDefault}
+                      maxTime={
+                        formik.values.found_date_time &&
+                        formik.values.found_date_time.toDateString() ===
+                          now.toDateString()
+                          ? maxTimeToday
+                          : new Date().setHours(22, 0, 0, 0)
+                      }
+                      className="input--icon"
                       disabled={editingOption}
                     />
                   </div>
@@ -294,23 +336,22 @@ const AddNewItemModal = ({
                 </div>
 
                 <div className="col-span-2">
-                    <label className="mb-2 block">Description</label>
+                  <label className="mb-2 block">Description</label>
 
-                    <textarea
-                      name="description"
-                      value={formik.values.description}
-                      onChange={formik.handleChange}
-                      placeholder="Description"
-                      className={`custom--input w-full ${
-                        editingOption
-                          ? "!bg-gray-100 pointer-events-none text-gray-500"
-                          : ""
-                      }`}
-                      disabled={editingOption}
-                    />
-                  </div>
+                  <textarea
+                    name="description"
+                    value={formik.values.description}
+                    onChange={formik.handleChange}
+                    placeholder="Description"
+                    className={`custom--input w-full ${
+                      editingOption
+                        ? "!bg-gray-100 pointer-events-none text-gray-500"
+                        : ""
+                    }`}
+                    disabled={editingOption}
+                  />
+                </div>
 
-               
                 {/* {editingOption && editingOption && (
                   <div className="col-span-2">
                     <label className="mb-2 block">Notes</label>

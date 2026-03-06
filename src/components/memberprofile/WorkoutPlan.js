@@ -1064,22 +1064,67 @@ const WorkoutPlan = ({
                     type="number"
                     min={0}
                     value={data.plan.no_of_days ?? ""}
+                    // onChange={(e) => {
+                    //   const value = e.target.value;
+                    //   if (value === "") {
+                    //     setData((prev) => ({
+                    //       ...prev,
+                    //       plan: { ...prev.plan, no_of_days: "" },
+                    //     }));
+                    //     return;
+                    //   }
+
+                    //   const parsedValue = parseInt(value, 10);
+                    //   setData((prev) => ({
+                    //     ...prev,
+                    //     plan: {
+                    //       ...prev.plan,
+                    //       no_of_days: isNaN(parsedValue) ? "" : parsedValue,
+                    //       end_date: calculateEndDate(
+                    //         prev.plan.start_date,
+                    //         parsedValue,
+                    //       ),
+                    //     },
+                    //   }));
+                    // }}
+                    onKeyDown={(e) => {
+                      // Block unwanted characters
+                      if (["e", "E", "+", "-", "."].includes(e.key)) {
+                        e.preventDefault();
+                      }
+                    }}
+                    onPaste={(e) => {
+                      const paste = e.clipboardData.getData("text");
+                      if (!/^\d+$/.test(paste)) {
+                        e.preventDefault();
+                      }
+                    }}
                     onChange={(e) => {
                       const value = e.target.value;
+
+                      // Allow empty
                       if (value === "") {
                         setData((prev) => ({
                           ...prev,
-                          plan: { ...prev.plan, no_of_days: "" },
+                          plan: {
+                            ...prev.plan,
+                            no_of_days: "",
+                            end_date: "",
+                          },
                         }));
                         return;
                       }
 
+                      // Extra safety: allow only digits
+                      if (!/^\d+$/.test(value)) return;
+
                       const parsedValue = parseInt(value, 10);
+
                       setData((prev) => ({
                         ...prev,
                         plan: {
                           ...prev.plan,
-                          no_of_days: isNaN(parsedValue) ? "" : parsedValue,
+                          no_of_days: parsedValue,
                           end_date: calculateEndDate(
                             prev.plan.start_date,
                             parsedValue,
@@ -1179,12 +1224,17 @@ const WorkoutPlan = ({
                     <>
                       {!data.days[activeDayIndex]?.is_rest_day && (
                         <div className="flex items-center gap-1">
-                          <button
-                            onClick={() => handleCopyDay(activeDayIndex)}
-                            className="text-sm text-white px-3 py-1 rounded-[5px] bg-blue-500"
-                          >
-                            Copy
-                          </button>
+                          {data.days?.length > 1 &&
+                            !data.days[activeDayIndex]?.is_rest_day &&
+                            data.days[activeDayIndex]?.exercises?.length >
+                              0 && (
+                              <button
+                                onClick={() => handleCopyDay(activeDayIndex)}
+                                className="text-sm text-white px-3 py-1 rounded-[5px] bg-blue-500"
+                              >
+                                Copy
+                              </button>
+                            )}
                           <button
                             onClick={() => handlePasteDay(activeDayIndex)}
                             disabled={!copiedDay}

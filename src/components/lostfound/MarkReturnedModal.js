@@ -283,7 +283,7 @@ const MarkReturnedModal = ({ lostID, onClose, clubOptions, fetchLostFoundList })
                   <div>
                     <label className="mb-2 block">Found Date</label>
                     <div className="custom--date relative">
-                      <span className="absolute z-[1] mt-[11px] ml-[15px]">
+                      <span className="absolute z-[1] mt-[9px] ml-[15px]">
                         <FaCalendarDays />
                       </span>
                       <DatePicker
@@ -375,7 +375,7 @@ const MarkReturnedModal = ({ lostID, onClose, clubOptions, fetchLostFoundList })
                       Return Date & Time<span className="text-red-500">*</span>
                     </label>
                     <div className="custom--date">
-                      <span className="absolute z-[1] mt-[11px] ml-[15px]">
+                      <span className="absolute z-[1] mt-[9px] ml-[15px]">
                         <FaCalendarDays />
                       </span>
                       <DatePicker
@@ -388,6 +388,7 @@ const MarkReturnedModal = ({ lostID, onClose, clubOptions, fetchLostFoundList })
                         timeFormat="hh:mm aa"
                         dateFormat="dd/MM/yyyy hh:mm aa"
                         className="custom--input w-full input--icon"
+                        disabled={true}
                       />
                     </div>
                     {formik.touched.returnDate_time &&

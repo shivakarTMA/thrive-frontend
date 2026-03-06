@@ -16,50 +16,6 @@ import { customStyles } from "../../Helper/helper";
 import Pagination from "../common/Pagination";
 import { QRCodeCanvas } from "qrcode.react";
 
-const indianStates = [
-  { label: "Haryana", value: "Haryana" },
-  { label: "Andhra Pradesh", value: "Andhra Pradesh" },
-  { label: "Arunachal Pradesh", value: "Arunachal Pradesh" },
-  { label: "Assam", value: "Assam" },
-  { label: "Bihar", value: "Bihar" },
-  { label: "Chhattisgarh", value: "Chhattisgarh" },
-  { label: "Goa", value: "Goa" },
-  { label: "Gujarat", value: "Gujarat" },
-  { label: "Himachal Pradesh", value: "Himachal Pradesh" },
-  { label: "Jammu and Kashmir", value: "Jammu and Kashmir" },
-  { label: "Jharkhand", value: "Jharkhand" },
-  { label: "Karnataka", value: "Karnataka" },
-  { label: "Kerala", value: "Kerala" },
-  { label: "Madhya Pradesh", value: "Madhya Pradesh" },
-  { label: "Maharashtra", value: "Maharashtra" },
-  { label: "Manipur", value: "Manipur" },
-  { label: "Meghalaya", value: "Meghalaya" },
-  { label: "Mizoram", value: "Mizoram" },
-  { label: "Nagaland", value: "Nagaland" },
-  { label: "Odisha", value: "Odisha" },
-  { label: "Punjab", value: "Punjab" },
-  { label: "Rajasthan", value: "Rajasthan" },
-  { label: "Sikkim", value: "Sikkim" },
-  { label: "Tamil Nadu", value: "Tamil Nadu" },
-  { label: "Telangana", value: "Telangana" },
-  { label: "Tripura", value: "Tripura" },
-  { label: "Uttar Pradesh", value: "Uttar Pradesh" },
-  { label: "Uttarakhand", value: "Uttarakhand" },
-  { label: "West Bengal", value: "West Bengal" },
-  {
-    label: "Andaman and Nicobar Islands",
-    value: "Andaman and Nicobar Islands",
-  },
-  { label: "Chandigarh", value: "Chandigarh" },
-  {
-    label: "Dadra and Nagar Haveli and Daman and Diu",
-    value: "Dadra and Nagar Haveli and Daman and Diu",
-  },
-  { label: "Delhi", value: "Delhi" },
-  { label: "Lakshadweep", value: "Lakshadweep" },
-  { label: "Puducherry", value: "Puducherry" },
-];
-
 const ClubList = () => {
   const [showModal, setShowModal] = useState(false);
   const [club, setClub] = useState([]);
@@ -137,10 +93,13 @@ const ClubList = () => {
       email: "",
       phone: "",
       address: "",
-      city: "",
+      city: null,
       gstno: "",
-      state: indianStates[0],
-      country: "India",
+      state: null,
+      country: {
+        label: "India",
+        value: "IN",
+      },
       zipcode: "",
       status: "",
       club_available_service: [],
@@ -160,18 +119,17 @@ const ClubList = () => {
           if (!value) return false;
           return isValidPhoneNumber(value);
         }),
-      city: Yup.string().required("City is required"),
-      state: Yup.mixed()
-        .test(
-          "is-valid-state",
-          "State/Province is required",
-          (value) =>
-            value && (typeof value === "object" || typeof value === "string"),
-        )
-        .required("State/Province is required"),
-      country: Yup.string().required("Country is required"),
-      gstno: Yup.string().required("GST No. is required"),
-      zipcode: Yup.string().required("ZIP or Postal is required"),
+      country: Yup.object().nullable().required("Country is required"),
+
+      state: Yup.object().nullable().required("State/Province is required"),
+
+      city: Yup.object().nullable().required("City is required"),
+
+      zipcode: Yup.string().required("ZIP/Postal code is required"),
+      // .min(4, "ZIP code is too short")
+      // .max(10, "ZIP code is too long"),
+
+      // zipcode: Yup.string().required("ZIP or Postal is required"),
       status: Yup.string().required("Status is required"),
       address: Yup.string().required("Address is required"),
       description: Yup.string().required("Description is required"),
@@ -205,9 +163,9 @@ const ClubList = () => {
           values.phone?.startsWith("+") ? values.phone.slice(1) : values.phone,
         );
         formData.append("address", values.address);
-        formData.append("city", values.city);
-        formData.append("state", values.state?.value || values.state);
-        formData.append("country", values.country);
+        formData.append("city", values.city?.label);
+        formData.append("state", values.state?.label || "");
+        formData.append("country", values.country?.label || "");
         formData.append("zipcode", values.zipcode);
         formData.append("status", values.status);
         formData.append("map_url", values.map_url);
@@ -495,7 +453,6 @@ const ClubList = () => {
           handleOverlayClick={handleOverlayClick}
           leadBoxRef={leadBoxRef}
           handlePhoneChange={handlePhoneChange}
-          indianStates={indianStates}
         />
       )}
     </div>

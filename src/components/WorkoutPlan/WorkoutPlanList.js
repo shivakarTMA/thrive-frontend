@@ -62,7 +62,7 @@ const WorkoutPlanList = () => {
       try {
         await authAxios().delete(`/workoutplan/${workoutToDelete.id}`);
 
-        toast.success("Workout deleted successfully");
+        toast.success("Workout plan deleted successfully");
         fetchWorkouts();
       } catch (error) {
         toast.error("Failed to delete exercise.");
@@ -168,22 +168,22 @@ const WorkoutPlanList = () => {
                               </Link>
                             </div>
                           </Tooltip>
-                          <Tooltip
-                            id={`delete-workout-${row.id}`}
-                            content="Delete Exercise"
-                            place="top"
-                          >
-                            <div
-                              onClick={() => handleDeleteClick(row)}
-                              className="p-1 cursor-pointer"
+                          {row.id === 4 ? null : (
+                            <Tooltip
+                              id={`delete-workout-${row.id}`}
+                              content="Delete Exercise"
+                              place="top"
                             >
-                              <RiDeleteBin6Fill
-                                className={`text-[25px] text-black ${
-                                  row.id === 4 ? "hidden" : "block"
-                                }`}
-                              />
-                            </div>
-                          </Tooltip>
+                              <div
+                                onClick={() => handleDeleteClick(row)}
+                                className="p-1 cursor-pointer"
+                              >
+                                <RiDeleteBin6Fill
+                                  className={`text-[25px] text-black`}
+                                />
+                              </div>
+                            </Tooltip>
+                          )}
                         </div>
                       </td>
                     </tr>

@@ -4,12 +4,16 @@ import { FaEnvelope, FaRegBuilding } from "react-icons/fa6";
 import { GrDocument } from "react-icons/gr";
 import { LuPlug } from "react-icons/lu";
 import Select from "react-select";
-import { selectIcon } from "../../Helper/helper";
+import {
+  blockInvalidNumberKeys,
+  sanitizePositiveInteger,
+  selectIcon,
+} from "../../Helper/helper";
 import PhoneInput from "react-phone-number-input";
 import { toast } from "react-toastify";
 import { authAxios } from "../../config/config";
 import { PiImageFill } from "react-icons/pi";
-import { Country, State } from "country-state-city";
+import { Country, State, City } from "country-state-city";
 
 const CreateCompany = ({
   setShowModal,
@@ -17,7 +21,6 @@ const CreateCompany = ({
   formik,
   handleOverlayClick,
   leadBoxRef,
-  indianStates,
 }) => {
   // ✅ Fetch company details when selectedId changes
 
@@ -43,7 +46,12 @@ const CreateCompany = ({
             email: data.email || "",
             phone: data.phone || "",
             address: data.address || "",
-            city: data.city || "",
+            city: data.city
+              ? {
+                  label: data.city,
+                  value: data.city,
+                }
+              : null,
             country: data.country
               ? {
                   label: data.country,
@@ -273,9 +281,10 @@ const CreateCompany = ({
                               }))
                             : []
                         }
-                        onChange={(option) =>
-                          formik.setFieldValue("state", option)
-                        }
+                        onChange={(option) => {
+                          formik.setFieldValue("state", option);
+                          formik.setFieldValue("city", null); // reset city when state changes
+                        }}
                         onBlur={() => formik.setFieldTouched("state", true)}
                         styles={selectIcon}
                         isDisabled={!formik.values.country}
@@ -298,16 +307,35 @@ const CreateCompany = ({
                   <div>
                     <label className="mb-2 block">City</label>
                     <div className="relative">
-                      <span className="absolute top-[50%] translate-y-[-50%] left-[15px]">
+                      <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[10]">
                         <IoLocationOutline />
                       </span>
-                      <input
-                        type="text"
+
+                      <Select
                         name="city"
                         value={formik.values.city}
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
-                        className="custom--input w-full input--icon"
+                        options={
+                          formik.values.country && formik.values.state
+                            ? City.getCitiesOfState(
+                                formik.values.country.value,
+                                formik.values.state.value,
+                              ).map((c) => ({
+                                label: c.name,
+                                value: c.name,
+                              }))
+                            : []
+                        }
+                        onChange={(option) =>
+                          formik.setFieldValue("city", option)
+                        }
+                        onBlur={() => formik.setFieldTouched("city", true)}
+                        styles={selectIcon}
+                        isDisabled={!formik.values.state}
+                        placeholder={
+                          formik.values.state
+                            ? "Select City"
+                            : "Select State First"
+                        }
                       />
                     </div>
                     {/* {formik.touched.city && formik.errors.city && (
@@ -325,12 +353,25 @@ const CreateCompany = ({
                         <IoLocationOutline />
                       </span>
                       <input
-                        type="text"
+                        type="number"
                         name="zipcode"
                         value={formik.values.zipcode}
-                        onChange={formik.handleChange}
+                        onKeyDown={blockInvalidNumberKeys} // ⛔ blocks typing -, e, etc.
+                        onChange={(e) => {
+                          // Keep only positive integers
+                          let cleanValue = sanitizePositiveInteger(
+                            e.target.value,
+                          );
+
+                          // Limit to max 6 digits
+                          if (cleanValue.length > 6) {
+                            cleanValue = cleanValue.slice(0, 6);
+                          }
+
+                          formik.setFieldValue("zipcode", cleanValue);
+                        }}
                         onBlur={formik.handleBlur}
-                        className="custom--input w-full input--icon"
+                        className="custom--input w-full input--icon number--appearance-none"
                       />
                     </div>
                     {/* {formik.touched.zipcode && formik.errors.zipcode && (

@@ -27,6 +27,7 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { GoClock } from "react-icons/go";
 import { PiImageFill } from "react-icons/pi";
+import { Country, State, City } from "country-state-city";
 
 const CreateClub = ({
   setShowModal,
@@ -35,7 +36,6 @@ const CreateClub = ({
   handleOverlayClick,
   leadBoxRef,
   handlePhoneChange,
-  indianStates,
 }) => {
   const [logoError, setLogoError] = useState("");
   // Remove leading/trailing double quotes, single quotes and whitespace
@@ -153,12 +153,37 @@ const CreateClub = ({
             phone: "+" + data?.phone || "",
             address: data?.address || "",
             gstno: data?.gstno || "",
-            city: data?.city || "",
-            state:
-              typeof data?.state === "string"
-                ? { label: data?.state, value: data?.state }
-                : data?.state || "",
-            country: data?.country || "",
+            // city: data?.city || "",
+            // state:
+            //   typeof data?.state === "string"
+            //     ? { label: data?.state, value: data?.state }
+            //     : data?.state || "",
+            // country: data?.country || "",
+            city: data.city
+              ? {
+                  label: data.city,
+                  value: data.city,
+                }
+              : null,
+            country: data.country
+              ? {
+                  label: data.country,
+                  value: Country.getAllCountries().find(
+                    (c) => c.name === data.country,
+                  )?.isoCode,
+                }
+              : null,
+
+            state: data.state
+              ? {
+                  label: data.state,
+                  value: State.getStatesOfCountry(
+                    Country.getAllCountries().find(
+                      (c) => c.name === data.country,
+                    )?.isoCode,
+                  )?.find((s) => s.name === data.state)?.isoCode,
+                }
+              : null,
             zipcode: data?.zipcode || "",
             status: data?.status || "",
             position: data?.position || "",
@@ -213,43 +238,43 @@ const CreateClub = ({
     (Array.isArray(arr) ? arr : []).map((s) => ({ label: s, value: s }));
 
   const handleLogoChange = (e) => {
-  const file = e.target.files[0];
+    const file = e.target.files[0];
 
-  if (!file) {
-    setLogoError("Logo is required");
-    formik.setFieldValue("logo", null);
-    formik.setFieldValue("logoFile", null);
-    return;
-  }
+    if (!file) {
+      setLogoError("Logo is required");
+      formik.setFieldValue("logo", null);
+      formik.setFieldValue("logoFile", null);
+      return;
+    }
 
-  const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
-  const maxSize = 2 * 1024 * 1024; // 2MB
+    const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+    const maxSize = 2 * 1024 * 1024; // 2MB
 
-  // ❌ Invalid type
-  if (!allowedTypes.includes(file.type)) {
-    setLogoError("Only JPG, PNG, or WEBP files are allowed");
-    formik.setFieldValue("logo", null);
-    formik.setFieldValue("logoFile", null);
-    e.target.value = null;
-    return;
-  }
+    // ❌ Invalid type
+    if (!allowedTypes.includes(file.type)) {
+      setLogoError("Only JPG, PNG, or WEBP files are allowed");
+      formik.setFieldValue("logo", null);
+      formik.setFieldValue("logoFile", null);
+      e.target.value = null;
+      return;
+    }
 
-  // ❌ Invalid size
-  // if (file.size > maxSize) {
-  //   setLogoError("Image size must be less than 2MB");
-  //   formik.setFieldValue("logo", null);
-  //   formik.setFieldValue("logoFile", null);
-  //   e.target.value = null;
-  //   return;
-  // }
+    // ❌ Invalid size
+    // if (file.size > maxSize) {
+    //   setLogoError("Image size must be less than 2MB");
+    //   formik.setFieldValue("logo", null);
+    //   formik.setFieldValue("logoFile", null);
+    //   e.target.value = null;
+    //   return;
+    // }
 
-  // ✅ Valid file
-  setLogoError("");
-  const previewURL = URL.createObjectURL(file);
+    // ✅ Valid file
+    setLogoError("");
+    const previewURL = URL.createObjectURL(file);
 
-  formik.setFieldValue("logo", previewURL);
-  formik.setFieldValue("logoFile", file);
-};
+    formik.setFieldValue("logo", previewURL);
+    formik.setFieldValue("logoFile", file);
+  };
 
   return (
     <div
@@ -414,31 +439,44 @@ const CreateClub = ({
                       </p>
                     )}
                   </div>
-                  {/* City */}
+                  {/* Country */}
                   <div>
                     <label className="mb-2 block">
-                      City<span className="text-red-500">*</span>
+                      Country<span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
-                      <span className="absolute top-[50%] translate-y-[-50%] left-[15px]">
+                      <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[10]">
                         <IoLocationOutline />
                       </span>
-                      <input
+                      {/* <input
                         type="text"
-                        name="city"
-                        value={formik.values.city}
+                        name="country"
+                        value={formik.values.country}
                         onChange={formik.handleChange}
                         onBlur={formik.handleBlur}
                         className="custom--input w-full input--icon"
-                      />
+                      /> */}
+                      <Select
+                                              name="country"
+                                              value={formik.values.country}
+                                              options={Country.getAllCountries().map((c) => ({
+                                                label: c.name,
+                                                value: c.isoCode,
+                                              }))}
+                                              onChange={(option) => {
+                                                formik.setFieldValue("country", option);
+                                                formik.setFieldValue("state", null); // reset state
+                                              }}
+                                              styles={selectIcon}
+                                              placeholder="Select Country"
+                                            />
                     </div>
-                    {formik.touched.city && formik.errors.city && (
+                    {formik.touched.country && formik.errors.country && (
                       <p className="text-red-500 text-sm mt-1">
-                        {formik.errors.city}
+                        {formik.errors.country}
                       </p>
                     )}
                   </div>
-
                   {/* State */}
                   <div>
                     <label className="mb-2 block">
@@ -450,13 +488,30 @@ const CreateClub = ({
                       </span>
                       <Select
                         name="state"
-                        value={formik.values.state} // ✅ should be an object { label, value }
-                        options={indianStates}
-                        onChange={(option) =>
-                          formik.setFieldValue("state", option)
-                        } // ✅ store whole object
+                        value={formik.values.state}
+                        options={
+                          formik.values.country
+                            ? State.getStatesOfCountry(
+                                formik.values.country.value,
+                              ).map((s) => ({
+                                label: s.name,
+                                value: s.isoCode,
+                              }))
+                            : []
+                        }
+                        onChange={(option) => {
+                          formik.setFieldValue("state", option);
+                          formik.setFieldValue("city", null); // reset city when state changes
+                        }}
                         onBlur={() => formik.setFieldTouched("state", true)}
                         styles={selectIcon}
+                        isDisabled={!formik.values.country}
+                        placeholder={
+                          formik.values.country
+                            ? "Select State"
+                            : "Select Country First"
+                        }
+                        className="text-black"
                       />
                     </div>
                     {formik.touched.state && formik.errors.state && (
@@ -466,27 +521,45 @@ const CreateClub = ({
                     )}
                   </div>
 
-                  {/* Country */}
+                  {/* City */}
                   <div>
                     <label className="mb-2 block">
-                      Country<span className="text-red-500">*</span>
+                      City<span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
-                      <span className="absolute top-[50%] translate-y-[-50%] left-[15px]">
+                      <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[10]">
                         <IoLocationOutline />
                       </span>
-                      <input
-                        type="text"
-                        name="country"
-                        value={formik.values.country}
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
-                        className="custom--input w-full input--icon"
+                      <Select
+                        name="city"
+                        value={formik.values.city}
+                        options={
+                          formik.values.country && formik.values.state
+                            ? City.getCitiesOfState(
+                                formik.values.country.value,
+                                formik.values.state.value,
+                              ).map((c) => ({
+                                label: c.name,
+                                value: c.name,
+                              }))
+                            : []
+                        }
+                        onChange={(option) =>
+                          formik.setFieldValue("city", option)
+                        }
+                        onBlur={() => formik.setFieldTouched("city", true)}
+                        styles={selectIcon}
+                        isDisabled={!formik.values.state}
+                        placeholder={
+                          formik.values.state
+                            ? "Select City"
+                            : "Select State First"
+                        }
                       />
                     </div>
-                    {formik.touched.country && formik.errors.country && (
+                    {formik.touched.city && formik.errors.city && (
                       <p className="text-red-500 text-sm mt-1">
-                        {formik.errors.country}
+                        {formik.errors.city}
                       </p>
                     )}
                   </div>
@@ -504,7 +577,21 @@ const CreateClub = ({
                         type="text"
                         name="zipcode"
                         value={formik.values.zipcode}
-                        onChange={formik.handleChange}
+                        // onChange={formik.handleChange}
+                        onKeyDown={blockInvalidNumberKeys} // ⛔ blocks typing -, e, etc.
+                        onChange={(e) => {
+                          // Keep only positive integers
+                          let cleanValue = sanitizePositiveInteger(
+                            e.target.value,
+                          );
+
+                          // Limit to max 6 digits
+                          if (cleanValue.length > 6) {
+                            cleanValue = cleanValue.slice(0, 6);
+                          }
+
+                          formik.setFieldValue("zipcode", cleanValue);
+                        }}
                         onBlur={formik.handleBlur}
                         className="custom--input w-full input--icon"
                       />

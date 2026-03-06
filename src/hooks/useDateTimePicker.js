@@ -1,9 +1,20 @@
 // hooks/useDateTimePicker.js
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 // ✅ WITH FORMIK
 export const useDateTimePicker = (formik, fieldName, filterTime = null) => {
   const [timeSelected, setTimeSelected] = useState(false);
+
+    // ✅ NEW: Detect existing time (for edit mode)
+  useEffect(() => {
+    const value = formik.values[fieldName];
+    if (value) {
+      const d = new Date(value);
+      if (d.getHours() !== 0 || d.getMinutes() !== 0) {
+        setTimeSelected(true);
+      }
+    }
+  }, [formik.values[fieldName]]);
 
   const handleDateTime = (date) => {
     if (!date) {

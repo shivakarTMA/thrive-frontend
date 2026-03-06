@@ -232,15 +232,18 @@ const Login = (props) => {
                 </div>
               </div>
 
-              <div className="flex gap-2 justify-between mt-2">
+              <div className="gap-2 justify-between mt-2">
                 {/* ✅ Resend Button */}
 
                 {/* ✅ Timer Display */}
                 {timer > 0 ? (
+                  <>
                   <p className="text-sm text-gray-500">
                     Didn’t receive the code? Resend OTP in{" "}
                     <span className="font-semibold">{timer}s</span>
                   </p>
+                  <p className="text-sm text-gray-500">This OTP is valid for 5 minutes only.</p>
+                  </>
                 ) : (
                   <p className="text-sm ">
                     <span className="text-gray-400">

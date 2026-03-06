@@ -171,7 +171,7 @@ const CreateWorkoutplan = () => {
           position: i + 1,
           exercises: [],
         };
-      }
+      },
     );
 
     setData((prev) => ({
@@ -264,7 +264,7 @@ const CreateWorkoutplan = () => {
         if (idx !== dayIdx) return day;
 
         const updatedExercises = day.exercises.map((ex, i) =>
-          i === exIdx ? { ...ex, [field]: value } : ex
+          i === exIdx ? { ...ex, [field]: value } : ex,
         );
 
         return { ...day, exercises: updatedExercises };
@@ -306,7 +306,7 @@ const CreateWorkoutplan = () => {
 
     // Deep clone exercises and remove IDs to avoid conflicts
     const copiedExercises = JSON.parse(
-      JSON.stringify(dayToCopy.exercises || [])
+      JSON.stringify(dayToCopy.exercises || []),
     ).map((ex) => {
       // Remove id field to treat as new exercises
       const { id, ...exerciseWithoutId } = ex;
@@ -334,7 +334,7 @@ const CreateWorkoutplan = () => {
             ex._ui?.type === "rest"
               ? { ...ex._ui, id: `rest-${Date.now()}-${idx}` }
               : { ...ex._ui, id: `${ex._ui?.id || "ex"}-${Date.now()}-${idx}` },
-        })
+        }),
       );
 
       updatedDays[dayIdx] = {
@@ -488,7 +488,7 @@ const CreateWorkoutplan = () => {
 
         response = await authAxios().put(
           `/workoutplan/${editingId}`,
-          updatePayload
+          updatePayload,
         );
         toast.success("Workout plan updated successfully!");
       } else {
@@ -507,7 +507,7 @@ const CreateWorkoutplan = () => {
     } catch (error) {
       console.error("Error saving workout plan:", error);
       toast.error(
-        error.response?.data?.message || "Failed to save workout plan"
+        error.response?.data?.message || "Failed to save workout plan",
       );
     } finally {
       setLoading(false);
@@ -565,7 +565,7 @@ const CreateWorkoutplan = () => {
                         activeDayIndex,
                         exIdx,
                         "sets",
-                        sanitizeNumber(e.target.value)
+                        sanitizeNumber(e.target.value),
                       )
                     }
                     className="custom--input number--appearance-none w-full"
@@ -598,7 +598,7 @@ const CreateWorkoutplan = () => {
                         activeDayIndex,
                         exIdx,
                         "reps",
-                        sanitizeNumber(e.target.value)
+                        sanitizeNumber(e.target.value),
                       )
                     }
                     className="custom--input number--appearance-none w-full"
@@ -631,7 +631,7 @@ const CreateWorkoutplan = () => {
                         activeDayIndex,
                         exIdx,
                         "duration_mins",
-                        sanitizeNumber(e.target.value)
+                        sanitizeNumber(e.target.value),
                       )
                     }
                     className="custom--input number--appearance-none w-full"
@@ -664,7 +664,7 @@ const CreateWorkoutplan = () => {
                         activeDayIndex,
                         exIdx,
                         "distance_mts",
-                        sanitizeNumber(e.target.value)
+                        sanitizeNumber(e.target.value),
                       )
                     }
                     className="custom--input number--appearance-none w-full"
@@ -697,7 +697,7 @@ const CreateWorkoutplan = () => {
                         activeDayIndex,
                         exIdx,
                         "weight_kg",
-                        sanitizeNumber(e.target.value)
+                        sanitizeNumber(e.target.value),
                       )
                     }
                     className="custom--input number--appearance-none w-full"
@@ -730,7 +730,7 @@ const CreateWorkoutplan = () => {
                         activeDayIndex,
                         exIdx,
                         "rest_secs",
-                        sanitizeNumber(e.target.value)
+                        sanitizeNumber(e.target.value),
                       )
                     }
                     className="custom--input number--appearance-none w-full"
@@ -751,9 +751,7 @@ const CreateWorkoutplan = () => {
             </div>
             <div className="block">
               <div className="w-full">
-                <label className="mb-2 block">
-                  Notes
-                </label>
+                <label className="mb-2 block">Notes</label>
                 <input
                   type="text"
                   placeholder="Notes"
@@ -763,7 +761,7 @@ const CreateWorkoutplan = () => {
                       activeDayIndex,
                       exIdx,
                       "notes",
-                      e.target.value
+                      e.target.value,
                     )
                   }
                   className="custom--input w-full"
@@ -853,6 +851,28 @@ const CreateWorkoutplan = () => {
     );
   }
 
+  // ✅ Common numeric input handler
+  const handleNumericInput = (e, maxLength) => {
+    const { name, value } = e.target;
+
+    // Remove everything except digits
+    const numericValue = value.replace(/\D/g, "");
+
+    // Limit length
+    if (numericValue.length <= maxLength) {
+      setData((prev) => ({
+        ...prev,
+        [name]: numericValue,
+      }));
+    }
+  };
+
+  const blockInvalidKeys = (e) => {
+    if (["e", "E", "+", "-", "."].includes(e.key)) {
+      e.preventDefault();
+    }
+  };
+
   return (
     <div className="page--content">
       <div className="flex items-end justify-between gap-2 mb-5">
@@ -902,7 +922,7 @@ const CreateWorkoutplan = () => {
                   <Select
                     options={workoutTypeOptions}
                     value={workoutTypeOptions.find(
-                      (opt) => opt.value === data.plan.workout_type
+                      (opt) => opt.value === data.plan.workout_type,
                     )}
                     onChange={(selectedOption) => {
                       setData((prev) => ({
@@ -931,12 +951,35 @@ const CreateWorkoutplan = () => {
                       type="number"
                       min={0}
                       value={data.plan.no_of_days ?? ""}
-                      onChange={(e) =>
-                        setData((prev) => ({
-                          ...prev,
-                          plan: { ...prev.plan, no_of_days: e.target.value },
-                        }))
-                      }
+                      // onChange={(e) =>
+                      //   setData((prev) => ({
+                      //     ...prev,
+                      //     plan: { ...prev.plan, no_of_days: e.target.value },
+                      //   }))
+                      // }
+                      onKeyDown={(e) => {
+                        // Block unwanted characters
+                        if (["e", "E", "+", "-", "."].includes(e.key)) {
+                          e.preventDefault();
+                        }
+                      }}
+                      onPaste={(e) => {
+                        const paste = e.clipboardData.getData("text");
+                        if (!/^\d+$/.test(paste)) {
+                          e.preventDefault();
+                        }
+                      }}
+                      onChange={(e) => {
+                        const value = e.target.value;
+
+                        // Allow only digits
+                        if (/^\d*$/.test(value)) {
+                          setData((prev) => ({
+                            ...prev,
+                            plan: { ...prev.plan, no_of_days: value },
+                          }));
+                        }
+                      }}
                       disabled={data.plan.workout_type === "SINGLE"}
                       className={`custom--input w-full ${
                         data.plan.workout_type === "SINGLE"
@@ -1025,12 +1068,17 @@ const CreateWorkoutplan = () => {
                       <>
                         {!data.days[activeDayIndex]?.is_rest_day && (
                           <div className="flex items-center gap-1">
-                            <button
-                              onClick={() => handleCopyDay(activeDayIndex)}
-                              className="text-sm text-white px-3 py-1 rounded-[5px] bg-blue-500"
-                            >
-                              Copy
-                            </button>
+                            {data.days?.length > 1 &&
+                              !data.days[activeDayIndex]?.is_rest_day &&
+                              data.days[activeDayIndex]?.exercises?.length >
+                                0 && (
+                                <button
+                                  onClick={() => handleCopyDay(activeDayIndex)}
+                                  className="text-sm text-white px-3 py-1 rounded-[5px] bg-blue-500"
+                                >
+                                  Copy
+                                </button>
+                              )}
                             <button
                               onClick={() => handlePasteDay(activeDayIndex)}
                               disabled={!copiedDay}
@@ -1125,7 +1173,7 @@ const CreateWorkoutplan = () => {
                         )}
 
                         {ungrouped.map((exercise) =>
-                          renderExercise(exercise, exercise.index)
+                          renderExercise(exercise, exercise.index),
                         )}
                       </>
                     );
@@ -1157,8 +1205,8 @@ const CreateWorkoutplan = () => {
                 {loading
                   ? "Saving..."
                   : editingId
-                  ? "Update Workout"
-                  : "Save Workout"}
+                    ? "Update Workout"
+                    : "Save Workout"}
               </button>
             </div>
           </div>

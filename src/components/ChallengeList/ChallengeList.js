@@ -36,8 +36,8 @@ const challengeType = [
 ];
 
 const statusType = [
-  { label: "Active", value: "ACTIVE" },
-  { label: "Inactive", value: "INACTIVE" },
+  // { label: "Active", value: "ACTIVE" },
+  // { label: "Inactive", value: "INACTIVE" },
   { label: "Completed", value: "COMPLETED" },
   { label: "Ongoing", value: "ONGOING" },
   { label: "Upcoming", value: "UPCOMING" },
@@ -143,7 +143,7 @@ const ChallengeList = () => {
       condition: "[]",
       description: "",
       challenge_type: "",
-      start_date_time: "",
+      start_date_time: null,
       duration_days: "",
       end_date_time: "",
       frequency: "",
@@ -159,7 +159,7 @@ const ChallengeList = () => {
       winning_caption_subheading: "",
       progress_caption_heading: "",
       progress_caption_subheading: "",
-      // status: "UPCOMING",
+      status: "",
     },
 
     validationSchema: Yup.object({
@@ -204,6 +204,9 @@ const ChallengeList = () => {
       ),
       progress_caption_subheading: Yup.string().required(
         "Progress caption subheading is required",
+      ),
+      status: Yup.string().required(
+        "Status is required",
       ),
     }),
 
@@ -458,16 +461,22 @@ const ChallengeList = () => {
                               setShowConfirmModal(true);
                             }}
                           >
-                            <IoCheckboxOutline className="text-[25px] text-black" />
+                            <IoCheckboxOutline className="text-[22px] text-black" />
                           </div>
                         </Tooltip>
                         <Tooltip
                           id={`tooltip-edit-${item.id}`}
-                          content="Edit Challenge"
+                          content={`${
+                            item?.status === "COMPLETED" ? "" : "Edit Challenge"
+                          }`}
                           place="left"
                         >
                           <div
-                            className="p-1 cursor-pointer"
+                            className={`p-1 cursor-pointer ${
+                              item?.status === "COMPLETED"
+                                ? "opacity-[0.5] pointer-events-none"
+                                : ""
+                            }`}
                             onClick={() => {
                               setEditingOption(item.id);
                               setShowModal(true);

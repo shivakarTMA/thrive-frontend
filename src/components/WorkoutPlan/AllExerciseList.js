@@ -52,6 +52,8 @@ const AllExerciseList = ({ isOpen, onClose, onSelectExercise }) => {
   const handleOverlayClick = (e) => {
     if (leadBoxRef.current && !leadBoxRef.current.contains(e.target)) {
       onClose();
+      setSearchTerm("");
+      setSelectedCategory(null)
     }
   };
 
@@ -71,7 +73,13 @@ const AllExerciseList = ({ isOpen, onClose, onSelectExercise }) => {
       >
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-lg font-semibold">Exercise Library</h2>
-          <button onClick={onClose}>
+          <button
+            onClick={() => {
+              onClose();
+              setSearchTerm(""); // reset search
+              setSelectedCategory(null)
+            }}
+          >
             <FiX size={22} />
           </button>
         </div>

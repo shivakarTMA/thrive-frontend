@@ -340,6 +340,7 @@ const LeadCallLogs = () => {
 
   useEffect(() => {
     if (editLog) {
+      console.log(editLog,'aksdhfiasdhfiueditLog')
       formik.setValues({
         member_id: leadId,
         call_status: editLog.call_status,

@@ -13,6 +13,7 @@ import {
   customStyles,
   filterActiveItems,
   formatAutoDate,
+  formatDateTimeLead,
   formatText,
 } from "../../Helper/helper";
 import viewIcon from "../../assets/images/icons/eye.svg";
@@ -380,6 +381,8 @@ const AllLostFound = () => {
                   <th className="px-2 py-4">Status</th>
                   <th className="px-2 py-4">Logged By</th>
                   <th className="px-2 py-4">Claimant Name</th>
+                  <th className="px-2 py-4">Return By</th>
+                  <th className="px-2 py-4">Return Date Time</th>
                   <th className="px-2 py-4">Action</th>
                 </tr>
               </thead>
@@ -397,7 +400,7 @@ const AllLostFound = () => {
                       <td className="px-2 py-4">{row?.category}</td>
                       <td className="px-2 py-4">{row?.found_at_location}</td>
                       <td className="px-2 py-4">
-                        {formatAutoDate(row?.found_date_time)}
+                        {formatDateTimeLead(row?.found_date_time)}
                       </td>
                       <td className="px-2 py-4">
                         <span
@@ -419,6 +422,14 @@ const AllLostFound = () => {
                       </td>
                       <td className="px-2 py-4">
                         {row?.claimant_name == null ? "--" : row?.claimant_name}
+                      </td>
+                      <td className="px-2 py-4">
+                        {row?.returnby_name == null ? "--" : row?.returnby_name}
+                      </td>
+                      <td className="px-2 py-4">
+                        {row?.return_date_time == null
+                          ? "--"
+                          : formatDateTimeLead(row?.return_date_time)}
                       </td>
                       <td className="px-2 py-4">
                         <div className="flex">

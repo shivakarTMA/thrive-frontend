@@ -3,7 +3,13 @@ import React, { useEffect, useState } from "react";
 import { IoCloseCircle } from "react-icons/io5";
 import { FaListUl } from "react-icons/fa6";
 import Select from "react-select";
-import { filterActiveItems, selectIcon } from "../../Helper/helper";
+import {
+  blockInvalidNumberKeys,
+  durationValueInteger,
+  filterActiveItems,
+  sanitizePositiveInteger,
+  selectIcon,
+} from "../../Helper/helper";
 import { toast } from "react-toastify";
 import { authAxios } from "../../config/config";
 import { LuCalendar, LuPlug } from "react-icons/lu";
@@ -69,7 +75,7 @@ const CreateCoupon = ({
 
       // keep only active plans (case-insensitive)
       const activeOnly = (Array.isArray(raw) ? raw : []).filter(
-        (item) => String(item.status || "").toUpperCase() === "ACTIVE"
+        (item) => String(item.status || "").toUpperCase() === "ACTIVE",
       );
 
       setSubscriptions(activeOnly);
@@ -91,7 +97,7 @@ const CreateCoupon = ({
 
       // keep only active plans (case-insensitive)
       const activeOnly = (Array.isArray(raw) ? raw : []).filter(
-        (item) => String(item.status || "").toUpperCase() === "ACTIVE"
+        (item) => String(item.status || "").toUpperCase() === "ACTIVE",
       );
 
       setPackages(activeOnly);
@@ -114,7 +120,7 @@ const CreateCoupon = ({
 
       // keep only active plans (case-insensitive)
       const activeOnly = (Array.isArray(raw) ? raw : []).filter(
-        (item) => String(item.status || "").toUpperCase() === "ACTIVE"
+        (item) => String(item.status || "").toUpperCase() === "ACTIVE",
       );
 
       setProducts(activeOnly);
@@ -220,7 +226,7 @@ const CreateCoupon = ({
           }
 
           const types = new Set(
-            (rulesToSet || []).map((r) => r?.applicable_type).filter(Boolean)
+            (rulesToSet || []).map((r) => r?.applicable_type).filter(Boolean),
           );
           if (types.has("SUBSCRIPTION")) await fetchSubscriptions();
           if (types.has("PACKAGE")) await fetchPackages();
@@ -351,7 +357,7 @@ const CreateCoupon = ({
     // Only reset if club_id is set and rules have specific items selected
     if (clubId) {
       const hasSpecificItems = currentRules.some(
-        (rule) => rule.applicable_type !== "ALL" && rule.applicable_id !== null
+        (rule) => rule.applicable_type !== "ALL" && rule.applicable_id !== null,
       );
 
       if (hasSpecificItems) {
@@ -419,14 +425,14 @@ const CreateCoupon = ({
                           clubOptions.find(
                             (option) =>
                               option.value?.toString() ===
-                              String(formik.values.coupon.club_id)
+                              String(formik.values.coupon.club_id),
                           ) || null
                         }
                         options={clubOptions}
                         onChange={(option) =>
                           formik.setFieldValue(
                             "coupon.club_id",
-                            option?.value ?? null
+                            option?.value ?? null,
                           )
                         }
                         onBlur={() =>
@@ -485,14 +491,14 @@ const CreateCoupon = ({
                           discountType.find(
                             (option) =>
                               option.value?.toString() ===
-                              String(formik.values.coupon?.discount_type)
+                              String(formik.values.coupon?.discount_type),
                           ) || null
                         }
                         options={discountType}
                         onChange={(option) =>
                           formik.setFieldValue(
                             "coupon.discount_type",
-                            option?.value ?? ""
+                            option?.value ?? "",
                           )
                         }
                         onBlur={() =>
@@ -523,8 +529,19 @@ const CreateCoupon = ({
                         type="number"
                         name="coupon.discount_value"
                         value={formik.values.coupon?.discount_value || ""}
-                        onChange={formik.handleChange}
+                        // onChange={formik.handleChange}
+                        onKeyDown={blockInvalidNumberKeys} // ⛔ blocks typing -, e, etc.
+                        onChange={(e) => {
+                          const cleanValue = durationValueInteger(
+                            e.target.value,
+                          );
+                          formik.setFieldValue(
+                            "coupon.discount_value",
+                            cleanValue,
+                          );
+                        }}
                         onBlur={formik.handleBlur}
+                        min="1"
                         className="custom--input w-full input--icon"
                       />
                     </div>
@@ -549,9 +566,16 @@ const CreateCoupon = ({
                         type="number"
                         name="coupon.max_usage"
                         value={formik.values.coupon?.max_usage ?? ""}
-                        onChange={formik.handleChange}
+                        // onChange={formik.handleChange}
+                        onKeyDown={blockInvalidNumberKeys} // ⛔ blocks typing -, e, etc.
+                        onChange={(e) => {
+                          const cleanValue = sanitizePositiveInteger(
+                            e.target.value,
+                          );
+                          formik.setFieldValue("coupon.max_usage", cleanValue);
+                        }}
                         onBlur={formik.handleBlur}
-                        className="custom--input w-full input--icon"
+                        className="custom--input w-full input--icon number--appearance-none"
                       />
                     </div>
                     {formik.touched.coupon?.max_usage &&
@@ -575,9 +599,16 @@ const CreateCoupon = ({
                         type="number"
                         name="coupon.per_user_limit"
                         value={formik.values.coupon?.per_user_limit ?? ""}
-                        onChange={formik.handleChange}
+                        // onChange={formik.handleChange}
+                        onKeyDown={blockInvalidNumberKeys} // ⛔ blocks typing -, e, etc.
+                        onChange={(e) => {
+                          const cleanValue = sanitizePositiveInteger(
+                            e.target.value,
+                          );
+                          formik.setFieldValue("coupon.per_user_limit", cleanValue);
+                        }}
                         onBlur={formik.handleBlur}
-                        className="custom--input w-full input--icon"
+                        className="custom--input w-full input--icon number--appearance-none"
                       />
                     </div>
                     {formik.touched.coupon?.per_user_limit &&
@@ -601,7 +632,14 @@ const CreateCoupon = ({
                         type="number"
                         name="coupon.position"
                         value={formik.values.coupon?.position ?? ""}
-                        onChange={formik.handleChange}
+                        // onChange={formik.handleChange}
+                        onKeyDown={blockInvalidNumberKeys} // ⛔ blocks typing -, e, etc.
+                        onChange={(e) => {
+                          const cleanValue = sanitizePositiveInteger(
+                            e.target.value,
+                          );
+                          formik.setFieldValue("coupon.position", cleanValue);
+                        }}
                         onBlur={formik.handleBlur}
                         className="custom--input w-full input--icon"
                       />
@@ -628,7 +666,7 @@ const CreateCoupon = ({
                         onChange={(date) =>
                           formik.setFieldValue(
                             "coupon.start_date",
-                            date ? date.toISOString() : ""
+                            date ? date.toISOString() : "",
                           )
                         }
                         dateFormat="dd-MM-yyyy"
@@ -658,7 +696,7 @@ const CreateCoupon = ({
                         onChange={(date) =>
                           formik.setFieldValue(
                             "coupon.end_date",
-                            date ? date.toISOString() : ""
+                            date ? date.toISOString() : "",
                           )
                         }
                         dateFormat="dd-MM-yyyy"
@@ -690,14 +728,14 @@ const CreateCoupon = ({
                           value={
                             statusOptions.find(
                               (opt) =>
-                                opt.value === formik.values.coupon?.status
+                                opt.value === formik.values.coupon?.status,
                             ) || null
                           }
                           options={statusOptions}
                           onChange={(option) =>
                             formik.setFieldValue(
                               "coupon.status",
-                              option?.value ?? ""
+                              option?.value ?? "",
                             )
                           }
                           onBlur={() =>
@@ -766,7 +804,8 @@ const CreateCoupon = ({
                               <Select
                                 value={
                                   applicableTypeOptions.find(
-                                    (opt) => opt.value === rule?.applicable_type
+                                    (opt) =>
+                                      opt.value === rule?.applicable_type,
                                   ) || null
                                 }
                                 options={applicableTypeOptions}
@@ -816,16 +855,16 @@ const CreateCoupon = ({
                                   rule?.applicable_type !== "ALL"
                                     ? getApplicableOptions(
                                         rule?.applicable_type,
-                                        index
+                                        index,
                                       ).find(
                                         (opt) =>
-                                          opt.value === rule?.applicable_id
+                                          opt.value === rule?.applicable_id,
                                       ) || null
                                     : null
                                 }
                                 options={getApplicableOptions(
                                   rule?.applicable_type,
-                                  index
+                                  index,
                                 )}
                                 onChange={(option) =>
                                   handleApplicableIdChange(index, option)
@@ -838,17 +877,17 @@ const CreateCoupon = ({
                                   rule?.applicable_type === "SUBSCRIPTION"
                                     ? loadingLists.subscriptions
                                     : rule?.applicable_type === "PACKAGE"
-                                    ? loadingLists.packages
-                                    : rule?.applicable_type === "PRODUCT"
-                                    ? loadingLists.products
-                                    : false
+                                      ? loadingLists.packages
+                                      : rule?.applicable_type === "PRODUCT"
+                                        ? loadingLists.products
+                                        : false
                                 }
                                 placeholder={
                                   rule?.applicable_type === "ALL"
                                     ? "Not applicable"
                                     : !rule?.applicable_type
-                                    ? "Choose type first"
-                                    : "Select item..."
+                                      ? "Choose type first"
+                                      : "Select item..."
                                 }
                                 styles={{
                                   ...selectIcon,
@@ -894,7 +933,7 @@ const CreateCoupon = ({
                             </button>
                           </div>
                         </div>
-                      )
+                      ),
                     )}
                   </div>
                 </div>

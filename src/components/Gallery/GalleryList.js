@@ -366,11 +366,30 @@ const GalleryList = () => {
       )}
 
       {showDeleteModal && selectedDeleteId && (
-        <ConfirmPopup
-          message={`Confirm deletion of the "${selectedDeleteId?.title}"?`}
-          onConfirm={handleConfirmDelete}
-          onCancel={handleCancelDelete}
-        />
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+          <div className="bg-white p-5 py-6 rounded shadow-lg text-center max-w-md w-full">
+            <p className="mb-2 text-lg font-semibold">
+              Are you sure you want to delete this image?
+            </p>
+            <p className="mb-4 text-[12px] font-[500]">
+              This image will be permanently removed from the Club Gallery.
+            </p>
+            <div className="flex justify-center gap-4">
+              <button
+                onClick={handleConfirmDelete}
+                className="bg-black text-white px-4 py-2 rounded max-w-[100px] w-full"
+              >
+                Yes
+              </button>
+              <button
+                onClick={handleCancelDelete}
+                className="bg-gray-300 text-black px-4 py-2 rounded max-w-[100px] w-full"
+              >
+                No
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

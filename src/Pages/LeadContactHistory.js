@@ -127,7 +127,7 @@ export default function LeadContactHistory({ handleEditLog, filteredData }) {
           {/* Child Remark */}
           {childRemark && (
             <div className="mt-2 p-2 bg-white border border-[#D4D4D4] rounded-md">
-              <p className="text-xs text-gray-500 mb-1">Updated Remark:</p>
+              <p className="text-xs text-gray-500 mb-1">Updated Remarks:</p>
               <p className="text-sm text-black">{childRemark}</p>
             </div>
           )}

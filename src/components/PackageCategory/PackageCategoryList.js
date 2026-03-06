@@ -134,33 +134,46 @@ const PackageCategoryList = () => {
           formData.append("file", values.icon);
         }
 
-        if (editingOption && editingOption) {
+        let response;
+
+        if (editingOption) {
           // Update
-          await authAxios().put(
+          response = await authAxios().put(
             `/package-category/${editingOption}`,
+            formData,
+            { headers: { "Content-Type": "multipart/form-data" } },
+          );
+        } else {
+          // Create
+          response = await authAxios().post(
+            "/package-category/create",
             formData,
             {
               headers: { "Content-Type": "multipart/form-data" },
             },
           );
-          toast.success("Updated Successfully");
-        } else {
-          // Create
-          await authAxios().post("/package-category/create", formData, {
-            headers: { "Content-Type": "multipart/form-data" },
-          });
-          toast.success("Created Successfully");
         }
 
-        fetchPackageCategoryList();
+        if (response.data.status === false) {
+          toast.error(response.data.message || "Something went wrong");
+        } else {
+          toast.success(
+            response.data.message ||
+              (editingOption ? "Updated Successfully" : "Created Successfully"),
+          );
+          fetchPackageCategoryList();
+          resetForm();
+          setEditingOption(null);
+          setShowModal(false);
+        }
       } catch (err) {
-        console.error("API Error:", err.response?.data || err.message);
-        toast.error("Failed to save package");
+        // console.error("API Error:", err.response?.data);
+        toast.error(err.response?.data?.message);
       }
 
-      resetForm();
-      setEditingOption(null);
-      setShowModal(false);
+      // resetForm();
+      // setEditingOption(null);
+      // setShowModal(false);
     },
   });
 

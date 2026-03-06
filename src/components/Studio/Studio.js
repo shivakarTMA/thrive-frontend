@@ -118,23 +118,29 @@ const Studio = () => {
       try {
         const payload = { ...values };
 
+         let response;
+
         if (editingOption && editingOption.id) {
-          await authAxios().put(`/studio/${editingOption.id}`, payload);
-          toast.success("Updated Successfully");
+          response = await authAxios().put(`/studio/${editingOption.id}`, payload);
         } else {
-          await authAxios().post("/studio/create", payload);
-          toast.success("Created Successfully");
+          response = await authAxios().post("/studio/create", payload);
         }
 
-        fetchStudio();
-      } catch (err) {
-        console.error("API Error:", err.response?.data || err.message);
-        toast.error("Failed to save onboarding");
-      }
+        if (response.data.status === false) {
+          toast.error(response.data.message || "Something went wrong");
+        } else {
+          toast.success((editingOption ? "Updated Successfully" : "Created Successfully"));
+          fetchStudio();
+          resetForm();
+          setEditingOption(null);
+          setShowModal(false);
+        }
 
-      resetForm();
-      setEditingOption(null);
-      setShowModal(false);
+        // fetchStudio();
+      } catch (err) {
+        // console.error("API Error:", err.response?.data || err.message);
+         toast.error(err.response?.data?.message);
+      }
     },
   });
 
