@@ -69,7 +69,7 @@ const CreateProduct = ({
             hsn_sac_code: data?.hsn_sac_code || "",
             amount: data?.amount || "",
             discount: data?.discount || "",
-            gst: data?.gst || "",
+            gst: data?.gst || 5,
             // stock_quantity: data?.stock_quantity || "",
             stock_quantity:
               data?.stock_quantity !== null &&
@@ -506,13 +506,12 @@ const CreateProduct = ({
                   {/* GST (%) */}
                   <div>
                     <label className="mb-2 block">
-                      GST (%)<span className="text-red-500">*</span>
+                      GST (%)
                     </label>
                     <div className="relative">
                       <input
                         type="number"
                         name="gst"
-                        className="custom--input w-full number--appearance-none"
                         value={formik.values.gst}
                         // onChange={formik.handleChange}
                         onKeyDown={blockInvalidNumberKeys} // ⛔ blocks typing -, e, etc.
@@ -523,6 +522,8 @@ const CreateProduct = ({
                           formik.setFieldValue("gst", cleanValue);
                         }}
                         onBlur={formik.handleBlur}
+                        disabled={true}
+                        className="custom--input w-full number--appearance-none cursor-not-allowed pointer-events-none !bg-gray-100 !text-gray-500"
                       />
                     </div>
                     {formik.touched.gst && formik.errors.gst && (

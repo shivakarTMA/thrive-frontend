@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { FiClock, FiPlus, FiTrash2 } from "react-icons/fi";
+import { FiPlus, FiTrash2 } from "react-icons/fi";
 import { IoCloseCircle } from "react-icons/io5";
 import Select from "react-select";
 import {
@@ -8,9 +8,6 @@ import {
   filterActiveItems,
   sanitizePositiveInteger,
 } from "../../Helper/helper";
-import DatePicker from "react-datepicker"; // Date picker component
-import "react-datepicker/dist/react-datepicker.css"; // Date picker styles
-import { FaCalendarDays } from "react-icons/fa6";
 import { authAxios } from "../../config/config";
 import { toast } from "react-toastify";
 import { PiImageFill } from "react-icons/pi";
@@ -32,17 +29,10 @@ const ptType = [
   { label: "Trio Plan (3 members)", value: "TRIPLE" },
 ];
 
-// Is Feature type options for dropdown
-const featureType = [
-  { label: "Yes", value: true },
-  { label: "No", value: false },
-];
-
 const CreatePackage = ({
   setShowModal,
   editingOption,
   formik,
-
   setSessionLevelValue,
   sessionLevel,
   sessionLevelValue,
@@ -51,7 +41,6 @@ const CreatePackage = ({
   const [studio, setStudio] = useState([]);
   const [club, setClub] = useState([]);
   const [service, setService] = useState([]);
-  const [staffList, setStaffList] = useState([]);
 
   const getServiceType = (service_id, serviceOptions) => {
     const found = serviceOptions.find((s) => s.value === service_id);
@@ -91,20 +80,6 @@ const CreatePackage = ({
     }
   };
 
-  const fetchStaff = async (clubId = null) => {
-    try {
-      const params = {};
-      if (clubId) params.club_id = clubId;
-      const res = await authAxios().get("/staff/list?role=TRAINER", { params });
-      let data = res.data?.data || res.data || [];
-      const activeService = data.filter((item) => item.status === "ACTIVE");
-      setStaffList(activeService);
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to fetch service");
-    }
-  };
-
   const fetchStudio = async (clubId = null) => {
     try {
       const params = {};
@@ -127,7 +102,6 @@ const CreatePackage = ({
     if (formik.values.club_id) {
       fetchService(formik.values.club_id);
       fetchStudio(formik.values.club_id);
-      fetchStaff(formik.values.club_id);
 
       // reset dependent fields
       formik.setFieldValue("service_id", "");
@@ -137,12 +111,6 @@ const CreatePackage = ({
       setService([]);
     }
   }, [formik.values.club_id]);
-
-  const trainerOptions =
-    staffList?.map((item) => ({
-      label: item.name,
-      value: item.id,
-    })) || [];
 
   const clubOptions =
     club?.map((item) => ({
@@ -953,10 +921,7 @@ const CreatePackage = ({
                       service_type_check !== "RECOVERY" && (
                         <div>
                           <label className="mb-2 block">
-                            GST{" "}
-                            <span>
-                              (%)<span className="text-red-500">*</span>
-                            </span>
+                            GST (%)
                           </label>
                           <div className="relative">
                             <input
@@ -976,7 +941,8 @@ const CreatePackage = ({
                                 formik.setFieldValue("gst", cleanValue);
                               }}
                               onBlur={formik.handleBlur}
-                              className="custom--input w-full number--appearance-none"
+                              disabled={true}
+                              className="custom--input w-full number--appearance-none cursor-not-allowed pointer-events-none !bg-gray-100 !text-gray-500"
                             />
                           </div>
                           {formik.touched.gst && formik.errors.gst && (
@@ -1441,7 +1407,7 @@ const CreatePackage = ({
                             {/* GST */}
                             <div>
                               <label className="mb-2 block">
-                                GST (%) <span className="text-red-500">*</span>
+                                GST (%)
                               </label>
                               <input
                                 type="number"
@@ -1461,7 +1427,8 @@ const CreatePackage = ({
                                   );
                                 }}
                                 onBlur={formik.handleBlur}
-                                className="custom--input w-full number--appearance-none"
+                                className="custom--input w-full number--appearance-none cursor-not-allowed pointer-events-none !bg-gray-100 !text-gray-500"
+                                disabled={true}
                               />
                               {formik.touched.variation?.[index]?.gst &&
                                 formik.errors.variation?.[index]?.gst && (

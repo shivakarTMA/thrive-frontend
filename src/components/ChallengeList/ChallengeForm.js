@@ -37,6 +37,10 @@ const statusType = [
   { label: "Completed", value: "COMPLETED" },
   { label: "Upcoming", value: "UPCOMING" },
 ];
+const joinBetween = [
+  { value: true, label: "Yes" },
+  { value: false, label: "No" },
+];
 
 // Define the ChallengeForm component
 const ChallengeForm = ({ setShowModal, editingOption, formik }) => {
@@ -123,7 +127,7 @@ const ChallengeForm = ({ setShowModal, editingOption, formik }) => {
             about_challenge: exerciseData?.about_challenge || "",
             position: exerciseData?.position || "",
             status: exerciseData?.status || "",
-            join_in_between: exerciseData?.join_in_between || null,
+            join_in_between: exerciseData?.join_in_between || "",
             winning_caption_heading:
               exerciseData?.winning_caption_heading || "",
             winning_caption_subheading:
@@ -446,219 +450,248 @@ const ChallengeForm = ({ setShowModal, editingOption, formik }) => {
                   </div> */}
 
                   {/* Start Date Field */}
-<div>
-  <label className="mb-2 block">
-    Start Date & Time<span className="text-red-500">*</span>
-  </label>
-  <div className="custom--date">
-    <span className="absolute mt-[10px] ml-[15px] z-[1]">
-      <LuCalendar />
-    </span>
-    <DatePicker
-      onChangeRaw={(e) => e.preventDefault()}
-      selected={formik.values.start_date_time}
-      onChange={(date) => {
-        if (!date) {
-          formik.setFieldValue("start_date_time", null);
-          formik.setFieldValue("end_date_time", null);
-          return;
-        }
+                  <div>
+                    <label className="mb-2 block">
+                      Start Date & Time<span className="text-red-500">*</span>
+                    </label>
+                    <div className="custom--date">
+                      <span className="absolute mt-[10px] ml-[15px] z-[1]">
+                        <LuCalendar />
+                      </span>
+                      <DatePicker
+                        onChangeRaw={(e) => e.preventDefault()}
+                        selected={formik.values.start_date_time}
+                        onChange={(date) => {
+                          if (!date) {
+                            formik.setFieldValue("start_date_time", null);
+                            formik.setFieldValue("end_date_time", null);
+                            return;
+                          }
 
-        const freshNow = new Date();
-        const selectedDate = new Date(date);
-        const isToday =
-          selectedDate.toDateString() === freshNow.toDateString();
+                          const freshNow = new Date();
+                          const selectedDate = new Date(date);
+                          const isToday =
+                            selectedDate.toDateString() ===
+                            freshNow.toDateString();
 
-        if (isToday) {
-          const minAllowed = roundUpTime(freshNow, 30);
-          // ✅ Issue 1 Fix: If selected time is in the past for today, force it to minAllowed
-          if (selectedDate < minAllowed) {
-            formik.setFieldValue("start_date_time", minAllowed);
-            formik.setFieldValue("end_date_time", null);
-            return;
-          }
-        }
+                          if (isToday) {
+                            const minAllowed = roundUpTime(freshNow, 30);
+                            // ✅ Issue 1 Fix: If selected time is in the past for today, force it to minAllowed
+                            if (selectedDate < minAllowed) {
+                              formik.setFieldValue(
+                                "start_date_time",
+                                minAllowed,
+                              );
+                              formik.setFieldValue("end_date_time", null);
+                              return;
+                            }
+                          }
 
-        formik.setFieldValue("start_date_time", selectedDate);
-        // ✅ Always reset end date when start changes
-        formik.setFieldValue("end_date_time", null);
-      }}
-      showTimeSelect
-      timeFormat="hh:mm aa"
-      dateFormat="dd/MM/yyyy hh:mm aa"
-      timeIntervals={30}
-      placeholderText="Select date & time"
-      minDate={new Date()}
-      minTime={(() => {
-        const freshNow = new Date();
-        const selectedDate = formik.values.start_date_time
-          ? new Date(formik.values.start_date_time)
-          : null;
+                          formik.setFieldValue("start_date_time", selectedDate);
+                          // ✅ Always reset end date when start changes
+                          formik.setFieldValue("end_date_time", null);
+                        }}
+                        showTimeSelect
+                        timeFormat="hh:mm aa"
+                        dateFormat="dd/MM/yyyy hh:mm aa"
+                        timeIntervals={30}
+                        placeholderText="Select date & time"
+                        minDate={new Date()}
+                        minTime={(() => {
+                          const freshNow = new Date();
+                          const selectedDate = formik.values.start_date_time
+                            ? new Date(formik.values.start_date_time)
+                            : null;
 
-        const isToday = selectedDate
-          ? selectedDate.toDateString() === freshNow.toDateString()
-          : true;
+                          const isToday = selectedDate
+                            ? selectedDate.toDateString() ===
+                              freshNow.toDateString()
+                            : true;
 
-        return isToday ? roundUpTime(freshNow, 30) : minTimeDefault;
-      })()}
-      maxTime={maxTimeDefault}
-      className="input--icon"
-    />
-  </div>
-  {formik.touched.start_date_time && formik.errors.start_date_time && (
-    <p className="text-red-500 text-sm">{formik.errors.start_date_time}</p>
-  )}
-</div>
+                          return isToday
+                            ? roundUpTime(freshNow, 30)
+                            : minTimeDefault;
+                        })()}
+                        maxTime={maxTimeDefault}
+                        className="input--icon"
+                      />
+                    </div>
+                    {formik.touched.start_date_time &&
+                      formik.errors.start_date_time && (
+                        <p className="text-red-500 text-sm">
+                          {formik.errors.start_date_time}
+                        </p>
+                      )}
+                  </div>
 
-{/* End Date Field */}
-{/* End Date Field */}
-<div>
-  <label className="mb-2 block">
-    End Date & Time<span className="text-red-500">*</span>
-  </label>
-  <div className="custom--date">
-    <span className="absolute mt-[10px] ml-[15px] z-[1]">
-      <LuCalendar />
-    </span>
-    <DatePicker
-      onChangeRaw={(e) => e.preventDefault()}
-      disabled={!formik.values.start_date_time}
-      selected={
-        formik.values.end_date_time
-          ? new Date(formik.values.end_date_time)
-          : null
-      }
-      // ✅ KEY FIX: Open calendar on start date, not today
-      openToDate={
-        formik.values.start_date_time
-          ? new Date(formik.values.start_date_time)
-          : new Date()
-      }
-      onChange={(date) => {
-        if (!date) {
-          formik.setFieldValue("end_date_time", null);
-          return;
-        }
+                  {/* End Date Field */}
+                  {/* End Date Field */}
+                  <div>
+                    <label className="mb-2 block">
+                      End Date & Time<span className="text-red-500">*</span>
+                    </label>
+                    <div className="custom--date">
+                      <span className="absolute mt-[10px] ml-[15px] z-[1]">
+                        <LuCalendar />
+                      </span>
+                      <DatePicker
+                        onChangeRaw={(e) => e.preventDefault()}
+                        disabled={!formik.values.start_date_time}
+                        selected={
+                          formik.values.end_date_time
+                            ? new Date(formik.values.end_date_time)
+                            : null
+                        }
+                        // ✅ KEY FIX: Open calendar on start date, not today
+                        openToDate={
+                          formik.values.start_date_time
+                            ? new Date(formik.values.start_date_time)
+                            : new Date()
+                        }
+                        onChange={(date) => {
+                          if (!date) {
+                            formik.setFieldValue("end_date_time", null);
+                            return;
+                          }
 
-        const freshNow = new Date();
-        const selectedEnd = new Date(date);
-        const startDate = formik.values.start_date_time
-          ? new Date(formik.values.start_date_time)
-          : null;
+                          const freshNow = new Date();
+                          const selectedEnd = new Date(date);
+                          const startDate = formik.values.start_date_time
+                            ? new Date(formik.values.start_date_time)
+                            : null;
 
-        // ✅ KEY FIX: If user picks a time without picking a date first,
-        // the picker defaults to today — force it to start date instead
-        if (
-          startDate &&
-          selectedEnd.toDateString() === freshNow.toDateString() &&
-          selectedEnd.toDateString() !== startDate.toDateString()
-        ) {
-          // Replace today's date with start date, keep the chosen time
-          const corrected = new Date(startDate);
-          corrected.setHours(
-            selectedEnd.getHours(),
-            selectedEnd.getMinutes(),
-            0,
-            0,
-          );
+                          // ✅ KEY FIX: If user picks a time without picking a date first,
+                          // the picker defaults to today — force it to start date instead
+                          if (
+                            startDate &&
+                            selectedEnd.toDateString() ===
+                              freshNow.toDateString() &&
+                            selectedEnd.toDateString() !==
+                              startDate.toDateString()
+                          ) {
+                            // Replace today's date with start date, keep the chosen time
+                            const corrected = new Date(startDate);
+                            corrected.setHours(
+                              selectedEnd.getHours(),
+                              selectedEnd.getMinutes(),
+                              0,
+                              0,
+                            );
 
-          // Make sure corrected time is still after start time
-          if (corrected <= startDate) {
-            const afterStart = new Date(
-              startDate.getTime() + 30 * 60 * 1000,
-            );
-            formik.setFieldValue("end_date_time", afterStart);
-          } else {
-            formik.setFieldValue("end_date_time", corrected);
-          }
-          return;
-        }
+                            // Make sure corrected time is still after start time
+                            if (corrected <= startDate) {
+                              const afterStart = new Date(
+                                startDate.getTime() + 30 * 60 * 1000,
+                              );
+                              formik.setFieldValue("end_date_time", afterStart);
+                            } else {
+                              formik.setFieldValue("end_date_time", corrected);
+                            }
+                            return;
+                          }
 
-        const isEndSameAsStart =
-          startDate &&
-          selectedEnd.toDateString() === startDate.toDateString();
+                          const isEndSameAsStart =
+                            startDate &&
+                            selectedEnd.toDateString() ===
+                              startDate.toDateString();
 
-        const isEndToday =
-          selectedEnd.toDateString() === freshNow.toDateString();
+                          const isEndToday =
+                            selectedEnd.toDateString() ===
+                            freshNow.toDateString();
 
-        // End same day as start → must be after start time
-        if (isEndSameAsStart && selectedEnd <= startDate) {
-          const corrected = new Date(startDate.getTime() + 30 * 60 * 1000);
-          formik.setFieldValue("end_date_time", corrected);
-          return;
-        }
+                          // End same day as start → must be after start time
+                          if (isEndSameAsStart && selectedEnd <= startDate) {
+                            const corrected = new Date(
+                              startDate.getTime() + 30 * 60 * 1000,
+                            );
+                            formik.setFieldValue("end_date_time", corrected);
+                            return;
+                          }
 
-        // End is today → must not be past
-        if (isEndToday) {
-          const minAllowed = roundUpTime(freshNow, 30);
-          if (selectedEnd < minAllowed) {
-            formik.setFieldValue("end_date_time", minAllowed);
-            return;
-          }
-        }
+                          // End is today → must not be past
+                          if (isEndToday) {
+                            const minAllowed = roundUpTime(freshNow, 30);
+                            if (selectedEnd < minAllowed) {
+                              formik.setFieldValue("end_date_time", minAllowed);
+                              return;
+                            }
+                          }
 
-        formik.setFieldValue("end_date_time", selectedEnd);
-      }}
-      showTimeSelect
-      timeFormat="hh:mm aa"
-      dateFormat="dd/MM/yyyy hh:mm aa"
-      timeIntervals={30}
-      placeholderText={
-        !formik.values.start_date_time
-          ? "Select start date first"
-          : "Select date & time"
-      }
-      minDate={
-        formik.values.start_date_time
-          ? new Date(formik.values.start_date_time)
-          : new Date()
-      }
-      minTime={(() => {
-        const freshNow = new Date();
-        const startDate = formik.values.start_date_time
-          ? new Date(formik.values.start_date_time)
-          : null;
-        const endDate = formik.values.end_date_time
-          ? new Date(formik.values.end_date_time)
-          : null;
+                          formik.setFieldValue("end_date_time", selectedEnd);
+                        }}
+                        showTimeSelect
+                        timeFormat="hh:mm aa"
+                        dateFormat="dd/MM/yyyy hh:mm aa"
+                        timeIntervals={30}
+                        placeholderText={
+                          !formik.values.start_date_time
+                            ? "Select start date first"
+                            : "Select date & time"
+                        }
+                        minDate={
+                          formik.values.start_date_time
+                            ? new Date(formik.values.start_date_time)
+                            : new Date()
+                        }
+                        minTime={(() => {
+                          const freshNow = new Date();
+                          const startDate = formik.values.start_date_time
+                            ? new Date(formik.values.start_date_time)
+                            : null;
+                          const endDate = formik.values.end_date_time
+                            ? new Date(formik.values.end_date_time)
+                            : null;
 
-        // End same day as start
-        if (
-          startDate &&
-          endDate &&
-          endDate.toDateString() === startDate.toDateString()
-        ) {
-          return startDate > freshNow ? startDate : roundUpTime(freshNow, 30);
-        }
+                          // End same day as start
+                          if (
+                            startDate &&
+                            endDate &&
+                            endDate.toDateString() === startDate.toDateString()
+                          ) {
+                            return startDate > freshNow
+                              ? startDate
+                              : roundUpTime(freshNow, 30);
+                          }
 
-        // End is today
-        if (endDate && endDate.toDateString() === freshNow.toDateString()) {
-          return roundUpTime(freshNow, 30);
-        }
+                          // End is today
+                          if (
+                            endDate &&
+                            endDate.toDateString() === freshNow.toDateString()
+                          ) {
+                            return roundUpTime(freshNow, 30);
+                          }
 
-        // No end date yet — base on start date
-        if (!endDate && startDate) {
-          if (startDate.toDateString() === freshNow.toDateString()) {
-            return startDate > freshNow
-              ? startDate
-              : roundUpTime(freshNow, 30);
-          }
-          return minTimeDefault; // start is future day → 6 AM
-        }
+                          // No end date yet — base on start date
+                          if (!endDate && startDate) {
+                            if (
+                              startDate.toDateString() ===
+                              freshNow.toDateString()
+                            ) {
+                              return startDate > freshNow
+                                ? startDate
+                                : roundUpTime(freshNow, 30);
+                            }
+                            return minTimeDefault; // start is future day → 6 AM
+                          }
 
-        // End is a future day → 6 AM
-        return minTimeDefault;
-      })()}
-      maxTime={maxTimeDefault}
-      className={`input--icon ${
-        !formik.values.start_date_time ? "opacity-50 cursor-not-allowed" : ""
-      }`}
-    />
-  </div>
-  {formik.touched.end_date_time && formik.errors.end_date_time && (
-    <p className="text-red-500 text-sm">{formik.errors.end_date_time}</p>
-  )}
-</div>
+                          // End is a future day → 6 AM
+                          return minTimeDefault;
+                        })()}
+                        maxTime={maxTimeDefault}
+                        className={`input--icon ${
+                          !formik.values.start_date_time
+                            ? "opacity-50 cursor-not-allowed"
+                            : ""
+                        }`}
+                      />
+                    </div>
+                    {formik.touched.end_date_time &&
+                      formik.errors.end_date_time && (
+                        <p className="text-red-500 text-sm">
+                          {formik.errors.end_date_time}
+                        </p>
+                      )}
+                  </div>
 
                   {/* Frequency Field */}
                   <div>
@@ -747,21 +780,26 @@ const ChallengeForm = ({ setShowModal, editingOption, formik }) => {
                     </label>
                     <Select
                       name="join_in_between"
-                      value={
-                        formik.values.join_in_between
-                          ? { value: true, label: "Yes" }
-                          : { value: false, label: "No" }
-                      }
+                      value={joinBetween.find(
+                        (option) =>
+                          option.value === formik.values.join_in_between,
+                      )}
                       onChange={(option) =>
                         formik.setFieldValue("join_in_between", option.value)
                       }
-                      options={[
-                        { value: true, label: "Yes" },
-                        { value: false, label: "No" },
-                      ]}
+                      onBlur={() =>
+                        formik.setFieldTouched("join_in_between", true)
+                      }
+                      options={joinBetween}
                       classNamePrefix="custom--select"
                       styles={customStyles}
                     />
+                    {formik.touched.join_in_between &&
+                      formik.errors.join_in_between && (
+                        <p className="text-red-500 text-sm">
+                          {formik.errors.join_in_between}
+                        </p>
+                      )}
                   </div>
 
                   {/* Position Field */}

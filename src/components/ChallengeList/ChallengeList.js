@@ -36,8 +36,8 @@ const challengeType = [
 ];
 
 const statusType = [
-  // { label: "Active", value: "ACTIVE" },
-  // { label: "Inactive", value: "INACTIVE" },
+  { label: "Active", value: "ACTIVE" },
+  { label: "Inactive", value: "INACTIVE" },
   { label: "Completed", value: "COMPLETED" },
   { label: "Ongoing", value: "ONGOING" },
   { label: "Upcoming", value: "UPCOMING" },
@@ -153,7 +153,7 @@ const ChallengeList = () => {
       reward_second: "",
       reward_third: "",
       about_challenge: "",
-      join_in_between: null,
+      join_in_between: "",
       position: "",
       winning_caption_heading: "",
       winning_caption_subheading: "",
@@ -186,6 +186,7 @@ const ChallengeList = () => {
       frequency: Yup.string().required("Frequency is required"),
       target_value: Yup.string().required("Target value is required"),
       target_unit: Yup.string().required("Target unit is required"),
+      join_in_between: Yup.string().required("Join In Between is required"),
       reward_first: Yup.string().required("First reward is required"),
       reward_second: Yup.string().required("Second reward is required"),
       reward_third: Yup.string().required("Third reward is required"),
@@ -194,16 +195,16 @@ const ChallengeList = () => {
       ),
       position: Yup.string().required("Position is required"),
       winning_caption_heading: Yup.string().required(
-        "Winning caption heading is required",
+        "Winning heading is required",
       ),
       winning_caption_subheading: Yup.string().required(
-        "Winning caption subheading is required",
+        "Winning subheading is required",
       ),
       progress_caption_heading: Yup.string().required(
-        "Progress caption heading is required",
+        "Progress heading is required",
       ),
       progress_caption_subheading: Yup.string().required(
-        "Progress caption subheading is required",
+        "Progress subheading is required",
       ),
       status: Yup.string().required(
         "Status is required",

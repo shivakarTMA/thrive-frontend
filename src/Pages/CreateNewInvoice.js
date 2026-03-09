@@ -336,6 +336,8 @@ const CreateNewInvoice = ({
   /* ================= PRODUCT ================= */
 
   const handleProductSubmit = (product) => {
+    resetVoucher();
+
     setSelectedPackageType(product.package_type || "CLASS");
 
     const total = product.amount - product.discount;
@@ -422,7 +424,7 @@ const CreateNewInvoice = ({
       const payload = {
         coupon: voucherInput.trim(),
         applicable_ids: [formik.values.productDetails?.id],
-        applicable_type: "SUBSCRIPTION",
+        applicable_type: "PACKAGE",
         amount: formik.values.productDetails?.total_amount,
         club_id: formik.values.club_id,
       };
@@ -591,10 +593,29 @@ const CreateNewInvoice = ({
 
 }, [renewPlanService]);
 
+const resetVoucher = () => {
+  setVoucherInput("");
+  setVoucherStatus(null);
+  setVoucherMessage("");
+
+  const baseFinal = formik.values.productDetails?.final_amount || 0;
+
+  formik.setFieldValue("coupon", "");
+  formik.setFieldValue("discountAmount", 0);
+  formik.setFieldValue("final_amount", baseFinal);
+  formik.setFieldValue("amount_pay", baseFinal);
+};
+
+useEffect(() => {
+  if (!formik.values.productDetails?.id) return;
+
+  resetVoucher();
+}, [formik.values.productDetails?.id]);
+
   // useEffect(() => {
   //   console.log("Formik Errors:", formik.errors);
   //   console.log("Formik Touched:", formik.touched);
-  console.log("Formik Values:", formik.values);
+  // console.log("Formik Values:", formik.values);
   // }, [formik.errors, formik.touched, formik.values]);
 
   return (
@@ -648,8 +669,7 @@ const CreateNewInvoice = ({
                             formik.setFieldValue("variation", null);
                             formik.setFieldValue("start_date", null);
                             formik.setFieldValue("start_time", "");
-                            setVoucherInput("");
-                            setVoucherStatus("");
+                            resetVoucher(); 
                           }}
                           styles={selectIcon}
                         />

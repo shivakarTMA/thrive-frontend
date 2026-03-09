@@ -105,6 +105,7 @@ const OrderHistory = ({ details }) => {
               <th className="border px-3 py-2">Date</th>
               <th className="border px-3 py-2">Status</th>
               <th className="border px-3 py-2">Type</th>
+              <th className="border px-3 py-2">Name</th>
               <th className="border px-3 py-2">Method</th>
               <th className="border px-3 py-2">Payment</th>
               <th className="border px-3 py-2">Amount</th>
@@ -123,6 +124,9 @@ const OrderHistory = ({ details }) => {
                   </td>
                   <td className="border px-3 py-2">
                     {formatText(order?.order_type)}
+                  </td>
+                  <td className="border px-3 py-2">
+                    {order?.name}
                   </td>
                   <td className="border px-3 py-2">
                     {order?.payment_method ? formatText(order?.payment_method) : "--"}

@@ -105,8 +105,6 @@ const MemberSendPaymentLink = ({
   });
 
   // ✅ Fetch lead details when selectedId changes
-  // ✅ Fetch lead details when selectedId changes
-  // ✅ Fetch member id and club_id only
   useEffect(() => {
     if (!selectedLeadMember) return;
 
@@ -126,6 +124,20 @@ const MemberSendPaymentLink = ({
 
     fetchMemberID();
   }, [selectedLeadMember]);
+
+  const resetVoucher = () => {
+    setVoucherInput("");
+    setVoucherStatus(null);
+    setSelectedVoucher(null);
+    setVoucherMessage("");
+
+    const baseFinal = formik.values.productDetails?.final_amount || 0;
+
+    formik.setFieldValue("coupon", "");
+    formik.setFieldValue("discountAmount", 0);
+    formik.setFieldValue("final_amount", baseFinal);
+    formik.setFieldValue("amount_pay", baseFinal);
+  };
 
   // ✅ plan_type change resets productDetails ONLY when user manually changes it
   useEffect(() => {
@@ -152,29 +164,31 @@ const MemberSendPaymentLink = ({
       amount_pay: 0,
     }));
 
-    setVoucherInput("");
-    setVoucherStatus(null);
-    setSelectedVoucher(null);
+    resetVoucher();
   }, [formik.values.plan_type]);
 
-  console.log(startDateNext, "startDateNext");
+  // console.log(startDateNext, "startDateNext");
+
+  useEffect(() => {
+  if (!formik.values.productDetails?.id) return;
+    resetVoucher();
+  }, [formik.values.productDetails?.id]);
 
   // ✅ Step 1: Calculate next allowed start date
-useEffect(() => {
-  if (!startDateNext) {
-    setMinStartDate(new Date());
-    return;
-  }
+  useEffect(() => {
+    if (!startDateNext) {
+      setMinStartDate(new Date());
+      return;
+    }
 
-  const nextDate = new Date(startDateNext);
-  nextDate.setDate(nextDate.getDate() + 1);
+    const nextDate = new Date(startDateNext);
+    nextDate.setDate(nextDate.getDate() + 1);
 
-  setMinStartDate(nextDate);
+    setMinStartDate(nextDate);
 
-  // 🔥 Also update formik value in real time
-  formik.setFieldValue("start_date", nextDate);
-
-}, [startDateNext]);
+    // 🔥 Also update formik value in real time
+    formik.setFieldValue("start_date", nextDate);
+  }, [startDateNext]);
 
   // ✅ Auto-fill when renewPlanMembership is provided
   useEffect(() => {
@@ -183,12 +197,12 @@ useEffect(() => {
     const { subscription_plan_id, subscription_title, plan_type, end_date } =
       renewPlanMembership;
 
-let nextStartDate = new Date();
+    let nextStartDate = new Date();
 
-if (startDateNext) {
-  nextStartDate = new Date(startDateNext);
-  nextStartDate.setDate(nextStartDate.getDate() + 1);
-}
+    if (startDateNext) {
+      nextStartDate = new Date(startDateNext);
+      nextStartDate.setDate(nextStartDate.getDate() + 1);
+    }
 
     const fetchSubscriptionPlan = async () => {
       try {
@@ -256,9 +270,7 @@ if (startDateNext) {
     const finalAmount = totalAmount + gstAmount;
 
     // 🔥 Reset coupon when product changes
-    setVoucherInput("");
-    setVoucherStatus(null);
-    setSelectedVoucher(null);
+    resetVoucher();
 
     formik.setValues({
       ...formik.values,
@@ -352,8 +364,6 @@ if (startDateNext) {
         final_amount: originalFinal,
         amount_pay: originalFinal,
       });
-
-      // toast.error(err?.message || "Invalid or expired coupon");
     }
   };
 
@@ -361,7 +371,6 @@ if (startDateNext) {
     applyCoupon();
   };
 
-  console.log(formik.values, "membership paln value");
   return (
     <>
       <div

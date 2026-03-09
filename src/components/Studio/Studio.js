@@ -44,7 +44,7 @@ const Studio = () => {
       setClub(activeClub);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch companies");
+      toast.error("Failed to fetch club");
     }
   };
 

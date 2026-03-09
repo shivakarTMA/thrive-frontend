@@ -11,7 +11,12 @@ import {
 import { FaUser, FaEnvelope, FaBuilding, FaBirthdayCake } from "react-icons/fa";
 import { trainerAvailability } from "../DummyData/DummyData";
 
-import { filterActiveItems, selectIcon } from "../Helper/helper";
+import {
+  blockInvalidNumberKeys,
+  filterActiveItems,
+  sanitizePositiveInteger,
+  selectIcon,
+} from "../Helper/helper";
 import { IoBan, IoCloseCircle } from "react-icons/io5";
 import { useFormik } from "formik";
 import * as Yup from "yup";
@@ -61,31 +66,31 @@ const validationSchema = Yup.object({
   //     return phoneNumber?.isValid() || false;
   //   }),
   mobile: Yup.string()
-  .required("Contact number is required")
-  .test("valid-phone", "Invalid phone number", function (value) {
-    if (!value) return false;
+    .required("Contact number is required")
+    .test("valid-phone", "Invalid phone number", function (value) {
+      if (!value) return false;
 
-    // Add default country "IN"
-    const phoneNumber = parsePhoneNumberFromString(value, "IN");
+      // Add default country "IN"
+      const phoneNumber = parsePhoneNumberFromString(value, "IN");
 
-    if (!phoneNumber || !phoneNumber.isValid()) {
-      return false;
-    }
+      if (!phoneNumber || !phoneNumber.isValid()) {
+        return false;
+      }
 
-    const nationalNumber = phoneNumber.nationalNumber;
+      const nationalNumber = phoneNumber.nationalNumber;
 
-    // Block repeated digits like 1111111111
-    if (/^(\d)\1+$/.test(nationalNumber)) {
-      return false;
-    }
+      // Block repeated digits like 1111111111
+      if (/^(\d)\1+$/.test(nationalNumber)) {
+        return false;
+      }
 
-    // Block simple sequences
-    if (nationalNumber === "1234567890" || nationalNumber === "0123456789") {
-      return false;
-    }
+      // Block simple sequences
+      if (nationalNumber === "1234567890" || nationalNumber === "0123456789") {
+        return false;
+      }
 
-    return true;
-  }),
+      return true;
+    }),
   interested_in: Yup.array()
     .of(Yup.string())
     .min(1, "Please select at least one interest")
@@ -183,7 +188,7 @@ const CreateLeadForm = ({
     gender: "",
     date_of_birth: "",
     address: "",
-    location: "",
+    pincode: "",
     company_id: null,
     company_name: "",
     otherCompanyName: "",
@@ -278,12 +283,12 @@ const CreateLeadForm = ({
           payload.mobile = null;
         }
 
-        console.log("✅ FINAL PAYLOAD:", payload);
+        // console.log("✅ FINAL PAYLOAD:", payload);
 
-        console.log({
-          typed: values.company_name,
-          final: companyName,
-        });
+        // console.log({
+        //   typed: values.company_name,
+        //   final: companyName,
+        // });
 
         // ===============================
         // ✅ API CALL
@@ -351,7 +356,7 @@ const CreateLeadForm = ({
               ? new Date(data.date_of_birth).toISOString()
               : null,
             address: data.address || "",
-            location: data.location || "",
+            pincode: data.pincode || "",
             // ✅ VERY IMPORTANT
             company_id: data.company_id || null,
             company_name: data.company_name || "",
@@ -724,7 +729,6 @@ const CreateLeadForm = ({
 
     // ✅ Reset schedule when club changes
     formik.setFieldValue("schedule_date_time", "");
-
   }, [formik.values?.club_id]);
 
   return (
@@ -968,15 +972,30 @@ const CreateLeadForm = ({
                     </div>
 
                     <div>
-                      <label className="mb-2 block">Location</label>
+                      <label className="mb-2 block">Pincode</label>
                       <div className="relative">
                         <span className="absolute top-[50%] translate-y-[-50%] left-[15px]">
                           <FaLocationDot />
                         </span>
                         <input
-                          name="location"
-                          value={formik.values.location}
-                          onChange={formik.handleChange}
+                          type="text"
+                          name="pincode"
+                          value={formik.values.pincode}
+                          // onChange={formik.handleChange}
+                          onKeyDown={blockInvalidNumberKeys} // ⛔ blocks typing -, e, etc.
+                          onChange={(e) => {
+                            // Keep only positive integers
+                            let cleanValue = sanitizePositiveInteger(
+                              e.target.value,
+                            );
+
+                            // Limit to max 6 digits
+                            if (cleanValue.length > 6) {
+                              cleanValue = cleanValue.slice(0, 6);
+                            }
+
+                            formik.setFieldValue("pincode", cleanValue);
+                          }}
                           className="custom--input w-full input--icon"
                         />
                       </div>

@@ -44,7 +44,7 @@ const CreateSubscriptionPlan = ({
             hsn_sac_code: data?.hsn_sac_code || "",
             amount: data?.amount || "",
             discount: data?.discount || "",
-            gst: data?.gst || "",
+            gst: data?.gst || 5,
             earn_coin:
               data?.earn_coin !== null && data?.earn_coin !== undefined
                 ? String(data.earn_coin)
@@ -404,7 +404,7 @@ const CreateSubscriptionPlan = ({
 
                   <div className="">
                     <label className="mb-2 block">
-                      GST (%)<span className="text-red-500">*</span>
+                      GST (%)
                     </label>
                     <div className="relative">
                       <span className="absolute top-[50%] translate-y-[-50%] left-[15px]">
@@ -423,7 +423,8 @@ const CreateSubscriptionPlan = ({
                           formik.setFieldValue("gst", cleanValue);
                         }}
                         onBlur={formik.handleBlur}
-                        className="custom--input w-full input--icon number--appearance-none"
+                        disabled={true}
+                        className="custom--input w-full input--icon number--appearance-none cursor-not-allowed pointer-events-none !bg-gray-100 !text-gray-500"
                       />
                     </div>
                     {formik.touched.gst && formik.errors.gst && (

@@ -35,7 +35,6 @@ const Login = (props) => {
     }
   }, [accessToken]);
 
-
   // ✅ Common numeric input handler
   const handleNumericInput = (e, maxLength) => {
     const { name, value } = e.target;
@@ -238,11 +237,11 @@ const Login = (props) => {
                 {/* ✅ Timer Display */}
                 {timer > 0 ? (
                   <>
-                  <p className="text-sm text-gray-500">
-                    Didn’t receive the code? Resend OTP in{" "}
-                    <span className="font-semibold">{timer}s</span>
-                  </p>
-                  <p className="text-sm text-gray-500">This OTP is valid for 5 minutes only.</p>
+                    <p className="text-sm text-gray-500">
+                      Didn’t receive the code? Resend OTP in{" "}
+                      <span className="font-semibold">{timer}s</span>
+                    </p>
+                    {/* <p className="text-sm text-gray-500">This OTP is valid for 5 minutes only.</p> */}
                   </>
                 ) : (
                   <p className="text-sm ">
@@ -271,6 +270,19 @@ const Login = (props) => {
             </button>
           </div>
         </form>
+        {step === 2 && (
+          <button
+            type="button"
+            onClick={() => {
+              setStep(1);
+              setData({ identifier: "", otp: "" });
+              setCurrentUser(null);
+            }}
+            className="w-full text-sm text-gray-600 font-medium mt-3 z-[1] relative"
+          >
+            ← Change phone number
+          </button>
+        )}
       </div>
     </div>
   );

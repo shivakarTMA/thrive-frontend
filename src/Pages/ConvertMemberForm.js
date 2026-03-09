@@ -112,7 +112,7 @@ const stepValidationSchemas = [
       .nullable()
       .required("Date of birth is required")
       .max(new Date(), "Date of birth cannot be in the future"),
-    location: Yup.string().required("Location is required"),
+    pincode: Yup.string().required("Pincode is required"),
     lead_source: Yup.string().required("Lead Source is required"),
     lead_type: Yup.string().required("Lead Type is required"),
     platform: Yup.string().when("lead_source", {
@@ -242,7 +242,7 @@ const ConvertMemberForm = ({
     date_of_birth: "",
     height: "",
     address: "",
-    location: "",
+    pincode: "",
     company_name: "",
     interested_in: [],
     lead_source: "",
@@ -437,7 +437,7 @@ const ConvertMemberForm = ({
             height: data.height || "",
             date_of_birth: dobIso,
             address: data.address || "",
-            location: data.location || "",
+            pincode: data.pincode || "",
             company_name: data.company_name || "",
             designation: data.designation || "",
             official_email: data.official_email || "",
@@ -1311,23 +1311,38 @@ const ConvertMemberForm = ({
 
                           <div>
                             <label className="mb-2 block">
-                              Location<span className="text-red-500">*</span>
+                              Pincode<span className="text-red-500">*</span>
                             </label>
                             <div className="relative">
                               <span className="absolute top-[50%] translate-y-[-50%] left-[15px]">
                                 <FaLocationDot />
                               </span>
                               <input
-                                name="location"
-                                value={formik.values.location}
-                                onChange={formik.handleChange}
+                                type="text"
+                                name="pincode"
+                                value={formik.values.pincode}
+                                // onChange={formik.handleChange}
+                                onKeyDown={blockInvalidNumberKeys} // ⛔ blocks typing -, e, etc.
+                                onChange={(e) => {
+                                  // Keep only positive integers
+                                  let cleanValue = sanitizePositiveInteger(
+                                    e.target.value,
+                                  );
+
+                                  // Limit to max 6 digits
+                                  if (cleanValue.length > 6) {
+                                    cleanValue = cleanValue.slice(0, 6);
+                                  }
+
+                                  formik.setFieldValue("pincode", cleanValue);
+                                }}
                                 className="custom--input w-full input--icon"
                               />
                             </div>
-                            {formik.errors?.location &&
-                              formik.touched?.location && (
+                            {formik.errors?.pincode &&
+                              formik.touched?.pincode && (
                                 <div className="text-red-500 text-sm">
-                                  {formik.errors.location}
+                                  {formik.errors.pincode}
                                 </div>
                               )}
                           </div>

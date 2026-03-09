@@ -88,6 +88,7 @@ const ClubList = () => {
 
   const formik = useFormik({
     initialValues: {
+      technogym_facilit_url:"",
       logo: null,
       name: "",
       email: "",
@@ -111,6 +112,7 @@ const ClubList = () => {
       position: "",
     },
     validationSchema: Yup.object({
+      technogym_facilit_url: Yup.string().required("Technogym Facilit is required"),
       name: Yup.string().required("Club name is required"),
       email: Yup.string().required("Club email is required"),
       phone: Yup.string()
@@ -162,6 +164,7 @@ const ClubList = () => {
           "phone",
           values.phone?.startsWith("+") ? values.phone.slice(1) : values.phone,
         );
+        formData.append("technogym_facilit_url", values.technogym_facilit_url);
         formData.append("address", values.address);
         formData.append("city", values.city?.label);
         formData.append("state", values.state?.label || "");
@@ -297,17 +300,18 @@ const ClubList = () => {
             <thead className="text-xs text-gray-700 uppercase bg-gray-50">
               <tr>
                 {/* <th className="px-2 py-4">Club ID</th> */}
-                <th className="px-2 py-4">QR Code</th>
-                <th className="px-2 py-4">Name</th>
-                <th className="px-2 py-4">Email</th>
-                <th className="px-2 py-4">GST No.</th>
-                <th className="px-2 py-4">City</th>
-                <th className="px-2 py-4">Open Time</th>
-                <th className="px-2 py-4">Close Time</th>
-                <th className="px-2 py-4">Trial Duration</th>
-                <th className="px-2 py-4 text-center">Position</th>
-                <th className="px-2 py-4">Status</th>
-                <th className="px-2 py-4">Action</th>
+                <th className="px-2 py-4 min-w-[100px]">QR Code</th>
+                <th className="px-2 py-4 min-w-[130px]">Name</th>
+                <th className="px-2 py-4 min-w-[150px]">Email</th>
+                <th className="px-2 py-4 min-w-[150px]">GST No.</th>
+                <th className="px-2 py-4 min-w-[100px]">City</th>
+                <th className="px-2 py-4 min-w-[100px]">Open Time</th>
+                <th className="px-2 py-4 min-w-[100px]">Close Time</th>
+                <th className="px-2 py-4 min-w-[130px]">Trial Duration</th>
+                <th className="px-2 py-4 min-w-[150px]">Technogym Facilit</th>
+                <th className="px-2 py-4 text-center min-w-[100px]">Position</th>
+                <th className="px-2 py-4 min-w-[100px]">Status</th>
+                <th className="px-2 py-4 min-w-[100px]">Action</th>
               </tr>
             </thead>
             <tbody>
@@ -381,6 +385,9 @@ const ClubList = () => {
                         {club?.trial_duration
                           ? club?.trial_duration + " Minutes"
                           : "--"}
+                      </td>
+                      <td className="px-2 py-4 text-center">
+                        {club?.technogym_facilit_url}
                       </td>
                       <td className="px-2 py-4 text-center">
                         {club?.position}

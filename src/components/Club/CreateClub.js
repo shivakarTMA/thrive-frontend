@@ -29,6 +29,15 @@ import { GoClock } from "react-icons/go";
 import { PiImageFill } from "react-icons/pi";
 import { Country, State, City } from "country-state-city";
 
+const facilityOptions = [
+  { label: "DLF", value: "ac226592" },
+  { label: "DLF CAMELLIAS", value: "ac1917358" },
+  { label: "DLF DOWNTOWN 4", value: "dlfthrivedowntown4" },
+  { label: "DLF Limited", value: "ac2050652" },
+  { label: "DLF THARAMANI, Chennai", value: "dlftharamanichennai" },
+  { label: "DLF, ATRIUM", value: "dlfthriveatrium" },
+];
+
 const CreateClub = ({
   setShowModal,
   editingClub,
@@ -147,6 +156,7 @@ const CreateClub = ({
           );
           // ✅ Prefill formik fields with fetched data
           formik.setValues({
+            technogym_facilit_url: data?.technogym_facilit_url || "",
             logo: data?.logo || null,
             name: data?.name || "",
             email: data?.email || "",
@@ -813,6 +823,57 @@ const CreateClub = ({
                     {formik.touched.position && formik.errors.position && (
                       <p className="text-red-500 text-sm mt-1">
                         {formik.errors.position}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Technogym Facilit */}
+                  <div>
+                    <label className="mb-2 block">
+                      Technogym Facilit<span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[10]">
+                        <LuPlug />
+                      </span>
+                      {/* <Select
+                        name="technogym_facilit_url"
+                        value={{
+                          label: formik.values.technogym_facilit_url,
+                          value: formik.values.technogym_facilit_url,
+                        }}
+                        options={[
+                          { label: "DLF", value: "ac226592" },
+                          { label: "DLF CAMELLIAS", value: "ac1917358" },
+                          { label: "DLF DOWNTOWN 4", value: "dlfthrivedowntown4" },
+                          { label: "DLF Limited", value: "ac2050652" },
+                          { label: "DLF THARAMANI, Chennai", value: "dlftharamanichennai" },
+                          { label: "DLF, ATRIUM", value: "dlfthriveatrium" },
+                        ]}
+                        onChange={(option) =>
+                          formik.setFieldValue("technogym_facilit_url", option.value)
+                        }
+                        onBlur={() => formik.setFieldTouched("technogym_facilit_url", true)}
+                        styles={selectIcon}
+                        className="!capitalize"
+                      /> */}
+                      <Select
+                        name="technogym_facilit_url"
+                        options={facilityOptions}
+                        value={facilityOptions.find(
+                          (option) => option.value === formik.values.technogym_facilit_url
+                        )}
+                        onChange={(option) =>
+                          formik.setFieldValue("technogym_facilit_url", option.value)
+                        }
+                        onBlur={() => formik.setFieldTouched("technogym_facilit_url", true)}
+                        styles={selectIcon}
+                        className="!capitalize"
+                      />
+                    </div>
+                    {formik.touched.technogym_facilit_url && formik.errors.technogym_facilit_url && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {formik.errors.technogym_facilit_url}
                       </p>
                     )}
                   </div>

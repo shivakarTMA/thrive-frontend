@@ -9,17 +9,22 @@ import { LiaEdit } from "react-icons/lia";
 import { FaCircle } from "react-icons/fa6";
 import CreateMarketingBanner from "./CreateMarketingBanner";
 import { authAxios } from "../../config/config";
-import { IoSearchOutline } from "react-icons/io5";
 import Select from "react-select";
 import { customStyles } from "../../Helper/helper";
 import Pagination from "../common/Pagination";
+import { useSelector } from "react-redux";
 
 const MarketingBanner = () => {
   const [showModal, setShowModal] = useState(false);
-  const [club, setClub] = useState([]);
   const [editingClub, setEditingClub] = useState(null);
   const leadBoxRef = useRef(null);
-  const [searchTerm, setSearchTerm] = useState("");
+
+  const { user } = useSelector((state) => state.auth);
+  const currentUserRole = user?.role; // Example, dynamically from user info
+
+  const [marketingBannerData, setMarketingBannerData] = useState([]);
+  const [club, setClub] = useState([]);
+  const [clubFilter, setClubFilter] = useState(null);
   const [statusFilter, setStatusFilter] = useState(null);
 
   const [page, setPage] = useState(1);
@@ -27,25 +32,42 @@ const MarketingBanner = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
 
+  const fetchClub = async (search = "") => {
+    try {
+      const res = await authAxios().get("/club/list", {
+        params: search ? { search } : {},
+      });
+      let data = res.data?.data || res.data || [];
+      const activeClub = data.filter((item) => item.status === "ACTIVE");
+      setClub(activeClub);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to fetch club");
+    }
+  };
+
   const fetchMarketingBanner = async (search = "", currentPage = page) => {
     try {
-      const res = await authAxios().get("/marketingbanner/list", {
-        params: {
-          page: currentPage,
-          limit: rowsPerPage,
-          ...(search ? { search } : {}),
-        },
-      });
+      const params = {
+        page: currentPage,
+        limit: rowsPerPage,
+      };
 
-      let data = res.data?.data || [];
-      if (statusFilter?.value) {
-        data = data.filter((item) => item.status === statusFilter.value);
+      if (clubFilter) {
+        params.club_id = clubFilter.value;
+      }
+      if (statusFilter) {
+        params.status = statusFilter.value;
       }
 
-      setClub(data);
-      // setPage(res.data?.currentPage || 1);
-      // setTotalPages(res.data?.totalPage || 1);
-      // setTotalCount(res.data?.totalCount || data.length);
+      const res = await authAxios().get("/marketingbanner/list", { params });
+
+      let data = res.data?.data || [];
+
+      setMarketingBannerData(data);
+      setPage(res.data?.currentPage || 1);
+      setTotalPages(res.data?.totalPage || 1);
+      setTotalCount(res.data?.totalCount || data.length);
     } catch (err) {
       console.error(err);
       toast.error("Failed to fetch banner");
@@ -53,8 +75,23 @@ const MarketingBanner = () => {
   };
 
   useEffect(() => {
-    fetchMarketingBanner();
+    fetchClub();
   }, []);
+
+  const clubOptions =
+    club?.map((item) => ({
+      label: item.name, // Show club name
+      value: item.id, // Store club_id as ID
+    })) || [];
+
+  useEffect(() => {
+    const delayDebounce = setTimeout(() => {
+      setPage(1);
+      fetchMarketingBanner(1);
+    }, 300);
+
+    return () => clearTimeout(delayDebounce);
+  }, [clubFilter, statusFilter]);
 
   const handleOverlayClick = (e) => {
     if (leadBoxRef.current && !leadBoxRef.current.contains(e.target)) {
@@ -69,10 +106,10 @@ const MarketingBanner = () => {
     banner_subheading: Yup.string().required("Banner subheading is required"),
     button_text: Yup.string().required("Button text is required"),
     description_heading: Yup.string().required(
-      "Description heading is required"
+      "Description heading is required",
     ),
     description_subheading: Yup.string().required(
-      "Description subheading is required"
+      "Description subheading is required",
     ),
     caption: Yup.string().required("Caption is required"),
 
@@ -110,7 +147,7 @@ const MarketingBanner = () => {
         formData.append("description_heading", values.description_heading);
         formData.append(
           "description_subheading",
-          values.description_subheading
+          values.description_subheading,
         );
         formData.append("caption", values.caption);
         formData.append("content", JSON.stringify(values.content)); // Convert content array to string
@@ -154,8 +191,6 @@ const MarketingBanner = () => {
     formik.setFieldValue("phone", value);
   };
 
-  console.log(club, "club");
-
   return (
     <div className="page--content">
       <div className="flex items-end justify-between gap-2 mb-5">
@@ -179,22 +214,18 @@ const MarketingBanner = () => {
       </div>
 
       {/* Filters */}
-      {/* <div className="flex gap-3 mb-4">
-   
-        <div className="w-full max-w-[200px] relative">
-          <span className="absolute top-[50%] translate-y-[-50%] left-[15px]">
-            <IoSearchOutline />
-          </span>
-          <input
-            type="text"
-            placeholder="Search club..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="custom--input w-full input--icon"
+      <div className="flex gap-3 mb-4">
+        <div className="w-fit min-w-[200px]">
+          <Select
+            placeholder="Filter by club"
+            value={clubFilter}
+            options={clubOptions}
+            onChange={(option) => setClubFilter(option)}
+            isClearable={currentUserRole === "ADMIN" ? true : false}
+            styles={customStyles}
+            className="w-full"
           />
         </div>
-
-     
         <div className="w-full max-w-[200px]">
           <Select
             placeholder="Filter by Status"
@@ -208,7 +239,7 @@ const MarketingBanner = () => {
             styles={customStyles}
           />
         </div>
-      </div> */}
+      </div>
       <div className="box--shadow bg-white rounded-[15px] p-4">
         <div className="relative overflow-x-auto">
           <table className="w-full text-sm text-left text-gray-500">
@@ -228,14 +259,14 @@ const MarketingBanner = () => {
               </tr>
             </thead>
             <tbody>
-              {club.length === 0 ? (
+              {marketingBannerData.length === 0 ? (
                 <tr>
                   <td colSpan="7" className="text-center py-4">
                     No banner found.
                   </td>
                 </tr>
               ) : (
-                club.map((item, index) => (
+                marketingBannerData.map((item, index) => (
                   <tr
                     key={item.id || index}
                     className="group bg-white border-b hover:bg-gray-50 relative transition duration-700"
@@ -249,7 +280,9 @@ const MarketingBanner = () => {
                         />
                       </div>
                     </td>
-                    <td className="px-2 py-4">{item?.club_name ? item?.club_name : "--"}</td>
+                    <td className="px-2 py-4">
+                      {item?.club_name ? item?.club_name : "--"}
+                    </td>
                     <td className="px-2 py-4">{item?.banner_heading}</td>
                     <td className="px-2 py-4">{item?.banner_subheading}</td>
                     {/* <td className="px-2 py-4">{item?.description_heading}</td>
@@ -297,17 +330,17 @@ const MarketingBanner = () => {
           </table>
         </div>
 
-        {/* <Pagination
+        <Pagination
           page={page}
           totalPages={totalPages}
           rowsPerPage={rowsPerPage}
           totalCount={totalCount}
-          currentDataLength={club.length}
+          currentDataLength={marketingBannerData.length}
           onPageChange={(newPage) => {
             setPage(newPage);
-            fetchMarketingBanner(searchTerm, newPage);
+            fetchMarketingBanner(newPage);
           }}
-        /> */}
+        />
       </div>
 
       {showModal && (

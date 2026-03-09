@@ -8,7 +8,6 @@ import { LiaEdit } from "react-icons/lia";
 import { FaCircle } from "react-icons/fa6";
 import CreateProduct from "./CreateProduct";
 import { authAxios } from "../../config/config";
-import { IoIosSearch } from "react-icons/io";
 import Pagination from "../common/Pagination";
 import { IoSearchOutline } from "react-icons/io5";
 import Select from "react-select";
@@ -195,11 +194,11 @@ const ProductsList = () => {
           .required("Discount is required")
           .max(amount, "Discount cannot be greater than amount");
       }),
-    gst: Yup.number()
-      .typeError("GST must be a number")
-      .required("GST is required")
-      .min(2, "GST cannot be less than 2%")
-      .max(40, "GST cannot be greater than 40%"),
+    // gst: Yup.number()
+    //   .typeError("GST must be a number")
+    //   .required("GST is required")
+    //   .min(2, "GST cannot be less than 2%")
+    //   .max(40, "GST cannot be greater than 40%"),
     stock_quantity: Yup.string().required("Stock Quantity is required"),
     earn_coin: Yup.string().required("Thrive Coins is required"),
     position: Yup.string().required("Position is required"),
@@ -232,7 +231,7 @@ const ProductsList = () => {
     hsn_sac_code: "",
     amount: "",
     discount: "",
-    gst: "",
+    gst: 5,
     stock_quantity: "",
     earn_coin: "",
     position: "",
@@ -354,7 +353,7 @@ const ProductsList = () => {
                 <th className="px-2 py-4 min-w-[70px]">Image</th>
                 <th className="px-2 py-4 min-w-[200px]">Title</th>
                 <th className="px-2 py-4 min-w-[150px]">Club Name</th>
-                <th className="px-2 py-4 min-w-[100px]">Product Category</th>
+                <th className="px-2 py-4 min-w-[150px]">Product Category</th>
                 <th className="px-2 py-4 min-w-[120px]">Product Type</th>
                 <th className="px-2 py-4 min-w-[100px]">Amount</th>
                 <th className="px-2 py-4 min-w-[100px]">Discount</th>

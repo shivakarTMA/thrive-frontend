@@ -122,7 +122,7 @@ const SubscriptionPlan = () => {
       hsn_sac_code: "",
       amount: "",
       discount: "",
-      gst: "",
+      gst: 5,
       earn_coin: "",
       is_spouse_plan: "",
       status: "",
@@ -163,11 +163,11 @@ const SubscriptionPlan = () => {
             .required("Discount is required")
             .max(amount, "Discount cannot be greater than amount");
         }),
-      gst: Yup.number()
-        .typeError("GST must be a number")
-        .required("GST is required")
-        .min(2, "GST cannot be less than 2%")
-        .max(40, "GST cannot be greater than 40%"),
+      // gst: Yup.number()
+      //   .typeError("GST must be a number")
+      //   .required("GST is required")
+      //   .min(2, "GST cannot be less than 2%")
+      //   .max(40, "GST cannot be greater than 40%"),
       earn_coin: Yup.string().required("Earn Coins is required"),
       is_spouse_plan: Yup.string().required("Is Spouse Plan is required"),
       status: Yup.string().required("Status is required"),

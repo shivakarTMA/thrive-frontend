@@ -224,15 +224,15 @@ const PackagesList = () => {
               otherwise: (schema) => schema.nullable(),
             }),
 
-          gst: Yup.number()
-            .typeError("GST must be a number")
-            .min(2, "GST cannot be less than 2%")
-            .max(40, "GST cannot be greater than 40%")
-            .when("booking_type", {
-              is: "PAID",
-              then: (schema) => schema.required("GST is required"),
-              otherwise: (schema) => schema.nullable().notRequired(),
-            }),
+          // gst: Yup.number()
+          //   .typeError("GST must be a number")
+          //   .min(2, "GST cannot be less than 2%")
+          //   .max(40, "GST cannot be greater than 40%")
+          //   .when("booking_type", {
+          //     is: "PAID",
+          //     then: (schema) => schema.required("GST is required"),
+          //     otherwise: (schema) => schema.nullable().notRequired(),
+          //   }),
         };
       }
 
@@ -318,11 +318,11 @@ const PackagesList = () => {
                     .required("Discount is required")
                     .max(amount, "Discount cannot be greater than amount");
                 }),
-              gst: Yup.number()
-                .typeError("GST must be a number")
-                .required("GST is required")
-                .min(2, "GST cannot be less than 2%")
-                .max(40, "GST cannot be greater than 40%"),
+              // gst: Yup.number()
+              //   .typeError("GST must be a number")
+              //   .required("GST is required")
+              //   .min(2, "GST cannot be less than 2%")
+              //   .max(40, "GST cannot be greater than 40%"),
               earn_coin: Yup.number()
                 .typeError("Earn Coins must be a number")
                 .required("Earn Coins is required"),
@@ -393,6 +393,7 @@ const PackagesList = () => {
     validateOnChange: true,
     validateOnBlur: true,
     onSubmit: async (values, { resetForm }) => {
+      // console.log(values,'SHIVAKAR')
       try {
         const formData = new FormData();
 
@@ -624,6 +625,33 @@ const PackagesList = () => {
     fetchService(clubFilter?.value || null); // Fetch services for selected club
     setServiceFilter(null); // Reset selected service when club changes
   }, [clubFilter]);
+
+  useEffect(() => {
+  const type = getServiceType(formik.values.service_id, serviceOptions);
+
+  // RECOVERY → variation GST = 5
+  if (type === "RECOVERY") {
+    const updatedVariation = (formik.values.variation || []).map((v) => ({
+      ...v,
+      gst: 5,
+    }));
+
+    formik.setFieldValue("variation", updatedVariation);
+    formik.setFieldValue("gst", "");
+  }
+
+  // NOT RECOVERY
+  else {
+    if (formik.values.booking_type === "PAID") {
+      formik.setFieldValue("gst", 5);
+    } else {
+      formik.setFieldValue("gst", 0);
+    }
+  }
+}, [
+  formik.values.service_id,
+  formik.values.booking_type,
+]);
 
   // console.log(formik.values, "SHIVAKAR values");
   // console.log(formik.errors, "SHIVAKAR ERRORS");

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { formatAutoDate, formatDateTimeLead } from "../Helper/helper";
+import { formatAutoDate, formatDateTimeLead, formatText } from "../Helper/helper";
+import { FaCircle } from "react-icons/fa";
 
 export default function LeadContactHistory({ handleEditLog, filteredData }) {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -100,6 +101,47 @@ export default function LeadContactHistory({ handleEditLog, filteredData }) {
               </div>
             </div>
           )}
+
+        {/* {filteredData?.status && (
+            <p className="text-sm flex gap-2">
+              <span>Status:</span>{" "}
+              <span
+                className={`
+                  flex items-center justify-between gap-1 rounded-full min-h-[30px] px-3 text-sm w-fit
+                ${
+                  filteredData?.status !== true
+                    ? "bg-[#EEEEEE]"
+                    : "bg-[#E8FFE6] text-[#138808]"
+                }
+                `}
+              >
+                <FaCircle className="text-[10px]" />{" "}
+                {filteredData?.status}
+              </span>
+            </p>
+          )} */}
+        {filteredData?.status && (
+          <p className="text-sm flex gap-2 items-center">
+            <span>Status:</span>
+            <span
+              className={`
+                flex items-center justify-between gap-1 rounded-full min-h-[25px] px-2 text-sm w-fit
+                ${
+                  filteredData?.status === "PENDING"
+                    ? "bg-yellow-100 text-yellow-700"
+                    : filteredData?.status === "MISSED"
+                      ? "bg-red-100 text-red-700"
+                      : filteredData?.status === "COMPLETE"
+                        ? "bg-[#E8FFE6] text-[#138808]"
+                        : "bg-[#EEEEEE] text-black"
+                }
+              `}
+            >
+              <FaCircle className="text-[10px]" />
+              {formatText(filteredData?.status)}
+            </span>
+          </p>
+        )}
 
         {/* Remarks section */}
         <div className="mt-3 border-t p-2 border border-[#D4D4D4] rounded-[5px] bg-[#F7F7F7]">

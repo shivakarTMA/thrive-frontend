@@ -4,7 +4,11 @@ import * as Yup from "yup";
 import PhoneInput from "react-phone-number-input";
 import DatePicker from "react-datepicker";
 import Select from "react-select";
-import { customStyles } from "../../Helper/helper";
+import {
+  blockInvalidNumberKeys,
+  customStyles,
+  sanitizePositiveInteger,
+} from "../../Helper/helper";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchOptionList } from "../../Redux/Reducers/optionListSlice";
 import DummyProfile from "../../assets/images/dummy-profile.png";
@@ -85,7 +89,7 @@ const validationSchema = Yup.object({
   date_of_birth: Yup.date().required("Date of birth is required"),
   email: Yup.string().required("Email is required"),
   // company_name: Yup.string().required("Company is required"),
-  location: Yup.string().required("Location is required"),
+  pincode: Yup.string().required("Pincode is required"),
   company_name: Yup.string().required("Company Name is required"),
 });
 
@@ -114,7 +118,7 @@ const ProfileDetails = ({ member }) => {
     date_of_birth: "",
     gender: "NOTDISCLOSE",
     email: "",
-    location: "",
+    pincode: "",
     address: "",
     lead_owner: "",
     lead_type: null,
@@ -277,7 +281,7 @@ const ProfileDetails = ({ member }) => {
           date_of_birth: data?.date_of_birth || "",
           gender: data?.gender || "NOTDISCLOSE",
           email: data?.email || "",
-          location: data?.location || "",
+          pincode: data?.pincode || "",
           address: data?.address || "",
           lead_owner: data?.lead_owner || "",
           lead_type: data?.lead_type || "",
@@ -1069,18 +1073,30 @@ const ProfileDetails = ({ member }) => {
 
                 <div>
                   <label className="block text-sm font-medium text-black mb-2">
-                    Location<span className="text-red-500">*</span>
+                    Pincode<span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
-                    name="location"
-                    value={formik.values?.location}
-                    onChange={formik.handleChange}
+                    name="pincode"
+                    value={formik.values?.pincode}
+                    // onChange={formik.handleChange}
+                    onKeyDown={blockInvalidNumberKeys} // ⛔ blocks typing -, e, etc.
+                    onChange={(e) => {
+                      // Keep only positive integers
+                      let cleanValue = sanitizePositiveInteger(e.target.value);
+
+                      // Limit to max 6 digits
+                      if (cleanValue.length > 6) {
+                        cleanValue = cleanValue.slice(0, 6);
+                      }
+
+                      formik.setFieldValue("pincode", cleanValue);
+                    }}
                     className="custom--input w-full"
                   />
-                  {formik.errors?.location && formik.touched?.location && (
+                  {formik.errors?.pincode && formik.touched?.pincode && (
                     <div className="text-red-500 text-sm">
-                      {formik.errors.location}
+                      {formik.errors.pincode}
                     </div>
                   )}
                 </div>
