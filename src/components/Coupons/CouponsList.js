@@ -104,191 +104,404 @@ const CouponsList = () => {
     }
   };
 
+  // const formik = useFormik({
+  //   initialValues: {
+  //     coupon: {
+  //       club_id: null,
+  //       code: "",
+  //       description: "",
+  //       discount_type: "",
+  //       discount_value: "",
+  //       max_usage: "",
+  //       per_user_limit: "",
+  //       start_date: "",
+  //       end_date: "",
+  //       position: "",
+  //       status: "",
+  //     },
+  //     applicable_rules: [
+  //       {
+  //         applicable_type: "ALL",
+  //         applicable_id: null,
+  //       },
+  //     ],
+  //   },
+  //   validationSchema: Yup.object({
+  //     coupon: Yup.object({
+  //       club_id: Yup.number()
+  //         .typeError("Club Name must be a number")
+  //         .required("Club Name is required"),
+
+  //       code: Yup.string().required("Code is required"),
+
+  //       description: Yup.string().required("Description is required"),
+
+  //       discount_type: Yup.string().required("Discount type is required"),
+
+  //       discount_value: Yup.string().required("Discount value is required"),
+
+  //       max_usage: Yup.string().required("Max Usage is required"),
+
+  //       per_user_limit: Yup.string().required("Per User Limit is required"),
+
+  //       start_date: Yup.date()
+  //         .typeError("Start date is invalid")
+  //         .required("Start date is required"),
+
+  //       end_date: Yup.date()
+  //         .typeError("End date is invalid")
+  //         .min(Yup.ref("start_date"), "End date cannot be before start date")
+  //         .required("End date is required"),
+
+  //       position: Yup.string().required("Position is required"),
+  //     }),
+  //     applicable_rules: Yup.array()
+  //       .of(
+  //         Yup.object().shape({
+  //           applicable_type: Yup.string().required(
+  //             "Applicable Type is required",
+  //           ),
+  //           applicable_id: Yup.mixed().when("applicable_type", {
+  //             is: (type) => type && type !== "ALL",
+  //             then: (schema) =>
+  //               schema
+  //                 .required("Applicable Item is required when type is not ALL")
+  //                 .nullable()
+  //                 .test(
+  //                   "is-not-null",
+  //                   "Applicable Item is required",
+  //                   (value) => value !== null && value !== undefined,
+  //                 ),
+  //             otherwise: (schema) => schema.nullable(),
+  //           }),
+  //         }),
+  //       )
+  //       .min(1, "At least one applicable rule is required"),
+  //   }),
+  //   onSubmit: async (values, { resetForm }) => {
+  //     try {
+  //       const couponPayload = { ...values.coupon };
+
+  //       if (editingOption) {
+  //         const current = Array.isArray(values.applicable_rules)
+  //           ? values.applicable_rules
+  //           : [];
+  //         const original = Array.isArray(originalApplicableRules)
+  //           ? originalApplicableRules
+  //           : [];
+
+  //         const mapById = (arr) => {
+  //           const m = new Map();
+  //           arr.forEach((r) => {
+  //             if (r && r.id != null) m.set(Number(r.id), r);
+  //           });
+  //           return m;
+  //         };
+
+  //         const originalById = mapById(original);
+  //         const currentById = mapById(current);
+
+  //         const add = [];
+  //         const update = [];
+  //         const deleteIds = [];
+
+  //         current.forEach((r) => {
+  //           const itemBase = {
+  //             applicable_type: r.applicable_type,
+  //             applicable_id:
+  //               r.applicable_type === "ALL"
+  //                 ? null
+  //                 : r.applicable_id == null
+  //                   ? null
+  //                   : Number(r.applicable_id),
+  //           };
+
+  //           if (r.id == null) {
+  //             add.push(itemBase);
+  //           } else {
+  //             const orig = originalById.get(Number(r.id));
+  //             const origType = orig?.applicable_type ?? "";
+  //             const origId =
+  //               orig && orig.applicable_id != null
+  //                 ? String(orig.applicable_id)
+  //                 : null;
+  //             const currId =
+  //               r && r.applicable_id != null ? String(r.applicable_id) : null;
+
+  //             const changed =
+  //               origType !== (r.applicable_type ?? "") || origId !== currId;
+
+  //             if (changed) {
+  //               update.push({ id: Number(r.id), ...itemBase });
+  //             }
+  //           }
+  //         });
+
+  //         for (const orig of original) {
+  //           if (orig && orig.id != null) {
+  //             if (!currentById.has(Number(orig.id))) {
+  //               deleteIds.push(Number(orig.id));
+  //             }
+  //           }
+  //         }
+
+  //         const payload = {
+  //           coupon: couponPayload,
+  //           applicable_rules: {
+  //             add,
+  //             update,
+  //             delete: deleteIds,
+  //           },
+  //         };
+
+  //         await authAxios().put(`/coupon/update/${editingOption}`, payload);
+  //         toast.success("Updated Successfully");
+  //       } else {
+  //         const payload = {
+  //           coupon: couponPayload,
+  //           applicable_rules: Array.isArray(values.applicable_rules)
+  //             ? values.applicable_rules.map((r) => ({
+  //                 applicable_type: r.applicable_type,
+  //                 applicable_id:
+  //                   r.applicable_type === "ALL"
+  //                     ? null
+  //                     : r.applicable_id == null
+  //                       ? null
+  //                       : Number(r.applicable_id),
+  //               }))
+  //             : [],
+  //         };
+
+  //         await authAxios().post("/coupon/create", payload);
+  //         toast.success("Created Successfully");
+  //       }
+
+  //       fetchCoupons();
+  //     } catch (error) {
+  //       console.error("API Error:", error.response?.data || error.message);
+  //       toast.error("Failed to save coupon item");
+  //     }
+
+  //     resetForm();
+  //     setEditingOption(null);
+  //     setShowModal(false);
+  //     setOriginalApplicableRules([]);
+  //   },
+  // });
+
+  
   const formik = useFormik({
-    initialValues: {
-      coupon: {
-        club_id: null,
-        code: "",
-        description: "",
-        discount_type: "",
-        discount_value: "",
-        max_usage: "",
-        per_user_limit: "",
-        start_date: "",
-        end_date: "",
-        position: "",
-        status: "",
-      },
-      applicable_rules: [
-        {
-          applicable_type: "ALL",
-          applicable_id: null,
-        },
-      ],
+  initialValues: {
+    coupon: {
+      club_id: null,
+      code: "",
+      description: "",
+      discount_type: "",
+      discount_value: "",
+      max_usage: "",
+      per_user_limit: "",
+      start_date: "",
+      end_date: "",
+      position: "",
+      status: "",
     },
-    validationSchema: Yup.object({
-      coupon: Yup.object({
-        club_id: Yup.number()
-          .typeError("Club Name must be a number")
-          .required("Club Name is required"),
+    applicable_rules: [
+      {
+        applicable_type: "ALL",
+        applicable_id: null,
+      },
+    ],
+  },
 
-        code: Yup.string().required("Code is required"),
+  validationSchema: Yup.object({
+    coupon: Yup.object({
+      club_id: Yup.number()
+        .typeError("Club Name must be a number")
+        .required("Club Name is required"),
 
-        description: Yup.string().required("Description is required"),
+      code: Yup.string().required("Code is required"),
 
-        discount_type: Yup.string().required("Discount type is required"),
+      description: Yup.string().required("Description is required"),
 
-        discount_value: Yup.string().required("Discount value is required"),
+      discount_type: Yup.string().required("Discount type is required"),
 
-        max_usage: Yup.string().required("Max Usage is required"),
+      discount_value: Yup.string().required("Discount value is required"),
 
-        per_user_limit: Yup.string().required("Per User Limit is required"),
+      max_usage: Yup.string().required("Max Usage is required"),
 
-        start_date: Yup.date()
-          .typeError("Start date is invalid")
-          .required("Start date is required"),
+      per_user_limit: Yup.string().required("Per User Limit is required"),
 
-        end_date: Yup.date()
-          .typeError("End date is invalid")
-          .min(Yup.ref("start_date"), "End date cannot be before start date")
-          .required("End date is required"),
+      start_date: Yup.date()
+        .typeError("Start date is invalid")
+        .required("Start date is required"),
 
-        position: Yup.string().required("Position is required"),
-      }),
-      applicable_rules: Yup.array()
-        .of(
-          Yup.object().shape({
-            applicable_type: Yup.string().required(
-              "Applicable Type is required",
-            ),
-            applicable_id: Yup.mixed().when("applicable_type", {
-              is: (type) => type && type !== "ALL",
-              then: (schema) =>
-                schema
-                  .required("Applicable Item is required when type is not ALL")
-                  .nullable()
-                  .test(
-                    "is-not-null",
-                    "Applicable Item is required",
-                    (value) => value !== null && value !== undefined,
-                  ),
-              otherwise: (schema) => schema.nullable(),
-            }),
-          }),
-        )
-        .min(1, "At least one applicable rule is required"),
+      end_date: Yup.date()
+        .typeError("End date is invalid")
+        .min(Yup.ref("start_date"), "End date cannot be before start date")
+        .required("End date is required"),
+
+      position: Yup.string().required("Position is required"),
     }),
-    onSubmit: async (values, { resetForm }) => {
-      try {
-        const couponPayload = { ...values.coupon };
 
-        if (editingOption) {
-          const current = Array.isArray(values.applicable_rules)
-            ? values.applicable_rules
-            : [];
-          const original = Array.isArray(originalApplicableRules)
-            ? originalApplicableRules
-            : [];
+    applicable_rules: Yup.array()
+      .of(
+        Yup.object().shape({
+          applicable_type: Yup.string().required(
+            "Applicable Type is required",
+          ),
 
-          const mapById = (arr) => {
-            const m = new Map();
-            arr.forEach((r) => {
-              if (r && r.id != null) m.set(Number(r.id), r);
-            });
-            return m;
+          applicable_id: Yup.mixed().when("applicable_type", {
+            is: (type) => type && type !== "ALL",
+            then: (schema) =>
+              schema
+                .required("Applicable Item is required when type is not ALL")
+                .nullable()
+                .test(
+                  "is-not-null",
+                  "Applicable Item is required",
+                  (value) => value !== null && value !== undefined,
+                ),
+            otherwise: (schema) => schema.nullable(),
+          }),
+        }),
+      )
+      .min(1, "At least one applicable rule is required"),
+  }),
+
+  onSubmit: async (values, { resetForm }) => {
+    try {
+      const couponPayload = {
+        club_id: Number(values.coupon.club_id),
+        code: values.coupon.code,
+        description: values.coupon.description,
+        discount_type: values.coupon.discount_type,
+        discount_value: Number(values.coupon.discount_value),
+        max_usage: Number(values.coupon.max_usage),
+        per_user_limit: Number(values.coupon.per_user_limit),
+        start_date: values.coupon.start_date,
+        end_date: values.coupon.end_date,
+        position: Number(values.coupon.position),
+        ...(editingOption && { status: values.coupon.status }),
+      };
+
+      if (editingOption) {
+        const current = Array.isArray(values.applicable_rules)
+          ? values.applicable_rules
+          : [];
+
+        const original = Array.isArray(originalApplicableRules)
+          ? originalApplicableRules
+          : [];
+
+        const mapById = (arr) => {
+          const map = new Map();
+          arr.forEach((r) => {
+            if (r && r.id != null) map.set(Number(r.id), r);
+          });
+          return map;
+        };
+
+        const originalById = mapById(original);
+        const currentById = mapById(current);
+
+        const add = [];
+        const update = [];
+        const deleteIds = [];
+
+        current.forEach((r) => {
+          if (!r) return;
+
+          const itemBase = {
+            applicable_type: r.applicable_type,
+            applicable_id:
+              r.applicable_type === "ALL"
+                ? null
+                : r.applicable_id == null
+                  ? null
+                  : Number(r.applicable_id),
           };
 
-          const originalById = mapById(original);
-          const currentById = mapById(current);
+          if (r.id == null) {
+            add.push(itemBase);
+          } else {
+            const orig = originalById.get(Number(r.id));
 
-          const add = [];
-          const update = [];
-          const deleteIds = [];
+            const origType = orig?.applicable_type ?? "";
+            const origId =
+              orig && orig.applicable_id != null
+                ? String(orig.applicable_id)
+                : null;
 
-          current.forEach((r) => {
-            const itemBase = {
-              applicable_type: r.applicable_type,
-              applicable_id:
-                r.applicable_type === "ALL"
-                  ? null
-                  : r.applicable_id == null
-                    ? null
-                    : Number(r.applicable_id),
-            };
+            const currId =
+              r && r.applicable_id != null ? String(r.applicable_id) : null;
 
-            if (r.id == null) {
-              add.push(itemBase);
-            } else {
-              const orig = originalById.get(Number(r.id));
-              const origType = orig?.applicable_type ?? "";
-              const origId =
-                orig && orig.applicable_id != null
-                  ? String(orig.applicable_id)
-                  : null;
-              const currId =
-                r && r.applicable_id != null ? String(r.applicable_id) : null;
+            const changed =
+              origType !== (r.applicable_type ?? "") ||
+              origId !== currId;
 
-              const changed =
-                origType !== (r.applicable_type ?? "") || origId !== currId;
-
-              if (changed) {
-                update.push({ id: Number(r.id), ...itemBase });
-              }
-            }
-          });
-
-          for (const orig of original) {
-            if (orig && orig.id != null) {
-              if (!currentById.has(Number(orig.id))) {
-                deleteIds.push(Number(orig.id));
-              }
+            if (changed) {
+              update.push({
+                id: Number(r.id),
+                ...itemBase,
+              });
             }
           }
+        });
 
-          const payload = {
-            coupon: couponPayload,
-            applicable_rules: {
-              add,
-              update,
-              delete: deleteIds,
-            },
-          };
-
-          await authAxios().put(`/coupon/update/${editingOption}`, payload);
-          toast.success("Updated Successfully");
-        } else {
-          const payload = {
-            coupon: couponPayload,
-            applicable_rules: Array.isArray(values.applicable_rules)
-              ? values.applicable_rules.map((r) => ({
-                  applicable_type: r.applicable_type,
-                  applicable_id:
-                    r.applicable_type === "ALL"
-                      ? null
-                      : r.applicable_id == null
-                        ? null
-                        : Number(r.applicable_id),
-                }))
-              : [],
-          };
-
-          await authAxios().post("/coupon/create", payload);
-          toast.success("Created Successfully");
+        for (const orig of original) {
+          if (orig && orig.id != null) {
+            if (!currentById.has(Number(orig.id))) {
+              deleteIds.push(Number(orig.id));
+            }
+          }
         }
 
-        fetchCoupons();
-      } catch (error) {
-        console.error("API Error:", error.response?.data || error.message);
-        toast.error("Failed to save coupon item");
+        const payload = {
+          coupon: couponPayload,
+          applicable_rules: {
+            add,
+            update,
+            delete: deleteIds,
+          },
+        };
+
+        await authAxios().put(`/coupon/update/${editingOption}`, payload);
+
+        toast.success("Updated Successfully");
+      } else {
+        const payload = {
+          coupon: couponPayload,
+          applicable_rules: Array.isArray(values.applicable_rules)
+            ? values.applicable_rules.map((r) => ({
+                applicable_type: r.applicable_type,
+                applicable_id:
+                  r.applicable_type === "ALL"
+                    ? null
+                    : r.applicable_id == null
+                      ? null
+                      : Number(r.applicable_id),
+              }))
+            : [],
+        };
+
+        await authAxios().post("/coupon/create", payload);
+
+        toast.success("Created Successfully");
       }
+
+      fetchCoupons();
 
       resetForm();
       setEditingOption(null);
       setShowModal(false);
       setOriginalApplicableRules([]);
-    },
-  });
-
+    } catch (error) {
+      console.error("API Error:", error.response?.data || error.message);
+      toast.error("Failed to save coupon item");
+    }
+  },
+});
+  
   const handleDeleteClick = (exercise) => {
     setCouponToDelete(exercise);
     setShowConfirmPopup(true);
@@ -373,16 +586,16 @@ const CouponsList = () => {
           <table className="w-full text-sm text-left text-gray-500">
             <thead className="text-xs text-gray-700 uppercase bg-gray-50">
               <tr>
-                <th className="px-2 py-4">Club Name</th>
-                <th className="px-2 py-4">Code</th>
-                <th className="px-2 py-4 min-w-[200px]">Description</th>
-                <th className="px-2 py-4">Type</th>
-                <th className="px-2 py-4">Value</th>
-                <th className="px-2 py-4">Status</th>
-                <th className="px-2 py-4 text-center">Position</th>
-                <th className="px-2 py-4 text-center">Start Date</th>
-                <th className="px-2 py-4 text-center">End Date</th>
-                <th className="px-2 py-4">Action</th>
+                <th className="px-2 py-4 min-w-[150px]">Club Name</th>
+                <th className="px-2 py-4 min-w-[100px]">Code</th>
+                <th className="px-2 py-4 min-w-[150px]">Description</th>
+                <th className="px-2 py-4 min-w-[100px]">Type</th>
+                <th className="px-2 py-4 min-w-[100px]">Value</th>
+                <th className="px-2 py-4 min-w-[100px]">Status</th>
+                <th className="px-2 py-4 text-center min-w-[100px]">Position</th>
+                <th className="px-2 py-4 text-center min-w-[100px]">Start Date</th>
+                <th className="px-2 py-4 text-center min-w-[100px]">End Date</th>
+                <th className="px-2 py-4 min-w-[80px]">Action</th>
               </tr>
             </thead>
             <tbody>

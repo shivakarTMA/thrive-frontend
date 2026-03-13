@@ -81,7 +81,7 @@ export default function LeadContactHistory({ handleEditLog, filteredData }) {
 
         {filteredData?.follow_up_datetime &&
           filteredData?.schedule_for_name && (
-            <div className="border-t p-2 border border-[#D4D4D4] rounded-[5px] bg-[#fff]">
+            <div className="border-t p-2 border border-[#D4D4D4] rounded-[5px] bg-[#fff] mb-2">
               <div className="flex gap-3 justify-between pb-2 border-b border-b-[#D4D4D4] mb-2">
                 <strong className="block ">Schedule Follow UP:</strong>
               </div>
@@ -125,7 +125,7 @@ export default function LeadContactHistory({ handleEditLog, filteredData }) {
             <span>Status:</span>
             <span
               className={`
-                flex items-center justify-between gap-1 rounded-full min-h-[25px] px-2 text-sm w-fit
+                flex items-center justify-between gap-1 rounded-full min-h-[25px] px-2 text-xs w-fit
                 ${
                   filteredData?.status === "PENDING"
                     ? "bg-yellow-100 text-yellow-700"

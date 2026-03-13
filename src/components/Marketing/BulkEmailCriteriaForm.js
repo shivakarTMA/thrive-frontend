@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import Select from "react-select";
@@ -18,21 +18,11 @@ const validationSchema = Yup.object({
   message: Yup.string().required("Message is required"),
 });
 
-// ✅ Define available merge tags for email personalization
-const MERGE_TAGS = [
-  { label: "User Name", value: "{{user_name}}" },
-  { label: "Email", value: "{{email}}" },
-  { label: "Club Name", value: "{{club_name}}" },
-  { label: "Phone Number", value: "{{phone}}" },
-  { label: "Membership ID", value: "{{membership_id}}" },
-  { label: "Expiry Date", value: "{{expiry_date}}" },
-  { label: "Service Name", value: "{{service_name}}" },
-];
 
 const BulkEmailCriteriaForm = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const editorRef = useRef(null); // ✅ Ref for editor
+    const [templateOptions, setTemplateOptions] = useState([]);
 
   // ✅ Parse URL to get type (member/lead) and ids
   // Parse URL query params correctly
@@ -41,13 +31,14 @@ const BulkEmailCriteriaForm = () => {
 
     return {
       type: params.get("type") || "member",
+      clubId: params.get("clubId") ? Number(params.get("clubId")) : null,
       idsArray: params.get("ids")
         ? params.get("ids").split(",").map(Number)
         : [],
     };
   };
 
-  const { type: currentType, idsArray } = parseUrlParams();
+  const { type: currentType, idsArray, clubId } = parseUrlParams();
 
   // ✅ Initialize Formik using the hook pattern
   const formik = useFormik({
@@ -65,15 +56,14 @@ const BulkEmailCriteriaForm = () => {
       }
 
       const ids = values.send_to.map((m) => m.id);
-      const emails = values.send_to.map((m) => m.email);
 
       const payload = {
-        ids,
-        emails,
+        club_id: clubId,
+        member_ids: ids,
         subject: values.subject,
-        message: values.message,
-        template: values.selectedTemplate?.value,
-        type: currentType, // 'member' or 'lead'
+        body_html: values.message,
+        scheduled_at: new Date(),
+        status: 'SENT', // 'member' or 'lead'
       };
 
       console.log("API Payload:", payload);
@@ -87,18 +77,35 @@ const BulkEmailCriteriaForm = () => {
     },
   });
 
-  console.log(formik.values?.send_to, "SHIVAKAR");
-
-  const handleTemplateSelect = (option) => {
-    formik.setFieldValue("selectedTemplate", option);
-
-    if (option?.value && emailTemplates[option.value]) {
-      const templateHtml = emailTemplates[option.value];
-
-      // Insert template into the editor
-      formik.setFieldValue("message", templateHtml);
-    }
-  };
+  // ✅ Fetch email templates on mount
+    useEffect(() => {
+      const fetchTemplates = async () => {
+        try {
+          const res = await authAxios().get("/emailtemplate/list");
+          const data = res.data?.data || [];
+          const options = data.map((t) => ({
+            value: t.id,
+            label: t.name,
+            subject: t.subject,
+            body_html: t.body_html,
+          }));
+          setTemplateOptions(options);
+        } catch {
+          toast.error("Failed to fetch email templates");
+        }
+      };
+      fetchTemplates();
+    }, []);
+  
+    // ✅ Replace existing handleTemplateSelect
+    const handleTemplateSelect = (option) => {
+      formik.setFieldValue("selectedTemplate", option);
+      if (option) {
+        // Auto-fill subject and message from template
+        formik.setFieldValue("subject", option.subject || "");
+        formik.setFieldValue("message", option.body_html || "");
+      }
+    };
 
   const handleRemoveFilter = (id) => {
     const updated = formik.values.send_to.filter((item) => item.id !== id);
@@ -135,15 +142,6 @@ const BulkEmailCriteriaForm = () => {
   useEffect(() => {
     fetchMemberList();
   }, [currentType]);
-
-  const copyMergeTag = async (tagValue) => {
-    try {
-      await navigator.clipboard.writeText(tagValue);
-      toast.success("Merge tag copied to clipboard!");
-    } catch (error) {
-      toast.error("Failed to copy merge tag.");
-    }
-  };
 
   return (
     <div className="page--content">
@@ -194,17 +192,11 @@ const BulkEmailCriteriaForm = () => {
                 </label>
                 <Select
                   value={formik.values.selectedTemplate}
-                  // onChange={(option) =>
-                  //   formik.setFieldValue("selectedTemplate", option)
-                  // }
                   onChange={handleTemplateSelect}
-                  options={[
-                    { value: "welcome", label: "Welcome Template" },
-                    { value: "renewal", label: "Renewal Template" },
-                    { value: "promotion", label: "Promotion Template" },
-                  ]}
+                  options={templateOptions} // ✅ dynamic from API
                   placeholder="Select template"
                   styles={customStyles}
+                  isClearable
                 />
                 {formik.touched.selectedTemplate &&
                   formik.errors.selectedTemplate && (
@@ -237,26 +229,6 @@ const BulkEmailCriteriaForm = () => {
             </div>
 
             {/* --- MESSAGE SECTION --- */}
-            <div className="mt-4">
-              {/* ✅ Merge Tags Helper Panel */}
-              <div className="mb-2 p-2 bg-gray-50 border border-gray-200 rounded">
-                <p className="text-sm font-medium mb-2">
-                  📌 Personalize your email:
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {MERGE_TAGS.map((tag) => (
-                    <button
-                      key={tag.value}
-                      type="button"
-                      onClick={() => copyMergeTag(tag.value)}
-                      className="px-3 py-1 text-sm bg-white hover:bg-gray-100 border rounded"
-                    >
-                      {tag.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
             <div className="mt-4">
               <RichTextEditor
                 value={formik.values.message}

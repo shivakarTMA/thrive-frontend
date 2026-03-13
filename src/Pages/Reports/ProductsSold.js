@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { addYears, subYears } from "date-fns";
@@ -8,6 +8,7 @@ import {
   filterActiveItems,
   formatAutoDate,
   formatText,
+  selectIcon,
 } from "../../Helper/helper";
 import Select from "react-select";
 import ProductSoldPanel from "../../components/FilterPanel/ProductSoldPanel";
@@ -17,13 +18,14 @@ import { authAxios } from "../../config/config";
 import { toast } from "react-toastify";
 import Pagination from "../../components/common/Pagination";
 import { format } from "date-fns";
-import { FaShareSquare } from "react-icons/fa";
 import Tooltip from "../../components/common/Tooltip";
 import { useSelector } from "react-redux";
-import { IoEyeOutline } from "react-icons/io5";
 import { MdFileDownload } from "react-icons/md";
 import { IoIosShareAlt } from "react-icons/io";
 import IsLoadingHOC from "../../components/common/IsLoadingHOC";
+import { LuDownload } from "react-icons/lu";
+import { IoCloseCircle } from "react-icons/io5";
+import { FaListUl } from "react-icons/fa";
 
 const dateFilterOptions = [
   { value: "today", label: "Today" },
@@ -32,8 +34,8 @@ const dateFilterOptions = [
   { value: "custom", label: "Custom Date" },
 ];
 
-  const ProductsSold = (props) => {
-    const { setLoading } = props;
+const ProductsSold = (props) => {
+  const { setLoading } = props;
   const location = useLocation();
   const navigate = useNavigate();
   const [productSoldData, setProductSoldData] = useState([]);
@@ -47,6 +49,12 @@ const dateFilterOptions = [
   const [clubFilter, setClubFilter] = useState(null);
 
   const [sendModalOrder, setSendModalOrder] = useState(null);
+  const [exportShowModal, setExportShowModal] = useState(false);
+  const leadBoxRef = useRef(null);
+
+  const [clubIdExport, setClubIdExport] = useState("");
+  const [dateExport, setDateExport] = useState(null);
+  const [formatExport, setFormatExport] = useState("excel");
 
   const [page, setPage] = useState(1);
   const [rowsPerPage] = useState(10);
@@ -368,6 +376,51 @@ const dateFilterOptions = [
     }
   };
 
+  const handleOverlayClick = (e) => {
+    if (leadBoxRef.current && !leadBoxRef.current.contains(e.target)) {
+      setExportShowModal(false);
+      setClubIdExport("");
+      setDateExport(null);
+      setFormatExport("excel");
+    }
+  };
+
+  const handleDownload = async (e) => {
+    e.preventDefault();
+
+    if (!clubIdExport || !dateExport || !formatExport) {
+      toast.error("Please fill all fields");
+      return;
+    }
+
+    try {
+      const response = await authAxios().get(
+        `/report/prologic/export?date=${dateExport}&club_id=${clubIdExport}&format=${formatExport}`,
+        { responseType: "blob" },
+      );
+
+      const blob = new Blob([response.data]);
+      const link = document.createElement("a");
+
+      const fileName = formatExport === "excel" ? "report.xlsx" : "report.xml";
+
+      link.href = window.URL.createObjectURL(blob);
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      
+      setExportShowModal(false);
+      setClubIdExport("");
+      setDateExport(null);
+      setFormatExport("excel");
+      toast.success("File downloaded successfully");
+    } catch (error) {
+      console.error(error);
+      toast.error("Download failed. Please try again.");
+    }
+  };
+
   return (
     <>
       <div className="page--content">
@@ -400,7 +453,7 @@ const dateFilterOptions = [
             {dateFilter?.value === "custom" && (
               <>
                 <div className="custom--date dob-format flex-1 max-w-[180px] w-full">
-                  <span className="absolute z-[1] mt-[11px] ml-[15px]">
+                  <span className="absolute z-[1] mt-[10px] ml-[15px]">
                     <FaCalendarDays />
                   </span>
                   <DatePicker
@@ -420,7 +473,7 @@ const dateFilterOptions = [
                   />
                 </div>
                 <div className="custom--date dob-format flex-1 max-w-[180px] w-full">
-                  <span className="absolute z-[1] mt-[11px] ml-[15px]">
+                  <span className="absolute z-[1] mt-[10px] ml-[15px]">
                     <FaCalendarDays />
                   </span>
                   <DatePicker
@@ -451,6 +504,12 @@ const dateFilterOptions = [
               />
             </div>
           </div>
+          <button
+            onClick={() => setExportShowModal(true)}
+            className="px-4 py-2 bg-black text-white rounded flex items-center gap-2"
+          >
+            <LuDownload /> <span>Export</span>
+          </button>
         </div>
 
         {/* Dynamic Statistics */}
@@ -684,7 +743,7 @@ const dateFilterOptions = [
                                 className="bg-[#F1F1F1] border border-[#D4D4D4] rounded-l-[5px] w-[32px] h-[32px] flex items-center justify-center cursor-pointer"
                                 onClick={() => downloadInvoice(row)}
                               >
-                                <MdFileDownload />
+                                <MdFileDownload className="text-[18px]" />
                               </div>
                             </Tooltip>
                             <Tooltip
@@ -696,7 +755,7 @@ const dateFilterOptions = [
                                 className={`bg-[#F1F1F1] border border-[#D4D4D4] rounded-r-[5px] w-[32px] h-[32px] flex items-center justify-center cursor-pointer `}
                                 onClick={() => handleSendInvoice(row)}
                               >
-                                <IoIosShareAlt />
+                                <IoIosShareAlt className="text-[18px]" />
                               </div>
                             </Tooltip>
                           </div>
@@ -793,6 +852,142 @@ const dateFilterOptions = [
           </div>
         </div>
       )}
+
+      {/* Export */}
+      {exportShowModal && (
+        <div
+          className="bg--blur create--lead--container overflow-auto hide--overflow fixed top-0 left-0 z-[999] w-full bg-black bg-opacity-60 h-full"
+          onClick={handleOverlayClick}
+        >
+          <div
+            className="min-h-[70vh] w-[95%] max-w-[600px] mx-auto mt-[100px] mb-[100px] container--leadbox rounded-[10px] flex flex-col"
+            ref={leadBoxRef}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="bg-white rounded-t-[10px] flex gap-3 items-center justify-between py-4 px-4 border-b">
+              <h2 className="text-xl font-semibold">Export</h2>
+              <div
+                className="close--lead cursor-pointer"
+                onClick={() => {
+                  setExportShowModal(false);
+                }}
+              >
+                <IoCloseCircle className="text-3xl" />
+              </div>
+            </div>
+
+            <div className="flex-1">
+              <form onSubmit={handleDownload} className="p-0 space-y-0">
+                <div className="flex bg-white rounded-b-[10px]">
+                  <div className="p-6 flex-1">
+                    <div className="grid grid-cols-2 gap-4">
+                      {/* Date */}
+                      <div>
+                        <label className="mb-2 block">
+                          Start Time<span className="text-red-500">*</span>
+                        </label>
+                        <div className="custom--date relative">
+                          <span className="absolute z-[1] mt-[10px] ml-[15px]">
+                            <FaCalendarDays />
+                          </span>
+
+                          <DatePicker
+                            selected={dateExport}
+                            onChange={(selectedDate) =>
+                              setDateExport(selectedDate)
+                            }
+                            placeholderText="Select Date"
+                            className="custom--input w-full input--icon"
+                            maxDate={new Date()}
+                            dropdownMode="select"
+                            dateFormat="dd-MM-yyyy"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Club */}
+                      <div>
+                        <label className="block mb-2">
+                          Club<span className="text-red-500">*</span>
+                        </label>
+                        <div className="relative">
+                          <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[10]">
+                            <FaListUl />
+                          </span>
+                          <Select
+                            value={
+                              clubOptions.find(
+                                (o) => o.value === clubIdExport,
+                              ) || null
+                            }
+                            options={clubOptions}
+                            onChange={(option) => setClubIdExport(option.value)}
+                            styles={selectIcon}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Format */}
+                      <div className="col-span-2">
+                        <label className="block mb-2">
+                          Format<span className="text-red-500">*</span>
+                        </label>
+
+                        <div className="flex gap-6">
+                          <label className="flex items-center gap-2">
+                            <input
+                              type="radio"
+                              name="formatExport"
+                              value="excel"
+                              checked={formatExport === "excel"}
+                              onChange={(e) => setFormatExport(e.target.value)}
+                            />
+                            Excel
+                          </label>
+
+                          <label className="flex items-center gap-2">
+                            <input
+                              type="radio"
+                              name="formatExport"
+                              value="xml"
+                              checked={formatExport === "xml"}
+                              onChange={(e) => setFormatExport(e.target.value)}
+                            />
+                            XML
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Buttons */}
+                <div className="flex gap-4 py-5 justify-end">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setExportShowModal(false);
+                      setClubIdExport("");
+                      setDateExport(null);
+                      setFormatExport("excel");
+                    }}
+                    className="px-4 py-2 bg-transparent border border-white text-white font-semibold rounded max-w-[150px] w-full"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 bg-white text-black font-semibold rounded max-w-[150px] w-full"
+                  >
+                    Download
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Export End */}
     </>
   );
 };

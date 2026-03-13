@@ -372,6 +372,13 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                   <FaCircle className="menu--icon !text-[10px]" />
                   <span className="nav-text">Refund Requests</span>
                 </Link>
+                <Link
+                  to="/reports/finance-reports/revenue-recognition-report"
+                  className="text-white flex items-center gap-[5px] mb-2 text-sm"
+                >
+                  <FaCircle className="menu--icon !text-[10px]" />
+                  <span className="nav-text">Revenue Recognition Report</span>
+                </Link>
               </div>
             )}
 
@@ -1184,6 +1191,13 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                 >
                   <FaCircle className="menu--icon !text-[10px]" />
                   <span className="nav-text">Refund Requests</span>
+                </Link>
+                <Link
+                  to="/reports/finance-reports/revenue-recognition-report"
+                  className="text-white flex items-center gap-[5px] mb-2 text-sm"
+                >
+                  <FaCircle className="menu--icon !text-[10px]" />
+                  <span className="nav-text">Revenue Recognition Report</span>
                 </Link>
               </div>
             )}

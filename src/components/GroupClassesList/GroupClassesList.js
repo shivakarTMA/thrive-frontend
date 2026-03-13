@@ -307,13 +307,13 @@ const GroupClassesList = () => {
         otherwise: (schema) => schema.nullable(),
       }),
 
-    gst: Yup.number()
-      .typeError("GST must be a number")
-      .when("booking_type", {
-        is: "PAID",
-        then: (schema) => schema.required("GST is required"),
-        otherwise: (schema) => schema.nullable(),
-      }),
+    // gst: Yup.number()
+    //   .typeError("GST must be a number")
+    //   .when("booking_type", {
+    //     is: "PAID",
+    //     then: (schema) => schema.required("GST is required"),
+    //     otherwise: (schema) => schema.nullable(),
+    //   }),
     studio_id: Yup.string().required("Studio is required"),
   });
 
@@ -350,7 +350,6 @@ const GroupClassesList = () => {
     validateOnChange: true,
     validateOnBlur: true,
     onSubmit: async (values, { resetForm }) => {
-      console.log(values, "values");
       try {
         const formData = new FormData();
 
@@ -506,7 +505,24 @@ const GroupClassesList = () => {
     appliedFilters.trainer_id,
   ]);
 
-  console.log(formik.errors, "SHIVAKAR ERRORS");
+  useEffect(() => {
+    if (CreateFormik.values.booking_type !== "PAID") {
+      CreateFormik.setValues({
+        ...CreateFormik.values,
+        amount: "",
+        discount: "",
+        gst: "",
+      });
+    }
+  }, [CreateFormik.values.booking_type]);
+
+  useEffect(() => {
+    if (CreateFormik.values.booking_type === "PAID") {
+      CreateFormik.setFieldValue("gst", 5);
+    } else {
+      CreateFormik.setFieldValue("gst", "");
+    }
+  }, [CreateFormik.values.booking_type]);
 
   return (
     <>

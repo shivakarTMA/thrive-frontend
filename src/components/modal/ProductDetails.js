@@ -98,7 +98,7 @@ const ProductModal = ({ selectedType, onClose, onSubmit, planType, clubId }) => 
                   </div> */}
                   <div className="text-sm text-gray-600">
                     Duration: {product?.duration_value} {product?.duration_type}{" "}
-                    | Amount: ₹{product?.amount} | Sessions:{" "}
+                    | Amount: ₹{product?.total_amount} | Sessions:{" "}
                     {product?.sessions ? product?.sessions : "N/A"}
                   </div>
                 </div>

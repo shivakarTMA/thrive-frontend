@@ -213,6 +213,8 @@ const CreateLeadForm = ({
         return;
       }
 
+      console.log('check error', values)
+
       try {
         // ===============================
         // ✅ COMPANY HANDLING (SOURCE OF TRUTH)
@@ -257,6 +259,11 @@ const CreateLeadForm = ({
           company_name: companyName,
         };
 
+        // ✅ Clear schedule if NOTRIAL
+        if (values.schedule === "NOTRIAL") {
+          payload.schedule = "";
+        }
+
         // Remove interested_in if editing
         if (selectedLead) {
           delete payload.interested_in;
@@ -282,13 +289,6 @@ const CreateLeadForm = ({
           payload.country_code = null;
           payload.mobile = null;
         }
-
-        // console.log("✅ FINAL PAYLOAD:", payload);
-
-        // console.log({
-        //   typed: values.company_name,
-        //   final: companyName,
-        // });
 
         // ===============================
         // ✅ API CALL

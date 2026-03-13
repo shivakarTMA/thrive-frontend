@@ -46,7 +46,7 @@ const MarketingBanner = () => {
     }
   };
 
-  const fetchMarketingBanner = async (search = "", currentPage = page) => {
+  const fetchMarketingBanner = async (currentPage = page) => {
     try {
       const params = {
         page: currentPage,
@@ -84,13 +84,10 @@ const MarketingBanner = () => {
       value: item.id, // Store club_id as ID
     })) || [];
 
+  // Initial fetch
   useEffect(() => {
-    const delayDebounce = setTimeout(() => {
-      setPage(1);
-      fetchMarketingBanner(1);
-    }, 300);
-
-    return () => clearTimeout(delayDebounce);
+    setPage(1);
+    fetchMarketingBanner(1);
   }, [clubFilter, statusFilter]);
 
   const handleOverlayClick = (e) => {

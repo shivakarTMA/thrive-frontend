@@ -21,10 +21,12 @@ const discountType = [
   { label: "Percentage", value: "PERCENTAGE" },
   { label: "Fixed", value: "FIXED" },
 ];
+
 const statusOptions = [
   { label: "Active", value: "ACTIVE" },
   { label: "Inactive", value: "INACTIVE" },
 ];
+
 const applicableTypeOptions = [
   { label: "Subscription", value: "SUBSCRIPTION" },
   { label: "Package", value: "PACKAGE" },
@@ -46,6 +48,7 @@ const CreateCoupon = ({
   const [subscriptions, setSubscriptions] = useState([]);
   const [packages, setPackages] = useState([]);
   const [products, setProducts] = useState([]);
+
   const [loadingLists, setLoadingLists] = useState({
     subscriptions: false,
     packages: false,
@@ -56,12 +59,9 @@ const CreateCoupon = ({
     try {
       const response = await authAxios().get("/club/list");
       const data = response.data?.data || response.data || [];
-
       const activeOnly = filterActiveItems(data);
-
       setClub(activeOnly);
     } catch (error) {
-      console.error(error);
       toast.error("Failed to fetch clubs");
     }
   };
@@ -69,11 +69,12 @@ const CreateCoupon = ({
   const fetchSubscriptions = async () => {
     try {
       if (subscriptions.length) return;
+
       setLoadingLists((s) => ({ ...s, subscriptions: true }));
+
       const response = await authAxios().get("/subscription-plan/list");
       const raw = response.data?.data || response.data || [];
 
-      // keep only active plans (case-insensitive)
       const activeOnly = (Array.isArray(raw) ? raw : []).filter(
         (item) => String(item.status || "").toUpperCase() === "ACTIVE",
       );
@@ -81,7 +82,6 @@ const CreateCoupon = ({
       setSubscriptions(activeOnly);
       setLoadingLists((s) => ({ ...s, subscriptions: false }));
     } catch (error) {
-      console.error(error);
       toast.error("Failed to fetch subscriptions");
       setLoadingLists((s) => ({ ...s, subscriptions: false }));
     }
@@ -90,21 +90,19 @@ const CreateCoupon = ({
   const fetchPackages = async () => {
     try {
       if (packages.length) return;
+
       setLoadingLists((s) => ({ ...s, packages: true }));
 
       const response = await authAxios().get("/package/list");
       const raw = response.data?.data || response.data || [];
 
-      // keep only active plans (case-insensitive)
       const activeOnly = (Array.isArray(raw) ? raw : []).filter(
         (item) => String(item.status || "").toUpperCase() === "ACTIVE",
       );
 
       setPackages(activeOnly);
-
       setLoadingLists((s) => ({ ...s, packages: false }));
     } catch (error) {
-      console.error(error);
       toast.error("Failed to fetch packages");
       setLoadingLists((s) => ({ ...s, packages: false }));
     }
@@ -113,21 +111,19 @@ const CreateCoupon = ({
   const fetchProducts = async () => {
     try {
       if (products.length) return;
+
       setLoadingLists((s) => ({ ...s, products: true }));
 
       const response = await authAxios().get("/product/list");
       const raw = response.data?.data || response.data || [];
 
-      // keep only active plans (case-insensitive)
       const activeOnly = (Array.isArray(raw) ? raw : []).filter(
         (item) => String(item.status || "").toUpperCase() === "ACTIVE",
       );
 
       setProducts(activeOnly);
-
       setLoadingLists((s) => ({ ...s, products: false }));
     } catch (error) {
-      console.error(error);
       toast.error("Failed to fetch products");
       setLoadingLists((s) => ({ ...s, products: false }));
     }
@@ -138,7 +134,6 @@ const CreateCoupon = ({
     fetchSubscriptions();
     fetchPackages();
     fetchProducts();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const clubOptions =
@@ -179,6 +174,7 @@ const CreateCoupon = ({
 
         if (data) {
           const couponData = data?.coupon || data;
+
           const coupon = {
             id: couponData?.id || "",
             club_id: couponData?.club_id || "",
@@ -198,55 +194,48 @@ const CreateCoupon = ({
             formik.setFieldValue(`coupon.${k}`, v, false);
           });
 
-          let fetchedRules = [];
-          if (Array.isArray(data?.applicable_rules)) {
-            fetchedRules = data.applicable_rules;
-          } else if (Array.isArray(data?.applicable_rules?.add)) {
-            fetchedRules = data.applicable_rules;
-          } else if (Array.isArray(data?.applicable_rules?.rules)) {
-            fetchedRules = data.applicable_rules.rules;
-          } else if (
-            Array.isArray(data?.applicable_rules) === false &&
-            data?.applicable_rules == null
-          ) {
-            fetchedRules = [];
-          } else {
-            fetchedRules = data.applicable_rules || [];
-          }
+          const rules =
+  Array.isArray(data?.applicable_rules) && data.applicable_rules.length
+    ? data.applicable_rules.map((r) => ({
+        id: r.id,
+        applicable_type: r.applicable_type || "",
+        applicable_id: r.applicable_id ?? null,
+      }))
+    : [{ applicable_type: "ALL", applicable_id: null }];
 
-          const rulesToSet =
-            Array.isArray(fetchedRules) && fetchedRules.length
-              ? fetchedRules
-              : [{ applicable_type: "ALL", applicable_id: null }];
+formik.setFieldValue("applicable_rules", rules, false);
 
-          formik.setFieldValue("applicable_rules", rulesToSet, false);
-
-          if (typeof setOriginalApplicableRules === "function") {
-            setOriginalApplicableRules(JSON.parse(JSON.stringify(rulesToSet)));
-          }
-
-          const types = new Set(
-            (rulesToSet || []).map((r) => r?.applicable_type).filter(Boolean),
-          );
-          if (types.has("SUBSCRIPTION")) await fetchSubscriptions();
-          if (types.has("PACKAGE")) await fetchPackages();
-          if (types.has("PRODUCT")) await fetchProducts();
+if (typeof setOriginalApplicableRules === "function") {
+  setOriginalApplicableRules(JSON.parse(JSON.stringify(rules)));
+}
         }
       } catch (err) {
-        console.error(err);
         toast.error("Failed to fetch coupon details");
       }
     };
 
     fetchCouponById(editingOption);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editingOption]);
+
+  useEffect(() => {
+    const rules = formik.values?.applicable_rules || [];
+
+    if (!rules.length) return;
+
+    const types = new Set(rules.map((r) => r?.applicable_type).filter(Boolean));
+
+    if (types.has("SUBSCRIPTION")) fetchSubscriptions();
+    if (types.has("PACKAGE")) fetchPackages();
+    if (types.has("PRODUCT")) fetchProducts();
+  }, [formik.values?.applicable_rules]);
 
   const addApplicableRule = () => {
     const current = Array.isArray(formik.values.applicable_rules)
       ? [...formik.values.applicable_rules]
       : [];
+
     current.push({ applicable_type: "", applicable_id: null });
+
     formik.setFieldValue("applicable_rules", current);
   };
 
@@ -254,28 +243,30 @@ const CreateCoupon = ({
     const current = Array.isArray(formik.values.applicable_rules)
       ? [...formik.values.applicable_rules]
       : [];
+
     if (current.length <= 1) {
       formik.setFieldValue("applicable_rules", [
         { applicable_type: "ALL", applicable_id: null },
       ]);
       return;
     }
+
     current.splice(index, 1);
+
     formik.setFieldValue("applicable_rules", current);
   };
 
   const handleApplicableTypeChange = async (index, option) => {
     const type = option?.value ?? "";
-    const current = Array.isArray(formik.values.applicable_rules)
-      ? [...formik.values.applicable_rules]
-      : [];
-    while (current.length <= index)
-      current.push({ applicable_type: "", applicable_id: null });
+
+    const current = [...formik.values.applicable_rules];
+
     current[index] = {
       ...current[index],
       applicable_type: type,
       applicable_id: null,
     };
+
     formik.setFieldValue("applicable_rules", current);
 
     if (type === "SUBSCRIPTION") await fetchSubscriptions();
@@ -285,12 +276,14 @@ const CreateCoupon = ({
 
   const handleApplicableIdChange = (index, option) => {
     const id = option?.value ?? null;
-    const current = Array.isArray(formik.values.applicable_rules)
-      ? [...formik.values.applicable_rules]
-      : [];
-    while (current.length <= index)
-      current.push({ applicable_type: "", applicable_id: null });
-    current[index] = { ...current[index], applicable_id: id };
+
+    const current = [...formik.values.applicable_rules];
+
+    current[index] = {
+      ...current[index],
+      applicable_id: id,
+    };
+
     formik.setFieldValue("applicable_rules", current);
   };
 
@@ -301,22 +294,15 @@ const CreateCoupon = ({
       .filter(Boolean);
   };
 
-  // Updated getApplicableOptions function
   const getApplicableOptions = (type, ruleIndex = null) => {
-    const clubId = formik.values?.coupon?.club_id; // Fixed: get club_id from coupon object
+    const clubId = formik.values?.coupon?.club_id;
+
     let list = [];
 
     switch (type) {
       case "SUBSCRIPTION":
         list = subscriptionOptions
-          .filter((opt) => {
-            // Only show items matching selected club_id
-            if (clubId) {
-              return opt.club_id === clubId;
-            }
-            // If no club selected, show all
-            return true;
-          })
+          .filter((opt) => (!clubId ? true : opt.club_id === clubId))
           .map((opt) => ({
             ...opt,
             label: `${opt.label} (${opt.plan_type})`,
@@ -324,61 +310,123 @@ const CreateCoupon = ({
         break;
 
       case "PACKAGE":
-        list = packageOptions.filter((opt) => {
-          if (clubId) {
-            return opt.club_id === clubId;
-          }
-          return true;
-        });
+        list = packageOptions.filter((opt) =>
+          !clubId ? true : opt.club_id === clubId,
+        );
         break;
 
       case "PRODUCT":
-        list = productOptions.filter((opt) => {
-          if (clubId) {
-            return opt.club_id === clubId;
-          }
-          return true;
-        });
+        list = productOptions.filter((opt) =>
+          !clubId ? true : opt.club_id === clubId,
+        );
         break;
 
       default:
         return [];
     }
 
-    // Filter out already selected items
     const selectedIds = getSelectedApplicableIds(ruleIndex);
+
     return list.filter((opt) => !selectedIds.includes(opt.value));
   };
-  useEffect(() => {
-    // reset applicable_rules if club_id changes
-    const clubId = formik.values?.coupon?.club_id; // Fixed path
-    const currentRules = formik.values.applicable_rules || [];
 
-    // Only reset if club_id is set and rules have specific items selected
-    if (clubId) {
-      const hasSpecificItems = currentRules.some(
-        (rule) => rule.applicable_type !== "ALL" && rule.applicable_id !== null,
-      );
+  const getSelectedApplicableOption = (type, id) => {
+    if (!type || id == null) return null;
 
-      if (hasSpecificItems) {
-        // Reset the field value
-        formik.setFieldValue("applicable_rules", [
-          { applicable_type: "ALL", applicable_id: null },
-        ]);
+    let list = [];
 
-        // Reset touched state for applicable_rules
-        formik.setFieldTouched("applicable_rules", false, false);
+    switch (type) {
+      case "SUBSCRIPTION":
+        list = subscriptionOptions.map((opt) => ({
+          ...opt,
+          label: `${opt.label} (${opt.plan_type})`,
+        }));
+        break;
 
-        // Optionally clear errors
-        formik.setErrors({
-          ...formik.errors,
-          applicable_rules: undefined,
+      case "PACKAGE":
+        list = packageOptions;
+        break;
+
+      case "PRODUCT":
+        list = productOptions;
+        break;
+
+      default:
+        return null;
+    }
+
+    const found = list.find((opt) => String(opt.value) === String(id));
+
+    return found || null;
+  };
+
+  // ADD THIS FUNCTION ABOVE return()
+
+const buildUpdatePayload = (values, originalRules = []) => {
+  const currentRules = values.applicable_rules || [];
+
+  const payload = {
+    coupon: {
+      code: values.coupon.code,
+      description: values.coupon.description,
+      discount_type: values.coupon.discount_type,
+      discount_value: Number(values.coupon.discount_value),
+      max_usage: Number(values.coupon.max_usage),
+      per_user_limit: Number(values.coupon.per_user_limit),
+      start_date: values.coupon.start_date,
+      end_date: values.coupon.end_date,
+      position: Number(values.coupon.position),
+      status: values.coupon.status,
+    },
+    applicable_rules: {
+      add: [],
+      update: [],
+      delete: [],
+    },
+  };
+
+  const originalMap = new Map();
+  originalRules.forEach((r) => {
+    if (r.id) originalMap.set(r.id, r);
+  });
+
+  const currentIds = [];
+
+  currentRules.forEach((rule) => {
+    if (!rule) return;
+
+    if (rule.id) {
+      currentIds.push(rule.id);
+
+      const original = originalMap.get(rule.id);
+
+      if (
+        original &&
+        (original.applicable_type !== rule.applicable_type ||
+          Number(original.applicable_id) !== Number(rule.applicable_id))
+      ) {
+        payload.applicable_rules.update.push({
+          id: rule.id,
+          applicable_type: rule.applicable_type,
+          applicable_id: rule.applicable_id,
         });
       }
+    } else {
+      payload.applicable_rules.add.push({
+        applicable_type: rule.applicable_type,
+        applicable_id: rule.applicable_id,
+      });
     }
-  }, [formik.values?.coupon?.club_id]);
+  });
 
-  console.log(formik.values?.club_id, "formik.values?.club_id");
+  originalRules.forEach((r) => {
+    if (r.id && !currentIds.includes(r.id)) {
+      payload.applicable_rules.delete.push(r.id);
+    }
+  });
+
+  return payload;
+};
 
   return (
     <div
@@ -394,6 +442,7 @@ const CreateCoupon = ({
           <h2 className="text-xl font-semibold">
             {editingOption ? "Edit Coupon" : "Create Coupon"}
           </h2>
+
           <div
             className="close--lead cursor-pointer"
             onClick={() => {
@@ -605,7 +654,10 @@ const CreateCoupon = ({
                           const cleanValue = sanitizePositiveInteger(
                             e.target.value,
                           );
-                          formik.setFieldValue("coupon.per_user_limit", cleanValue);
+                          formik.setFieldValue(
+                            "coupon.per_user_limit",
+                            cleanValue,
+                          );
                         }}
                         onBlur={formik.handleBlur}
                         className="custom--input w-full input--icon number--appearance-none"
@@ -771,10 +823,10 @@ const CreateCoupon = ({
                   </div>
                 </div>
 
-                {/* Applicable Rules */}
                 <div className="mt-6">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-semibold">Applicable Rules</h3>
+
                     <button
                       type="button"
                       onClick={addApplicableRule}
@@ -791,11 +843,9 @@ const CreateCoupon = ({
                           key={index}
                           className="grid grid-cols-[1fr_1fr_auto] gap-4 p-4 border rounded-lg bg-gray-50"
                         >
-                          {/* Type */}
                           <div>
                             <label className="mb-2 block text-sm">
                               Applicable Type
-                              <span className="text-red-500">*</span>
                             </label>
                             <div className="relative">
                               <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[10]">
@@ -812,15 +862,8 @@ const CreateCoupon = ({
                                 onChange={(option) =>
                                   handleApplicableTypeChange(index, option)
                                 }
-                                styles={{
-                                  ...selectIcon,
-                                  menuPortal: (base) => ({
-                                    ...base,
-                                    zIndex: 9999,
-                                  }),
-                                }}
+                                styles={selectIcon}
                                 className="!capitalize"
-                                placeholder="Select type..."
                                 isClearable
                               />
                             </div>
@@ -837,14 +880,9 @@ const CreateCoupon = ({
                               )}
                           </div>
 
-                          {/* Applicable ID */}
                           <div>
                             <label className="mb-2 block text-sm">
                               Applicable Item
-                              {rule?.applicable_type &&
-                                rule?.applicable_type !== "ALL" && (
-                                  <span className="text-red-500">*</span>
-                                )}
                             </label>
                             <div className="relative">
                               <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[10]">
@@ -853,13 +891,10 @@ const CreateCoupon = ({
                               <Select
                                 value={
                                   rule?.applicable_type !== "ALL"
-                                    ? getApplicableOptions(
+                                    ? getSelectedApplicableOption(
                                         rule?.applicable_type,
-                                        index,
-                                      ).find(
-                                        (opt) =>
-                                          opt.value === rule?.applicable_id,
-                                      ) || null
+                                        rule?.applicable_id,
+                                      )
                                     : null
                                 }
                                 options={getApplicableOptions(
@@ -913,7 +948,6 @@ const CreateCoupon = ({
                               )}
                           </div>
 
-                          {/* Delete */}
                           <div className="flex items-end">
                             <button
                               type="button"
@@ -924,10 +958,6 @@ const CreateCoupon = ({
                                   ? "cursor-not-allowed pointer-events-none !bg-gray-100 text-gray-500"
                                   : "text-red-500"
                               }`}
-                              disabled={
-                                (formik.values.applicable_rules || [])
-                                  .length === 1
-                              }
                             >
                               <FiTrash2 className="text-xl" />
                             </button>
@@ -938,7 +968,6 @@ const CreateCoupon = ({
                   </div>
                 </div>
               </div>
-
               <div className="flex gap-4 py-5 px-6 justify-end bg-white border-t rounded-b-[10px]">
                 <button
                   type="button"
@@ -950,6 +979,7 @@ const CreateCoupon = ({
                 >
                   Cancel
                 </button>
+
                 <button
                   type="submit"
                   className="px-4 py-2 bg-black text-white rounded max-w-[150px] w-full"

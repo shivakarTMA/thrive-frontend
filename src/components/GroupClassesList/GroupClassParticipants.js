@@ -9,6 +9,7 @@ import { MdOutlineKeyboardBackspace } from "react-icons/md";
 
 const GroupClassParticipants = () => {
   const { id } = useParams();
+  const [participantClassTitle, setParticipantClassTitle] = useState("");
   const [packageParticipats, setPackageParticipats] = useState([]);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [remarks, setRemarks] = useState("");
@@ -35,6 +36,7 @@ const GroupClassParticipants = () => {
       const responseData = res.data;
       const data = responseData?.data || [];
 
+      setParticipantClassTitle(responseData?.participant_class_name_title)
       setPackageParticipats(data);
       setPage(responseData?.currentPage || 1);
       setTotalPages(responseData?.totalPage || 1);
@@ -124,8 +126,8 @@ const GroupClassParticipants = () => {
       <div className="page--content">
         <div className="flex items-end justify-between gap-2 mb-5">
           <div className="title--breadcrumbs">
-            <p className="text-sm">{`Home > Group Classes > ZUMBA Class`}</p>
-            <h1 className="text-3xl font-semibold">ZUMBA Class</h1>
+            <p className="text-sm">{`Home > Group Classes > ${participantClassTitle}`}</p>
+            <h1 className="text-3xl font-semibold">{participantClassTitle}</h1>
           </div>
         </div>
 

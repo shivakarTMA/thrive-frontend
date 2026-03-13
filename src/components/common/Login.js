@@ -195,6 +195,7 @@ const Login = (props) => {
                     title="Phone number must be exactly 10 digits"
                     className="number--appearance-none block w-full rounded-md border-0 py-1.5 px-4 text-gray-900 focus:outline-none sm:text-sm"
                     placeholder="Enter your phone number"
+                    autocomplete="off"
                   />
                 </div>
               </div>
@@ -227,6 +228,7 @@ const Login = (props) => {
                     required
                     className="number--appearance-none block w-full rounded-md border-0 py-1.5 px-4 text-gray-900 focus:outline-none sm:text-sm"
                     placeholder="Enter 6 digit OTP"
+                    autocomplete="off"
                   />
                 </div>
               </div>

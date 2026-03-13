@@ -18,6 +18,7 @@ import { LiaEdit } from "react-icons/lia";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import Pagination from "../components/common/Pagination";
 import { useSelector } from "react-redux";
+import { FaCircle } from "react-icons/fa";
 
 const dateFilterOptions = [
   { value: "today", label: "Today" },
@@ -356,14 +357,38 @@ const MyFollowUps = () => {
                       {row.member_name ? row.member_name : "--"}
                     </td>
                     <td className="px-2 py-4">{row.call_status}</td>
-                    <td className="px-2 py-4">{formatText(row.status)}</td>
+                    <td className="px-2 py-4">
+                      {row?.status ? (
+                        <span
+                          className={`
+                          flex items-center justify-between gap-1 rounded-full min-h-[25px] px-2 text-xs w-fit
+                          ${
+                            row?.status === "PENDING"
+                              ? "bg-yellow-100 text-yellow-700"
+                              : row?.status === "MISSED"
+                                ? "bg-red-100 text-red-700"
+                                : row?.status === "COMPLETE"
+                                  ? "bg-[#E8FFE6] text-[#138808]"
+                                  : "bg-[#EEEEEE] text-black"
+                          }
+                        `}
+                        >
+                          <FaCircle className="text-[10px]" />
+                          {formatText(row?.status)}
+                        </span>
+                      ) : (
+                        "--"
+                      )}
+                    </td>
                     <td className="px-2 py-4">
                       {row.staff_name ? row.staff_name : "--"}
                     </td>
                     <td className="px-2 py-4">
                       {row.status !== "COMPLETE" ? (
                         <div className="flex">
-                          {!(row.entity_type === "LEAD" && row.is_subscribed) ? (
+                          {!(
+                            row.entity_type === "LEAD" && row.is_subscribed
+                          ) ? (
                             <Tooltip
                               id={`tooltip-update-${row.id}`}
                               content="Update Follow Up"
@@ -392,7 +417,9 @@ const MyFollowUps = () => {
                             </Tooltip>
                           )}
                         </div>
-                      ):("--")}
+                      ) : (
+                        "--"
+                      )}
                     </td>
                   </tr>
                 ))

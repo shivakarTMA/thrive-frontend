@@ -1,20 +1,10 @@
 import React, { useState } from "react";
 import EmailCriteriaForm from "./EmailCriteriaForm";
 import { toast } from "react-toastify";
+import { Link } from "react-router-dom";
+import { MdOutlineKeyboardBackspace } from "react-icons/md";
 
 const EmailModule = () => {
-  const [activeTab, setActiveTab] = useState("Member");
-  const [isFilterDirty, setIsFilterDirty] = useState(false);
-
-  const tabs = ["Member", "Enquiries"];
-
-  const handleTabClick = (tab) => {
-    if (isFilterDirty) {
-      toast.warning("Please clear filter criteria before switching tabs");
-      return;
-    }
-    setActiveTab(tab);
-  };
 
   return (
     <div className="page--content">
@@ -24,35 +14,13 @@ const EmailModule = () => {
           <h1 className="text-3xl font-semibold">Send Email</h1>
         </div>
       </div>
-      <div className="flexs">
-        <aside className="w-full">
-          <div className="mt-6 flex flex-wrap items-center ">
-            <div className="mt-0 flex items-center border-b border-b-[#D4D4D4] overflow-auto buttons--overflow pr-6 w-full">
-              {tabs.map((item, index) => (
-                <div
-                  key={index}
-                  onClick={() => handleTabClick(item)}
-                  className={`w-fit min-w-[fit-content] cursor-pointer
-                      ${activeTab === item ? "btn--tab" : ""}`}
-                >
-                  <div className="px-5 py-3 z-[1] relative text-[15px] font-[500]">
-                    {item}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </aside>
-
-        {/* Main Content */}
-
-        <div className="mt-4 ">
-          <EmailCriteriaForm
-            activeTab={activeTab}
-            onFilterDirtyChange={setIsFilterDirty}
-          />
-        </div>
-      </div>
+      <Link
+        to="/reports/marketing-reports/email-list"
+        className="flex items-center gap-2 mt-5 mb-3 cursor-pointer border rounded-full w-fit border-black px-3 py-1 bg-black text-white"
+      >
+        <MdOutlineKeyboardBackspace /> <span>Back</span>
+      </Link>
+      <EmailCriteriaForm />
     </div>
   );
 };

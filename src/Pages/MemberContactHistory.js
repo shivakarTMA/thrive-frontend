@@ -1,6 +1,7 @@
 import React, { useState } from "react"; // Import React and useState hook
-import { formatDateTimeLead } from "../Helper/helper";
+import { formatDateTimeLead, formatText } from "../Helper/helper";
 import { useNavigate } from "react-router-dom";
+import { FaCircle } from "react-icons/fa";
 
 // Component to render individual call card details
 export default function MemberContactHistory({ filteredData, handleEditLog }) {
@@ -11,6 +12,9 @@ export default function MemberContactHistory({ filteredData, handleEditLog }) {
   const toggleRemarks = () => {
     setIsExpanded((prevState) => !prevState);
   };
+
+    // Get the first child_log remark if it exists
+  const childRemark = filteredData?.child_log?.[0]?.remark;
 
   return (
     <div className="bg-white shadow-md rounded-2xl w-full border border-[#D4D4D4] overflow-hidden mb-4">
@@ -26,7 +30,7 @@ export default function MemberContactHistory({ filteredData, handleEditLog }) {
         <p className="text-sm flex gap-2 mb-3">
           Created by: {filteredData?.created_by_name}
         </p>
-        <div className="grid grid-cols-2 gap-5">
+        <div className="grid grid-cols-2 gap-5 mb-2">
           {/* Left side details */}
           <div className="space-y-2">
             <p className="text-sm flex gap-2">
@@ -60,6 +64,29 @@ export default function MemberContactHistory({ filteredData, handleEditLog }) {
           </div>
         </div>
 
+        {filteredData?.status && (
+          <p className="text-sm flex gap-2 items-center">
+            <span>Status:</span>
+            <span
+              className={`
+                flex items-center gap-1 rounded-full min-h-[25px] px-2 text-xs w-fit
+                ${
+                  filteredData?.status === "PENDING"
+                    ? "bg-yellow-100 text-yellow-700"
+                    : filteredData?.status === "MISSED"
+                      ? "bg-red-100 text-red-700"
+                      : filteredData?.status === "COMPLETE"
+                        ? "bg-[#E8FFE6] text-[#138808]"
+                        : "bg-[#EEEEEE] text-black"
+                }
+              `}
+            >
+              <FaCircle className="text-[10px]" />
+              {formatText(filteredData?.status)}
+            </span>
+          </p>
+        )}
+
         {/* Remarks section */}
         <div className="mt-3 border-t p-2 border border-[#D4D4D4] rounded-[5px] bg-[#F7F7F7]">
           <div className="flex gap-3 justify-between pb-2 border-b border-b-[#D4D4D4] mb-2">
@@ -67,7 +94,7 @@ export default function MemberContactHistory({ filteredData, handleEditLog }) {
             {filteredData?.remark?.length > 50 && (
               <button
                 onClick={toggleRemarks}
-                className="text-blue-500 text-xs mt-1 underline"
+                className="text-[#009EB2] text-xs mt-1 underline"
               >
                 {isExpanded ? "View Less" : "View More"}
               </button>
@@ -83,22 +110,29 @@ export default function MemberContactHistory({ filteredData, handleEditLog }) {
             </p>
             {/* <p className="text-sm text-[#6F6F6F]">Marked By: Swati Singh</p> */}
           </div>
+          {/* Child Remark */}
+          {childRemark && (
+            <div className="mt-2 p-2 bg-white border border-[#D4D4D4] rounded-md">
+              <p className="text-xs text-gray-500 mb-1">Updated Remarks:</p>
+              <p className="text-sm text-black">{childRemark}</p>
+            </div>
+          )}
         </div>
 
-        <div className="flex gap-2 items-center justify-between  mt-2">
-          {/* Update button */}
-          <button
-            className="mt-3 bg-black text-white py-1 px-4 rounded-[5px] hover:bg-gray-800"
-            // onClick={() => handleEditLog(filteredData)}
-            onClick={() => {
-              navigate(
-                `/member/${filteredData.member_id}?view=call-logs&logId=${filteredData.id}`,
-              );
-              handleEditLog(filteredData);
-            }}
-          >
-            Update
-          </button>
+        <div className="flex gap-2 items-center justify-between mt-2">
+          {filteredData?.status === "PENDING" && (
+            <button
+              className="mt-3 bg-black text-white py-1 px-4 rounded-[5px] hover:bg-gray-800"
+              onClick={() => {
+                navigate(
+                  `/member/${filteredData.member_id}?view=call-logs&logId=${filteredData.id}`,
+                );
+                handleEditLog(filteredData);
+              }}
+            >
+              Update
+            </button>
+          )}
 
           {filteredData?.updatedAt && (
             <p className="text-sm text-[#6F6F6F] flex gap-2 text-right w-full justify-end">

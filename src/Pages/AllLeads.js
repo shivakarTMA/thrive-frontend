@@ -119,6 +119,7 @@ const AllLeads = () => {
     const queryParams = new URLSearchParams({
       type: "lead",
       ids: selectedUserId.join(","),
+      clubId: clubFilter?.value || "",
     }).toString();
 
     let url = "";

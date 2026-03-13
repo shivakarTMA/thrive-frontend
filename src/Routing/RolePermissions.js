@@ -119,6 +119,7 @@ export const ROUTE_PERMISSIONS = {
   '/reports/finance-reports/monthly-targets-report': ['ADMIN', 'FINANCE_MANAGER', 'CLUB_MANAGER'],
   '/reports/finance-reports/set-incentive-policy': ['ADMIN', 'FINANCE_MANAGER'],
   '/reports/finance-reports/refund-requests': ['ADMIN', 'FINANCE_MANAGER'],
+  '/reports/finance-reports/revenue-recognition-report': ['ADMIN', 'FINANCE_MANAGER'],
   
   // Operations Reports
   '/reports/operations-reports/member-checkins-report': ['ADMIN', 'FOH', 'TRAINER', 'CLUB_MANAGER', 'FINANCE_MANAGER', 'MARKETING_MANAGER'],

@@ -33,7 +33,6 @@ const featureType = [
 ];
 
 const CreateGroupClasses = ({ setShowModal, editingOption, formik }) => {
-  console.log(formik.values, "formik");
   const leadBoxRef = useRef(null);
   const [studio, setStudio] = useState([]);
   const [club, setClub] = useState([]);
@@ -207,7 +206,7 @@ const CreateGroupClasses = ({ setShowModal, editingOption, formik }) => {
             amount: data?.amount !== undefined ? data.amount : "",
             discount: data?.discount !== undefined ? data.discount : "",
             booking_type: data?.booking_type || "",
-            gst: data?.gst !== undefined ? data.gst : "",
+            // gst: data?.gst !== undefined ? data.gst : "",
             earn_coin: data?.earn_coin !== undefined ? data.earn_coin : "",
             position: data?.position !== undefined ? data.position : "",
             hsn_sac_code: data?.hsn_sac_code || "",
@@ -878,7 +877,7 @@ const CreateGroupClasses = ({ setShowModal, editingOption, formik }) => {
                           <label className="mb-2 block">
                             GST{" "}
                             <span>
-                              (%)<span className="text-red-500">*</span>
+                              (%)
                             </span>
                           </label>
                           <div className="relative">
@@ -899,7 +898,7 @@ const CreateGroupClasses = ({ setShowModal, editingOption, formik }) => {
                                 formik.setFieldValue("gst", cleanValue);
                               }}
                               onBlur={formik.handleBlur}
-                              className="custom--input w-full number--appearance-none"
+                              className="custom--input w-full number--appearance-none cursor-not-allowed pointer-events-none !bg-gray-100 !text-gray-500"
                             />
                           </div>
                           {formik.touched.gst && formik.errors.gst && (

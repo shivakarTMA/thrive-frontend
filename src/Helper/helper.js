@@ -15,6 +15,11 @@ export const multiRowStyles = {
     },
   }),
 
+  clearIndicator: (base) => ({
+    ...base,
+    padding: 0,
+  }),
+
   multiValue: (base) => ({
     ...base,
     whiteSpace: "nowrap",
@@ -52,6 +57,10 @@ export const customStyles = {
       width: "14px",
       height: "14px",
     },
+  }),
+  clearIndicator: (base) => ({
+    ...base,
+    padding: 0,
   }),
   multiValue: (base) => ({
     ...base,
@@ -98,6 +107,10 @@ export const dasboardStyles = {
     paddingLeft: "3px",
     backgroundColor: state.isDisabled ? "#f3f4f6" : "#fff", // Added disabled background
     cursor: state.isDisabled ? "not-allowed" : "default", // Optional: change cursor
+  }),
+  clearIndicator: (base) => ({
+    ...base,
+    padding: 0,
   }),
   multiValue: (base) => ({
     ...base,
@@ -153,6 +166,11 @@ export const selectIcon = {
       width: "14px",
       height: "14px",
     },
+  }),
+  /* ✅ REMOVE PADDING FROM CLEAR ICON */
+  clearIndicator: (base) => ({
+    ...base,
+    padding: 0,
   }),
   multiValue: (base) => ({
     ...base,

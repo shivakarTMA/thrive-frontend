@@ -94,7 +94,6 @@ const GalleryList = () => {
   // Fetch clubs and gallery list on component mount
   useEffect(() => {
     fetchClub();
-    fetchGallery();
   }, []);
 
   // Fetch gallery list when filters change

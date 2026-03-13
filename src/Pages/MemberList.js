@@ -391,6 +391,7 @@ const MemberList = () => {
     const queryParams = new URLSearchParams({
       type: "member",
       ids: selectedUserId.join(","),
+      clubId: clubFilter?.value || "",
     }).toString();
 
     let url = "";

@@ -112,6 +112,7 @@ import BirthdayReport from "../Pages/Reports/BirthdayReport";
 import AnniversaryReport from "../Pages/Reports/AnniversaryReport";
 import ExerciesCategoryList from "../components/ExerciesCategory/ExerciesCategoryList";
 import NourishOrders from "../Pages/NourishOrders";
+import RevenueRecognitionReport from "../components/Reports/FinanceReports/RevenueRecognitionReport";
 
 // Role-based route wrapper component
 const RoleProtectedRoute = ({ children, path, skipPrivateRoute = false }) => {
@@ -851,6 +852,14 @@ export default function Routing() {
           element={
             <RoleProtectedRoute path="/reports/finance-reports/refund-requests">
               <RefundRequests />
+            </RoleProtectedRoute>
+          }
+        />
+        <Route
+          path="/reports/finance-reports/revenue-recognition-report"
+          element={
+            <RoleProtectedRoute path="/reports/finance-reports/revenue-recognition-report">
+              <RevenueRecognitionReport />
             </RoleProtectedRoute>
           }
         />
