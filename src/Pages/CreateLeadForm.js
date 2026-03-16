@@ -3,18 +3,19 @@ import Select from "react-select";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import "react-phone-number-input/style.css";
-import PhoneInput, { isValidPhoneNumber } from "react-phone-number-input";
-import {
-  parsePhoneNumberFromString,
-  isPossiblePhoneNumber,
-} from "libphonenumber-js";
+import PhoneInput from "react-phone-number-input";
+import { parsePhoneNumberFromString } from "libphonenumber-js";
 import { FaUser, FaEnvelope, FaBuilding, FaBirthdayCake } from "react-icons/fa";
-import { trainerAvailability } from "../DummyData/DummyData";
 
 import {
+  allowOnlyLetters,
   blockInvalidNumberKeys,
+  blockNonLetters,
+  blockNonLettersAndNumbers,
   filterActiveItems,
   sanitizePositiveInteger,
+  sanitizeText,
+  sanitizeTextWithNumbers,
   selectIcon,
 } from "../Helper/helper";
 import { IoBan, IoCloseCircle } from "react-icons/io5";
@@ -29,16 +30,8 @@ import { authAxios, phoneAxios } from "../config/config";
 import { PiGenderIntersexBold } from "react-icons/pi";
 import CreatableSelect from "react-select/creatable";
 import MultiSelect from "react-multi-select-component";
-import { useClubDateTime } from "../hooks/useClubDateTime";
-import { useDateTimePicker } from "../hooks/useDateTimePicker";
-
-// Trainer assignment options
-const assignTrainers = [
-  { value: "shivakar", label: "Shivakar" },
-  { value: "nitin", label: "Nitin" },
-  { value: "esha", label: "Esha" },
-  { value: "apporva", label: "Apporva" },
-];
+import { useClubDatePickerProps } from "../hooks/useClubDatePickerProps";
+import { fetchClubTiming } from "../Redux/Reducers/clubTimingSlice";
 
 const genderOptions = [
   { value: "MALE", label: "Male" },
@@ -49,22 +42,6 @@ const genderOptions = [
 const validationSchema = Yup.object({
   club_id: Yup.string().required("Club Name is required"),
   full_name: Yup.string().required("Full Name is required"),
-  // mobile: Yup.string()
-  //   .required("Contact number is required")
-  //   .test("is-valid-phone", "Invalid phone number", function (value) {
-  //     const { country_code } = this.parent;
-  //     if (!value || !country_code) return false;
-
-  //     // Combine country code and number to full international format
-  //     const phoneNumberString = `+${country_code}${value}`;
-
-  //     // First check if the number is even possible (not just valid)
-  //     if (!isPossiblePhoneNumber(phoneNumberString)) return false;
-
-  //     // Parse and check validity strictly according to country
-  //     const phoneNumber = parsePhoneNumberFromString(phoneNumberString);
-  //     return phoneNumber?.isValid() || false;
-  //   }),
   mobile: Yup.string()
     .required("Contact number is required")
     .test("valid-phone", "Invalid phone number", function (value) {
@@ -118,20 +95,16 @@ const CreateLeadForm = ({
   handleLeadUpdate,
   leadModalPage,
 }) => {
-  console.log("selectedLead", selectedLead);
   const leadBoxRef = useRef(null);
-  const now = new Date();
   const [showUnderageModal, setShowUnderageModal] = useState(false);
   const [pendingDob, setPendingDob] = useState(null);
   const [duplicateError, setDuplicateError] = useState("");
   const [duplicateEmailError, setDuplicateEmailError] = useState("");
   const [showDuplicateEmailModal, setShowDuplicateEmailModal] = useState(false);
   const [companyOptions, setCompanyOptions] = useState([]);
-  const { user } = useSelector((state) => state.auth);
 
   const [club, setClub] = useState([]);
   const [staffList, setStaffList] = useState([]);
-  const [clubData, setClubData] = useState(null);
 
   const [selected, setSelected] = useState([]);
 
@@ -163,18 +136,6 @@ const CreateLeadForm = ({
       formik.setFieldValue("lead_source", selectedLead);
     }
   }, [selectedLead]);
-
-  const fetchClubById = async (id) => {
-    try {
-      const res = await authAxios().get(`/club/${id}`);
-      const data = res.data?.data || res.data || null;
-      console.log("CLUB DATA:", data);
-      setClubData(data);
-    } catch (err) {
-      console.error("❌ Club API Error:", err.response?.data || err.message);
-      toast.error("Failed to fetch club details");
-    }
-  };
 
   // ✅ Initial form values
   const initialValues = {
@@ -212,8 +173,6 @@ const CreateLeadForm = ({
         setShowDuplicateEmailModal(!!duplicateEmailError);
         return;
       }
-
-      console.log('check error', values)
 
       try {
         // ===============================
@@ -309,23 +268,6 @@ const CreateLeadForm = ({
       }
     },
   });
-
-  useEffect(() => {
-    if (formik.values?.club_id) {
-      fetchClubById(formik.values.club_id);
-    }
-  }, [formik.values?.club_id]);
-
-  const { filterTime: followUpFilterTime } = useClubDateTime(
-    formik.values.schedule_date_time,
-    clubData,
-  );
-
-  const scheduleDT = useDateTimePicker(
-    formik,
-    "schedule_date_time",
-    followUpFilterTime,
-  );
 
   // ✅ Fetch lead details when selectedId changes
   useEffect(() => {
@@ -508,13 +450,6 @@ const CreateLeadForm = ({
       value: item.id,
     })) || [];
 
-  // Staff dropdown options
-  const trainerOptions =
-    staffList?.map((item) => ({
-      label: item.name,
-      value: item.id,
-    })) || [];
-
   const fifteenYearsAgo = new Date();
   fifteenYearsAgo.setFullYear(fifteenYearsAgo.getFullYear() - 15);
 
@@ -555,41 +490,6 @@ const CreateLeadForm = ({
   const handleInput = (e) => {
     const { name, value } = e.target;
     formik.setFieldValue(name, value);
-  };
-
-  // DateTime picker -> save as UTC ISO (with Z)
-  const handleDateTrainerChange = (val) => {
-    if (!val) return;
-    formik.setFieldValue("schedule_date_time", val.toISOString());
-  };
-
-  const minTime = new Date();
-  minTime.setHours(6, 0, 0, 0); // Earliest selectable time = 6:00 AM
-
-  const maxTime = new Date();
-  maxTime.setHours(22, 0, 0, 0);
-
-  const baseMinTime = new Date();
-  baseMinTime.setHours(6, 0, 0, 0); // 6:00 AM
-
-  const baseMaxTime = new Date();
-  baseMaxTime.setHours(22, 0, 0, 0); // 10:00 PM
-
-  const getMinTime = (selectedDate) => {
-    if (!selectedDate) return baseMinTime;
-
-    const isToday = selectedDate.toDateString() === now.toDateString();
-
-    // If today → disable past times but still enforce 6 AM
-    if (isToday) {
-      const current = new Date();
-      const dynamicTime = current.getHours() < 6 ? baseMinTime : current;
-
-      return dynamicTime;
-    }
-
-    // For future dates → use normal 6 AM
-    return baseMinTime;
   };
 
   const handlePhoneChange = (value) => {
@@ -695,21 +595,6 @@ const CreateLeadForm = ({
     }
   };
 
-  const getAvailableTrainers = () => {
-    const dt = formik.values.schedule_date_time;
-    if (!dt) return [];
-
-    const selected = new Date(dt);
-    if (isNaN(selected)) return [];
-
-    return assignTrainers.filter((trainer) =>
-      trainerAvailability[trainer.value]?.some((slot) => {
-        const slotDt = new Date(slot.date_time);
-        return slotDt.getTime() === selected.getTime();
-      }),
-    );
-  };
-
   const handleOverlayClick = (e) => {
     if (leadBoxRef.current && !leadBoxRef.current.contains(e.target)) {
       setLeadModal(false);
@@ -720,16 +605,26 @@ const CreateLeadForm = ({
     setLeadModal(false);
   };
 
+  // Add this useEffect alongside the other useEffects
   useEffect(() => {
-    const clubId = formik.values?.club_id;
-
-    if (clubId) {
-      fetchClubById(clubId);
+    if (formik.values.club_id) {
+      dispatch(fetchClubTiming(formik.values.club_id));
     }
+  }, [formik.values.club_id]);
 
-    // ✅ Reset schedule when club changes
-    formik.setFieldValue("schedule_date_time", "");
-  }, [formik.values?.club_id]);
+  const datePickerProps = useClubDatePickerProps(
+    formik.values.schedule_date_time,
+  );
+
+  useEffect(() => {
+    if (formik.values.club_id) {
+      dispatch(fetchClubTiming(formik.values.club_id));
+
+      // Reset schedule fields when club changes
+      formik.setFieldValue("schedule_date_time", "");
+      formik.setFieldValue("assigned_staff_id", "");
+    }
+  }, [formik.values.club_id]);
 
   return (
     <>
@@ -823,7 +718,12 @@ const CreateLeadForm = ({
                         <input
                           name="full_name"
                           value={formik.values.full_name}
-                          onChange={formik.handleChange}
+                          // onChange={formik.handleChange}
+                          onKeyDown={blockNonLetters}
+                          onChange={(e) => {
+                            const cleaned = allowOnlyLetters(e.target.value);
+                            formik.setFieldValue("full_name", cleaned);
+                          }}
                           className="custom--input w-full input--icon"
                         />
                       </div>
@@ -953,17 +853,26 @@ const CreateLeadForm = ({
                             formik.setFieldValue("company_id", null);
                             formik.setFieldValue("company_name", option.label);
                           }}
+                          /* ✅ sanitize created company name */
                           onCreateOption={(newValue) => {
-                            // ❌ DO NOT push fake value into options
-                            // ❌ DO NOT assign string to company_id
+                            const cleaned = sanitizeText(newValue);
 
                             formik.setFieldValue("company_id", null);
-                            formik.setFieldValue("company_name", newValue);
+                            formik.setFieldValue("company_name", cleaned);
                           }}
-                          onInputChange={(inputValue) => {
-                            if (inputValue.length >= 2) {
-                              fetchCompanies(inputValue);
+                          /* ✅ sanitize typing */
+                          onInputChange={(inputValue, { action }) => {
+                            if (action === "input-change") {
+                              const cleaned = allowOnlyLetters(inputValue);
+
+                              if (cleaned.length >= 2) {
+                                fetchCompanies(cleaned);
+                              }
+
+                              return cleaned;
                             }
+
+                            return inputValue;
                           }}
                           options={companyOptions} // must be [{ value: number, label: string }]
                           styles={selectIcon}
@@ -1007,7 +916,14 @@ const CreateLeadForm = ({
                         <input
                           name="address"
                           value={formik.values.address}
-                          onChange={formik.handleChange}
+                          // onChange={formik.handleChange}
+                          onKeyDown={blockNonLettersAndNumbers}
+                          onChange={(e) => {
+                            const cleaned = sanitizeTextWithNumbers(
+                              e.target.value,
+                            );
+                            formik.setFieldValue("address", cleaned);
+                          }}
                           className="custom--input w-full"
                         />
                       </div>
@@ -1188,7 +1104,12 @@ const CreateLeadForm = ({
                             type="text"
                             name="platform"
                             value={formik.values.platform}
-                            onChange={formik.handleChange}
+                            // onChange={formik.handleChange}
+                            onKeyDown={blockNonLetters}
+                            onChange={(e) => {
+                              const cleaned = allowOnlyLetters(e.target.value);
+                              formik.setFieldValue("platform", cleaned);
+                            }}
                             className="custom--input w-full input--icon "
                           />
                         </div>
@@ -1277,40 +1198,43 @@ const CreateLeadForm = ({
                               )}
                             </label>
                             <div className="custom--date flex-1">
-                              <span className="absolute z-[1] mt-[11px] ml-[15px]">
+                              <span className="absolute z-[1] mt-[9px] ml-[15px]">
                                 <FaCalendarDays />
                               </span>
-                              {/* <DatePicker
+                              <DatePicker
                                 selected={
                                   formik.values.schedule_date_time
                                     ? new Date(formik.values.schedule_date_time)
                                     : null
                                 }
-                                onChange={handleDateTrainerChange}
-                                showTimeSelect
-                                timeFormat="hh:mm aa"
-                                dateFormat="dd/MM/yyyy hh:mm aa"
-                                placeholderText="Select date & time"
-                                className="border px-3 py-2 w-full input--icon"
-                                minDate={now} // Disable past dates
-                                minTime={getMinTime(new Date())} // Calculate minTime for selected date dynamically
-                                maxTime={baseMaxTime} // 10:00 PM limit
-                                disabled={
-                                  !formik.values.schedule ||
-                                  formik.values.schedule === "NOTRIAL"
-                                }
-                              /> */}
+                                onChange={(date) => {
+                                  if (!date) {
+                                    formik.setFieldValue("schedule_date_time", null);
+                                    return;
+                                  }
 
-                              <DatePicker
-                                selected={scheduleDT.selected}
-                                onChange={scheduleDT.handleDateTime}
-                                onChangeRaw={scheduleDT.handleChangeRaw}
-                                showTimeSelect
-                                timeFormat="hh:mm aa"
-                                dateFormat={scheduleDT.dateFormat}
+                                  const prev = formik.values.schedule_date_time;
+                                  const isSameDay =
+                                    prev &&
+                                    new Date(prev).toDateString() ===
+                                      new Date(date).toDateString();
+
+                                  if (isSameDay) {
+                                    // ✅ User changed time — accept exactly what they picked
+                                    formik.setFieldValue("schedule_date_time", date);
+                                  } else {
+                                    // ✅ User picked a new date — auto-select first valid grid slot
+                                    const dateWithTime =
+                                      datePickerProps.getDefaultTimeForDate(date);
+                                    // null means today has no slots left (shouldn't reach here due to minDate)
+                                    formik.setFieldValue(
+                                      "schedule_date_time",
+                                      dateWithTime ?? null,
+                                    );
+                                  }
+                                }}
+                                {...datePickerProps}
                                 placeholderText="Select date & time"
-                                minDate={new Date()}
-                                filterTime={followUpFilterTime}
                                 className="border px-3 py-2 w-full input--icon"
                                 disabled={
                                   !formik.values.schedule ||

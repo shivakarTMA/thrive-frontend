@@ -9,7 +9,12 @@ import {
   useParams,
   useSearchParams,
 } from "react-router-dom";
-import { customStyles, filterActiveItems } from "../Helper/helper";
+import {
+  blockNonLettersAndNumbers,
+  customStyles,
+  filterActiveItems,
+  sanitizeTextWithNumbers,
+} from "../Helper/helper";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { authAxios } from "../config/config";
@@ -23,9 +28,7 @@ import { LuIndianRupee } from "react-icons/lu";
 import { format } from "date-fns";
 import { addYears, subYears } from "date-fns";
 import { MdOutlineKeyboardBackspace } from "react-icons/md";
-import { createFilterTime } from "../utils/dateTimeHelpers";
-import { useClubDateTime } from "../hooks/useClubDateTime";
-import { useDateTimePicker } from "../hooks/useDateTimePicker";
+import { useClubDatePickerProps } from "../hooks/useClubDatePickerProps";
 
 const validationSchema = Yup.object().shape({
   call_status: Yup.string().required("Call status is required"),
@@ -131,7 +134,6 @@ const LeadCallLogs = () => {
   const [trainerList, setTrainerList] = useState([]);
   const [staffList, setStaffList] = useState([]);
   const [editLog, setEditLog] = useState(null);
-  const [timeSelected, setTimeSelected] = useState(false);
 
   // Redux state
   const dispatch = useDispatch();
@@ -147,23 +149,10 @@ const LeadCallLogs = () => {
   const callStatusOption = lists["LEAD_CALL_STATUS"] || [];
   const notInterestedOption = lists["NOT_INTERESTED_REASON"] || [];
 
-  const [clubData, setClubData] = useState(null);
   const [callLogs, setCallLogs] = useState([]);
   const [filterStatus, setFilterStatus] = useState("");
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
-
-  const fetchClubById = async (id) => {
-    try {
-      const res = await authAxios().get(`/club/${id}`);
-      const data = res.data?.data || res.data || null;
-      console.log("CLUB DATA:", data); // ← CHECK THIS in browser console
-      setClubData(data);
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to fetch club details");
-    }
-  };
 
   const fetchLeadCallLogs = async (leadId, filters = {}) => {
     try {
@@ -196,7 +185,6 @@ const LeadCallLogs = () => {
       const res = await authAxios().get(`/lead/${leadId}`);
       const data = res.data?.data || res.data || null;
       setLeadDetails(data);
-      fetchClubById(data?.club_id);
     } catch (err) {
       console.error(err);
       toast.error("Failed to fetch lead details");
@@ -257,27 +245,6 @@ const LeadCallLogs = () => {
     },
   });
 
-  const { filterTime: followUpFilterTime } = useClubDateTime(
-    formik.values.follow_up_datetime,
-    clubData,
-  );
-
-  const { filterTime: trialFilterTime } = useClubDateTime(
-    formik.values.trial_tour_datetime,
-    clubData,
-  );
-
-  const followUpDT = useDateTimePicker(
-    formik,
-    "follow_up_datetime",
-    followUpFilterTime,
-  );
-  const trialToDT = useDateTimePicker(
-    formik,
-    "trial_tour_datetime",
-    trialFilterTime,
-  );
-
   const handleCallStatusChange = (option) => {
     if (formik.values.id) {
       // EDIT MODE → do not reset form
@@ -290,47 +257,12 @@ const LeadCallLogs = () => {
     }
   };
 
-  const handleDateTrainerChange = (val) => {
-    if (!val) return;
-    formik.setFieldValue("trial_tour_datetime", val.toISOString());
-    // reset selected trainer whenever date/time changes
-    formik.setFieldValue("training_by", "");
-  };
-
   // Staff select -> just the value/id
   const handleSelectSchedule = (_, selectedOption) => {
     formik.setFieldValue("training_by", selectedOption?.value ?? "");
   };
 
   const now = new Date();
-  const minTime = new Date();
-  minTime.setHours(6, 0, 0, 0);
-
-  const maxTime = new Date();
-  maxTime.setHours(22, 0, 0, 0);
-
-  const baseMinTime = new Date();
-  baseMinTime.setHours(6, 0, 0, 0); // 6:00 AM
-
-  const baseMaxTime = new Date();
-  baseMaxTime.setHours(22, 0, 0, 0); // 10:00 PM
-
-  const getMinTime = (selectedDate) => {
-    if (!selectedDate) return baseMinTime;
-
-    const selected = new Date(selectedDate);
-    const today = new Date();
-
-    const isToday = selected.toDateString() === today.toDateString();
-
-    if (isToday) {
-      const current = new Date();
-      return current.getHours() < 6 ? baseMinTime : current;
-    }
-
-    // future dates → always 6 AM
-    return baseMinTime;
-  };
 
   useEffect(() => {
     if (action === "schedule-tour-trial") {
@@ -340,7 +272,6 @@ const LeadCallLogs = () => {
 
   useEffect(() => {
     if (editLog) {
-      console.log(editLog,'aksdhfiasdhfiueditLog')
       formik.setValues({
         member_id: leadId,
         call_status: editLog.call_status,
@@ -411,12 +342,6 @@ const LeadCallLogs = () => {
     fetchStaff();
   }, []);
 
-  const staffListOptions =
-    staffList?.map((item) => ({
-      label: item.name,
-      value: item.id,
-    })) || [];
-
   // useEffect(() => {
   //   console.log("Formik Errors:", formik.errors);
   //   console.log("Formik Touched:", formik.touched);
@@ -432,6 +357,15 @@ const LeadCallLogs = () => {
       setEditLog(null);
     }
   }, [logId, callLogs]);
+
+  // ── NEW: get ready-to-use DatePicker props from Redux timing ──
+  const datePickerProps = useClubDatePickerProps(
+    formik?.values?.follow_up_datetime, // pass selected date for minTime logic
+  );
+
+  const dateTrialPickerProps = useClubDatePickerProps(
+    formik?.values?.trial_tour_datetime, // pass selected date for minTime logic
+  );
 
   return (
     <div className="page--content">
@@ -493,10 +427,10 @@ const LeadCallLogs = () => {
                       Date & Time <span className="text-red-500">*</span>
                     </label>
                     <div className="custom--date flex-1">
-                      <span className="absolute z-[1] mt-[11px] ml-[15px]">
+                      <span className="absolute z-[1] mt-[9px] ml-[15px]">
                         <FaCalendarDays />
                       </span>
-                      <DatePicker
+                      {/* <DatePicker
                         selected={followUpDT.selected}
                         onChange={followUpDT.handleDateTime}
                         onChangeRaw={followUpDT.handleChangeRaw}
@@ -508,6 +442,43 @@ const LeadCallLogs = () => {
                         filterTime={followUpFilterTime}
                         className="border px-3 py-2 w-full input--icon"
                         disabled={!!editLog}
+                      /> */}
+
+                      <DatePicker
+                        selected={formik.values.follow_up_datetime}
+                        onChange={(date) => {
+                          if (!date) {
+                            formik.setFieldValue("follow_up_datetime", null);
+                            return;
+                          }
+
+                          const prev = formik.values.follow_up_datetime;
+                          const isSameDay =
+                            prev &&
+                            new Date(prev).toDateString() ===
+                              new Date(date).toDateString();
+
+                          if (isSameDay) {
+                            // ✅ User changed time — accept exactly what they picked
+                            formik.setFieldValue("follow_up_datetime", date);
+                          } else {
+                            // ✅ User picked a new date — auto-select first valid grid slot
+                            const dateWithTime =
+                              datePickerProps.getDefaultTimeForDate(date);
+                            // null means today has no slots left (shouldn't reach here due to minDate)
+                            formik.setFieldValue(
+                              "follow_up_datetime",
+                              dateWithTime ?? null,
+                            );
+                          }
+                        }}
+                        {...datePickerProps}
+                        placeholderText="Select date & time"
+                        className="border px-3 py-2 w-full input--icon"
+                        disabled={!!editLog}
+                        onKeyDown={(e) => {
+                          e.preventDefault();
+                        }}
                       />
                     </div>
                     {formik.touched.follow_up_datetime &&
@@ -526,21 +497,44 @@ const LeadCallLogs = () => {
                       Date & Time <span className="text-red-500">*</span>
                     </label>
                     <div className="custom--date flex-1">
-                      <span className="absolute z-[1] mt-[11px] ml-[15px]">
+                      <span className="absolute z-[1] mt-[9px] ml-[15px]">
                         <FaCalendarDays />
                       </span>
                       <DatePicker
-                        selected={trialToDT.selected}
-                        onChange={trialToDT.handleDateTime}
-                        onChangeRaw={trialToDT.handleChangeRaw}
-                        showTimeSelect
-                        timeFormat="hh:mm aa"
-                        dateFormat={trialToDT.dateFormat}
+                        selected={formik.values.trial_tour_datetime}
+                        onChange={(date) => {
+                          if (!date) {
+                            formik.setFieldValue("trial_tour_datetime", null);
+                            return;
+                          }
+
+                          const prev = formik.values.trial_tour_datetime;
+                          const isSameDay =
+                            prev &&
+                            new Date(prev).toDateString() ===
+                              new Date(date).toDateString();
+
+                          if (isSameDay) {
+                            // ✅ User changed time — accept exactly what they picked
+                            formik.setFieldValue("trial_tour_datetime", date);
+                          } else {
+                            // ✅ User picked a new date — auto-select first valid grid slot
+                            const dateWithTime =
+                              dateTrialPickerProps.getDefaultTimeForDate(date);
+                            // null means today has no slots left (shouldn't reach here due to minDate)
+                            formik.setFieldValue(
+                              "trial_tour_datetime",
+                              dateWithTime ?? null,
+                            );
+                          }
+                        }}
+                        {...dateTrialPickerProps}
                         placeholderText="Select date & time"
-                        minDate={new Date()}
-                        filterTime={trialFilterTime}
                         className="border px-3 py-2 w-full input--icon"
                         disabled={!!editLog}
+                        onKeyDown={(e) => {
+                          e.preventDefault();
+                        }}
                       />
                       {formik.touched.trial_tour_datetime &&
                         formik.errors.trial_tour_datetime && (
@@ -593,25 +587,52 @@ const LeadCallLogs = () => {
 
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="mb-2 block">
-                          Date & Time
-                        </label>
+                        <label className="mb-2 block">Date & Time</label>
                         <div className="custom--date flex-1">
-                          <span className="absolute z-[1] mt-[11px] ml-[15px]">
+                          <span className="absolute z-[1] mt-[9px] ml-[15px]">
                             <FaCalendarDays />
                           </span>
                           <DatePicker
-                            selected={followUpDT.selected}
-                            onChange={followUpDT.handleDateTime}
-                            onChangeRaw={followUpDT.handleChangeRaw}
-                            showTimeSelect
-                            timeFormat="hh:mm aa"
-                            dateFormat={followUpDT.dateFormat}
+                            selected={formik.values.follow_up_datetime}
+                            onChange={(date) => {
+                              if (!date) {
+                                formik.setFieldValue(
+                                  "follow_up_datetime",
+                                  null,
+                                );
+                                return;
+                              }
+
+                              const prev = formik.values.follow_up_datetime;
+                              const isSameDay =
+                                prev &&
+                                new Date(prev).toDateString() ===
+                                  new Date(date).toDateString();
+
+                              if (isSameDay) {
+                                // ✅ User changed time — accept exactly what they picked
+                                formik.setFieldValue(
+                                  "follow_up_datetime",
+                                  date,
+                                );
+                              } else {
+                                // ✅ User picked a new date — auto-select first valid grid slot
+                                const dateWithTime =
+                                  datePickerProps.getDefaultTimeForDate(date);
+                                // null means today has no slots left (shouldn't reach here due to minDate)
+                                formik.setFieldValue(
+                                  "follow_up_datetime",
+                                  dateWithTime ?? null,
+                                );
+                              }
+                            }}
+                            {...datePickerProps}
                             placeholderText="Select date & time"
-                            minDate={new Date()}
-                            filterTime={followUpFilterTime}
                             className="border px-3 py-2 w-full input--icon"
                             disabled={!!editLog}
+                            onKeyDown={(e) => {
+                              e.preventDefault();
+                            }}
                           />
                         </div>
                         {formik.touched.follow_up_datetime &&
@@ -624,9 +645,7 @@ const LeadCallLogs = () => {
 
                       {/* Schedule For */}
                       <div>
-                        <label className="mb-2 block">
-                          Schedule For
-                        </label>
+                        <label className="mb-2 block">Schedule For</label>
 
                         <Select
                           name="schedule_for"
@@ -715,6 +734,9 @@ const LeadCallLogs = () => {
                         className="border px-3 py-2 w-full input--icon"
                         minDate={now}
                         disabled={!!editLog}
+                        onKeyDown={(e) => {
+                          e.preventDefault();
+                        }}
                       />
                     </div>
                   </div>
@@ -749,7 +771,12 @@ const LeadCallLogs = () => {
                 placeholder="Discussion (max 1800 characters)"
                 maxLength={1800}
                 value={formik.values.remark}
-                onChange={formik.handleChange}
+                // onChange={formik.handleChange}
+                onKeyDown={blockNonLettersAndNumbers}
+                onChange={(e) => {
+                  const cleaned = sanitizeTextWithNumbers(e.target.value);
+                  formik.setFieldValue("remark", cleaned);
+                }}
                 rows={4}
                 className="custom--input w-full"
               />
@@ -815,7 +842,7 @@ const LeadCallLogs = () => {
               />
 
               <div className="custom--date flex-1">
-                <span className="absolute z-[1] mt-[11px] ml-[15px]">
+                <span className="absolute z-[1] mt-[9px] ml-[15px]">
                   <FaCalendarDays />
                 </span>
                 <DatePicker
@@ -831,7 +858,7 @@ const LeadCallLogs = () => {
                 />
               </div>
               <div className="custom--date flex-1">
-                <span className="absolute z-[1] mt-[11px] ml-[15px]">
+                <span className="absolute z-[1] mt-[9px] ml-[15px]">
                   <FaCalendarDays />
                 </span>
                 <DatePicker

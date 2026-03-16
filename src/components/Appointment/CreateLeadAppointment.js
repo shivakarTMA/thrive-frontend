@@ -4,10 +4,18 @@ import * as Yup from "yup";
 import Select from "react-select";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { customStyles, filterActiveItems } from "../../Helper/helper";
+import {
+  blockNonLettersAndNumbers,
+  customStyles,
+  filterActiveItems,
+  sanitizeTextWithNumbers,
+} from "../../Helper/helper";
 import { IoCloseCircle } from "react-icons/io5";
 import { toast } from "react-toastify";
 import { authAxios } from "../../config/config";
+import { useDispatch } from "react-redux";
+import { useClubDatePickerProps } from "../../hooks/useClubDatePickerProps";
+import { fetchClubTiming } from "../../Redux/Reducers/clubTimingSlice";
 
 // Main component
 const CreateLeadAppointment = ({
@@ -19,23 +27,9 @@ const CreateLeadAppointment = ({
   clubId,
 }) => {
   const leadBoxRef = useRef(null);
+  const dispatch = useDispatch();
   const [staffList, setStaffList] = useState([]);
   const [serviceList, setServiceList] = useState([]);
-
-  console.log(clubId, "clubId");
-
-  const now = new Date();
-  const minTimeDefault = new Date();
-  minTimeDefault.setHours(6, 0, 0, 0);
-
-  const maxTimeDefault = new Date();
-  maxTimeDefault.setHours(22, 0, 0, 0);
-
-  // Helper to round up current time to next interval
-  const roundUpTime = (date, interval) => {
-    const ms = 1000 * 60 * interval; // interval in ms
-    return new Date(Math.ceil(date.getTime() / ms) * ms);
-  };
 
   const fetchStaff = async (clubId = null) => {
     try {
@@ -69,6 +63,7 @@ const CreateLeadAppointment = ({
     // Fetch services and staff based on clubId if provided
     fetchStaff(clubId);
     fetchService(clubId);
+    if (clubId) dispatch(fetchClubTiming(clubId));
   }, [clubId]); // <-- dependency added
 
   const staffListOptions =
@@ -128,7 +123,7 @@ const CreateLeadAppointment = ({
     validationSchema: validationSchema,
     context: { memberType },
     onSubmit: async (values, { resetForm }) => {
-      console.log(values,'asdefasdf')
+      console.log(values, "asdefasdf");
       const payload = {
         member_id: memberID,
         service_id: values.service_id,
@@ -167,6 +162,11 @@ const CreateLeadAppointment = ({
       formik.setFieldValue("appointment_category", defaultCategory);
     }
   }, [defaultCategory]);
+
+  // ── NEW: get ready-to-use DatePicker props from Redux timing ──
+  const datePickerProps = useClubDatePickerProps(
+    formik?.values?.appointment_date, // pass selected date for minTime logic
+  );
 
   return (
     <div
@@ -267,7 +267,7 @@ const CreateLeadAppointment = ({
                   Date & Time<span className="text-red-500">*</span>
                 </label>
                 <div className="custom--date">
-                  <DatePicker
+                  {/* <DatePicker
                     selected={formik.values.appointment_date}
                     onChange={(date) => {
                       if (!date) {
@@ -310,6 +310,38 @@ const CreateLeadAppointment = ({
                         : minTimeDefault
                     }
                     maxTime={maxTimeDefault}
+                  /> */}
+                  <DatePicker
+                    selected={formik.values.appointment_date}
+                    onChange={(date) => {
+                      if (!date) {
+                        formik.setFieldValue("appointment_date", null);
+                        return;
+                      }
+
+                      const prev = formik.values.appointment_date;
+                      const isSameDay =
+                        prev &&
+                        new Date(prev).toDateString() ===
+                          new Date(date).toDateString();
+
+                      if (isSameDay) {
+                        // ✅ User changed time — accept exactly what they picked
+                        formik.setFieldValue("appointment_date", date);
+                      } else {
+                        // ✅ User picked a new date — auto-select first valid grid slot
+                        const dateWithTime =
+                          datePickerProps.getDefaultTimeForDate(date);
+                        // null means today has no slots left (shouldn't reach here due to minDate)
+                        formik.setFieldValue(
+                          "appointment_date",
+                          dateWithTime ?? null,
+                        );
+                      }
+                    }}
+                    {...datePickerProps}
+                    placeholderText="Select date & time"
+                    className="custom--input !w-full"
                   />
                   {formik.errors.appointment_date &&
                     formik.touched.appointment_date && (
@@ -361,7 +393,11 @@ const CreateLeadAppointment = ({
               <textarea
                 name="remarks"
                 value={formik.values.remarks}
-                onChange={formik.handleChange}
+                onKeyDown={blockNonLettersAndNumbers}
+                onChange={(e) => {
+                  const cleaned = sanitizeTextWithNumbers(e.target.value);
+                  formik.setFieldValue("remarks", cleaned);
+                }}
                 className="custom--input w-full"
                 rows={4}
                 placeholder="Add any additional notes..."
