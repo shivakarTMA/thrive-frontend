@@ -98,7 +98,12 @@ const MarketingBanner = () => {
 
   const marketingBannerValidationSchema = Yup.object({
     club_id: Yup.string().required("Club is required"),
-    banner_image: Yup.string().required("Image is required"),
+    banner_image: Yup.mixed()
+      .required("Image is required")
+      .test("fileType", "Only JPG, PNG, or WEBP allowed", (value) => {
+        if (!value || typeof value === "string") return true;
+        return ["image/jpeg", "image/png", "image/webp"].includes(value.type);
+      }),
     banner_heading: Yup.string().required("Banner heading is required"),
     banner_subheading: Yup.string().required("Banner subheading is required"),
     button_text: Yup.string().required("Button text is required"),

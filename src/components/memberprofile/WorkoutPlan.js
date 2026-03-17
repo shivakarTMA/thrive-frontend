@@ -1,7 +1,11 @@
 import React, { useEffect, useState } from "react";
 import AllExerciseList from "../WorkoutPlan/AllExerciseList";
 import Select from "react-select";
-import { customStyles } from "../../Helper/helper";
+import {
+  blockNonLettersAndNumbers,
+  customStyles,
+  sanitizeTextWithNumbers,
+} from "../../Helper/helper";
 import { useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import DatePicker from "react-datepicker";
@@ -773,14 +777,17 @@ const WorkoutPlan = ({
                   type="text"
                   placeholder="Notes"
                   value={exercise.notes || ""}
-                  onChange={(e) =>
+                  onChange={(e) => {
+                    const cleaned = sanitizeTextWithNumbers(e.target.value);
+
                     handleExerciseFieldChange(
                       activeDayIndex,
                       exIdx,
                       "notes",
-                      e.target.value,
-                    )
-                  }
+                      cleaned
+                    );
+                  }}
+                  onKeyDown={blockNonLettersAndNumbers}
                   className="custom--input w-full"
                 />
               </div>
@@ -983,12 +990,18 @@ const WorkoutPlan = ({
                 <input
                   type="text"
                   value={data.plan.name}
-                  onChange={(e) =>
+                  onKeyDown={blockNonLettersAndNumbers}
+                  onChange={(e) => {
+                    const cleaned = sanitizeTextWithNumbers(e.target.value);
+
                     setData((prev) => ({
                       ...prev,
-                      plan: { ...prev.plan, name: e.target.value },
-                    }))
-                  }
+                      plan: {
+                        ...prev.plan,
+                        name: cleaned,
+                      },
+                    }));
+                  }}
                   className="custom--input w-full"
                 />
                 {errors.name && (
@@ -1047,6 +1060,9 @@ const WorkoutPlan = ({
                     placeholderText="Start date"
                     className="custom--input w-full"
                     minDate={minStartDate || new Date()}
+                    onKeyDown={(e) => {
+                      e.preventDefault();
+                    }}
                   />
                 </div>
                 {errors.start_date && (
@@ -1156,12 +1172,17 @@ const WorkoutPlan = ({
               <textarea
                 rows="5"
                 value={data.plan.description}
-                onChange={(e) =>
+                onChange={(e) => {
+                  const cleaned = sanitizeTextWithNumbers(e.target.value);
+
                   setData((prev) => ({
                     ...prev,
-                    plan: { ...prev.plan, description: e.target.value },
-                  }))
-                }
+                    plan: {
+                      ...prev.plan,
+                      description: cleaned,
+                    },
+                  }));
+                }}
                 className="custom--input w-full"
               />
               {errors.description && (

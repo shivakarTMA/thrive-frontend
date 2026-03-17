@@ -13,12 +13,17 @@ import { FaListCheck } from "react-icons/fa6";
 import Select from "react-select";
 import {
   blockInvalidNumberKeys,
+  blockNonLettersAndNumbers,
   customStyles,
   filterActiveItems,
   sanitizePositiveInteger,
+  sanitizeTextWithNumbers,
 } from "../../Helper/helper";
 import { PiImageFill } from "react-icons/pi";
 import { format } from "date-fns";
+import { useDispatch } from "react-redux";
+import { fetchClubTiming } from "../../Redux/Reducers/clubTimingSlice";
+import { useClubDatePickerProps } from "../../hooks/useClubDatePickerProps";
 
 const challengeType = [
   { label: "Steps", value: "STEPS" },
@@ -46,6 +51,7 @@ const joinBetween = [
 const ChallengeForm = ({ setShowModal, editingOption, formik }) => {
   const leadBoxRef = useRef();
   const [club, setClub] = useState([]);
+  const dispatch = useDispatch();
 
   // 👉 Local states for Terms of Play
   const [conditionList, setConditionList] = useState([]);
@@ -158,15 +164,28 @@ const ChallengeForm = ({ setShowModal, editingOption, formik }) => {
     }
   };
 
-  const handleFileChange = (e) => {
+  const handleFileChange = (e, formik) => {
     const file = e.target.files[0];
-    if (file) {
-      const previewURL = URL.createObjectURL(file);
-
-      formik.setFieldValue("image", previewURL); // for preview
-      formik.setFieldValue("imageFile", file); // actual file to upload
-    }
+    if (!file) return;
+    formik.setFieldValue("image", file); // for preview
   };
+
+  useEffect(() => {
+    if (formik.values?.club_id) {
+      // Fetch new club timing
+      dispatch(fetchClubTiming(formik.values?.club_id));
+
+      // ✅ Reset dependent fields
+      formik.setFieldValue("start_date_time", null);
+      formik.setFieldValue("end_date_time", null);
+    }
+  }, [formik.values?.club_id]);
+
+  const startPickerProps = useClubDatePickerProps(
+    formik.values?.start_date_time,
+  );
+
+  const endPickerProps = useClubDatePickerProps(formik.values?.end_date_time);
 
   return (
     <div
@@ -203,7 +222,11 @@ const ChallengeForm = ({ setShowModal, editingOption, formik }) => {
                     <div className="bg-gray-100 rounded-lg w-full h-[160px] overflow-hidden">
                       {formik.values?.image ? (
                         <img
-                          src={formik.values?.image}
+                          src={
+                            formik.values?.image instanceof File
+                              ? URL.createObjectURL(formik.values?.image)
+                              : formik.values?.image
+                          }
                           className="w-full h-full object-cover"
                         />
                       ) : (
@@ -229,8 +252,8 @@ const ChallengeForm = ({ setShowModal, editingOption, formik }) => {
                       <input
                         type="file"
                         name="image"
-                        accept="image/*"
-                        onChange={handleFileChange} // ✅ no value prop here
+                        // accept="image/*"
+                        onChange={(e) => handleFileChange(e, formik)}
                         onBlur={() => formik.setFieldTouched("image", true)}
                         className="custom--input w-full input--icon"
                       />
@@ -254,7 +277,7 @@ const ChallengeForm = ({ setShowModal, editingOption, formik }) => {
                           clubOptions.find(
                             (option) =>
                               option.value.toString() ===
-                              formik.values.club_id?.toString(),
+                              formik.values?.club_id?.toString(),
                           ) || null
                         }
                         options={clubOptions}
@@ -282,8 +305,15 @@ const ChallengeForm = ({ setShowModal, editingOption, formik }) => {
                       <FaListUl className="absolute top-[50%] translate-y-[-50%] left-[15px]" />
                       <input
                         name="name"
-                        value={formik.values.name}
-                        onChange={formik.handleChange}
+                        value={formik.values?.name}
+                        // onChange={formik.handleChange}
+                        onKeyDown={blockNonLettersAndNumbers}
+                        onChange={(e) => {
+                          const cleaned = sanitizeTextWithNumbers(
+                            e.target.value,
+                          );
+                          formik.setFieldValue("name", cleaned);
+                        }}
                         className="custom--input w-full input--icon"
                       />
                     </div>
@@ -303,8 +333,15 @@ const ChallengeForm = ({ setShowModal, editingOption, formik }) => {
                       <FaListUl className="absolute top-[50%] translate-y-[-50%] left-[15px]" />
                       <input
                         name="caption"
-                        value={formik.values.caption}
-                        onChange={formik.handleChange}
+                        value={formik.values?.caption}
+                        // onChange={formik.handleChange}
+                        onKeyDown={blockNonLettersAndNumbers}
+                        onChange={(e) => {
+                          const cleaned = sanitizeTextWithNumbers(
+                            e.target.value,
+                          );
+                          formik.setFieldValue("caption", cleaned);
+                        }}
                         className="custom--input w-full input--icon"
                       />
                     </div>
@@ -349,107 +386,6 @@ const ChallengeForm = ({ setShowModal, editingOption, formik }) => {
                   </div>
 
                   {/* Start Date Field */}
-                  {/* <div>
-                    <label className="mb-2 block">
-                      Start Date & Time<span className="text-red-500">*</span>
-                    </label>
-                    <div className="custom--date">
-                      <span className="absolute mt-[10px] ml-[15px] z-[1]">
-                        <LuCalendar />
-                      </span>
-                      <DatePicker
-                        onChangeRaw={(e) => e.preventDefault()}
-                        selected={formik.values.start_date_time}
-                        onChange={(date) => {
-                          formik.setFieldValue("start_date_time", date || null);
-
-                          const currentEnd = formik.values.end_date_time
-                            ? new Date(formik.values.end_date_time)
-                            : null;
-                          if (currentEnd && date && currentEnd <= date) {
-                            formik.setFieldValue("end_date_time", null);
-                          }
-                        }}
-                        showTimeSelect
-                        timeFormat="hh:mm aa"
-                        dateFormat="dd/MM/yyyy hh:mm aa"
-                        timeIntervals={30}
-                        placeholderText="Select date & time"
-                        minDate={new Date()} // ✅ always fresh "now", not stale
-                        // ✅ KEY FIX: compute fresh minTime inline every render
-                        minTime={(() => {
-                          const freshNow = new Date(); // always current time
-                          const selectedDate = formik.values.start_date_time
-                            ? new Date(formik.values.start_date_time)
-                            : null;
-
-                          const isToday = selectedDate
-                            ? selectedDate.toDateString() ===
-                              freshNow.toDateString()
-                            : true; // no date selected yet → treat as today
-
-                          if (isToday) {
-                            return roundUpTime(freshNow, 30); // ✅ blocks all past time slots
-                          }
-
-                          // Future date selected → allow from 6:00 AM
-                          return minTimeDefault;
-                        })()}
-                        maxTime={maxTimeDefault}
-                        className="input--icon"
-                      />
-                    </div>
-                    {formik.touched.start_date_time &&
-                      formik.errors.start_date_time && (
-                        <p className="text-red-500 text-sm">
-                          {formik.errors.start_date_time}
-                        </p>
-                      )}
-                  </div> */}
-
-                  {/* End Date Field */}
-                  {/* <div>
-                    <label className="mb-2 block">
-                      End Date & Time<span className="text-red-500">*</span>
-                    </label>
-                    <div className="custom--date ">
-                      <span className="absolute mt-[12px] ml-[15px] z-[1]">
-                        <LuCalendar />
-                      </span>
-                      <DatePicker
-                        selected={
-                          formik.values.end_date_time
-                            ? new Date(formik.values.end_date_time)
-                            : null
-                        }
-                        onChange={
-                          (date) => formik.setFieldValue("end_date_time", date)
-                          // formik.setFieldValue(
-                          //   "end_date_time",
-                          //   format(date, "yyyy-MM-dd hh:mm aa"),
-                          // )
-                        }
-                        showTimeSelect
-                        timeFormat="hh:mm aa"
-                        dateFormat="dd/MM/yyyy hh:mm aa"
-                        minDate={
-                          formik.values.start_date_time
-                            ? new Date(formik.values.start_date_time)
-                            : new Date()
-                        }
-                        className="input--icon"
-                      />
-                    </div>
-
-                    {formik.touched.end_date_time &&
-                      formik.errors.end_date_time && (
-                        <p className="text-red-500 text-sm">
-                          {formik.errors.end_date_time}
-                        </p>
-                      )}
-                  </div> */}
-
-                  {/* Start Date Field */}
                   <div>
                     <label className="mb-2 block">
                       Start Date & Time<span className="text-red-500">*</span>
@@ -460,7 +396,7 @@ const ChallengeForm = ({ setShowModal, editingOption, formik }) => {
                       </span>
                       <DatePicker
                         onChangeRaw={(e) => e.preventDefault()}
-                        selected={formik.values.start_date_time}
+                        selected={formik.values?.start_date_time}
                         onChange={(date) => {
                           if (!date) {
                             formik.setFieldValue("start_date_time", null);
@@ -468,51 +404,43 @@ const ChallengeForm = ({ setShowModal, editingOption, formik }) => {
                             return;
                           }
 
-                          const freshNow = new Date();
-                          const selectedDate = new Date(date);
-                          const isToday =
-                            selectedDate.toDateString() ===
-                            freshNow.toDateString();
+                          const prev = formik.values?.start_date_time;
 
-                          if (isToday) {
-                            const minAllowed = roundUpTime(freshNow, 30);
-                            // ✅ Issue 1 Fix: If selected time is in the past for today, force it to minAllowed
-                            if (selectedDate < minAllowed) {
-                              formik.setFieldValue(
-                                "start_date_time",
-                                minAllowed,
-                              );
-                              formik.setFieldValue("end_date_time", null);
-                              return;
+                          let finalDate = new Date(date);
+
+                          // ✅ Only apply default logic if NO previous value (first selection)
+                          if (!prev) {
+                            const defaultDate =
+                              startPickerProps.getDefaultTimeForDate(date);
+                            if (defaultDate) {
+                              finalDate = defaultDate;
                             }
                           }
 
-                          formik.setFieldValue("start_date_time", selectedDate);
-                          // ✅ Always reset end date when start changes
+                          formik.setFieldValue("start_date_time", finalDate);
                           formik.setFieldValue("end_date_time", null);
                         }}
                         showTimeSelect
                         timeFormat="hh:mm aa"
                         dateFormat="dd/MM/yyyy hh:mm aa"
-                        timeIntervals={30}
-                        placeholderText="Select date & time"
-                        minDate={new Date()}
+                        timeIntervals={startPickerProps.timeIntervals}
+                        minDate={startPickerProps.minDate}
+                        maxTime={startPickerProps.maxTime}
+                        // 🔥 FIX: dynamic minTime instead of static
                         minTime={(() => {
-                          const freshNow = new Date();
-                          const selectedDate = formik.values.start_date_time
-                            ? new Date(formik.values.start_date_time)
-                            : null;
+                          const selected = formik.values?.start_date_time;
+                          if (!selected) return startPickerProps.minTime;
 
-                          const isToday = selectedDate
-                            ? selectedDate.toDateString() ===
-                              freshNow.toDateString()
-                            : true;
+                          const now = new Date();
+                          const isToday =
+                            new Date(selected).toDateString() ===
+                            now.toDateString();
 
                           return isToday
-                            ? roundUpTime(freshNow, 30)
-                            : minTimeDefault;
+                            ? startPickerProps.minTime
+                            : startPickerProps.minTime;
                         })()}
-                        maxTime={maxTimeDefault}
+                        placeholderText="Select date & time"
                         className="input--icon"
                       />
                     </div>
@@ -525,7 +453,6 @@ const ChallengeForm = ({ setShowModal, editingOption, formik }) => {
                   </div>
 
                   {/* End Date Field */}
-                  {/* End Date Field */}
                   <div>
                     <label className="mb-2 block">
                       End Date & Time<span className="text-red-500">*</span>
@@ -536,17 +463,14 @@ const ChallengeForm = ({ setShowModal, editingOption, formik }) => {
                       </span>
                       <DatePicker
                         onChangeRaw={(e) => e.preventDefault()}
-                        disabled={!formik.values.start_date_time}
-                        selected={
-                          formik.values.end_date_time
-                            ? new Date(formik.values.end_date_time)
-                            : null
-                        }
-                        // ✅ KEY FIX: Open calendar on start date, not today
+                        disabled={!formik.values?.start_date_time}
+                        selected={formik.values?.end_date_time || null}
                         openToDate={
-                          formik.values.start_date_time
-                            ? new Date(formik.values.start_date_time)
-                            : new Date()
+                          formik.values?.end_date_time
+                            ? new Date(formik.values?.end_date_time)
+                            : formik.values?.start_date_time
+                              ? new Date(formik.values?.start_date_time)
+                              : new Date()
                         }
                         onChange={(date) => {
                           if (!date) {
@@ -554,132 +478,104 @@ const ChallengeForm = ({ setShowModal, editingOption, formik }) => {
                             return;
                           }
 
-                          const freshNow = new Date();
-                          const selectedEnd = new Date(date);
-                          const startDate = formik.values.start_date_time
-                            ? new Date(formik.values.start_date_time)
-                            : null;
+                          const startDate = new Date(
+                            formik.values?.start_date_time,
+                          );
+                          let selectedEnd = new Date(date);
 
-                          // ✅ KEY FIX: If user picks a time without picking a date first,
-                          // the picker defaults to today — force it to start date instead
+                          const minAllowed = new Date(
+                            startDate.getTime() +
+                              endPickerProps.timeIntervals * 60000,
+                          );
+
+                          // ✅ Only enforce if SAME DAY
                           if (
-                            startDate &&
                             selectedEnd.toDateString() ===
-                              freshNow.toDateString() &&
-                            selectedEnd.toDateString() !==
-                              startDate.toDateString()
+                              startDate.toDateString() &&
+                            selectedEnd < minAllowed
                           ) {
-                            // Replace today's date with start date, keep the chosen time
-                            const corrected = new Date(startDate);
-                            corrected.setHours(
-                              selectedEnd.getHours(),
-                              selectedEnd.getMinutes(),
-                              0,
-                              0,
-                            );
-
-                            // Make sure corrected time is still after start time
-                            if (corrected <= startDate) {
-                              const afterStart = new Date(
-                                startDate.getTime() + 30 * 60 * 1000,
-                              );
-                              formik.setFieldValue("end_date_time", afterStart);
-                            } else {
-                              formik.setFieldValue("end_date_time", corrected);
-                            }
-                            return;
-                          }
-
-                          const isEndSameAsStart =
-                            startDate &&
-                            selectedEnd.toDateString() ===
-                              startDate.toDateString();
-
-                          const isEndToday =
-                            selectedEnd.toDateString() ===
-                            freshNow.toDateString();
-
-                          // End same day as start → must be after start time
-                          if (isEndSameAsStart && selectedEnd <= startDate) {
-                            const corrected = new Date(
-                              startDate.getTime() + 30 * 60 * 1000,
-                            );
-                            formik.setFieldValue("end_date_time", corrected);
-                            return;
-                          }
-
-                          // End is today → must not be past
-                          if (isEndToday) {
-                            const minAllowed = roundUpTime(freshNow, 30);
-                            if (selectedEnd < minAllowed) {
-                              formik.setFieldValue("end_date_time", minAllowed);
-                              return;
-                            }
+                            selectedEnd = minAllowed;
                           }
 
                           formik.setFieldValue("end_date_time", selectedEnd);
                         }}
-                        showTimeSelect
-                        timeFormat="hh:mm aa"
-                        dateFormat="dd/MM/yyyy hh:mm aa"
-                        timeIntervals={30}
+                        excludeTimes={(() => {
+                          const startDate = formik.values?.start_date_time
+                            ? new Date(formik.values?.start_date_time)
+                            : null;
+
+                          const endDate = formik.values?.end_date_time
+                            ? new Date(formik.values?.end_date_time)
+                            : null;
+
+                          if (!startDate) return [];
+
+                          // ✅ Only apply for SAME DAY
+                          if (
+                            endDate &&
+                            endDate.toDateString() !== startDate.toDateString()
+                          ) {
+                            return [];
+                          }
+
+                          const times = [];
+
+                          const interval = endPickerProps.timeIntervals;
+
+                          // Start from opening time
+                          let current = new Date(startDate);
+                          current.setHours(0, 0, 0, 0);
+
+                          // Loop through full day in interval steps
+                          while (true) {
+                            current = new Date(current.getTime() + interval * 60000);
+
+                            // stop at start time
+                            if (current >= startDate) break;
+
+                            times.push(new Date(current));
+                          }
+
+                          // ✅ IMPORTANT: also exclude exact start time (9:00 PM)
+                          times.push(new Date(startDate));
+
+                          return times;
+                        })()}
+                        {...endPickerProps}
+                        minDate={new Date(formik.values?.start_date_time)}
+                        minTime={(() => {
+                          const startDate = formik.values?.start_date_time
+                            ? new Date(formik.values?.start_date_time)
+                            : null;
+
+                          const selectedEnd = formik.values?.end_date_time
+                            ? new Date(formik.values?.end_date_time)
+                            : null;
+
+                          if (!startDate) return endPickerProps.minTime;
+
+                          // ✅ SAME DAY → restrict
+                          if (
+                            selectedEnd &&
+                            selectedEnd.toDateString() ===
+                              startDate.toDateString()
+                          ) {
+                            return new Date(
+                              startDate.getTime() +
+                                endPickerProps.timeIntervals * 60 * 1000,
+                            );
+                          }
+
+                          // ✅ DIFFERENT DAY → full range
+                          return endPickerProps.minTime;
+                        })()}
                         placeholderText={
-                          !formik.values.start_date_time
+                          !formik.values?.start_date_time
                             ? "Select start date first"
                             : "Select date & time"
                         }
-                        minDate={
-                          formik.values.start_date_time
-                            ? new Date(formik.values.start_date_time)
-                            : new Date()
-                        }
-                        minTime={(() => {
-                          const freshNow = new Date();
-                          const startDate = formik.values.start_date_time
-                            ? new Date(formik.values.start_date_time)
-                            : null;
-                          const endDate = formik.values.end_date_time
-                            ? new Date(formik.values.end_date_time)
-                            : null;
-
-                          // End same day as start
-                          if (
-                            startDate &&
-                            endDate &&
-                            endDate.toDateString() === startDate.toDateString()
-                          ) {
-                            return startDate > freshNow
-                              ? startDate
-                              : roundUpTime(freshNow, 30);
-                          }
-
-                          // End is today
-                          if (
-                            endDate &&
-                            endDate.toDateString() === freshNow.toDateString()
-                          ) {
-                            return roundUpTime(freshNow, 30);
-                          }
-
-                          // No end date yet — base on start date
-                          if (!endDate && startDate) {
-                            if (
-                              startDate.toDateString() ===
-                              freshNow.toDateString()
-                            ) {
-                              return startDate > freshNow
-                                ? startDate
-                                : roundUpTime(freshNow, 30);
-                            }
-                            return minTimeDefault; // start is future day → 6 AM
-                          }
-
-                          // End is a future day → 6 AM
-                          return minTimeDefault;
-                        })()}
-                        maxTime={maxTimeDefault}
                         className={`input--icon ${
-                          !formik.values.start_date_time
+                          !formik.values?.start_date_time
                             ? "opacity-50 cursor-not-allowed"
                             : ""
                         }`}
@@ -729,7 +625,7 @@ const ChallengeForm = ({ setShowModal, editingOption, formik }) => {
                     <input
                       type="number"
                       name="target_value"
-                      value={formik.values.target_value}
+                      value={formik.values?.target_value}
                       // onChange={formik.handleChange}
                       onKeyDown={blockInvalidNumberKeys} // ⛔ blocks typing -, e, etc.
                       onChange={(e) => {
@@ -755,7 +651,7 @@ const ChallengeForm = ({ setShowModal, editingOption, formik }) => {
                     <input
                       type="number"
                       name="target_unit"
-                      value={formik.values.target_unit}
+                      value={formik.values?.target_unit}
                       // onChange={formik.handleChange}
                       onKeyDown={blockInvalidNumberKeys} // ⛔ blocks typing -, e, etc.
                       onChange={(e) => {
@@ -782,7 +678,7 @@ const ChallengeForm = ({ setShowModal, editingOption, formik }) => {
                       name="join_in_between"
                       value={joinBetween.find(
                         (option) =>
-                          option.value === formik.values.join_in_between,
+                          option.value === formik.values?.join_in_between,
                       )}
                       onChange={(option) =>
                         formik.setFieldValue("join_in_between", option.value)
@@ -808,7 +704,7 @@ const ChallengeForm = ({ setShowModal, editingOption, formik }) => {
                     <input
                       type="number"
                       name="position"
-                      value={formik.values.position}
+                      value={formik.values?.position}
                       // onChange={formik.handleChange}
                       onKeyDown={blockInvalidNumberKeys} // ⛔ blocks typing -, e, etc.
                       onChange={(e) => {
@@ -830,8 +726,15 @@ const ChallengeForm = ({ setShowModal, editingOption, formik }) => {
                       <input
                         type="text"
                         name="reward_first"
-                        value={formik.values.reward_first}
-                        onChange={formik.handleChange}
+                        value={formik.values?.reward_first}
+                        // onChange={formik.handleChange}
+                        onKeyDown={blockNonLettersAndNumbers}
+                        onChange={(e) => {
+                          const cleaned = sanitizeTextWithNumbers(
+                            e.target.value,
+                          );
+                          formik.setFieldValue("reward_first", cleaned);
+                        }}
                         onBlur={formik.handleBlur}
                         className="custom--input w-full input--icon"
                       />
@@ -853,8 +756,15 @@ const ChallengeForm = ({ setShowModal, editingOption, formik }) => {
                       <input
                         type="text"
                         name="reward_second"
-                        value={formik.values.reward_second}
-                        onChange={formik.handleChange}
+                        value={formik.values?.reward_second}
+                        // onChange={formik.handleChange}
+                        onKeyDown={blockNonLettersAndNumbers}
+                        onChange={(e) => {
+                          const cleaned = sanitizeTextWithNumbers(
+                            e.target.value,
+                          );
+                          formik.setFieldValue("reward_second", cleaned);
+                        }}
                         onBlur={formik.handleBlur}
                         className="custom--input w-full input--icon"
                       />
@@ -876,8 +786,15 @@ const ChallengeForm = ({ setShowModal, editingOption, formik }) => {
                       <input
                         type="text"
                         name="reward_third"
-                        value={formik.values.reward_third}
-                        onChange={formik.handleChange}
+                        value={formik.values?.reward_third}
+                        // onChange={formik.handleChange}
+                        onKeyDown={blockNonLettersAndNumbers}
+                        onChange={(e) => {
+                          const cleaned = sanitizeTextWithNumbers(
+                            e.target.value,
+                          );
+                          formik.setFieldValue("reward_third", cleaned);
+                        }}
                         onBlur={formik.handleBlur}
                         className="custom--input w-full input--icon"
                       />
@@ -899,8 +816,18 @@ const ChallengeForm = ({ setShowModal, editingOption, formik }) => {
                       <input
                         type="text"
                         name="winning_caption_heading"
-                        value={formik.values.winning_caption_heading}
-                        onChange={formik.handleChange}
+                        value={formik.values?.winning_caption_heading}
+                        // onChange={formik.handleChange}
+                        onKeyDown={blockNonLettersAndNumbers}
+                        onChange={(e) => {
+                          const cleaned = sanitizeTextWithNumbers(
+                            e.target.value,
+                          );
+                          formik.setFieldValue(
+                            "winning_caption_heading",
+                            cleaned,
+                          );
+                        }}
                         onBlur={formik.handleBlur}
                         className="custom--input w-full"
                       />
@@ -922,8 +849,18 @@ const ChallengeForm = ({ setShowModal, editingOption, formik }) => {
                       <input
                         type="text"
                         name="winning_caption_subheading"
-                        value={formik.values.winning_caption_subheading}
-                        onChange={formik.handleChange}
+                        value={formik.values?.winning_caption_subheading}
+                        // onChange={formik.handleChange}
+                        onKeyDown={blockNonLettersAndNumbers}
+                        onChange={(e) => {
+                          const cleaned = sanitizeTextWithNumbers(
+                            e.target.value,
+                          );
+                          formik.setFieldValue(
+                            "winning_caption_subheading",
+                            cleaned,
+                          );
+                        }}
                         onBlur={formik.handleBlur}
                         className="custom--input w-full"
                       />
@@ -945,8 +882,18 @@ const ChallengeForm = ({ setShowModal, editingOption, formik }) => {
                       <input
                         type="text"
                         name="progress_caption_heading"
-                        value={formik.values.progress_caption_heading}
-                        onChange={formik.handleChange}
+                        value={formik.values?.progress_caption_heading}
+                        // onChange={formik.handleChange}
+                        onKeyDown={blockNonLettersAndNumbers}
+                        onChange={(e) => {
+                          const cleaned = sanitizeTextWithNumbers(
+                            e.target.value,
+                          );
+                          formik.setFieldValue(
+                            "progress_caption_heading",
+                            cleaned,
+                          );
+                        }}
                         onBlur={formik.handleBlur}
                         className="custom--input w-full"
                       />
@@ -968,8 +915,18 @@ const ChallengeForm = ({ setShowModal, editingOption, formik }) => {
                       <input
                         type="text"
                         name="progress_caption_subheading"
-                        value={formik.values.progress_caption_subheading}
-                        onChange={formik.handleChange}
+                        value={formik.values?.progress_caption_subheading}
+                        // onChange={formik.handleChange}
+                        onKeyDown={blockNonLettersAndNumbers}
+                        onChange={(e) => {
+                          const cleaned = sanitizeTextWithNumbers(
+                            e.target.value,
+                          );
+                          formik.setFieldValue(
+                            "progress_caption_subheading",
+                            cleaned,
+                          );
+                        }}
                         onBlur={formik.handleBlur}
                         className="custom--input w-full"
                       />
@@ -988,20 +945,6 @@ const ChallengeForm = ({ setShowModal, editingOption, formik }) => {
                       Status<span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
-                      {/* <Select
-                        name="status"
-                        value={
-                          statusType.find(
-                            (opt) => opt.value === formik.values?.status
-                          ) || null
-                        }
-                        options={statusType}
-                        onChange={(option) =>
-                          formik.setFieldValue("status", option.value)
-                        }
-                        onBlur={() => formik.setFieldTouched("status", true)}
-                        styles={customStyles}
-                      /> */}
                       <Select
                         name="status"
                         value={
@@ -1032,8 +975,15 @@ const ChallengeForm = ({ setShowModal, editingOption, formik }) => {
                       </label>
                       <textarea
                         name="description"
-                        value={formik.values.description}
-                        onChange={formik.handleChange}
+                        value={formik.values?.description}
+                        // onChange={formik.handleChange}
+                        onKeyDown={blockNonLettersAndNumbers}
+                        onChange={(e) => {
+                          const cleaned = sanitizeTextWithNumbers(
+                            e.target.value,
+                          );
+                          formik.setFieldValue("description", cleaned);
+                        }}
                         className="custom--input w-full"
                       />
                       {formik.touched.description &&
@@ -1052,8 +1002,15 @@ const ChallengeForm = ({ setShowModal, editingOption, formik }) => {
                       </label>
                       <textarea
                         name="about_challenge"
-                        value={formik.values.about_challenge}
-                        onChange={formik.handleChange}
+                        value={formik.values?.about_challenge}
+                        // onChange={formik.handleChange}
+                        onKeyDown={blockNonLettersAndNumbers}
+                        onChange={(e) => {
+                          const cleaned = sanitizeTextWithNumbers(
+                            e.target.value,
+                          );
+                          formik.setFieldValue("about_challenge", cleaned);
+                        }}
                         className="custom--input w-full"
                       />
                       {formik.touched.about_challenge &&
@@ -1078,7 +1035,13 @@ const ChallengeForm = ({ setShowModal, editingOption, formik }) => {
                       <input
                         type="text"
                         value={tempCondition}
-                        onChange={(e) => setTempCondition(e.target.value)}
+                        // onChange={(e) => setTempCondition(e.target.value)}
+                        onChange={(e) => {
+                          const cleaned = sanitizeTextWithNumbers(
+                            e.target.value,
+                          );
+                          setTempCondition(cleaned);
+                        }}
                         className="custom--input flex-1"
                         placeholder="Add a rule..."
                       />

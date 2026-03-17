@@ -3,7 +3,7 @@ import { IoCloseCircle } from "react-icons/io5";
 import { FaListOl, FaListUl } from "react-icons/fa6";
 import { LuPlug } from "react-icons/lu";
 import Select from "react-select";
-import { selectIcon } from "../../Helper/helper";
+import { allowOnlyLetters, blockNonLetters, blockNonLettersAndNumbers, sanitizeTextWithNumbers, selectIcon } from "../../Helper/helper";
 import CreatableSelect from "react-select/creatable";
 import { toast } from "react-toastify";
 import { authAxios } from "../../config/config";
@@ -97,7 +97,12 @@ const CreateRole = ({
                         type="text"
                         name="name"
                         value={formik.values.name}
-                        onChange={formik.handleChange}
+                        // onChange={formik.handleChange}
+                        onKeyDown={blockNonLetters}
+                        onChange={(e) => {
+                          const cleaned = allowOnlyLetters(e.target.value);
+                          formik.setFieldValue("name", cleaned);
+                        }}
                         onBlur={formik.handleBlur}
                         className="custom--input w-full input--icon"
                       />
@@ -154,7 +159,12 @@ const CreateRole = ({
                         type="text"
                         name="description"
                         value={formik.values.description}
-                        onChange={formik.handleChange}
+                        // onChange={formik.handleChange}
+                        onKeyDown={blockNonLettersAndNumbers}
+                        onChange={(e) => {
+                          const cleaned = sanitizeTextWithNumbers(e.target.value);
+                          formik.setFieldValue("description", cleaned);
+                        }}
                         onBlur={formik.handleBlur}
                         className="custom--input w-full input--icon"
                       />

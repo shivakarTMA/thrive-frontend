@@ -5,7 +5,9 @@ import { LuPlug } from "react-icons/lu";
 import Select from "react-select";
 import {
   blockInvalidNumberKeys,
+  blockNonLettersAndNumbers,
   sanitizePositiveInteger,
+  sanitizeTextWithNumbers,
   selectIcon,
 } from "../../Helper/helper";
 import { toast } from "react-toastify";
@@ -86,7 +88,12 @@ const CreatePackageCategory = ({
                         type="text"
                         name="title"
                         value={formik.values.title}
-                        onChange={formik.handleChange}
+                        // onChange={formik.handleChange}
+                        onKeyDown={blockNonLettersAndNumbers}
+                        onChange={(e) => {
+                          const cleaned = sanitizeTextWithNumbers(e.target.value);
+                          formik.setFieldValue("title", cleaned);
+                        }}
                         onBlur={formik.handleBlur}
                         className="custom--input w-full input--icon"
                       />

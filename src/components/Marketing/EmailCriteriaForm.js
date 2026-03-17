@@ -3,12 +3,17 @@ import { useFormik } from "formik";
 import * as Yup from "yup";
 import Select from "react-select";
 import MemberEmailFilterPanel from "../FilterPanel/MemberEmailFilterPanel";
-import { customStyles } from "../../Helper/helper";
+import {
+  allowOnlyLetters,
+  blockNonLetters,
+  customStyles,
+} from "../../Helper/helper";
 import RichTextEditor from "../common/RichTextEditor";
 import { toast } from "react-toastify";
 import DatePicker from "react-datepicker";
 import { authAxios } from "../../config/config";
 import { useNavigate, useParams } from "react-router-dom";
+import { sanitizeHtml } from "../../Helper/sanitizeHtml";
 
 const EmailCriteriaForm = () => {
   const [activeTab, setActiveTab] = useState("Member");
@@ -34,7 +39,7 @@ const EmailCriteriaForm = () => {
 
   const validationSchema = Yup.object({
     subject: Yup.string().required("Subject is required"),
-    message: Yup.string().required("Message is required"),
+
     campaign_name: Yup.string().required("Campaign Name is required"),
 
     filterClub: id
@@ -65,6 +70,13 @@ const EmailCriteriaForm = () => {
         then: (schema) => schema.required("Schedule date & time is required"),
         otherwise: (schema) => schema.nullable(),
       }),
+    message: Yup.string()
+      .test(
+        "not-empty",
+        "Message is required",
+        (value) => value && value.replace(/<[^>]+>/g, "").trim().length > 0,
+      )
+      .required("Message is required"),
   });
 
   const filterFields = [
@@ -245,7 +257,10 @@ const EmailCriteriaForm = () => {
         // }
 
         if (data.email_for === "MEMBER") {
-          formik.setFieldValue("filterMemberValidity", data.validity || "All Members");
+          formik.setFieldValue(
+            "filterMemberValidity",
+            data.validity || "All Members",
+          );
         } else {
           formik.setFieldValue("filterLeadValidity", data.validity || "");
         }
@@ -451,7 +466,12 @@ const EmailCriteriaForm = () => {
                     name="campaign_name"
                     className="custom--input w-full"
                     value={formik.values.campaign_name}
-                    onChange={formik.handleChange}
+                    // onChange={formik.handleChange}
+                    onKeyDown={blockNonLetters}
+                    onChange={(e) => {
+                      const cleaned = allowOnlyLetters(e.target.value);
+                      formik.setFieldValue("campaign_name", cleaned);
+                    }}
                     onBlur={formik.handleBlur}
                     placeholder="Enter Campaign"
                   />
@@ -484,7 +504,12 @@ const EmailCriteriaForm = () => {
                     name="subject"
                     className="custom--input w-full"
                     value={formik.values.subject}
-                    onChange={formik.handleChange}
+                    // onChange={formik.handleChange}
+                    onKeyDown={blockNonLetters}
+                    onChange={(e) => {
+                      const cleaned = allowOnlyLetters(e.target.value);
+                      formik.setFieldValue("subject", cleaned);
+                    }}
                     onBlur={formik.handleBlur}
                     placeholder="Enter subject"
                   />
@@ -501,9 +526,13 @@ const EmailCriteriaForm = () => {
                   ref={editorRef}
                   value={formik.values.message}
                   label="Message"
-                  onChange={(content) =>
-                    formik.setFieldValue("message", content)
-                  }
+                  // onChange={(content) =>
+                  //   formik.setFieldValue("message", content)
+                  // }
+                  onChange={(content) => {
+                    formik.setFieldValue("message", sanitizeHtml(content));
+                    formik.setFieldTouched("message", true);
+                  }}
                   placeholder="Enter your email message..."
                 />
                 {formik.touched.message && formik.errors.message && (

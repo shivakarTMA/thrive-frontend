@@ -5,8 +5,12 @@ import { GrDocument } from "react-icons/gr";
 import { LuPlug } from "react-icons/lu";
 import Select from "react-select";
 import {
+  allowOnlyLetters,
   blockInvalidNumberKeys,
+  blockNonLetters,
+  blockNonLettersAndNumbers,
   sanitizePositiveInteger,
+  sanitizeTextWithNumbers,
   selectIcon,
 } from "../../Helper/helper";
 import PhoneInput from "react-phone-number-input";
@@ -175,7 +179,12 @@ const CreateCompany = ({
                         type="text"
                         name="name"
                         value={formik.values.name}
-                        onChange={formik.handleChange}
+                        // onChange={formik.handleChange}
+                        onKeyDown={blockNonLetters}
+                        onChange={(e) => {
+                          const cleaned = allowOnlyLetters(e.target.value);
+                          formik.setFieldValue("name", cleaned);
+                        }}
                         onBlur={formik.handleBlur}
                         className="custom--input w-full input--icon"
                       />
@@ -392,7 +401,12 @@ const CreateCompany = ({
                         type="text"
                         name="gstno"
                         value={formik.values.gstno}
-                        onChange={formik.handleChange}
+                        // onChange={formik.handleChange}
+                        onKeyDown={blockNonLettersAndNumbers}
+                        onChange={(e) => {
+                          const cleaned = sanitizeTextWithNumbers(e.target.value);
+                          formik.setFieldValue("gstno", cleaned);
+                        }}
                         onBlur={formik.handleBlur}
                         className="custom--input w-full input--icon"
                       />
@@ -446,7 +460,12 @@ const CreateCompany = ({
                       <textarea
                         name="address"
                         value={formik.values.address}
-                        onChange={formik.handleChange}
+                        // onChange={formik.handleChange}
+                        onKeyDown={blockNonLettersAndNumbers}
+                        onChange={(e) => {
+                          const cleaned = sanitizeTextWithNumbers(e.target.value);
+                          formik.setFieldValue("address", cleaned);
+                        }}
                         onBlur={formik.handleBlur}
                         className="custom--input w-full input--icon"
                       />

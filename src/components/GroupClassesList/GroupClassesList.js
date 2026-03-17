@@ -354,10 +354,10 @@ const GroupClassesList = () => {
         const formData = new FormData();
 
         Object.keys(values).forEach((key) => {
-          if (key === "imageFile") {
+          if (key === "image" && typeof values.image === "string") {
             // file upload
-            if (values.imageFile instanceof File) {
-              formData.append("image", values.imageFile);
+            if (values.image instanceof File) {
+              formData.append("image", values.image);
             }
           } else if (typeof values[key] === "boolean") {
             formData.append(key, values[key] ? "true" : "false");
@@ -568,7 +568,7 @@ const GroupClassesList = () => {
             {dateFilter?.value === "custom" && (
               <>
                 <div className="custom--date dob-format flex-1 max-w-[180px] w-full">
-                  <span className="absolute z-[1] mt-[11px] ml-[15px]">
+                  <span className="absolute z-[1] mt-[9px] ml-[15px]">
                     <FaCalendarDays />
                   </span>
                   <DatePicker
@@ -588,7 +588,7 @@ const GroupClassesList = () => {
                   />
                 </div>
                 <div className="custom--date dob-format flex-1 max-w-[180px] w-full">
-                  <span className="absolute z-[1] mt-[11px] ml-[15px]">
+                  <span className="absolute z-[1] mt-[9px] ml-[15px]">
                     <FaCalendarDays />
                   </span>
                   <DatePicker

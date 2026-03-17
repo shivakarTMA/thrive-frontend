@@ -6,9 +6,13 @@ import "react-phone-number-input/style.css";
 import PhoneInput, { isValidPhoneNumber } from "react-phone-number-input";
 import { parsePhoneNumberFromString } from "libphonenumber-js";
 import {
+  allowOnlyLetters,
   blockInvalidNumberKeys,
+  blockNonLetters,
+  blockNonLettersAndNumbers,
   formatText,
   sanitizePositiveInteger,
+  sanitizeTextWithNumbers,
   selectIcon,
 } from "../Helper/helper";
 import { IoBan, IoCloseCircle } from "react-icons/io5";
@@ -1180,7 +1184,12 @@ const ConvertMemberForm = ({
                               <input
                                 name="full_name"
                                 value={formik.values.full_name}
-                                onChange={formik.handleChange}
+                                // onChange={formik.handleChange}
+                                onKeyDown={blockNonLetters}
+                                onChange={(e) => {
+                                  const cleaned = allowOnlyLetters(e.target.value);
+                                  formik.setFieldValue("full_name", cleaned);
+                                }}
                                 className="custom--input w-full input--icon"
                               />
                             </div>
@@ -1353,7 +1362,12 @@ const ConvertMemberForm = ({
                               <input
                                 name="address"
                                 value={formik.values.address}
-                                onChange={formik.handleChange}
+                                // onChange={formik.handleChange}
+                                onKeyDown={blockNonLettersAndNumbers}
+                                onChange={(e) => {
+                                  const cleaned = sanitizeTextWithNumbers(e.target.value);
+                                  formik.setFieldValue("address", cleaned);
+                                }}
                                 className="custom--input w-full"
                               />
                             </div>
@@ -1530,7 +1544,12 @@ const ConvertMemberForm = ({
                               type="text"
                               name="designation"
                               value={formik.values?.designation}
-                              onChange={formik.handleChange}
+                              onKeyDown={blockNonLetters}
+                              onChange={(e) => {
+                                const cleaned = allowOnlyLetters(e.target.value);
+                                formik.setFieldValue("designation", cleaned);
+                              }}
+                              // onChange={formik.handleChange}
                               className="custom--input w-full input--icon"
                             />
                           </div>
@@ -1617,7 +1636,12 @@ const ConvertMemberForm = ({
                                   type="text"
                                   name={`member_emergency_contact.${index}.name`}
                                   value={phone?.name}
-                                  onChange={formik.handleChange}
+                                  // onChange={formik.handleChange}
+                                  onKeyDown={blockNonLetters}
+                                  onChange={(e) => {
+                                    const cleaned = allowOnlyLetters(e.target.value);
+                                    formik.setFieldValue(`member_emergency_contact.${index}.name`, cleaned);
+                                  }}
                                   className="custom--input w-full input--icon"
                                 />
                               </div>

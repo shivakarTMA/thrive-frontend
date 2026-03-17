@@ -3,7 +3,9 @@ import { useFormik } from "formik";
 import * as Yup from "yup";
 import Select from "react-select";
 import {
+  allowOnlyLetters,
   blockInvalidNumberKeys,
+  blockNonLetters,
   customStyles,
   durationValueInteger,
 } from "../../Helper/helper";
@@ -149,7 +151,12 @@ const AddCoins = ({ setCoinsModal, details, handleUpdateCoins }) => {
               <textarea
                 name="remark"
                 value={formik?.values?.remark}
-                onChange={formik.handleChange}
+                // onChange={formik.handleChange}
+                onKeyDown={blockNonLetters}
+                onChange={(e) => {
+                  const cleaned = allowOnlyLetters(e.target.value);
+                  formik.setFieldValue("remark", cleaned);
+                }}
                 className="custom--input w-full"
                 rows={4}
                 placeholder="Add any additional notes..."

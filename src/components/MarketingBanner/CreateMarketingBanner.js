@@ -3,7 +3,7 @@ import { IoCloseCircle } from "react-icons/io5";
 import { PiImageFill } from "react-icons/pi";
 import { authAxios } from "../../config/config";
 import { toast } from "react-toastify";
-import { customStyles, filterActiveItems } from "../../Helper/helper";
+import { blockInvalidNumberKeys, blockNonLettersAndNumbers, customStyles, filterActiveItems, sanitizePositiveInteger, sanitizeTextWithNumbers } from "../../Helper/helper";
 import Select from "react-select";
 
 const CreateMarketingBanner = ({
@@ -304,7 +304,12 @@ const CreateMarketingBanner = ({
                       type="text"
                       name="banner_heading"
                       value={formik.values.banner_heading}
-                      onChange={formik.handleChange}
+                      // onChange={formik.handleChange}
+                      onKeyDown={blockNonLettersAndNumbers}
+                      onChange={(e) => {
+                        const cleaned = sanitizeTextWithNumbers(e.target.value);
+                        formik.setFieldValue("banner_heading", cleaned);
+                      }}
                       onBlur={formik.handleBlur}
                       className="custom--input w-full"
                     />
@@ -323,7 +328,12 @@ const CreateMarketingBanner = ({
                       type="text"
                       name="banner_subheading"
                       value={formik.values.banner_subheading}
-                      onChange={formik.handleChange}
+                      // onChange={formik.handleChange}
+                      onKeyDown={blockNonLettersAndNumbers}
+                      onChange={(e) => {
+                        const cleaned = sanitizeTextWithNumbers(e.target.value);
+                        formik.setFieldValue("banner_subheading", cleaned);
+                      }}
                       onBlur={formik.handleBlur}
                       className="custom--input w-full"
                     />
@@ -342,7 +352,12 @@ const CreateMarketingBanner = ({
                       type="text"
                       name="button_text"
                       value={formik.values.button_text}
-                      onChange={formik.handleChange}
+                      // onChange={formik.handleChange}
+                      onKeyDown={blockNonLettersAndNumbers}
+                      onChange={(e) => {
+                        const cleaned = sanitizeTextWithNumbers(e.target.value);
+                        formik.setFieldValue("button_text", cleaned);
+                      }}
                       onBlur={formik.handleBlur}
                       className="custom--input w-full"
                     />
@@ -361,7 +376,12 @@ const CreateMarketingBanner = ({
                       type="text"
                       name="description_heading"
                       value={formik.values.description_heading}
-                      onChange={formik.handleChange}
+                      // onChange={formik.handleChange}
+                      onKeyDown={blockNonLettersAndNumbers}
+                      onChange={(e) => {
+                        const cleaned = sanitizeTextWithNumbers(e.target.value);
+                        formik.setFieldValue("description_heading", cleaned);
+                      }}
                       onBlur={formik.handleBlur}
                       className="custom--input w-full"
                     />
@@ -379,7 +399,12 @@ const CreateMarketingBanner = ({
                     <input
                       name="caption"
                       value={formik.values.caption}
-                      onChange={formik.handleChange}
+                      // onChange={formik.handleChange}
+                      onKeyDown={blockNonLettersAndNumbers}
+                      onChange={(e) => {
+                        const cleaned = sanitizeTextWithNumbers(e.target.value);
+                        formik.setFieldValue("caption", cleaned);
+                      }}
                       onBlur={formik.handleBlur}
                       className="custom--input w-full"
                     />
@@ -395,14 +420,29 @@ const CreateMarketingBanner = ({
                     <label className="mb-2 block">
                       Position
                     </label>
-                    <input
+                    {/* <input
                       type="text"
                       name="position"
                       value={formik.values.position}
                       onChange={formik.handleChange}
                       onBlur={formik.handleBlur}
                       className="custom--input w-full"
-                    />
+                    /> */}
+                    <input
+                        type="number"
+                        name="position"
+                        value={formik.values.position}
+                        // onChange={formik.handleChange}
+                        onKeyDown={blockInvalidNumberKeys} // ⛔ blocks typing -, e, etc.
+                        onChange={(e) => {
+                          const cleanValue = sanitizePositiveInteger(
+                            e.target.value,
+                          );
+                          formik.setFieldValue("position", cleanValue);
+                        }}
+                        onBlur={formik.handleBlur}
+                        className="custom--input w-full"
+                      />
                     {formik.touched.position && formik.errors.position && (
                       <p className="text-red-500 text-sm mt-1">
                         {formik.errors.position}
@@ -454,7 +494,12 @@ const CreateMarketingBanner = ({
                       type="text"
                       name="external_url"
                       value={formik.values.external_url}
-                      onChange={formik.handleChange}
+                      // onChange={formik.handleChange}
+                      onKeyDown={blockNonLettersAndNumbers}
+                      onChange={(e) => {
+                        const cleaned = sanitizeTextWithNumbers(e.target.value);
+                        formik.setFieldValue("external_url", cleaned);
+                      }}
                       onBlur={formik.handleBlur}
                       className="custom--input w-full"
                     />
@@ -466,7 +511,12 @@ const CreateMarketingBanner = ({
                       rows={2}
                       name="description_subheading"
                       value={formik.values.description_subheading}
-                      onChange={formik.handleChange}
+                      // onChange={formik.handleChange}
+                      onKeyDown={blockNonLettersAndNumbers}
+                      onChange={(e) => {
+                        const cleaned = sanitizeTextWithNumbers(e.target.value);
+                        formik.setFieldValue("description_subheading", cleaned);
+                      }}
                       onBlur={formik.handleBlur}
                       className="custom--input w-full"
                     />
@@ -489,9 +539,13 @@ const CreateMarketingBanner = ({
                       <input
                         type="text"
                         value={tempCondition}
-                        onChange={(event) =>
-                          setTempCondition(event.target.value)
-                        }
+                        // onChange={(event) =>
+                        //   setTempCondition(event.target.value)
+                        // }
+                        onChange={(e) => {
+                          const cleaned = sanitizeTextWithNumbers(e.target.value);
+                          setTempCondition(cleaned);
+                        }}
                         className="custom--input flex-1"
                         placeholder="Add a content item..."
                       />

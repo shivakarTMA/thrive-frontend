@@ -8,6 +8,7 @@ import React, {
 } from "react";
 import JoditEditor from "jodit-react";
 import { toast } from "react-toastify";
+import DOMPurify from "dompurify";
 
 const RichTextEditor = forwardRef(
   (
@@ -105,6 +106,9 @@ const RichTextEditor = forwardRef(
 
         // Better approach: use events to handle image insertion
         events: {
+          beforePaste: function (html) {
+            return DOMPurify.sanitize(html);
+          },
           beforeImageUpload: function (files) {
             const file = files?.[0];
             if (!file) return false;
@@ -134,6 +138,11 @@ const RichTextEditor = forwardRef(
                 );
               }, 0);
               return false; // Prevent upload
+            }
+
+            if (file.size > 2 * 1024 * 1024) {
+              toast.error("Image must be under 2MB");
+              return false;
             }
 
             // ✅ VALID — Convert to Base64 manually
@@ -201,7 +210,9 @@ const RichTextEditor = forwardRef(
 
         defaultActionOnPaste: "insert_as_html",
         askBeforePasteHTML: false,
-        cleanHTML: false,
+        cleanHTML: {
+          removeJavascript: true,
+        },
         showXPathInStatusbar: false,
         showCharsCounter: false,
         showWordsCounter: false,
@@ -239,15 +250,19 @@ const RichTextEditor = forwardRef(
 
     const handleEditorChange = () => {
       const content = extractContent();
-      setInternalValue(content);
-      if (emitOnChange) onChange(content);
+      const cleanContent = DOMPurify.sanitize(content);
+
+      setInternalValue(cleanContent);
+      if (emitOnChange) onChange(cleanContent);
     };
 
     const handleEditorBlur = () => {
       const content = extractContent();
-      setInternalValue(content);
+      const cleanContent = DOMPurify.sanitize(content);
+
+      setInternalValue(cleanContent);
       setIsFocused(false);
-      onChange(content);
+      onChange(cleanContent);
     };
 
     return (

@@ -4,9 +4,11 @@ import { IoCloseCircle } from "react-icons/io5";
 import Select from "react-select";
 import {
   blockInvalidNumberKeys,
+  blockNonLettersAndNumbers,
   customStyles,
   filterActiveItems,
   sanitizePositiveInteger,
+  sanitizeTextWithNumbers,
 } from "../../Helper/helper";
 import { authAxios } from "../../config/config";
 import { toast } from "react-toastify";
@@ -303,7 +305,7 @@ const CreatePackage = ({
         session_validity: "",
         amount: "",
         discount: "",
-        gst: "",
+        gst: 5,
         earn_coin: "",
         position: "",
       },
@@ -361,6 +363,14 @@ const CreatePackage = ({
     } else {
       formik.setFieldValue("image", null);
     }
+  };
+
+  const handleVariationImageUpload = (e, index, formik) => {
+    const file = e.target.files?.[0];
+
+    if (!file) return;
+
+    formik.setFieldValue(`variation[${index}].image`, file);
   };
 
   const handleOverlayClick = (e) => {
@@ -560,7 +570,14 @@ const CreatePackage = ({
                           type="text"
                           name="name"
                           value={formik.values.name}
-                          onChange={formik.handleChange}
+                          // onChange={formik.handleChange}
+                          onKeyDown={blockNonLettersAndNumbers}
+                          onChange={(e) => {
+                            const cleaned = sanitizeTextWithNumbers(
+                              e.target.value,
+                            );
+                            formik.setFieldValue("name", cleaned);
+                          }}
                           onBlur={formik.handleBlur}
                           className="custom--input w-full"
                         />
@@ -590,7 +607,14 @@ const CreatePackage = ({
                               type="text"
                               name="caption"
                               value={formik.values.caption}
-                              onChange={formik.handleChange}
+                              // onChange={formik.handleChange}
+                              onKeyDown={blockNonLettersAndNumbers}
+                              onChange={(e) => {
+                                const cleaned = sanitizeTextWithNumbers(
+                                  e.target.value,
+                                );
+                                formik.setFieldValue("caption", cleaned);
+                              }}
                               onBlur={formik.handleBlur}
                               className="custom--input w-full"
                             />
@@ -613,7 +637,14 @@ const CreatePackage = ({
                           type="text"
                           name="tags"
                           value={formik.values.tags}
-                          onChange={formik.handleChange}
+                          // onChange={formik.handleChange}
+                          onKeyDown={blockNonLettersAndNumbers}
+                          onChange={(e) => {
+                            const cleaned = sanitizeTextWithNumbers(
+                              e.target.value,
+                            );
+                            formik.setFieldValue("tags", cleaned);
+                          }}
                           onBlur={formik.handleBlur}
                           className="custom--input w-full"
                         />
@@ -920,9 +951,7 @@ const CreatePackage = ({
                     {formik.values?.booking_type === "PAID" &&
                       service_type_check !== "RECOVERY" && (
                         <div>
-                          <label className="mb-2 block">
-                            GST (%)
-                          </label>
+                          <label className="mb-2 block">GST (%)</label>
                           <div className="relative">
                             <input
                               type="number"
@@ -961,7 +990,14 @@ const CreatePackage = ({
                           type="text"
                           name="hsn_sac_code"
                           value={formik.values.hsn_sac_code}
-                          onChange={formik.handleChange}
+                          // onChange={formik.handleChange}
+                          onKeyDown={blockNonLettersAndNumbers}
+                          onChange={(e) => {
+                            const cleaned = sanitizeTextWithNumbers(
+                              e.target.value,
+                            );
+                            formik.setFieldValue("hsn_sac_code", cleaned);
+                          }}
                           onBlur={formik.handleBlur}
                           className="custom--input w-full"
                         />
@@ -1089,7 +1125,13 @@ const CreatePackage = ({
                                 {formik.values?.variation?.[index]?.image ? (
                                   <img
                                     src={
-                                      formik.values?.variation?.[index]?.image
+                                      formik.values.variation[index]
+                                        .image instanceof File
+                                        ? URL.createObjectURL(
+                                            formik.values.variation[index]
+                                              .image,
+                                          )
+                                        : formik.values.variation[index].image
                                     }
                                     className="w-full h-full object-cover"
                                   />
@@ -1103,6 +1145,7 @@ const CreatePackage = ({
                                 )}
                               </div>
                             </div>
+
                             {/* Image */}
                             <div>
                               <label className="mb-2 block">
@@ -1110,22 +1153,10 @@ const CreatePackage = ({
                               </label>
                               <input
                                 type="file"
-                                onChange={(e) => {
-                                  const file = e.target.files[0];
-                                  if (file) {
-                                    const previewURL =
-                                      URL.createObjectURL(file);
-
-                                    formik.setFieldValue(
-                                      `variation[${index}].image`,
-                                      previewURL,
-                                    ); // preview
-                                    formik.setFieldValue(
-                                      `variation[${index}].imageFile`,
-                                      file,
-                                    ); // actual file
-                                  }
-                                }}
+                                accept="image/png,image/jpeg,image/webp"
+                                onChange={(e) =>
+                                  handleVariationImageUpload(e, index, formik)
+                                }
                                 onBlur={() =>
                                   formik.setFieldTouched(
                                     `variation[${index}].image`,
@@ -1153,7 +1184,12 @@ const CreatePackage = ({
                                 value={
                                   formik.values.variation[index]?.name || ""
                                 }
-                                onChange={formik.handleChange}
+                                // onChange={formik.handleChange}
+                                onKeyDown={blockNonLettersAndNumbers}
+                                onChange={(e) => {
+                                  const cleaned = sanitizeTextWithNumbers(e.target.value);
+                                  formik.setFieldValue(`variation[${index}].name`, cleaned);
+                                }}
                                 onBlur={formik.handleBlur}
                                 className="custom--input w-full"
                               />
@@ -1178,7 +1214,12 @@ const CreatePackage = ({
                                   formik.values.variation[index]
                                     ?.recovery_goals || ""
                                 }
-                                onChange={formik.handleChange}
+                                // onChange={formik.handleChange}
+                                onKeyDown={blockNonLettersAndNumbers}
+                                onChange={(e) => {
+                                  const cleaned = sanitizeTextWithNumbers(e.target.value);
+                                  formik.setFieldValue(`variation[${index}].recovery_goals`, cleaned);
+                                }}
                                 onBlur={formik.handleBlur}
                                 className="custom--input w-full"
                               />
@@ -1206,7 +1247,12 @@ const CreatePackage = ({
                                 value={
                                   formik.values.variation[index]?.caption || ""
                                 }
-                                onChange={formik.handleChange}
+                                // onChange={formik.handleChange}
+                                onKeyDown={blockNonLettersAndNumbers}
+                                onChange={(e) => {
+                                  const cleaned = sanitizeTextWithNumbers(e.target.value);
+                                  formik.setFieldValue(`variation[${index}].caption`, cleaned);
+                                }}
                                 onBlur={formik.handleBlur}
                                 className="custom--input w-full"
                               />
@@ -1406,9 +1452,7 @@ const CreatePackage = ({
 
                             {/* GST */}
                             <div>
-                              <label className="mb-2 block">
-                                GST (%)
-                              </label>
+                              <label className="mb-2 block">GST (%)</label>
                               <input
                                 type="number"
                                 name={`variation[${index}].gst`}
@@ -1518,7 +1562,12 @@ const CreatePackage = ({
                                   formik.values.variation[index]?.description ||
                                   ""
                                 }
-                                onChange={formik.handleChange}
+                                // onChange={formik.handleChange}
+                                onKeyDown={blockNonLettersAndNumbers}
+                                onChange={(e) => {
+                                  const cleaned = sanitizeTextWithNumbers(e.target.value);
+                                  formik.setFieldValue(`variation[${index}].description`, cleaned);
+                                }}
                                 onBlur={formik.handleBlur}
                                 className="custom--input w-full"
                               />
@@ -1570,7 +1619,14 @@ const CreatePackage = ({
                         type="text"
                         name="equipment"
                         value={formik.values.equipment}
-                        onChange={formik.handleChange}
+                        // onChange={formik.handleChange}
+                        onKeyDown={blockNonLettersAndNumbers}
+                        onChange={(e) => {
+                          const cleaned = sanitizeTextWithNumbers(
+                            e.target.value,
+                          );
+                          formik.setFieldValue("equipment", cleaned);
+                        }}
                         onBlur={formik.handleBlur}
                         className="custom--input w-full"
                       />
@@ -1587,7 +1643,14 @@ const CreatePackage = ({
                         rows={3}
                         name="description"
                         value={formik.values.description}
-                        onChange={formik.handleChange}
+                        // onChange={formik.handleChange}
+                        onKeyDown={blockNonLettersAndNumbers}
+                        onChange={(e) => {
+                          const cleaned = sanitizeTextWithNumbers(
+                            e.target.value,
+                          );
+                          formik.setFieldValue("description", cleaned);
+                        }}
                         onBlur={formik.handleBlur}
                         className="custom--input w-full"
                       />

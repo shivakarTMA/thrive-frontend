@@ -5,8 +5,10 @@ import { LuPlug } from "react-icons/lu";
 import Select from "react-select";
 import {
   blockInvalidNumberKeys,
+  blockNonLettersAndNumbers,
   durationValueInteger,
   sanitizePositiveInteger,
+  sanitizeTextWithNumbers,
   selectIcon,
 } from "../../Helper/helper";
 import { authAxios } from "../../config/config";
@@ -111,7 +113,12 @@ const CreateSubscriptionPlan = ({
                         type="text"
                         name="title"
                         value={formik.values.title}
-                        onChange={formik.handleChange}
+                        // onChange={formik.handleChange}
+                        onKeyDown={blockNonLettersAndNumbers}
+                        onChange={(e) => {
+                          const cleaned = sanitizeTextWithNumbers(e.target.value);
+                          formik.setFieldValue("title", cleaned);
+                        }}
                         onBlur={formik.handleBlur}
                         className="custom--input w-full input--icon"
                       />
@@ -134,7 +141,12 @@ const CreateSubscriptionPlan = ({
                         type="text"
                         name="description"
                         value={formik.values.description}
-                        onChange={formik.handleChange}
+                        // onChange={formik.handleChange}
+                        onKeyDown={blockNonLettersAndNumbers}
+                        onChange={(e) => {
+                          const cleaned = sanitizeTextWithNumbers(e.target.value);
+                          formik.setFieldValue("description", cleaned);
+                        }}
                         onBlur={formik.handleBlur}
                         className="custom--input w-full input--icon"
                       />
@@ -292,7 +304,12 @@ const CreateSubscriptionPlan = ({
                         type="text"
                         name="hsn_sac_code"
                         value={formik.values.hsn_sac_code}
-                        onChange={formik.handleChange}
+                        // onChange={formik.handleChange}
+                        onKeyDown={blockNonLettersAndNumbers}
+                        onChange={(e) => {
+                          const cleaned = sanitizeTextWithNumbers(e.target.value);
+                          formik.setFieldValue("hsn_sac_code", cleaned);
+                        }}
                         onBlur={formik.handleBlur}
                         className="custom--input w-full input--icon"
                       />

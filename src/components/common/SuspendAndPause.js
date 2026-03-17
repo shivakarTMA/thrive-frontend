@@ -6,6 +6,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import { IoCloseCircle } from "react-icons/io5";
 import { toast } from "react-toastify";
 import { FaCalendarDays } from "react-icons/fa6";
+import { allowOnlyLetters, blockNonLetters } from "../../Helper/helper";
 
 // Main component
 const SuspendAndPause = ({ setSuspendPause, actionType }) => {
@@ -80,7 +81,12 @@ const SuspendAndPause = ({ setSuspendPause, actionType }) => {
               <textarea
                 name="reason"
                 value={formik.values.reason}
-                onChange={formik.handleChange}
+                // onChange={formik.handleChange}
+                onKeyDown={blockNonLetters}
+                onChange={(e) => {
+                  const cleaned = allowOnlyLetters(e.target.value);
+                  formik.setFieldValue("reason", cleaned);
+                }}
                 className="custom--input w-full"
                 rows={4}
                 placeholder="Write the reason..."

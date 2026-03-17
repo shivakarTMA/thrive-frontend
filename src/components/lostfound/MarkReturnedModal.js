@@ -14,7 +14,7 @@ import { toast } from "react-toastify";
 import { FaCalendarDays } from "react-icons/fa6";
 import { useSelector } from "react-redux";
 import Select from "react-select";
-import { customStyles } from "../../Helper/helper";
+import { blockNonLettersAndNumbers, customStyles, sanitizeTextWithNumbers } from "../../Helper/helper";
 
 const MarkReturnedModal = ({ lostID, onClose, clubOptions, fetchLostFoundList }) => {
   const { user } = useSelector((state) => state.auth);
@@ -406,7 +406,12 @@ const MarkReturnedModal = ({ lostID, onClose, clubOptions, fetchLostFoundList })
                     <textarea
                       name="notes"
                       value={formik.values.notes}
-                      onChange={formik.handleChange}
+                      // onChange={formik.handleChange}
+                      onKeyDown={blockNonLettersAndNumbers}
+                      onChange={(e) => {
+                        const cleaned = sanitizeTextWithNumbers(e.target.value);
+                        formik.setFieldValue("notes", cleaned);
+                      }}
                       placeholder="Add verification notes"
                       className="custom--input w-full"
                       rows="3"

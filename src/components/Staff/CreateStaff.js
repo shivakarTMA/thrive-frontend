@@ -2,10 +2,13 @@ import React, { useEffect, useRef, useState } from "react";
 import Select from "react-select";
 import { IoAppsSharp, IoCloseCircle, IoPricetagSharp } from "react-icons/io5";
 import {
+  allowOnlyLetters,
   allowOnlyPositiveNumbers,
   blockInvalidNumberKeys,
+  blockNonLetters,
   filterActiveItems,
   sanitizePositiveInteger,
+  sanitizeText,
   selectIcon,
 } from "../../Helper/helper";
 import DatePicker from "react-datepicker";
@@ -238,7 +241,12 @@ const CreateStaff = ({
                         name="name"
                         className="custom--input w-full input--icon"
                         value={formik.values.name}
-                        onChange={formik.handleChange}
+                        // onChange={formik.handleChange}
+                        onKeyDown={blockNonLetters}
+                        onChange={(e) => {
+                          const cleaned = allowOnlyLetters(e.target.value);
+                          formik.setFieldValue("name", cleaned);
+                        }}
                         onBlur={formik.handleBlur}
                       />
                     </div>
@@ -339,6 +347,9 @@ const CreateStaff = ({
                         maxDate={adultLimitDate}
                         minDate={oldestYearLimit}
                         yearDropdownItemNumber={100}
+                        onKeyDown={(e) => {
+                          e.preventDefault();
+                        }}
                       />
                     </div>
                   </div>
@@ -614,7 +625,12 @@ const CreateStaff = ({
                             name="tags"
                             className="custom--input w-full input--icon"
                             value={formik.values.tags}
-                            onChange={formik.handleChange}
+                            // onChange={formik.handleChange}
+                            onKeyDown={blockNonLetters}
+                            onChange={(e) => {
+                              const cleaned = allowOnlyLetters(e.target.value);
+                              formik.setFieldValue("tags", cleaned);
+                            }}
                             onBlur={formik.handleBlur}
                           />
                         </div>
@@ -636,7 +652,11 @@ const CreateStaff = ({
                           rows={3}
                           name="description"
                           value={formik.values.description}
-                          onChange={formik.handleChange}
+
+                          onChange={(e) => {
+                            const cleaned = sanitizeText(e.target.value);
+                            formik.setFieldValue("description", cleaned);
+                          }}
                           onBlur={formik.handleBlur}
                           className="custom--input w-full"
                         />
@@ -666,12 +686,17 @@ const CreateStaff = ({
                                   type="text"
                                   className="custom--input w-full"
                                   value={item.title}
-                                  onChange={(e) =>
-                                    formik.setFieldValue(
-                                      `content[${index}].title`,
-                                      e.target.value,
-                                    )
-                                  }
+                                  // onChange={(e) =>
+                                  //   formik.setFieldValue(
+                                  //     `content[${index}].title`,
+                                  //     e.target.value,
+                                  //   )
+                                  // }
+                                  onKeyDown={blockNonLetters}
+                                  onChange={(e) => {
+                                    const cleaned = sanitizeText(e.target.value);
+                                    formik.setFieldValue(`content[${index}].title`, cleaned);
+                                  }}
                                 />
                                 {formik.touched.content?.[index]?.title &&
                                   formik.errors.content?.[index]?.title && (
@@ -690,12 +715,17 @@ const CreateStaff = ({
                                   type="text"
                                   className="custom--input w-full"
                                   value={item.description}
-                                  onChange={(e) =>
-                                    formik.setFieldValue(
-                                      `content[${index}].description`,
-                                      e.target.value,
-                                    )
-                                  }
+                                  // onChange={(e) =>
+                                  //   formik.setFieldValue(
+                                  //     `content[${index}].description`,
+                                  //     e.target.value,
+                                  //   )
+                                  // }
+                                  onKeyDown={blockNonLetters}
+                                  onChange={(e) => {
+                                    const cleaned = sanitizeText(e.target.value);
+                                    formik.setFieldValue(`content[${index}].description`, cleaned);
+                                  }}
                                 />
                                 {formik.touched.content?.[index]?.description &&
                                   formik.errors.content?.[index]

@@ -4,7 +4,9 @@ import { FaListUl } from "react-icons/fa6";
 import { LuPlug } from "react-icons/lu";
 import Select from "react-select";
 import {
+  allowOnlyLetters,
   blockInvalidNumberKeys,
+  blockNonLetters,
   handleTextOnlyChange,
   sanitizePositiveInteger,
   selectIcon,
@@ -160,9 +162,14 @@ const CreateService = ({
                         type="text"
                         name="name"
                         value={formik.values.name}
-                        onChange={(e) =>
-                          handleTextOnlyChange(e, formik, "name")
-                        }
+                        // onChange={(e) =>
+                        //   handleTextOnlyChange(e, formik, "name")
+                        // }
+                        onKeyDown={blockNonLetters}
+                        onChange={(e) => {
+                          const cleaned = allowOnlyLetters(e.target.value);
+                          formik.setFieldValue("name", cleaned);
+                        }}
                         onBlur={formik.handleBlur}
                         className="custom--input w-full input--icon"
                       />

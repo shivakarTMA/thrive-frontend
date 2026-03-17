@@ -10,7 +10,9 @@ import Select from "react-select";
 // Import custom styles for select input
 import {
   blockInvalidNumberKeys,
+  blockNonLettersAndNumbers,
   sanitizePositiveInteger,
+  sanitizeTextWithNumbers,
   selectIcon,
 } from "../../Helper/helper";
 import { toast } from "react-toastify";
@@ -166,7 +168,12 @@ const CreateGallery = ({
                         type="text"
                         name="title"
                         value={formik.values.title}
-                        onChange={formik.handleChange}
+                        // onChange={formik.handleChange}
+                        onKeyDown={blockNonLettersAndNumbers}
+                        onChange={(e) => {
+                          const cleaned = sanitizeTextWithNumbers(e.target.value);
+                          formik.setFieldValue("title", cleaned);
+                        }}
                         onBlur={formik.handleBlur}
                         className="custom--input w-full input--icon"
                       />

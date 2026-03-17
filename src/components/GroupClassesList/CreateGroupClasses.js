@@ -4,9 +4,11 @@ import { IoCloseCircle } from "react-icons/io5";
 import Select from "react-select";
 import {
   blockInvalidNumberKeys,
+  blockNonLettersAndNumbers,
   customStyles,
   filterActiveItems,
   sanitizePositiveInteger,
+  sanitizeTextWithNumbers,
 } from "../../Helper/helper";
 import DatePicker from "react-datepicker"; // Date picker component
 import "react-datepicker/dist/react-datepicker.css"; // Date picker styles
@@ -14,6 +16,9 @@ import { FaCalendarDays } from "react-icons/fa6";
 import { authAxios } from "../../config/config";
 import { toast } from "react-toastify";
 import { PiImageFill } from "react-icons/pi";
+import { useDispatch } from "react-redux";
+import { useClubDatePickerProps } from "../../hooks/useClubDatePickerProps";
+import { fetchClubTiming } from "../../Redux/Reducers/clubTimingSlice";
 
 // status type options for dropdown
 const statusType = [
@@ -39,6 +44,7 @@ const CreateGroupClasses = ({ setShowModal, editingOption, formik }) => {
   const [service, setService] = useState([]);
   const [staffList, setStaffList] = useState([]);
   const [packageCategory, setPackageCategory] = useState([]);
+  const dispatch = useDispatch();
 
   const fetchClub = async (search = "") => {
     try {
@@ -107,7 +113,7 @@ const CreateGroupClasses = ({ setShowModal, editingOption, formik }) => {
       const params = {};
       if (clubId) params.club_id = clubId;
       const res = await authAxios().get("/package-category/list", { params });
-       let data = res.data?.data || res.data || [];
+      let data = res.data?.data || res.data || [];
       // filter only ACTIVE categories
       const activeCategories = data.filter((item) => item.status === "ACTIVE");
       setPackageCategory(activeCategories);
@@ -127,6 +133,7 @@ const CreateGroupClasses = ({ setShowModal, editingOption, formik }) => {
       fetchStudio(formik.values.club_id);
       fetchStaff(formik.values.club_id);
       fetchPackageCategory(formik.values.club_id);
+      dispatch(fetchClubTiming(formik.values.club_id)); // ✅ ADD THIS
 
       // ❌ reset ONLY when NOT editing
       if (!editingOption) {
@@ -134,6 +141,8 @@ const CreateGroupClasses = ({ setShowModal, editingOption, formik }) => {
         formik.setFieldValue("studio_id", "");
         formik.setFieldValue("trainer_id", "");
         formik.setFieldValue("package_category_id", "");
+        formik.setFieldValue("start_time", "");  // ✅ ADD
+        formik.setFieldValue("end_time", "");    // ✅ ADD
       }
     } else {
       setService([]);
@@ -252,14 +261,10 @@ const CreateGroupClasses = ({ setShowModal, editingOption, formik }) => {
     return d;
   };
 
-  const handleFileChange = (e) => {
+  const handleFileChange = (e, formik) => {
     const file = e.target.files[0];
-    if (file) {
-      const previewURL = URL.createObjectURL(file);
-
-      formik.setFieldValue("image", previewURL); // for preview
-      formik.setFieldValue("imageFile", file); // actual file to upload
-    }
+    if (!file) return;
+    formik.setFieldValue("image", file); // for preview
   };
 
   const handleOverlayClick = (e) => {
@@ -277,6 +282,23 @@ const CreateGroupClasses = ({ setShowModal, editingOption, formik }) => {
       formik.setFieldValue("end_time", "");
     }
   }, [formik.values.start_time]);
+
+  // ✅ Pass start_time combined with start_date for correct today minTime logic
+  const startDateTimeForHook =
+    formik.values.start_date && formik.values.start_time
+      ? new Date(`${formik.values.start_date} ${formik.values.start_time}`)
+      : formik.values.start_date
+        ? new Date(formik.values.start_date)
+        : null;
+
+  const datePickerProps = useClubDatePickerProps(startDateTimeForHook);
+
+  const filterEndTime = (time) => {
+    if (!formik.values.start_time) return true;
+
+    const start = parseTime(formik.values.start_time);
+    return time.getTime() !== start.getTime(); // remove exact start time
+  };
 
   return (
     <>
@@ -318,7 +340,11 @@ const CreateGroupClasses = ({ setShowModal, editingOption, formik }) => {
                       <div className="bg-gray-100 rounded-lg w-full h-[160px] overflow-hidden">
                         {formik.values?.image ? (
                           <img
-                            src={formik.values?.image}
+                            src={
+                              formik.values.image instanceof File
+                                ? URL.createObjectURL(formik.values.image)
+                                : formik.values.image
+                            }
                             className="w-full h-full object-cover"
                           />
                         ) : (
@@ -341,7 +367,8 @@ const CreateGroupClasses = ({ setShowModal, editingOption, formik }) => {
                         <input
                           type="file"
                           name="image"
-                          onChange={handleFileChange} // ✅ no value prop here
+                          // onChange={handleFileChange} // ✅ no value prop here
+                          onChange={(e) => handleFileChange(e, formik)}
                           onBlur={() => formik.setFieldTouched("image", true)}
                           className="custom--input w-full"
                         />
@@ -486,7 +513,14 @@ const CreateGroupClasses = ({ setShowModal, editingOption, formik }) => {
                           type="text"
                           name="name"
                           value={formik.values.name}
-                          onChange={formik.handleChange}
+                          // onChange={formik.handleChange}
+                          onKeyDown={blockNonLettersAndNumbers}
+                          onChange={(e) => {
+                            const cleaned = sanitizeTextWithNumbers(
+                              e.target.value,
+                            );
+                            formik.setFieldValue("name", cleaned);
+                          }}
                           onBlur={formik.handleBlur}
                           className="custom--input w-full"
                         />
@@ -509,7 +543,14 @@ const CreateGroupClasses = ({ setShowModal, editingOption, formik }) => {
                           type="text"
                           name="tags"
                           value={formik.values.tags}
-                          onChange={formik.handleChange}
+                          // onChange={formik.handleChange}
+                          onKeyDown={blockNonLettersAndNumbers}
+                          onChange={(e) => {
+                            const cleaned = sanitizeTextWithNumbers(
+                              e.target.value,
+                            );
+                            formik.setFieldValue("tags", cleaned);
+                          }}
                           onBlur={formik.handleBlur}
                           className="custom--input w-full"
                         />
@@ -563,17 +604,9 @@ const CreateGroupClasses = ({ setShowModal, editingOption, formik }) => {
                               ? new Date(formik.values.start_date) // ✅ Ensure valid Date object
                               : null
                           }
-                          // onChange={
-                          //   (date) =>
-                          //     formik.setFieldValue(
-                          //       "start_date",
-                          //       // date.toISOString().split("T")[0]
-                          //       date.toLocaleDateString("en-CA"),
-                          //     ) // ✅ Save as YYYY-MM-DD
-                          // }
-
                           onChange={(date) => {
-                            const formattedDate = date.toLocaleDateString("en-CA");
+                            const formattedDate =
+                              date.toLocaleDateString("en-CA");
 
                             formik.setFieldValue("start_date", formattedDate);
 
@@ -587,6 +620,9 @@ const CreateGroupClasses = ({ setShowModal, editingOption, formik }) => {
                           dateFormat="dd-MM-yyyy"
                           minDate={new Date()} // ✅ Prevent selecting past dates
                           className="custom--input w-full input--icon"
+                          onKeyDown={(e) => {
+                            e.preventDefault();
+                          }}
                         />
                       </div>
                       {/* Display validation error if any */}
@@ -604,7 +640,6 @@ const CreateGroupClasses = ({ setShowModal, editingOption, formik }) => {
                         Start Time<span className="text-red-500">*</span>
                       </label>
                       <div className="custom--date relative">
-                        {/* Clock Icon */}
                         <span className="absolute z-[1] mt-[11px] ml-[15px]">
                           <FiClock />
                         </span>
@@ -614,7 +649,11 @@ const CreateGroupClasses = ({ setShowModal, editingOption, formik }) => {
                               ? parseTime(formik.values.start_time)
                               : null
                           }
-                          onChange={(date) =>
+                          onChange={(date) => {
+                            if (!date) {
+                              formik.setFieldValue("start_time", "");
+                              return;
+                            }
                             formik.setFieldValue(
                               "start_time",
                               date.toLocaleTimeString([], {
@@ -622,25 +661,29 @@ const CreateGroupClasses = ({ setShowModal, editingOption, formik }) => {
                                 minute: "2-digit",
                                 hour12: false,
                               }),
-                            )
-                          }
+                            );
+                            // ✅ Reset end_time when start changes
+                            formik.setFieldValue("end_time", "");
+                          }}
                           showTimeSelect
                           showTimeSelectOnly
-                          timeIntervals={30}
+                          // ✅ Use club intervals
+                          timeIntervals={datePickerProps.timeIntervals}
                           dateFormat="hh:mm aa"
                           className="custom--input w-full input--icon"
+                          // ✅ today → club minTime, future → club open time
                           minTime={
                             formik.values.start_date &&
                             new Date(
                               formik.values.start_date,
                             ).toDateString() === new Date().toDateString()
-                              ? new Date()
-                              : new Date(0, 0, 0, 0, 0)
+                              ? datePickerProps.minTime // club-aware minTime for today
+                              : datePickerProps.minTime // club open time for future
                           }
-                          maxTime={new Date(0, 0, 0, 23, 59)}
+                          maxTime={datePickerProps.maxTime} // ✅ close - trial_duration
+                          onKeyDown={(e) => e.preventDefault()}
                         />
                       </div>
-                      {/* Display validation error if any */}
                       {formik.touched.start_time &&
                         formik.errors.start_time && (
                           <div className="text-red-500 text-sm">
@@ -655,7 +698,6 @@ const CreateGroupClasses = ({ setShowModal, editingOption, formik }) => {
                         End Time<span className="text-red-500">*</span>
                       </label>
                       <div className="custom--date relative">
-                        {/* Clock Icon */}
                         <span className="absolute z-[1] mt-[11px] ml-[15px]">
                           <FiClock />
                         </span>
@@ -665,7 +707,11 @@ const CreateGroupClasses = ({ setShowModal, editingOption, formik }) => {
                               ? parseTime(formik.values.end_time)
                               : null
                           }
-                          onChange={(date) =>
+                          onChange={(date) => {
+                            if (!date) {
+                              formik.setFieldValue("end_time", "");
+                              return;
+                            }
                             formik.setFieldValue(
                               "end_time",
                               date.toLocaleTimeString([], {
@@ -673,26 +719,36 @@ const CreateGroupClasses = ({ setShowModal, editingOption, formik }) => {
                                 minute: "2-digit",
                                 hour12: false,
                               }),
-                            )
-                          }
+                            );
+                          }}
                           onBlur={() =>
                             formik.setFieldTouched("end_time", true)
                           }
                           showTimeSelect
                           showTimeSelectOnly
-                          timeIntervals={30}
-                          timeCaption="Time"
+                          // ✅ Use club intervals
+                          timeIntervals={datePickerProps.timeIntervals}
                           dateFormat="hh:mm aa"
                           className="custom--input w-full input--icon"
+                          // ✅ end time must be after start time, within club close time
+                          // minTime={
+                          //   formik.values.start_time
+                          //     ? parseTime(formik.values.start_time)
+                          //     : datePickerProps.minTime
+                          // }
                           minTime={
                             formik.values.start_time
-                              ? parseTime(formik.values.start_time)
-                              : new Date(0, 0, 0, 0, 0)
+                              ? new Date(
+                                  parseTime(formik.values.start_time).getTime() +
+                                    datePickerProps.timeIntervals * 60000
+                                )
+                              : datePickerProps.minTime
                           }
-                          maxTime={new Date(0, 0, 0, 23, 59)}
+                          maxTime={datePickerProps.maxTime} // ✅ close time (no trial_duration deduction for end time)
+                          filterTime={filterEndTime}
+                          onKeyDown={(e) => e.preventDefault()}
                         />
                       </div>
-                      {/* Display validation error if any */}
                       {formik.touched.end_time && formik.errors.end_time && (
                         <div className="text-red-500 text-sm">
                           {formik.errors.end_time}
@@ -875,10 +931,7 @@ const CreateGroupClasses = ({ setShowModal, editingOption, formik }) => {
 
                         <div>
                           <label className="mb-2 block">
-                            GST{" "}
-                            <span>
-                              (%)
-                            </span>
+                            GST <span>(%)</span>
                           </label>
                           <div className="relative">
                             <input
@@ -949,7 +1002,14 @@ const CreateGroupClasses = ({ setShowModal, editingOption, formik }) => {
                           type="text"
                           name="hsn_sac_code"
                           value={formik.values.hsn_sac_code}
-                          onChange={formik.handleChange}
+                          // onChange={formik.handleChange}
+                          onKeyDown={blockNonLettersAndNumbers}
+                          onChange={(e) => {
+                            const cleaned = sanitizeTextWithNumbers(
+                              e.target.value,
+                            );
+                            formik.setFieldValue("hsn_sac_code", cleaned);
+                          }}
                           onBlur={formik.handleBlur}
                           className="custom--input w-full"
                         />
@@ -1073,7 +1133,14 @@ const CreateGroupClasses = ({ setShowModal, editingOption, formik }) => {
                         type="text"
                         name="equipment"
                         value={formik.values.equipment}
-                        onChange={formik.handleChange}
+                        // onChange={formik.handleChange}
+                        onKeyDown={blockNonLettersAndNumbers}
+                        onChange={(e) => {
+                          const cleaned = sanitizeTextWithNumbers(
+                            e.target.value,
+                          );
+                          formik.setFieldValue("equipment", cleaned);
+                        }}
                         onBlur={formik.handleBlur}
                         className="custom--input w-full"
                       />
@@ -1090,7 +1157,14 @@ const CreateGroupClasses = ({ setShowModal, editingOption, formik }) => {
                         rows={3}
                         name="description"
                         value={formik.values.description}
-                        onChange={formik.handleChange}
+                        // onChange={formik.handleChange}
+                        onKeyDown={blockNonLettersAndNumbers}
+                        onChange={(e) => {
+                          const cleaned = sanitizeTextWithNumbers(
+                            e.target.value,
+                          );
+                          formik.setFieldValue("description", cleaned);
+                        }}
                         onBlur={formik.handleBlur}
                         className="custom--input w-full"
                       />

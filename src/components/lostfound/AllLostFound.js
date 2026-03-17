@@ -97,6 +97,8 @@ const AllLostFound = () => {
   const clubOptions = clubList.map((item) => ({
     label: item.name,
     value: item.id,
+    open_time: item.open_time,
+    close_time: item.close_time,
   }));
 
   const selectedClub =

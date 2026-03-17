@@ -14,9 +14,13 @@ import { GrDocument } from "react-icons/gr";
 import { LuPlug } from "react-icons/lu";
 import Select from "react-select";
 import {
+  allowOnlyLetters,
   blockInvalidNumberKeys,
+  blockNonLetters,
+  blockNonLettersAndNumbers,
   multiRowStyles,
   sanitizePositiveInteger,
+  sanitizeTextWithNumbers,
   selectIcon,
 } from "../../Helper/helper";
 import PhoneInput from "react-phone-number-input";
@@ -360,7 +364,11 @@ const CreateClub = ({
                         type="text"
                         name="name"
                         value={formik.values.name}
-                        onChange={formik.handleChange}
+                        onKeyDown={blockNonLettersAndNumbers}
+                        onChange={(e) => {
+                          const cleaned = sanitizeTextWithNumbers(e.target.value);
+                          formik.setFieldValue("name", cleaned);
+                        }}
                         onBlur={formik.handleBlur}
                         className="custom--input w-full input--icon"
                       />
@@ -438,7 +446,14 @@ const CreateClub = ({
                         type="text"
                         name="gstno"
                         value={formik.values.gstno}
-                        onChange={formik.handleChange}
+                        // onChange={formik.handleChange}
+                        onKeyDown={blockNonLettersAndNumbers}
+                        onChange={(e) => {
+                          const cleaned = sanitizeTextWithNumbers(
+                            e.target.value,
+                          );
+                          formik.setFieldValue("gstno", cleaned);
+                        }}
                         onBlur={formik.handleBlur}
                         className="custom--input w-full input--icon"
                       />
@@ -467,19 +482,19 @@ const CreateClub = ({
                         className="custom--input w-full input--icon"
                       /> */}
                       <Select
-                                              name="country"
-                                              value={formik.values.country}
-                                              options={Country.getAllCountries().map((c) => ({
-                                                label: c.name,
-                                                value: c.isoCode,
-                                              }))}
-                                              onChange={(option) => {
-                                                formik.setFieldValue("country", option);
-                                                formik.setFieldValue("state", null); // reset state
-                                              }}
-                                              styles={selectIcon}
-                                              placeholder="Select Country"
-                                            />
+                        name="country"
+                        value={formik.values.country}
+                        options={Country.getAllCountries().map((c) => ({
+                          label: c.name,
+                          value: c.isoCode,
+                        }))}
+                        onChange={(option) => {
+                          formik.setFieldValue("country", option);
+                          formik.setFieldValue("state", null); // reset state
+                        }}
+                        styles={selectIcon}
+                        placeholder="Select Country"
+                      />
                     </div>
                     {formik.touched.country && formik.errors.country && (
                       <p className="text-red-500 text-sm mt-1">
@@ -624,7 +639,12 @@ const CreateClub = ({
                         type="text"
                         name="map_url"
                         value={formik.values.map_url}
-                        onChange={formik.handleChange}
+                        // onChange={formik.handleChange}
+                        onKeyDown={blockNonLetters}
+                        onChange={(e) => {
+                          const cleaned = allowOnlyLetters(e.target.value);
+                          formik.setFieldValue("map_url", cleaned);
+                        }}
                         onBlur={formik.handleBlur}
                         className="custom--input w-full input--icon"
                       />
@@ -654,7 +674,20 @@ const CreateClub = ({
                           selected ? selected.map((i) => i.value) : [],
                         )
                       }
-                      onCreateOption={handleCreateService}
+                      // onCreateOption={handleCreateService}
+
+                      // sanitize typing
+                      onInputChange={(inputValue, { action }) => {
+                        if (action === "input-change") {
+                          return allowOnlyLetters(inputValue);
+                        }
+                        return inputValue;
+                      }}
+                      // sanitize created option
+                      onCreateOption={(inputValue) => {
+                        const cleaned = allowOnlyLetters(inputValue);
+                        handleCreateService(cleaned);
+                      }}
                       styles={multiRowStyles}
                       placeholder="Create or select services"
                     />
@@ -697,6 +730,9 @@ const CreateClub = ({
                         dateFormat="hh:mm aa"
                         className="custom--input w-full input--icon"
                         placeholderText="Select Open Time"
+                        onKeyDown={(e) => {
+                          e.preventDefault();
+                        }}
                       />
                     </div>
                     {formik.touched.open_time && formik.errors.open_time && (
@@ -743,6 +779,9 @@ const CreateClub = ({
                             : new Date(0, 0, 0, 0, 0)
                         }
                         maxTime={new Date(0, 0, 0, 23, 59)}
+                        onKeyDown={(e) => {
+                          e.preventDefault();
+                        }}
                       />
                     </div>
                     {formik.touched.close_time && formik.errors.close_time && (
@@ -861,21 +900,29 @@ const CreateClub = ({
                         name="technogym_facilit_url"
                         options={facilityOptions}
                         value={facilityOptions.find(
-                          (option) => option.value === formik.values.technogym_facilit_url
+                          (option) =>
+                            option.value ===
+                            formik.values.technogym_facilit_url,
                         )}
                         onChange={(option) =>
-                          formik.setFieldValue("technogym_facilit_url", option.value)
+                          formik.setFieldValue(
+                            "technogym_facilit_url",
+                            option.value,
+                          )
                         }
-                        onBlur={() => formik.setFieldTouched("technogym_facilit_url", true)}
+                        onBlur={() =>
+                          formik.setFieldTouched("technogym_facilit_url", true)
+                        }
                         styles={selectIcon}
                         className="!capitalize"
                       />
                     </div>
-                    {formik.touched.technogym_facilit_url && formik.errors.technogym_facilit_url && (
-                      <p className="text-red-500 text-sm mt-1">
-                        {formik.errors.technogym_facilit_url}
-                      </p>
-                    )}
+                    {formik.touched.technogym_facilit_url &&
+                      formik.errors.technogym_facilit_url && (
+                        <p className="text-red-500 text-sm mt-1">
+                          {formik.errors.technogym_facilit_url}
+                        </p>
+                      )}
                   </div>
 
                   {/* Status */}
@@ -926,7 +973,12 @@ const CreateClub = ({
                           rows={3}
                           name="address"
                           value={formik.values.address}
-                          onChange={formik.handleChange}
+                          // onChange={formik.handleChange}
+                          onKeyDown={blockNonLettersAndNumbers}
+                          onChange={(e) => {
+                            const cleaned = sanitizeTextWithNumbers(e.target.value);
+                            formik.setFieldValue("address", cleaned);
+                          }}
                           onBlur={formik.handleBlur}
                           className="custom--input w-full input--icon"
                         />
@@ -949,7 +1001,12 @@ const CreateClub = ({
                           rows={3}
                           name="description"
                           value={formik.values.description}
-                          onChange={formik.handleChange}
+                          // onChange={formik.handleChange}
+                          onKeyDown={blockNonLetters}
+                          onChange={(e) => {
+                            const cleaned = allowOnlyLetters(e.target.value);
+                            formik.setFieldValue("description", cleaned);
+                          }}
                           onBlur={formik.handleBlur}
                           className="custom--input w-full input--icon"
                         />

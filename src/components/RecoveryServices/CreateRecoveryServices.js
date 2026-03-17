@@ -9,7 +9,9 @@ import { LuPlug } from "react-icons/lu";
 import Select from "react-select";
 // Import custom styles for select input
 import {
+  allowOnlyLetters,
   blockInvalidNumberKeys,
+  blockNonLetters,
   handleTextOnlyChange,
   sanitizePositiveInteger,
   selectIcon,
@@ -198,9 +200,14 @@ const RecoveryServices = ({
                         type="text"
                         name="name"
                         value={formik.values.name}
-                        onChange={(e) =>
-                          handleTextOnlyChange(e, formik, "name")
-                        }
+                        // onChange={(e) =>
+                        //   handleTextOnlyChange(e, formik, "name")
+                        // }
+                        onKeyDown={blockNonLetters}
+                        onChange={(e) => {
+                          const cleaned = allowOnlyLetters(e.target.value);
+                          formik.setFieldValue("name", cleaned);
+                        }}
                         onBlur={formik.handleBlur}
                         className="custom--input w-full input--icon"
                       />
@@ -225,9 +232,11 @@ const RecoveryServices = ({
                         type="text"
                         name="tags"
                         value={formik.values.tags}
-                        onChange={(e) =>
-                          handleTextOnlyChange(e, formik, "tags")
-                        }
+                        onKeyDown={blockNonLetters}
+                        onChange={(e) => {
+                          const cleaned = allowOnlyLetters(e.target.value);
+                          formik.setFieldValue("tags", cleaned);
+                        }}
                         onBlur={formik.handleBlur}
                         className="custom--input w-full input--icon"
                       />
@@ -378,7 +387,12 @@ const RecoveryServices = ({
                         rows={3}
                         name="description"
                         value={formik.values.description}
-                        onChange={formik.handleChange}
+                        // onChange={formik.handleChange}
+                        onKeyDown={blockNonLetters}
+                        onChange={(e) => {
+                          const cleaned = allowOnlyLetters(e.target.value);
+                          formik.setFieldValue("description", cleaned);
+                        }}
                         onBlur={formik.handleBlur}
                         className="custom--input w-full"
                       />

@@ -141,7 +141,7 @@ const HealthProfile = ({ details }) => {
       {dateFilter?.value === "custom" && (
         <>
           <div className="custom--date dob-format flex-1 max-w-[180px] w-full">
-            <span className="absolute z-[1] mt-[11px] ml-[15px]">
+            <span className="absolute z-[1] mt-[9px] ml-[15px]">
               <FaCalendarDays />
             </span>
             <DatePicker
@@ -162,7 +162,7 @@ const HealthProfile = ({ details }) => {
           </div>
 
           <div className="custom--date dob-format flex-1 max-w-[180px] w-full">
-            <span className="absolute z-[1] mt-[11px] ml-[15px]">
+            <span className="absolute z-[1] mt-[9px] ml-[15px]">
               <FaCalendarDays />
             </span>
             <DatePicker
@@ -183,6 +183,8 @@ const HealthProfile = ({ details }) => {
       )}
     </div>
   );
+
+  console.log(memberActivity, "memberActivity");
 
   return (
     <div className="p-4 bg-white rounded shadow">
@@ -230,21 +232,21 @@ const HealthProfile = ({ details }) => {
                   memberActivity.map((item, idx) => (
                     <tr key={idx}>
                       <td className="border px-3 py-2">
-                        {formatAutoDate(item.datetime)}
+                        {formatAutoDate(item.date)}
                       </td>
                       <td className="border px-3 py-2">
-                        {item?.steps
+                        {item?.steps !== null && item?.steps !== undefined
                           ? formatIndianNumber(item?.steps)
                           : "--"}
                       </td>
                       <td className="border px-3 py-2">
-                        {item?.kcal || "--"}
+                        {item?.total_calories ?? "--"}
                       </td>
                       <td className="border px-3 py-2">
-                        {item?.distance || "--"}
+                        {item?.distance ?? "--"}
                       </td>
                       <td className="border px-3 py-2">
-                        {item?.active_min || "--"}
+                        {item?.active_minutes ?? "--"}
                       </td>
                     </tr>
                   ))

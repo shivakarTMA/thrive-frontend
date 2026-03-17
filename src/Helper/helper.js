@@ -447,3 +447,76 @@ export const getMinSelectableTime = (selectedDate) => {
 export const getMaxSelectableTime = (hour = 22, minute = 0) => {
   return new Date(0, 0, 0, hour, minute);
 };
+
+
+export const sanitizeText = (value) => {
+  if (!value) return "";
+
+  return value
+    .replace(/<[^>]*>?/gm, "") // remove HTML tags
+    .replace(/[^a-zA-Z\s&%()\/,.:!\-]/g, "") // allow only safe characters
+    .trim();
+};
+
+export const allowOnlyLetters = (value) => {
+  if (!value) return "";
+
+  return value.replace(/[^a-zA-Z\s&%()\/,.:!\-]/g, "");
+};
+
+export const blockNonLetters = (e) => {
+  const regex = /^[a-zA-Z\s&%()\/,.:!\-]$/;
+
+  const allowedKeys = [
+    "Backspace",
+    "Delete",
+    "ArrowLeft",
+    "ArrowRight",
+    "Tab",
+  ];
+
+  if (!regex.test(e.key) && !allowedKeys.includes(e.key)) {
+    e.preventDefault();
+  }
+};
+
+// Allow Letters + Numbers + Symbols
+
+export const sanitizeTextWithNumbers = (value) => {
+  if (!value) return "";
+
+  return value
+    .replace(/<[^>]*>?/gm, "")
+    .replace(/[^a-zA-Z0-9&%()\/,.:!\- ]/g, "") // space allowed
+};
+
+export const allowLettersAndNumbers = (value) => {
+  if (!value) return "";
+
+  return value.replace(/[^a-zA-Z0-9 &%()\/,.:!\-]/g, "");
+};
+
+export const blockNonLettersAndNumbers = (e) => {
+  const regex = /^[a-zA-Z0-9 &%()\/,.:!\-]$/;
+
+  const allowedKeys = [
+    "Backspace",
+    "Delete",
+    "ArrowLeft",
+    "ArrowRight",
+    "Tab",
+    " ",
+    "Spacebar", // older browsers
+  ];
+
+  if (!regex.test(e.key) && !allowedKeys.includes(e.key)) {
+    e.preventDefault();
+  }
+};
+
+// Option List Create
+export const optionTypeCreation = (value) => {
+  if (!value) return "";
+
+  return value.replace(/[^a-zA-Z_]/g, "");
+};

@@ -29,6 +29,7 @@ import { format } from "date-fns";
 import { addYears, subYears } from "date-fns";
 import { MdOutlineKeyboardBackspace } from "react-icons/md";
 import { useClubDatePickerProps } from "../hooks/useClubDatePickerProps";
+import { fetchClubTiming } from "../Redux/Reducers/clubTimingSlice";
 
 const validationSchema = Yup.object().shape({
   call_status: Yup.string().required("Call status is required"),
@@ -134,6 +135,7 @@ const LeadCallLogs = () => {
   const [trainerList, setTrainerList] = useState([]);
   const [staffList, setStaffList] = useState([]);
   const [editLog, setEditLog] = useState(null);
+  const [clubData, setClubData] = useState(null);
 
   // Redux state
   const dispatch = useDispatch();
@@ -185,6 +187,7 @@ const LeadCallLogs = () => {
       const res = await authAxios().get(`/lead/${leadId}`);
       const data = res.data?.data || res.data || null;
       setLeadDetails(data);
+      setClubData(data?.club_id);
     } catch (err) {
       console.error(err);
       toast.error("Failed to fetch lead details");
@@ -342,11 +345,7 @@ const LeadCallLogs = () => {
     fetchStaff();
   }, []);
 
-  // useEffect(() => {
-  //   console.log("Formik Errors:", formik.errors);
-  //   console.log("Formik Touched:", formik.touched);
-  //   console.log("Formik Values:", formik.values);
-  // }, [formik.errors, formik.touched, formik.values]);
+
 
   useEffect(() => {
     const logToEdit = callLogs.find((log) => String(log.id) === String(logId));
@@ -358,6 +357,13 @@ const LeadCallLogs = () => {
     }
   }, [logId, callLogs]);
 
+
+  useEffect(() => {
+    if (clubData) {
+      dispatch(fetchClubTiming(clubData));
+    }
+  }, [clubData]);
+
   // ── NEW: get ready-to-use DatePicker props from Redux timing ──
   const datePickerProps = useClubDatePickerProps(
     formik?.values?.follow_up_datetime, // pass selected date for minTime logic
@@ -366,6 +372,12 @@ const LeadCallLogs = () => {
   const dateTrialPickerProps = useClubDatePickerProps(
     formik?.values?.trial_tour_datetime, // pass selected date for minTime logic
   );
+
+    // useEffect(() => {
+  //   console.log("Formik Errors:", formik.errors);
+  //   console.log("Formik Touched:", formik.touched);
+  //   console.log("Formik Values:", formik.values);
+  // }, [formik.errors, formik.touched, formik.values]);
 
   return (
     <div className="page--content">

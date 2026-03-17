@@ -6,11 +6,13 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchOptionList } from "../../Redux/Reducers/optionListSlice";
-import { customStyles } from "../../Helper/helper";
+import { blockNonLettersAndNumbers, customStyles, sanitizeTextWithNumbers } from "../../Helper/helper";
 import Select from "react-select";
 import { FaCalendarDays } from "react-icons/fa6";
 import { toast } from "react-toastify";
 import { authAxios } from "../../config/config";
+import { useClubDateTime } from "../../hooks/useClubDateTime";
+import { useDateTimePicker } from "../../hooks/useDateTimePicker";
 
 const AddNewItemModal = ({
   onClose,
@@ -103,10 +105,6 @@ const AddNewItemModal = ({
   const foundLocation = lists["FOUND_LOCATION"] || [];
   const lostCategory = lists["LOST_CATEGORY"] || [];
 
-  const handleDateTime = (date) => {
-    formik.setFieldValue("found_date_time", date); // Store Date object in Formik
-  };
-
   const handleOverlayClick = (e) => {
     if (leadBoxRef.current && !leadBoxRef.current.contains(e.target)) {
       onClose();
@@ -115,11 +113,21 @@ const AddNewItemModal = ({
 
   const now = new Date();
 
-  const minTimeDefault = new Date();
-  minTimeDefault.setHours(6, 0, 0, 0); // optional, earliest allowed time of the day
+  const selectedClub = clubOptions.find(
+    (club) => club.value?.toString() === formik.values.club_id?.toString()
+  );
 
-  const maxTimeToday = new Date();
-  maxTimeToday.setHours(now.getHours(), now.getMinutes(), 0, 0); // current time
+  const { filterTime: followUpFilterTime } = useClubDateTime(
+    formik.values.found_date_time,
+    selectedClub,
+  );
+
+  const followUpDT = useDateTimePicker(formik, "found_date_time", followUpFilterTime);
+
+  useEffect(() => {
+    formik.setFieldValue("found_date_time", null);
+  }, [formik.values.club_id]);
+
 
   return (
     <div
@@ -185,7 +193,12 @@ const AddNewItemModal = ({
                     type="text"
                     name="item_name"
                     value={formik.values.item_name}
-                    onChange={formik.handleChange}
+                    // onChange={formik.handleChange}
+                    onKeyDown={blockNonLettersAndNumbers}
+                    onChange={(e) => {
+                      const cleaned = sanitizeTextWithNumbers(e.target.value);
+                      formik.setFieldValue("item_name", cleaned);
+                    }}
                     onBlur={formik.handleBlur}
                     placeholder="Item Name"
                     className={`custom--input w-full ${
@@ -264,57 +277,21 @@ const AddNewItemModal = ({
                     Date & Time <span className="text-red-500">*</span>
                   </label>
                   <div className="custom--date flex-1">
-                    <span className="absolute z-[1] mt-[11px] ml-[15px]">
+                    <span className="absolute z-[1] mt-[9px] ml-[15px]">
                       <FaCalendarDays />
                     </span>
-                    {/* <DatePicker
-                      selected={
-                        formik.values.found_date_time
-                          ? new Date(formik.values.found_date_time)
-                          : null
-                      }
-                      onChange={handleDateTime}
-                      showTimeSelect
-                      timeFormat="hh:mm aa"
-                      dateFormat="dd/MM/yyyy hh:mm aa"
-                      placeholderText="Select date & time"
-                      className="border px-3 py-2 w-full input--icon"
-                      maxDate={new Date()}
-                      disabled={editingOption}
-                    /> */}
                     <DatePicker
-                      selected={formik.values.found_date_time}
-                      onChange={(date) => {
-                        if (!date) {
-                          formik.setFieldValue("found_date_time", null);
-                          return;
-                        }
-
-                        // Make sure time doesn't go into the future
-                        const newDate = new Date(date);
-                        if (newDate.getTime() > now.getTime()) {
-                          toast.error("Future date & time is not allowed.");
-                          return;
-                        }
-
-                        formik.setFieldValue("found_date_time", newDate);
-                      }}
+                      selected={followUpDT.selected}
+                      onChange={followUpDT.handleDateTime}
+                      onChangeRaw={followUpDT.handleChangeRaw}
                       showTimeSelect
                       timeFormat="hh:mm aa"
-                      dateFormat="dd/MM/yyyy hh:mm aa"
-                      timeIntervals={30} // 30-minute slots
+                      dateFormat={followUpDT.dateFormat}
                       placeholderText="Select date & time"
-                      maxDate={now} // no future date
-                      minTime={minTimeDefault}
-                      maxTime={
-                        formik.values.found_date_time &&
-                        formik.values.found_date_time.toDateString() ===
-                          now.toDateString()
-                          ? maxTimeToday
-                          : new Date().setHours(22, 0, 0, 0)
-                      }
-                      className="input--icon"
-                      disabled={editingOption}
+                      maxDate={now}
+                      filterTime={followUpFilterTime}
+                      disabled={editingOption || formik.values.club_id === null}
+                      className="border px-3 py-2 w-full input--icon"
                     />
                   </div>
                   {formik.touched.found_date_time &&
@@ -341,7 +318,12 @@ const AddNewItemModal = ({
                   <textarea
                     name="description"
                     value={formik.values.description}
-                    onChange={formik.handleChange}
+                    // onChange={formik.handleChange}
+                    onKeyDown={blockNonLettersAndNumbers}
+                    onChange={(e) => {
+                      const cleaned = sanitizeTextWithNumbers(e.target.value);
+                      formik.setFieldValue("description", cleaned);
+                    }}
                     placeholder="Description"
                     className={`custom--input w-full ${
                       editingOption

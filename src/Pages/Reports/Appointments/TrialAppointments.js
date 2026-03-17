@@ -10,6 +10,7 @@ import {
   formatAutoDate,
   formatText,
   formatTimeAppointment,
+  sanitizeTextWithNumbers,
 } from "../../../Helper/helper";
 import Select from "react-select";
 import TrialAppointmentPanel from "../../../components/FilterPanel/TrialAppointmentPanel";
@@ -18,8 +19,10 @@ import { authAxios } from "../../../config/config";
 import { toast } from "react-toastify";
 import Pagination from "../../../components/common/Pagination";
 import { useFormik } from "formik";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { FiClock } from "react-icons/fi";
+import { fetchClubTiming } from "../../../Redux/Reducers/clubTimingSlice";
+import { useClubDatePickerProps } from "../../../hooks/useClubDatePickerProps";
 
 // Date filter dropdown options
 const dateFilterOptions = [
@@ -43,17 +46,6 @@ const filterStatusOptions = [
   { value: "NO_SHOW", label: "No Show" },
 ];
 
-const isToday = (date) => {
-  if (!date) return false;
-
-  const today = new Date();
-  return (
-    date.getDate() === today.getDate() &&
-    date.getMonth() === today.getMonth() &&
-    date.getFullYear() === today.getFullYear()
-  );
-};
-
 const TrialAppointments = () => {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [pendingStatus, setPendingStatus] = useState(null);
@@ -62,8 +54,9 @@ const TrialAppointments = () => {
   const { user } = useSelector((state) => state.auth);
   const userRole = user.role;
 
-  const [rescheduleDate, setRescheduleDate] = useState(null);
-  const [rescheduleTime, setRescheduleTime] = useState(null);
+  const dispatch = useDispatch();
+  const [selectedLeadClub, setSelectedLeadClub] = useState(null);
+  const [rescheduleDateTime, setRescheduleDateTime] = useState(null);
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -340,32 +333,33 @@ const TrialAppointments = () => {
   const { scheduled, upcoming, completed, noShow, cancelled } = stats;
 
   const updateAppointmentStatus = (row, newStatus) => {
+    setSelectedLeadClub(row.club_id);
     setPendingId(row.id);
     setPendingStatus(newStatus);
     setRemarks("");
 
-    // ✅ Prefill previous date & time for reschedule
     if (newStatus === "RESCHEDULED") {
-      setRescheduleDate(row.start_date ? new Date(row.start_date) : null);
-
-      if (row.start_time) {
+      // ✅ Combine existing date + time into single rescheduleDateTime
+      if (row.start_date && row.start_time) {
+        const combined = new Date(row.start_date);
         const [hours, minutes] = row.start_time.split(":");
-        const time = new Date();
-        time.setHours(hours);
-        time.setMinutes(minutes);
-        setRescheduleTime(time);
+        combined.setHours(Number(hours), Number(minutes), 0, 0);
+        setRescheduleDateTime(combined);
+      } else {
+        setRescheduleDateTime(null);
       }
     }
 
-    setShowConfirmModal(true);
+    setShowConfirmModal(false); // close any previous
+    setTimeout(() => setShowConfirmModal(true), 0); // reopen fresh
   };
 
   const confirmStatusUpdate = async () => {
     try {
-      // ✅ Validation for RESCHEDULED
       if (pendingStatus === "RESCHEDULED") {
-        if (!rescheduleDate || !rescheduleTime || !remarks.trim()) {
-          toast.error("Please select date, time and enter remarks");
+        // ✅ Validate single rescheduleDateTime instead of separate date+time
+        if (!rescheduleDateTime || !remarks.trim()) {
+          toast.error("Please select date & time and enter remarks");
           return;
         }
       }
@@ -373,22 +367,12 @@ const TrialAppointments = () => {
       let body = {};
 
       if (pendingStatus === "RESCHEDULED") {
-        // ✅ Combine date + time into one Date object
-        const combinedDateTime = new Date(rescheduleDate);
-        combinedDateTime.setHours(
-          rescheduleTime.getHours(),
-          rescheduleTime.getMinutes(),
-          0,
-          0,
-        );
-
         body = {
-          start_date: format(combinedDateTime, "yyyy-MM-dd HH:mm:ss"),
+          start_date: format(rescheduleDateTime, "yyyy-MM-dd HH:mm:ss"),
           last_status: "RESCHEDULED",
           remarks: remarks.trim(),
         };
       } else {
-        // ✅ Other statuses
         body = {
           booking_status: pendingStatus,
           remarks: remarks.trim() || undefined,
@@ -396,14 +380,12 @@ const TrialAppointments = () => {
       }
 
       await authAxios().put(`/appointment/${pendingId}`, body);
-
       toast.success("Status updated successfully");
 
-      // ✅ Reset modal state
+      // ✅ Reset all modal state
       setShowConfirmModal(false);
       setRemarks("");
-      setRescheduleDate(null);
-      setRescheduleTime(null);
+      setRescheduleDateTime(null); // ✅ reset single state
 
       fetchAppointments(page);
     } catch (err) {
@@ -453,22 +435,12 @@ const TrialAppointments = () => {
     return status === "ACTIVE" || status === "COMPLETED";
   };
 
-  const getMinTime = () => {
-    if (isToday(rescheduleDate)) {
-      return new Date(); // current time
-    }
+  useEffect(() => {
+    if (selectedLeadClub) dispatch(fetchClubTiming(selectedLeadClub));
+  }, [selectedLeadClub]); // <-- dependency added
 
-    // allow full day for future dates
-    const time = new Date();
-    time.setHours(0, 0, 0, 0);
-    return time;
-  };
-
-  const getMaxTime = () => {
-    const time = new Date();
-    time.setHours(23, 45, 0, 0);
-    return time;
-  };
+  // ── NEW: get ready-to-use DatePicker props from Redux timing ──
+  const datePickerProps = useClubDatePickerProps(rescheduleDateTime);
 
   return (
     <>
@@ -506,7 +478,7 @@ const TrialAppointments = () => {
             {dateFilter?.value === "custom" && (
               <>
                 <div className="custom--date dob-format flex-1 max-w-[180px] w-full">
-                  <span className="absolute z-[1] mt-[11px] ml-[15px]">
+                  <span className="absolute z-[1] mt-[9px] ml-[15px]">
                     <FaCalendarDays />
                   </span>
                   <DatePicker
@@ -526,7 +498,7 @@ const TrialAppointments = () => {
                   />
                 </div>
                 <div className="custom--date dob-format flex-1 max-w-[180px] w-full">
-                  <span className="absolute z-[1] mt-[11px] ml-[15px]">
+                  <span className="absolute z-[1] mt-[9px] ml-[15px]">
                     <FaCalendarDays />
                   </span>
                   <DatePicker
@@ -753,7 +725,11 @@ const TrialAppointments = () => {
                 </label>
                 <textarea
                   value={remarks}
-                  onChange={(e) => setRemarks(e.target.value)}
+                  // onChange={(e) => setRemarks(e.target.value)}
+                  onChange={(e) => {
+                    const cleaned = sanitizeTextWithNumbers(e.target.value);
+                    setRemarks(cleaned);
+                  }}
                   placeholder="Enter cancellation reason"
                   rows="4"
                   className="w-full border border-gray-300 rounded-[5px] p-2 text-sm focus:outline-none focus:ring-2 focus:ring-black resize-none"
@@ -763,52 +739,43 @@ const TrialAppointments = () => {
 
             {pendingStatus === "RESCHEDULED" && (
               <div className="mb-4 space-y-3">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-1">
-                      New Date <span className="text-red-500">*</span>
-                    </label>
-                    <div className="custom--date relative">
-                      {/* Calendar Icon */}
-                      <span className="absolute z-[1] mt-[11px] ml-[15px]">
-                        <FaCalendarDays />
-                      </span>
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    New Date & Time <span className="text-red-500">*</span>
+                  </label>
+                  <div className="custom--date relative">
+                    {/* Calendar Icon */}
+                    <span className="absolute z-[1] mt-[11px] ml-[15px]">
+                      <FaCalendarDays />
+                    </span>
+                    <DatePicker
+                      selected={rescheduleDateTime}
+                      onChange={(date) => {
+                        if (!date) {
+                          setRescheduleDateTime(null);
+                          return;
+                        }
 
-                      <DatePicker
-                        selected={rescheduleDate}
-                        onChange={(date) => {
-                          setRescheduleDate(date);
-                          setRescheduleTime(null); // ✅ reset time
-                        }}
-                        className="custom--input w-full input--icon"
-                        dateFormat="dd-MM-yyyy"
-                        minDate={new Date()}
-                      />
-                    </div>
-                  </div>
+                        const prev = rescheduleDateTime;
+                        const isSameDay =
+                          prev &&
+                          new Date(prev).toDateString() ===
+                            new Date(date).toDateString();
 
-                  <div>
-                    <label className="block text-sm font-medium mb-1">
-                      New Time <span className="text-red-500">*</span>
-                    </label>
-                    <div className="custom--date relative">
-                      {/* Clock Icon */}
-                      <span className="absolute z-[1] mt-[11px] ml-[15px]">
-                        <FiClock />
-                      </span>
-                      <DatePicker
-                        selected={rescheduleTime}
-                        onChange={(time) => setRescheduleTime(time)}
-                        showTimeSelect
-                        showTimeSelectOnly
-                        timeIntervals={15}
-                        timeCaption="Time"
-                        dateFormat="hh:mm aa"
-                        className="custom--input w-full input--icon"
-                        minTime={getMinTime()}
-                        maxTime={getMaxTime()}
-                      />
-                    </div>
+                        if (isSameDay) {
+                          // ✅ User changed time — accept exactly what they picked
+                          setRescheduleDateTime(date);
+                        } else {
+                          // ✅ User changed date — auto-select first valid grid slot
+                          const dateWithTime =
+                            datePickerProps.getDefaultTimeForDate(date);
+                          setRescheduleDateTime(dateWithTime ?? null);
+                        }
+                      }}
+                      {...datePickerProps}
+                      placeholderText="Select date & time"
+                      className="custom--input w-full input--icon"
+                    />
                   </div>
                 </div>
 
@@ -818,7 +785,11 @@ const TrialAppointments = () => {
                   </label>
                   <textarea
                     value={remarks}
-                    onChange={(e) => setRemarks(e.target.value)}
+                    // onChange={(e) => setRemarks(e.target.value)}
+                    onChange={(e) => {
+                      const cleaned = sanitizeTextWithNumbers(e.target.value);
+                      setRemarks(cleaned);
+                    }}
                     rows="3"
                     className="w-full border rounded p-2"
                     placeholder="Reason for rescheduling"

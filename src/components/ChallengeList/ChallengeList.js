@@ -164,7 +164,12 @@ const ChallengeList = () => {
 
     validationSchema: Yup.object({
       club_id: Yup.string().required("Club is required"),
-      image: Yup.string().required("Image is required"),
+      image: Yup.mixed()
+            .required("Image is required")
+            .test("fileType", "Only JPG, PNG, or WEBP allowed", (value) => {
+              if (!value || typeof value === "string") return true;
+              return ["image/jpeg", "image/png", "image/webp"].includes(value.type);
+            }),
       name: Yup.string().required("Challenge Name is required"),
       caption: Yup.string().required("Caption is required"),
       condition: Yup.string()
@@ -217,10 +222,10 @@ const ChallengeList = () => {
 
         // Append every field correctly
         Object.keys(values).forEach((key) => {
-          if (key === "imageFile") {
+          if (key === "image" && typeof values.image === "string") {
             // file upload
-            if (values.imageFile instanceof File) {
-              formData.append("image", values.imageFile);
+            if (values.image instanceof File) {
+              formData.append("image", values.image);
             }
           } else if (typeof values[key] === "boolean") {
             formData.append(key, values[key] ? "true" : "false");

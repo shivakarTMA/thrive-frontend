@@ -3,8 +3,11 @@ import { useFormik } from "formik";
 import * as Yup from "yup";
 import Select from "react-select";
 import {
+  allowOnlyLetters,
   blockInvalidNumberKeys,
+  blockNonLetters,
   sanitizePositiveInteger,
+  sanitizeText,
   selectIcon,
 } from "../../Helper/helper";
 import { IoCloseCircle } from "react-icons/io5";
@@ -189,7 +192,12 @@ const CreateExercise = ({
                     name="name"
                     className="custom--input w-full input--icon"
                     value={formik.values.name}
-                    onChange={formik.handleChange}
+                    // onChange={formik.handleChange}
+                    onKeyDown={blockNonLetters}
+                    onChange={(e) => {
+                      const cleaned = allowOnlyLetters(e.target.value);
+                      formik.setFieldValue("name", cleaned);
+                    }}
                     onBlur={formik.handleBlur}
                   />
                 </div>
@@ -232,7 +240,11 @@ const CreateExercise = ({
                   name="description"
                   className="custom--input w-full"
                   value={formik.values.description}
-                  onChange={formik.handleChange}
+                  // onChange={formik.handleChange}
+                  onChange={(e) => {
+                    const cleaned = sanitizeText(e.target.value);
+                    formik.setFieldValue("description", cleaned);
+                  }}
                   onBlur={formik.handleBlur}
                   rows={1}
                 />

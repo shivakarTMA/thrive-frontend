@@ -8,7 +8,9 @@ import { FaListUl } from "react-icons/fa6";
 import Select from "react-select";
 // Import custom styles for select input
 import {
+  allowOnlyLetters,
   blockInvalidNumberKeys,
+  blockNonLetters,
   sanitizePositiveInteger,
   selectIcon,
 } from "../../Helper/helper";
@@ -101,7 +103,12 @@ const CreateExerciesCategory = ({
                         type="text"
                         name="title"
                         value={formik.values.title}
-                        onChange={formik.handleChange}
+                        // onChange={formik.handleChange}
+                        onKeyDown={blockNonLetters}
+                        onChange={(e) => {
+                          const cleaned = allowOnlyLetters(e.target.value);
+                          formik.setFieldValue("title", cleaned);
+                        }}
                         onBlur={formik.handleBlur}
                         className="custom--input w-full input--icon"
                       />

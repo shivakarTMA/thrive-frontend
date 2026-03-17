@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import AllExerciseList from "../WorkoutPlan/AllExerciseList";
 import Select from "react-select";
-import { customStyles } from "../../Helper/helper";
+import { blockNonLettersAndNumbers, customStyles, sanitizeTextWithNumbers } from "../../Helper/helper";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   TrainingList,
@@ -473,8 +473,6 @@ const CreateWorkoutplan = () => {
 
     const cleanedData = cleanDataForSubmission(data);
 
-    console.log("cleanedData", cleanedData);
-
     try {
       setLoading(true);
       let response;
@@ -756,14 +754,17 @@ const CreateWorkoutplan = () => {
                   type="text"
                   placeholder="Notes"
                   value={exercise.notes || ""}
-                  onChange={(e) =>
+                  onChange={(e) => {
+                    const cleaned = sanitizeTextWithNumbers(e.target.value);
+
                     handleExerciseFieldChange(
                       activeDayIndex,
                       exIdx,
                       "notes",
-                      e.target.value,
-                    )
-                  }
+                      cleaned
+                    );
+                  }}
+                  onKeyDown={blockNonLettersAndNumbers}
                   className="custom--input w-full"
                 />
               </div>
@@ -780,9 +781,6 @@ const CreateWorkoutplan = () => {
     }
   }, [editingId]);
 
-  const handleAssignTemplate = () => {
-    setShowModal(true);
-  };
 
   const handleAssignFromModal = () => {
     if (!selectedTemplate) {
@@ -851,28 +849,6 @@ const CreateWorkoutplan = () => {
     );
   }
 
-  // ✅ Common numeric input handler
-  const handleNumericInput = (e, maxLength) => {
-    const { name, value } = e.target;
-
-    // Remove everything except digits
-    const numericValue = value.replace(/\D/g, "");
-
-    // Limit length
-    if (numericValue.length <= maxLength) {
-      setData((prev) => ({
-        ...prev,
-        [name]: numericValue,
-      }));
-    }
-  };
-
-  const blockInvalidKeys = (e) => {
-    if (["e", "E", "+", "-", "."].includes(e.key)) {
-      e.preventDefault();
-    }
-  };
-
   return (
     <div className="page--content">
       <div className="flex items-end justify-between gap-2 mb-5">
@@ -884,13 +860,6 @@ const CreateWorkoutplan = () => {
             {editingId ? `${data?.plan?.name}` : "Create Workout"}
           </h1>
         </div>
-        {/* <button
-          type="button"
-          onClick={handleAssignTemplate}
-          className="bg-black text-white px-4 py-2 rounded text-sm flex gap-1 items-center"
-        >
-          <FiPlus /> Assign Template
-        </button> */}
       </div>
 
       <div className="box--shadow bg-white rounded-[15px] p-4">
@@ -905,12 +874,18 @@ const CreateWorkoutplan = () => {
                   <input
                     type="text"
                     value={data.plan.name}
-                    onChange={(e) =>
+                    onKeyDown={blockNonLettersAndNumbers}
+                    onChange={(e) => {
+                      const cleaned = sanitizeTextWithNumbers(e.target.value);
+
                       setData((prev) => ({
                         ...prev,
-                        plan: { ...prev.plan, name: e.target.value },
-                      }))
-                    }
+                        plan: {
+                          ...prev.plan,
+                          name: cleaned,
+                        },
+                      }));
+                    }}
                     className="custom--input w-full"
                   />
                   {errors.name && (
@@ -1002,12 +977,17 @@ const CreateWorkoutplan = () => {
                 <textarea
                   rows="5"
                   value={data.plan.description}
-                  onChange={(e) =>
-                    setData((prev) => ({
-                      ...prev,
-                      plan: { ...prev.plan, description: e.target.value },
-                    }))
-                  }
+                  onChange={(e) => {
+                  const cleaned = sanitizeTextWithNumbers(e.target.value);
+
+                  setData((prev) => ({
+                    ...prev,
+                    plan: {
+                      ...prev.plan,
+                      description: cleaned,
+                    },
+                  }));
+                }}
                   className="custom--input w-full"
                 />
                 {errors.description && (

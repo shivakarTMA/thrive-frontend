@@ -5,9 +5,13 @@ import PhoneInput from "react-phone-number-input";
 import DatePicker from "react-datepicker";
 import Select from "react-select";
 import {
+  allowOnlyLetters,
   blockInvalidNumberKeys,
+  blockNonLetters,
+  blockNonLettersAndNumbers,
   customStyles,
   sanitizePositiveInteger,
+  sanitizeTextWithNumbers,
 } from "../../Helper/helper";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchOptionList } from "../../Redux/Reducers/optionListSlice";
@@ -997,7 +1001,12 @@ const ProfileDetails = ({ member }) => {
                   <input
                     name="full_name"
                     value={formik.values?.full_name}
-                    onChange={formik.handleChange}
+                    // onChange={formik.handleChange}
+                    onKeyDown={blockNonLetters}
+                    onChange={(e) => {
+                      const cleaned = allowOnlyLetters(e.target.value);
+                      formik.setFieldValue("full_name", cleaned);
+                    }}
                     className="custom--input w-full"
                   />
                   {formik.errors?.full_name && formik.touched?.full_name && (
@@ -1108,7 +1117,12 @@ const ProfileDetails = ({ member }) => {
                   <textarea
                     name="address"
                     value={formik.values?.address}
-                    onChange={formik.handleChange}
+                    // onChange={formik.handleChange}
+                    onKeyDown={blockNonLettersAndNumbers}
+                    onChange={(e) => {
+                      const cleaned = sanitizeTextWithNumbers(e.target.value);
+                      formik.setFieldValue("address", cleaned);
+                    }}
                     rows={1}
                     className="custom--input w-full"
                   />
@@ -1269,7 +1283,12 @@ const ProfileDetails = ({ member }) => {
                     type="text"
                     name="designation"
                     value={formik.values?.designation}
-                    onChange={formik.handleChange}
+                    // onChange={formik.handleChange}
+                    onKeyDown={blockNonLetters}
+                    onChange={(e) => {
+                      const cleaned = allowOnlyLetters(e.target.value);
+                      formik.setFieldValue("designation", cleaned);
+                    }}
                     className="custom--input w-full"
                   />
                 </div>
@@ -1319,13 +1338,26 @@ const ProfileDetails = ({ member }) => {
                         <input
                           type="text"
                           value={contact.name}
-                          onChange={(e) =>
-                            updateEmergencyContactField(
-                              index,
-                              "name",
-                              e.target.value,
-                            )
-                          }
+                          // onChange={(e) =>
+                          //   updateEmergencyContactField(
+                          //     index,
+                          //     "name",
+                          //     e.target.value,
+                          //   )
+                          // }
+
+                          onKeyDown={blockNonLetters}
+                          onChange={(e) => {
+                            const cleaned = allowOnlyLetters(e.target.value);
+                            formik.setFieldValue(
+                              updateEmergencyContactField(
+                                index,
+                                "name",
+                                e.target.value,
+                              ),
+                              cleaned,
+                            );
+                          }}
                           className="custom--input w-full"
                         />
                         {errs.name && (
@@ -1435,13 +1467,25 @@ const ProfileDetails = ({ member }) => {
                           type="text"
                           placeholder="Name"
                           value={contact.name}
-                          onChange={(e) =>
-                            updateNewEmergencyField(
-                              index,
-                              "name",
-                              e.target.value,
-                            )
-                          }
+                          // onChange={(e) =>
+                          //   updateNewEmergencyField(
+                          //     index,
+                          //     "name",
+                          //     e.target.value,
+                          //   )
+                          // }
+                          onKeyDown={blockNonLetters}
+                          onChange={(e) => {
+                            const cleaned = allowOnlyLetters(e.target.value);
+                            formik.setFieldValue(
+                              updateNewEmergencyField(
+                                index,
+                                "name",
+                                e.target.value,
+                              ),
+                              cleaned,
+                            );
+                          }}
                           className="custom--input w-full"
                         />
                         {errs.name && (

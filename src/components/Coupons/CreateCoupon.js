@@ -5,9 +5,11 @@ import { FaListUl } from "react-icons/fa6";
 import Select from "react-select";
 import {
   blockInvalidNumberKeys,
+  blockNonLettersAndNumbers,
   durationValueInteger,
   filterActiveItems,
   sanitizePositiveInteger,
+  sanitizeTextWithNumbers,
   selectIcon,
 } from "../../Helper/helper";
 import { toast } from "react-toastify";
@@ -512,7 +514,12 @@ const buildUpdatePayload = (values, originalRules = []) => {
                         type="text"
                         name="coupon.code"
                         value={formik.values.coupon?.code || ""}
-                        onChange={formik.handleChange}
+                        // onChange={formik.handleChange}
+                        onKeyDown={blockNonLettersAndNumbers}
+                        onChange={(e) => {
+                          const cleaned = sanitizeTextWithNumbers(e.target.value);
+                          formik.setFieldValue("coupon.code", cleaned);
+                        }}
                         onBlur={formik.handleBlur}
                         className="custom--input w-full input--icon"
                       />
@@ -810,7 +817,12 @@ const buildUpdatePayload = (values, originalRules = []) => {
                       <textarea
                         name="coupon.description"
                         value={formik.values.coupon?.description || ""}
-                        onChange={formik.handleChange}
+                        // onChange={formik.handleChange}
+                        onKeyDown={blockNonLettersAndNumbers}
+                        onChange={(e) => {
+                          const cleaned = sanitizeTextWithNumbers(e.target.value);
+                          formik.setFieldValue("coupon.description", cleaned);
+                        }}
                         className="custom--input w-full input--icon"
                       />
                     </div>

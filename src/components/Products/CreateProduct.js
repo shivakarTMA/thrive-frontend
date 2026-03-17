@@ -2,8 +2,10 @@ import React, { useEffect, useRef } from "react";
 import Select from "react-select";
 import {
   blockInvalidNumberKeys,
+  blockNonLettersAndNumbers,
   customStyles,
   sanitizePositiveInteger,
+  sanitizeTextWithNumbers,
 } from "../../Helper/helper";
 import { IoCloseCircle } from "react-icons/io5";
 import { toast } from "react-toastify";
@@ -237,7 +239,12 @@ const CreateProduct = ({
                         name="name"
                         className="custom--input w-full"
                         value={formik.values.name}
-                        onChange={formik.handleChange}
+                        // onChange={formik.handleChange}
+                        onKeyDown={blockNonLettersAndNumbers}
+                        onChange={(e) => {
+                          const cleaned = sanitizeTextWithNumbers(e.target.value);
+                          formik.setFieldValue("name", cleaned);
+                        }}
                         onBlur={formik.handleBlur}
                       />
                     </div>
@@ -259,7 +266,12 @@ const CreateProduct = ({
                         name="caption"
                         className="custom--input w-full"
                         value={formik.values.caption}
-                        onChange={formik.handleChange}
+                        // onChange={formik.handleChange}
+                        onKeyDown={blockNonLettersAndNumbers}
+                        onChange={(e) => {
+                          const cleaned = sanitizeTextWithNumbers(e.target.value);
+                          formik.setFieldValue("caption", cleaned);
+                        }}
                         onBlur={formik.handleBlur}
                       />
                     </div>
@@ -392,7 +404,12 @@ const CreateProduct = ({
                         name="sku"
                         className="custom--input w-full"
                         value={formik.values.sku}
-                        onChange={formik.handleChange}
+                        // onChange={formik.handleChange}
+                        onKeyDown={blockNonLettersAndNumbers}
+                        onChange={(e) => {
+                          const cleaned = sanitizeTextWithNumbers(e.target.value);
+                          formik.setFieldValue("sku", cleaned);
+                        }}
                         onBlur={formik.handleBlur}
                       />
                     </div>
@@ -413,7 +430,12 @@ const CreateProduct = ({
                         name="allergens"
                         className="custom--input w-full"
                         value={formik.values.allergens}
-                        onChange={formik.handleChange}
+                        // onChange={formik.handleChange}
+                        onKeyDown={blockNonLettersAndNumbers}
+                        onChange={(e) => {
+                          const cleaned = sanitizeTextWithNumbers(e.target.value);
+                          formik.setFieldValue("allergens", cleaned);
+                        }}
                         onBlur={formik.handleBlur}
                       />
                     </div>
@@ -432,7 +454,12 @@ const CreateProduct = ({
                         type="text"
                         name="hsn_sac_code"
                         value={formik.values.hsn_sac_code}
-                        onChange={formik.handleChange}
+                        // onChange={formik.handleChange}
+                        onKeyDown={blockNonLettersAndNumbers}
+                        onChange={(e) => {
+                          const cleaned = sanitizeTextWithNumbers(e.target.value);
+                          formik.setFieldValue("hsn_sac_code", cleaned);
+                        }}
                         onBlur={formik.handleBlur}
                         className="custom--input w-full"
                       />
@@ -742,7 +769,12 @@ const CreateProduct = ({
                       type="text"
                       name="short_description"
                       value={formik.values.short_description}
-                      onChange={formik.handleChange}
+                      // onChange={formik.handleChange}
+                      onKeyDown={blockNonLettersAndNumbers}
+                      onChange={(e) => {
+                        const cleaned = sanitizeTextWithNumbers(e.target.value);
+                        formik.setFieldValue("short_description", cleaned);
+                      }}
                       onBlur={formik.handleBlur}
                       className="custom--input w-full"
                     />
@@ -796,7 +828,12 @@ const CreateProduct = ({
                       rows={3}
                       name="description"
                       value={formik.values.description}
-                      onChange={formik.handleChange}
+                      // onChange={formik.handleChange}
+                      onKeyDown={blockNonLettersAndNumbers}
+                      onChange={(e) => {
+                        const cleaned = sanitizeTextWithNumbers(e.target.value);
+                        formik.setFieldValue("description", cleaned);
+                      }}
                       onBlur={formik.handleBlur}
                       className="custom--input w-full"
                     />

@@ -4,10 +4,18 @@ import * as Yup from "yup";
 import Select from "react-select";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { customStyles, filterActiveItems } from "../../Helper/helper";
+import {
+  blockNonLettersAndNumbers,
+  customStyles,
+  filterActiveItems,
+  sanitizeTextWithNumbers,
+} from "../../Helper/helper";
 import { IoCloseCircle } from "react-icons/io5";
 import { toast } from "react-toastify";
 import { authAxios } from "../../config/config";
+import { useClubDatePickerProps } from "../../hooks/useClubDatePickerProps";
+import { fetchClubTiming } from "../../Redux/Reducers/clubTimingSlice";
+import { useDispatch } from "react-redux";
 
 function toCapitalizedCase(inputString) {
   return inputString
@@ -24,11 +32,12 @@ const CreateMemberAppointment = ({
   memberID,
   memberType,
   handleUpdate,
-  clubId
+  clubId,
 }) => {
   console.log(memberType, "memberType");
   const leadBoxRef = useRef(null);
   const [packageList, setPackageList] = useState([]);
+  const dispatch = useDispatch();
   const [memberPurchasedServices, setMemberPurchasedServices] = useState([]);
   const [staffList, setStaffList] = useState([]);
   const [serviceList, setServiceList] = useState([]);
@@ -73,7 +82,7 @@ const CreateMemberAppointment = ({
     try {
       const params = {};
       if (clubId) params.club_id = clubId;
-      const res = await authAxios().get("/staff/list?role=TRAINER",{ params });
+      const res = await authAxios().get("/staff/list?role=TRAINER", { params });
       let data = res.data?.data || res?.data || [];
       const activeService = data?.filter((item) => item?.status === "ACTIVE");
       setStaffList(activeService);
@@ -85,7 +94,7 @@ const CreateMemberAppointment = ({
 
   const fetchService = async (clubId = null) => {
     try {
-            const params = {};
+      const params = {};
       if (clubId) params.club_id = clubId;
       const res = await authAxios().get("/service/list", { params });
       let data = res.data?.data || res?.data || [];
@@ -101,11 +110,11 @@ const CreateMemberAppointment = ({
     fetchPackageAvailable();
   }, []);
 
-    useEffect(() => {
-      // Fetch services and staff based on clubId if provided
-      fetchStaff(clubId);
-      fetchService(clubId);
-    }, [clubId]); // <-- dependency added
+  useEffect(() => {
+    // Fetch services and staff based on clubId if provided
+    fetchStaff(clubId);
+    fetchService(clubId);
+  }, [clubId]); // <-- dependency added
 
   const staffListOptions =
     staffList?.map((item) => ({
@@ -298,6 +307,17 @@ const CreateMemberAppointment = ({
     }
   }, [defaultCategory]);
 
+  useEffect(() => {
+    if (clubId) {
+      dispatch(fetchClubTiming(clubId));
+    }
+  }, [clubId]);
+
+  // ── NEW: get ready-to-use DatePicker props from Redux timing ──
+  const datePickerProps = useClubDatePickerProps(
+    formik?.values?.appointment_date, // pass selected date for minTime logic
+  );
+
   return (
     <div
       className="bg--blur create--lead--container overflow-auto fixed top-0 left-0 z-[999] w-full bg-black bg-opacity-60 h-full"
@@ -463,41 +483,29 @@ const CreateMemberAppointment = ({
                         return;
                       }
 
-                      const newDate = new Date(date);
-                      const isToday =
-                        newDate.toDateString() === now.toDateString();
+                      const prev = formik.values.appointment_date;
+                      const isSameDay =
+                        prev &&
+                        new Date(prev).toDateString() ===
+                          new Date(date).toDateString();
 
-                      if (isToday) {
-                        // Round current time to next 30-min slot
-                        const roundedNow = roundUpTime(now, 30);
-                        newDate.setHours(
-                          roundedNow.getHours(),
-                          roundedNow.getMinutes(),
-                          0,
-                          0,
-                        );
+                      if (isSameDay) {
+                        // ✅ User changed time — accept exactly what they picked
+                        formik.setFieldValue("appointment_date", date);
                       } else {
-                        // Future dates → default to 6:00 AM
-                        newDate.setHours(6, 0, 0, 0);
+                        // ✅ User picked a new date — auto-select first valid grid slot
+                        const dateWithTime =
+                          datePickerProps.getDefaultTimeForDate(date);
+                        // null means today has no slots left (shouldn't reach here due to minDate)
+                        formik.setFieldValue(
+                          "appointment_date",
+                          dateWithTime ?? null,
+                        );
                       }
-
-                      formik.setFieldValue("appointment_date", newDate);
                     }}
-                    showTimeSelect
-                    timeFormat="hh:mm aa"
-                    dateFormat="dd/MM/yyyy hh:mm aa"
-                    timeIntervals={30} // time slot every 30 minutes
+                    {...datePickerProps}
                     placeholderText="Select date & time"
                     className="custom--input !w-full"
-                    minDate={now}
-                    minTime={
-                      formik.values.appointment_date &&
-                      formik.values.appointment_date.toDateString() ===
-                        now.toDateString()
-                        ? roundUpTime(now, 30) // next 30-min slot
-                        : minTimeDefault
-                    }
-                    maxTime={maxTimeDefault}
                   />
 
                   {formik.errors.appointment_date &&
@@ -550,7 +558,12 @@ const CreateMemberAppointment = ({
               <textarea
                 name="remarks"
                 value={formik.values.remarks}
-                onChange={formik.handleChange}
+                // onChange={formik.handleChange}
+                onKeyDown={blockNonLettersAndNumbers}
+                onChange={(e) => {
+                  const cleaned = sanitizeTextWithNumbers(e.target.value);
+                  formik.setFieldValue("remarks", cleaned);
+                }}
                 className="custom--input w-full"
                 rows={4}
                 placeholder="Add any additional notes..."

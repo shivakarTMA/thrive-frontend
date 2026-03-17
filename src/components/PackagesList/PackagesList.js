@@ -275,7 +275,11 @@ const PackagesList = () => {
               image: Yup.mixed()
                 .required("Image is required")
                 .test("fileType", "Only JPG, PNG, or WEBP allowed", (value) => {
-                  if (!value || typeof value === "string") return true;
+                  if (!value) return false;
+
+                  // If editing and already have image URL
+                  if (typeof value === "string") return true;
+
                   return ["image/jpeg", "image/png", "image/webp"].includes(
                     value.type,
                   );
@@ -480,8 +484,8 @@ const PackagesList = () => {
     fd.append("position", variation.position || "");
     fd.append("earn_coin", variation.earn_coin || "");
 
-    if (variation.imageFile instanceof File) {
-      fd.append("image", variation.imageFile);
+    if (variation.image instanceof File) {
+      fd.append("image", variation.image);
     }
 
     return authAxios().post("/package/variation/create", fd, {
@@ -506,8 +510,8 @@ const PackagesList = () => {
     fd.append("position", variation.position || "");
     fd.append("earn_coin", variation.earn_coin || "");
 
-    if (variation.imageFile instanceof File) {
-      fd.append("image", variation.imageFile);
+    if (variation.image instanceof File) {
+      fd.append("image", variation.image);
     }
 
     return authAxios().put(`/package/variation/${variation.id}`, fd, {

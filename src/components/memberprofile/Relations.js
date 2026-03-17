@@ -8,7 +8,7 @@ import { useFormik } from "formik";
 import * as Yup from "yup";
 import "react-phone-number-input/style.css";
 import { IoCloseCircle } from "react-icons/io5";
-import { formatAutoDate, selectIcon } from "../../Helper/helper";
+import { allowOnlyLetters, blockNonLetters, formatAutoDate, selectIcon } from "../../Helper/helper";
 import { FaEnvelope, FaUser } from "react-icons/fa";
 import { MdOutlineFamilyRestroom } from "react-icons/md";
 import { FiPlus } from "react-icons/fi";
@@ -223,7 +223,12 @@ const Relations = ({ details }) => {
                   <input
                     name="full_name"
                     value={formik.values.full_name}
-                    onChange={formik.handleChange}
+                    // onChange={formik.handleChange}
+                    onKeyDown={blockNonLetters}
+                    onChange={(e) => {
+                      const cleaned = allowOnlyLetters(e.target.value);
+                      formik.setFieldValue("full_name", cleaned);
+                    }}
                     className="custom--input w-full input--icon"
                   />
                 </div>

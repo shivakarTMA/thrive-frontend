@@ -4,8 +4,11 @@ import { FaListOl, FaListUl } from "react-icons/fa6";
 import { LuPlug } from "react-icons/lu";
 import Select from "react-select";
 import {
+  optionTypeCreation,
   blockInvalidNumberKeys,
+  blockNonLettersAndNumbers,
   sanitizePositiveInteger,
+  sanitizeTextWithNumbers,
   selectIcon,
 } from "../../Helper/helper";
 import CreatableSelect from "react-select/creatable";
@@ -106,7 +109,14 @@ const CreateOption = ({
                         type="text"
                         name="name"
                         value={formik.values.name}
-                        onChange={formik.handleChange}
+                        // onChange={formik.handleChange}
+                        onKeyDown={blockNonLettersAndNumbers}
+                        onChange={(e) => {
+                          const cleaned = sanitizeTextWithNumbers(
+                            e.target.value,
+                          );
+                          formik.setFieldValue("name", cleaned);
+                        }}
                         onBlur={formik.handleBlur}
                         className="custom--input w-full input--icon"
                       />
@@ -138,6 +148,28 @@ const CreateOption = ({
                             : null
                         }
                         onChange={handleTagChange}
+                        // sanitize typing
+                        onInputChange={(inputValue, { action }) => {
+                          if (action === "input-change") {
+                            return optionTypeCreation(inputValue);
+                          }
+                          return inputValue;
+                        }}
+                        // create option directly
+                        onCreateOption={(inputValue) => {
+                          const cleaned = optionTypeCreation(inputValue);
+
+                          const newOption = {
+                            label: cleaned,
+                            value: cleaned,
+                          };
+
+                          // add option to list
+                          setAvailableTags((prev) => [...prev, newOption]);
+
+                          // set formik value
+                          formik.setFieldValue("option_list_type", cleaned);
+                        }}
                         styles={selectIcon}
                         isClearable
                         isDisabled={editingOption ? true : false}

@@ -3,7 +3,7 @@ import Select from "react-select";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import PhoneInput from "react-phone-number-input";
-import { customStyles } from "../Helper/helper";
+import { blockNonLettersAndNumbers, customStyles, sanitizeTextWithNumbers } from "../Helper/helper";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { useDispatch, useSelector } from "react-redux";
@@ -17,8 +17,8 @@ import { BsExclamationCircle } from "react-icons/bs";
 import LeadContactHistory from "./LeadContactHistory";
 import { addYears, subYears } from "date-fns";
 import { useParams, useSearchParams, useNavigate } from "react-router-dom";
-import { useClubDateTime } from "../hooks/useClubDateTime";
-import { useDateTimePicker } from "../hooks/useDateTimePicker";
+import { useClubDatePickerProps } from "../hooks/useClubDatePickerProps";
+import { fetchClubTiming } from "../Redux/Reducers/clubTimingSlice";
 
 // Validation schema with conditional required fields
 const validationSchema = Yup.object().shape({
@@ -101,17 +101,6 @@ const MemberCallLogs = () => {
   const maxTime = new Date();
   maxTime.setHours(22, 0, 0, 0);
 
-  const fetchClubById = async (id) => {
-    try {
-      const res = await authAxios().get(`/club/${id}`);
-      const data = res.data?.data || res.data || null;
-      console.log("CLUB DATA:", data); // ← CHECK THIS in browser console
-      setClubData(data);
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to fetch club details");
-    }
-  };
 
   const fetchMemberEnquiery = async (memberId, filters = {}) => {
     try {
@@ -183,7 +172,7 @@ const MemberCallLogs = () => {
       const data = res.data?.data || res.data || null;
       console.log(data, "data");
       setMemberDetails(data);
-      fetchClubById(data?.club_id);
+      setClubData(data?.club_id);
     } catch (err) {
       console.error(err);
       toast.error("Failed to fetch member details");
@@ -266,16 +255,6 @@ const MemberCallLogs = () => {
     },
   });
 
-  const { filterTime: followUpFilterTime } = useClubDateTime(
-    formik.values.follow_up_datetime,
-    clubData,
-  );
-
-  const followUpDT = useDateTimePicker(
-    formik,
-    "follow_up_datetime",
-    followUpFilterTime,
-  );
 
   useEffect(() => {
     let filtered = [];
@@ -358,10 +337,6 @@ const MemberCallLogs = () => {
     showNotInterestedTypes.includes(formik.values?.call_type) &&
     formik.values?.call_status === "Not Interested";
 
-  // Function to handle setting formatted date
-  const handleDateChange = (date) => {
-    formik.setFieldValue("follow_up_datetime", date); // Store Date object in Formik
-  };
 
   useEffect(() => {
     if (editLog) {
@@ -398,6 +373,17 @@ const MemberCallLogs = () => {
       setEditLog(null);
     }
   }, [logId, callDataList]);
+
+  useEffect(() => {
+    if (clubData) {
+      dispatch(fetchClubTiming(clubData));
+    }
+  }, [clubData]);
+
+    // ── NEW: get ready-to-use DatePicker props from Redux timing ──
+  const datePickerProps = useClubDatePickerProps(
+    formik?.values?.follow_up_datetime, // pass selected date for minTime logic
+  );
 
   return (
     <div className="">
@@ -551,17 +537,46 @@ const MemberCallLogs = () => {
                             <FaCalendarDays />
                           </span>
                           <DatePicker
-                            selected={followUpDT.selected}
-                            onChange={followUpDT.handleDateTime}
-                            onChangeRaw={followUpDT.handleChangeRaw}
-                            showTimeSelect
-                            timeFormat="hh:mm aa"
-                            dateFormat={followUpDT.dateFormat}
+                            selected={formik.values.follow_up_datetime}
+                            onChange={(date) => {
+                              if (!date) {
+                                formik.setFieldValue(
+                                  "follow_up_datetime",
+                                  null,
+                                );
+                                return;
+                              }
+
+                              const prev = formik.values.follow_up_datetime;
+                              const isSameDay =
+                                prev &&
+                                new Date(prev).toDateString() ===
+                                  new Date(date).toDateString();
+
+                              if (isSameDay) {
+                                // ✅ User changed time — accept exactly what they picked
+                                formik.setFieldValue(
+                                  "follow_up_datetime",
+                                  date,
+                                );
+                              } else {
+                                // ✅ User picked a new date — auto-select first valid grid slot
+                                const dateWithTime =
+                                  datePickerProps.getDefaultTimeForDate(date);
+                                // null means today has no slots left (shouldn't reach here due to minDate)
+                                formik.setFieldValue(
+                                  "follow_up_datetime",
+                                  dateWithTime ?? null,
+                                );
+                              }
+                            }}
+                            {...datePickerProps}
                             placeholderText="Select date & time"
-                            minDate={new Date()}
-                            filterTime={followUpFilterTime}
                             className="border px-3 py-2 w-full input--icon"
                             disabled={!!editLog}
+                            onKeyDown={(e) => {
+                              e.preventDefault();
+                            }}
                           />
                         </div>
 
@@ -573,34 +588,6 @@ const MemberCallLogs = () => {
                           )}
                       </div>
                     )}
-
-                    {/* Staff Name */}
-                    {/* <div>
-                      <label className="mb-2 block">
-                        Assign to<span className="text-red-500">*</span>
-                      </label>
-
-                      <Select
-                        name="calledBy"
-                        value={
-                          staffListOptions.find(
-                            (opt) => opt.value === formik.values?.calledBy
-                          ) || null
-                        }
-                        options={staffListOptions}
-                        onChange={(option) =>
-                          formik.setFieldValue("calledBy", option.value)
-                        }
-                        onBlur={() => formik.setFieldTouched("calledBy", true)}
-                        styles={customStyles}
-                        // isDisabled={isDisabled}
-                      />
-                      {formik.errors?.calledBy && formik.touched?.calledBy && (
-                        <div className="text-red-500 text-sm">
-                          {formik.errors?.calledBy}
-                        </div>
-                      )}
-                    </div> */}
                   </div>
 
                   {/* Discussion */}
@@ -613,7 +600,12 @@ const MemberCallLogs = () => {
                       placeholder="Discussion (max 1800 characters)"
                       maxLength={1800}
                       value={formik.values?.remark}
-                      onChange={formik.handleChange}
+                      // onChange={formik.handleChange}
+                      onKeyDown={blockNonLettersAndNumbers}
+                      onChange={(e) => {
+                        const cleaned = sanitizeTextWithNumbers(e.target.value);
+                        formik.setFieldValue("remark", cleaned);
+                      }}
                       className="custom--input w-full"
                       rows={4}
                       // disabled={isDisabled ? true : false}

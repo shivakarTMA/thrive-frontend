@@ -6,15 +6,22 @@ import { toast } from "react-toastify";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { MdOutlineKeyboardBackspace } from "react-icons/md";
 import { authAxios } from "../../config/config";
-import { customStyles, filterActiveItems } from "../../Helper/helper";
+import { allowOnlyLetters, blockNonLetters, blockNonLettersAndNumbers, customStyles, filterActiveItems, sanitizeTextWithNumbers } from "../../Helper/helper";
 import Select from "react-select";
+import { sanitizeHtml } from "../../Helper/sanitizeHtml";
 
 // ✅ Define validation schema using Yup
 const validationSchema = Yup.object({
   club_id: Yup.string().required("Club Name is required"),
   name: Yup.string().required("Template Name is required"),
   subject: Yup.string().required("Subject is required"),
-  body_html: Yup.string().required("Message is required"),
+  body_html: Yup.string()
+  .test(
+    "not-empty",
+    "Message is required",
+    (value) => value && value.replace(/<[^>]+>/g, "").trim().length > 0
+  )
+  .required("Message is required"),
 });
 
 const CreateEmailTemplate = () => {
@@ -159,7 +166,12 @@ const CreateEmailTemplate = () => {
                   name="name"
                   className="custom--input w-full"
                   value={formik.values.name}
-                  onChange={formik.handleChange}
+                  // onChange={formik.handleChange}
+                  onKeyDown={blockNonLettersAndNumbers}
+                  onChange={(e) => {
+                    const cleaned = sanitizeTextWithNumbers(e.target.value);
+                    formik.setFieldValue("name", cleaned);
+                  }}
                   onBlur={formik.handleBlur}
                   placeholder="Enter Template Name"
                 />
@@ -180,7 +192,17 @@ const CreateEmailTemplate = () => {
                   name="subject"
                   className="custom--input w-full"
                   value={formik.values.subject}
-                  onChange={formik.handleChange}
+                  // onChange={formik.handleChange}
+                  // onKeyDown={blockNonLetters}
+                  // onChange={(e) => {
+                  //   const cleaned = allowOnlyLetters(e.target.value);
+                  //   formik.setFieldValue("subject", cleaned);
+                  // }}
+                  onKeyDown={blockNonLettersAndNumbers}
+                  onChange={(e) => {
+                    const cleaned = sanitizeTextWithNumbers(e.target.value);
+                    formik.setFieldValue("subject", cleaned);
+                  }}
                   onBlur={formik.handleBlur}
                   placeholder="Enter subject"
                 />
@@ -197,7 +219,11 @@ const CreateEmailTemplate = () => {
               <RichTextEditor
                 value={formik.values.body_html}
                 label="Message"
-                onChange={(content) => formik.setFieldValue("body_html", content)}
+                // onChange={(content) => formik.setFieldValue("body_html", content)}
+                onChange={(content) => {
+                  formik.setFieldValue("body_html", sanitizeHtml(content));
+                  formik.setFieldTouched("body_html", true);
+                }}
                 placeholder="Enter your email message..."
                 height={300}
               />
