@@ -104,191 +104,6 @@ const CouponsList = () => {
     }
   };
 
-  // const formik = useFormik({
-  //   initialValues: {
-  //     coupon: {
-  //       club_id: null,
-  //       code: "",
-  //       description: "",
-  //       discount_type: "",
-  //       discount_value: "",
-  //       max_usage: "",
-  //       per_user_limit: "",
-  //       start_date: "",
-  //       end_date: "",
-  //       position: "",
-  //       status: "",
-  //     },
-  //     applicable_rules: [
-  //       {
-  //         applicable_type: "ALL",
-  //         applicable_id: null,
-  //       },
-  //     ],
-  //   },
-  //   validationSchema: Yup.object({
-  //     coupon: Yup.object({
-  //       club_id: Yup.number()
-  //         .typeError("Club Name must be a number")
-  //         .required("Club Name is required"),
-
-  //       code: Yup.string().required("Code is required"),
-
-  //       description: Yup.string().required("Description is required"),
-
-  //       discount_type: Yup.string().required("Discount type is required"),
-
-  //       discount_value: Yup.string().required("Discount value is required"),
-
-  //       max_usage: Yup.string().required("Max Usage is required"),
-
-  //       per_user_limit: Yup.string().required("Per User Limit is required"),
-
-  //       start_date: Yup.date()
-  //         .typeError("Start date is invalid")
-  //         .required("Start date is required"),
-
-  //       end_date: Yup.date()
-  //         .typeError("End date is invalid")
-  //         .min(Yup.ref("start_date"), "End date cannot be before start date")
-  //         .required("End date is required"),
-
-  //       position: Yup.string().required("Position is required"),
-  //     }),
-  //     applicable_rules: Yup.array()
-  //       .of(
-  //         Yup.object().shape({
-  //           applicable_type: Yup.string().required(
-  //             "Applicable Type is required",
-  //           ),
-  //           applicable_id: Yup.mixed().when("applicable_type", {
-  //             is: (type) => type && type !== "ALL",
-  //             then: (schema) =>
-  //               schema
-  //                 .required("Applicable Item is required when type is not ALL")
-  //                 .nullable()
-  //                 .test(
-  //                   "is-not-null",
-  //                   "Applicable Item is required",
-  //                   (value) => value !== null && value !== undefined,
-  //                 ),
-  //             otherwise: (schema) => schema.nullable(),
-  //           }),
-  //         }),
-  //       )
-  //       .min(1, "At least one applicable rule is required"),
-  //   }),
-  //   onSubmit: async (values, { resetForm }) => {
-  //     try {
-  //       const couponPayload = { ...values.coupon };
-
-  //       if (editingOption) {
-  //         const current = Array.isArray(values.applicable_rules)
-  //           ? values.applicable_rules
-  //           : [];
-  //         const original = Array.isArray(originalApplicableRules)
-  //           ? originalApplicableRules
-  //           : [];
-
-  //         const mapById = (arr) => {
-  //           const m = new Map();
-  //           arr.forEach((r) => {
-  //             if (r && r.id != null) m.set(Number(r.id), r);
-  //           });
-  //           return m;
-  //         };
-
-  //         const originalById = mapById(original);
-  //         const currentById = mapById(current);
-
-  //         const add = [];
-  //         const update = [];
-  //         const deleteIds = [];
-
-  //         current.forEach((r) => {
-  //           const itemBase = {
-  //             applicable_type: r.applicable_type,
-  //             applicable_id:
-  //               r.applicable_type === "ALL"
-  //                 ? null
-  //                 : r.applicable_id == null
-  //                   ? null
-  //                   : Number(r.applicable_id),
-  //           };
-
-  //           if (r.id == null) {
-  //             add.push(itemBase);
-  //           } else {
-  //             const orig = originalById.get(Number(r.id));
-  //             const origType = orig?.applicable_type ?? "";
-  //             const origId =
-  //               orig && orig.applicable_id != null
-  //                 ? String(orig.applicable_id)
-  //                 : null;
-  //             const currId =
-  //               r && r.applicable_id != null ? String(r.applicable_id) : null;
-
-  //             const changed =
-  //               origType !== (r.applicable_type ?? "") || origId !== currId;
-
-  //             if (changed) {
-  //               update.push({ id: Number(r.id), ...itemBase });
-  //             }
-  //           }
-  //         });
-
-  //         for (const orig of original) {
-  //           if (orig && orig.id != null) {
-  //             if (!currentById.has(Number(orig.id))) {
-  //               deleteIds.push(Number(orig.id));
-  //             }
-  //           }
-  //         }
-
-  //         const payload = {
-  //           coupon: couponPayload,
-  //           applicable_rules: {
-  //             add,
-  //             update,
-  //             delete: deleteIds,
-  //           },
-  //         };
-
-  //         await authAxios().put(`/coupon/update/${editingOption}`, payload);
-  //         toast.success("Updated Successfully");
-  //       } else {
-  //         const payload = {
-  //           coupon: couponPayload,
-  //           applicable_rules: Array.isArray(values.applicable_rules)
-  //             ? values.applicable_rules.map((r) => ({
-  //                 applicable_type: r.applicable_type,
-  //                 applicable_id:
-  //                   r.applicable_type === "ALL"
-  //                     ? null
-  //                     : r.applicable_id == null
-  //                       ? null
-  //                       : Number(r.applicable_id),
-  //               }))
-  //             : [],
-  //         };
-
-  //         await authAxios().post("/coupon/create", payload);
-  //         toast.success("Created Successfully");
-  //       }
-
-  //       fetchCoupons();
-  //     } catch (error) {
-  //       console.error("API Error:", error.response?.data || error.message);
-  //       toast.error("Failed to save coupon item");
-  //     }
-
-  //     resetForm();
-  //     setEditingOption(null);
-  //     setShowModal(false);
-  //     setOriginalApplicableRules([]);
-  //   },
-  // });
-
   
   const formik = useFormik({
   initialValues: {
@@ -325,11 +140,34 @@ const CouponsList = () => {
 
       discount_type: Yup.string().required("Discount type is required"),
 
-      discount_value: Yup.string().required("Discount value is required"),
+      // discount_value: Yup.string().required("Discount value is required"),
+      discount_value: Yup.number()
+      .required("Value is required")
+      .when("discount_type", {
+        is: "PERCENTAGE",
+        then: (schema) =>
+          schema.max(100, "Percentage discount cannot exceed 100"),
+        otherwise: (schema) => schema,
+      }),
 
-      max_usage: Yup.string().required("Max Usage is required"),
+      // max_usage: Yup.string().required("Max Usage is required"),
+      max_usage: Yup.number()
+      .required("Max usage is required")
+      .min(1, "Max usage must be at least 1"),
 
-      per_user_limit: Yup.string().required("Per User Limit is required"),
+      // per_user_limit: Yup.string().required("Per User Limit is required"),
+      per_user_limit: Yup.number()
+      .required("Per user limit is required")
+      .min(1, "Per user limit must be at least 1")
+      .test(
+        "per-user-limit-check",
+        "Per user limit cannot exceed max usage", // this will show as error message
+        function (value) {
+          const { max_usage } = this.parent;
+          if (!value || !max_usage) return true;
+          return Number(value) <= Number(max_usage);
+        }
+      ),
 
       start_date: Yup.date()
         .typeError("Start date is invalid")

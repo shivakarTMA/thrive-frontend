@@ -167,17 +167,17 @@ const CreateStaff = ({
 
   const handlePhoneChange = (value) => {
     formik.setFieldValue("phoneFull", value);
-    if (!value) {
+
+    if (value) {
+      const phoneNumber = parsePhoneNumberFromString(value);
+      if (phoneNumber) {
+        formik.setFieldValue("country_code", phoneNumber.countryCallingCode);
+        formik.setFieldValue("mobile", phoneNumber.nationalNumber);
+      }
+    } else {
       formik.setFieldValue("mobile", "");
       formik.setFieldValue("country_code", "");
-      return;
     }
-    const phoneNumber = parsePhoneNumberFromString(value);
-    if (phoneNumber) {
-      formik.setFieldValue("mobile", phoneNumber.nationalNumber);
-      formik.setFieldValue("country_code", phoneNumber.countryCallingCode);
-    }
-    formik.setFieldError("mobile", "");
   };
 
   const handleLogoChange = (e) => {
@@ -210,7 +210,7 @@ const CreateStaff = ({
       onClick={handleOverlayClick}
     >
       <div
-        className="min-h-[70vh] w-[95%] max-w-5xl mx-auto mt-[100px] mb-[100px] container--leadbox rounded-[10px] flex flex-col"
+        className="min-h-[100vh] w-[95%] max-w-5xl mx-auto  container--leadbox rounded-[10px] flex flex-col justify-center py-5"
         ref={leadBoxRef}
         onClick={(e) => e.stopPropagation()}
       >
@@ -291,6 +291,7 @@ const CreateStaff = ({
                       name="phoneFull"
                       value={formik.values.phoneFull}
                       onChange={handlePhoneChange}
+                      onBlur={() => formik.setFieldTouched("mobile", true)}
                       international
                       defaultCountry="IN"
                       countryCallingCodeEditable={false}
@@ -418,41 +419,9 @@ const CreateStaff = ({
 
                   <div
                     className={`md:col-span-3 ${
-                      editingOption ? "grid-cols-4" : "grid-cols-3"
+                      editingOption ? "grid-cols-3" : "grid-cols-3"
                     }  grid  gap-4 "`}
                   >
-                    {/* Experience */}
-                    <div>
-                      <label className="mb-2 block">
-                        Experience<span className="text-red-500">*</span>
-                      </label>
-                      <div className="relative">
-                        <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
-                          <FaBusinessTime />
-                        </span>
-                        <input
-                          type="number"
-                          name="experience"
-                          className="custom--input w-full input--icon number--appearance-none"
-                          value={formik.values.experience}
-                          onKeyDown={blockInvalidNumberKeys} // ⛔ blocks typing -, e, etc.
-                          onChange={(e) => {
-                            const cleanValue = sanitizePositiveInteger(
-                              e.target.value,
-                            );
-                            formik.setFieldValue("experience", cleanValue);
-                          }}
-                          onBlur={formik.handleBlur}
-                        />
-                      </div>
-                      {formik.touched.experience &&
-                        formik.errors.experience && (
-                          <p className="text-red-500 text-sm">
-                            {formik.errors.experience}
-                          </p>
-                        )}
-                    </div>
-
                     {/* Club */}
                     <div>
                       <label className="mb-2 block">
@@ -640,6 +609,37 @@ const CreateStaff = ({
                           </p>
                         )}
                       </div>
+                      {/* Experience */}
+                      <div>
+                        <label className="mb-2 block">
+                          Experience<span className="text-red-500">*</span>
+                        </label>
+                        <div className="relative">
+                          <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
+                            <FaBusinessTime />
+                          </span>
+                          <input
+                            type="number"
+                            name="experience"
+                            className="custom--input w-full input--icon number--appearance-none"
+                            value={formik.values.experience}
+                            onKeyDown={blockInvalidNumberKeys} // ⛔ blocks typing -, e, etc.
+                            onChange={(e) => {
+                              const cleanValue = sanitizePositiveInteger(
+                                e.target.value,
+                              );
+                              formik.setFieldValue("experience", cleanValue);
+                            }}
+                            onBlur={formik.handleBlur}
+                          />
+                        </div>
+                        {formik.touched.experience &&
+                          formik.errors.experience && (
+                            <p className="text-red-500 text-sm">
+                              {formik.errors.experience}
+                            </p>
+                          )}
+                      </div>
 
                       {/* Description */}
                       <div className="md:col-span-3">
@@ -652,7 +652,6 @@ const CreateStaff = ({
                           rows={3}
                           name="description"
                           value={formik.values.description}
-
                           onChange={(e) => {
                             const cleaned = sanitizeText(e.target.value);
                             formik.setFieldValue("description", cleaned);
@@ -694,8 +693,13 @@ const CreateStaff = ({
                                   // }
                                   onKeyDown={blockNonLetters}
                                   onChange={(e) => {
-                                    const cleaned = sanitizeText(e.target.value);
-                                    formik.setFieldValue(`content[${index}].title`, cleaned);
+                                    const cleaned = sanitizeText(
+                                      e.target.value,
+                                    );
+                                    formik.setFieldValue(
+                                      `content[${index}].title`,
+                                      cleaned,
+                                    );
                                   }}
                                 />
                                 {formik.touched.content?.[index]?.title &&
@@ -723,8 +727,13 @@ const CreateStaff = ({
                                   // }
                                   onKeyDown={blockNonLetters}
                                   onChange={(e) => {
-                                    const cleaned = sanitizeText(e.target.value);
-                                    formik.setFieldValue(`content[${index}].description`, cleaned);
+                                    const cleaned = sanitizeText(
+                                      e.target.value,
+                                    );
+                                    formik.setFieldValue(
+                                      `content[${index}].description`,
+                                      cleaned,
+                                    );
                                   }}
                                 />
                                 {formik.touched.content?.[index]?.description &&

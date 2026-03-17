@@ -185,7 +185,7 @@ const StaffList = () => {
         return true;
       }),
     gender: Yup.string().required("Gender is required"),
-    experience: Yup.string().required("Experience is required"),
+
     role: Yup.string().required("Role is required"),
     club_id: Yup.array()
       .min(1, "Please select at least one club")
@@ -206,6 +206,11 @@ const StaffList = () => {
     tags: Yup.string().when("show_on_app", {
       is: true,
       then: (schema) => schema.required("Tags are required"),
+      otherwise: (schema) => schema.notRequired(),
+    }),
+    experience: Yup.string().when("show_on_app", {
+      is: true,
+      then: (schema) => schema.required("Experience is required"),
       otherwise: (schema) => schema.notRequired(),
     }),
 
@@ -254,6 +259,8 @@ const StaffList = () => {
   const formik = useFormik({
     initialValues,
     validationSchema,
+    validateOnBlur: true,
+    validateOnChange: false,
     onSubmit: async (values, { resetForm }) => {
       try {
         const formData = new FormData();

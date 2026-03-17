@@ -193,6 +193,15 @@ const MarketingBanner = () => {
     formik.setFieldValue("phone", value);
   };
 
+  useEffect(() => {
+    if (club.length > 0 && !clubFilter) {
+      setClubFilter({
+        label: club[0].name,
+        value: club[0].id,
+      });
+    }
+  }, [club]);
+
   return (
     <div className="page--content">
       <div className="flex items-end justify-between gap-2 mb-5">

@@ -39,6 +39,7 @@ import Topbar from "../components/common/Topbar";
 import { useFormik } from "formik";
 import { persistor } from "../Redux/store";
 import { logout } from "../Redux/Reducers/authSlice";
+import useAutoLogout from "../hooks/useAutoLogout";
 
 const dateFilterOptions = [
   { value: "today", label: "Today" },
@@ -48,6 +49,7 @@ const dateFilterOptions = [
 ];
 
 const AllLeads = () => {
+  // useAutoLogout();
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useDispatch();

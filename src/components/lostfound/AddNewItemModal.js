@@ -67,6 +67,8 @@ const AddNewItemModal = ({
         const res = await authAxios().get(`/lost/found/${id}`);
         const data = res.data?.data || res.data || null;
 
+        console.log(data,'shivakar')
+
         if (data) {
           formik.setValues({
             club_id: data?.club_id || null,
@@ -334,19 +336,24 @@ const AddNewItemModal = ({
                   />
                 </div>
 
-                {/* {editingOption && editingOption && (
+                {editingOption && editingOption && (
                   <div className="col-span-2">
-                    <label className="mb-2 block">Notes</label>
+                    <label className="mb-2 block">Verification Notes</label>
 
                     <textarea
                       name="verification_notes"
                       value={formik.values.verification_notes}
                       onChange={formik.handleChange}
                       placeholder="Any additional remarks"
-                      className={`custom--input w-full`}
+                      className={`custom--input w-full ${
+                        editingOption
+                          ? "!bg-gray-100 pointer-events-none text-gray-500"
+                          : ""
+                      }`}
+                      disabled={editingOption}
                     />
                   </div>
-                )} */}
+                )}
               </div>
             </div>
             {!editingOption && (

@@ -68,17 +68,24 @@ const CreateCoupon = ({
     }
   };
 
-  const fetchSubscriptions = async () => {
+  const fetchSubscriptions = async (clubId) => {
     try {
-      if (subscriptions.length) return;
+      if (!clubId) return; // No club selected
 
       setLoadingLists((s) => ({ ...s, subscriptions: true }));
 
-      const response = await authAxios().get("/subscription-plan/list");
+      const response = await authAxios().get("/subscription-plan/list", {
+        params: { club_id: clubId }, // send club_id as query param if API supports it
+      });
+
       const raw = response.data?.data || response.data || [];
 
+      // Filter active & PAID
       const activeOnly = (Array.isArray(raw) ? raw : []).filter(
-        (item) => String(item.status || "").toUpperCase() === "ACTIVE",
+        (item) =>
+          String(item.status || "").toUpperCase() === "ACTIVE" &&
+          String(item.booking_type || "").toUpperCase() === "PAID" &&
+          Number(item.club_id) === Number(clubId), // filter by club
       );
 
       setSubscriptions(activeOnly);
@@ -89,17 +96,23 @@ const CreateCoupon = ({
     }
   };
 
-  const fetchPackages = async () => {
+  const fetchPackages = async (clubId) => {
     try {
-      if (packages.length) return;
+      if (!clubId) return;
 
       setLoadingLists((s) => ({ ...s, packages: true }));
 
-      const response = await authAxios().get("/package/list");
+      const response = await authAxios().get("/package/list", {
+        params: { club_id: clubId },
+      });
+
       const raw = response.data?.data || response.data || [];
 
       const activeOnly = (Array.isArray(raw) ? raw : []).filter(
-        (item) => String(item.status || "").toUpperCase() === "ACTIVE",
+        (item) =>
+          String(item.status || "").toUpperCase() === "ACTIVE" &&
+          String(item.booking_type || "").toUpperCase() === "PAID" &&
+          Number(item.club_id) === Number(clubId),
       );
 
       setPackages(activeOnly);
@@ -110,26 +123,32 @@ const CreateCoupon = ({
     }
   };
 
-  const fetchProducts = async () => {
-    try {
-      if (products.length) return;
+  const fetchProducts = async (clubId) => {
+  try {
+    if (!clubId) return; // No club selected
 
-      setLoadingLists((s) => ({ ...s, products: true }));
+    setLoadingLists((s) => ({ ...s, products: true }));
 
-      const response = await authAxios().get("/product/list");
-      const raw = response.data?.data || response.data || [];
+    const response = await authAxios().get("/product/list", {
+      params: { club_id: clubId }, // send club_id as query param if API supports it
+    });
 
-      const activeOnly = (Array.isArray(raw) ? raw : []).filter(
-        (item) => String(item.status || "").toUpperCase() === "ACTIVE",
-      );
+    const raw = response.data?.data || response.data || [];
 
-      setProducts(activeOnly);
-      setLoadingLists((s) => ({ ...s, products: false }));
-    } catch (error) {
-      toast.error("Failed to fetch products");
-      setLoadingLists((s) => ({ ...s, products: false }));
-    }
-  };
+    // Filter only ACTIVE products for the selected club
+    const activeOnly = (Array.isArray(raw) ? raw : []).filter(
+      (item) =>
+        String(item.status || "").toUpperCase() === "ACTIVE" &&
+        Number(item.club_id) === Number(clubId)
+    );
+
+    setProducts(activeOnly);
+    setLoadingLists((s) => ({ ...s, products: false }));
+  } catch (error) {
+    toast.error("Failed to fetch products");
+    setLoadingLists((s) => ({ ...s, products: false }));
+  }
+};
 
   useEffect(() => {
     fetchClub();
@@ -197,19 +216,20 @@ const CreateCoupon = ({
           });
 
           const rules =
-  Array.isArray(data?.applicable_rules) && data.applicable_rules.length
-    ? data.applicable_rules.map((r) => ({
-        id: r.id,
-        applicable_type: r.applicable_type || "",
-        applicable_id: r.applicable_id ?? null,
-      }))
-    : [{ applicable_type: "ALL", applicable_id: null }];
+            Array.isArray(data?.applicable_rules) &&
+            data.applicable_rules.length
+              ? data.applicable_rules.map((r) => ({
+                  id: r.id,
+                  applicable_type: r.applicable_type || "",
+                  applicable_id: r.applicable_id ?? null,
+                }))
+              : [{ applicable_type: "ALL", applicable_id: null }];
 
-formik.setFieldValue("applicable_rules", rules, false);
+          formik.setFieldValue("applicable_rules", rules, false);
 
-if (typeof setOriginalApplicableRules === "function") {
-  setOriginalApplicableRules(JSON.parse(JSON.stringify(rules)));
-}
+          if (typeof setOriginalApplicableRules === "function") {
+            setOriginalApplicableRules(JSON.parse(JSON.stringify(rules)));
+          }
         }
       } catch (err) {
         toast.error("Failed to fetch coupon details");
@@ -364,71 +384,80 @@ if (typeof setOriginalApplicableRules === "function") {
 
   // ADD THIS FUNCTION ABOVE return()
 
-const buildUpdatePayload = (values, originalRules = []) => {
-  const currentRules = values.applicable_rules || [];
+  const buildUpdatePayload = (values, originalRules = []) => {
+    const currentRules = values.applicable_rules || [];
 
-  const payload = {
-    coupon: {
-      code: values.coupon.code,
-      description: values.coupon.description,
-      discount_type: values.coupon.discount_type,
-      discount_value: Number(values.coupon.discount_value),
-      max_usage: Number(values.coupon.max_usage),
-      per_user_limit: Number(values.coupon.per_user_limit),
-      start_date: values.coupon.start_date,
-      end_date: values.coupon.end_date,
-      position: Number(values.coupon.position),
-      status: values.coupon.status,
-    },
-    applicable_rules: {
-      add: [],
-      update: [],
-      delete: [],
-    },
-  };
+    const payload = {
+      coupon: {
+        code: values.coupon.code,
+        description: values.coupon.description,
+        discount_type: values.coupon.discount_type,
+        discount_value: Number(values.coupon.discount_value),
+        max_usage: Number(values.coupon.max_usage),
+        per_user_limit: Number(values.coupon.per_user_limit),
+        start_date: values.coupon.start_date,
+        end_date: values.coupon.end_date,
+        position: Number(values.coupon.position),
+        status: values.coupon.status,
+      },
+      applicable_rules: {
+        add: [],
+        update: [],
+        delete: [],
+      },
+    };
 
-  const originalMap = new Map();
-  originalRules.forEach((r) => {
-    if (r.id) originalMap.set(r.id, r);
-  });
+    const originalMap = new Map();
+    originalRules.forEach((r) => {
+      if (r.id) originalMap.set(r.id, r);
+    });
 
-  const currentIds = [];
+    const currentIds = [];
 
-  currentRules.forEach((rule) => {
-    if (!rule) return;
+    currentRules.forEach((rule) => {
+      if (!rule) return;
 
-    if (rule.id) {
-      currentIds.push(rule.id);
+      if (rule.id) {
+        currentIds.push(rule.id);
 
-      const original = originalMap.get(rule.id);
+        const original = originalMap.get(rule.id);
 
-      if (
-        original &&
-        (original.applicable_type !== rule.applicable_type ||
-          Number(original.applicable_id) !== Number(rule.applicable_id))
-      ) {
-        payload.applicable_rules.update.push({
-          id: rule.id,
+        if (
+          original &&
+          (original.applicable_type !== rule.applicable_type ||
+            Number(original.applicable_id) !== Number(rule.applicable_id))
+        ) {
+          payload.applicable_rules.update.push({
+            id: rule.id,
+            applicable_type: rule.applicable_type,
+            applicable_id: rule.applicable_id,
+          });
+        }
+      } else {
+        payload.applicable_rules.add.push({
           applicable_type: rule.applicable_type,
           applicable_id: rule.applicable_id,
         });
       }
-    } else {
-      payload.applicable_rules.add.push({
-        applicable_type: rule.applicable_type,
-        applicable_id: rule.applicable_id,
-      });
-    }
-  });
+    });
 
-  originalRules.forEach((r) => {
-    if (r.id && !currentIds.includes(r.id)) {
-      payload.applicable_rules.delete.push(r.id);
-    }
-  });
+    originalRules.forEach((r) => {
+      if (r.id && !currentIds.includes(r.id)) {
+        payload.applicable_rules.delete.push(r.id);
+      }
+    });
 
-  return payload;
-};
+    return payload;
+  };
+
+  useEffect(() => {
+    const maxUsage = Number(formik.values.coupon?.max_usage);
+    const perUser = Number(formik.values.coupon?.per_user_limit);
+
+    if (perUser > maxUsage) {
+      formik.setFieldValue("coupon.per_user_limit", maxUsage);
+    }
+  }, [formik.values.coupon?.max_usage]);
 
   return (
     <div
@@ -480,12 +509,21 @@ const buildUpdatePayload = (values, originalRules = []) => {
                           ) || null
                         }
                         options={clubOptions}
-                        onChange={(option) =>
-                          formik.setFieldValue(
-                            "coupon.club_id",
-                            option?.value ?? null,
-                          )
-                        }
+                        // onChange={(option) =>
+                        //   formik.setFieldValue(
+                        //     "coupon.club_id",
+                        //     option?.value ?? null,
+                        //   )
+                        // }
+                        onChange={(option) => {
+                          const clubId = option?.value ?? null;
+                          formik.setFieldValue("coupon.club_id", clubId);
+
+                          // Fetch items for selected club
+                          fetchSubscriptions(clubId);
+                          fetchPackages(clubId);
+                          fetchProducts(clubId);
+                        }}
                         onBlur={() =>
                           formik.setFieldTouched("coupon.club_id", true)
                         }
@@ -517,7 +555,9 @@ const buildUpdatePayload = (values, originalRules = []) => {
                         // onChange={formik.handleChange}
                         onKeyDown={blockNonLettersAndNumbers}
                         onChange={(e) => {
-                          const cleaned = sanitizeTextWithNumbers(e.target.value);
+                          const cleaned = sanitizeTextWithNumbers(
+                            e.target.value,
+                          );
                           formik.setFieldValue("coupon.code", cleaned);
                         }}
                         onBlur={formik.handleBlur}
@@ -551,12 +591,25 @@ const buildUpdatePayload = (values, originalRules = []) => {
                           ) || null
                         }
                         options={discountType}
-                        onChange={(option) =>
+                        // onChange={(option) =>
+                        //   formik.setFieldValue(
+                        //     "coupon.discount_type",
+                        //     option?.value ?? "",
+                        //   )
+                        // }
+                        onChange={(option) => {
                           formik.setFieldValue(
                             "coupon.discount_type",
                             option?.value ?? "",
-                          )
-                        }
+                          );
+
+                          if (
+                            option?.value === "PERCENTAGE" &&
+                            formik.values.coupon.discount_value > 100
+                          ) {
+                            formik.setFieldValue("coupon.discount_value", 100);
+                          }
+                        }}
                         onBlur={() =>
                           formik.setFieldTouched("coupon.discount_type", true)
                         }
@@ -587,10 +640,29 @@ const buildUpdatePayload = (values, originalRules = []) => {
                         value={formik.values.coupon?.discount_value || ""}
                         // onChange={formik.handleChange}
                         onKeyDown={blockInvalidNumberKeys} // ⛔ blocks typing -, e, etc.
+                        // onChange={(e) => {
+                        //   const cleanValue = durationValueInteger(
+                        //     e.target.value,
+                        //   );
+                        //   formik.setFieldValue(
+                        //     "coupon.discount_value",
+                        //     cleanValue,
+                        //   );
+                        // }}
                         onChange={(e) => {
-                          const cleanValue = durationValueInteger(
-                            e.target.value,
-                          );
+                          let cleanValue = durationValueInteger(e.target.value);
+
+                          if (
+                            formik.values.coupon?.discount_type === "PERCENTAGE"
+                          ) {
+                            if (Number(cleanValue) > 100) {
+                              cleanValue = 100;
+                              toast.error(
+                                "Percentage discount cannot exceed 100",
+                              );
+                            }
+                          }
+
                           formik.setFieldValue(
                             "coupon.discount_value",
                             cleanValue,
@@ -657,6 +729,15 @@ const buildUpdatePayload = (values, originalRules = []) => {
                         value={formik.values.coupon?.per_user_limit ?? ""}
                         // onChange={formik.handleChange}
                         onKeyDown={blockInvalidNumberKeys} // ⛔ blocks typing -, e, etc.
+                        // onChange={(e) => {
+                        //   const cleanValue = sanitizePositiveInteger(
+                        //     e.target.value,
+                        //   );
+                        //   formik.setFieldValue(
+                        //     "coupon.per_user_limit",
+                        //     cleanValue,
+                        //   );
+                        // }}
                         onChange={(e) => {
                           const cleanValue = sanitizePositiveInteger(
                             e.target.value,
@@ -673,7 +754,7 @@ const buildUpdatePayload = (values, originalRules = []) => {
                     {formik.touched.coupon?.per_user_limit &&
                       formik.errors.coupon?.per_user_limit && (
                         <p className="text-red-500 text-sm mt-1">
-                          {formik.errors.coupon?.per_user_limit}
+                          {formik.errors.coupon.per_user_limit}
                         </p>
                       )}
                   </div>
@@ -820,7 +901,9 @@ const buildUpdatePayload = (values, originalRules = []) => {
                         // onChange={formik.handleChange}
                         onKeyDown={blockNonLettersAndNumbers}
                         onChange={(e) => {
-                          const cleaned = sanitizeTextWithNumbers(e.target.value);
+                          const cleaned = sanitizeTextWithNumbers(
+                            e.target.value,
+                          );
                           formik.setFieldValue("coupon.description", cleaned);
                         }}
                         className="custom--input w-full input--icon"
