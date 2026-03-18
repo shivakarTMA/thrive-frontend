@@ -114,6 +114,7 @@ const MarkReturnedModal = ({ lostID, onClose, clubOptions, fetchLostFoundList })
 
       // Set form values with fetched data
       formik.setValues({
+        image: data.image || null,
         club_id: data.club_id || null,
         item: data.item_name || "",
         description: data.description || "",
@@ -228,6 +229,14 @@ const MarkReturnedModal = ({ lostID, onClose, clubOptions, fetchLostFoundList })
             >
               <div className="p-6 flex-1 bg-white rounded-b-[10px]">
                 <div className="grid grid-cols-2 gap-4">
+                  <div className="row-span-2">
+                  <div className="bg-gray-100 rounded-lg w-full h-[160px] overflow-hidden">
+                    <img
+                        src={formik.values.image}
+                        className="w-full h-full object-cover"
+                      />
+                  </div>
+                </div>
                   {/* Club Dropdown */}
                   <div>
                     <label className="mb-2 block">

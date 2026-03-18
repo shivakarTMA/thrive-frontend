@@ -110,7 +110,7 @@ const CompanyList = () => {
         //   values.phone ? values.phone.replace("+", "") : "",
         // );
         formData.append("address", values.address);
-        formData.append("city", values.city?.label);
+        formData.append("city", values.city?.label || "");
         formData.append("state", values.state?.label || "");
         formData.append("country", values.country?.label || "");
         formData.append("zipcode", values.zipcode);

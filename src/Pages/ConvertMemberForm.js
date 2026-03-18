@@ -1158,7 +1158,10 @@ const ConvertMemberForm = ({
                               name="phoneFull"
                               value={formik.values.phoneFull} // 👈 use phoneFull for UI binding
                               onChange={handlePhoneChange}
-                              onBlur={handlePhoneBlur}
+                              onBlur={() => {
+                                formik.setFieldTouched("mobile", true);
+                                handlePhoneBlur();
+                              }}
                               international
                               defaultCountry="IN"
                               countryCallingCodeEditable={false}
@@ -1671,6 +1674,7 @@ const ConvertMemberForm = ({
                                 onChange={(value) =>
                                   handleEmergancyPhone(value, index)
                                 } // Ensure this function handles formik update
+                                onBlur={() => formik.setFieldTouched(`member_emergency_contact.${index}.phone`, true)}
                                 international
                                 defaultCountry="IN"
                                 countryCallingCodeEditable={false}

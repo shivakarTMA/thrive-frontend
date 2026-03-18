@@ -166,6 +166,8 @@ const CreateLeadForm = ({
   const formik = useFormik({
     initialValues,
     validationSchema,
+    validateOnChange: true,
+    validateOnBlur: true,
     enableReinitialize: true, // 👈 ensures selectedLead values re-populate
 
     onSubmit: async (values) => {
@@ -693,7 +695,12 @@ const CreateLeadForm = ({
                         name="phoneFull"
                         value={formik.values.phoneFull} // 👈 use phoneFull for UI binding
                         onChange={handlePhoneChange}
-                        onBlur={handlePhoneBlur}
+                        // onBlur={handlePhoneBlur}
+                        // onBlur={() => formik.setFieldTouched("mobile", true)}
+                        onBlur={() => {
+                          formik.setFieldTouched("mobile", true);
+                          handlePhoneBlur();
+                        }}
                         international
                         defaultCountry="IN"
                         countryCallingCodeEditable={false}
@@ -1209,7 +1216,10 @@ const CreateLeadForm = ({
                                 }
                                 onChange={(date) => {
                                   if (!date) {
-                                    formik.setFieldValue("schedule_date_time", null);
+                                    formik.setFieldValue(
+                                      "schedule_date_time",
+                                      null,
+                                    );
                                     return;
                                   }
 
@@ -1221,11 +1231,16 @@ const CreateLeadForm = ({
 
                                   if (isSameDay) {
                                     // ✅ User changed time — accept exactly what they picked
-                                    formik.setFieldValue("schedule_date_time", date);
+                                    formik.setFieldValue(
+                                      "schedule_date_time",
+                                      date,
+                                    );
                                   } else {
                                     // ✅ User picked a new date — auto-select first valid grid slot
                                     const dateWithTime =
-                                      datePickerProps.getDefaultTimeForDate(date);
+                                      datePickerProps.getDefaultTimeForDate(
+                                        date,
+                                      );
                                     // null means today has no slots left (shouldn't reach here due to minDate)
                                     formik.setFieldValue(
                                       "schedule_date_time",

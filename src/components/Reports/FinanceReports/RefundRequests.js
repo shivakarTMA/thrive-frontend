@@ -99,7 +99,7 @@ const RefundRequests = () => {
   const [selectedRow, setSelectedRow] = useState(null);
   const [modalType, setModalType] = useState(null); // approve | deny | view
 
-  const [dateFilter, setDateFilter] = useState(dateFilterOptions[1]);
+  const [dateFilter, setDateFilter] = useState(dateFilterOptions[0]);
   const [customFrom, setCustomFrom] = useState(null);
   const [customTo, setCustomTo] = useState(null);
 

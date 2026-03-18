@@ -34,7 +34,7 @@ const ReferralReport = () => {
   const { user } = useSelector((state) => state.auth);
   const userRole = user.role;
 
-  const [dateFilter, setDateFilter] = useState(dateFilterOptions[1]);
+  const [dateFilter, setDateFilter] = useState(dateFilterOptions[0]);
   const [customFrom, setCustomFrom] = useState(null);
   const [customTo, setCustomTo] = useState(null);
 

@@ -9,6 +9,7 @@ import { authAxios } from "../../config/config";
 import { toast } from "react-toastify";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchOptionList } from "../../Redux/Reducers/optionListSlice";
+import { format } from "date-fns";
 
 const ageGroupOptions = [
   { value: "15-20", label: "15-20" },
@@ -36,6 +37,8 @@ const validityEnquireOptions = [
   { value: "Open Enquiries", label: "Open Enquiries" },
   { value: "Lost Enquiries", label: "Lost Enquiries" },
 ];
+
+const formatDate = (date) => format(date, "yyyy-MM-dd");
 
 const MemberEmailFilterPanel = ({
   formik,
@@ -77,7 +80,10 @@ const MemberEmailFilterPanel = ({
   // ─── Fetch helpers — always RETURN data so callers don't depend on state ────
 
   const fetchService = async (clubId) => {
-    if (!clubId) { setServiceList([]); return []; }
+    if (!clubId) {
+      setServiceList([]);
+      return [];
+    }
     try {
       const res = await authAxios().get(`/service/list?club_id=${clubId}`);
       const data = filterActiveItems(res.data?.data || res?.data || []);
@@ -90,7 +96,10 @@ const MemberEmailFilterPanel = ({
   };
 
   const fetchServiceNames = async (serviceId) => {
-    if (!serviceId) { setServicesType([]); return []; }
+    if (!serviceId) {
+      setServicesType([]);
+      return [];
+    }
     try {
       const res = await authAxios().get(
         `/package/list?page=1&limit=10&service_id=${serviceId}`,
@@ -120,8 +129,12 @@ const MemberEmailFilterPanel = ({
 
   const dispatch = useDispatch();
   const { lists } = useSelector((state) => state.optionList);
-  useEffect(() => { dispatch(fetchOptionList("LEAD_SOURCE")); }, [dispatch]);
-  useEffect(() => { fetchClub(); }, []);
+  useEffect(() => {
+    dispatch(fetchOptionList("LEAD_SOURCE"));
+  }, [dispatch]);
+  useEffect(() => {
+    fetchClub();
+  }, []);
 
   // ─── Sync chips when GET prefill arrives ────────────────────────────────────
   //
@@ -134,9 +147,16 @@ const MemberEmailFilterPanel = ({
   //
   useEffect(() => {
     const hasAny =
-      filterClub || filterMemberValidity || filterLeadValidity ||
-      filterAgeGroup || filterGender || filterServiceType ||
-      filterServiceName || filterLeadSource || filterExpiryFrom || filterExpiryTo;
+      filterClub ||
+      filterMemberValidity ||
+      filterLeadValidity ||
+      filterAgeGroup ||
+      filterGender ||
+      filterServiceType ||
+      filterServiceName ||
+      filterLeadSource ||
+      filterExpiryFrom ||
+      filterExpiryTo;
 
     if (!hasAny) return;
 
@@ -154,20 +174,22 @@ const MemberEmailFilterPanel = ({
       let resolvedPackageOptions = [];
       if (filterServiceType) {
         // ✅ Coerce string ID → number to match the API's numeric package IDs
-        resolvedPackageOptions = await fetchServiceNames(Number(filterServiceType));
+        resolvedPackageOptions = await fetchServiceNames(
+          Number(filterServiceType),
+        );
       }
 
       setAppliedFilters({
-        club_id:         filterClub          || null,
+        club_id: filterClub || null,
         member_validity: filterMemberValidity || null,
-        lead_validity:   filterLeadValidity   || null,
-        ageGroup:        filterAgeGroup       || null,
-        gender:          filterGender         || null,
-        service_type:    filterServiceType    || null,
-        service_name:    filterServiceName    || null,
-        leadSource:      filterLeadSource     || null,
-        expiry_from:     filterExpiryFrom     || null,
-        expiry_to:       filterExpiryTo       || null,
+        lead_validity: filterLeadValidity || null,
+        ageGroup: filterAgeGroup || null,
+        gender: filterGender || null,
+        service_type: filterServiceType || null,
+        service_name: filterServiceName || null,
+        leadSource: filterLeadSource || null,
+        expiry_from: filterExpiryFrom || null,
+        expiry_to: filterExpiryTo || null,
         // ✅ Stash resolved lists so getChipLabel can use them immediately
         _serviceOptions: resolvedServiceOptions,
         _packageOptions: resolvedPackageOptions,
@@ -176,20 +198,31 @@ const MemberEmailFilterPanel = ({
 
     syncChips();
   }, [
-    filterClub, filterMemberValidity, filterLeadValidity,
-    filterAgeGroup, filterGender, filterServiceType,
-    filterServiceName, filterLeadSource, filterExpiryFrom, filterExpiryTo,
+    filterClub,
+    filterMemberValidity,
+    filterLeadValidity,
+    filterAgeGroup,
+    filterGender,
+    filterServiceType,
+    filterServiceName,
+    filterLeadSource,
+    filterExpiryFrom,
+    filterExpiryTo,
   ]);
 
   // ─── Draft panel fetches ────────────────────────────────────────────────────
 
   useEffect(() => {
     if (draft.filterClub) fetchService(draft.filterClub);
-    else { setServiceList([]); setServicesType([]); }
+    else {
+      setServiceList([]);
+      setServicesType([]);
+    }
   }, [draft.filterClub]);
 
   useEffect(() => {
-    if (draft.filterServiceType) fetchServiceNames(Number(draft.filterServiceType));
+    if (draft.filterServiceType)
+      fetchServiceNames(Number(draft.filterServiceType));
     else setServicesType([]);
   }, [draft.filterServiceType]);
 
@@ -197,9 +230,16 @@ const MemberEmailFilterPanel = ({
 
   const handleOpenPanel = () => {
     setDraft({
-      filterClub, filterMemberValidity, filterLeadValidity,
-      filterAgeGroup, filterGender, filterServiceType,
-      filterServiceName, filterLeadSource, filterExpiryFrom, filterExpiryTo,
+      filterClub,
+      filterMemberValidity,
+      filterLeadValidity,
+      filterAgeGroup,
+      filterGender,
+      filterServiceType,
+      filterServiceName,
+      filterLeadSource,
+      filterExpiryFrom,
+      filterExpiryTo,
     });
     setShowFilters(true);
   };
@@ -208,7 +248,8 @@ const MemberEmailFilterPanel = ({
 
   useEffect(() => {
     const handleClickOutside = (e) => {
-      if (panelRef.current && !panelRef.current.contains(e.target)) handleClosePanel();
+      if (panelRef.current && !panelRef.current.contains(e.target))
+        handleClosePanel();
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
@@ -223,76 +264,57 @@ const MemberEmailFilterPanel = ({
   const serviceOptions = serviceList
     .map((item) => ({ label: item.name, value: item.id, type: item.type }))
     .filter((item) => item.type !== "PRODUCT");
-  const clubOptions = clubList.map((item) => ({ label: item.name, value: item.id }));
+  const clubOptions = clubList.map((item) => ({
+    label: item.name,
+    value: item.id,
+  }));
 
   // ─── Apply ──────────────────────────────────────────────────────────────────
 
-  const handleApply = async () => {
-    Object.entries(draft).forEach(([field, value]) => setFilterValue(field, value));
-
-    const keyMap = {
-      club_id:         "filterClub",
-      member_validity: "filterMemberValidity",
-      lead_validity:   "filterLeadValidity",
-      ageGroup:        "filterAgeGroup",
-      gender:          "filterGender",
-      leadSource:      "filterLeadSource",
-      service_type:    "filterServiceType",
-      service_name:    "filterServiceName",
-      expiry_from:     "filterExpiryFrom",
-      expiry_to:       "filterExpiryTo",
-    };
-    Object.entries(keyMap).forEach(([, formikKey]) => {
-      formik.setFieldValue(formikKey, draft[formikKey], false);
-      formik.setFieldTouched(formikKey, false, false);
-    });
-
-    // After Apply, serviceOptions/servicesType are already populated from draft fetches
-    setAppliedFilters({
-      club_id:         draft.filterClub          || null,
-      member_validity: draft.filterMemberValidity || null,
-      lead_validity:   draft.filterLeadValidity   || null,
-      ageGroup:        draft.filterAgeGroup       || null,
-      gender:          draft.filterGender         || null,
-      service_type:    draft.filterServiceType    || null,
-      service_name:    draft.filterServiceName    || null,
-      leadSource:      draft.filterLeadSource     || null,
-      expiry_from:     draft.filterExpiryFrom     || null,
-      expiry_to:       draft.filterExpiryTo       || null,
-      _serviceOptions: serviceOptions,
-      _packageOptions: servicesType,
-    });
-
-    setShowFilters(false);
-    if (!draft.filterClub) return;
+  const fetchMembers = async (filters) => {
+    if (!filters.filterClub) {
+      onMemberIdsFetched([]);
+      return;
+    }
 
     try {
-      const entityType = formik?.values?.module === "Member" ? "MEMBER" : "LEAD";
+      const entityType =
+        formik?.values?.module === "Member" ? "MEMBER" : "LEAD";
+
       const params = new URLSearchParams();
-      params.append("club_id", draft.filterClub);
+      params.append("club_id", filters.filterClub);
       params.append("entity_type", entityType);
-      if (draft.filterAgeGroup)       params.append("age_group",       draft.filterAgeGroup);
-      if (draft.filterGender)         params.append("gender",          draft.filterGender);
-      if (draft.filterServiceType)    params.append("service_id",      draft.filterServiceType);
-      if (draft.filterServiceName)    params.append("package_id",      draft.filterServiceName);
-      if (draft.filterLeadSource)     params.append("lead_source",     draft.filterLeadSource);
-      if (draft.filterMemberValidity) params.append("member_validity", draft.filterMemberValidity);
-      if (draft.filterLeadValidity)   params.append("lead_validity",   draft.filterLeadValidity);
-      if (draft.filterExpiryFrom)
-        params.append("expiry_from", draft.filterExpiryFrom.toISOString().slice(0, 10));
-      if (draft.filterExpiryTo)
-        params.append("expiry_to",   draft.filterExpiryTo.toISOString().slice(0, 10));
+
+      if (filters.filterAgeGroup)
+        params.append("age_group", filters.filterAgeGroup);
+      if (filters.filterGender) params.append("gender", filters.filterGender);
+      if (filters.filterServiceType)
+        params.append("service_id", filters.filterServiceType);
+      if (filters.filterServiceName)
+        params.append("package_id", filters.filterServiceName);
+      if (filters.filterLeadSource)
+        params.append("lead_source", filters.filterLeadSource);
+      if (filters.filterMemberValidity)
+        params.append("member_validity", filters.filterMemberValidity);
+      if (filters.filterLeadValidity)
+        params.append("lead_validity", filters.filterLeadValidity);
+
+      if (filters.filterExpiryFrom)
+        params.append("expiry_from", formatDate(filters.filterExpiryFrom));
+      if (filters.filterExpiryTo)
+        params.append("expiry_to", formatDate(filters.filterExpiryTo));
 
       const res = await authAxios().post(
         `/emailCampaign/filter/member/list?${params.toString()}`,
       );
+
       const members = res.data?.data || [];
 
       if (members.length === 0) {
         toast.warning(
           formik?.values?.module === "Member"
-            ? "No members found for the selected criteria. Please adjust your filters."
-            : "No enquiries found for the selected criteria. Please adjust your filters.",
+            ? "No members found for the selected criteria."
+            : "No enquiries found for the selected criteria.",
         );
         onMemberIdsFetched([]);
         return;
@@ -300,8 +322,11 @@ const MemberEmailFilterPanel = ({
 
       const ids = members.map((m) => m.id);
       onMemberIdsFetched(ids);
+
       toast.success(
-        `${ids.length} ${formik?.values?.module === "Member" ? "member(s)" : "enquiry(ies)"} found.`,
+        `${ids.length} ${
+          formik?.values?.module === "Member" ? "member(s)" : "enquiry(ies)"
+        } found.`,
       );
     } catch {
       toast.error("Failed to fetch member list");
@@ -309,27 +334,101 @@ const MemberEmailFilterPanel = ({
     }
   };
 
+const handleApply = async () => {
+  // ✅ 1. Commit draft values to formik
+  Object.entries(draft).forEach(([field, value]) => {
+    setFilterValue(field, value);
+  });
+
+  // ✅ 2. Untouched — no validation errors shown after apply
+  const keyMap = {
+    club_id:         "filterClub",
+    member_validity: "filterMemberValidity",
+    lead_validity:   "filterLeadValidity",
+    ageGroup:        "filterAgeGroup",
+    gender:          "filterGender",
+    leadSource:      "filterLeadSource",
+    service_type:    "filterServiceType",
+    service_name:    "filterServiceName",
+    expiry_from:     "filterExpiryFrom",
+    expiry_to:       "filterExpiryTo",
+  };
+  Object.values(keyMap).forEach((formikKey) => {
+    formik.setFieldTouched(formikKey, false, false);
+  });
+
+  // ✅ 3. Set chips from draft
+  setAppliedFilters({
+    club_id:         draft.filterClub          || null,
+    member_validity: draft.filterMemberValidity || null,
+    lead_validity:   draft.filterLeadValidity   || null,
+    ageGroup:        draft.filterAgeGroup       || null,
+    gender:          draft.filterGender         || null,
+    service_type:    draft.filterServiceType    || null,
+    service_name:    draft.filterServiceName    || null,
+    leadSource:      draft.filterLeadSource     || null,
+    expiry_from:     draft.filterExpiryFrom     || null,
+    expiry_to:       draft.filterExpiryTo       || null,
+    _serviceOptions: serviceOptions,
+    _packageOptions: servicesType,
+  });
+
+  // ✅ 4. Close the panel
+  setShowFilters(false);
+
+  // ✅ 5. Call filter API
+  await fetchMembers(draft);
+};
+
   // ─── Remove chip ────────────────────────────────────────────────────────────
 
   const handleRemoveFilter = (key) => {
     const keyMap = {
-      club_id:         "filterClub",
+      club_id: "filterClub",
       member_validity: "filterMemberValidity",
-      lead_validity:   "filterLeadValidity",
-      ageGroup:        "filterAgeGroup",
-      gender:          "filterGender",
-      leadSource:      "filterLeadSource",
-      service_type:    "filterServiceType",
-      service_name:    "filterServiceName",
-      expiry_from:     "filterExpiryFrom",
-      expiry_to:       "filterExpiryTo",
+      lead_validity: "filterLeadValidity",
+      ageGroup: "filterAgeGroup",
+      gender: "filterGender",
+      leadSource: "filterLeadSource",
+      service_type: "filterServiceType",
+      service_name: "filterServiceName",
+      expiry_from: "filterExpiryFrom",
+      expiry_to: "filterExpiryTo",
     };
+
+    // ✅ Build updated filters by nulling out the removed key
+    const updatedFilters = {
+      filterClub: keyMap["club_id"] === keyMap[key] ? null : filterClub,
+      filterMemberValidity:
+        keyMap["member_validity"] === keyMap[key] ? null : filterMemberValidity,
+      filterLeadValidity:
+        keyMap["lead_validity"] === keyMap[key] ? null : filterLeadValidity,
+      filterAgeGroup:
+        keyMap["ageGroup"] === keyMap[key] ? null : filterAgeGroup,
+      filterGender: keyMap["gender"] === keyMap[key] ? null : filterGender,
+      filterLeadSource:
+        keyMap["leadSource"] === keyMap[key] ? null : filterLeadSource,
+      filterServiceType:
+        keyMap["service_type"] === keyMap[key] ? null : filterServiceType,
+      filterServiceName:
+        keyMap["service_name"] === keyMap[key] ? null : filterServiceName,
+      filterExpiryFrom:
+        keyMap["expiry_from"] === keyMap[key] ? null : filterExpiryFrom,
+      filterExpiryTo:
+        keyMap["expiry_to"] === keyMap[key] ? null : filterExpiryTo,
+    };
+
+    // ✅ Update chips UI
     setAppliedFilters((prev) => ({ ...prev, [key]: null }));
+
+    // ✅ Sync to formik
     if (keyMap[key]) {
       setFilterValue(keyMap[key], null);
       formik.setFieldTouched(keyMap[key], false);
     }
-    onMemberIdsFetched([]);
+
+    // ✅ Re-call filter API with remaining filters in real time
+    fetchMembers(updatedFilters);
   };
 
   // ─── Chip label resolver ────────────────────────────────────────────────────
@@ -339,20 +438,20 @@ const MemberEmailFilterPanel = ({
   // Also coerces string IDs to numbers before matching (API quirk).
   //
   const getChipLabel = (key, value) => {
-    if (value instanceof Date) return value.toLocaleDateString();
+    if (value instanceof Date) return format(value, "dd/MM/yyyy");
 
     // ✅ Coerce string "13" → 13 for ID-based lookups
     const numericValue = isNaN(Number(value)) ? value : Number(value);
 
     const optionsMap = {
-      club_id:         clubOptions,
+      club_id: clubOptions,
       member_validity: validityMemberOptions,
-      lead_validity:   validityEnquireOptions,
-      ageGroup:        ageGroupOptions,
-      gender:          genderOptions,
-      service_type:    appliedFilters._serviceOptions || serviceOptions,
-      service_name:    appliedFilters._packageOptions || servicesType,
-      leadSource:      leadSourceOptions,
+      lead_validity: validityEnquireOptions,
+      ageGroup: ageGroupOptions,
+      gender: genderOptions,
+      service_type: appliedFilters._serviceOptions || serviceOptions,
+      service_name: appliedFilters._packageOptions || servicesType,
+      leadSource: leadSourceOptions,
     };
 
     const options = optionsMap[key];
@@ -369,9 +468,16 @@ const MemberEmailFilterPanel = ({
   // ─── Render ─────────────────────────────────────────────────────────────────
 
   const chipKeys = [
-    "club_id", "member_validity", "lead_validity", "ageGroup",
-    "gender", "service_type", "service_name", "leadSource",
-    "expiry_from", "expiry_to",
+    "club_id",
+    "member_validity",
+    "lead_validity",
+    "ageGroup",
+    "gender",
+    "service_type",
+    "service_name",
+    "leadSource",
+    "expiry_from",
+    "expiry_to",
   ];
 
   return (
@@ -389,17 +495,21 @@ const MemberEmailFilterPanel = ({
 
       {showFilters && (
         <div className="absolute top-[100%] mt-4 z-[333] bg-white border rounded-lg shadow-md animate-fade-in">
-          <div className="absolute top-[-15px] left-[20px]"><IoTriangle /></div>
+          <div className="absolute top-[-15px] left-[20px]">
+            <IoTriangle />
+          </div>
           <div className="p-4">
             <div className="grid grid-cols-2 gap-4 min-w-[500px]">
-
               {/* Club */}
               <div>
                 <label className="block mb-1 text-sm font-medium">
                   Club<span className="text-red-500">*</span>
                 </label>
                 <Select
-                  value={clubOptions.find((o) => o.value === draft.filterClub) || null}
+                  value={
+                    clubOptions.find((o) => o.value === draft.filterClub) ||
+                    null
+                  }
                   onChange={(option) => {
                     updateDraft("filterClub", option?.value || null);
                     updateDraft("filterServiceType", null);
@@ -419,8 +529,14 @@ const MemberEmailFilterPanel = ({
                     Validity<span className="text-red-500">*</span>
                   </label>
                   <Select
-                    value={validityMemberOptions.find((o) => o.value === draft.filterMemberValidity) || null}
-                    onChange={(option) => updateDraft("filterMemberValidity", option?.value || null)}
+                    value={
+                      validityMemberOptions.find(
+                        (o) => o.value === draft.filterMemberValidity,
+                      ) || null
+                    }
+                    onChange={(option) =>
+                      updateDraft("filterMemberValidity", option?.value || null)
+                    }
                     options={validityMemberOptions}
                     placeholder="Select Validity"
                     styles={customStyles}
@@ -435,8 +551,14 @@ const MemberEmailFilterPanel = ({
                     Validity<span className="text-red-500">*</span>
                   </label>
                   <Select
-                    value={validityEnquireOptions.find((o) => o.value === draft.filterLeadValidity) || null}
-                    onChange={(option) => updateDraft("filterLeadValidity", option?.value || null)}
+                    value={
+                      validityEnquireOptions.find(
+                        (o) => o.value === draft.filterLeadValidity,
+                      ) || null
+                    }
+                    onChange={(option) =>
+                      updateDraft("filterLeadValidity", option?.value || null)
+                    }
                     options={validityEnquireOptions}
                     placeholder="Select Validity"
                     styles={customStyles}
@@ -446,10 +568,18 @@ const MemberEmailFilterPanel = ({
 
               {/* Age Group */}
               <div>
-                <label className="block mb-1 text-sm font-medium">Age Group</label>
+                <label className="block mb-1 text-sm font-medium">
+                  Age Group
+                </label>
                 <Select
-                  value={ageGroupOptions.find((o) => o.value === draft.filterAgeGroup) || null}
-                  onChange={(option) => updateDraft("filterAgeGroup", option?.value || null)}
+                  value={
+                    ageGroupOptions.find(
+                      (o) => o.value === draft.filterAgeGroup,
+                    ) || null
+                  }
+                  onChange={(option) =>
+                    updateDraft("filterAgeGroup", option?.value || null)
+                  }
                   options={ageGroupOptions}
                   placeholder="Select Age Group"
                   styles={customStyles}
@@ -460,8 +590,13 @@ const MemberEmailFilterPanel = ({
               <div>
                 <label className="block mb-1 text-sm font-medium">Gender</label>
                 <Select
-                  value={genderOptions.find((o) => o.value === draft.filterGender) || null}
-                  onChange={(option) => updateDraft("filterGender", option?.value || null)}
+                  value={
+                    genderOptions.find((o) => o.value === draft.filterGender) ||
+                    null
+                  }
+                  onChange={(option) =>
+                    updateDraft("filterGender", option?.value || null)
+                  }
                   options={genderOptions}
                   placeholder="Select Gender"
                   styles={customStyles}
@@ -472,10 +607,16 @@ const MemberEmailFilterPanel = ({
                 <>
                   {/* Service Type */}
                   <div>
-                    <label className="block mb-1 text-sm font-medium">Service Type</label>
+                    <label className="block mb-1 text-sm font-medium">
+                      Service Type
+                    </label>
                     <Select
                       // ✅ Coerce to number for matching against API numeric IDs
-                      value={serviceOptions.find((o) => o.value === Number(draft.filterServiceType)) || null}
+                      value={
+                        serviceOptions.find(
+                          (o) => o.value === Number(draft.filterServiceType),
+                        ) || null
+                      }
                       onChange={(option) => {
                         updateDraft("filterServiceType", option?.value || null);
                         updateDraft("filterServiceName", null);
@@ -490,11 +631,19 @@ const MemberEmailFilterPanel = ({
 
                   {/* Service Name */}
                   <div>
-                    <label className="block mb-1 text-sm font-medium">Service Name</label>
+                    <label className="block mb-1 text-sm font-medium">
+                      Service Name
+                    </label>
                     <Select
                       // ✅ Coerce to number for matching
-                      value={servicesType.find((o) => o.value === Number(draft.filterServiceName)) || null}
-                      onChange={(option) => updateDraft("filterServiceName", option?.value || null)}
+                      value={
+                        servicesType.find(
+                          (o) => o.value === Number(draft.filterServiceName),
+                        ) || null
+                      }
+                      onChange={(option) =>
+                        updateDraft("filterServiceName", option?.value || null)
+                      }
                       options={servicesType}
                       placeholder="Select Category"
                       styles={customStyles}
@@ -507,10 +656,18 @@ const MemberEmailFilterPanel = ({
               {/* Lead Source */}
               {formik?.values?.module === "Enquiries" && (
                 <div>
-                  <label className="block mb-1 text-sm font-medium">Lead Source</label>
+                  <label className="block mb-1 text-sm font-medium">
+                    Lead Source
+                  </label>
                   <Select
-                    value={leadSourceOptions.find((o) => o.value === draft.filterLeadSource) || null}
-                    onChange={(option) => updateDraft("filterLeadSource", option?.value || null)}
+                    value={
+                      leadSourceOptions.find(
+                        (o) => o.value === draft.filterLeadSource,
+                      ) || null
+                    }
+                    onChange={(option) =>
+                      updateDraft("filterLeadSource", option?.value || null)
+                    }
                     options={leadSourceOptions}
                     placeholder="Select Lead Source"
                     styles={customStyles}
@@ -522,14 +679,22 @@ const MemberEmailFilterPanel = ({
                 <>
                   {/* Expiry From */}
                   <div>
-                    <label className="block mb-1 text-sm font-medium">Membership Expiry</label>
+                    <label className="block mb-1 text-sm font-medium">
+                      Membership Expiry
+                    </label>
                     <div className="custom--date relative">
-                      <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]"><LuCalendar /></span>
+                      <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
+                        <LuCalendar />
+                      </span>
                       <DatePicker
                         selected={draft.filterExpiryFrom}
                         onChange={(date) => {
                           updateDraft("filterExpiryFrom", date);
-                          if (draft.filterExpiryTo && date && draft.filterExpiryTo < date)
+                          if (
+                            draft.filterExpiryTo &&
+                            date &&
+                            draft.filterExpiryTo < date
+                          )
                             updateDraft("filterExpiryTo", null);
                         }}
                         placeholderText="From"
@@ -541,9 +706,13 @@ const MemberEmailFilterPanel = ({
 
                   {/* Expiry To */}
                   <div>
-                    <label className="block mb-1 text-sm font-medium opacity-0">Membership Expiry</label>
+                    <label className="block mb-1 text-sm font-medium opacity-0">
+                      Membership Expiry
+                    </label>
                     <div className="custom--date relative">
-                      <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]"><LuCalendar /></span>
+                      <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
+                        <LuCalendar />
+                      </span>
                       <DatePicker
                         selected={draft.filterExpiryTo}
                         onChange={(date) => updateDraft("filterExpiryTo", date)}
@@ -560,7 +729,11 @@ const MemberEmailFilterPanel = ({
             </div>
 
             <div className="flex justify-end pt-3">
-              <button type="button" onClick={handleApply} className="px-4 py-2 bg-black text-white rounded">
+              <button
+                type="button"
+                onClick={handleApply}
+                className="px-4 py-2 bg-black text-white rounded"
+              >
                 Apply
               </button>
             </div>
@@ -580,7 +753,10 @@ const MemberEmailFilterPanel = ({
                 className="flex items-center justify-between gap-1 border rounded-full bg-[#EEEEEE] min-h-[30px] px-3 text-sm"
               >
                 <span>{getChipLabel(key, value)}</span>
-                <IoClose onClick={() => handleRemoveFilter(key)} className="cursor-pointer text-xl" />
+                <IoClose
+                  onClick={() => handleRemoveFilter(key)}
+                  className="cursor-pointer text-xl"
+                />
               </div>
             );
           })}

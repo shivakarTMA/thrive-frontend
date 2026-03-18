@@ -49,7 +49,7 @@ const dateFilterOptions = [
 ];
 
 const AllLeads = () => {
-  // useAutoLogout();
+  useAutoLogout();
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useDispatch();
@@ -80,7 +80,7 @@ const AllLeads = () => {
 
   const [isSearchMode, setIsSearchMode] = useState(false);
 
-  const [dateFilter, setDateFilter] = useState(dateFilterOptions[1]);
+  const [dateFilter, setDateFilter] = useState(dateFilterOptions[0]);
   const [customFrom, setCustomFrom] = useState(null);
   const [customTo, setCustomTo] = useState(null);
   const [clubList, setClubList] = useState([]);

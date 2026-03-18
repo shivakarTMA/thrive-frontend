@@ -14,6 +14,7 @@ import Select from "react-select";
 import {
   customStyles,
   filterActiveItems,
+  formatIndianNumber,
   formatText,
 } from "../../Helper/helper";
 import { useDispatch, useSelector } from "react-redux";
@@ -631,31 +632,28 @@ const PackagesList = () => {
   }, [clubFilter]);
 
   useEffect(() => {
-  const type = getServiceType(formik.values.service_id, serviceOptions);
+    const type = getServiceType(formik.values.service_id, serviceOptions);
 
-  // RECOVERY → variation GST = 5
-  if (type === "RECOVERY") {
-    const updatedVariation = (formik.values.variation || []).map((v) => ({
-      ...v,
-      gst: 5,
-    }));
+    // RECOVERY → variation GST = 5
+    if (type === "RECOVERY") {
+      const updatedVariation = (formik.values.variation || []).map((v) => ({
+        ...v,
+        gst: 5,
+      }));
 
-    formik.setFieldValue("variation", updatedVariation);
-    formik.setFieldValue("gst", "");
-  }
-
-  // NOT RECOVERY
-  else {
-    if (formik.values.booking_type === "PAID") {
-      formik.setFieldValue("gst", 5);
-    } else {
-      formik.setFieldValue("gst", 0);
+      formik.setFieldValue("variation", updatedVariation);
+      formik.setFieldValue("gst", "");
     }
-  }
-}, [
-  formik.values.service_id,
-  formik.values.booking_type,
-]);
+
+    // NOT RECOVERY
+    else {
+      if (formik.values.booking_type === "PAID") {
+        formik.setFieldValue("gst", 5);
+      } else {
+        formik.setFieldValue("gst", 0);
+      }
+    }
+  }, [formik.values.service_id, formik.values.booking_type]);
 
   // console.log(formik.values, "SHIVAKAR values");
   // console.log(formik.errors, "SHIVAKAR ERRORS");
@@ -730,6 +728,10 @@ const PackagesList = () => {
                 <th className="px-2 py-4">Club Name</th>
                 <th className="px-2 py-4">Booking Type</th>
                 <th className="px-2 py-4">Service</th>
+                <th className="px-2 py-4">Amount</th>
+                <th className="px-2 py-4">Discount</th>
+                <th className="px-2 py-4">gst</th>
+                <th className="px-2 py-4">Total Amount</th>
                 <th className="px-2 py-4 text-center">Position</th>
                 <th className="px-2 py-4">Status</th>
                 <th className="px-2 py-4">Action</th>
@@ -764,6 +766,24 @@ const PackagesList = () => {
                     </td>
                     <td className="px-2 py-4">
                       {formatText(item?.service_name)}
+                    </td>
+                    <td className="px-2 py-4">
+                      {item?.service_type === "RECOVERY" ? "--" : `₹${formatIndianNumber(item?.amount)}`}
+                    </td>
+                    <td className="px-2 py-4">
+                      {item?.service_type === "RECOVERY"
+                        ? "--"
+                        : `₹${formatIndianNumber(item?.discount)}`}
+                    </td>
+                    <td className="px-2 py-4">
+                      {item?.service_type === "RECOVERY"
+                        ? "--"
+                        : `${item?.gst}%`}
+                    </td>
+                    <td className="px-2 py-4">
+                      {item?.service_type === "RECOVERY"
+                        ? "--"
+                        : `₹${formatIndianNumber(item?.booking_amount)}`}
                     </td>
                     <td className="px-2 py-4 text-center">{item.position}</td>
                     <td className="px-2 py-4">

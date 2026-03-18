@@ -108,7 +108,7 @@ const EmailAutomationReport = () => {
   const [clubList, setClubList] = useState([]);
   const [clubFilter, setClubFilter] = useState(null);
 
-  const [dateFilter, setDateFilter] = useState(dateFilterOptions[1]);
+  const [dateFilter, setDateFilter] = useState(dateFilterOptions[0]);
   const [customFrom, setCustomFrom] = useState(null);
   const [customTo, setCustomTo] = useState(null);
 

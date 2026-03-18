@@ -191,9 +191,15 @@ const StaffList = () => {
       .min(1, "Please select at least one club")
       .required("Club selection is required"),
 
-    profile_image: Yup.string().when("show_on_app", {
+    profile_image: Yup.mixed().when("show_on_app", {
       is: true,
-      then: (schema) => schema.required("Image is required"),
+      then: (schema) =>
+        schema
+          .required("Image is required")
+          .test("fileType", "Only JPG, PNG, or WEBP allowed", (value) => {
+            if (!value || typeof value === "string") return true; // allow existing URL string
+            return ["image/jpeg", "image/png", "image/webp"].includes(value.type);
+          }),
       otherwise: (schema) => schema.notRequired(),
     }),
 
@@ -211,6 +217,11 @@ const StaffList = () => {
     experience: Yup.string().when("show_on_app", {
       is: true,
       then: (schema) => schema.required("Experience is required"),
+      otherwise: (schema) => schema.notRequired(),
+    }),
+    position: Yup.string().when("show_on_app", {
+      is: true,
+      then: (schema) => schema.required("Position is required"),
       otherwise: (schema) => schema.notRequired(),
     }),
 
@@ -247,7 +258,8 @@ const StaffList = () => {
     status: "ACTIVE",
     show_on_app: false,
     tags: "",
-    profile_image: "",
+    profile_image: null,
+    position: "",
     content: [
       {
         title: "",
@@ -259,8 +271,8 @@ const StaffList = () => {
   const formik = useFormik({
     initialValues,
     validationSchema,
+    validateOnChange: true,
     validateOnBlur: true,
-    validateOnChange: false,
     onSubmit: async (values, { resetForm }) => {
       try {
         const formData = new FormData();
@@ -277,6 +289,7 @@ const StaffList = () => {
         formData.append("show_on_app", values.show_on_app);
         formData.append("experience", values.experience);
         formData.append("tags", values.tags);
+        formData.append("position", values.position);
         //   // --- Club IDs ---
         if (values.club_id?.length > 0) {
           formData.append("club_id", JSON.stringify(values.club_id));
@@ -297,8 +310,8 @@ const StaffList = () => {
         }
 
         // --- Image file ---
-        if (values.profile_imageFile instanceof File) {
-          formData.append("profile_image", values.profile_imageFile);
+        if (values.profile_image instanceof File) {
+          formData.append("profile_image", values.profile_image);
         }
 
         // --- API call ---

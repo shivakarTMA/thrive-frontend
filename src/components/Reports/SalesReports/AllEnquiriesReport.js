@@ -36,7 +36,7 @@ const AllEnquiriesReport = () => {
   const userRole = user.role;
 
   const [searchParams] = useSearchParams();
-  const [dateFilter, setDateFilter] = useState(dateFilterOptions[1]);
+  const [dateFilter, setDateFilter] = useState(dateFilterOptions[0]);
   const [customFrom, setCustomFrom] = useState(null);
   const [customTo, setCustomTo] = useState(null);
 

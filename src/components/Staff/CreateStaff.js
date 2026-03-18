@@ -19,6 +19,7 @@ import {
   FaBusinessTime,
   FaEnvelope,
   FaListCheck,
+  FaListOl,
   FaRegBuilding,
   FaUser,
 } from "react-icons/fa6";
@@ -110,7 +111,7 @@ const CreateStaff = ({
 
           // set Formik values
           formik.setValues({
-            profile_image: data?.profile_image || "",
+            profile_image: data?.profile_image || null,
             logo: data?.logo || "",
             name: data?.name || "",
             email: data?.email || "",
@@ -124,6 +125,7 @@ const CreateStaff = ({
             date_of_birth: data?.date_of_birth || null,
             gender: data?.gender || "",
             tags: data?.tags || "",
+            position: data?.position || "",
             role: data?.role || "",
             club_id: clubIds,
             status: data?.status || "",
@@ -183,10 +185,7 @@ const CreateStaff = ({
   const handleLogoChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      const previewURL = URL.createObjectURL(file);
-
-      formik.setFieldValue("profile_image", previewURL); // for preview
-      formik.setFieldValue("profile_imageFile", file); // actual file to upload
+      formik.setFieldValue("profile_image", file); // for preview
     }
   };
 
@@ -532,7 +531,11 @@ const CreateStaff = ({
                         <div>
                           {formik.values?.profile_image ? (
                             <img
-                              src={formik.values?.profile_image}
+                              src={
+                                formik.values.profile_image instanceof File
+                                  ? URL.createObjectURL(formik.values.profile_image)
+                                  : formik.values.profile_image
+                              }
                               alt="Preview"
                               className="w-[75px] h-[75px] object-cover rounded-[10px]"
                             />
@@ -558,15 +561,8 @@ const CreateStaff = ({
                             <input
                               type="file"
                               name="profile_image"
-                              accept="image/*"
-                              // onChange={(event) => {
-                              //   const file = event.currentTarget.files[0];
-                              //   formik.setFieldValue("profile_image", file);
-                              // }}
-                              onChange={handleLogoChange}
-                              onBlur={() =>
-                                formik.setFieldTouched("profile_image", true)
-                              }
+                              onChange={(e) => handleLogoChange(e, formik)}
+                              onBlur={() => formik.setFieldTouched("profile_image", true)}
                               className="custom--input w-full input--icon"
                             />
                           </div>
@@ -637,6 +633,38 @@ const CreateStaff = ({
                           formik.errors.experience && (
                             <p className="text-red-500 text-sm">
                               {formik.errors.experience}
+                            </p>
+                          )}
+                      </div>
+
+                      {/* Position */}
+                      <div>
+                        <label className="mb-2 block">
+                          Position<span className="text-red-500">*</span>
+                        </label>
+                        <div className="relative">
+                          <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
+                            <FaListOl />
+                          </span>
+                          <input
+                            type="number"
+                            name="position"
+                            className="custom--input w-full input--icon number--appearance-none"
+                            value={formik.values.position}
+                            onKeyDown={blockInvalidNumberKeys} // ⛔ blocks typing -, e, etc.
+                            onChange={(e) => {
+                              const cleanValue = sanitizePositiveInteger(
+                                e.target.value,
+                              );
+                              formik.setFieldValue("position", cleanValue);
+                            }}
+                            onBlur={formik.handleBlur}
+                          />
+                        </div>
+                        {formik.touched.position &&
+                          formik.errors.position && (
+                            <p className="text-red-500 text-sm">
+                              {formik.errors.position}
                             </p>
                           )}
                       </div>

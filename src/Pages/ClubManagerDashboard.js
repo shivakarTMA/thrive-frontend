@@ -61,7 +61,7 @@ const ClubManagerDashboard = () => {
   const [dashboardData, setDashboardData] = useState([]);
   const [currentDayIndex, setCurrentDayIndex] = useState(1); // Default to Today
   const [activeTab, setActiveTab] = useState("Snapshot");
-  const [dateFilter, setDateFilter] = useState(dateFilterOptions[1]);
+  const [dateFilter, setDateFilter] = useState(dateFilterOptions[0]);
   const [customFrom, setCustomFrom] = useState(null);
   const [customTo, setCustomTo] = useState(null);
   const [clubList, setClubList] = useState([]);

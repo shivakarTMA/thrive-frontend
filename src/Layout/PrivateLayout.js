@@ -5,7 +5,7 @@ import useAutoLogout from "../hooks/useAutoLogout";
 
 export default function PrivateLayout({ children }) {
 
-  // useAutoLogout();
+  useAutoLogout();
   const [toggleMenuBar, setToggleMenuBar] = useState(false);
 
   return (

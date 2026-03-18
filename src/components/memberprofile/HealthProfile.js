@@ -28,7 +28,7 @@ const HealthProfile = ({ details }) => {
   const [memberHealth, setMemberHealth] = useState([]);
   const [memberActivity, setMemberActivity] = useState([]);
 
-  const [dateFilter, setDateFilter] = useState(dateFilterOptions[1]);
+  const [dateFilter, setDateFilter] = useState(dateFilterOptions[0]);
   const [customFrom, setCustomFrom] = useState(null);
   const [customTo, setCustomTo] = useState(null);
 
@@ -113,7 +113,7 @@ const HealthProfile = ({ details }) => {
 
   const handleTabActive = (tab) => {
     setActiveHealthTab(tab);
-    setDateFilter(dateFilterOptions[1]);
+    setDateFilter(dateFilterOptions[0]);
     setCustomFrom(null);
     setCustomTo(null);
     setPage(1);

@@ -7,6 +7,7 @@ import {
   customStyles,
   filterActiveItems,
   formatAutoDate,
+  formatIndianNumber,
   formatText,
   formatTimeAppointment,
 } from "../../Helper/helper";
@@ -37,7 +38,7 @@ const GroupClassesList = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [productSoldData, setProductSoldData] = useState([]);
-  const [dateFilter, setDateFilter] = useState(dateFilterOptions[1]);
+  const [dateFilter, setDateFilter] = useState(dateFilterOptions[0]);
   const [customFrom, setCustomFrom] = useState(null);
   const [customTo, setCustomTo] = useState(null);
   const { user } = useSelector((state) => state.auth);
@@ -698,13 +699,13 @@ const GroupClassesList = () => {
                         </td>
 
                         <td className="px-2 py-4">
-                          ₹{row?.amount ? row?.amount : 0}
+                          ₹{row?.amount ? formatIndianNumber(row?.amount) : 0}
                         </td>
                         <td className="px-2 py-4">
-                          ₹{row?.discount ? row?.discount : 0}
+                          ₹{row?.discount ? formatIndianNumber(row?.discount) : 0}
                         </td>
                         <td className="px-2 py-4">
-                          ₹{row?.total_amount ? row?.total_amount : 0}
+                          ₹{row?.total_amount ? formatIndianNumber(row?.total_amount) : 0}
                         </td>
                         <td className="px-2 py-4">
                           {formatAutoDate(row?.start_date)}{" "}

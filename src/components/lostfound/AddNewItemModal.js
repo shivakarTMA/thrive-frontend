@@ -6,13 +6,18 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchOptionList } from "../../Redux/Reducers/optionListSlice";
-import { blockNonLettersAndNumbers, customStyles, sanitizeTextWithNumbers } from "../../Helper/helper";
+import {
+  blockNonLettersAndNumbers,
+  customStyles,
+  sanitizeTextWithNumbers,
+} from "../../Helper/helper";
 import Select from "react-select";
 import { FaCalendarDays } from "react-icons/fa6";
 import { toast } from "react-toastify";
 import { authAxios } from "../../config/config";
 import { useClubDateTime } from "../../hooks/useClubDateTime";
 import { useDateTimePicker } from "../../hooks/useDateTimePicker";
+import { PiImageFill } from "react-icons/pi";
 
 const AddNewItemModal = ({
   onClose,
@@ -25,6 +30,7 @@ const AddNewItemModal = ({
 
   const formik = useFormik({
     initialValues: {
+      image: null,
       club_id: null,
       item_name: "",
       category: null,
@@ -36,24 +42,49 @@ const AddNewItemModal = ({
       status: "AVAILABLE",
     },
     validationSchema: Yup.object({
+      image: Yup.mixed()
+        .required("Image is required")
+        .test("fileType", "Only JPG, PNG, or WEBP allowed", (value) => {
+          if (!value || typeof value === "string") return true;
+          return ["image/jpeg", "image/png", "image/webp"].includes(value.type);
+        }),
       item_name: Yup.string().required("Item Name is required"),
       category: Yup.string().required("Category Name is required"),
       found_at_location: Yup.string().required("Location is required"),
       found_date_time: Yup.date().required("Date & Time is required"),
-      // description: Yup.string().required("Description is required"),
     }),
+     validateOnChange: true,
+    validateOnBlur: true,
     onSubmit: async (values, { resetForm }) => {
       try {
-        await authAxios().post("/lost/found/create", values);
+        // Create FormData instance
+        const formData = new FormData();
+
+        // Append each value to FormData
+        formData.append("image", values.image); // file
+        formData.append("club_id", values.club_id || ""); // optional fallback
+        formData.append("item_name", values.item_name);
+        formData.append("category", values.category);
+        formData.append("description", values.description || "");
+        formData.append("found_at_location", values.found_at_location);
+        formData.append("found_date_time", values.found_date_time);
+        formData.append("loggedBy", values.loggedBy || "");
+        formData.append("verification_notes", values.verification_notes || "");
+        formData.append("status", values.status);
+
+        // Send FormData
+        await authAxios().post("/lost/found/create", formData, {
+          headers: {
+            "Content-Type": "multipart/form-data", // important for file upload
+          },
+        });
+
         toast.success("Item Successfully Added");
 
         // Reset form and close modal
         resetForm();
-        // Close modal after refresh
         onClose();
         fetchLostFoundList();
-        // Trigger the parent component to fetch updated item list
-        // handleUpdateCoins();
       } catch (error) {
         toast.error("Something went wrong. Please try again.");
         console.error("Error submitting form:", error);
@@ -67,16 +98,17 @@ const AddNewItemModal = ({
         const res = await authAxios().get(`/lost/found/${id}`);
         const data = res.data?.data || res.data || null;
 
-        console.log(data,'shivakar')
-
         if (data) {
           formik.setValues({
+            image: data?.image || null,
             club_id: data?.club_id || null,
             item_name: data?.item_name || "",
             category: data?.category || null,
             description: data?.description || "",
             found_at_location: data?.found_at_location || null,
-            found_date_time: data?.found_date_time ? new Date(data.found_date_time) : null,
+            found_date_time: data?.found_date_time
+              ? new Date(data.found_date_time)
+              : null,
             loggedBy: data?.loggedBy || user?.name,
             verification_notes: data?.verification_notes || "",
             status: data?.status || "AVAILABLE",
@@ -116,7 +148,7 @@ const AddNewItemModal = ({
   const now = new Date();
 
   const selectedClub = clubOptions.find(
-    (club) => club.value?.toString() === formik.values.club_id?.toString()
+    (club) => club.value?.toString() === formik.values.club_id?.toString(),
   );
 
   const { filterTime: followUpFilterTime } = useClubDateTime(
@@ -124,12 +156,21 @@ const AddNewItemModal = ({
     selectedClub,
   );
 
-  const followUpDT = useDateTimePicker(formik, "found_date_time", followUpFilterTime);
+  const followUpDT = useDateTimePicker(
+    formik,
+    "found_date_time",
+    followUpFilterTime,
+  );
 
   useEffect(() => {
     formik.setFieldValue("found_date_time", null);
   }, [formik.values.club_id]);
 
+  const handleFileChange = (e, formik) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    formik.setFieldValue("image", file); // for preview
+  };
 
   return (
     <div
@@ -156,6 +197,59 @@ const AddNewItemModal = ({
           >
             <div className="p-6 flex-1 bg-white rounded-b-[10px]">
               <div className="grid grid-cols-2 gap-4">
+                {/* Image Preview */}
+                <div className="row-span-2">
+                  <div className="bg-gray-100 rounded-lg w-full h-[160px] overflow-hidden">
+                    {formik.values?.image ? (
+                      <img
+                        src={
+                          formik.values.image instanceof File
+                            ? URL.createObjectURL(formik.values.image)
+                            : formik.values.image
+                        }
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex flex-col items-center justify-center">
+                        <PiImageFill className="text-gray-300 text-7xl" />
+                        <span className="text-gray-500 text-sm">
+                          Upload Image
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Image Upload */}
+                {editingOption ? null : (
+                <div>
+                  <label className="mb-2 block">
+                    Image<span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="file"
+                      name="image"
+                      // onChange={handleFileChange} // ✅ no value prop here
+                      onChange={(e) => handleFileChange(e, formik)}
+                      onBlur={() => formik.setFieldTouched("image", true)}
+                      className={`custom--input w-full ${
+                      editingOption
+                        ? "!bg-gray-100 pointer-events-none text-gray-500"
+                        : ""
+                    }`}
+                      disabled={editingOption}
+                    />
+                  </div>
+
+                  {formik.touched.image && formik.errors.image && (
+                    <div className="text-red-500 text-sm">
+                      {formik.errors.image}
+                    </div>
+                  )}
+                </div>
+                )}
+
                 {/* Club Dropdown */}
                 <div>
                   <label className="mb-2 block">

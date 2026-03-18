@@ -152,9 +152,6 @@ const CreateCoupon = ({
 
   useEffect(() => {
     fetchClub();
-    fetchSubscriptions();
-    fetchPackages();
-    fetchProducts();
   }, []);
 
   const clubOptions =
@@ -185,71 +182,86 @@ const CreateCoupon = ({
       club_id: item.club_id,
     })) || [];
 
-  useEffect(() => {
-    if (!editingOption) return;
+useEffect(() => {
+  if (!editingOption) return;
 
-    const fetchCouponById = async (id) => {
-      try {
-        const res = await authAxios().get(`/coupon/${id}`);
-        const data = res.data?.data || res.data || null;
+  const fetchCouponById = async (id) => {
+    try {
+      const res = await authAxios().get(`/coupon/${id}`);
+      const data = res.data?.data || res.data || null;
 
-        if (data) {
-          const couponData = data?.coupon || data;
+      if (data) {
+        const couponData = data?.coupon || data;
 
-          const coupon = {
-            id: couponData?.id || "",
-            club_id: couponData?.club_id || "",
-            code: couponData?.code || "",
-            description: couponData?.description || "",
-            discount_type: couponData?.discount_type || "",
-            discount_value: couponData?.discount_value || "",
-            max_usage: couponData?.max_usage || "",
-            per_user_limit: couponData?.per_user_limit || "",
-            start_date: couponData?.start_date || "",
-            end_date: couponData?.end_date || "",
-            position: couponData?.position || "",
-            status: couponData?.status || "",
-          };
+        const clubId = couponData?.club_id;
 
-          Object.entries(coupon).forEach(([k, v]) => {
-            formik.setFieldValue(`coupon.${k}`, v, false);
-          });
+        // ✅ FIRST set club
+        formik.setFieldValue("coupon.club_id", clubId, false);
 
-          const rules =
-            Array.isArray(data?.applicable_rules) &&
-            data.applicable_rules.length
-              ? data.applicable_rules.map((r) => ({
-                  id: r.id,
-                  applicable_type: r.applicable_type || "",
-                  applicable_id: r.applicable_id ?? null,
-                }))
-              : [{ applicable_type: "ALL", applicable_id: null }];
+        // ✅ THEN fetch dependent lists
+        await fetchSubscriptions(clubId);
+        await fetchPackages(clubId);
+        await fetchProducts(clubId);
 
-          formik.setFieldValue("applicable_rules", rules, false);
+        // ✅ THEN set rest of fields
+        const coupon = {
+          id: couponData?.id || "",
+          club_id: clubId,
+          code: couponData?.code || "",
+          description: couponData?.description || "",
+          discount_type: couponData?.discount_type || "",
+          discount_value: couponData?.discount_value || "",
+          max_usage: couponData?.max_usage || "",
+          per_user_limit: couponData?.per_user_limit || "",
+          start_date: couponData?.start_date || "",
+          end_date: couponData?.end_date || "",
+          position: couponData?.position || "",
+          status: couponData?.status || "",
+        };
 
-          if (typeof setOriginalApplicableRules === "function") {
-            setOriginalApplicableRules(JSON.parse(JSON.stringify(rules)));
-          }
+        Object.entries(coupon).forEach(([k, v]) => {
+          formik.setFieldValue(`coupon.${k}`, v, false);
+        });
+
+        const rules =
+          Array.isArray(data?.applicable_rules) &&
+          data.applicable_rules.length
+            ? data.applicable_rules.map((r) => ({
+                id: r.id,
+                applicable_type: r.applicable_type || "",
+                applicable_id: r.applicable_id ?? null,
+              }))
+            : [{ applicable_type: "ALL", applicable_id: null }];
+
+        formik.setFieldValue("applicable_rules", rules, false);
+
+        if (typeof setOriginalApplicableRules === "function") {
+          setOriginalApplicableRules(JSON.parse(JSON.stringify(rules)));
         }
-      } catch (err) {
-        toast.error("Failed to fetch coupon details");
       }
-    };
+    } catch (err) {
+      toast.error("Failed to fetch coupon details");
+    }
+  };
 
-    fetchCouponById(editingOption);
-  }, [editingOption]);
+  fetchCouponById(editingOption);
+}, [editingOption]);
 
-  useEffect(() => {
-    const rules = formik.values?.applicable_rules || [];
+useEffect(() => {
+  const rules = formik.values?.applicable_rules || [];
+  const clubId = formik.values?.coupon?.club_id;
 
-    if (!rules.length) return;
+  if (!rules.length || !clubId) return;
 
-    const types = new Set(rules.map((r) => r?.applicable_type).filter(Boolean));
+  const types = new Set(rules.map((r) => r?.applicable_type).filter(Boolean));
 
-    if (types.has("SUBSCRIPTION")) fetchSubscriptions();
-    if (types.has("PACKAGE")) fetchPackages();
-    if (types.has("PRODUCT")) fetchProducts();
-  }, [formik.values?.applicable_rules]);
+  if (types.has("SUBSCRIPTION")) fetchSubscriptions(clubId);
+  if (types.has("PACKAGE")) fetchPackages(clubId);
+  if (types.has("PRODUCT")) fetchProducts(clubId);
+}, [formik.values?.applicable_rules, formik.values?.coupon?.club_id]);
+
+console.log("subscriptions:", subscriptions);
+console.log("selected rule:", formik.values.applicable_rules);
 
   const addApplicableRule = () => {
     const current = Array.isArray(formik.values.applicable_rules)

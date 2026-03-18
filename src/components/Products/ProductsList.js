@@ -11,7 +11,7 @@ import { authAxios } from "../../config/config";
 import Pagination from "../common/Pagination";
 import { IoSearchOutline } from "react-icons/io5";
 import Select from "react-select";
-import { customStyles, filterActiveItems } from "../../Helper/helper";
+import { customStyles, filterActiveItems, formatIndianNumber } from "../../Helper/helper";
 
 const ProductsList = () => {
   const [showModal, setShowModal] = useState(false);
@@ -392,12 +392,12 @@ const ProductsList = () => {
                     <td className="px-2 py-4">{item?.club_name}</td>
                     <td className="px-2 py-4">{item?.product_category_name}</td>
                     <td className="px-2 py-4">{item?.product_type}</td>
-                    <td className="px-2 py-4">₹{item?.amount}</td>
-                    <td className="px-2 py-4">₹{item?.discount}</td>
-                    <td className="px-2 py-4">₹{item?.total_amount}</td>
+                    <td className="px-2 py-4">₹{formatIndianNumber(item?.amount)}</td>
+                    <td className="px-2 py-4">₹{formatIndianNumber(item?.discount)}</td>
+                    <td className="px-2 py-4">₹{formatIndianNumber(item?.total_amount)}</td>
                     <td className="px-2 py-4">{item?.gst}%</td>
-                    <td className="px-2 py-4">₹{item?.gst_amount}</td>
-                    <td className="px-2 py-4">₹{item?.booking_amount}</td>
+                    <td className="px-2 py-4">₹{formatIndianNumber(item?.gst_amount)}</td>
+                    <td className="px-2 py-4">₹{formatIndianNumber(item?.booking_amount)}</td>
                     <td className="px-2 py-4 text-center">{item.position}</td>
                     <td className="px-2 py-4">
                       <div

@@ -47,7 +47,7 @@ const AllLostFound = () => {
   const { user } = useSelector((state) => state.auth);
   const userRole = user.role;
 
-  const [dateFilter, setDateFilter] = useState(dateFilterOptions[1]);
+  const [dateFilter, setDateFilter] = useState(dateFilterOptions[0]);
   const [customFrom, setCustomFrom] = useState(null);
   const [customTo, setCustomTo] = useState(null);
 
@@ -375,6 +375,7 @@ const AllLostFound = () => {
             <table className="w-full text-sm text-left text-gray-500">
               <thead className="text-xs text-gray-700 uppercase bg-gray-50">
                 <tr>
+                  <th className="px-2 py-4">Image</th>
                   <th className="px-2 py-4">Club Name</th>
                   <th className="px-2 py-4">Item Name</th>
                   <th className="px-2 py-4">Category</th>
@@ -395,6 +396,14 @@ const AllLostFound = () => {
                       key={row.id}
                       className="bg-white border-b hover:bg-gray-50 border-gray-200"
                     >
+                      <td className="px-2 py-4">
+                          <div className="bg-gray-100 rounded-lg w-14 h-14 overflow-hidden">
+                            <img
+                              src={row?.image}
+                              className="w-full h-full object-contain"
+                            />
+                          </div>
+                        </td>
                       <td className="px-2 py-4">
                         {row?.club_name ? row?.club_name : "--"}
                       </td>
@@ -475,7 +484,7 @@ const AllLostFound = () => {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={7} className="px-2 py-4">
+                    <td colSpan={12} className="px-2 py-4">
                       <p className="text-center text-sm text-gray-500">
                         No data found.
                       </p>

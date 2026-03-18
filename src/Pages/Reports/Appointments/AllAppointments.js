@@ -64,7 +64,7 @@ const AllAppointments = () => {
   const [clubList, setClubList] = useState([]);
   const [clubFilter, setClubFilter] = useState(null);
 
-  const [dateFilter, setDateFilter] = useState(dateFilterOptions[1]);
+  const [dateFilter, setDateFilter] = useState(dateFilterOptions[0]);
   const [customFrom, setCustomFrom] = useState(null);
   const [customTo, setCustomTo] = useState(null);
 
@@ -130,7 +130,7 @@ const AllAppointments = () => {
     value: item.id,
   }));
 
-    const selectedClub =
+  const selectedClub =
     clubOptions.find((opt) => opt.value === clubFilter?.value) || null;
 
   // ---------------------------
@@ -376,64 +376,90 @@ const AllAppointments = () => {
   };
 
   const confirmStatusUpdate = async () => {
-      try {
-        if (pendingStatus === "RESCHEDULED") {
-          // ✅ Validate single rescheduleDateTime instead of separate date+time
-          if (!rescheduleDateTime || !remarks.trim()) {
-            toast.error("Please select date & time and enter remarks");
-            return;
-          }
+    try {
+      if (pendingStatus === "RESCHEDULED") {
+        // ✅ Validate single rescheduleDateTime instead of separate date+time
+        if (!rescheduleDateTime || !remarks.trim()) {
+          toast.error("Please select date & time and enter remarks");
+          return;
         }
-  
-        let body = {};
-  
-        if (pendingStatus === "RESCHEDULED") {
-          body = {
-            start_date: format(rescheduleDateTime, "yyyy-MM-dd HH:mm:ss"),
-            last_status: "RESCHEDULED",
-            remarks: remarks.trim(),
-          };
-        } else {
-          body = {
-            booking_status: pendingStatus,
-            remarks: remarks.trim() || undefined,
-          };
-        }
-  
-        await authAxios().put(`/appointment/${pendingId}`, body);
-        toast.success("Status updated successfully");
-  
-        // ✅ Reset all modal state
-        setShowConfirmModal(false);
-        setRemarks("");
-        setRescheduleDateTime(null); // ✅ reset single state
-  
-        fetchAppointments(page);
-      } catch (err) {
-        console.error(err);
-        toast.error("Failed to update appointment");
       }
-    };
+
+      let body = {};
+
+      if (pendingStatus === "RESCHEDULED") {
+        body = {
+          start_date: format(rescheduleDateTime, "yyyy-MM-dd HH:mm:ss"),
+          last_status: "RESCHEDULED",
+          remarks: remarks.trim(),
+        };
+      } else {
+        body = {
+          booking_status: pendingStatus,
+          remarks: remarks.trim() || undefined,
+        };
+      }
+
+      await authAxios().put(`/appointment/${pendingId}`, body);
+      toast.success("Status updated successfully");
+
+      // ✅ Reset all modal state
+      setShowConfirmModal(false);
+      setRemarks("");
+      setRescheduleDateTime(null); // ✅ reset single state
+
+      fetchAppointments(page);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to update appointment");
+    }
+  };
+
+  const isInProgress = (row) => {
+    if (row?.booking_status !== "ACTIVE") return false;
+
+    if (!row?.start_date || !row?.start_time) return false;
+
+    const now = new Date();
+
+    const start = new Date(row.start_date);
+    const [hours, minutes] = row.start_time.split(":");
+    start.setHours(Number(hours), Number(minutes), 0, 0);
+
+    // Optional: define a session duration (e.g. 1 hour)
+    const end = new Date(start);
+    end.setHours(end.getHours() + 1);
+
+    return now >= start && now <= end;
+  };
 
   // ✅ UPDATED: Fixed function to show proper labels for ACTIVE and UPCOMING
-  const getSelectedStatusOption = (status) => {
+  const getSelectedStatusOption = (status, row) => {
     if (!status) return null;
 
-    // For ACTIVE status, display as "Upcoming"
+    // 🔥 NEW CONDITION
+    if (isInProgress(row)) {
+      return { value: "ACTIVE", label: "In Progress" };
+    }
+
     if (status === "ACTIVE") {
       return { value: status, label: "Upcoming" };
     }
 
-    // For UPCOMING status, display as "Upcoming"
-    // if (status === "UPCOMING") {
-    //   return { value: status, label: "Upcoming" };
-    // }
-
-    // For other statuses (COMPLETED, CANCELLED, NO_SHOW), find in statusUpdateOptions
     return statusUpdateOptions.find((opt) => opt.value === status) || null;
   };
 
-  const getAllowedStatusOptions = (currentStatus) => {
+  const getAllowedStatusOptions = (row) => {
+    const currentStatus = row?.booking_status;
+
+    // 🔥 NEW CONDITION
+    if (isInProgress(row)) {
+      return [
+        { value: "COMPLETED", label: "Completed" },
+        { value: "NO_SHOW", label: "No Show" },
+      ];
+    }
+
     switch (currentStatus) {
       case "ACTIVE":
         return [
@@ -447,7 +473,6 @@ const AllAppointments = () => {
         return [{ value: "NO_SHOW", label: "No Show" }];
 
       default:
-        // CANCELLED, NO_SHOW
         return [];
     }
   };
@@ -456,13 +481,20 @@ const AllAppointments = () => {
     return status === "ACTIVE" || status === "COMPLETED";
   };
 
-    useEffect(() => {
+  useEffect(() => {
     if (selectedLeadClub) dispatch(fetchClubTiming(selectedLeadClub));
   }, [selectedLeadClub]); // <-- dependency added
 
   // ── NEW: get ready-to-use DatePicker props from Redux timing ──
   const datePickerProps = useClubDatePickerProps(rescheduleDateTime);
 
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setAppointmentList((prev) => [...prev]);
+    }, 60000); // every 1 min
+
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <>
@@ -692,16 +724,17 @@ const AllAppointments = () => {
                           <div className="max-w-[130px] w-full">
                             <Select
                               placeholder="Select"
-                              options={getAllowedStatusOptions(
-                                row?.booking_status,
-                              )}
-                              value={getSelectedStatusOption(
-                                row?.booking_status,
-                              )}
+                              // options={getAllowedStatusOptions(
+                              //   row?.booking_status,
+                              // )}
+                              // value={getSelectedStatusOption(
+                              //   row?.booking_status,
+                              // )}
+                              options={getAllowedStatusOptions(row)}
+                              value={getSelectedStatusOption(row?.booking_status, row)}
                               isDisabled={
-                                !canUpdateStatus(row?.booking_status) ||
-                                getAllowedStatusOptions(row?.booking_status)
-                                  .length === 0
+                                !canUpdateStatus(row?.booking_status)
+                                // getAllowedStatusOptions(row?.booking_status).length === 0
                               }
                               onChange={(selected) => {
                                 if (!selected) return;
@@ -716,13 +749,13 @@ const AllAppointments = () => {
                           {/* {row?.booking_status === "CANCELLED" && row?.remarks
                             ? row?.remarks
                             : "--"} */}
-                            {row?.remarks ? row?.remarks : "--"}
+                          {row?.remarks ? row?.remarks : "--"}
                         </td>
                         <td className="px-2 py-4">
-                            {row?.vas_rating ? row?.vas_rating : "--"}
+                          {row?.vas_rating ? row?.vas_rating : "--"}
                         </td>
                         <td className="px-2 py-4">
-                            {row?.rating ? row?.rating : "--"}
+                          {row?.rating ? row?.rating : "--"}
                         </td>
                       </tr>
                     ))
