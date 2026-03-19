@@ -11,7 +11,6 @@ import {
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { FiPlus, FiUser, FiUsers } from "react-icons/fi";
 import { useDispatch, useSelector } from "react-redux";
-import { logout } from "../../Redux/Reducers/authSlice";
 import DropdownMenu from "../DropdownMenu";
 import CreateLeadForm from "../../Pages/CreateLeadForm";
 import CreateNewInvoice from "../../Pages/CreateNewInvoice";
@@ -24,6 +23,7 @@ import { useDropzone } from "react-dropzone";
 import { authAxios } from "../../config/config";
 import { toast } from "react-toastify";
 import NotificationDropdown from "./NotificationDropdown";
+import { logoutUser } from "../../Redux/thunks/authThunk";
 
 const Topbar = ({
   setToggleMenuBar,
@@ -70,7 +70,7 @@ const Topbar = ({
   };
 
   const handleLogout = () => {
-    dispatch(logout());
+    dispatch(logoutUser());
     navigate("/login");
   };
 

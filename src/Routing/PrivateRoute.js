@@ -4,7 +4,7 @@ import { Navigate, useLocation } from "react-router-dom";
 import PrivateLayout from "../Layout/PrivateLayout";
 import { authAxios } from "../config/config";
 import { persistor } from "../Redux/store";
-import { logout } from "../Redux/Reducers/authSlice";
+import { logoutUser } from "../Redux/thunks/authThunk";
 
 export default function PrivateRoute({ children }) {
   const dispatch = useDispatch();
@@ -14,7 +14,7 @@ export default function PrivateRoute({ children }) {
   );
 
   const handleLogout = () => {
-    dispatch(logout());
+    dispatch(logoutUser());
     persistor.purge();
   };
 

@@ -1,8 +1,8 @@
 import { persistor } from "../store";
-import { logout } from "./authSlice";
+import { logoutUser } from "../thunks/authThunk";
 
 export const performLogout = (dispatch) => {
-  dispatch(logout());
+  dispatch(logoutUser());
   persistor.purge();
   window.location.href = "/login";
 };
