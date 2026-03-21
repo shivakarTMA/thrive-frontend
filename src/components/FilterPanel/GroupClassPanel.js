@@ -45,7 +45,6 @@ export default function GroupClassPanel({
       setTrainerList(activeOnly);
     } catch (error) {
       console.error("Failed to fetch trainers:", error);
-      toast.error("Failed to fetch trainers");
     }
   };
 
@@ -63,7 +62,6 @@ export default function GroupClassPanel({
       setCategoryList(activeOnly);
     } catch (error) {
       console.error("Failed to fetch category:", error);
-      toast.error("Failed to fetch category");
     }
   };
 

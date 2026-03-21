@@ -67,7 +67,7 @@ const ActiveClientReport = () => {
         setClubFilter(activeOnly[0].id);
       }
     } catch (error) {
-      toast.error("Failed to fetch clubs");
+      console.error(error);
     }
   };
   // Function to fetch role list
@@ -80,7 +80,7 @@ const ActiveClientReport = () => {
       const activeOnly = filterActiveItems(data);
       setCompanyList(activeOnly)
     } catch (error) {
-      toast.error("Failed to fetch company");
+      console.error(error);
     }
   };
   // Function to fetch company list
@@ -145,7 +145,6 @@ const ActiveClientReport = () => {
       setTotalCount(responseData?.totalCount || data.length);
     } catch (err) {
       console.error(err);
-      toast.error("data not found");
     }
   };
 

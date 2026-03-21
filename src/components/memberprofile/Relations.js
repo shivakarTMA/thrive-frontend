@@ -87,7 +87,6 @@ const Relations = ({ details }) => {
       setReferredBy(res.data?.data || []);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch referrals");
     }
   };
 
@@ -130,10 +129,7 @@ const Relations = ({ details }) => {
           toast.error(res?.data?.message || "Something went wrong");
         }
       } catch (error) {
-        toast.error(
-          error?.response?.data?.message ||
-            "Something went wrong. Please try again.",
-        );
+        console.log(error)
       }
     },
   });

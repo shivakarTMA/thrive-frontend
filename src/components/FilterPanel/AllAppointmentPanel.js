@@ -51,7 +51,6 @@ export default function AllAppointmentPanel({
       setTrainerList(activeOnly);
     } catch (error) {
       console.error("Failed to fetch trainers:", error);
-      toast.error("Failed to fetch trainers");
     }
   };
 
@@ -73,7 +72,6 @@ export default function AllAppointmentPanel({
       setServiceList(activeProductServices);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch services");
     }
   };
 
@@ -95,7 +93,7 @@ export default function AllAppointmentPanel({
 
       setPackageList(activePackages);
     } catch (err) {
-      toast.error("Failed to fetch packages");
+      console.log(err)
       setPackageList([]);
     }
   };

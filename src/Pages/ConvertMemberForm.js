@@ -382,9 +382,7 @@ const ConvertMemberForm = ({
           // setMemberModal(false);
           onLeadUpdate();
         } catch (error) {
-          // toast.error("Failed to create member. Please try again.");
           console.log(error, "error");
-          toast.error(error.response?.data?.message);
         }
       } else {
         setStep(step + 1);
@@ -471,7 +469,6 @@ const ConvertMemberForm = ({
         }
       } catch (err) {
         console.error(err);
-        toast.error("Failed to fetch module details");
       }
     };
 
@@ -485,7 +482,6 @@ const ConvertMemberForm = ({
       setAllLeads(data);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch lead");
     }
   };
   // Fetch companies
@@ -514,7 +510,6 @@ const ConvertMemberForm = ({
       setCompanyOptions(options);
     } catch (err) {
       console.error("❌ Failed to fetch companies:", err);
-      toast.error("Failed to fetch companies");
     }
   };
 
@@ -789,8 +784,6 @@ const ConvertMemberForm = ({
         final_amount: originalFinal,
         amount_pay: originalFinal,
       });
-
-      // toast.error(err?.message || "Invalid or expired coupon");
     }
   };
 
@@ -818,7 +811,7 @@ const ConvertMemberForm = ({
         await authAxios().delete(`/member-emergency-contact/${contact.id}`);
         toast.success("Emergency contact removed");
       } catch (error) {
-        toast.error("Failed to delete contact");
+        console.error(error);
         return;
       }
     }

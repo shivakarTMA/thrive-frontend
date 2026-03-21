@@ -165,7 +165,6 @@ const MarketingManagerDashboard = () => {
       setOrders(data);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch companies");
     }
   };
 
@@ -194,7 +193,6 @@ const MarketingManagerDashboard = () => {
       setDashboardData(data);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch companies");
     }
   };
 
@@ -233,7 +231,6 @@ const MarketingManagerDashboard = () => {
       setProductSeries(seriesData);
     } catch (error) {
       console.error(error);
-      toast.error("Failed to fetch product status");
     }
   };
 
@@ -277,7 +274,6 @@ const MarketingManagerDashboard = () => {
       setLeadSeries(seriesData);
     } catch (error) {
       console.error(error);
-      toast.error("Failed to fetch enquiry status");
     }
   };
 
@@ -302,7 +298,7 @@ const MarketingManagerDashboard = () => {
         });
       }
     } catch (error) {
-      toast.error("Failed to fetch clubs");
+      console.error(error);
     }
   };
 

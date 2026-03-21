@@ -43,7 +43,6 @@ const GroupClassParticipants = () => {
       setTotalCount(responseData?.totalCount || data.length);
     } catch (err) {
       console.error("❌ API Error:", err);
-      toast.error("Failed to fetch participant");
     }
   };
 
@@ -78,7 +77,6 @@ const GroupClassParticipants = () => {
       fetchParticipatList(page);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to update status");
     }
   };
 

@@ -53,7 +53,6 @@ const Services = () => {
       setClub(activeOnly);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch companies");
     }
   };
 
@@ -71,7 +70,6 @@ const Services = () => {
       setStudio(activeOnly);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch companies");
     }
   };
 
@@ -100,7 +98,6 @@ const Services = () => {
       setTotalCount(res.data?.totalCount || data.length);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch companies");
     }
   };
 
@@ -202,7 +199,6 @@ const Services = () => {
         fetchServices();
       } catch (err) {
         console.error("API Error:", err.response?.data || err.message);
-        toast.error("Failed to save onboarding");
       }
 
       resetForm();

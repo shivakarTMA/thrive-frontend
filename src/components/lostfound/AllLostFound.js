@@ -3,7 +3,6 @@ import { FaAngleLeft, FaAngleRight, FaCheck, FaCircle } from "react-icons/fa";
 import { FiPlus } from "react-icons/fi";
 import { IoIosSearch } from "react-icons/io";
 import Select from "react-select";
-import { lostFoundData as initialData } from "../../DummyData/DummyData";
 import AddNewItemModal from "./AddNewItemModal";
 import MarkReturnedModal from "./MarkReturnedModal";
 import DatePicker from "react-datepicker";
@@ -85,7 +84,7 @@ const AllLostFound = () => {
       const activeOnly = filterActiveItems(data);
       setClubList(activeOnly);
     } catch (error) {
-      toast.error("Failed to fetch clubs");
+      console.log(error)
     }
   };
   // Function to fetch role list
@@ -146,7 +145,6 @@ const AllLostFound = () => {
       setTotalCount(responseData?.totalCount || data.length);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch Data");
     }
   };
 

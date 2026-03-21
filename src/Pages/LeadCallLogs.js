@@ -178,7 +178,6 @@ const LeadCallLogs = () => {
       setCallLogs(data);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch lead details");
     }
   };
 
@@ -190,7 +189,6 @@ const LeadCallLogs = () => {
       setClubData(data?.club_id);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch lead details");
     }
   };
 
@@ -242,7 +240,6 @@ const LeadCallLogs = () => {
         resetForm();
         fetchLeadCallLogs(leadId);
       } catch (error) {
-        toast.error("Something went wrong. Please try again.");
         console.error("Error submitting form:", error);
       }
     },
@@ -337,7 +334,6 @@ const LeadCallLogs = () => {
       setStaffList(groupedOptions); // For 'training_by'
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch staff");
     }
   };
 

@@ -42,7 +42,6 @@ const ProductCategoryList = () => {
       setClub(activeClub);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch companies");
     }
   };
 
@@ -71,7 +70,6 @@ const ProductCategoryList = () => {
       setTotalCount(res.data?.totalCount || data.length);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch companies");
     }
   };
 
@@ -161,7 +159,6 @@ const ProductCategoryList = () => {
         fetchProductCategoryList();
       } catch (err) {
         console.error("API Error:", err.response?.data || err.message);
-        toast.error("Failed to save package");
       }
 
       resetForm();

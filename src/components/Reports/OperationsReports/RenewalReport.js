@@ -53,7 +53,7 @@ const RenewalReport = () => {
       const activeOnly = filterActiveItems(data);
       setClubList(activeOnly);
     } catch (error) {
-      toast.error("Failed to fetch clubs");
+      console.error(error);
     }
   };
 

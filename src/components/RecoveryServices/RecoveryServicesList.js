@@ -53,7 +53,6 @@ const RecoveryServicesList = () => {
       setServicesList(activeOnly);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch companies");
     }
   };
   // club list
@@ -65,7 +64,6 @@ const RecoveryServicesList = () => {
       setClub(activeOnly);
     } catch (error) {
       console.error(error);
-      toast.error("Failed to fetch clubs");
     }
   };
 
@@ -95,7 +93,6 @@ const RecoveryServicesList = () => {
       setTotalCount(res.data?.totalCount || data.length);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch recovery services");
     }
   };
 
@@ -201,7 +198,6 @@ const RecoveryServicesList = () => {
         fetchRecoveryServices();
       } catch (err) {
         console.error("API Error:", err.response?.data || err.message);
-        toast.error("Failed to save recovery service");
       }
 
       resetForm();

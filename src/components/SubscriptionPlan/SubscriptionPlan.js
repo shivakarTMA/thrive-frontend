@@ -46,7 +46,6 @@ const SubscriptionPlan = () => {
       setClub(activeOnly);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch club");
     }
   };
 
@@ -79,7 +78,6 @@ const SubscriptionPlan = () => {
       setTotalCount(responseData?.totalCount || data.length);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch subscription");
     }
   };
 
@@ -189,7 +187,6 @@ const SubscriptionPlan = () => {
         fetchSubscription();
       } catch (err) {
         console.error("API Error:", err.response?.data || err.message);
-        toast.error("Failed to save onboarding");
       }
 
       resetForm();

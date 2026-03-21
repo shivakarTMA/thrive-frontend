@@ -44,7 +44,6 @@ const Studio = () => {
       setClub(activeClub);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch club");
     }
   };
 
@@ -69,7 +68,6 @@ const Studio = () => {
       setTotalCount(res.data?.totalCount || data.length);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch studio");
     }
   };
 
@@ -138,8 +136,7 @@ const Studio = () => {
 
         // fetchStudio();
       } catch (err) {
-        // console.error("API Error:", err.response?.data || err.message);
-         toast.error(err.response?.data?.message);
+         console.error(err);
       }
     },
   });

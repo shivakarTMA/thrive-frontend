@@ -21,75 +21,10 @@ const dateFilterOptions = [
   { value: "custom", label: "Custom Date" },
 ];
 
-const dummyData = [
-  {
-    ClubName: "Summit Plaza",
-    SupplierGSTIN: "07AAACD1234F1Z2",
-    InvoiceDate: "05-Dec-2025",
-    InvoiceNo: "DLF202600029",
-    MemberID: "MB-784512",
-    MemberName: "Rahul Mehta",
-    TypeOfService: "Membership",
-    Description: "12-Month",
-    ValueOfService: "48000",
-    Taxes: "8640",
-    UtilisedValueOfService: "18000",
-    BalanceValueOfService: "30000",
 
-    // 🔽 New fields from attachment
-    RequestedRefundAmount: "48000",
-    DeferredRevenue: "30000",
-    Reason: "Medical issue",
-    ClubManagerRemarks: "Member injured, medical certificate submitted",
-    ApprovedBy: "—",
-    Status: "Pending",
-  },
-  {
-    ClubName: "Cybepark",
-    SupplierGSTIN: "07BBBCD5678G2Z3",
-    InvoiceDate: "09-Dec-2025",
-    InvoiceNo: "DLF202600030",
-    MemberID: "MB-562341",
-    MemberName: "Ananya Verma",
-    TypeOfService: "PT Package",
-    Description: "24-Session PT Pack",
-    ValueOfService: "36000",
-    Taxes: "6480",
-    UtilisedValueOfService: "18000",
-    BalanceValueOfService: "18000",
-
-    RequestedRefundAmount: "18000",
-    DeferredRevenue: "18000",
-    Reason: "Relocation",
-    ClubManagerRemarks: "Member relocating out of city",
-    ApprovedBy: "—",
-    Status: "Pending",
-  },
-  {
-    ClubName: "Summit Plaza",
-    SupplierGSTIN: "07AAACD1234F1Z2",
-    InvoiceDate: "20-Dec-2025",
-    InvoiceNo: "DLF202600031",
-    MemberID: "MB-774521",
-    MemberName: "Neha Kapoor",
-    TypeOfService: "Membership",
-    Description: "6-Month",
-    ValueOfService: "30000",
-    Taxes: "5400",
-    UtilisedValueOfService: "10000",
-    BalanceValueOfService: "20000",
-
-    RequestedRefundAmount: "30000",
-    DeferredRevenue: "20000",
-    Reason: "Policy exception",
-    ClubManagerRemarks: "Outside refund window",
-    ApprovedBy: "Sakshi",
-    Status: "Denied",
-  },
-];
 
 const RefundRequests = () => {
-  const [data] = useState(dummyData);
+  const [data] = useState([]);
   const [clubList, setClubList] = useState([]);
   const [clubFilter, setClubFilter] = useState(null);
   const { user } = useSelector((state) => state.auth);
@@ -113,7 +48,7 @@ const RefundRequests = () => {
       const activeOnly = filterActiveItems(data);
       setClubList(activeOnly);
     } catch (error) {
-      toast.error("Failed to fetch clubs");
+      console.error(error);
     }
   };
   // Function to fetch role list

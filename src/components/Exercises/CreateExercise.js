@@ -81,7 +81,6 @@ const CreateExercise = ({
         resetForm();
         setShowModal(false);
       } catch (error) {
-        toast.error("Something went wrong. Please try again.");
         console.error("Error submitting form:", error);
       }
     },
@@ -109,7 +108,6 @@ const CreateExercise = ({
             has_distance: exerciseData.has_distance || false,
           });
         } catch (error) {
-          toast.error("Failed to fetch exercise data.");
           console.error("Error fetching exercise:", error);
         }
       }

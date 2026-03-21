@@ -92,7 +92,6 @@ const HealthProfile = ({ details }) => {
       setTotalCount(res.data?.totalCount || data.length);
     } catch (err) {
       console.error(err);
-      toast.error(`Failed to fetch member ${type}`);
     }
   };
 

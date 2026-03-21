@@ -63,8 +63,7 @@ const CreatePackage = ({
       const activeOnly = filterActiveItems(data);
       setClub(activeOnly);
     } catch (err) {
-      console.error(err);
-      toast.error("Failed to fetch companies");
+      console.log(err);
     }
   };
 
@@ -78,7 +77,6 @@ const CreatePackage = ({
       setService(activeService);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch service");
     }
   };
 
@@ -92,7 +90,6 @@ const CreatePackage = ({
       setStudio(activeService);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch club");
     }
   };
 
@@ -170,7 +167,6 @@ const CreatePackage = ({
       );
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch variation list");
     }
   };
 
@@ -237,7 +233,6 @@ const CreatePackage = ({
         }
       } catch (err) {
         console.error(err);
-        toast.error("Failed to fetch package details");
       }
     };
 
@@ -264,7 +259,7 @@ const CreatePackage = ({
       const updated = formik.values.variation.filter((_, i) => i !== index);
       formik.setFieldValue("variation", updated);
     } catch (err) {
-      toast.error("Failed to delete variation");
+      console.log(err)
     }
 
     // Close modal

@@ -62,7 +62,6 @@ const CreateSubscriptionPlan = ({
         }
       } catch (err) {
         console.error(err);
-        toast.error("Failed to fetch subscription details");
       }
     };
 

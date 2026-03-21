@@ -205,7 +205,6 @@ const KYCSubmission = ({ details, setLoading }) => {
       toast.success("Documents submitted successfully!");
     } catch (error) {
       console.error("Error uploading documents:", error);
-      toast.error("Upload failed. Check console for details.");
     }
   };
 
@@ -260,7 +259,6 @@ const downloadAndOpenParqForm = async () => {
 
   } catch (error) {
     console.error("Failed to download and open PAR-Q form:", error);
-    toast.error("Failed to download and open PAR-Q form");
   } finally {
     setLoading(false);
   }
@@ -299,7 +297,6 @@ const downloadAndOpenTerms = async () => {
 
   } catch (error) {
     console.error("Failed to download T&C form:", error);
-    toast.error("Failed to download T&C form");
   } finally {
     setLoading(false);
   }

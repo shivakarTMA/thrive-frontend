@@ -22,7 +22,6 @@ const FaqCategoryList = () => {
       setFaqCategory(data);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch companies");
     }
   };
 
@@ -62,7 +61,6 @@ const FaqCategoryList = () => {
         fetchFaqCategoryList();
       } catch (err) {
         console.error("API Error:", err.response?.data || err.message);
-        toast.error("Failed to save faq category");
       }
 
       resetForm();

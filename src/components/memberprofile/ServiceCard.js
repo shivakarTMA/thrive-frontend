@@ -65,8 +65,8 @@ const ServiceCard = ({ details }) => {
       const res = await authAxios().get("/staff/list?role=TRAINER", { params });
       const data = res.data?.data || res?.data || [];
       setStaffList(data.filter((item) => item?.status === "ACTIVE"));
-    } catch {
-      toast.error("Failed to fetch staff");
+    } catch(error) {
+      console.log(error)
     }
   };
 
@@ -79,7 +79,6 @@ const ServiceCard = ({ details }) => {
       setMembershipData(data);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch coins");
     }
   };
 
@@ -118,7 +117,6 @@ const ServiceCard = ({ details }) => {
       setHasUpcomingMembership(upcomingExists);
     } catch (err) {
       console.error("Membership Fetch Error:", err);
-      toast.error("Failed to fetch memberships");
       setPurchasedMemberships([]);
       setPurchasedMembershipsCount(0);
       setHasUpcomingMembership(false);
@@ -148,7 +146,6 @@ const ServiceCard = ({ details }) => {
       setPurchasedServicesCount(dataCount);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch services");
     }
   };
 
@@ -173,7 +170,6 @@ const ServiceCard = ({ details }) => {
       fetchPurchaseServices();
     } catch (error) {
       console.error(error);
-      toast.error("Failed to assign trainer");
     }
   };
 

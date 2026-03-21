@@ -37,7 +37,6 @@ const FaqsList = () => {
       setProductCategory(activeOnly);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch product");
     }
   };
 
@@ -76,7 +75,6 @@ const FaqsList = () => {
       setTotalCount(responseData?.totalCount || data.length);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch companies");
     }
   };
 
@@ -134,7 +132,6 @@ const FaqsList = () => {
         fetchFaqsList();
       } catch (err) {
         console.error("API Error:", err.response?.data || err.message);
-        toast.error("Failed to save faq");
       }
 
       resetForm();

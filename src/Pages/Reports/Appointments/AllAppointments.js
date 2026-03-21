@@ -117,7 +117,7 @@ const AllAppointments = () => {
       const activeOnly = filterActiveItems(data);
       setClubList(activeOnly);
     } catch (error) {
-      toast.error("Failed to fetch clubs");
+      console.error(error);
     }
   };
 
@@ -236,7 +236,6 @@ const AllAppointments = () => {
       });
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch appointments");
     }
   };
 
@@ -411,7 +410,6 @@ const AllAppointments = () => {
       fetchAppointments(page);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to update appointment");
     }
   };
 

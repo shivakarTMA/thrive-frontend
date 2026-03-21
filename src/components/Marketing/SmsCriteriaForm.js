@@ -1,16 +1,17 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import Select from "react-select";
 import MemberEmailFilterPanel from "../FilterPanel/MemberEmailFilterPanel";
 import { customStyles } from "../../Helper/helper";
-import { smsTemplates } from "../../DummyData/DummyData";
 import { toast } from "react-toastify";
 import DatePicker from "react-datepicker";
 
 const smsGateways = [{ value: "gupshup", label: "Gupshup" }];
 
 const SmsCriteriaForm = ({ activeTab, onFilterDirtyChange }) => {
+
+    const [smsTemplates, setSmsTemplates] = useState([])
   // ✅ Define validation schema using Yup
   const validationSchema = Yup.object({
     // selectedTemplate: Yup.object().nullable().required("Template is required"),

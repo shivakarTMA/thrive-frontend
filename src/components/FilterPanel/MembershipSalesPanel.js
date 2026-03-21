@@ -100,7 +100,6 @@ export default function MembershipSalesPanel({
       setStaffList(activeOnly);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch staff");
     }
   };
 
@@ -122,7 +121,6 @@ export default function MembershipSalesPanel({
       setServiceList(activeProductServices);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch services");
     }
   };
 

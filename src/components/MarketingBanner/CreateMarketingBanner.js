@@ -37,8 +37,6 @@ const CreateMarketingBanner = ({
     } catch (err) {
       // Log error in console for debugging
       console.error(err);
-      // Show error toast to user
-      toast.error("Failed to fetch clubs");
     }
   };
 
@@ -140,8 +138,6 @@ const CreateMarketingBanner = ({
       } catch (err) {
         // Log error for debugging
         console.error(err);
-        // Show error toast to user
-        toast.error("Failed to fetch banner details");
       }
     };
 

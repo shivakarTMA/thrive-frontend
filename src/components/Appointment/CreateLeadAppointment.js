@@ -41,7 +41,6 @@ const CreateLeadAppointment = ({
       setStaffList(activeService);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch club");
     }
   };
 
@@ -55,7 +54,6 @@ const CreateLeadAppointment = ({
       setServiceList(activeService);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch club");
     }
   };
 
@@ -141,7 +139,6 @@ const CreateLeadAppointment = ({
         handleLeadUpdate();
         handleAppointmentModal();
       } catch (error) {
-        toast.error("Something went wrong. Please try again.");
         console.error("Error submitting form:", error);
       }
     },

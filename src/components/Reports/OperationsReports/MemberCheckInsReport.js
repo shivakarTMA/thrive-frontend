@@ -65,8 +65,8 @@ const MemberCheckInsReport = () => {
         params: { search },
       });
       setMemberResults(res.data?.data || []);
-    } catch {
-      toast.error("Failed to fetch members");
+    } catch(error) {
+      console.error(error);
     } finally {
       setMemberLoading(false);
     }
@@ -92,8 +92,8 @@ const MemberCheckInsReport = () => {
       setClubFilter(activeClubs[0].id);
     }
 
-    } catch {
-      toast.error("Failed to fetch clubs");
+    } catch(error) {
+      console.error(error);
     }
   };
 
@@ -130,8 +130,8 @@ const MemberCheckInsReport = () => {
       const res = await authAxios().get("/report/attendance", { params });
       setData(res.data?.data || []);
       setSummaryData(res.data?.summary || {});
-    } catch {
-      toast.error("Data not found");
+    } catch(error) {
+      console.error(error);
     }
   };
 

@@ -59,7 +59,6 @@ const PackagesList = () => {
       setService(activeService);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch service");
     }
   };
 
@@ -85,7 +84,6 @@ const PackagesList = () => {
       setClub(activeOnly);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch club");
     }
   };
 
@@ -118,7 +116,6 @@ const PackagesList = () => {
       setTotalCount(responseData?.totalCount || data.length);
     } catch (err) {
       console.error(err);
-      toast.error("Package not found");
     }
   };
 
@@ -462,8 +459,7 @@ const PackagesList = () => {
         setEditingOption(null);
         setShowModal(false);
       } catch (err) {
-        console.error("API Error:", err.response?.data || err.message);
-        toast.error(err.response?.data.message);
+        console.log(err);
       }
     },
   });

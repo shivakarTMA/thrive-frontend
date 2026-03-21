@@ -69,7 +69,6 @@ const NotificationFilterPanel = ({
       setServiceList(activeOnly);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch club");
     }
   };
 
@@ -90,7 +89,7 @@ const NotificationFilterPanel = ({
 
       setServicesType(options);
     } catch (error) {
-      toast.error("Failed to fetch service names");
+      console.log(error)
     }
   };
 
@@ -102,7 +101,7 @@ const NotificationFilterPanel = ({
       const activeOnly = filterActiveItems(data);
       setClubList(activeOnly);
     } catch (error) {
-      toast.error("Failed to fetch clubs");
+      console.log(error)
     }
   };
 

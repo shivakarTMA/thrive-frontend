@@ -15,91 +15,9 @@ const dateFilterOptions = [
   { value: "custom", label: "Custom Date" },
 ];
 
-const dummyData = [
-  {
-    club_name: "DLF Summit Plaza",
-    purchaseDate: "2025-04-01",
-    branchLocation: "Mumbai - Andheri",
-    memberId: "MBR1001",
-    memberName: "Rohit Mehta",
-    contactNumber: "9876543210",
-    email: "rohit.mehta@gmail.com",
-    gstNo: "27ABCDE1234F1Z5",
-    clubId: "CLB01",
-    gender: "Male",
-    birthday: "1997-08-12",
-    company: "Infosys",
-    billNo: "INV-001",
-    sequence: "SEQ-001",
-    paidInvoice: "Yes",
-    cancelledPaidInvoice: "No",
-    descriptionService: "Gym Membership 12 Months",
-    startDate: "2025-04-01",
-    endDate: "2026-03-31",
-    ptName: "Amit Trainer",
-    salesRepName: "Neha Singh",
-    generalTrainer: "Ravi Kumar",
-    createdBy: "Admin",
-    amount: 20000,
-    cgst: 1800,
-    sgst: 1800,
-    igst: 0,
-    finalAmount: 23600,
-    paid: 23600,
-    tdsAmount: 0,
-    pending: 0,
-    payMode: "Credit Card",
-    cancelledBy: "-",
-    reason: "-",
-    leadSource: "Walk-in",
-    status: "Active",
-    discountReason: "New Year Offer",
-    note: "Payment completed",
-  },
-  {
-    club_name: "DLF Summit Plaza",
-    purchaseDate: "2025-04-10",
-    branchLocation: "Delhi - Saket",
-    memberId: "MBR1002",
-    memberName: "Anjali Verma",
-    contactNumber: "9123456789",
-    email: "anjali.verma@gmail.com",
-    gstNo: "07PQRSX5678L1Z2",
-    clubId: "CLB02",
-    gender: "Female",
-    birthday: "2000-02-18",
-    company: "Wipro",
-    billNo: "INV-002",
-    sequence: "SEQ-002",
-    paidInvoice: "No",
-    cancelledPaidInvoice: "No",
-    descriptionService: "Gym + PT 6 Months",
-    startDate: "2025-04-10",
-    endDate: "2025-10-09",
-    ptName: "Suresh PT",
-    salesRepName: "Aakash Jain",
-    generalTrainer: "Vikas Singh",
-    createdBy: "Staff",
-    amount: 15000,
-    cgst: 1350,
-    sgst: 1350,
-    igst: 0,
-    finalAmount: 17700,
-    paid: 10000,
-    tdsAmount: 0,
-    pending: 7700,
-    payMode: "UPI",
-    cancelledBy: "-",
-    reason: "-",
-    leadSource: "Instagram",
-    status: "Active",
-    discountReason: "Festival Discount",
-    note: "Balance pending",
-  },
-];
 
 const CancelledPaidInvioceReport = () => {
-  const [data] = useState(dummyData);
+  const [data] = useState([]);
   const [clubList, setClubList] = useState([]);
   const [clubFilter, setClubFilter] = useState(null);
 
@@ -117,7 +35,7 @@ const CancelledPaidInvioceReport = () => {
       const activeOnly = filterActiveItems(data);
       setClubList(activeOnly);
     } catch (error) {
-      toast.error("Failed to fetch clubs");
+      console.error(error);
     }
   };
   // Function to fetch role list

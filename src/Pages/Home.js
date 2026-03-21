@@ -139,7 +139,6 @@ const Home = () => {
       setClassPerformance(formattedData);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch class performances");
     }
   };
 
@@ -207,7 +206,6 @@ const Home = () => {
       setOrders(data);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch companies");
     }
   };
 
@@ -236,7 +234,6 @@ const Home = () => {
       setDashboardData(data);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch companies");
     }
   };
 
@@ -275,7 +272,6 @@ const Home = () => {
       setProductSeries(seriesData);
     } catch (error) {
       console.error(error);
-      toast.error("Failed to fetch product status");
     }
   };
 
@@ -319,7 +315,6 @@ const Home = () => {
       setLeadSeries(seriesData);
     } catch (error) {
       console.error(error);
-      toast.error("Failed to fetch enquiry status");
     }
   };
 
@@ -344,7 +339,7 @@ const Home = () => {
         });
       }
     } catch (error) {
-      toast.error("Failed to fetch clubs");
+      console.log(error)
     }
   };
 

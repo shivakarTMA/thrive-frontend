@@ -47,7 +47,6 @@ const RoleList = () => {
       setTotalCount(res.data?.totalCount || data.length);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch companies");
     }
   };
 
@@ -100,7 +99,6 @@ const RoleList = () => {
         fetchRole();
       } catch (err) {
         console.error(err);
-        toast.error("Failed to save role");
       }
 
       resetForm();

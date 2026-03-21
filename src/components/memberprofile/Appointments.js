@@ -65,7 +65,6 @@ const Appointments = ({ details }) => {
       setTotalCount(responseData?.totalCount || data.length);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch club");
     }
   };
 
@@ -89,7 +88,6 @@ const Appointments = ({ details }) => {
       setServices(activeService);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch club");
     }
   };
 
@@ -133,7 +131,6 @@ const Appointments = ({ details }) => {
       fetchAppointmentsList(page); // Refresh the table
     } catch (err) {
       console.error(err);
-      toast.error("Failed to update appointment status");
     }
   };
 

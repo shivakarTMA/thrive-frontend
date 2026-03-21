@@ -79,7 +79,6 @@ const CreateStaff = ({
       setClub(activeOnly);
     } catch (error) {
       console.error(error);
-      toast.error("Failed to fetch clubs");
     }
   };
 
@@ -150,7 +149,6 @@ const CreateStaff = ({
         }
       } catch (err) {
         console.error(err);
-        toast.error("Failed to fetch staff details");
       }
     };
 

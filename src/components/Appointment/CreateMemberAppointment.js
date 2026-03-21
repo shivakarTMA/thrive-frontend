@@ -74,7 +74,6 @@ const CreateMemberAppointment = ({
       setMemberPurchasedServices(formattedOptions);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch coins");
     }
   };
 
@@ -88,7 +87,6 @@ const CreateMemberAppointment = ({
       setStaffList(activeService);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch club");
     }
   };
 
@@ -102,7 +100,6 @@ const CreateMemberAppointment = ({
       setServiceList(activeService);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch club");
     }
   };
 
@@ -254,10 +251,6 @@ const CreateMemberAppointment = ({
         handleAppointmentModal();
       } catch (error) {
         console.error("Appointment API Error:", error);
-        toast.error(
-          error?.response?.data?.message ||
-            "Something went wrong. Please try again.",
-        );
       }
     },
   });

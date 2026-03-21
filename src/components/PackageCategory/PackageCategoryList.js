@@ -41,7 +41,6 @@ const PackageCategoryList = () => {
       setClub(activeClub);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch companies");
     }
   };
 
@@ -78,7 +77,6 @@ const PackageCategoryList = () => {
       setTotalCount(res.data?.totalCount || data.length);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch companies");
     }
   };
 
@@ -167,8 +165,7 @@ const PackageCategoryList = () => {
           setShowModal(false);
         }
       } catch (err) {
-        // console.error("API Error:", err.response?.data);
-        toast.error(err.response?.data?.message);
+        console.log(err)
       }
 
       // resetForm();

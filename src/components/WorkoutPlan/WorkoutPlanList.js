@@ -35,7 +35,6 @@ const WorkoutPlanList = () => {
       setTotalCount(res.data?.totalCount || data.length);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch workout plans");
     }
   };
 
@@ -65,7 +64,6 @@ const WorkoutPlanList = () => {
         toast.success("Workout plan deleted successfully");
         fetchWorkouts();
       } catch (error) {
-        toast.error("Failed to delete exercise.");
         console.error("Error deleting exercise:", error);
       }
     }

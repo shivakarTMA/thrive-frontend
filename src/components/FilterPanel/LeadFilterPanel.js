@@ -70,7 +70,6 @@ export default function LeadFilterPanel({
       setStaffList(activeOnly);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch staff");
     }
   };
 

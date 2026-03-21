@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import { IoIosAddCircleOutline, IoIosSearch } from "react-icons/io";
 import { LiaEdit } from "react-icons/lia";
 import { MdCall } from "react-icons/md";
 import Select from "react-select";
@@ -37,8 +36,7 @@ import Sidebar from "../components/common/Sidebar";
 import Topbar from "../components/common/Topbar";
 import { useFormik } from "formik";
 import { persistor } from "../Redux/store";
-import { logout } from "../Redux/Reducers/authSlice";
-import useAutoLogout from "../hooks/useAutoLogout";
+import { logoutUser } from "../Redux/thunks/authThunk";
 
 const dateFilterOptions = [
   { value: "today", label: "Today" },
@@ -48,7 +46,6 @@ const dateFilterOptions = [
 ];
 
 const AllLeads = () => {
-  useAutoLogout();
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useDispatch();
@@ -106,7 +103,7 @@ const AllLeads = () => {
   });
 
   const handleLogout = () => {
-    dispatch(logout());
+    dispatch(logoutUser());
     persistor.purge();
   };
 
@@ -119,7 +116,6 @@ const AllLeads = () => {
     const queryParams = new URLSearchParams({
       type: "lead",
       ids: selectedUserId.join(","),
-      clubId: clubFilter?.value || "",
     }).toString();
 
     let url = "";
@@ -280,7 +276,7 @@ const AllLeads = () => {
       const activeOnly = filterActiveItems(data);
       setClubList(activeOnly);
     } catch (error) {
-      console.error(error);
+        console.error(error);
     }
   };
 
@@ -390,18 +386,6 @@ const AllLeads = () => {
       setCustomFrom(new Date(startDate));
       setCustomTo(new Date(endDate));
     }
-
-    // if (clubId) {
-    //   const club = clubList.find((c) => c.id === Number(clubId));
-    //   if (club) {
-    //     setClubFilter({ label: club.name, value: club.id });
-    //   }
-    // } else {
-    //   setClubFilter({
-    //     label: clubList[0].name,
-    //     value: clubList[0].id,
-    //   });
-    // }
 
     if (!clubFilter) {
       if (clubId) {
@@ -533,6 +517,9 @@ const AllLeads = () => {
       fetchLeadList();
     } catch (err) {
       console.error(err);
+      toast.error(
+        err?.response?.data?.message || "Failed to assign owner. Try again.",
+      );
     }
   };
 
@@ -604,6 +591,57 @@ const AllLeads = () => {
     handleLogout();
     return <Navigate to="/login" replace />;
   }
+
+  const handleResetFilters = () => {
+    // Reset date filters
+    setDateFilter(dateFilterOptions[0]); // default = Last 7 Days
+    setCustomFrom(null);
+    setCustomTo(null);
+
+    // Reset club filter (optional: keep default club)
+    if (clubList.length > 0) {
+      setClubFilter({
+        label: clubList[0].name,
+        value: clubList[0].id,
+      });
+    } else {
+      setClubFilter(null);
+    }
+
+    // Reset applied filters
+    const resetFilters = {
+      lead_source: null,
+      lead_status: null,
+      lead_type: null,
+      last_call_status: null,
+      lead_owner: null,
+      interested_in: null,
+      gender: null,
+    };
+
+    setAppliedFilters(resetFilters);
+
+    // Reset formik panel
+    formik.resetForm();
+
+    // Reset pagination
+    setPage(1);
+
+    // Reset URL
+    navigate("", { replace: true });
+
+    // Fetch fresh data
+    fetchLeadList(1);
+  };
+
+  const defaultClubId = clubList.length ? clubList[0].id : null;
+
+  const isFilterApplied =
+    dateFilter?.value !== "last_7_days" ||
+    customFrom !== null ||
+    customTo !== null ||
+    clubFilter?.value !== defaultClubId ||
+    Object.values(appliedFilters).some((value) => value !== null);
 
   return (
     <>
@@ -731,6 +769,14 @@ const AllLeads = () => {
                       userRole={userRole}
                       clubId={clubFilter?.value}
                     />
+                    {isFilterApplied && (
+                      <button
+                        onClick={handleResetFilters}
+                        className="px-4 py-2 border border-gray-400 rounded-md text-sm hover:bg-gray-100"
+                      >
+                        Reset Filters
+                      </button>
+                    )}
                   </div>
                   <div>
                     <div className="flex gap-2 items-center">
@@ -1003,29 +1049,13 @@ const AllLeads = () => {
                                         onClick={() => {
                                           setSelectedLeadMember(row?.id);
                                           setAppointmentModal(true);
-                                          setSelectedLeadClub(row?.club_id)
+                                          setSelectedLeadClub(row?.club_id);
                                         }}
                                         className="p-1 cursor-pointer"
                                       >
                                         <LuCalendarPlus className="text-[25px] text-black" />
                                       </div>
                                     </Tooltip>
-
-                                    {/* <Tooltip
-                                      id={`tooltip-send-${row.id}`}
-                                      content="Send Payment Link"
-                                      place="top"
-                                    >
-                                      <div
-                                        onClick={() => {
-                                          setSelectedLeadMember(row.id);
-                                          setSendPaymentModal(true);
-                                        }}
-                                        className="p-1 cursor-pointer"
-                                      >
-                                        <IoIosAddCircleOutline className="text-[25px] text-black" />
-                                      </div>
-                                    </Tooltip> */}
                                   </div>
                                 )}
                                 {/* Lead Actions End */}

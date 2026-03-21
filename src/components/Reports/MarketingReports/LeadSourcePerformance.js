@@ -49,7 +49,7 @@ const LeadSourcePerformance = () => {
         setClubFilter(activeOnly[0].id);
       }
     } catch (error) {
-      toast.error("Failed to fetch clubs");
+      console.error(error);
     }
   };
   // Function to fetch role list
@@ -92,7 +92,6 @@ const LeadSourcePerformance = () => {
       setLeadSource(data);
     } catch (err) {
       console.error(err);
-      toast.error("data not found");
     }
   };
   useEffect(() => {

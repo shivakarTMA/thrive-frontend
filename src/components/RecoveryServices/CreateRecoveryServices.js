@@ -53,7 +53,6 @@ const RecoveryServices = ({
             status: data.status || "ACTIVE",
           });
         } catch (error) {
-          toast.error("Failed to fetch recovery data.");
           console.error("Error fetching recovery:", error);
         }
       }

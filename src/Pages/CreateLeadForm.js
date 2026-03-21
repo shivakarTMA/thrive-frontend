@@ -266,7 +266,6 @@ const CreateLeadForm = ({
         leadModalPage && handleLeadUpdate();
       } catch (err) {
         console.error("❌ API Error:", err.response?.data || err.message);
-        toast.error(err.response?.data?.message || err.message);
       }
     },
   });
@@ -322,7 +321,6 @@ const CreateLeadForm = ({
         }
       } catch (err) {
         console.error(err);
-        toast.error("Failed to fetch module details");
       }
     };
 
@@ -364,7 +362,6 @@ const CreateLeadForm = ({
       });
     } catch (err) {
       console.error("❌ Failed to fetch companies:", err);
-      toast.error("Failed to fetch companies");
     }
   };
 
@@ -421,7 +418,6 @@ const CreateLeadForm = ({
       setStaffList(groupedOptions);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch staff");
     }
   };
 
@@ -433,7 +429,7 @@ const CreateLeadForm = ({
       const activeOnly = filterActiveItems(data);
       setClub(activeOnly);
     } catch (error) {
-      toast.error("Failed to fetch clubs");
+      console.error(error);
     }
   };
   // Function to fetch role list

@@ -71,7 +71,6 @@ const ChallengeParticipantsList = () => {
           const data = response.data?.data || response.data || null;
           setChallengeData(data);
         } catch (error) {
-          toast.error("Failed to fetch challenge data.");
           console.error("Error fetching challenge:", error);
         }
 
@@ -82,7 +81,6 @@ const ChallengeParticipantsList = () => {
           const data = response.data?.data || response.data || null;
           setData(data);
         } catch (error) {
-          toast.error("Failed to fetch participant data.");
           console.error("Error fetching participant:", error);
         }
       }

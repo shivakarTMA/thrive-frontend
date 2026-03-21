@@ -20,7 +20,6 @@ const ProfileDetails = ({ staffID, setProfileModal }) => {
         }
       } catch (err) {
         console.error(err);
-        toast.error("Failed to fetch module details");
       }
     };
 

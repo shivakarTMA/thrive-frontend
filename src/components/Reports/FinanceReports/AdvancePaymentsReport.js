@@ -15,50 +15,8 @@ const dateFilterOptions = [
   { value: "custom", label: "Custom Date" },
 ];
 
-const dummyData = [
-  {
-    id: 1,
-    club_name: "DLF Summit Plaza",
-    purchaseDate: "2025-02-01",
-    branchLocation: "Mumbai - Andheri",
-    memberId: "2004687",
-    memberName: "Rahul Sharma",
-    contactNumber: "9876543210",
-    email: "rahul.sharma@gmail.com",
-    company: "Tech Solutions Pvt Ltd",
-    descriptionService: "Annual Gym Membership",
-    amount: 12000,
-  },
-  {
-    id: 2,
-    club_name: "DLF Summit Plaza",
-    purchaseDate: "2025-02-05",
-    branchLocation: "Bangalore - Whitefield",
-    memberId: "2004688",
-    memberName: "Anita Verma",
-    contactNumber: "9123456789",
-    email: "anita.verma@gmail.com",
-    company: "Infosys",
-    descriptionService: "Personal Training Package",
-    amount: 8000,
-  },
-  {
-    id: 3,
-    club_name: "DLF Summit Plaza",
-    purchaseDate: "2025-02-10",
-    branchLocation: "Delhi - Saket",
-    memberId: "2004689",
-    memberName: "Karan Mehta",
-    contactNumber: "9988776655",
-    email: "karan.mehta@gmail.com",
-    company: "Freelancer",
-    descriptionService: "Yoga Classes (3 Months)",
-    amount: 4500,
-  },
-];
-
 const AdvancePaymentsReport = () => {
-  const [data] = useState(dummyData);
+  const [data] = useState([]);
   const [clubList, setClubList] = useState([]);
   const [clubFilter, setClubFilter] = useState(null);
 
@@ -76,7 +34,7 @@ const AdvancePaymentsReport = () => {
       const activeOnly = filterActiveItems(data);
       setClubList(activeOnly);
     } catch (error) {
-      toast.error("Failed to fetch clubs");
+      console.error(error);
     }
   };
   // Function to fetch role list

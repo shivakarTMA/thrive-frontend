@@ -80,7 +80,6 @@ const ChallengeForm = ({ setShowModal, editingOption, formik }) => {
       setClub(activeOnly);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch companies");
     }
   };
 
@@ -149,7 +148,6 @@ const ChallengeForm = ({ setShowModal, editingOption, formik }) => {
             setConditionList([]);
           }
         } catch (error) {
-          toast.error("Failed to fetch exercise data.");
           console.error("Error fetching exercise:", error);
         }
       }

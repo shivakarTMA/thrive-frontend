@@ -102,7 +102,6 @@ const StaffList = () => {
       setTotalCount(res.data?.totalCount || data.length);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch staff");
     }
   };
 
@@ -116,7 +115,7 @@ const StaffList = () => {
       const activeOnly = filterActiveItems(data);
       setClubList(activeOnly);
     } catch (error) {
-      toast.error("Failed to fetch clubs");
+      console.error(error);
     }
   };
   // Function to fetch role list
@@ -333,7 +332,6 @@ const StaffList = () => {
         setEditingOption(null);
       } catch (err) {
         console.error("API Error:", err.response?.data || err.message);
-        toast.error(err.response?.data?.message);
       }
     },
   });
@@ -355,7 +353,6 @@ const StaffList = () => {
         toast.success("Staff deleted successfully");
         fetchStaff();
       } catch (error) {
-        toast.error("Failed to delete Staff.");
         console.error("Error deleting Staff:", error);
       }
     }

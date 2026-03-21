@@ -57,7 +57,7 @@ const AllInvoiceReport = () => {
         setClubFilter(activeOnly[0].id);
       }
     } catch (error) {
-      toast.error("Failed to fetch clubs");
+      console.error(error);
     }
   };
   // Function to fetch role list
@@ -103,9 +103,8 @@ const AllInvoiceReport = () => {
       setPage(responseData?.currentPage || 1);
       setTotalPages(responseData?.totalPage || 1);
       setTotalCount(responseData?.totalCount || data.length);
-    } catch (err) {
-      console.error(err);
-      toast.error("data not found");
+    } catch (error) {
+      console.error(error);
     }
   };
 

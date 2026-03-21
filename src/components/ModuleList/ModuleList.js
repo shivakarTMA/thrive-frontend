@@ -45,7 +45,6 @@ const ModuleList = () => {
       setTotalCount(res.data?.totalCount || data.length);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch companies");
     }
   };
 
@@ -101,7 +100,6 @@ const ModuleList = () => {
         fetchModuleList();
       } catch (err) {
         console.error(err);
-        toast.error("Failed to save module");
       }
 
       resetForm();

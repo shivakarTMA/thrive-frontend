@@ -48,7 +48,6 @@ const MemberProfile = (props) => {
       setMember(data);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch member details");
     }
   };
 

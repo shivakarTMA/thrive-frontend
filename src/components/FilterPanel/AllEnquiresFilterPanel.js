@@ -89,7 +89,6 @@ export default function AllEnquiresFilterPanel({
       setStaffList(activeOnly);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch staff");
     }
   };
 

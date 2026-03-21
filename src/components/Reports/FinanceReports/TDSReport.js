@@ -15,53 +15,9 @@ const dateFilterOptions = [
   { value: "custom", label: "Custom Date" },
 ];
 
-const dummyData = [
-  {
-    id: 1,
-    club_name: "DLF Summit Plaza",
-    sequence: "SEQ-001",
-    proFormaInvoiceNo: "PFI-1001",
-    memberId: "M-101",
-    memberName: "John Doe",
-    date: "2025-01-10",
-    service: "Personal Training",
-    salesRepName: "Alex Smith",
-    ptName: "David Lee",
-    paidAmount: 5000,
-    tdsAmount: 500,
-  },
-  {
-    id: 2,
-    club_name: "DLF Summit Plaza",
-    sequence: "SEQ-002",
-    proFormaInvoiceNo: "PFI-1002",
-    memberId: "M-102",
-    memberName: "Emma Watson",
-    date: "2025-01-12",
-    service: "Zumba Classes",
-    salesRepName: "Sarah Johnson",
-    ptName: "Michael Brown",
-    paidAmount: 3000,
-    tdsAmount: 300,
-  },
-  {
-    id: 3,
-    club_name: "DLF Summit Plaza",
-    sequence: "SEQ-003",
-    proFormaInvoiceNo: "PFI-1003",
-    memberId: "M-103",
-    memberName: "Chris Evans",
-    date: "2025-01-15",
-    service: "Yoga Training",
-    salesRepName: "Robert King",
-    ptName: "Sophia Wilson",
-    paidAmount: 4000,
-    tdsAmount: 400,
-  },
-];
 
 const TDSReport = () => {
-  const [data] = useState(dummyData);
+  const [data] = useState([]);
   const [clubList, setClubList] = useState([]);
   const [clubFilter, setClubFilter] = useState(null);
 
@@ -79,7 +35,7 @@ const TDSReport = () => {
       const activeOnly = filterActiveItems(data);
       setClubList(activeOnly);
     } catch (error) {
-      toast.error("Failed to fetch clubs");
+      console.error(error);
     }
   };
   // Function to fetch role list

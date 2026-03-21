@@ -82,7 +82,7 @@ const ChallengeList = () => {
         });
       }
     } catch (error) {
-      toast.error("Failed to fetch clubs");
+      console.log(error)
     }
   };
   // Function to fetch role list
@@ -108,7 +108,6 @@ const ChallengeList = () => {
       setTotalCount(res.data?.totalCount || data.length);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch challenges");
     }
   };
 
@@ -250,7 +249,6 @@ const ChallengeList = () => {
         setShowModal(false);
         fetchChallengeList();
       } catch (error) {
-        toast.error("Something went wrong. Please try again.");
         console.error("Error submitting form:", error.response || error);
       }
     },
@@ -269,7 +267,6 @@ const ChallengeList = () => {
       setSelectedChallenge({ id: null, name: "" });
       fetchChallengeList(); // refresh table
     } catch (error) {
-      toast.error("Failed to update challenge status");
       console.error(error);
     }
   };

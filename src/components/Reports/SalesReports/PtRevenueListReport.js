@@ -1,53 +1,10 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 
-const dummyData = [
-  {
-    id: 1,
-    club_name: "DLF Summit Plaza",
-    name: "Avantika",
-    invoice_no: "Mar9-2025",
-    new_sales: "New Sales",
-    start_date: "05-03-2025",
-    end_date: "02-07-2025",
-    service: "36 - Sessions",
-    total_sessions: "36",
-    completed_sessions: "5",
-    pending_sessions: "31",
-    base_amount: "33040",
-  },
-  {
-    id: 2,
-    club_name: "DLF Summit Plaza",
-    name: "Harneet Kaur",
-    invoice_no: "Mar54-2025",
-    new_sales: "Renewal",
-    start_date: "18-03-2025",
-    end_date: "01-05-2025",
-    service: "12 - Sessions",
-    total_sessions: "12",
-    completed_sessions: "1",
-    pending_sessions: "11",
-    base_amount: "12036",
-  },
-  {
-    id: 3,
-    club_name: "DLF Summit Plaza",
-    name: "Raina Sinha",
-    invoice_no: "Mar49-2025",
-    new_sales: "Renewal",
-    start_date: "13-03-2025",
-    end_date: "11-04-2025",
-    service: "8 - Sessions",
-    total_sessions: "8",
-    completed_sessions: "3",
-    pending_sessions: "5",
-    base_amount: "8496",
-  },
-];
+
 
 const PtRevenueListReport = () => {
-  const [data] = useState(dummyData);
+  const [data] = useState([]);
 
   return (
     <div className="page--content">

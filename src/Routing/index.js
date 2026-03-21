@@ -18,11 +18,9 @@ import MemberList from "../Pages/MemberList";
 import MemberProfile from "../Pages/MemberProfile";
 
 // PT Pages
-import EditLeadDetails from "../Pages/EditLeadDetails";
 import ForgotPassword from "../components/common/ForgotPassword";
 import SetPassword from "../components/common/SetPassword";
 import LeadCallLogs from "../Pages/LeadCallLogs";
-import BookingService from "../Pages/BookingService";
 import CompanyList from "../components/Companies/CompanyList";
 import ProductsList from "../components/Products/ProductsList";
 import StaffList from "../components/Staff/StaffList";
@@ -214,14 +212,6 @@ export default function Routing() {
           }
         />
         <Route
-          path="/edit-lead-details/:id"
-          element={
-            <RoleProtectedRoute path="/edit-lead-details/:id">
-              <EditLeadDetails />
-            </RoleProtectedRoute>
-          }
-        />
-        <Route
           path="/lead-follow-up/:id"
           element={
             <RoleProtectedRoute path="/lead-follow-up/:id">
@@ -268,14 +258,6 @@ export default function Routing() {
           element={
             <RoleProtectedRoute path="/member-follow-up/:id">
               <MemberCallLogs />
-            </RoleProtectedRoute>
-          }
-        />
-        <Route
-          path="/book-service/:id"
-          element={
-            <RoleProtectedRoute path="/book-service/:id">
-              <BookingService />
             </RoleProtectedRoute>
           }
         />

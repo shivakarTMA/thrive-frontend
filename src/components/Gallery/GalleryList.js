@@ -57,7 +57,6 @@ const GalleryList = () => {
       setClub(activeOnly);
     } catch (error) {
       console.error(error);
-      toast.error("Failed to fetch clubs");
     }
   };
 
@@ -87,7 +86,6 @@ const GalleryList = () => {
       setTotalCount(response.data?.totalCount || data.length);
     } catch (error) {
       console.error(error);
-      toast.error("Failed to fetch gallery list");
     }
   };
 
@@ -171,7 +169,6 @@ const GalleryList = () => {
         fetchGallery();
       } catch (error) {
         console.error("API Error:", error.response?.data || error.message);
-        toast.error("Failed to save gallery item");
       }
 
       resetForm();
@@ -190,7 +187,6 @@ const GalleryList = () => {
       fetchGallery();
     } catch (error) {
       console.error(error);
-      toast.error("Failed to delete gallery item");
     } finally {
       setShowDeleteModal(false);
       setSelectedDeleteId(null);

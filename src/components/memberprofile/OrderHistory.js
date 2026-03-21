@@ -35,7 +35,6 @@ const OrderHistory = ({ details }) => {
       setOrdersList(data);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch coins");
     }
   };
 

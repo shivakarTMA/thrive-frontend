@@ -198,7 +198,7 @@ const EmailCriteriaForm = () => {
 
         navigate("/reports/marketing-reports/email-list", { replace: true });
       } catch (error) {
-        toast.error(error?.response?.data?.message || "Something went wrong");
+        console.log(error)
       }
     },
   });
@@ -285,7 +285,7 @@ const EmailCriteriaForm = () => {
             new Date(data.membership_expiry_to),
           );
       } catch (error) {
-        toast.error("Failed to load campaign data");
+        console.log(error)
       } finally {
         setIsFetchingCampaign(false);
       }
@@ -316,8 +316,8 @@ const EmailCriteriaForm = () => {
           );
           if (matched) formik.setFieldValue("selectedTemplate", matched);
         }
-      } catch {
-        toast.error("Failed to fetch email templates");
+      } catch(error) {
+        console.log(error)
       }
     };
     fetchTemplates();

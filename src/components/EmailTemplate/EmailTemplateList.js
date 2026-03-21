@@ -40,7 +40,7 @@ const EmailTemplateList = () => {
       const activeOnly = filterActiveItems(data);
       setClubList(activeOnly);
     } catch (error) {
-      toast.error("Failed to fetch clubs");
+      console.log(error)
     }
   };
   // Function to fetch role list
@@ -73,7 +73,6 @@ const EmailTemplateList = () => {
       setTotalCount(response.data?.totalCount || data.length);
     } catch (err) {
       console.error(err);
-      toast.error("email template not found");
     }
   };
 
@@ -93,7 +92,6 @@ const EmailTemplateList = () => {
       fetchEmailTemplate();
     } catch (error) {
       console.error(error);
-      toast.error("Failed to delete email template");
     } finally {
       setShowDeleteModal(false);
       setSelectedDeleteId(null);

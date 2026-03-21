@@ -45,7 +45,6 @@ const ExercisesList = () => {
       setProductCategory(activeOnly);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch category");
     }
   };
 
@@ -87,7 +86,6 @@ const ExercisesList = () => {
       setTotalCount(res.data?.totalCount || data.length);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch exercises");
     }
   };
 
@@ -117,7 +115,6 @@ const ExercisesList = () => {
         toast.success("Exercise deleted successfully");
         fetchExercisesList();
       } catch (error) {
-        toast.error("Failed to delete exercise.");
         console.error("Error deleting exercise:", error);
       }
     }

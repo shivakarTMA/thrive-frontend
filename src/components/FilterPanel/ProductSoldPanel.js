@@ -93,7 +93,6 @@ export default function ProductSoldPanel({
       setStaffList(activeOnly);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch staff");
     }
   };
 
@@ -115,7 +114,6 @@ export default function ProductSoldPanel({
       setServiceList(activeProductServices);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch services");
     }
   };
 

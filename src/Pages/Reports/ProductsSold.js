@@ -100,7 +100,7 @@ const ProductsSold = (props) => {
       const activeOnly = filterActiveItems(data);
       setClubList(activeOnly);
     } catch (error) {
-      toast.error("Failed to fetch clubs");
+      console.error(error);
     }
   };
   // Function to fetch role list
@@ -216,7 +216,6 @@ const ProductsSold = (props) => {
       });
     } catch (err) {
       console.error("❌ API Error:", err);
-      toast.error("Failed to fetch product sold report");
     }
   };
 
@@ -371,7 +370,6 @@ const ProductsSold = (props) => {
       setLoading(false);
     } catch (err) {
       console.error("Invoice download failed", err);
-      toast.error("Failed to download invoice");
       setLoading(false);
     }
   };
@@ -417,7 +415,6 @@ const ProductsSold = (props) => {
       toast.success("File downloaded successfully");
     } catch (error) {
       console.error(error);
-      toast.error("Download failed. Please try again.");
     }
   };
 

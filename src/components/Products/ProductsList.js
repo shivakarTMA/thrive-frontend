@@ -39,7 +39,6 @@ const ProductsList = () => {
       setService(activeService);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch service");
     }
   };
 
@@ -53,7 +52,6 @@ const ProductsList = () => {
       setClub(activeOnly);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch companies");
     }
   };
 
@@ -81,7 +79,6 @@ const ProductsList = () => {
       setProductCategory(activeService);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch product");
     }
   };
 
@@ -123,7 +120,6 @@ const ProductsList = () => {
       setTotalCount(responseData?.totalCount || data.length);
     } catch (err) {
       console.error(err);
-      toast.error("Product not found");
     }
   };
 
@@ -280,7 +276,6 @@ const ProductsList = () => {
       } catch (err) {
         console.error("API Error:", err.response?.data || err.message);
         const message = err.response?.data?.message?.toLowerCase() || "";
-        toast.error(message);
       }
     },
   });

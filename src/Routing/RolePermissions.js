@@ -26,7 +26,6 @@ export const ROUTE_PERMISSIONS = {
   '/all-members/:id': ['ADMIN', 'FOH', 'TRAINER', 'CLUB_MANAGER', 'FINANCE_MANAGER', 'MARKETING_MANAGER'],
   '/member/:id': ['ADMIN', 'FOH', 'TRAINER', 'CLUB_MANAGER', 'FINANCE_MANAGER', 'MARKETING_MANAGER'],
   '/member-follow-up/:id': ['ADMIN', 'FOH'],
-  '/book-service/:id': ['ADMIN', 'FOH'],
   
   // Workout Plans
   '/workout-plans': ['ADMIN', 'TRAINER'],

@@ -88,10 +88,6 @@ const MarkReturnedModal = ({ lostID, onClose, clubOptions, fetchLostFoundList })
 
   
       } catch (error) {
-        toast.error(
-          error.response?.data?.message ||
-            "Something went wrong. Please try again."
-        );
         console.error("Error updating item:", error);
       } finally {
         setLoading(false);
@@ -142,7 +138,6 @@ const MarkReturnedModal = ({ lostID, onClose, clubOptions, fetchLostFoundList })
         }
       }
     } catch (error) {
-      toast.error("Failed to fetch item data");
       console.error("Error fetching item:", error);
       onClose();
     } finally {

@@ -50,7 +50,6 @@ const CreateFaqs = ({
         }
       } catch (err) {
         console.error(err);
-        toast.error("Failed to fetch faq details");
       }
     };
 

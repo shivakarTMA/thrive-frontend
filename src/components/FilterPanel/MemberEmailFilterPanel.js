@@ -90,8 +90,8 @@ const MemberEmailFilterPanel = ({
       const data = filterActiveItems(res.data?.data || res?.data || []);
       setServiceList(data);
       return data; // ✅ return raw array, not state
-    } catch {
-      toast.error("Failed to fetch services");
+    } catch (error) {
+      console.log(error)
       return [];
     }
   };
@@ -111,8 +111,8 @@ const MemberEmailFilterPanel = ({
       }));
       setServicesType(options);
       return options; // ✅ return options, not state
-    } catch {
-      toast.error("Failed to fetch service names");
+    } catch (error) {
+      console.log(error)
       return [];
     }
   };
@@ -121,8 +121,8 @@ const MemberEmailFilterPanel = ({
     try {
       const res = await authAxios().get("/club/list");
       setClubList(filterActiveItems(res.data?.data || []));
-    } catch {
-      toast.error("Failed to fetch clubs");
+    } catch (error) {
+      console.log(error)
     }
   };
 
@@ -329,8 +329,8 @@ const MemberEmailFilterPanel = ({
           formik?.values?.module === "Member" ? "member(s)" : "enquiry(ies)"
         } found.`,
       );
-    } catch {
-      toast.error("Failed to fetch member list");
+    } catch(error) {
+      console.log(error)
       onMemberIdsFetched([]);
     }
   };

@@ -51,7 +51,6 @@ const OptionList = () => {
       setTotalCount(res.data?.totalCount || data.length);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch options");
     }
   };
 
@@ -68,7 +67,6 @@ const OptionList = () => {
       );
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch option types");
     }
   };
 
@@ -121,7 +119,6 @@ const OptionList = () => {
         fetchOptions();
       } catch (err) {
         console.error(err);
-        toast.error("Failed to save option");
       }
 
       resetForm();

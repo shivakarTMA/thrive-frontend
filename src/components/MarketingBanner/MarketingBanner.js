@@ -42,7 +42,6 @@ const MarketingBanner = () => {
       setClub(activeClub);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch club");
     }
   };
 
@@ -70,7 +69,6 @@ const MarketingBanner = () => {
       setTotalCount(res.data?.totalCount || data.length);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch banner");
     }
   };
 
@@ -184,7 +182,6 @@ const MarketingBanner = () => {
         setEditingClub(null);
       } catch (err) {
         console.error("API Error:", err.response?.data || err.message);
-        toast.error("Failed to save club");
       }
     },
   });

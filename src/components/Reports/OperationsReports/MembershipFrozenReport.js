@@ -15,56 +15,8 @@ const dateFilterOptions = [
   { value: "custom", label: "Custom Date" },
 ];
 
-const dummyData = [
-  {
-    club_name: "DLF Summit Plaza",
-    memberId: "MB-601",
-    memberName: "Amit Sharma",
-    planName: "Gold Membership",
-    freezeStartDate: "05-12-2025",
-    freezeEndDate: "20-12-2025",
-    lastCheckInDate: "04-12-2025",
-    leadSource: "Website",
-    salesRepName: "Rohit Verma",
-    billAmount: 12000,
-    payMode: "Credit Card",
-    companyName: "FitZone Gym",
-    gender: "Male",
-  },
-  {
-    club_name: "DLF Summit Plaza",
-    memberId: "MB-602",
-    memberName: "Neha Singh",
-    planName: "Silver Membership",
-    freezeStartDate: "10-12-2025",
-    freezeEndDate: "25-12-2025",
-    lastCheckInDate: "09-12-2025",
-    leadSource: "Referral",
-    salesRepName: "Anjali Mehta",
-    billAmount: 8000,
-    payMode: "UPI",
-    companyName: "FitZone Gym",
-    gender: "Female",
-  },
-  {
-    club_name: "DLF Summit Plaza",
-    memberId: "MB-603",
-    memberName: "Rahul Patel",
-    planName: "Platinum Membership",
-    freezeStartDate: "01-12-2025",
-    freezeEndDate: "15-12-2025",
-    lastCheckInDate: "30-11-2025",
-    leadSource: "Walk-in",
-    salesRepName: "Kunal Shah",
-    billAmount: 18000,
-    payMode: "Cash",
-    companyName: "Elite Fitness Club",
-    gender: "Male",
-  },
-];
-
 const MembershipFrozenReport = () => {
-  const [data] = useState(dummyData);
+  const [data] = useState([]);
   const [clubList, setClubList] = useState([]);
   const [clubFilter, setClubFilter] = useState(null);
 
@@ -82,7 +34,7 @@ const MembershipFrozenReport = () => {
       const activeOnly = filterActiveItems(data);
       setClubList(activeOnly);
     } catch (error) {
-      toast.error("Failed to fetch clubs");
+      console.error(error);
     }
   };
   // Function to fetch role list

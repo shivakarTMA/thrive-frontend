@@ -29,38 +29,9 @@ const yearOptions = Array.from({ length: 10 }, (_, i) => {
   return { value: year, label: year.toString() };
 });
 
-const dummyData = [
-  {
-    id: 1,
-    staff_name: "Prerna",
-    club_name: "DLF Summit Plaza",
-    sales_target: 60000,
-    sales_achieved: 53572,
-    new_sales: 33040,
-    renewals: 20532,
-  },
-  {
-    id: 2,
-    staff_name: "Swati Singh",
-    club_name: "DLF Summit Plaza",
-    sales_target: 75000,
-    sales_achieved: 68250,
-    new_sales: 45000,
-    renewals: 23250,
-  },
-  {
-    id: 3,
-    staff_name: "Rahul Verma",
-    club_name: "DLF Summit Plaza",
-    sales_target: 50000,
-    sales_achieved: 41200,
-    new_sales: 29000,
-    renewals: 12200,
-  },
-];
 
 const PtRevenueReport = () => {
-  const [data] = useState(dummyData);
+  const [data] = useState([]);
   const [clubList, setClubList] = useState([]);
   const [clubFilter, setClubFilter] = useState(null);
   const [staffList, setStaffList] = useState([]);
@@ -79,7 +50,7 @@ const PtRevenueReport = () => {
       const activeOnly = filterActiveItems(data);
       setClubList(activeOnly);
     } catch (error) {
-      toast.error("Failed to fetch clubs");
+      console.error(error);
     }
   };
   // Function to fetch role list
@@ -94,7 +65,6 @@ const PtRevenueReport = () => {
       setStaffList(activeStaff);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch staff");
     }
   };
 

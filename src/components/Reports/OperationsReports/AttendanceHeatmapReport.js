@@ -38,7 +38,7 @@ const AttendanceHeatmapReport = () => {
       }
       setClubList(activeOnly);
     } catch (error) {
-      toast.error("Failed to fetch clubs");
+      console.error(error);
     }
   };
   // Function to fetch role list

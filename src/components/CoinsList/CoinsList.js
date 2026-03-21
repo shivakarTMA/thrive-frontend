@@ -59,7 +59,6 @@ const CoinsList = ({ details }) => {
       setTotalCount(responseData?.totalCount || data.length);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch coins");
     }
   };
 

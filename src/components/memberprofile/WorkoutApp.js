@@ -78,7 +78,6 @@ const WorkoutApp = ({ member }) => {
     }
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch workout plans");
     }
   };
 
@@ -106,7 +105,6 @@ const WorkoutApp = ({ member }) => {
       }
     } catch (err) {
       console.error(err);
-      toast.error("Action failed");
     }
 
     // Close modal

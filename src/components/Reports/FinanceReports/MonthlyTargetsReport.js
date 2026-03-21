@@ -21,69 +21,7 @@ const dateFilterOptions = [
   { value: "custom", label: "Custom Date" },
 ];
 
-const dummyData = [
-  {
-    id: 1,
-    club_id: 16,
-    club_name: "DLF Summit Plaza",
-    month: "01/2026",
-    target_type: "Revenue",
-    target: "4,000,000",
-    achieved: "3,520,000",
-    achievement_percent: "88%",
-    status: "Locked",
-    effective_from: "01/01/2026",
-    effective_to: "31/01/2026",
-    last_updated_on: "19/12/2025",
-    last_updated_by: "Prerna",
-  },
-  {
-    id: 2,
-    club_id: 16,
-    club_name: "DLF Summit Plaza",
-    month: "02/2026",
-    target_type: "Revenue",
-    target: "3,000,000",
-    achieved: "3,450,000",
-    achievement_percent: "115%",
-    status: "Active",
-    effective_from: "01/01/2026",
-    effective_to: "31/01/2026",
-    last_updated_on: "01/01/2026",
-    last_updated_by: "Shivakar",
-  },
-  {
-    id: 3,
-    club_id: 16,
-    club_name: "DLF Summit Plaza",
-    month: "02/2026",
-    target_type: "Collection",
-    target: "5,000,000",
-    achieved: "4,100,000",
-    achievement_percent: "82%",
-    status: "Inactive",
-    effective_from: "01/01/2026",
-    effective_to: "31/01/2026",
-    last_updated_on: "03/01/2026",
-    last_updated_by: "Prerna",
-  },
-  {
-    id: 4,
-    club_id: 16,
-    club_name: "DLF Summit Plaza",
-    month: "12/2025",
-    target_type: "Revenue",
-    target: "4,800,000",
-    achieved: "5,600,000",
-    achievement_percent: "117%",
-    status: "Locked",
-    effective_from: "01/12/2025",
-    effective_to: "31/12/2025",
-    last_updated_on: "31/12/2025",
-    last_updated_by: "Prerna",
-    actions: ["View"],
-  },
-];
+
 
 const formatMonth = (value) => {
   const [mm, yyyy] = value.split("/");
@@ -95,7 +33,7 @@ const formatMonth = (value) => {
 };
 
 const MonthlyTargetsReport = () => {
-  const [data] = useState(dummyData);
+  const [data] = useState([]);
   const [clubList, setClubList] = useState([]);
   const [clubFilter, setClubFilter] = useState(null);
 
@@ -117,7 +55,7 @@ const MonthlyTargetsReport = () => {
       const activeOnly = filterActiveItems(data);
       setClubList(activeOnly);
     } catch (error) {
-      toast.error("Failed to fetch clubs");
+      console.error(error);
     }
   };
   // Function to fetch role list

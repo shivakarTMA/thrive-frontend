@@ -72,7 +72,6 @@ export default function MemberFilterPanel({
       setTrainerList(activeStaff);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch trainer");
     }
   };
 
@@ -115,7 +114,6 @@ export default function MemberFilterPanel({
       setStaffList(activeOnly);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch staff");
     }
   };
 

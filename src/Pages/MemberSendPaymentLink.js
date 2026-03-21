@@ -118,7 +118,6 @@ const MemberSendPaymentLink = ({
         }
       } catch (err) {
         console.error(err);
-        toast.error("Failed to fetch module details");
       }
     };
 
@@ -243,7 +242,6 @@ const MemberSendPaymentLink = ({
         }
       } catch (err) {
         console.error(err);
-        toast.error("Failed to fetch subscription plan details");
       } finally {
         isRenewingRef.current = false; // ✅ allow manual plan_type changes after fill
       }

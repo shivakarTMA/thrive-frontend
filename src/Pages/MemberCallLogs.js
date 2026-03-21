@@ -121,7 +121,6 @@ const MemberCallLogs = () => {
       setMemberEnquiry(data);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch club");
     }
   };
 
@@ -162,7 +161,6 @@ const MemberCallLogs = () => {
       setCallDataList(data);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch member call logs");
     }
   };
 
@@ -175,7 +173,6 @@ const MemberCallLogs = () => {
       setClubData(data?.club_id);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch member details");
     }
   };
 
@@ -249,7 +246,6 @@ const MemberCallLogs = () => {
         // ✅ 4. Refresh list
         fetchMemberCallLogs(memberId);
       } catch (error) {
-        toast.error("Something went wrong. Please try again.");
         console.error("Error submitting form:", error);
       }
     },

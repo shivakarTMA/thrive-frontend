@@ -1,9 +1,8 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import Select from "react-select";
 import { customStyles } from "../../Helper/helper";
-import { smsTemplates } from "../../DummyData/DummyData";
 import { toast } from "react-toastify";
 import { IoClose } from "react-icons/io5";
 import { authAxios } from "../../config/config";
@@ -31,6 +30,7 @@ const BulkSmsCriteriaForm = () => {
 
   const navigate = useNavigate();
   const location = useLocation();
+  const [smsTemplates, setSmsTemplates] = useState([])
 
   // ✅ Parse URL to get type (member/lead) and ids
   // Parse URL query params correctly
@@ -125,7 +125,6 @@ const BulkSmsCriteriaForm = () => {
       }
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch data");
     }
   };
 

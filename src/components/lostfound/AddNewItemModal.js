@@ -86,7 +86,6 @@ const AddNewItemModal = ({
         onClose();
         fetchLostFoundList();
       } catch (error) {
-        toast.error("Something went wrong. Please try again.");
         console.error("Error submitting form:", error);
       }
     },
@@ -116,7 +115,6 @@ const AddNewItemModal = ({
         }
       } catch (err) {
         console.error(err);
-        toast.error("Failed to fetch item details");
       }
     };
 

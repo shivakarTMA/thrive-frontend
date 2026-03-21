@@ -56,7 +56,7 @@ const CouponsList = () => {
         });
       }
     } catch (error) {
-      toast.error("Failed to fetch clubs");
+      console.log(error)
     }
   };
   // Function to fetch role list
@@ -90,7 +90,6 @@ const CouponsList = () => {
       setTotalCount(response.data?.totalCount || data.length);
     } catch (error) {
       console.error(error);
-      toast.error("Failed to fetch coupon list");
     }
   };
 
@@ -335,7 +334,6 @@ const CouponsList = () => {
       setOriginalApplicableRules([]);
     } catch (error) {
       console.error("API Error:", error.response?.data || error.message);
-      toast.error("Failed to save coupon item");
     }
   },
 });
@@ -355,7 +353,6 @@ const CouponsList = () => {
         setCouponsList(updatedCoupons);
         toast.success("Coupon deleted successfully");
       } catch (error) {
-        toast.error("Failed to delete coupon.");
         console.error("Error deleting coupon:", error);
       }
     }

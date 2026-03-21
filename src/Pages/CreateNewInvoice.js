@@ -259,7 +259,7 @@ const CreateNewInvoice = ({
         // }
       } catch (err) {
         setInvoiceModal(false);
-        toast.error(err?.response?.data?.message);
+        console.error(err);
       }
     },
   });
@@ -289,7 +289,6 @@ const CreateNewInvoice = ({
         }
       } catch (err) {
         console.error(err);
-        toast.error("Failed to fetch module details");
       }
     };
 
@@ -495,7 +494,7 @@ const CreateNewInvoice = ({
       setService(activeService);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch service");
+
     }
   };
 
@@ -584,7 +583,7 @@ const CreateNewInvoice = ({
         }
       } catch (err) {
         console.error(err);
-        toast.error("Failed to fetch variation details");
+
       }
     };
 

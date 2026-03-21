@@ -9,7 +9,7 @@ export const fetchOptionList = createAsyncThunk(
       {
         params: { optionListType },
         headers: {
-          "x-api-key": process.env.REACT_APP_API_KEY,
+          // "x-api-key": process.env.REACT_APP_API_KEY,
           "Content-Type": "application/json",
         },
       }

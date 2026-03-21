@@ -46,7 +46,6 @@ export default function TrialAppointmentPanel({
       setTrainerList(activeOnly);
     } catch (error) {
       console.error("Failed to fetch trainers:", error);
-      toast.error("Failed to fetch trainers");
     }
   };
 

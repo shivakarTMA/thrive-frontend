@@ -56,7 +56,7 @@ const CreateGroupClasses = ({ setShowModal, editingOption, formik }) => {
       setClub(activeOnly);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch companies");
+
     }
   };
 
@@ -75,7 +75,6 @@ const CreateGroupClasses = ({ setShowModal, editingOption, formik }) => {
       setService(activeService);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch service");
     }
   };
 
@@ -90,7 +89,6 @@ const CreateGroupClasses = ({ setShowModal, editingOption, formik }) => {
       setStaffList(activeService);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch service");
     }
   };
 
@@ -104,7 +102,6 @@ const CreateGroupClasses = ({ setShowModal, editingOption, formik }) => {
       setStudio(activeService);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch club");
     }
   };
 
@@ -119,7 +116,6 @@ const CreateGroupClasses = ({ setShowModal, editingOption, formik }) => {
       setPackageCategory(activeCategories);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch Classes category");
     }
   };
 
@@ -231,7 +227,6 @@ const CreateGroupClasses = ({ setShowModal, editingOption, formik }) => {
         }
       } catch (err) {
         console.error(err);
-        toast.error("Failed to fetch package details");
       }
     };
 

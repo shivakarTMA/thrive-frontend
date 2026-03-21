@@ -37,7 +37,7 @@ const CreateEmailTemplate = () => {
       const activeOnly = filterActiveItems(data);
       setClubList(activeOnly);
     } catch (error) {
-      toast.error("Failed to fetch clubs");
+      console.log(error)
     }
   };
   // Function to fetch role list
@@ -72,7 +72,6 @@ const CreateEmailTemplate = () => {
         }
       } catch (err) {
         console.error("API Error:", err.response?.data || err.message);
-        toast.error("Failed to save email template");
       }
 
       resetForm();
@@ -102,7 +101,6 @@ const CreateEmailTemplate = () => {
         }
       } catch (err) {
         console.error(err);
-        toast.error("Failed to fetch email template");
       }
     };
 

@@ -3,17 +3,8 @@ import AllExerciseList from "../WorkoutPlan/AllExerciseList";
 import Select from "react-select";
 import { blockNonLettersAndNumbers, customStyles, sanitizeTextWithNumbers } from "../../Helper/helper";
 import { useNavigate, useParams } from "react-router-dom";
-import {
-  TrainingList,
-  workoutTemplateHIIT,
-  workoutTemplatePushDay,
-  workoutTemplateWithExercises,
-} from "../../DummyData/DummyData";
 import { toast } from "react-toastify";
-import { FiPlus } from "react-icons/fi";
 import { authAxios } from "../../config/config";
-import SaveWorkoutTemplate from "../memberprofile/SaveWorkoutTemplate";
-import AssignTemplateModal from "../memberprofile/AssignTemplateModal";
 
 const workoutTypeOptions = [
   { value: "MULTIDAY", label: "Workout Plan (Multiple Days)" },
@@ -51,11 +42,6 @@ const CreateWorkoutplan = () => {
   const [showConfiguration, setShowConfiguration] = useState(false);
   const [workoutForm, setWorkoutForm] = useState(true);
   const [loading, setLoading] = useState(false);
-
-  const [showModal, setShowModal] = useState(false);
-  const [saveTemplate, setSaveTemplate] = useState(false);
-  const [selectedWorkoutType, setSelectedWorkoutType] = useState(null);
-  const [selectedTemplate, setSelectedTemplate] = useState(null);
 
   const handleCancelWorkout = () => {
     navigate("/workout-plans"); // Change to your desired route
@@ -141,7 +127,6 @@ const CreateWorkoutplan = () => {
       }
     } catch (error) {
       console.error("Error fetching workout plan:", error);
-      toast.error("Failed to load workout plan");
     } finally {
       setLoading(false);
     }
@@ -504,9 +489,6 @@ const CreateWorkoutplan = () => {
       handleCancelWorkout();
     } catch (error) {
       console.error("Error saving workout plan:", error);
-      toast.error(
-        error.response?.data?.message || "Failed to save workout plan",
-      );
     } finally {
       setLoading(false);
     }
@@ -781,45 +763,6 @@ const CreateWorkoutplan = () => {
     }
   }, [editingId]);
 
-
-  const handleAssignFromModal = () => {
-    if (!selectedTemplate) {
-      toast.error("Please select a template");
-      return;
-    }
-
-    let templateData = null;
-    if (selectedTemplate.value === "template1")
-      templateData = workoutTemplateWithExercises;
-    if (selectedTemplate.value === "template2")
-      templateData = workoutTemplatePushDay;
-    if (selectedTemplate.value === "template3") templateData = TrainingList;
-    if (selectedTemplate.value === "template4")
-      templateData = workoutTemplateHIIT;
-
-    setData((prev) => ({
-      ...prev,
-      plan: {
-        ...prev.plan,
-        name: templateData.name,
-        workout_type: templateData.type,
-        no_of_days: templateData.numDays,
-        description: templateData.description,
-      },
-      days: templateData.days,
-    }));
-
-    setActiveDayIndex(0);
-    setShowConfiguration(true);
-    setWorkoutForm(true);
-    setShowModal(false);
-    toast.success("Template Assigned Successfully!");
-  };
-
-  const handleSaveTemplateModal = () => {
-    handleCancelWorkout();
-    toast.success("Template Saved Successfully!");
-  };
 
   useEffect(() => {
     const newErrors = {};
@@ -1197,21 +1140,6 @@ const CreateWorkoutplan = () => {
         isOpen={showExercises}
         onClose={() => setShowExercises(false)}
         onSelectExercise={(ex) => handleExerciseAdd(ex)}
-      />
-      <AssignTemplateModal
-        open={showModal}
-        onClose={() => setShowModal(false)}
-        onAssign={handleAssignFromModal}
-        selectedWorkoutType={selectedWorkoutType}
-        setSelectedWorkoutType={setSelectedWorkoutType}
-        selectedTemplate={selectedTemplate}
-        setSelectedTemplate={setSelectedTemplate}
-      />
-
-      <SaveWorkoutTemplate
-        onAssign={handleSaveTemplateModal}
-        open={saveTemplate}
-        onClose={() => setSaveTemplate(false)}
       />
     </div>
   );

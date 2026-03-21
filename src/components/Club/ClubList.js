@@ -63,7 +63,6 @@ const ClubList = () => {
       setTotalCount(res.data?.totalCount || data.length);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch club");
     }
   };
 
@@ -211,7 +210,6 @@ const ClubList = () => {
         setEditingClub(null);
       } catch (err) {
         console.error("API Error:", err.response?.data || err.message);
-        toast.error("Failed to save club");
       }
     },
   });

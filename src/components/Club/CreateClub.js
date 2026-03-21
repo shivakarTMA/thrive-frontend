@@ -211,7 +211,6 @@ const CreateClub = ({
         }
       } catch (err) {
         console.error(err);
-        toast.error("Failed to fetch module details");
       }
     };
 

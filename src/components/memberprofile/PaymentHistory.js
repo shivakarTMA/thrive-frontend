@@ -31,7 +31,6 @@ const PaymentHistory = ({ details, setLoading }) => {
       setPaymentHistory(data);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch coins");
     }
   };
 
@@ -69,7 +68,6 @@ const PaymentHistory = ({ details, setLoading }) => {
       setSendModalOrder(null);
     } catch (error) {
       console.error("Send invoice failed:", error);
-      toast.error("Failed to send invoice");
     } finally {
       setLoading(false);
     }
@@ -106,7 +104,6 @@ const PaymentHistory = ({ details, setLoading }) => {
       setLoading(false);
     } catch (err) {
       console.error("Invoice download failed", err);
-      toast.error("Failed to download invoice");
       setLoading(false);
     }
   };

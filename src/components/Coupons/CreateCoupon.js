@@ -64,7 +64,7 @@ const CreateCoupon = ({
       const activeOnly = filterActiveItems(data);
       setClub(activeOnly);
     } catch (error) {
-      toast.error("Failed to fetch clubs");
+      console.log(error)
     }
   };
 
@@ -91,7 +91,7 @@ const CreateCoupon = ({
       setSubscriptions(activeOnly);
       setLoadingLists((s) => ({ ...s, subscriptions: false }));
     } catch (error) {
-      toast.error("Failed to fetch subscriptions");
+      console.log(error)
       setLoadingLists((s) => ({ ...s, subscriptions: false }));
     }
   };
@@ -118,7 +118,7 @@ const CreateCoupon = ({
       setPackages(activeOnly);
       setLoadingLists((s) => ({ ...s, packages: false }));
     } catch (error) {
-      toast.error("Failed to fetch packages");
+      console.log(error)
       setLoadingLists((s) => ({ ...s, packages: false }));
     }
   };
@@ -145,7 +145,7 @@ const CreateCoupon = ({
     setProducts(activeOnly);
     setLoadingLists((s) => ({ ...s, products: false }));
   } catch (error) {
-    toast.error("Failed to fetch products");
+    console.log(error)
     setLoadingLists((s) => ({ ...s, products: false }));
   }
 };
@@ -240,7 +240,7 @@ useEffect(() => {
         }
       }
     } catch (err) {
-      toast.error("Failed to fetch coupon details");
+      console.log(err)
     }
   };
 

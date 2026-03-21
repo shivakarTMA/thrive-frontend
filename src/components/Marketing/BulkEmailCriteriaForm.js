@@ -4,7 +4,6 @@ import * as Yup from "yup";
 import Select from "react-select";
 import { customStyles } from "../../Helper/helper";
 import RichTextEditor from "../common/RichTextEditor";
-import { emailTemplates } from "../../DummyData/DummyData";
 import { toast } from "react-toastify";
 import { IoClose } from "react-icons/io5";
 import { authAxios } from "../../config/config";
@@ -90,8 +89,8 @@ const BulkEmailCriteriaForm = () => {
             body_html: t.body_html,
           }));
           setTemplateOptions(options);
-        } catch {
-          toast.error("Failed to fetch email templates");
+        } catch(error) {
+          console.log(error)
         }
       };
       fetchTemplates();
@@ -134,7 +133,6 @@ const BulkEmailCriteriaForm = () => {
       }
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch data");
     }
   };
 

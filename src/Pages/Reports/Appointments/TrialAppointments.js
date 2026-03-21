@@ -115,7 +115,7 @@ const TrialAppointments = () => {
       const activeOnly = filterActiveItems(data);
       setClubList(activeOnly);
     } catch (error) {
-      toast.error("Failed to fetch clubs");
+      console.error(error);
     }
   };
 
@@ -220,7 +220,6 @@ const TrialAppointments = () => {
       });
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch appointments");
     }
   };
 
@@ -390,7 +389,6 @@ const TrialAppointments = () => {
       fetchAppointments(page);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to update appointment");
     }
   };
 

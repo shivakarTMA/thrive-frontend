@@ -35,7 +35,6 @@ const SplashScreen = () => {
       setModule(data);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch companies");
     }
   };
 
@@ -121,7 +120,6 @@ const SplashScreen = () => {
         fetchSplashScreen();
       } catch (err) {
         console.error("API Error:", err.response?.data || err.message);
-        toast.error("Failed to save onboarding");
       }
 
       resetForm();

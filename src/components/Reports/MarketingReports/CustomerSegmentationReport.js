@@ -49,7 +49,7 @@ const CustomerSegmentationReport = () => {
         setClubFilter(activeOnly[0].id);
       }
     } catch (error) {
-      toast.error("Failed to fetch clubs");
+      console.error(error);
     }
   };
   // Function to fetch role list
@@ -85,7 +85,6 @@ const CustomerSegmentationReport = () => {
       setLeadSource(res.data?.data || []);
     } catch (error) {
       console.error(error);
-      toast.error("Data not found");
     }
   };
 

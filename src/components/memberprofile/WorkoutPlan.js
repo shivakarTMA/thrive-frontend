@@ -11,7 +11,6 @@ import { toast } from "react-toastify";
 import DatePicker from "react-datepicker";
 import { FiPlus } from "react-icons/fi";
 import AssignTemplateModal from "./AssignTemplateModal";
-import SaveWorkoutTemplate from "./SaveWorkoutTemplate";
 import { useSelector } from "react-redux";
 import { authAxios } from "../../config/config";
 
@@ -180,7 +179,6 @@ const WorkoutPlan = ({
       }
     } catch (error) {
       console.error("Error fetching workout plan:", error);
-      toast.error("Failed to load workout plan");
     } finally {
       setLoading(false);
     }
@@ -543,7 +541,6 @@ const WorkoutPlan = ({
       handleWorkoutUpdate();
     } catch (err) {
       console.error("❌ Save failed:", err);
-      toast.error(err.response?.data?.message || "Save failed");
     } finally {
       setLoading(false);
     }
@@ -890,15 +887,9 @@ const WorkoutPlan = ({
       toast.success("Template assigned successfully!");
     } catch (err) {
       console.error("❌ Assign template failed:", err);
-      toast.error("Failed to assign template");
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleSaveTemplateModal = () => {
-    handleCancelWorkout();
-    toast.success("Template Saved Successfully!");
   };
 
   useEffect(() => {
@@ -1402,12 +1393,6 @@ const WorkoutPlan = ({
         setSelectedWorkoutType={setSelectedWorkoutType}
         selectedTemplate={selectedTemplate}
         setSelectedTemplate={setSelectedTemplate}
-      />
-
-      <SaveWorkoutTemplate
-        onAssign={handleSaveTemplateModal}
-        open={saveTemplate}
-        onClose={() => setSaveTemplate(false)}
       />
     </div>
   );

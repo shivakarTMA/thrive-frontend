@@ -5,7 +5,6 @@ import "react-datepicker/dist/react-datepicker.css";
 import "react-phone-number-input/style.css";
 import PhoneInput, { isValidPhoneNumber } from "react-phone-number-input";
 import { parsePhoneNumberFromString } from "libphonenumber-js";
-import { companies, centreInfo } from "../DummyData/DummyData";
 import { selectIcon } from "../Helper/helper";
 import { IoBan, IoCloseCircle } from "react-icons/io5";
 import { useFormik } from "formik";
@@ -228,9 +227,7 @@ const CreateMemberForm = ({ setMemberModal, onMemberUpdate }) => {
 
           setMemberModal(false);
         } catch (error) {
-          // toast.error("Failed to create member. Please try again.");
           console.log(error, "error");
-          toast.error(error.response?.data?.message);
         }
       } else {
         setStep(step + 1);
@@ -252,7 +249,6 @@ const CreateMemberForm = ({ setMemberModal, onMemberUpdate }) => {
       setCompanyOptions(options);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch companies");
     }
   };
 

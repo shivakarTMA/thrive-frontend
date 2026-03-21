@@ -91,7 +91,7 @@ const MemberList = () => {
       const activeOnly = filterActiveItems(data);
       setClubList(activeOnly);
     } catch (error) {
-      toast.error("Failed to fetch clubs");
+      console.error(error);
     }
   };
 
@@ -167,7 +167,6 @@ const MemberList = () => {
       setTotalCount(responseData?.totalCount || data.length);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch member");
     }
   };
 
@@ -198,7 +197,6 @@ const MemberList = () => {
       setDashboardData(data);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch companies");
     }
   };
 
@@ -318,7 +316,6 @@ const MemberList = () => {
       setStaffList(activeOnly);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch staff");
     }
   };
 
@@ -395,9 +392,6 @@ const MemberList = () => {
       fetchMemberList();
     } catch (err) {
       console.error(err);
-      toast.error(
-        err?.response?.data?.message || "Failed to assign owner. Try again.",
-      );
     }
   };
 

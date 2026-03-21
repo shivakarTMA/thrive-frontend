@@ -72,7 +72,6 @@ const ExerciesCategoryList = () => {
       setTotalCount(response.data?.totalCount || data.length);
     } catch (error) {
       console.error(error);
-      toast.error("Failed to fetch gallery list");
     }
   };
 
@@ -131,7 +130,6 @@ const ExerciesCategoryList = () => {
         fetchExerciesCategory();
       } catch (error) {
         console.error("API Error:", error.response?.data || error.message);
-        toast.error("Failed to save exercise category");
       }
 
       resetForm();
@@ -150,7 +148,6 @@ const ExerciesCategoryList = () => {
       fetchExerciesCategory();
     } catch (error) {
       console.error(error);
-      toast.error("Failed to delete category item");
     } finally {
       setShowDeleteModal(false);
       setSelectedDeleteId(null);

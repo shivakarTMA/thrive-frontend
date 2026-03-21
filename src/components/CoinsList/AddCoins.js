@@ -56,7 +56,6 @@ const AddCoins = ({ setCoinsModal, details, handleUpdateCoins }) => {
         // Trigger the parent component to fetch updated coins list
         handleUpdateCoins();
       } catch (error) {
-        toast.error("Something went wrong. Please try again.");
         console.error("Error submitting form:", error);
       }
     },

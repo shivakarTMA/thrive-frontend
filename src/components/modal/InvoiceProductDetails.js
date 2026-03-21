@@ -41,7 +41,6 @@ const InvoiceProductDetails = ({
       setFilteredProducts(activeOnly);
     } catch (err) {
       console.error("Failed to fetch packages", err);
-      toast.error("Failed to fetch packages");
       setFilteredProducts([]);
     } finally {
       setLoading(false);
@@ -60,7 +59,6 @@ const InvoiceProductDetails = ({
       setFilteredProducts(activeOnly);
     } catch (err) {
       console.error("Failed to fetch variations", err);
-      toast.error("Failed to fetch variations");
       setFilteredProducts([]);
     } finally {
       setLoading(false);

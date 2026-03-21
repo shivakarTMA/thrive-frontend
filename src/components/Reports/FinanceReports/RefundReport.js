@@ -13,61 +13,9 @@ const dateFilterOptions = [
   { value: "custom", label: "Custom Date" },
 ];
 
-const dummyData = [
-  {
-    name: "Rahul Sharma",
-    mobile: "9876543210",
-    emailId: "rahul.sharma@gmail.com",
-    sequence: "SEQ-001",
-    service: "Gym Membership",
-    serviceVariation: "12 Months",
-    proformaInvoiceNo: "PF-INV-001",
-    type: "Sale",
-    baseValue: 20000,
-    tax: 3600,
-    total: 23600,
-    paid: 23600,
-    balance: 0,
-    utilisedValue: 18000,
-    unutilisedValue: 2000,
-    deduction: 0,
-    refundAmount: 0,
-    staffName: "Neha Singh",
-    dateTime: "2025-05-01 10:30 AM",
-    instrument: "Credit Card",
-    transactionId: "TXN123456",
-    note: "Full payment received",
-    creditNoteNo: "-",
-  },
-  {
-    name: "Anjali Verma",
-    mobile: "9123456789",
-    emailId: "anjali.verma@gmail.com",
-    sequence: "SEQ-002",
-    service: "Gym + PT",
-    serviceVariation: "6 Months",
-    proformaInvoiceNo: "PF-INV-002",
-    type: "Refund",
-    baseValue: 15000,
-    tax: 2700,
-    total: 17700,
-    paid: 10000,
-    balance: 7700,
-    utilisedValue: 8000,
-    unutilisedValue: 2000,
-    deduction: 500,
-    refundAmount: 1500,
-    staffName: "Aakash Jain",
-    dateTime: "2025-05-10 04:15 PM",
-    instrument: "UPI",
-    transactionId: "TXN654321",
-    note: "Partial refund processed",
-    creditNoteNo: "CN-002",
-  },
-];
 
 const RefundReport = () => {
-  const [data] = useState(dummyData);
+  const [data] = useState([]);
   const [dateFilter, setDateFilter] = useState(dateFilterOptions[0]);
   const [customFrom, setCustomFrom] = useState(null);
   const [customTo, setCustomTo] = useState(null);

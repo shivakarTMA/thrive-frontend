@@ -85,7 +85,7 @@ const GroupClassesList = () => {
       const activeOnly = filterActiveItems(data);
       setClubList(activeOnly);
     } catch (error) {
-      toast.error("Failed to fetch clubs");
+      console.log(error)
     }
   };
   // Function to fetch role list
@@ -171,7 +171,6 @@ const GroupClassesList = () => {
       setTotalCount(responseData?.totalCount || data.length);
     } catch (err) {
       console.error("❌ API Error:", err);
-      toast.error("Failed to fetch product sold report");
     }
   };
 
@@ -395,7 +394,6 @@ const GroupClassesList = () => {
         setShowModal(false);
       } catch (err) {
         console.error("API Error:", err.response?.data || err.message);
-        toast.error(err.response?.data.message);
       }
     },
   });

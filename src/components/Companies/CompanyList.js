@@ -49,7 +49,6 @@ const CompanyList = () => {
       setTotalCount(res.data?.totalCount || data.length);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch companies");
     }
   };
 
@@ -140,7 +139,6 @@ const CompanyList = () => {
         fetchCompanies();
       } catch (err) {
         console.error("API Error:", err.response?.data || err.message);
-        toast.error("Failed to save company");
       }
 
       resetForm();

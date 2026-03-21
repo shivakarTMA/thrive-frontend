@@ -180,7 +180,6 @@ const ProfileDetails = ({ member }) => {
       setStaffList(groupedOptions); // For 'training_by'
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch staff");
     }
   };
 
@@ -223,7 +222,6 @@ const ProfileDetails = ({ member }) => {
       setCompanyOptions(options);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch companies");
     }
   };
 
@@ -299,7 +297,6 @@ const ProfileDetails = ({ member }) => {
         });
       } catch (error) {
         console.error("Error fetching member data:", error);
-        toast.error("Failed to load member data.");
       }
     };
 
@@ -523,9 +520,6 @@ const ProfileDetails = ({ member }) => {
         navigate("/all-members");
       } catch (error) {
         console.error("Error updating profile:", error);
-        toast.error(
-          error?.response?.data?.message || "Failed to update profile.",
-        );
       }
     },
   });
@@ -608,7 +602,6 @@ const ProfileDetails = ({ member }) => {
       setEmergencyContacts(updated);
     } catch (error) {
       console.error("Error deleting contact:", error);
-      toast.error("Failed to remove emergency contact.");
     }
   };
 

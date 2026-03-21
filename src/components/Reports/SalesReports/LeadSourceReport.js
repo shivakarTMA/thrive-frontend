@@ -57,7 +57,7 @@ const LeadSourceReport = () => {
         setClubFilter(activeOnly[0].id);
       }
     } catch (error) {
-      toast.error("Failed to fetch clubs");
+      console.error(error);
     }
   };
   // Function to fetch role list
@@ -105,7 +105,6 @@ const LeadSourceReport = () => {
       setTotalCount(responseData?.totalCount || data.length);
     } catch (err) {
       console.error(err);
-      toast.error("data not found");
     }
   };
 
