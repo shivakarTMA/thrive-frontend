@@ -427,32 +427,22 @@ const EmailCriteriaForm = () => {
 
             {/* ✅ Recipient count message — shown after filter is applied */}
             {!id && filterApplied && (
-              <div
-                className={`mb-3 px-3 py-2 rounded text-sm border ${
-                  memberIds.length > 0
-                    ? "bg-green-50 border-green-200 text-green-700"
-                    : "bg-red-50 border-red-200 text-red-600"
-                }`}
+
+              <>
+              {memberIds.length > 0  ? (
+                 <div
+                className={`mb-3 px-3 py-2 rounded text-sm border bg-green-50 border-green-200 text-green-700`}
               >
-                {memberIds.length > 0 ? (
-                  <>
-                    📧 This campaign will be sent to{" "}
+                This campaign will be sent to{" "}
                     <strong>{memberIds.length}</strong>{" "}
                     {formik.values.module === "Member"
                       ? "member"
                       : "enquiry(ies)"}
                     {memberIds.length !== 1 ? "s" : ""}.
-                  </>
-                ) : (
-                  <>
-                    ⚠️ No{" "}
-                    {formik.values.module === "Member"
-                      ? "members"
-                      : "enquiries"}{" "}
-                    found for the selected criteria. Please adjust your filters.
-                  </>
-                )}
               </div>
+              ):null}
+              </>
+             
             )}
 
             <div>
@@ -562,13 +552,38 @@ const EmailCriteriaForm = () => {
                   <div className="mt-2 max-w-sm">
                     <DatePicker
                       selected={formik.values.scheduledAt}
-                      onChange={(date) =>
-                        formik.setFieldValue("scheduledAt", date)
-                      }
+                      onChange={(date) => {
+                        if (!date) return;
+
+                        const now = new Date();
+                        const selected = new Date(date);
+
+                        if (selected.toDateString() === now.toDateString()) {
+                          // Today: round to next 15-min interval
+                          const minutes = Math.ceil(now.getMinutes() / 15) * 15;
+                          selected.setHours(now.getHours(), minutes, 0, 0);
+                        } else {
+                          // Future date: default time 09:00 AM
+                          selected.setHours(0, 0, 0, 0);
+                        }
+
+                        formik.setFieldValue("scheduledAt", selected);
+                      }}
                       showTimeSelect
                       timeIntervals={15}
                       dateFormat="dd/MM/yyyy hh:mm aa"
-                      minDate={new Date()}
+                      minDate={new Date()} // disable past dates
+                      minTime={
+                        formik.values.scheduledAt &&
+                        formik.values.scheduledAt.toDateString() ===
+                          new Date().toDateString()
+                          ? new Date() // today: minTime is now
+                          : new Date(new Date().setHours(0, 0, 0, 0)) // future: start of day
+                      }
+                      maxTime={new Date(new Date().setHours(23, 45, 0, 0))} // end of day
+                      onKeyDown={(e) => {
+                        e.preventDefault();
+                      }}
                       placeholderText="Select date & time"
                       className="custom--input w-full"
                     />

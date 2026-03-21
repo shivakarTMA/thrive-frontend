@@ -13,7 +13,7 @@ export default function MemberContactHistory({ filteredData, handleEditLog }) {
     setIsExpanded((prevState) => !prevState);
   };
 
-    // Get the first child_log remark if it exists
+  // Get the first child_log remark if it exists
   const childRemark = filteredData?.child_log?.[0]?.remark;
 
   return (
@@ -39,10 +39,12 @@ export default function MemberContactHistory({ filteredData, handleEditLog }) {
             {/* <p className="text-sm flex gap-2">
               <span>Scheduled For:</span> {filteredData?.schedule_for}
             </p> */}
-            <p className="text-sm flex gap-2">
-              <span>Scheduled On:</span>{" "}
-              {formatDateTimeLead(filteredData?.follow_up_datetime)}
-            </p>
+            {filteredData?.follow_up_datetime && (
+              <p className="text-sm flex gap-2">
+                <span>Scheduled On:</span>{" "}
+                {formatDateTimeLead(filteredData?.follow_up_datetime)}
+              </p>
+            )}
           </div>
 
           {/* Right side details */}

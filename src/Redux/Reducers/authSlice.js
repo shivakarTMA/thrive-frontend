@@ -1,4 +1,5 @@
-import { createSlice } from '@reduxjs/toolkit';
+import { createSlice, createSelector } from '@reduxjs/toolkit';
+import { getAuthFromToken } from '../../utils/authUtils';
 
 
 const initialState = {
@@ -36,6 +37,12 @@ export const authSlice = createSlice({
         },
     },
 });
+
+// ✅ Add this — derives role/id from JWT, not localStorage
+export const selectAuthFromToken = createSelector(
+  (state) => state.auth.accessToken,
+  (accessToken) => getAuthFromToken(accessToken)
+);
 
 export const { setAccessToken,  setuser ,setIsAuthenticated , setTokenExpiry, logout  } = authSlice.actions;
 

@@ -35,6 +35,7 @@ const MemberList = () => {
   const { user } = useSelector((state) => state.auth);
   const userRole = user.role;
   const [staffList, setStaffList] = useState([]);
+  const [dashboardData, setDashboardData] = useState([]);
 
   const [clubList, setClubList] = useState([]);
   const [clubFilter, setClubFilter] = useState(null);
@@ -183,9 +184,27 @@ const MemberList = () => {
     }
   };
 
+  const fetchDashboardData = async () => {
+    try {
+      const params = {};
+      // Club filter
+      if (clubFilter?.value) {
+        params.club_id = clubFilter.value;
+      }
+
+      const res = await authAxios().get("/dashboard/overview", { params });
+      let data = res.data?.data || res.data || [];
+
+      setDashboardData(data);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to fetch companies");
+    }
+  };
+
   useEffect(() => {
-    fetchMemberStats();
-  }, []);
+    fetchDashboardData();
+  }, [clubFilter]);
 
   /* ---------------- INIT FROM URL ---------------- */
   useEffect(() => {
@@ -460,7 +479,7 @@ const MemberList = () => {
           </div>
 
           <div className="w-fit bg-white shodow--box rounded-[10px] px-5 py-2">
-            <div className="flex items-center">
+            {/* <div className="flex items-center">
               <div className="w-fit flex items-center gap-2 border-r">
                 <div className="text-md font-medium text-gray-600 flex gap-2 items-center">
                   <FaCircle className="text-[10px] text-[#009EB2]" /> Total
@@ -505,7 +524,53 @@ const MemberList = () => {
                   </span>
                 </div>
               </div>
-            </div>
+            </div> */}
+            <div className="flex items-center">
+                      <div className="w-fit flex items-center gap-2 border-r">
+                        <div className="text-sm font-medium text-gray-600 flex gap-2 items-center">
+                          <FaCircle className="text-[10px] text-[#009EB2]" /> Total New
+                          Member
+                        </div>
+                        <div className="pr-2">
+                          <span className="text-sm font-semibold">
+                            {dashboardData?.snapshot?.total_new_member}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="w-fit flex items-center gap-2 border-r pl-2">
+                        <div className="text-sm font-medium text-gray-600 flex gap-2 items-center">
+                          <FaCircle className="text-[10px] text-[#1F9254]" />
+                          Total Renewal Member
+                        </div>
+                        <div className="pr-2">
+                          <span className="text-sm font-semibold">
+                            {dashboardData?.snapshot?.total_renewal_member}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="w-fit flex items-center gap-2 border-r pl-2">
+                        <div className="text-sm font-medium text-gray-600 flex gap-2 items-center">
+                          <FaCircle className="text-[10px] text-[#ff9900]" />
+                          Total Returning Member
+                        </div>
+                        <div className="pr-2">
+                          <span className="text-sm font-semibold">
+                            {dashboardData?.snapshot?.total_returning_member}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="w-fit flex items-center gap-2 pl-2">
+                        <div className="text-sm font-medium text-gray-600 flex gap-2 items-center">
+                          <FaCircle className="text-[10px] text-[#FF0000]" />
+                          Total Advanced Renewal Member
+                        </div>
+                        <div>
+                          <span className="text-sm font-semibold">
+                            {dashboardData?.snapshot?.total_advanced_renewal_member}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
           </div>
         </div>
 

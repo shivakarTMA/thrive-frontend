@@ -30,6 +30,7 @@ const validityMemberOptions = [
   { value: "All Members", label: "All Members" },
   { value: "ACTIVE", label: "Active Members" },
   { value: "INACTIVE", label: "Inactive Members" },
+  { value: "EXMEMBERS", label: "Ex-members" },
 ];
 
 const validityEnquireOptions = [
@@ -526,7 +527,7 @@ const handleApply = async () => {
               {formik?.values?.module === "Member" && (
                 <div>
                   <label className="block mb-1 text-sm font-medium">
-                    Validity<span className="text-red-500">*</span>
+                    Status<span className="text-red-500">*</span>
                   </label>
                   <Select
                     value={
@@ -548,7 +549,7 @@ const handleApply = async () => {
               {formik?.values?.module === "Enquiries" && (
                 <div>
                   <label className="block mb-1 text-sm font-medium">
-                    Validity<span className="text-red-500">*</span>
+                    Status<span className="text-red-500">*</span>
                   </label>
                   <Select
                     value={
