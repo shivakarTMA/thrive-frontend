@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import Select from "react-select";
@@ -8,138 +8,185 @@ import { toast } from "react-toastify";
 import { IoClose } from "react-icons/io5";
 import { authAxios } from "../../config/config";
 import { useLocation, useNavigate } from "react-router-dom";
+import DatePicker from "react-datepicker";
+import { sanitizeHtml } from "../../Helper/sanitizeHtml";
 
-// ✅ Define validation schema using Yup
+// ✅ Validation Schema
 const validationSchema = Yup.object({
-  send_to: Yup.array().min(1, "Please select at least one member"),
-  selectedTemplate: Yup.object().nullable().required("Template is required"),
+  send_to: Yup.array().min(1, "Please select at least one recipient"),
   subject: Yup.string().required("Subject is required"),
-  message: Yup.string().required("Message is required"),
+  message: Yup.string()
+    .test(
+      "not-empty",
+      "Message is required",
+      (value) =>
+        value && value.replace(/<[^>]+>/g, "").trim().length > 0
+    )
+    .required("Message is required"),
+  scheduledAt: Yup.date().nullable().when("sendType", {
+    is: "SCHEDULED",
+    then: (schema) => schema.required("Schedule date & time is required"),
+    otherwise: (schema) => schema.nullable(),
+  }),
 });
-
 
 const BulkEmailCriteriaForm = () => {
   const navigate = useNavigate();
   const location = useLocation();
-    const [templateOptions, setTemplateOptions] = useState([]);
+  const [templateOptions, setTemplateOptions] = useState([]);
 
-  // ✅ Parse URL to get type (member/lead) and ids
-  // Parse URL query params correctly
-  const parseUrlParams = () => {
-    const params = new URLSearchParams(location.search);
+  // ✅ Parse URL
+  const params = new URLSearchParams(location.search);
+  const currentType = params.get("type") || "member";
+  const clubId = params.get("clubId")
+    ? Number(params.get("clubId"))
+    : null;
+  const idsArray = params.get("ids")
+    ? params.get("ids").split(",").map(Number)
+    : [];
 
-    return {
-      type: params.get("type") || "member",
-      clubId: params.get("clubId") ? Number(params.get("clubId")) : null,
-      idsArray: params.get("ids")
-        ? params.get("ids").split(",").map(Number)
-        : [],
-    };
-  };
-
-  const { type: currentType, idsArray, clubId } = parseUrlParams();
-
-  // ✅ Initialize Formik using the hook pattern
+  // ✅ Formik
   const formik = useFormik({
     initialValues: {
       send_to: [],
       selectedTemplate: null,
       subject: "",
       message: "",
+      sendType: "NOW",
+      scheduledAt: null,
+      status: "",
     },
     validationSchema,
-    onSubmit: (values, { resetForm }) => {
-      if (values.send_to.length === 0) {
-        toast.error("Please select at least one recipient");
-        return;
+    onSubmit: async (values, { resetForm }) => {
+      try {
+        const ids = values.send_to.map((m) => m.id);
+
+        if (!ids.length) {
+          toast.error("No recipients found");
+          return;
+        }
+
+        if (!clubId) {
+          toast.error("Club is required");
+          return;
+        }
+
+        const scheduledAt =
+          values.sendType === "SCHEDULED" && values.scheduledAt
+            ? values.scheduledAt
+            : new Date();
+
+        const formattedScheduledAt = scheduledAt
+          .toLocaleString("sv-SE")
+          .replace("T", " ");
+
+        const payload = {
+          club_id: clubId,
+          email_template_id: values.selectedTemplate?.value || null,
+          name: "Personalize Campaign",
+          subject: values.subject,
+          body_html: sanitizeHtml(values.message),
+          scheduled_at: formattedScheduledAt,
+          status:"SCHEDULED",
+          member_ids: ids,
+          email_for:
+            currentType === "member" ? "MEMBER" : "LEAD",
+        };
+
+        console.log("Final Payload:", payload);
+
+        // ✅ API Call
+        await authAxios().post("/emailcampaign/create", payload);
+
+        toast.success(
+          values.sendType === "SCHEDULED"
+            ? "Campaign scheduled successfully"
+            : "Email sent successfully"
+        );
+
+        resetForm();
+        navigate(currentType === "member" ? "/all-members" : "/all-leads", {
+          replace: true,
+        });
+
+      } catch (error) {
+        console.log(error);
+        toast.error("Something went wrong");
       }
-
-      const ids = values.send_to.map((m) => m.id);
-
-      const payload = {
-        club_id: clubId,
-        member_ids: ids,
-        subject: values.subject,
-        body_html: values.message,
-        scheduled_at: new Date(),
-        status: 'SENT', // 'member' or 'lead'
-      };
-
-      console.log("API Payload:", payload);
-
-      toast.success("Email sent successfully!");
-      resetForm();
-      // ⭐ Reset send-mail URL
-      navigate("/send-mail", {
-        replace: true,
-      });
     },
   });
 
-  // ✅ Fetch email templates on mount
-    useEffect(() => {
-      const fetchTemplates = async () => {
-        try {
-          const res = await authAxios().get("/emailtemplate/list");
-          const data = res.data?.data || [];
-          const options = data.map((t) => ({
-            value: t.id,
-            label: t.name,
-            subject: t.subject,
-            body_html: t.body_html,
-          }));
-          setTemplateOptions(options);
-        } catch(error) {
-          console.log(error)
-        }
-      };
-      fetchTemplates();
-    }, []);
-  
-    // ✅ Replace existing handleTemplateSelect
-    const handleTemplateSelect = (option) => {
-      formik.setFieldValue("selectedTemplate", option);
-      if (option) {
-        // Auto-fill subject and message from template
-        formik.setFieldValue("subject", option.subject || "");
-        formik.setFieldValue("message", option.body_html || "");
+  // ✅ Fetch Templates
+  useEffect(() => {
+    const fetchTemplates = async () => {
+      try {
+        const res = await authAxios().get("/emailtemplate/list");
+        const data = res.data?.data || [];
+        const options = data.map((t) => ({
+          value: t.id,
+          label: t.name,
+          subject: t.subject,
+          body_html: t.body_html,
+        }));
+        setTemplateOptions(options);
+      } catch (error) {
+        console.log(error);
       }
     };
+    fetchTemplates();
+  }, []);
 
-  const handleRemoveFilter = (id) => {
-    const updated = formik.values.send_to.filter((item) => item.id !== id);
-    formik.setFieldValue("send_to", updated);
-  };
-
-  const fetchMemberList = async () => {
-    try {
-      let list = [];
-      if (currentType === "member") {
-        const res = await authAxios().get("/member/list");
-        list = res.data?.data || [];
-      } else if (currentType === "lead") {
-        const res = await authAxios().get("/lead/list");
-        list = res.data?.data || [];
-      }
-
-      // Filter based on URL ids
-      if (idsArray.length > 0) {
-        const filtered = list.filter((item) => idsArray.includes(item.id));
-        formik.setFieldValue("send_to", filtered);
-
-        if (filtered.length === 0) {
-          toast.error(`No ${currentType} found for the given IDs.`);
-        }
-      }
-    } catch (err) {
-      console.error(err);
+  // ✅ Template select
+  const handleTemplateSelect = (option) => {
+    formik.setFieldValue("selectedTemplate", option);
+    if (option) {
+      formik.setFieldValue("subject", option.subject || "");
+      formik.setFieldValue("message", option.body_html || "");
     }
   };
 
-  // Initial fetch
+  // ✅ Remove recipient
+  const handleRemoveFilter = (id) => {
+    const updated = formik.values.send_to.filter(
+      (item) => item.id !== id
+    );
+    formik.setFieldValue("send_to", updated);
+  };
+
+  // ✅ Fetch Members/Leads from API
   useEffect(() => {
-    fetchMemberList();
+    const fetchList = async () => {
+      try {
+        let list = [];
+
+        if (currentType === "member") {
+          const res = await authAxios().get("/member/list");
+          list = res.data?.data || [];
+        } else {
+          const res = await authAxios().get("/lead/list");
+          list = res.data?.data || [];
+        }
+
+        const filtered = list.filter((item) =>
+          idsArray.includes(item.id)
+        );
+
+        formik.setFieldValue("send_to", filtered);
+
+        if (!filtered.length) {
+          toast.error("No recipients found for given IDs");
+        }
+      } catch (err) {
+        console.log(err);
+      }
+    };
+
+    fetchList();
   }, [currentType]);
+
+const isSubmitDisabled =
+  idsArray.length === 0 ||
+  !clubId;
 
   return (
     <div className="page--content">
@@ -185,9 +232,7 @@ const BulkEmailCriteriaForm = () => {
             <div className="grid grid-cols-2 gap-2">
               {/* Select Template */}
               <div>
-                <label className="mb-2 block">
-                  Select Email Template<span className="text-red-500">*</span>
-                </label>
+                <label className="mb-2 block">Select Email Template</label>
                 <Select
                   value={formik.values.selectedTemplate}
                   onChange={handleTemplateSelect}
@@ -196,12 +241,6 @@ const BulkEmailCriteriaForm = () => {
                   styles={customStyles}
                   isClearable
                 />
-                {formik.touched.selectedTemplate &&
-                  formik.errors.selectedTemplate && (
-                    <p className="text-red-500 text-sm mt-1">
-                      {formik.errors.selectedTemplate}
-                    </p>
-                  )}
               </div>
 
               {/* Subject Input */}
@@ -242,13 +281,81 @@ const BulkEmailCriteriaForm = () => {
               )}
             </div>
 
-            {/* --- SUBMIT BUTTON --- */}
-            <button
-              type="submit"
-              className="px-4 py-2 bg-black text-white rounded flex items-center gap-2 mt-4"
-            >
-              Send Mail
-            </button>
+            <div className="mt-4">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={formik.values.sendType === "SCHEDULED"}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      formik.setFieldValue("sendType", "SCHEDULED");
+                    } else {
+                      formik.setFieldValue("sendType", "NOW");
+                      formik.setFieldValue("scheduledAt", null);
+                    }
+                  }}
+                />
+                <span className="text-sm font-medium">Schedule send</span>
+              </label>
+              {formik.values.sendType === "SCHEDULED" && (
+                <div className="mt-2 max-w-sm">
+                  <DatePicker
+                    selected={formik.values.scheduledAt}
+                    onChange={(date) => {
+                      if (!date) return;
+
+                      const now = new Date();
+                      const selected = new Date(date);
+
+                      if (selected.toDateString() === now.toDateString()) {
+                        // Today: round to next 15-min interval
+                        const minutes = Math.ceil(now.getMinutes() / 15) * 15;
+                        selected.setHours(now.getHours(), minutes, 0, 0);
+                      } else {
+                        // Future date: default time 09:00 AM
+                        selected.setHours(0, 0, 0, 0);
+                      }
+
+                      formik.setFieldValue("scheduledAt", selected);
+                    }}
+                    showTimeSelect
+                    timeIntervals={15}
+                    dateFormat="dd/MM/yyyy hh:mm aa"
+                    minDate={new Date()} // disable past dates
+                    minTime={
+                      formik.values.scheduledAt &&
+                      formik.values.scheduledAt.toDateString() ===
+                        new Date().toDateString()
+                        ? new Date() // today: minTime is now
+                        : new Date(new Date().setHours(0, 0, 0, 0)) // future: start of day
+                    }
+                    maxTime={new Date(new Date().setHours(23, 45, 0, 0))} // end of day
+                    onKeyDown={(e) => {
+                      e.preventDefault();
+                    }}
+                    placeholderText="Select date & time"
+                    className="custom--input w-full"
+                  />
+                  {formik.errors.scheduledAt && (
+                    <p className="text-red-500 text-sm mt-1">
+                      {formik.errors.scheduledAt}
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {formik.values.status !== "SENT" && (
+                <button
+                  type="submit"
+                  disabled={isSubmitDisabled}
+                  className="px-4 py-2 bg-black text-white rounded flex items-center gap-2 mt-4 disabled:opacity-50"
+                >
+                  {formik.values.sendType === "SCHEDULED"
+                    ? "Schedule Email"
+                    : "Send Email"}
+                </button>
+            )}
           </div>
         </form>
       </div>
