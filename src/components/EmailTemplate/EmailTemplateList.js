@@ -113,7 +113,7 @@ const EmailTemplateList = () => {
           </div>
           <div className="flex items-end gap-2">
             <Link
-              to="/email-template/"
+              to="/email-template"
               className="px-4 py-2 bg-black text-white rounded flex items-center gap-2"
             >
               <FiPlus /> Create Template

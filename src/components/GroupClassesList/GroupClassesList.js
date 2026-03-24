@@ -193,9 +193,6 @@ const GroupClassesList = () => {
     description: Yup.string().required("Description is required"),
     package_category_id: Yup.number().required("Category is required"),
     start_date: Yup.string().required("Start Date is required"),
-
-    // start_time: Yup.string().required("Start Time is required"),
-    // end_time: Yup.string().required("End Time is required"),
     start_time: Yup.string()
       .required("Start time is required")
       .test(
@@ -258,22 +255,6 @@ const GroupClassesList = () => {
       .oneOf(["PAID", "FREE"])
       .required("Booking Type is required"),
 
-    // amount: Yup.number()
-    //   .typeError("Amount must be a number")
-    //   .when("booking_type", {
-    //     is: "PAID",
-    //     then: (schema) => schema.required("Amount is required"),
-    //     otherwise: (schema) => schema.nullable(),
-    //   }),
-
-    // discount: Yup.number()
-    //   .typeError("Discount must be a number")
-    //   .when("booking_type", {
-    //     is: "PAID",
-    //     then: (schema) => schema.required("Discount is required"),
-    //     otherwise: (schema) => schema.nullable(),
-    //   }),
-
     amount: Yup.number()
       .typeError("Amount must be a number")
       .when("booking_type", {
@@ -281,7 +262,7 @@ const GroupClassesList = () => {
         then: (schema) =>
           schema
             .required("Amount is required")
-            .min(0, "Amount cannot be negative"),
+            .min(1, "Amount must be at least 1"),
         otherwise: (schema) => schema.nullable(),
       }),
 
@@ -293,6 +274,15 @@ const GroupClassesList = () => {
           schema
             .required("Discount is required")
             .min(0, "Discount cannot be negative")
+            .test(
+              "not-equal-amount",
+              "Discount cannot be equal to Amount",
+              function (value) {
+                const { amount } = this.parent;
+                if (!amount || !value) return true;
+                return value !== amount; // ❌ prevent equal
+              }
+            )
             .test(
               "discount-not-greater-than-amount",
               "Discount cannot be greater than Amount",
@@ -306,14 +296,6 @@ const GroupClassesList = () => {
             ),
         otherwise: (schema) => schema.nullable(),
       }),
-
-    // gst: Yup.number()
-    //   .typeError("GST must be a number")
-    //   .when("booking_type", {
-    //     is: "PAID",
-    //     then: (schema) => schema.required("GST is required"),
-    //     otherwise: (schema) => schema.nullable(),
-    //   }),
     studio_id: Yup.string().required("Studio is required"),
   });
 
@@ -393,7 +375,8 @@ const GroupClassesList = () => {
         setEditingOption(null);
         setShowModal(false);
       } catch (err) {
-        console.error("API Error:", err.response?.data || err.message);
+        console.error("API Error:", err.response?.data?.errors);
+        toast.error(err.response?.data?.errors)
       }
     },
   });

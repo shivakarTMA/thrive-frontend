@@ -209,6 +209,15 @@ const PackagesList = () => {
                   .required("Discount is required")
                   .min(0, "Discount cannot be negative")
                   .test(
+                    "not-equal-amount",
+                    "Discount cannot be equal to Amount",
+                    function (value) {
+                      const { amount } = this.parent;
+                      if (!amount || !value) return true;
+                      return value !== amount; // ❌ prevent equal
+                    }
+                  )
+                  .test(
                     "discount-not-greater-than-amount",
                     "Discount cannot be greater than Amount",
                     function (value) {
@@ -309,16 +318,23 @@ const PackagesList = () => {
                 .min(0, "Discount cannot be negative")
                 .when("amount", (amount, schema) => {
                   if (amount === 0) {
+                    // Case 1: Amount = 0 → Discount must be 0 or empty
                     return schema.test(
                       "no-discount-when-zero",
-                      "Discount is not allowed when amount is 0",
-                      (value) => !value || value === 0,
+                      "Discount must be 0 or empty when amount is 0",
+                      (value) => !value || value === 0
                     );
                   }
 
+                  // Case 2: Amount > 0 → Discount is required, ≤ amount, and ≠ amount
                   return schema
                     .required("Discount is required")
-                    .max(amount, "Discount cannot be greater than amount");
+                    .max(amount, "Discount cannot be greater than amount")
+                    .test(
+                      "not-equal-amount",
+                      "Discount cannot be equal to amount",
+                      (value) => value !== amount
+                    );
                 }),
               // gst: Yup.number()
               //   .typeError("GST must be a number")
@@ -460,6 +476,7 @@ const PackagesList = () => {
         setShowModal(false);
       } catch (err) {
         console.log(err);
+        toast.error(err.response?.data?.errors)
       }
     },
   });

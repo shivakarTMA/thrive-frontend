@@ -117,13 +117,15 @@ const OptionList = () => {
         }
 
         fetchOptions();
+        resetForm();
+        setEditingOption(null);
+        setShowModal(false);
       } catch (err) {
         console.error(err);
+        toast.error(err.response?.data?.errors)
       }
 
-      resetForm();
-      setEditingOption(null);
-      setShowModal(false);
+      
     },
   });
 

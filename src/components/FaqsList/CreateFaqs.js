@@ -6,8 +6,10 @@ import Select from "react-select";
 import {
   blockInvalidNumberKeys,
   blockNonLettersAndNumbers,
+  blockNonLettersAndNumbersFaq,
   sanitizePositiveInteger,
   sanitizeTextWithNumbers,
+  sanitizeTextWithNumbersFaq,
   selectIcon,
 } from "../../Helper/helper";
 import { toast } from "react-toastify";
@@ -131,9 +133,9 @@ const CreateFaqs = ({
                         name="question"
                         value={formik.values.question}
                         // onChange={formik.handleChange}
-                        onKeyDown={blockNonLettersAndNumbers}
+                        onKeyDown={blockNonLettersAndNumbersFaq}
                         onChange={(e) => {
-                          const cleaned = sanitizeTextWithNumbers(e.target.value);
+                          const cleaned = sanitizeTextWithNumbersFaq(e.target.value);
                           formik.setFieldValue("question", cleaned);
                         }}
                         onBlur={formik.handleBlur}

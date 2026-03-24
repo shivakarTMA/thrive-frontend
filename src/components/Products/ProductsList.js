@@ -152,7 +152,6 @@ const ProductsList = () => {
 
         return ["image/jpeg", "image/png", "image/webp"].includes(value.type);
       }),
-    // service_id: Yup.string().required("Service is required"),
     club_id: Yup.string().required("Club is required"),
     product_category_id: Yup.string().required("Product category is required"),
     name: Yup.string().required("Name is required"),
@@ -160,15 +159,12 @@ const ProductsList = () => {
     sku: Yup.string().required("sku is required"),
     product_type: Yup.string().required("Product type is required"),
     food_type: Yup.string().required("Food type is required"),
-    // short_description: Yup.string().required("Short Description is required"),
     calorie: Yup.string().required("Calorie is required"),
     protein: Yup.string().required("Protein is required"),
     carbohydrate: Yup.string().required("Carbohydrate is required"),
     fat: Yup.string().required("Fat is required"),
     description: Yup.string().required("Description is required"),
     allergens: Yup.string().required("Allergens is required"),
-    // amount: Yup.string().required("Amount is required"),
-    // discount: Yup.string().required("Discount is required"),
     amount: Yup.number()
       .typeError("Amount must be a number")
       .required("Amount is required")
@@ -178,23 +174,27 @@ const ProductsList = () => {
       .typeError("Discount must be a number")
       .min(0, "Discount cannot be negative")
       .when("amount", (amount, schema) => {
-        if (amount === 0) {
+        if (!amount || amount === 0) {
           return schema.test(
             "no-discount-when-zero",
             "Discount is not allowed when amount is 0",
-            (value) => !value || value === 0,
+            (value) => !value || value === 0
           );
         }
 
         return schema
           .required("Discount is required")
-          .max(amount, "Discount cannot be greater than amount");
+          .max(amount, "Discount cannot be greater than amount")
+          .test(
+            "not-equal-amount",
+            "Discount cannot be equal to amount",
+            function (value) {
+              const { amount } = this.parent; // ✅ access current amount from parent
+              if (amount === undefined) return true;
+              return value !== amount; // discount cannot equal amount
+            }
+          );
       }),
-    // gst: Yup.number()
-    //   .typeError("GST must be a number")
-    //   .required("GST is required")
-    //   .min(2, "GST cannot be less than 2%")
-    //   .max(40, "GST cannot be greater than 40%"),
     stock_quantity: Yup.string().required("Stock Quantity is required"),
     earn_coin: Yup.string().required("Thrive Coins is required"),
     position: Yup.string().required("Position is required"),
@@ -276,6 +276,7 @@ const ProductsList = () => {
       } catch (err) {
         console.error("API Error:", err.response?.data || err.message);
         const message = err.response?.data?.message?.toLowerCase() || "";
+        toast.error(err.response?.data?.errors)
       }
     },
   });

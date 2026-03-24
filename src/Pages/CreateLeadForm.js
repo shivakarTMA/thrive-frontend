@@ -266,6 +266,7 @@ const CreateLeadForm = ({
         leadModalPage && handleLeadUpdate();
       } catch (err) {
         console.error("❌ API Error:", err.response?.data || err.message);
+        toast.error(err.response?.data?.errors)
       }
     },
   });

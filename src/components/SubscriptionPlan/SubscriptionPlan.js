@@ -149,17 +149,26 @@ const SubscriptionPlan = () => {
         .typeError("Discount must be a number")
         .min(0, "Discount cannot be negative")
         .when("amount", (amount, schema) => {
-          if (amount === 0) {
+          if (!amount || amount === 0) {
             return schema.test(
               "no-discount-when-zero",
               "Discount is not allowed when amount is 0",
-              (value) => !value || value === 0,
+              (value) => !value || value === 0
             );
           }
-
+  
           return schema
             .required("Discount is required")
-            .max(amount, "Discount cannot be greater than amount");
+            .max(amount, "Discount cannot be greater than amount")
+            .test(
+              "not-equal-amount",
+              "Discount cannot be equal to amount",
+              function (value) {
+                const { amount } = this.parent; // ✅ access current amount from parent
+                if (amount === undefined) return true;
+                return value !== amount; // discount cannot equal amount
+              }
+            );
         }),
       // gst: Yup.number()
       //   .typeError("GST must be a number")
@@ -185,13 +194,15 @@ const SubscriptionPlan = () => {
         }
 
         fetchSubscription();
+        resetForm();
+        setEditingOption(null);
+        setShowModal(false);
       } catch (err) {
         console.error("API Error:", err.response?.data || err.message);
+        toast.error(err.response?.data?.errors)
       }
 
-      resetForm();
-      setEditingOption(null);
-      setShowModal(false);
+      
     },
   });
 

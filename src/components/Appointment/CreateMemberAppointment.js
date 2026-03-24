@@ -251,6 +251,7 @@ const CreateMemberAppointment = ({
         handleAppointmentModal();
       } catch (error) {
         console.error("Appointment API Error:", error);
+        toast.error(error.response?.data?.errors)
       }
     },
   });
@@ -497,6 +498,9 @@ const CreateMemberAppointment = ({
                       }
                     }}
                     {...datePickerProps}
+                    onKeyDown={(e) => {
+                      e.preventDefault();
+                    }}
                     placeholderText="Select date & time"
                     className="custom--input !w-full"
                   />

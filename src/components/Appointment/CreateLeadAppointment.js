@@ -140,6 +140,7 @@ const CreateLeadAppointment = ({
         handleAppointmentModal();
       } catch (error) {
         console.error("Error submitting form:", error);
+        toast.error(error.response?.data?.errors)
       }
     },
   });
@@ -264,50 +265,6 @@ const CreateLeadAppointment = ({
                   Date & Time<span className="text-red-500">*</span>
                 </label>
                 <div className="custom--date">
-                  {/* <DatePicker
-                    selected={formik.values.appointment_date}
-                    onChange={(date) => {
-                      if (!date) {
-                        formik.setFieldValue("appointment_date", null);
-                        return;
-                      }
-
-                      const newDate = new Date(date);
-                      const isToday =
-                        newDate.toDateString() === now.toDateString();
-
-                      if (isToday) {
-                        // Round current time to next 30-min slot
-                        const roundedNow = roundUpTime(now, 30);
-                        newDate.setHours(
-                          roundedNow.getHours(),
-                          roundedNow.getMinutes(),
-                          0,
-                          0,
-                        );
-                      } else {
-                        // Future dates → default to 6:00 AM
-                        newDate.setHours(6, 0, 0, 0);
-                      }
-
-                      formik.setFieldValue("appointment_date", newDate);
-                    }}
-                    showTimeSelect
-                    timeFormat="hh:mm aa"
-                    dateFormat="dd/MM/yyyy hh:mm aa"
-                    timeIntervals={30} // time slot every 30 minutes
-                    placeholderText="Select date & time"
-                    className="custom--input !w-full"
-                    minDate={now}
-                    minTime={
-                      formik.values.appointment_date &&
-                      formik.values.appointment_date.toDateString() ===
-                        now.toDateString()
-                        ? roundUpTime(now, 30) // next 30-min slot
-                        : minTimeDefault
-                    }
-                    maxTime={maxTimeDefault}
-                  /> */}
                   <DatePicker
                     selected={formik.values.appointment_date}
                     onChange={(date) => {
@@ -337,6 +294,9 @@ const CreateLeadAppointment = ({
                       }
                     }}
                     {...datePickerProps}
+                    onKeyDown={(e) => {
+                      e.preventDefault();
+                    }}
                     placeholderText="Select date & time"
                     className="custom--input !w-full"
                   />

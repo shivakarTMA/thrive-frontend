@@ -128,13 +128,14 @@ const ExerciesCategoryList = () => {
         }
 
         fetchExerciesCategory();
+        resetForm();
+        setEditingOption(null);
+        setShowModal(false);
       } catch (error) {
         console.error("API Error:", error.response?.data || error.message);
+        toast.error(error.response?.data?.errors)
       }
-
-      resetForm();
-      setEditingOption(null);
-      setShowModal(false);
+      
     },
   });
 

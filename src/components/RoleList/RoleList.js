@@ -69,7 +69,6 @@ const RoleList = () => {
     }
   };
 
-  console.log(role, "role");
 
   const formik = useFormik({
     initialValues: {
@@ -97,13 +96,15 @@ const RoleList = () => {
 
         // 🔄 Re-fetch after save
         fetchRole();
+        resetForm();
+        setEditingOption(null);
+        setShowModal(false);
       } catch (err) {
         console.error(err);
+        toast.error(err.response?.data?.errors)
       }
 
-      resetForm();
-      setEditingOption(null);
-      setShowModal(false);
+      
     },
   });
 

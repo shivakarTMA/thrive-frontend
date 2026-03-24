@@ -6,7 +6,7 @@ import { toast } from "react-toastify";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { MdOutlineKeyboardBackspace } from "react-icons/md";
 import { authAxios } from "../../config/config";
-import { allowOnlyLetters, blockNonLetters, blockNonLettersAndNumbers, customStyles, filterActiveItems, sanitizeTextWithNumbers } from "../../Helper/helper";
+import { blockNonLettersAndNumbers, customStyles, filterActiveItems, sanitizeTextWithNumbers } from "../../Helper/helper";
 import Select from "react-select";
 import { sanitizeHtml } from "../../Helper/sanitizeHtml";
 
@@ -70,14 +70,17 @@ const CreateEmailTemplate = () => {
           await authAxios().post("/emailtemplate/create", payload);
           toast.success("Created Successfully");
         }
+        resetForm();
+        navigate("/email-template-list", {
+          replace: true,
+        });
+
       } catch (err) {
         console.error("API Error:", err.response?.data || err.message);
+        toast.error(err.response?.data?.errors)
       }
 
-      resetForm();
-      navigate("/email-template-list", {
-        replace: true,
-      });
+      
     },
   });
 

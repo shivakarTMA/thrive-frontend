@@ -383,6 +383,7 @@ const ConvertMemberForm = ({
           onLeadUpdate();
         } catch (error) {
           console.log(error, "error");
+          toast.error(error.response?.data?.errors)
         }
       } else {
         setStep(step + 1);

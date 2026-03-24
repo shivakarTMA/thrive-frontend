@@ -196,13 +196,15 @@ const RecoveryServicesList = () => {
         }
 
         fetchRecoveryServices();
+        resetForm();
+        setEditingOption(null);
+        setShowModal(false);
       } catch (err) {
         console.error("API Error:", err.response?.data || err.message);
+        toast.error(err.response?.data?.errors)
       }
 
-      resetForm();
-      setEditingOption(null);
-      setShowModal(false);
+      
     },
   });
 
