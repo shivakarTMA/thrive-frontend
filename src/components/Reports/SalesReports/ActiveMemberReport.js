@@ -266,8 +266,8 @@ const ActiveMemberReport = () => {
                           : formatText(row?.service_name)}
                     </td>
                     <td className="px-2 py-2">{row?.variation_name}</td>
-                    <td className="px-2 py-2">₹{row?.booking_amount}</td>
-                    <td className="px-2 py-2">₹{row?.booking_amount}</td>
+                    <td className="px-2 py-2">₹{formatIndianNumber(row?.booking_amount)}</td>
+                    <td className="px-2 py-2">₹{formatIndianNumber(row?.booking_amount)}</td>
                     <td className="px-2 py-2">
                       {formatAutoDate(row?.subscription_start_date)}
                     </td>

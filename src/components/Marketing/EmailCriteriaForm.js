@@ -6,7 +6,9 @@ import MemberEmailFilterPanel from "../FilterPanel/MemberEmailFilterPanel";
 import {
   allowOnlyLetters,
   blockNonLetters,
+  blockNonLettersAndNumbers,
   customStyles,
+  sanitizeTextWithNumbers,
 } from "../../Helper/helper";
 import RichTextEditor from "../common/RichTextEditor";
 import { toast } from "react-toastify";
@@ -457,9 +459,9 @@ const EmailCriteriaForm = () => {
                     className="custom--input w-full"
                     value={formik.values.campaign_name}
                     // onChange={formik.handleChange}
-                    onKeyDown={blockNonLetters}
+                    onKeyDown={blockNonLettersAndNumbers}
                     onChange={(e) => {
-                      const cleaned = allowOnlyLetters(e.target.value);
+                      const cleaned = sanitizeTextWithNumbers(e.target.value);
                       formik.setFieldValue("campaign_name", cleaned);
                     }}
                     onBlur={formik.handleBlur}
@@ -495,9 +497,9 @@ const EmailCriteriaForm = () => {
                     className="custom--input w-full"
                     value={formik.values.subject}
                     // onChange={formik.handleChange}
-                    onKeyDown={blockNonLetters}
+                    onKeyDown={blockNonLettersAndNumbers}
                     onChange={(e) => {
-                      const cleaned = allowOnlyLetters(e.target.value);
+                      const cleaned = sanitizeTextWithNumbers(e.target.value);
                       formik.setFieldValue("subject", cleaned);
                     }}
                     onBlur={formik.handleBlur}
@@ -519,11 +521,15 @@ const EmailCriteriaForm = () => {
                   // onChange={(content) =>
                   //   formik.setFieldValue("message", content)
                   // }
+                  emitOnChange={true} 
                   onChange={(content) => {
-                    formik.setFieldValue("message", sanitizeHtml(content));
+                    // formik.setFieldValue("message", sanitizeHtml(content));
+                    // formik.setFieldTouched("message", true);
+                    formik.setFieldValue("message", content);
                     formik.setFieldTouched("message", true);
                   }}
                   placeholder="Enter your email message..."
+                  height={400}
                 />
                 {formik.touched.message && formik.errors.message && (
                   <p className="text-red-500 text-sm mt-1">
@@ -552,19 +558,64 @@ const EmailCriteriaForm = () => {
                   <div className="mt-2 max-w-sm">
                     <DatePicker
                       selected={formik.values.scheduledAt}
+                      // onChange={(date) => {
+                      //   if (!date) return;
+
+                      //   const now = new Date();
+                      //   const selected = new Date(date);
+
+                      //   if (selected.toDateString() === now.toDateString()) {
+                      //     // Today: round to next 15-min interval
+                      //     const minutes = Math.ceil(now.getMinutes() / 15) * 15;
+                      //     selected.setHours(now.getHours(), minutes, 0, 0);
+                      //   } else {
+                      //     // Future date: default time 09:00 AM
+                      //     selected.setHours(0, 0, 0, 0);
+                      //   }
+
+                      //   formik.setFieldValue("scheduledAt", selected);
+                      // }}
                       onChange={(date) => {
                         if (!date) return;
 
                         const now = new Date();
                         const selected = new Date(date);
 
-                        if (selected.toDateString() === now.toDateString()) {
-                          // Today: round to next 15-min interval
-                          const minutes = Math.ceil(now.getMinutes() / 15) * 15;
-                          selected.setHours(now.getHours(), minutes, 0, 0);
+                        const roundTo15 = (d) => {
+                          let minutes = d.getMinutes();
+                          let rounded = Math.round(minutes / 15) * 15;
+
+                          let hours = d.getHours();
+
+                          if (rounded === 60) {
+                            rounded = 0;
+                            hours += 1;
+                          }
+
+                          d.setHours(hours, rounded, 0, 0);
+                          return d;
+                        };
+
+                        const isToday =
+                          selected.toDateString() === now.toDateString();
+
+                        const isPastTime =
+                          selected.getTime() < now.getTime();
+
+                        if (isToday && isPastTime) {
+                          // move to next valid slot
+                          let minutes = Math.ceil(now.getMinutes() / 15) * 15;
+                          let hours = now.getHours();
+
+                          if (minutes === 60) {
+                            minutes = 0;
+                            hours += 1;
+                          }
+
+                          selected.setHours(hours, minutes, 0, 0);
                         } else {
-                          // Future date: default time 09:00 AM
-                          selected.setHours(0, 0, 0, 0);
+                          // snap user selection to nearest 15 min
+                          roundTo15(selected);
                         }
 
                         formik.setFieldValue("scheduledAt", selected);

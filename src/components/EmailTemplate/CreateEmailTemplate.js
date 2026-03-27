@@ -221,12 +221,15 @@ const CreateEmailTemplate = () => {
                 value={formik.values.body_html}
                 label="Message"
                 // onChange={(content) => formik.setFieldValue("body_html", content)}
+                emitOnChange={true} 
                 onChange={(content) => {
-                  formik.setFieldValue("body_html", sanitizeHtml(content));
+                  // formik.setFieldValue("body_html", sanitizeHtml(content));
+                  // formik.setFieldTouched("body_html", true);
+                  formik.setFieldValue("body_html", content);
                   formik.setFieldTouched("body_html", true);
                 }}
                 placeholder="Enter your email message..."
-                height={300}
+                height={400}
               />
 
               {formik.touched.body_html && formik.errors.body_html && (

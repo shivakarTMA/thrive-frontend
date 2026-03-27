@@ -270,8 +270,16 @@ const isSubmitDisabled =
               <RichTextEditor
                 value={formik.values.message}
                 label="Message"
-                onChange={(content) => formik.setFieldValue("message", content)}
+                // onChange={(content) => formik.setFieldValue("message", content)}
+                emitOnChange={true} 
+                  onChange={(content) => {
+                    // formik.setFieldValue("message", sanitizeHtml(content));
+                    // formik.setFieldTouched("message", true);
+                    formik.setFieldValue("message", content);
+                    formik.setFieldTouched("message", true);
+                  }}
                 placeholder="Enter your email message..."
+                height={400}
               />
 
               {formik.touched.message && formik.errors.message && (

@@ -4,7 +4,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import { addYears, subYears } from "date-fns";
 import { FaCalendarDays } from "react-icons/fa6";
 import Select from "react-select";
-import { customStyles, filterActiveItems } from "../../../Helper/helper";
+import { customStyles, filterActiveItems, formatIndianNumber } from "../../../Helper/helper";
 import { authAxios } from "../../../config/config";
 import { toast } from "react-toastify";
 
@@ -289,8 +289,8 @@ const EventCommunityEngagement = () => {
                     <td className="px-2 py-3">{item.eventName}</td>
                     <td className="px-2 py-3">{item.registrations}</td>
                     <td className="px-2 py-3">{item.attendees}</td>
-                    <td className="px-2 py-3">₹{item.revenue}</td>
-                    <td className="px-2 py-3">₹{item.budget}</td>
+                    <td className="px-2 py-3">₹{formatIndianNumber(item.revenue)}</td>
+                    <td className="px-2 py-3">₹{formatIndianNumber(item.budget)}</td>
                     <td className="px-2 py-3">{item.roi}</td>
                   </tr>
                 ))

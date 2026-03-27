@@ -63,6 +63,7 @@ const ClubList = () => {
       setTotalCount(res.data?.totalCount || data.length);
     } catch (err) {
       console.error(err);
+      toast.error(err.response?.data?.message);
     }
   };
 
@@ -87,7 +88,7 @@ const ClubList = () => {
 
   const formik = useFormik({
     initialValues: {
-      technogym_facilit_url:"",
+      technogym_facilit_url: "",
       logo: null,
       name: "",
       email: "",
@@ -109,9 +110,13 @@ const ClubList = () => {
       close_time: "",
       trial_duration: "",
       position: "",
+      terms_and_conditions: "",
+      abbr: "",
     },
     validationSchema: Yup.object({
-      technogym_facilit_url: Yup.string().required("Technogym Facilit is required"),
+      technogym_facilit_url: Yup.string().required(
+        "Technogym Facilit is required",
+      ),
       name: Yup.string().required("Club name is required"),
       email: Yup.string().required("Club email is required"),
       phone: Yup.string()
@@ -135,6 +140,7 @@ const ClubList = () => {
       address: Yup.string().required("Address is required"),
       description: Yup.string().required("Description is required"),
       position: Yup.string().required("Position is required"),
+      abbr: Yup.string().required("Club Abbreviation is required"),
 
       map_url: Yup.string()
         .url("Invalid URL format")
@@ -153,6 +159,13 @@ const ClubList = () => {
       club_available_service: Yup.array()
         .of(Yup.string())
         .min(1, "At least one service is required"), // If you want optional, remove .min()
+      terms_and_conditions: Yup.string()
+        .test(
+          "not-empty",
+          "Terms and Agreement is required",
+          (value) => value && value.replace(/<[^>]+>/g, "").trim().length > 0,
+        )
+        .required("Terms and Agreement is required"),
     }),
     onSubmit: async (values, { resetForm }) => {
       try {
@@ -174,6 +187,7 @@ const ClubList = () => {
         formData.append("position", values.position);
         formData.append("open_time", values.open_time);
         formData.append("close_time", values.close_time);
+        formData.append("abbr", values.abbr);
         formData.append("gstno", values.gstno);
         formData.append(
           "club_available_service",
@@ -182,6 +196,7 @@ const ClubList = () => {
 
         formData.append("trial_duration", values.trial_duration);
         formData.append("description", values.description);
+        formData.append("terms_and_conditions", values.terms_and_conditions);
 
         // ✅ Append logo only if it's a file
         if (values.logoFile instanceof File) {
@@ -210,7 +225,7 @@ const ClubList = () => {
         setEditingClub(null);
       } catch (err) {
         console.error("API Error:", err.response?.data || err.message);
-        toast.error(err.response?.data?.errors)
+        toast.error(err.response?.data?.errors);
       }
     },
   });
@@ -308,7 +323,9 @@ const ClubList = () => {
                 <th className="px-2 py-4 min-w-[100px]">Close Time</th>
                 <th className="px-2 py-4 min-w-[130px]">Trial Duration</th>
                 <th className="px-2 py-4 min-w-[150px]">Technogym Facilit</th>
-                <th className="px-2 py-4 text-center min-w-[100px]">Position</th>
+                <th className="px-2 py-4 text-center min-w-[100px]">
+                  Position
+                </th>
                 <th className="px-2 py-4 min-w-[100px]">Status</th>
                 <th className="px-2 py-4 min-w-[100px]">Action</th>
               </tr>

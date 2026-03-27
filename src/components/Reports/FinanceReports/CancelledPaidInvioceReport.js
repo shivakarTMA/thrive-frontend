@@ -4,7 +4,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import { addYears, subYears } from "date-fns";
 import { FaCalendarDays } from "react-icons/fa6";
 import Select from "react-select";
-import { customStyles, filterActiveItems } from "../../../Helper/helper";
+import { customStyles, filterActiveItems, formatIndianNumber } from "../../../Helper/helper";
 import { authAxios } from "../../../config/config";
 import { toast } from "react-toastify";
 
@@ -212,14 +212,14 @@ const CancelledPaidInvioceReport = () => {
                     <td className="px-2 py-4">{row.salesRepName}</td>
                     <td className="px-2 py-4">{row.generalTrainer}</td>
                     <td className="px-2 py-4">{row.createdBy}</td>
-                    <td className="px-2 py-4">₹{row.amount}</td>
-                    <td className="px-2 py-4">₹{row.cgst}</td>
-                    <td className="px-2 py-4">₹{row.sgst}</td>
-                    <td className="px-2 py-4">₹{row.igst}</td>
-                    <td className="px-2 py-4">₹{row.finalAmount}</td>
-                    <td className="px-2 py-4">₹{row.paid}</td>
-                    <td className="px-2 py-4">₹{row.tdsAmount}</td>
-                    <td className="px-2 py-4">₹{row.pending}</td>
+                    <td className="px-2 py-4">₹{formatIndianNumber(row.amount)}</td>
+                    <td className="px-2 py-4">₹{formatIndianNumber(row.cgst)}</td>
+                    <td className="px-2 py-4">₹{formatIndianNumber(row.sgst)}</td>
+                    <td className="px-2 py-4">₹{formatIndianNumber(row.igst)}</td>
+                    <td className="px-2 py-4">₹{formatIndianNumber(row.finalAmount)}</td>
+                    <td className="px-2 py-4">₹{formatIndianNumber(row.paid)}</td>
+                    <td className="px-2 py-4">₹{formatIndianNumber(row.tdsAmount)}</td>
+                    <td className="px-2 py-4">₹{formatIndianNumber(row.pending)}</td>
                     <td className="px-2 py-4">{row.payMode}</td>
                     <td className="px-2 py-4">{row.cancelledBy}</td>
                     <td className="px-2 py-4">{row.reason}</td>

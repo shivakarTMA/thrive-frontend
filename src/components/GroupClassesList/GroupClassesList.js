@@ -636,6 +636,7 @@ const GroupClassesList = () => {
                     <th className="px-2 py-4 min-w-[120px]">Booking Type</th>
                     <th className="px-2 py-4 min-w-[100px]">Amount</th>
                     <th className="px-2 py-4 min-w-[100px]">Discount</th>
+                    <th className="px-2 py-4 min-w-[100px]">GST</th>
                     <th className="px-2 py-4 min-w-[150px]">Total Amount</th>
                     <th className="px-2 py-4 min-w-[170px]">Scheduled At</th>
                     <th className="px-2 py-4 min-w-[100px]">Studio</th>
@@ -686,7 +687,10 @@ const GroupClassesList = () => {
                           ₹{row?.discount ? formatIndianNumber(row?.discount) : 0}
                         </td>
                         <td className="px-2 py-4">
-                          ₹{row?.total_amount ? formatIndianNumber(row?.total_amount) : 0}
+                          ₹{row?.gst_amount ? formatIndianNumber(row?.gst_amount) : 0}
+                        </td>
+                        <td className="px-2 py-4">
+                          ₹{row?.booking_amount ? formatIndianNumber(row?.booking_amount) : 0}
                         </td>
                         <td className="px-2 py-4">
                           {formatAutoDate(row?.start_date)}{" "}

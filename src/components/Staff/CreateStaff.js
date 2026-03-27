@@ -6,9 +6,11 @@ import {
   allowOnlyPositiveNumbers,
   blockInvalidNumberKeys,
   blockNonLetters,
+  blockNonLettersAndNumbers,
   filterActiveItems,
   sanitizePositiveInteger,
   sanitizeText,
+  sanitizeTextWithNumbers,
   selectIcon,
 } from "../../Helper/helper";
 import DatePicker from "react-datepicker";
@@ -239,9 +241,9 @@ const CreateStaff = ({
                         className="custom--input w-full input--icon"
                         value={formik.values.name}
                         // onChange={formik.handleChange}
-                        onKeyDown={blockNonLetters}
+                        onKeyDown={blockNonLettersAndNumbers}
                         onChange={(e) => {
-                          const cleaned = allowOnlyLetters(e.target.value);
+                          const cleaned = sanitizeTextWithNumbers(e.target.value);
                           formik.setFieldValue("name", cleaned);
                         }}
                         onBlur={formik.handleBlur}
@@ -589,9 +591,9 @@ const CreateStaff = ({
                             className="custom--input w-full input--icon"
                             value={formik.values.tags}
                             // onChange={formik.handleChange}
-                            onKeyDown={blockNonLetters}
+                            onKeyDown={blockNonLettersAndNumbers}
                             onChange={(e) => {
-                              const cleaned = allowOnlyLetters(e.target.value);
+                              const cleaned = sanitizeTextWithNumbers(e.target.value);
                               formik.setFieldValue("tags", cleaned);
                             }}
                             onBlur={formik.handleBlur}
@@ -678,8 +680,13 @@ const CreateStaff = ({
                           rows={3}
                           name="description"
                           value={formik.values.description}
+                          // onChange={(e) => {
+                          //   const cleaned = sanitizeText(e.target.value);
+                          //   formik.setFieldValue("description", cleaned);
+                          // }}
+                          onKeyDown={blockNonLettersAndNumbers}
                           onChange={(e) => {
-                            const cleaned = sanitizeText(e.target.value);
+                            const cleaned = sanitizeTextWithNumbers(e.target.value);
                             formik.setFieldValue("description", cleaned);
                           }}
                           onBlur={formik.handleBlur}
@@ -717,15 +724,10 @@ const CreateStaff = ({
                                   //     e.target.value,
                                   //   )
                                   // }
-                                  onKeyDown={blockNonLetters}
+                                  onKeyDown={blockNonLettersAndNumbers}
                                   onChange={(e) => {
-                                    const cleaned = sanitizeText(
-                                      e.target.value,
-                                    );
-                                    formik.setFieldValue(
-                                      `content[${index}].title`,
-                                      cleaned,
-                                    );
+                                    const cleaned = sanitizeTextWithNumbers(e.target.value);
+                                    formik.setFieldValue(`content[${index}].title`, cleaned);
                                   }}
                                 />
                                 {formik.touched.content?.[index]?.title &&
@@ -751,15 +753,10 @@ const CreateStaff = ({
                                   //     e.target.value,
                                   //   )
                                   // }
-                                  onKeyDown={blockNonLetters}
+                                  onKeyDown={blockNonLettersAndNumbers}
                                   onChange={(e) => {
-                                    const cleaned = sanitizeText(
-                                      e.target.value,
-                                    );
-                                    formik.setFieldValue(
-                                      `content[${index}].description`,
-                                      cleaned,
-                                    );
+                                    const cleaned = sanitizeTextWithNumbers(e.target.value);
+                                    formik.setFieldValue(`content[${index}].description`, cleaned);
                                   }}
                                 />
                                 {formik.touched.content?.[index]?.description &&

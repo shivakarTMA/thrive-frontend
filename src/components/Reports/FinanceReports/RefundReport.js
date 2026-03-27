@@ -4,7 +4,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import { addYears, subYears } from "date-fns";
 import { FaCalendarDays } from "react-icons/fa6";
 import Select from "react-select";
-import { customStyles } from "../../../Helper/helper";
+import { customStyles, formatIndianNumber } from "../../../Helper/helper";
 
 const dateFilterOptions = [
   { value: "today", label: "Today" },
@@ -145,15 +145,15 @@ const RefundReport = () => {
                     <td className="px-2 py-4">{row.serviceVariation}</td>
                     <td className="px-2 py-4">{row.proformaInvoiceNo}</td>
                     <td className="px-2 py-4">{row.type}</td>
-                    <td className="px-2 py-4">₹{row.baseValue}</td>
-                    <td className="px-2 py-4">₹{row.tax}</td>
-                    <td className="px-2 py-4">₹{row.total}</td>
-                    <td className="px-2 py-4">₹{row.paid}</td>
-                    <td className="px-2 py-4">₹{row.balance}</td>
-                    <td className="px-2 py-4">₹{row.utilisedValue}</td>
-                    <td className="px-2 py-4">₹{row.unutilisedValue}</td>
-                    <td className="px-2 py-4">₹{row.deduction}</td>
-                    <td className="px-2 py-4">₹{row.refundAmount}</td>
+                    <td className="px-2 py-4">₹{formatIndianNumber(row.baseValue)}</td>
+                    <td className="px-2 py-4">₹{formatIndianNumber(row.tax)}</td>
+                    <td className="px-2 py-4">₹{formatIndianNumber(row.total)}</td>
+                    <td className="px-2 py-4">₹{formatIndianNumber(row.paid)}</td>
+                    <td className="px-2 py-4">₹{formatIndianNumber(row.balance)}</td>
+                    <td className="px-2 py-4">₹{formatIndianNumber(row.utilisedValue)}</td>
+                    <td className="px-2 py-4">₹{formatIndianNumber(row.unutilisedValue)}</td>
+                    <td className="px-2 py-4">₹{formatIndianNumber(row.deduction)}</td>
+                    <td className="px-2 py-4">₹{formatIndianNumber(row.refundAmount)}</td>
                     <td className="px-2 py-4">{row.staffName}</td>
                     <td className="px-2 py-4">{row.dateTime}</td>
                     <td className="px-2 py-4">{row.instrument}</td>

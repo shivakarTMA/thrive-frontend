@@ -30,6 +30,7 @@ const challengeType = [
   { label: "Distance Travelled", value: "DISTANCE_TRAVELLED" },
   { label: "Calories Burnt", value: "CALORIES_BURNT" },
   { label: "Active Minutes", value: "ACTIVE_MINUTES" },
+  { label: "Custom", value: "CUSTOM" },
 ];
 const frequencyType = [
   { label: "Daily", value: "DAILY" },
@@ -50,6 +51,7 @@ const joinBetween = [
 // Define the ChallengeForm component
 const ChallengeForm = ({ setShowModal, editingOption, formik }) => {
   const leadBoxRef = useRef();
+  const prevTypeRef = useRef();
   const [club, setClub] = useState([]);
   const dispatch = useDispatch();
 
@@ -101,6 +103,7 @@ const ChallengeForm = ({ setShowModal, editingOption, formik }) => {
 
   // Fetch exercise by ID when editingExercise changes
   useEffect(() => {
+    if (!editingOption) return;
     const fetchChallengeById = async () => {
       if (editingOption) {
         try {
@@ -121,7 +124,9 @@ const ChallengeForm = ({ setShowModal, editingOption, formik }) => {
             start_date_time: exerciseData?.start_date_time
               ? new Date(exerciseData.start_date_time)
               : null,
-            end_date_time: exerciseData?.end_date_time || "",
+            end_date_time: exerciseData?.end_date_time
+              ? new Date(exerciseData.end_date_time)
+              : null,
             frequency: exerciseData?.frequency || "",
             target_value: exerciseData?.target_value || "",
             target_unit: exerciseData?.target_unit || "",
@@ -132,7 +137,10 @@ const ChallengeForm = ({ setShowModal, editingOption, formik }) => {
             about_challenge: exerciseData?.about_challenge || "",
             position: exerciseData?.position || "",
             status: exerciseData?.status || "",
-            join_in_between: exerciseData?.join_in_between || "",
+            join_in_between:
+              exerciseData?.join_in_between !== undefined
+                ? exerciseData.join_in_between
+                : "",
             winning_caption_heading:
               exerciseData?.winning_caption_heading || "",
             winning_caption_subheading:
@@ -184,6 +192,19 @@ const ChallengeForm = ({ setShowModal, editingOption, formik }) => {
   );
 
   const endPickerProps = useClubDatePickerProps(formik.values?.end_date_time);
+
+  const isCustom = formik.values?.challenge_type === "CUSTOM";
+
+  useEffect(() => {
+    const currentType = formik.values?.challenge_type;
+
+    if (prevTypeRef.current && prevTypeRef.current !== currentType) {
+      formik.setFieldValue("target_value", "");
+      formik.setFieldValue("target_unit", "");
+    }
+
+    prevTypeRef.current = currentType;
+  }, [formik.values?.challenge_type]);
 
   return (
     <div
@@ -526,7 +547,9 @@ const ChallengeForm = ({ setShowModal, editingOption, formik }) => {
 
                           // Loop through full day in interval steps
                           while (true) {
-                            current = new Date(current.getTime() + interval * 60000);
+                            current = new Date(
+                              current.getTime() + interval * 60000,
+                            );
 
                             // stop at start time
                             if (current >= startDate) break;
@@ -621,16 +644,24 @@ const ChallengeForm = ({ setShowModal, editingOption, formik }) => {
                       Target Value<span className="text-red-500">*</span>
                     </label>
                     <input
-                      type="number"
+                      type={isCustom ? "text" : "number"}
                       name="target_value"
                       value={formik.values?.target_value}
                       // onChange={formik.handleChange}
-                      onKeyDown={blockInvalidNumberKeys} // ⛔ blocks typing -, e, etc.
+                      onKeyDown={
+                        !isCustom
+                          ? blockInvalidNumberKeys
+                          : blockNonLettersAndNumbers
+                      }
                       onChange={(e) => {
-                        const cleanValue = sanitizePositiveInteger(
-                          e.target.value,
-                        );
-                        formik.setFieldValue("target_value", cleanValue);
+                        const value = e.target.value;
+                        if (isCustom) {
+                          const cleanValue = sanitizeTextWithNumbers(value);
+                          formik.setFieldValue("target_value", cleanValue);
+                        } else {
+                          const cleanValue = sanitizePositiveInteger(value);
+                          formik.setFieldValue("target_value", cleanValue);
+                        }
                       }}
                       className="custom--input w-full number--appearance-none"
                     />
@@ -647,16 +678,24 @@ const ChallengeForm = ({ setShowModal, editingOption, formik }) => {
                       Target Unit<span className="text-red-500">*</span>
                     </label>
                     <input
-                      type="number"
+                      type={isCustom ? "text" : "number"}
                       name="target_unit"
                       value={formik.values?.target_unit}
                       // onChange={formik.handleChange}
-                      onKeyDown={blockInvalidNumberKeys} // ⛔ blocks typing -, e, etc.
+                      onKeyDown={
+                        !isCustom
+                          ? blockInvalidNumberKeys
+                          : blockNonLettersAndNumbers
+                      }
                       onChange={(e) => {
-                        const cleanValue = sanitizePositiveInteger(
-                          e.target.value,
-                        );
-                        formik.setFieldValue("target_unit", cleanValue);
+                        const value = e.target.value;
+                        if (isCustom) {
+                          const cleanValue = sanitizeTextWithNumbers(value);
+                          formik.setFieldValue("target_unit", cleanValue);
+                        } else {
+                          const cleanValue = sanitizePositiveInteger(value);
+                          formik.setFieldValue("target_unit", cleanValue);
+                        }
                       }}
                       className="custom--input w-full number--appearance-none"
                     />
@@ -667,6 +706,7 @@ const ChallengeForm = ({ setShowModal, editingOption, formik }) => {
                         </p>
                       )}
                   </div>
+
                   {/* Join In Between Field */}
                   <div>
                     <label className="mb-2 block">

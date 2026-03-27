@@ -547,7 +547,7 @@ const NewJoineesReport = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={6} className="text-center py-4">
+                  <td colSpan={23} className="text-center py-4">
                     No data found
                   </td>
                 </tr>

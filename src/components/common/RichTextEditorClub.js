@@ -10,7 +10,7 @@ import JoditEditor from "jodit-react";
 import { toast } from "react-toastify";
 import DOMPurify from "dompurify";
 
-const RichTextEditor = forwardRef(
+const RichTextEditorClub = forwardRef(
   (
     {
       label,
@@ -49,11 +49,10 @@ const RichTextEditor = forwardRef(
         toolbar: [
           "undo redo | bold italic underline | align",
           "ul ol | outdent indent | table",
-          "link image | source",
         ],
 
         removeButtons:
-          "ai-assistant,ai-command,about,print,insertvideo,video,speech,paintformat,formatPainter,file,spellcheck,classSpan",
+          "ai-assistant,ai-command,about,print,insertvideo,video,speech,paintformat,formatPainter,file,spellcheck,classSpan,image,fullsize,preview",
 
         disablePlugins: [
           "ai-assistant",
@@ -65,109 +64,39 @@ const RichTextEditor = forwardRef(
           "paintformat",
           "filebrowser",
           "file",
+          "image",
+          "filebrowser",
+          "drag-and-drop",
+          "pasteStorage",
+          "fullsize", // ✅ disable fullscreen
+          "preview", // ✅ disable preview
         ],
 
         // MANUALLY handle image uploads
+        // ❌ Remove uploader completely
         uploader: {
-          insertImageAsBase64URI: true,
-          imagesExtensions: ["jpg", "png", "jpeg", "svg", "webp"],
-
-          // This prevents the AJAX request
-          url: "data:application/json;base64,eyJzdWNjZXNzIjp0cnVlfQ==",
-
-          // Handle file upload
-          process: (resp) => {
-            // Return false to prevent default processing
-            return {
-              files: [],
-              error: 0,
-              msg: "",
-            };
-          },
-
-          // Validate before upload
-          isSuccess: function (resp) {
-            return true;
-          },
-
-          // Handle the actual file selection
-          defaultHandlerSuccess: function (data, resp) {
-            const files = data.files || [];
-            if (files && files.length) {
-              this.selection.insertImage(files[0]);
-            }
-          },
-
-          // Error handler
-          error: function (e) {
-            this.events.fire("errorMessage", e.message, "error", 4000);
-          },
+          insertImageAsBase64URI: false,
         },
 
         // Better approach: use events to handle image insertion
         events: {
-          // beforePaste: function (html) {
-          //   return DOMPurify.sanitize(html);
-          // },
           beforePaste: function (html) {
-            return html; // ✅ keep original HTML
+            // Parse HTML safely
+            const doc = new DOMParser().parseFromString(html, "text/html");
+
+            // ❌ Remove ALL images (even nested inside links)
+            doc.querySelectorAll("img").forEach((img) => img.remove());
+
+            return doc.body.innerHTML;
           },
-          beforeImageUpload: function (files) {
-            const file = files?.[0];
-            if (!file) return false;
 
-            const allowed = [
-              "image/png",
-              "image/jpeg",
-              "image/jpg",
-              "image/svg+xml",
-              "image/webp",
-            ];
+          // ✅ Prevent pasted images also
+          beforePasteFromWord: function (html) {
+            return html.replace(/<img[^>]*>/g, "");
+          },
 
-            // ❌ INVALID FILE TYPE
-            if (!allowed.includes(file.type)) {
-              // Use setTimeout to ensure toast shows outside Jodit's event cycle
-              setTimeout(() => {
-                toast.error(
-                  "Only PNG, JPG, JPEG, SVG, or WebP images are allowed.",
-                  {
-                    position: "top-right",
-                    autoClose: 3000,
-                    hideProgressBar: false,
-                    closeOnClick: true,
-                    pauseOnHover: true,
-                    draggable: true,
-                  },
-                );
-              }, 0);
-              return false; // Prevent upload
-            }
-
-            if (file.size > 2 * 1024 * 1024) {
-              toast.error("Image must be under 2MB");
-              return false;
-            }
-
-            // ✅ VALID — Convert to Base64 manually
-            const reader = new FileReader();
-            const editor = this;
-
-            reader.onload = function () {
-              editor.selection.insertImage(reader.result, null, 250);
-            };
-
-            reader.onerror = function () {
-              setTimeout(() => {
-                toast.error("Failed to read image file.", {
-                  position: "top-right",
-                  autoClose: 3000,
-                });
-              }, 0);
-            };
-
-            reader.readAsDataURL(file);
-
-            return false; // Prevent default upload behavior
+          beforeInsertImage: function () {
+            return false; // ❌ block any internal image insert
           },
 
           // ✅ NEW: Auto-center tables after insertion
@@ -215,6 +144,7 @@ const RichTextEditor = forwardRef(
         askBeforePasteHTML: false,
         cleanHTML: {
           removeJavascript: true,
+          removeTags: ["img"],
         },
         showXPathInStatusbar: false,
         showCharsCounter: false,
@@ -255,7 +185,7 @@ const RichTextEditor = forwardRef(
       const content = extractContent();
       const cleanContent = DOMPurify.sanitize(content, {
         ALLOWED_TAGS: [
-          // existing
+          // ✅ Existing (keep them)
           "p",
           "strong",
           "span",
@@ -266,15 +196,13 @@ const RichTextEditor = forwardRef(
           "li",
           "br",
 
-          // headings
+          // ✅ ADD these (your new requirement)
           "h1",
           "h2",
           "h3",
           "h4",
           "h5",
           "h6",
-
-          // table
           "table",
           "thead",
           "tbody",
@@ -282,16 +210,10 @@ const RichTextEditor = forwardRef(
           "tr",
           "td",
           "th",
-
-          // layout
           "div",
           "blockquote",
           "pre",
           "code",
-
-          // ✅ REQUIRED for your HTML
-          "img",
-          "a",
         ],
 
         ALLOWED_ATTR: [
@@ -326,7 +248,7 @@ const RichTextEditor = forwardRef(
       const content = extractContent();
       const cleanContent = DOMPurify.sanitize(content, {
         ALLOWED_TAGS: [
-          // existing
+          // ✅ Existing (keep them)
           "p",
           "strong",
           "span",
@@ -337,15 +259,13 @@ const RichTextEditor = forwardRef(
           "li",
           "br",
 
-          // headings
+          // ✅ ADD these (your new requirement)
           "h1",
           "h2",
           "h3",
           "h4",
           "h5",
           "h6",
-
-          // table
           "table",
           "thead",
           "tbody",
@@ -353,17 +273,12 @@ const RichTextEditor = forwardRef(
           "tr",
           "td",
           "th",
-
-          // layout
           "div",
           "blockquote",
           "pre",
           "code",
-
-          // ✅ REQUIRED for your HTML
-          "img",
-          "a",
         ],
+
         ALLOWED_ATTR: [
           "style",
           "class",
@@ -488,6 +403,6 @@ const RichTextEditor = forwardRef(
   },
 );
 
-RichTextEditor.displayName = "RichTextEditor";
+RichTextEditorClub.displayName = "RichTextEditorClub";
 
-export default RichTextEditor;
+export default RichTextEditorClub;

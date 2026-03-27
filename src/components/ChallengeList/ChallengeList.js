@@ -33,6 +33,7 @@ const challengeType = [
   { label: "Distance Travelled", value: "DISTANCE_TRAVELLED" },
   { label: "Calories Burnt", value: "CALORIES_BURNT" },
   { label: "Active Minutes", value: "ACTIVE_MINUTES" },
+  { label: "Custom", value: "CUSTOM" },
 ];
 
 const statusType = [
@@ -197,7 +198,7 @@ const ChallengeList = () => {
       about_challenge: Yup.string().required(
         "Challenge Essentials is required",
       ),
-      position: Yup.string().required("Position is required"),
+      // position: Yup.string().required("Position is required"),
       winning_caption_heading: Yup.string().required(
         "Winning heading is required",
       ),
@@ -250,6 +251,8 @@ const ChallengeList = () => {
         fetchChallengeList();
       } catch (error) {
         console.error("Error submitting form:", error.response || error);
+        toast.error(error.response?.data?.errors)
+
       }
     },
   });

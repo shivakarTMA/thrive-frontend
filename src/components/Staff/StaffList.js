@@ -331,8 +331,8 @@ const StaffList = () => {
         resetForm();
         setEditingOption(null);
       } catch (err) {
-        console.error("API Error:", err.response?.data || err.message);
-        toast.error(err.response?.data?.errors)
+        console.error("API Error:", err.response?.data?.message);
+        toast.error(err.response?.data?.message)
       }
     },
   });

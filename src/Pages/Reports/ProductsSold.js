@@ -7,6 +7,7 @@ import {
   customStyles,
   filterActiveItems,
   formatAutoDate,
+  formatIndianNumber,
   formatText,
   selectIcon,
 } from "../../Helper/helper";
@@ -707,22 +708,22 @@ const ProductsSold = (props) => {
                           {row?.lead_owner ? row?.lead_owner : "--"}
                         </td>
                         <td className="px-2 py-4">
-                          ₹{row?.amount ? row?.amount : 0}
+                          ₹{row?.amount ? formatIndianNumber(row?.amount) : 0}
                         </td>
                         <td className="px-2 py-4">
-                          ₹{row?.cgst_amount ? row?.cgst_amount : 0}
+                          ₹{row?.cgst_amount ? formatIndianNumber(row?.cgst_amount) : 0}
                         </td>
                         <td className="px-2 py-4">
-                          ₹{row?.sgst_amount ? row?.sgst_amount : 0}
+                          ₹{row?.sgst_amount ? formatIndianNumber(row?.sgst_amount) : 0}
                         </td>
                         <td className="px-2 py-4">
-                          ₹{row?.igst_amount ? row?.igst_amount : 0}
+                          ₹{row?.igst_amount ? formatIndianNumber(row?.igst_amount) : 0}
                         </td>
                         <td className="px-2 py-4">
-                          ₹{row?.booking_amount ? row?.booking_amount : 0}
+                          ₹{row?.booking_amount ? formatIndianNumber(row?.booking_amount) : 0}
                         </td>
                         <td className="px-2 py-4">
-                          ₹{row?.paid_amount ? row?.paid_amount : 0}
+                          ₹{row?.paid_amount ? formatIndianNumber(row?.paid_amount) : 0}
                         </td>
                         <td className="px-2 py-4">
                           {row?.payment_method

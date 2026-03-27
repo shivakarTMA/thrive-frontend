@@ -1,10 +1,16 @@
 import React, { useEffect, useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { addYears, subYears } from "date-fns";
-import { FaCalendarDays } from "react-icons/fa6";
+import { addYears, format, subYears } from "date-fns";
+import { FaCalendarDays, FaCircle } from "react-icons/fa6";
 import Select from "react-select";
-import { customStyles, filterActiveItems } from "../../../Helper/helper";
+import {
+  customStyles,
+  filterActiveItems,
+  formatAutoDate,
+  formatDateTimeLead,
+  formatText,
+} from "../../../Helper/helper";
 import { authAxios } from "../../../config/config";
 import { toast } from "react-toastify";
 import { BsSend } from "react-icons/bs";
@@ -12,6 +18,8 @@ import { Link } from "react-router-dom";
 import Tooltip from "../../common/Tooltip";
 import { IoEyeOutline } from "react-icons/io5";
 import { LiaEdit } from "react-icons/lia";
+import { useSelector } from "react-redux";
+import Pagination from "../../common/Pagination";
 
 const dateFilterOptions = [
   { value: "today", label: "Today" },
@@ -20,43 +28,25 @@ const dateFilterOptions = [
   { value: "custom", label: "Custom Date" },
 ];
 
-const formatDate = (date) => {
-  if (!date) return null;
-  return date.toISOString().split("T")[0]; // YYYY-MM-DD
-};
-
-const customerData = [
-  {
-    id: 1,
-    campaignName: "Referral Reward Notification",
-    emailsSent: "Ravi Sharma, Ankit Shukla, Gaurav Kapoor, Manoj........",
-    scheduled_on: "01/01/2026 12:30 pm",
-    status: "Sent",
-  },
-  {
-    id: 2,
-    campaignName: "Corporate Wellness Announcement",
-    emailsSent: "Summit Palza, Active Members, Male, 31-40",
-    scheduled_on: "06/01/2026 12:30 pm",
-    status: "Scheduled",
-  },
-  {
-    id: 3,
-    campaignName: "Festive Offer Promotion",
-    emailsSent: "Summit Palza, Active Members, Male, 31-40, Pilates",
-    scheduled_on: "09/01/2026 12:30 pm",
-    status: "Scheduled",
-  },
-];
+const formatDate = (date) => format(date, "yyyy-MM-dd");
 
 const NotificationList = () => {
-  const [leadSource, setLeadSource] = useState(customerData);
+  const [notificationCampaignList, setNotificationCampaignList] = useState([]);
   const [clubList, setClubList] = useState([]);
   const [clubFilter, setClubFilter] = useState(null);
+  const [expandedRows, setExpandedRows] = useState({});
+
+  const { user } = useSelector((state) => state.auth);
+  const userRole = user.role;
 
   const [dateFilter, setDateFilter] = useState(dateFilterOptions[0]);
   const [customFrom, setCustomFrom] = useState(null);
   const [customTo, setCustomTo] = useState(null);
+
+  const [page, setPage] = useState(1);
+  const [rowsPerPage] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
 
   // Function to fetch club list
   const fetchClub = async (search = "") => {
@@ -86,9 +76,12 @@ const NotificationList = () => {
     value: item.id,
   }));
 
-  const fetchEmailAutomationReport = async () => {
+  const fetchEmailAutomationReport = async (currentPage = page) => {
     try {
-      const params = {};
+      const params = {
+        page: currentPage,
+        limit: rowsPerPage,
+      };
 
       // Club filter
       if (clubFilter) {
@@ -105,30 +98,36 @@ const NotificationList = () => {
         params.dateFilter = dateFilter.value;
       }
 
-      const res = await authAxios().get(
-        "/marketing/report/lead/source/performance",
-        { params }
-      );
-      const responseData = res.data;
-      const data = responseData?.data || [];
+      const response = await authAxios().get("/notificationcampaign/list", { params });
+      const data = response.data?.data || [];
 
-      // setLeadSource(data);
+      setNotificationCampaignList(data);
+      setPage(response.data?.currentPage || 1);
+      setTotalPages(response.data?.totalPage || 1);
+      setTotalCount(response.data?.totalCount || data.length);
     } catch (err) {
       console.error(err);
     }
   };
   useEffect(() => {
-    // If custom date is selected, wait for both dates
     if (dateFilter?.value === "custom") {
       if (customFrom && customTo) {
-        fetchEmailAutomationReport();
+        setPage(1);
+        fetchEmailAutomationReport(1);
       }
       return;
     }
 
-    // For all non-custom filters
-    fetchEmailAutomationReport();
+    setPage(1);
+    fetchEmailAutomationReport(1);
   }, [dateFilter, customFrom, customTo, clubFilter]);
+
+  const toggleMembers = (id) => {
+    setExpandedRows((prev) => ({
+      ...prev,
+      [id]: !prev[id],
+    }));
+  };
 
   return (
     <div className="page--content">
@@ -172,7 +171,7 @@ const NotificationList = () => {
           {dateFilter?.value === "custom" && (
             <>
               <div className="custom--date dob-format flex-1 max-w-[180px] w-full">
-                <span className="absolute z-[1] mt-[11px] ml-[15px]">
+                <span className="absolute z-[1] mt-[8px] ml-[15px]">
                   <FaCalendarDays />
                 </span>
                 <DatePicker
@@ -184,7 +183,7 @@ const NotificationList = () => {
                   placeholderText="From Date"
                   className="custom--input w-full input--icon"
                   minDate={subYears(new Date(), 20)}
-                  maxDate={addYears(new Date(), 0)}
+                  // maxDate={addYears(new Date(), 0)}
                   dateFormat="dd-MM-yyyy"
                   showMonthDropdown
                   showYearDropdown
@@ -192,7 +191,7 @@ const NotificationList = () => {
                 />
               </div>
               <div className="custom--date dob-format flex-1 max-w-[180px] w-full">
-                <span className="absolute z-[1] mt-[11px] ml-[15px]">
+                <span className="absolute z-[1] mt-[8px] ml-[15px]">
                   <FaCalendarDays />
                 </span>
                 <DatePicker
@@ -201,7 +200,7 @@ const NotificationList = () => {
                   placeholderText="To Date"
                   className="custom--input w-full input--icon"
                   minDate={customFrom || subYears(new Date(), 20)}
-                  maxDate={addYears(new Date(), 0)}
+                  // maxDate={addYears(new Date(), 0)}
                   showMonthDropdown
                   showYearDropdown
                   dropdownMode="select"
@@ -220,6 +219,7 @@ const NotificationList = () => {
               onChange={(option) => setClubFilter(option?.value)}
               styles={customStyles}
               className="w-full"
+              isClearable={userRole === "ADMIN" ? true : false}
             />
           </div>
         </div>
@@ -231,61 +231,107 @@ const NotificationList = () => {
           <table className="w-full text-sm text-left text-gray-500">
             <thead className="text-xs text-gray-700 uppercase bg-gray-50">
               <tr>
-                <th className="px-2 py-4">S.No</th>
-                <th className="px-2 py-4">Campaign Name</th>
-                <th className="px-2 py-4">Sent to</th>
-                <th className="px-2 py-4">Scheduled on</th>
-                <th className="px-2 py-4">Status</th>
-                <th className="px-2 py-4">Action</th>
+                <th className="px-2 py-4 min-w-[150px]">Club Name</th>
+                <th className="px-2 py-4 min-w-[150px]">Campaign Name</th>
+                <th className="px-2 py-4 min-w-[150px]">Sent to</th>
+                <th className="px-2 py-4 min-w-[150px]">Created At</th>
+                <th className="px-2 py-4 min-w-[150px]">Scheduled on</th>
+                <th className="px-2 py-4 min-w-[100px]">Status</th>
+                <th className="px-2 py-4 min-w-[100px]">Action</th>
               </tr>
             </thead>
 
             <tbody>
-              {customerData.length ? (
-                customerData.map((item, index) => (
+              {notificationCampaignList.length ? (
+                notificationCampaignList.map((item, index) => (
                   <tr
                     key={index}
                     className="bg-white border-b hover:bg-gray-50"
                   >
-                    <td className="px-2 py-3">{index + 1}</td>
-                    <td className="px-2 py-3">{item.campaignName}</td>
-                    <td className="px-2 py-3">{item.emailsSent}</td>
-                    <td className="px-2 py-3">{item.scheduled_on}</td>
-                    <td className="px-2 py-3">{item.status}</td>
-                    <td className="px-2 py-3">
-                      <div className="flex items-center gap-1">
+                    <td className="px-2 py-4">
+                      {item?.clubname ? item?.clubname : "--"}
+                    </td>
+                    <td className="px-2 py-4">
+                      {item?.name ? item?.name : "--"}
+                    </td>
+                    <td className="px-2 py-4">
+                      <div className="max-w-[350px] w-full">
+                        {item?.members?.length ? (
+                          <>
+                            {expandedRows[item.id]
+                              ? item.members.join(", ")
+                              : item.members.slice(0, 5).join(", ")}
+
+                            {item.members.length > 5 && (
+                              <button
+                                onClick={() => toggleMembers(item.id)}
+                                className="text-black-600 underline text-[12px] block"
+                              >
+                                {expandedRows[item.id]
+                                  ? "View Less <<"
+                                  : "View More >>"}
+                              </button>
+                            )}
+                          </>
+                        ) : (
+                          "--"
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-2 py-4">
+                      {item?.created_at
+                        ? formatAutoDate(item?.created_at)
+                        : "--"}
+                    </td>
+                    <td className="px-2 py-4">
+                      {item?.scheduled_at
+                        ? formatDateTimeLead(item?.scheduled_at)
+                        : "--"}
+                    </td>
+                    <td className="px-2 py-4">
+                      <span
+                        className={`flex items-center justify-between gap-1 rounded-full min-h-[30px] px-3 text-sm w-fit
+                        ${
+                          item?.status !== "SENT"
+                            ? "bg-[#EEEEEE]"
+                            : "bg-[#E8FFE6] text-[#138808]"
+                        }
+                        `}
+                      >
+                        <FaCircle className="text-[10px]" />{" "}
+                        {formatText(item?.status)}
+                      </span>
+                    </td>
+                    <td className="px-2 py-4">
+                      <div className="flex">
                         <Tooltip
-                          id={`tooltip-edit-${item.id}`}
+                          id={`tooltip-edit-${item?.id}`}
                           content="View Notification"
                           place="left"
                         >
                           <Link
-                            to={`/send-mail-list/${item.id}`}
-                            className={`p-1 cursor-pointer ${
-                              item?.status === "ONGOING" ||
-                              item?.status === "COMPLETED"
-                                ? ""
-                                : "opacity-[0.5] pointer-events-none"
-                            }`}
+                            to={`/reports/marketing-reports/send-notification/${item?.id}`}
+                            className={`bg-[#F1F1F1] border border-[#D4D4D4] rounded-l-[5px] w-[32px] h-[32px] flex items-center justify-center cursor-pointer 
+                              
+                            `}
                           >
-                            <IoEyeOutline className="text-[25px] text-black" />
+                            <IoEyeOutline className="text-[19px] text-black" />
                           </Link>
                         </Tooltip>
-
                         <Tooltip
-                          id={`tooltip-edit-${item.id}`}
+                          id={`tooltip-edit-${item?.id}`}
                           content="Edit Notification"
                           place="left"
                         >
                           <Link
-                            to={`/reports/marketing-reports/send-notification/${item.id}`}
-                            className={`p-1 cursor-pointer ${
-                              item?.status === "Scheduled"
+                            to={`/reports/marketing-reports/send-notification/${item?.id}`}
+                            className={`bg-[#F1F1F1] border border-[#D4D4D4] rounded-r-[5px] w-[32px] h-[32px] flex items-center justify-center cursor-pointer ${
+                              item?.status === "SCHEDULED"
                                 ? ""
                                 : "opacity-[0.5] pointer-events-none"
                             }`}
                           >
-                            <LiaEdit className="text-[25px] text-black" />
+                            <LiaEdit className="text-[19px] text-black" />
                           </Link>
                         </Tooltip>
                       </div>
@@ -302,6 +348,17 @@ const NotificationList = () => {
             </tbody>
           </table>
         </div>
+        <Pagination
+          page={page}
+          totalPages={totalPages}
+          rowsPerPage={rowsPerPage}
+          totalCount={totalCount}
+          currentDataLength={notificationCampaignList.length}
+          onPageChange={(newPage) => {
+            setPage(newPage);
+            fetchEmailAutomationReport(newPage);
+          }}
+        />
       </div>
     </div>
   );

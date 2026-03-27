@@ -439,20 +439,20 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                     >
                       Active Member Report
                     </Link>
-                    <Link
+                    {/* <Link
                       to="/reports/sales-reports/pt-revenue-report"
                       className="submenu-link text-white text-sm"
                     >
                       Sales Leaderboard
-                    </Link>
+                    </Link> */}
                     <Link
-                      to="/reports/sales-reports/lead-source-report/"
+                      to="/reports/sales-reports/lead-source-report"
                       className="submenu-link text-white text-sm"
                     >
                       Lead Source Report
                     </Link>
                     <Link
-                      to="/reports/sales-reports/group-classes-report/"
+                      to="/reports/sales-reports/group-classes-report"
                       className="submenu-link text-white text-sm"
                     >
                       Group Classes Report
@@ -664,12 +664,12 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                     >
                       SMS Delivery Report
                     </Link>
-                    <Link
+                    {/* <Link
                       to="/reports/marketing-reports/event-community-engagement"
                       className="submenu-link text-white text-sm"
                     >
                       Event Community Engagement
-                    </Link>
+                    </Link> */}
                   </div>
                 )}
               </div>
@@ -1024,7 +1024,7 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                   <span className="nav-text">Lead Source Performance</span>
                 </Link>
                 <Link
-                  to="/reports/sales-reports/group-classes-report/"
+                  to="/reports/sales-reports/group-classes-report"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
                 >
                   <FaCircle className="menu--icon !text-[10px]" />
@@ -1287,13 +1287,13 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                   <FaCircle className="menu--icon !text-[10px]" />
                   Member Checkins
                 </Link>
-                <Link
+                {/* <Link
                   to="/reports/sales-reports/pt-revenue-report"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
                 >
                   <FaCircle className="menu--icon !text-[10px]" />
                   <span className="nav-text">Sales Leaderboard</span>
-                </Link>
+                </Link> */}
 
                 <Link
                   to="/reports/operations-reports/renewal-report"
@@ -1611,13 +1611,13 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
               <div className="mt-2 pl-5 relative">
                 <div className="absolute h-[calc(100%-15px)] w-[2px] bg-white left-[23px] top-[8px]"></div>
 
-                <Link
+                {/* <Link
                   to="/reports/sales-reports/pt-revenue-report"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
                 >
                   <FaCircle className="menu--icon !text-[10px]" />
                   <span className="nav-text">Sales Leaderboard</span>
-                </Link>
+                </Link> */}
                 <Link
                   to="/reports/operations-reports/service-expiry-report"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
@@ -1897,20 +1897,20 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                     >
                       Active Member Report
                     </Link>
-                    <Link
+                    {/* <Link
                       to="/reports/sales-reports/pt-revenue-report"
                       className="submenu-link text-white text-sm"
                     >
                       Sales Leaderboard
-                    </Link>
+                    </Link> */}
                     <Link
-                      to="/reports/sales-reports/lead-source-report/"
+                      to="/reports/sales-reports/lead-source-report"
                       className="submenu-link text-white text-sm"
                     >
                       Lead Source Report
                     </Link>
                     <Link
-                      to="/reports/sales-reports/group-classes-report/"
+                      to="/reports/sales-reports/group-classes-report"
                       className="submenu-link text-white text-sm"
                     >
                       Group Classes Report

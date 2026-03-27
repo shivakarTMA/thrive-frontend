@@ -32,6 +32,8 @@ import "react-datepicker/dist/react-datepicker.css";
 import { GoClock } from "react-icons/go";
 import { PiImageFill } from "react-icons/pi";
 import { Country, State, City } from "country-state-city";
+import RichTextEditorClub from "../common/RichTextEditorClub";
+import { sanitizeHtml } from "../../Helper/sanitizeHtml";
 
 const facilityOptions = [
   { label: "DLF", value: "ac226592" },
@@ -163,6 +165,7 @@ const CreateClub = ({
             technogym_facilit_url: data?.technogym_facilit_url || "",
             logo: data?.logo || null,
             name: data?.name || "",
+            abbr: data?.abbr || "",
             email: data?.email || "",
             phone: "+" + data?.phone || "",
             address: data?.address || "",
@@ -207,6 +210,7 @@ const CreateClub = ({
             open_time: data?.open_time || "",
             close_time: data?.close_time || "",
             trial_duration: data?.trial_duration || "",
+            terms_and_conditions: data.terms_and_conditions || "",
           });
         }
       } catch (err) {
@@ -318,7 +322,7 @@ const CreateClub = ({
           <form onSubmit={formik.handleSubmit} className="p-0 space-y-0">
             <div className="flex bg-white rounded-b-[10px]">
               <div className="p-6 flex-1">
-                <div className="grid lg:grid-cols-3 grid-cols-1 lg:gap-4 gap-2">
+                <div className="grid grid-cols-3 lg:gap-4 gap-2">
                   {/* Image Preview */}
                   <div className="row-span-2">
                     <div className="bg-gray-100 rounded-lg w-full h-[160px] overflow-hidden p-4">
@@ -365,7 +369,9 @@ const CreateClub = ({
                         value={formik.values.name}
                         onKeyDown={blockNonLettersAndNumbers}
                         onChange={(e) => {
-                          const cleaned = sanitizeTextWithNumbers(e.target.value);
+                          const cleaned = sanitizeTextWithNumbers(
+                            e.target.value,
+                          );
                           formik.setFieldValue("name", cleaned);
                         }}
                         onBlur={formik.handleBlur}
@@ -958,8 +964,39 @@ const CreateClub = ({
                     )}
                   </div>
 
+                  {/* Club Abbr. */}
+                  <div>
+                    <label className="mb-2 block">
+                      Club Abbreviation<span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <span className="absolute top-[50%] translate-y-[-50%] left-[15px]">
+                        <FaRegBuilding />
+                      </span>
+                      <input
+                        type="text"
+                        name="abbr"
+                        value={formik.values.abbr}
+                        onKeyDown={blockNonLettersAndNumbers}
+                        onChange={(e) => {
+                          const cleaned = sanitizeTextWithNumbers(
+                            e.target.value,
+                          );
+                          formik.setFieldValue("abbr", cleaned);
+                        }}
+                        onBlur={formik.handleBlur}
+                        className="custom--input w-full input--icon"
+                      />
+                    </div>
+                    {formik.touched.abbr && formik.errors.abbr && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {formik.errors.abbr}
+                      </p>
+                    )}
+                  </div>
+
                   {/* Address */}
-                  <div className="lg:col-span-3 grid lg:grid-cols-2 grid-cols-1 lg:gap-4 gap-2">
+                  <div className="col-span-3 grid grid-cols-2 lg:gap-4 gap-2">
                     <div>
                       <label className="mb-2 block">
                         Physical Address<span className="text-red-500">*</span>
@@ -975,7 +1012,9 @@ const CreateClub = ({
                           // onChange={formik.handleChange}
                           onKeyDown={blockNonLettersAndNumbers}
                           onChange={(e) => {
-                            const cleaned = sanitizeTextWithNumbers(e.target.value);
+                            const cleaned = sanitizeTextWithNumbers(
+                              e.target.value,
+                            );
                             formik.setFieldValue("address", cleaned);
                           }}
                           onBlur={formik.handleBlur}
@@ -1001,9 +1040,11 @@ const CreateClub = ({
                           name="description"
                           value={formik.values.description}
                           // onChange={formik.handleChange}
-                          onKeyDown={blockNonLetters}
+                          onKeyDown={blockNonLettersAndNumbers}
                           onChange={(e) => {
-                            const cleaned = allowOnlyLetters(e.target.value);
+                            const cleaned = sanitizeTextWithNumbers(
+                              e.target.value,
+                            );
                             formik.setFieldValue("description", cleaned);
                           }}
                           onBlur={formik.handleBlur}
@@ -1017,6 +1058,32 @@ const CreateClub = ({
                           )}
                       </div>
                     </div>
+                  </div>
+                  <div className="mt-4 col-span-3 !relative block">
+                    <RichTextEditorClub
+                      value={formik.values.terms_and_conditions}
+                      label="Terms and Agreement"
+                      // onChange={(content) => {
+                      //   formik.setFieldValue(
+                      //     "terms_and_conditions",
+                      //     sanitizeHtml(content),
+                      //   );
+                      //   formik.setFieldTouched("terms_and_conditions", true);
+                      // }}
+                      emitOnChange={true} 
+                      onChange={(content) => {
+                        formik.setFieldValue("terms_and_conditions", content);
+                        formik.setFieldTouched("terms_and_conditions", true);
+                      }}
+                      placeholder="Enter your email message..."
+                      height={400}
+                    />
+
+                    {formik.touched.terms_and_conditions && formik.errors.terms_and_conditions && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {formik.errors.terms_and_conditions}
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>

@@ -7,7 +7,6 @@ import Select from "react-select";
 import {
   allowOnlyLetters,
   blockInvalidNumberKeys,
-  blockNonLetters,
   blockNonLettersAndNumbers,
   sanitizePositiveInteger,
   sanitizeTextWithNumbers,
@@ -179,9 +178,11 @@ const CreateCompany = ({
                         name="name"
                         value={formik.values.name}
                         // onChange={formik.handleChange}
-                        onKeyDown={blockNonLetters}
+                        onKeyDown={blockNonLettersAndNumbers}
                         onChange={(e) => {
-                          const cleaned = allowOnlyLetters(e.target.value);
+                          const cleaned = sanitizeTextWithNumbers(
+                            e.target.value,
+                          );
                           formik.setFieldValue("name", cleaned);
                         }}
                         onBlur={formik.handleBlur}
@@ -403,7 +404,9 @@ const CreateCompany = ({
                         // onChange={formik.handleChange}
                         onKeyDown={blockNonLettersAndNumbers}
                         onChange={(e) => {
-                          const cleaned = sanitizeTextWithNumbers(e.target.value);
+                          const cleaned = sanitizeTextWithNumbers(
+                            e.target.value,
+                          );
                           formik.setFieldValue("gstno", cleaned);
                         }}
                         onBlur={formik.handleBlur}
@@ -462,7 +465,9 @@ const CreateCompany = ({
                         // onChange={formik.handleChange}
                         onKeyDown={blockNonLettersAndNumbers}
                         onChange={(e) => {
-                          const cleaned = sanitizeTextWithNumbers(e.target.value);
+                          const cleaned = sanitizeTextWithNumbers(
+                            e.target.value,
+                          );
                           formik.setFieldValue("address", cleaned);
                         }}
                         onBlur={formik.handleBlur}

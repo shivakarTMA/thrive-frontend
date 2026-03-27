@@ -9,6 +9,7 @@ import { authAxios } from "../../../config/config";
 import { toast } from "react-toastify";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useSelector } from "react-redux";
+import Pagination from "../../common/Pagination";
 
 // Date filter dropdown options
 const dateFilterOptions = [
@@ -24,7 +25,7 @@ const MemberCheckInsReport = () => {
   const { id } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
-    const { user } = useSelector((state) => state.auth);
+  const { user } = useSelector((state) => state.auth);
   const userRole = user.role;
 
   const [data, setData] = useState([]);
@@ -37,6 +38,9 @@ const MemberCheckInsReport = () => {
   const [clubList, setClubList] = useState([]);
   const [clubFilter, setClubFilter] = useState(null);
 
+  const [memberPlan, setMemberPlan] = useState([]);
+  const [memberPlanFilter, setMemberPlanFilter] = useState(null);
+
   const [memberSearch, setMemberSearch] = useState("");
   const [memberResults, setMemberResults] = useState([]);
   const [memberFilter, setMemberFilter] = useState(null);
@@ -45,6 +49,11 @@ const MemberCheckInsReport = () => {
   const memberSearchRef = useRef(null);
 
   const [filtersInitialized, setFiltersInitialized] = useState(false);
+
+  const [page, setPage] = useState(1);
+  const [rowsPerPage] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
 
   /* ------------------ PAGE TITLE ------------------ */
 
@@ -65,7 +74,7 @@ const MemberCheckInsReport = () => {
         params: { search },
       });
       setMemberResults(res.data?.data || []);
-    } catch(error) {
+    } catch (error) {
       console.error(error);
     } finally {
       setMemberLoading(false);
@@ -87,12 +96,35 @@ const MemberCheckInsReport = () => {
       const activeClubs = filterActiveItems(res.data?.data || []);
       setClubList(activeClubs);
 
-       // ✅ Set default club (index 0) ONLY if not already set
-    if (!clubFilter && activeClubs.length > 0) {
-      setClubFilter(activeClubs[0].id);
+      // ✅ Set default club (index 0) ONLY if not already set
+      if (!clubFilter && activeClubs.length > 0) {
+        setClubFilter(activeClubs[0].id);
+      }
+    } catch (error) {
+      console.error(error);
     }
+  };
 
-    } catch(error) {
+  const fetchMembershipPlan = async (clubId) => {
+    try {
+      if (!clubId) {
+        setMemberPlan([]);
+        setMemberPlanFilter(null);
+        return;
+      }
+
+      const res = await authAxios().get("/subscription-plan/list", {
+        params: { club_id: clubId }, // ✅ pass club_id
+      });
+
+      const activePlans = filterActiveItems(res.data?.data || []);
+      setMemberPlan(activePlans);
+
+      // Reset selection if not valid
+      if (!activePlans.find((p) => p.id === memberPlanFilter)) {
+        setMemberPlanFilter(null);
+      }
+    } catch (error) {
       console.error(error);
     }
   };
@@ -101,22 +133,46 @@ const MemberCheckInsReport = () => {
     fetchClub();
   }, []);
 
+  useEffect(() => {
+    if (clubFilter) {
+      fetchMembershipPlan(clubFilter);
+    } else {
+      setMemberPlan([]);
+      setMemberPlanFilter(null);
+    }
+  }, [clubFilter]);
+
   const clubOptions = clubList.map((c) => ({
     label: c.name,
     value: c.id,
   }));
 
-  console.log(clubOptions,'clubOptions')
+  const memberPlanOptions = memberPlan.map((c) => ({
+    label: `${c.title} (${c.plan_type})`,
+    value: c.id,
+  }));
+
+  console.log(memberPlanOptions, "memberPlanOptions");
 
   /* ------------------ FETCH REPORT ------------------ */
 
-  const fetchReport = async () => {
+  const fetchReport = async (currentPage = page) => {
     try {
-      const params = {};
+      const params = {
+         page: currentPage,
+        limit: rowsPerPage,
+      };
 
-      if (clubFilter) params.club_id = clubFilter;
-      if (memberFilter) params.member_id = memberFilter;
-      else if (id) params.member_id = Number(id);
+      if (clubFilter){
+        params.club_id = clubFilter;
+      }
+      if (memberFilter){
+        params.member_id = memberFilter;
+      }
+      if (memberPlanFilter){
+        params.subscription_plan_id = memberPlanFilter;
+      } 
+      // else if (id) params.member_id = Number(id);
 
       if (dateFilter.value === "custom") {
         if (customFrom && customTo) {
@@ -128,9 +184,14 @@ const MemberCheckInsReport = () => {
       }
 
       const res = await authAxios().get("/report/attendance", { params });
-      setData(res.data?.data || []);
-      setSummaryData(res.data?.summary || {});
-    } catch(error) {
+      const responseData = res.data;
+      setData(responseData?.data || []);
+      setSummaryData(responseData?.summary || {});
+
+      setPage(responseData?.currentPage || 1);
+      setTotalPages(responseData?.totalPage || 1);
+      setTotalCount(responseData?.totalCount || 0);
+    } catch (error) {
       console.error(error);
     }
   };
@@ -153,7 +214,7 @@ const MemberCheckInsReport = () => {
       setCustomTo(new Date(endDate));
     } else if (dateFilterValue) {
       const matched = dateFilterOptions.find(
-        (opt) => opt.value === dateFilterValue
+        (opt) => opt.value === dateFilterValue,
       );
       if (matched) setDateFilter(matched);
     }
@@ -195,6 +256,7 @@ const MemberCheckInsReport = () => {
     customTo,
     clubFilter,
     memberFilter,
+    memberPlanFilter,
     filtersInitialized,
     navigate,
   ]);
@@ -203,11 +265,11 @@ const MemberCheckInsReport = () => {
 
   useEffect(() => {
     if (!filtersInitialized) return;
-        // 🚫 Prevent API call until both dates are selected
+    // 🚫 Prevent API call until both dates are selected
     if (dateFilter?.value === "custom" && (!customFrom || !customTo)) {
       return;
     }
-    fetchReport();
+    fetchReport(1);
   }, [
     filtersInitialized,
     dateFilter?.value,
@@ -215,6 +277,7 @@ const MemberCheckInsReport = () => {
     customTo,
     clubFilter,
     memberFilter,
+    memberPlanFilter,
     id,
   ]);
 
@@ -304,6 +367,21 @@ const MemberCheckInsReport = () => {
                 isClearable={userRole === "ADMIN" ? true : false}
               />
             </div>
+            <div className="w-fit min-w-[200px]">
+              <Select
+                placeholder="Filter by Plan"
+                options={memberPlanOptions}
+                styles={customStyles}
+                value={
+                  memberPlanOptions.find((o) => o.value === memberPlanFilter) ||
+                  null
+                }
+                onChange={(o) => setMemberPlanFilter(o?.value || null)}
+                className="w-full"
+                isClearable={userRole === "ADMIN" ? true : false}
+                isDisabled={!clubFilter} // ✅ disable if no club selected
+              />
+            </div>
             <div className="relative max-w-[250px] w-full">
               <input
                 ref={memberSearchRef}
@@ -379,10 +457,13 @@ const MemberCheckInsReport = () => {
               <table className="w-full text-sm text-left text-gray-500">
                 <thead className="text-xs text-gray-700 uppercase bg-gray-50">
                   <tr>
-                    <th className="px-2 py-4 min-w-[50px]">S.No</th>
+                    {/* <th className="px-2 py-4 min-w-[50px]">S.No</th> */}
                     <th className="px-2 py-4 min-w-[150px]">Club Name</th>
                     <th className="px-2 py-4 min-w-[100px]">Member ID</th>
                     <th className="px-2 py-4 min-w-[120px]">Member Name</th>
+                    <th className="px-2 py-4 min-w-[150px]">
+                      Member Current Plan
+                    </th>
 
                     <th className="px-2 py-4 min-w-[100px]">Date</th>
                     <th className="px-2 py-4 min-w-[100px]">Check -In</th>
@@ -397,16 +478,17 @@ const MemberCheckInsReport = () => {
                         key={i}
                         className="bg-white border-b hover:bg-gray-50 relative transition duration-700"
                       >
-                        <td className="px-2 py-4">{i + 1}</td>
-                        <td className="px-2 py-4">{r.club_name}</td>
-                        <td className="px-2 py-4">{r.membership_number}</td>
-                        <td className="px-2 py-4">{r.member_name}</td>
-                        <td className="px-2 py-4">{r.date}</td>
+                        {/* <td className="px-2 py-4">{i + 1}</td> */}
+                        <td className="px-2 py-4">{r?.club_name}</td>
+                        <td className="px-2 py-4">{r?.membership_number}</td>
+                        <td className="px-2 py-4">{r?.member_name}</td>
+                        <td className="px-2 py-4">{r?.subscription_title}</td>
+                        <td className="px-2 py-4">{r?.date}</td>
                         <td className="px-2 py-4 text-green-600">
-                          {r.check_in || "--"}
+                          {r?.check_in || "--"}
                         </td>
                         <td className="px-2 py-4 text-orange-500">
-                          {r.check_out || "--"}
+                          {r?.check_out || "--"}
                         </td>
                       </tr>
                     ))
@@ -420,6 +502,18 @@ const MemberCheckInsReport = () => {
                 </tbody>
               </table>
             </div>
+            {/* Pagination */}
+            <Pagination
+              page={page}
+              totalPages={totalPages}
+              rowsPerPage={rowsPerPage}
+              totalCount={totalCount}
+              currentDataLength={data.length}
+              onPageChange={(newPage) => {
+                setPage(newPage);
+                fetchReport(newPage);
+              }}
+            />
           </div>
         </div>
       </div>

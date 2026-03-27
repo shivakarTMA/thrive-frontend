@@ -269,10 +269,11 @@ const ProductsList = () => {
         }
 
         // ✅ If everything passes, refresh and reset
-        fetchProductList();
+        
         resetForm();
         setEditingOption(null);
         setShowModal(false);
+        fetchProductList();
       } catch (err) {
         console.error("API Error:", err.response?.data || err.message);
         const message = err.response?.data?.message?.toLowerCase() || "";
