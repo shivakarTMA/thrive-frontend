@@ -356,6 +356,8 @@ const EmailCriteriaForm = () => {
     }
   };
 
+  const editMode = formik.values.status === "SENT";
+
   if (isFetchingCampaign) {
     return (
       <div className="w-full p-6 border bg-white shadow-box rounded-[10px] flex items-center justify-center">
@@ -374,7 +376,7 @@ const EmailCriteriaForm = () => {
                 key={index}
                 onClick={() => handleTabClick(item)}
                 className={`w-fit min-w-[fit-content] cursor-pointer
-                      ${activeTab === item ? "btn--tab" : ""}`}
+                      ${activeTab === item ? "btn--tab" : ""} ${editMode ? '!pointer-events-none !cursor-not-allowed' : ''}`}
               >
                 <div className="px-5 py-3 z-[1] relative text-[15px] font-[500]">
                   {item}
@@ -408,6 +410,7 @@ const EmailCriteriaForm = () => {
                   setMemberIds(ids);
                   setFilterApplied(true);
                 }}
+                editMode={editMode}
               />
             </div>
 
@@ -456,7 +459,7 @@ const EmailCriteriaForm = () => {
                   <input
                     type="text"
                     name="campaign_name"
-                    className="custom--input w-full"
+                    // className="custom--input w-full"
                     value={formik.values.campaign_name}
                     // onChange={formik.handleChange}
                     onKeyDown={blockNonLettersAndNumbers}
@@ -466,6 +469,8 @@ const EmailCriteriaForm = () => {
                     }}
                     onBlur={formik.handleBlur}
                     placeholder="Enter Campaign"
+                    className={`custom--input w-full ${editMode ? '!bg-gray-100' : ''}`}
+                    disabled={editMode}
                   />
                   {formik.touched.campaign_name &&
                     formik.errors.campaign_name && (
@@ -484,6 +489,7 @@ const EmailCriteriaForm = () => {
                     placeholder="Select template"
                     styles={customStyles}
                     isClearable
+                    isDisabled={editMode}
                   />
                 </div>
 
@@ -494,7 +500,7 @@ const EmailCriteriaForm = () => {
                   <input
                     type="text"
                     name="subject"
-                    className="custom--input w-full"
+                    // className="custom--input w-full"
                     value={formik.values.subject}
                     // onChange={formik.handleChange}
                     onKeyDown={blockNonLettersAndNumbers}
@@ -504,6 +510,8 @@ const EmailCriteriaForm = () => {
                     }}
                     onBlur={formik.handleBlur}
                     placeholder="Enter subject"
+                    className={`custom--input w-full ${editMode ? '!bg-gray-100' : ''}`}
+                    disabled={editMode}
                   />
                   {formik.touched.subject && formik.errors.subject && (
                     <p className="text-red-500 text-sm mt-1">
@@ -530,6 +538,7 @@ const EmailCriteriaForm = () => {
                   }}
                   placeholder="Enter your email message..."
                   height={400}
+                  editMode={editMode}
                 />
                 {formik.touched.message && formik.errors.message && (
                   <p className="text-red-500 text-sm mt-1">
@@ -551,6 +560,7 @@ const EmailCriteriaForm = () => {
                         formik.setFieldValue("scheduledAt", null);
                       }
                     }}
+                     disabled={editMode}
                   />
                   <span className="text-sm font-medium">Schedule send</span>
                 </label>
@@ -636,7 +646,8 @@ const EmailCriteriaForm = () => {
                         e.preventDefault();
                       }}
                       placeholderText="Select date & time"
-                      className="custom--input w-full"
+                       className={`custom--input w-full ${editMode ? '!bg-gray-100' : ''}`}
+                      disabled={editMode}
                     />
                     {formik.errors.scheduledAt && (
                       <p className="text-red-500 text-sm mt-1">
@@ -647,7 +658,7 @@ const EmailCriteriaForm = () => {
                 )}
               </div>
 
-              {formik.values.status !== "SENT" && (
+              {!editMode && (
                 <button
                   type="submit"
                   disabled={

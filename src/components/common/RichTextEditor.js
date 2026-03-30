@@ -22,6 +22,7 @@ const RichTextEditor = forwardRef(
       disabled = false,
       emitOnChange = false,
       height = 400,
+      editMode = false,
     },
     ref,
   ) => {
@@ -42,6 +43,7 @@ const RichTextEditor = forwardRef(
 
     const config = useMemo(
       () => ({
+        disabled: editMode,
         readonly: !!disabled,
         height,
         placeholder,

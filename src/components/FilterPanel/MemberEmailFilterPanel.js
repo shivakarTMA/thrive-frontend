@@ -55,6 +55,7 @@ const MemberEmailFilterPanel = ({
   filterExpiryTo,
   setFilterValue,
   onMemberIdsFetched,
+  editMode
 }) => {
   const [showFilters, setShowFilters] = useState(false);
   const [appliedFilters, setAppliedFilters] = useState({});
@@ -487,7 +488,8 @@ const handleApply = async () => {
         <button
           type="button"
           onClick={handleOpenPanel}
-          className="w-[34px] h-[30px] bg-white text-black rounded-[5px] flex items-center justify-center border-[#D4D4D4] border-[2px]"
+          className={`w-[34px] h-[30px] bg-white text-black rounded-[5px] flex items-center justify-center border-[#D4D4D4] border-[2px] ${editMode ? '!bg-gray-100' : ''}`}
+          disabled={editMode}
         >
           <HiOutlineAdjustmentsHorizontal className="text-lg" />
         </button>
@@ -754,10 +756,13 @@ const handleApply = async () => {
                 className="flex items-center justify-between gap-1 border rounded-full bg-[#EEEEEE] min-h-[30px] px-3 text-sm"
               >
                 <span>{getChipLabel(key, value)}</span>
-                <IoClose
-                  onClick={() => handleRemoveFilter(key)}
-                  className="cursor-pointer text-xl"
+                {!editMode && (
+                  <IoClose
+                    onClick={() => handleRemoveFilter(key)}
+                    className="cursor-pointer text-xl"
                 />
+                )}
+                
               </div>
             );
           })}

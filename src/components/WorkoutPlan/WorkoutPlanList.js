@@ -155,7 +155,7 @@ const WorkoutPlanList = () => {
                           <Tooltip
                             content="Edit Workout"
                             id={`edit-workout-${row.id}`}
-                            place="top"
+                            place="left"
                           >
                             <div className="p-1 cursor-pointer">
                               <Link
@@ -170,7 +170,7 @@ const WorkoutPlanList = () => {
                             <Tooltip
                               id={`delete-workout-${row.id}`}
                               content="Delete Exercise"
-                              place="top"
+                              place="left"
                             >
                               <div
                                 onClick={() => handleDeleteClick(row)}
@@ -215,7 +215,13 @@ const WorkoutPlanList = () => {
 
       {showConfirmPopup && workoutToDelete && (
         <ConfirmPopup
-          message={`Are you sure you want to delete <br /> "${workoutToDelete?.name}"?`}
+          message={
+            <>
+              Are you sure you want to delete 
+              <br />
+              "{workoutToDelete?.name}"?
+            </>
+          }
           onConfirm={handleConfirmDelete}
           onCancel={handleCancelDelete}
         />

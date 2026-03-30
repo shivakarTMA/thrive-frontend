@@ -297,6 +297,8 @@ const NotificationCriteriaForm = () => {
     setIsFilterDirty(hasAnyFilterValue);
   }, [formik.values, setIsFilterDirty]);
 
+  const editMode = formik.values.status === "SENT";
+
 
   if (isFetchingCampaign) {
     return (
@@ -316,7 +318,8 @@ const NotificationCriteriaForm = () => {
                 key={index}
                 onClick={() => handleTabClick(item)}
                 className={`w-fit min-w-[fit-content] cursor-pointer
-                      ${activeTab === item ? "btn--tab" : ""}`}
+                      ${activeTab === item ? "btn--tab" : ""} ${editMode ? '!pointer-events-none !cursor-not-allowed' : ''}`}
+                
               >
                 <div className="px-5 py-3 z-[1] relative text-[15px] font-[500]">
                   {item}
@@ -350,6 +353,7 @@ const NotificationCriteriaForm = () => {
                   setMemberIds(ids);
                   setFilterApplied(true);
                 }}
+                editMode={editMode}
               />
             </div>
 
@@ -398,7 +402,7 @@ const NotificationCriteriaForm = () => {
                   <input
                     type="text"
                     name="name"
-                    className="custom--input w-full"
+                    // className="custom--input w-full"
                     value={formik.values.name}
                     // onChange={formik.handleChange}
                     onKeyDown={blockNonLettersAndNumbers}
@@ -408,6 +412,8 @@ const NotificationCriteriaForm = () => {
                     }}
                     onBlur={formik.handleBlur}
                     placeholder="Enter Campaign"
+                    className={`custom--input w-full ${editMode ? '!bg-gray-100' : ''}`}
+                    disabled={editMode}
                   />
                   {formik.touched.name &&
                     formik.errors.name && (
@@ -424,7 +430,7 @@ const NotificationCriteriaForm = () => {
                   <input
                     type="text"
                     name="heading"
-                    className="custom--input w-full"
+                    // className="custom--input w-full"
                     value={formik.values.heading}
                     // onChange={formik.handleChange}
                     onKeyDown={blockNonLettersAndNumbers}
@@ -434,6 +440,8 @@ const NotificationCriteriaForm = () => {
                     }}
                     onBlur={formik.handleBlur}
                     placeholder="Enter heading"
+                    className={`custom--input w-full ${editMode ? '!bg-gray-100' : ''}`}
+                    disabled={editMode}
                   />
                   {formik.touched.heading && formik.errors.heading && (
                     <p className="text-red-500 text-sm mt-1">
@@ -449,7 +457,7 @@ const NotificationCriteriaForm = () => {
                   </label>
                   <textarea
                     name="body"
-                    className="custom--input w-full h-[150px] resize-none"
+                    // className="custom--input w-full h-[150px] resize-none"
                     value={formik.values.body}
                     // onChange={formik.handleChange}
                     onKeyDown={blockNonLettersAndNumbers}
@@ -459,6 +467,8 @@ const NotificationCriteriaForm = () => {
                     }}
                     onBlur={formik.handleBlur}
                     placeholder="Enter Message"
+                    className={`custom--input w-full h-[150px] resize-none ${editMode ? '!bg-gray-100' : ''}`}
+                    disabled={editMode}
                   />
                 {formik.touched.body && formik.errors.body && (
                   <p className="text-red-500 text-sm mt-1">
@@ -480,6 +490,7 @@ const NotificationCriteriaForm = () => {
                         formik.setFieldValue("scheduledAt", null);
                       }
                     }}
+                    disabled={editMode}
                   />
                   <span className="text-sm font-medium">Schedule send</span>
                 </label>
@@ -565,7 +576,8 @@ const NotificationCriteriaForm = () => {
                         e.preventDefault();
                       }}
                       placeholderText="Select date & time"
-                      className="custom--input w-full"
+                      className={`custom--input w-full ${editMode ? '!bg-gray-100' : ''}`}
+                      disabled={editMode}
                     />
                     {formik.errors.scheduledAt && (
                       <p className="text-red-500 text-sm mt-1">
@@ -576,7 +588,7 @@ const NotificationCriteriaForm = () => {
                 )}
               </div>
 
-              {formik.values.status !== "SENT" && (
+              {!editMode && (
                 <button
                   type="submit"
                   disabled={

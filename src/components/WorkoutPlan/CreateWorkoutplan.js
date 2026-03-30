@@ -8,7 +8,7 @@ import { authAxios } from "../../config/config";
 
 const workoutTypeOptions = [
   { value: "MULTIDAY", label: "Workout Plan (Multiple Days)" },
-  { value: "SINGLE", label: "Workout (One Day)" },
+  { value: "SINGLEDAY", label: "Workout (One Day)" },
 ];
 
 const CreateWorkoutplan = () => {
@@ -849,7 +849,7 @@ const CreateWorkoutplan = () => {
                           ...prev.plan,
                           workout_type: selectedOption.value,
                           no_of_days:
-                            selectedOption.value === "SINGLE"
+                            selectedOption.value === "SINGLEDAY"
                               ? 1
                               : prev.plan.no_of_days,
                         },
@@ -898,9 +898,9 @@ const CreateWorkoutplan = () => {
                           }));
                         }
                       }}
-                      disabled={data.plan.workout_type === "SINGLE"}
+                      disabled={data.plan.workout_type === "SINGLEDAY"}
                       className={`custom--input w-full ${
-                        data.plan.workout_type === "SINGLE"
+                        data.plan.workout_type === "SINGLEDAY"
                           ? "cursor-not-allowed pointer-events-none !bg-gray-100"
                           : ""
                       }`}

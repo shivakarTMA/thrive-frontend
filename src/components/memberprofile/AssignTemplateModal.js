@@ -5,7 +5,7 @@ import { authAxios } from "../../config/config";
 
 const workoutTypeOptions = [
   { value: "MULTIDAY", label: "Workout Plan (Multiple Days)" },
-  { value: "SINGLE", label: "Workout (One Day)" },
+  { value: "SINGLEDAY", label: "Workout (One Day)" },
 ];
 
 const AssignTemplateModal = ({

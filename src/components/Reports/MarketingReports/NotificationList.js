@@ -5,11 +5,14 @@ import { addYears, format, subYears } from "date-fns";
 import { FaCalendarDays, FaCircle } from "react-icons/fa6";
 import Select from "react-select";
 import {
+  capitalizeText,
   customStyles,
   filterActiveItems,
   formatAutoDate,
   formatDateTimeLead,
   formatText,
+  formatTextProper,
+  formatTextTitleCase,
 } from "../../../Helper/helper";
 import { authAxios } from "../../../config/config";
 import { toast } from "react-toastify";
@@ -31,10 +34,13 @@ const dateFilterOptions = [
 const formatDate = (date) => format(date, "yyyy-MM-dd");
 
 const NotificationList = () => {
-  const [notificationCampaignList, setNotificationCampaignList] = useState([]);
+  const [emailCampaignList, setEmailCampaignList] = useState([]);
   const [clubList, setClubList] = useState([]);
   const [clubFilter, setClubFilter] = useState(null);
   const [expandedRows, setExpandedRows] = useState({});
+  const [serviceList, setServiceList] = useState([]);
+  const [serviceMap, setServiceMap] = useState({});
+  const [packageMap, setPackageMap] = useState({});
 
   const { user } = useSelector((state) => state.auth);
   const userRole = user.role;
@@ -44,7 +50,7 @@ const NotificationList = () => {
   const [customTo, setCustomTo] = useState(null);
 
   const [page, setPage] = useState(1);
-  const [rowsPerPage] = useState(10);
+  const [rowsPerPage] = useState(5);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
 
@@ -65,11 +71,69 @@ const NotificationList = () => {
       console.error(error);
     }
   };
+
+  // Function to fetch service list (for service_type lookup)
+  const fetchServiceList = async (clubId = null) => {
+    try {
+      const params = clubId ? { club_id: clubId } : {};
+      const response = await authAxios().get("/service/list", { params });
+      const data = filterActiveItems(response.data?.data || response.data?.data || []);
+      setServiceList(data);
+      const map = data.reduce((acc, item) => ({ ...acc, [String(item.id)]: item.name }), {});
+      setServiceMap(map);
+      return data;
+    } catch (error) {
+      console.error(error);
+      return [];
+    }
+  };
+
+  // Function to fetch package list (for service_name lookup) by service_type id
+  const fetchPackageList = async (serviceId) => {
+    if (!serviceId) return [];
+
+    try {
+      const response = await authAxios().get(`/package/list`, {
+        params: {
+          page: 1,
+          limit: 200,
+          service_id: serviceId,
+        },
+      });
+      const data = filterActiveItems(response.data?.data || []);
+      const map = data.reduce((acc, item) => ({ ...acc, [String(item.id)]: item.name }), {});
+      setPackageMap((prev) => ({ ...prev, ...map }));
+      return data;
+    } catch (error) {
+      console.error(error);
+      return [];
+    }
+  };
+
   // Function to fetch role list
 
   useEffect(() => {
     fetchClub();
   }, []);
+
+  useEffect(() => {
+    fetchServiceList(clubFilter);
+  }, [clubFilter]);
+
+  useEffect(() => {
+    const ids = [
+      ...new Set(
+        emailCampaignList
+          .map((item) => item?.service_type)
+          .filter((id) => id !== undefined && id !== null && id !== "")
+      ),
+    ];
+
+    ids.forEach((id) => {
+      const numeric = Number(id);
+      if (!Number.isNaN(numeric)) fetchPackageList(numeric);
+    });
+  }, [emailCampaignList]);
 
   const clubOptions = clubList.map((item) => ({
     label: item.name,
@@ -101,7 +165,7 @@ const NotificationList = () => {
       const response = await authAxios().get("/notificationcampaign/list", { params });
       const data = response.data?.data || [];
 
-      setNotificationCampaignList(data);
+      setEmailCampaignList(data);
       setPage(response.data?.currentPage || 1);
       setTotalPages(response.data?.totalPage || 1);
       setTotalCount(response.data?.totalCount || data.length);
@@ -121,6 +185,54 @@ const NotificationList = () => {
     setPage(1);
     fetchEmailAutomationReport(1);
   }, [dateFilter, customFrom, customTo, clubFilter]);
+
+  const getCriteriaText = (item) => {
+    const elements = [];
+
+    const isLead = item?.email_for === "LEAD";
+    const validityText = item?.validity
+      ? `${capitalizeText(item.validity)} ${isLead ? "" : "Members"}`
+      : `All ${isLead ? "" : "Members"}`;
+
+    elements.push(<span key="validity">{validityText}</span>);
+    if (item?.age_group)
+      elements.push(<span key="age_group">{formatText(item.age_group)}</span>);
+    if (item?.gender)
+      elements.push(<span key="gender">{formatText(item.gender)}</span>);
+    if (item?.service_type) {
+      const label =
+        serviceMap[String(item.service_type)] || formatText(item.service_type);
+      elements.push(<span key="service_type">{label}</span>);
+    }
+    if (item?.service_name) {
+      const label =
+        packageMap[String(item.service_name)] || formatText(item.service_name);
+      elements.push(<span key="service_name">{label}</span>);
+    }
+    if (item?.lead_source)
+      elements.push(<span key="lead_source">{formatText(item.lead_source)}</span>);
+    
+    if (item?.membership_expiry_from && item?.membership_expiry_to)
+      elements.push(
+        <span key="membership_expiry" className="block">
+          {formatAutoDate(item.membership_expiry_from)} to {formatAutoDate(item.membership_expiry_to)}
+        </span>
+      );
+    
+    // if (item?.email_for)
+    //   elements.push(
+    //     <span key="email_for">{item.email_for === "LEAD" ? "Enquiries" : formatText(item.email_for)}</span>
+    //   );
+
+    if (!elements.length) return "--";
+
+    return elements.map((element, idx) => (
+      <React.Fragment key={idx}>
+        {element}
+        {idx < elements.length - 1 && ", "}
+      </React.Fragment>
+    ));
+  };
 
   const toggleMembers = (id) => {
     setExpandedRows((prev) => ({
@@ -233,7 +345,9 @@ const NotificationList = () => {
               <tr>
                 <th className="px-2 py-4 min-w-[150px]">Club Name</th>
                 <th className="px-2 py-4 min-w-[150px]">Campaign Name</th>
-                <th className="px-2 py-4 min-w-[150px]">Sent to</th>
+                <th className="px-2 py-4 min-w-[200px]">Sent To (Member / Enquiries)</th>
+                <th className="px-2 py-4 min-w-[170px]">Criteria</th>
+                <th className="px-2 py-4 min-w-[150px]">Recipient Count</th>
                 <th className="px-2 py-4 min-w-[150px]">Created At</th>
                 <th className="px-2 py-4 min-w-[150px]">Scheduled on</th>
                 <th className="px-2 py-4 min-w-[100px]">Status</th>
@@ -242,8 +356,8 @@ const NotificationList = () => {
             </thead>
 
             <tbody>
-              {notificationCampaignList.length ? (
-                notificationCampaignList.map((item, index) => (
+              {emailCampaignList.length ? (
+                emailCampaignList.map((item, index) => (
                   <tr
                     key={index}
                     className="bg-white border-b hover:bg-gray-50"
@@ -278,6 +392,10 @@ const NotificationList = () => {
                         )}
                       </div>
                     </td>
+                    <td className="px-2 py-4">{getCriteriaText(item)}</td>
+                    <td className="px-2 py-4">
+                     {item?.members?.length ? item.members.length : "--"}
+                    </td>
                     <td className="px-2 py-4">
                       {item?.created_at
                         ? formatAutoDate(item?.created_at)
@@ -306,7 +424,7 @@ const NotificationList = () => {
                       <div className="flex">
                         <Tooltip
                           id={`tooltip-edit-${item?.id}`}
-                          content="View Notification"
+                          content="View Email"
                           place="left"
                         >
                           <Link
@@ -320,7 +438,7 @@ const NotificationList = () => {
                         </Tooltip>
                         <Tooltip
                           id={`tooltip-edit-${item?.id}`}
-                          content="Edit Notification"
+                          content="Edit Email"
                           place="left"
                         >
                           <Link
@@ -353,7 +471,7 @@ const NotificationList = () => {
           totalPages={totalPages}
           rowsPerPage={rowsPerPage}
           totalCount={totalCount}
-          currentDataLength={notificationCampaignList.length}
+          currentDataLength={emailCampaignList.length}
           onPageChange={(newPage) => {
             setPage(newPage);
             fetchEmailAutomationReport(newPage);

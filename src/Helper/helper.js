@@ -326,6 +326,18 @@ export function formatText(status) {
     .join(" ");
 }
 
+export const capitalizeText = (status) => {
+  if (!status) return "";
+
+  return status
+    .replace(/_/g, " ")             // Replace underscores with spaces
+    .split(" ")                      // Split into words
+    .map((word) => 
+      word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+    )
+    .join(" ");                      // Join words back
+};
+
 export const handleTextOnlyChange = (e, formik, fieldName) => {
   const regex = /^[A-Za-z\s]*$/; // only alphabets + spaces
 

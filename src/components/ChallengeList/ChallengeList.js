@@ -508,7 +508,7 @@ const ChallengeList = () => {
           currentDataLength={challenges.length}
           onPageChange={(newPage) => {
             setPage(newPage);
-            fetchChallengeList(newPage);
+            fetchChallengeList(searchTerm, newPage);
           }}
         />
       </div>

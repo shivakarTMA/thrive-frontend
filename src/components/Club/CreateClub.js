@@ -265,7 +265,6 @@ const CreateClub = ({
     }
 
     const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
-    const maxSize = 2 * 1024 * 1024; // 2MB
 
     // ❌ Invalid type
     if (!allowedTypes.includes(file.type)) {
@@ -275,15 +274,6 @@ const CreateClub = ({
       e.target.value = null;
       return;
     }
-
-    // ❌ Invalid size
-    // if (file.size > maxSize) {
-    //   setLogoError("Image size must be less than 2MB");
-    //   formik.setFieldValue("logo", null);
-    //   formik.setFieldValue("logoFile", null);
-    //   e.target.value = null;
-    //   return;
-    // }
 
     // ✅ Valid file
     setLogoError("");
@@ -1063,13 +1053,6 @@ const CreateClub = ({
                     <RichTextEditorClub
                       value={formik.values.terms_and_conditions}
                       label="Terms and Agreement"
-                      // onChange={(content) => {
-                      //   formik.setFieldValue(
-                      //     "terms_and_conditions",
-                      //     sanitizeHtml(content),
-                      //   );
-                      //   formik.setFieldTouched("terms_and_conditions", true);
-                      // }}
                       emitOnChange={true} 
                       onChange={(content) => {
                         formik.setFieldValue("terms_and_conditions", content);

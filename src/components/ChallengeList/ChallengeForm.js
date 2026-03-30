@@ -177,15 +177,13 @@ const ChallengeForm = ({ setShowModal, editingOption, formik }) => {
   };
 
   useEffect(() => {
-    if (formik.values?.club_id) {
-      // Fetch new club timing
-      dispatch(fetchClubTiming(formik.values?.club_id));
+  if (formik.values?.club_id && !editingOption) {
+    dispatch(fetchClubTiming(formik.values?.club_id));
 
-      // ✅ Reset dependent fields
-      formik.setFieldValue("start_date_time", null);
-      formik.setFieldValue("end_date_time", null);
-    }
-  }, [formik.values?.club_id]);
+    formik.setFieldValue("start_date_time", null);
+    formik.setFieldValue("end_date_time", null);
+  }
+}, [formik.values?.club_id]);
 
   const startPickerProps = useClubDatePickerProps(
     formik.values?.start_date_time,
@@ -196,15 +194,19 @@ const ChallengeForm = ({ setShowModal, editingOption, formik }) => {
   const isCustom = formik.values?.challenge_type === "CUSTOM";
 
   useEffect(() => {
-    const currentType = formik.values?.challenge_type;
+  const currentType = formik.values?.challenge_type;
 
-    if (prevTypeRef.current && prevTypeRef.current !== currentType) {
-      formik.setFieldValue("target_value", "");
-      formik.setFieldValue("target_unit", "");
-    }
+  if (
+    prevTypeRef.current &&
+    prevTypeRef.current !== currentType &&
+    !editingOption
+  ) {
+    formik.setFieldValue("target_value", "");
+    formik.setFieldValue("target_unit", "");
+  }
 
-    prevTypeRef.current = currentType;
-  }, [formik.values?.challenge_type]);
+  prevTypeRef.current = currentType;
+}, [formik.values?.challenge_type]);
 
   return (
     <div
