@@ -125,8 +125,9 @@ const LeadCallLogs = () => {
   const { id: leadId } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
-
+  
   const logId = searchParams.get("logId");
+  const clubIdFromParams = searchParams.get("club_id");
 
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
@@ -294,13 +295,23 @@ const LeadCallLogs = () => {
 
   const fetchStaff = async () => {
     try {
+
+          const clubId = clubIdFromParams || clubData; // ✅ fallback to API club
+
+    if (!clubId) return;
+
       // Fetch all staff needed for 'training_by' select (both roles)
-      const res = await authAxios().get("/staff/list?role=TRAINER&role=FOH");
+          const res = await authAxios().get("/staff/list", {
+      params: {
+        role: ["TRAINER", "FOH"],
+        club_id: clubId,
+      },
+    });
       const staff = res.data?.data || [];
 
       const activeOnly = filterActiveItems(staff);
 
-      console.log(activeOnly, "activeOnly");
+      // console.log(activeOnly, "activeOnly");
 
       // --- GROUPING STAFF BY ROLE ---
       const foh = activeOnly
@@ -317,29 +328,22 @@ const LeadCallLogs = () => {
           label: item.name,
         }));
 
-      // Final grouped structure for 'training_by' select
-      const groupedOptions = [
-        {
-          label: "FOH",
-          options: foh,
-        },
-        {
-          label: "TRAINER",
-          options: trainer,
-        },
-      ];
-
       // Separate arrays for each select
       setTrainerList(trainer); // For 'schedule_for'
-      setStaffList(groupedOptions); // For 'training_by'
+          setStaffList([
+      { label: "FOH", options: foh },
+      { label: "TRAINER", options: trainer },
+    ]);
     } catch (err) {
       console.error(err);
     }
   };
 
-  useEffect(() => {
+useEffect(() => {
+  if (clubIdFromParams || clubData) {
     fetchStaff();
-  }, []);
+  }
+}, [clubIdFromParams, clubData]);
 
 
 
@@ -702,11 +706,8 @@ const LeadCallLogs = () => {
                           option.value === formik.values.not_interested_reason,
                       )}
                       onChange={(option) => {
-                        formik.setFieldValue(
-                          "not_interested_reason",
-                          option.value,
-                        );
-                        formik.setFieldTouched("not_interested_reason", true);
+                        formik.setFieldValue("not_interested_reason", option.value, true);
+                        // formik.setFieldTouched("not_interested_reason", true);
                       }}
                       styles={customStyles}
                       placeholder="Select Reason"

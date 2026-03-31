@@ -704,7 +704,7 @@ const CreateProduct = ({
                   </div>
 
                   {/* Earn Coins */}
-                  <div>
+                  {/* <div>
                     <label className="mb-2 block">
                       Earn Coins<span className="text-red-500">*</span>
                     </label>
@@ -714,7 +714,6 @@ const CreateProduct = ({
                         name="earn_coin"
                         className="custom--input w-full number--appearance-none"
                         value={formik.values.earn_coin}
-                        // onChange={formik.handleChange}
                         onKeyDown={blockInvalidNumberKeys} // ⛔ blocks typing -, e, etc.
                         onChange={(e) => {
                           const cleanValue = sanitizePositiveInteger(
@@ -730,7 +729,7 @@ const CreateProduct = ({
                         {formik.errors.earn_coin}
                       </p>
                     )}
-                  </div>
+                  </div> */}
 
                   {/* Position */}
                   <div>

@@ -88,7 +88,7 @@ import ChallengeParticipantsList from "../components/ChallengeParticipants/Chall
 import NotificationModule from "../components/Marketing/NotificationModule";
 import MarketingManagerDashboard from "../Pages/MarketingManagerDashboard";
 import LeadSourcePerformance from "../components/Reports/MarketingReports/LeadSourcePerformance";
-import ThriveCoinsUsage from "../components/Reports/MarketingReports/ThriveCoinsUsage";
+// import ThriveCoinsUsage from "../components/Reports/MarketingReports/ThriveCoinsUsage";
 import CustomerSegmentationReport from "../components/Reports/MarketingReports/CustomerSegmentationReport";
 import DiscountCodesPerformance from "../components/Reports/MarketingReports/DiscountCodesPerformance";
 import EngagementTrackingReport from "../components/Reports/MarketingReports/EngagementTrackingReport";
@@ -945,14 +945,14 @@ export default function Routing() {
             </RoleProtectedRoute>
           }
         />
-        <Route
+        {/* <Route
           path="/reports/marketing-reports/thrive-coins-usage"
           element={
             <RoleProtectedRoute path="/reports/marketing-reports/thrive-coins-usage">
               <ThriveCoinsUsage />
             </RoleProtectedRoute>
           }
-        />
+        /> */}
         <Route
           path="/reports/marketing-reports/customer-segmentation-report"
           element={

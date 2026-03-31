@@ -450,7 +450,7 @@ const CreateSubscriptionPlan = ({
                     )}
                   </div>
 
-                  <div className="">
+                  {/* <div className="">
                     <label className="mb-2 block">
                       Earn Coins<span className="text-red-500">*</span>
                     </label>
@@ -462,7 +462,6 @@ const CreateSubscriptionPlan = ({
                         type="number"
                         name="earn_coin"
                         value={formik.values.earn_coin}
-                        // onChange={formik.handleChange}
                         onKeyDown={blockInvalidNumberKeys} // ⛔ blocks typing -, e, etc.
                         onChange={(e) => {
                           const cleanValue = sanitizePositiveInteger(
@@ -479,7 +478,7 @@ const CreateSubscriptionPlan = ({
                         {formik.errors.earn_coin}
                       </p>
                     )}
-                  </div>
+                  </div> */}
 
                   <div>
                     <label className="mb-2 block">Is Spouse Plan<span className="text-red-500">*</span></label>

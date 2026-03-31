@@ -135,7 +135,7 @@ export const ROUTE_PERMISSIONS = {
   
   // Marketing Reports
   '/reports/marketing-reports/lead-source-performance': ['ADMIN', 'MARKETING_MANAGER'],
-  '/reports/marketing-reports/thrive-coins-usage': ['ADMIN', 'MARKETING_MANAGER'],
+  // '/reports/marketing-reports/thrive-coins-usage': ['ADMIN', 'MARKETING_MANAGER'],
   '/reports/marketing-reports/customer-segmentation-report': ['ADMIN', 'MARKETING_MANAGER'],
   '/reports/marketing-reports/discount-codes-performance': ['ADMIN', 'MARKETING_MANAGER', 'FINANCE_MANAGER'],
   '/reports/marketing-reports/engagement-tracking-report': ['ADMIN', 'MARKETING_MANAGER'],

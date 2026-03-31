@@ -112,6 +112,8 @@ const ClubList = () => {
       position: "",
       terms_and_conditions: "",
       abbr: "",
+      company_name: "",
+      company_address: "",
     },
     validationSchema: Yup.object({
       technogym_facilit_url: Yup.string().required(
@@ -141,19 +143,22 @@ const ClubList = () => {
       description: Yup.string().required("Description is required"),
       position: Yup.string().required("Position is required"),
       abbr: Yup.string().required("Club Abbreviation is required"),
-
+      
       map_url: Yup.string()
-        .url("Invalid URL format")
-        .required("Map URL is required"),
-
+      .url("Invalid URL format")
+      .required("Map URL is required"),
+      
       // open_time is a time (Date object)
       open_time: Yup.string().required("Open time is required"),
       close_time: Yup.string().required("Close time is required"),
-
+      
       // Number (minutes)
       trial_duration: Yup.number()
-        .typeError("Trial duration is required")
-        .required("Trial duration is required"),
+      .typeError("Trial duration is required")
+      .required("Trial duration is required"),
+      
+      company_name: Yup.string().required("Company name is required"),
+      company_address: Yup.string().required("Company address is required"),
 
       // Club services array
       club_available_service: Yup.array()
@@ -189,6 +194,8 @@ const ClubList = () => {
         formData.append("close_time", values.close_time);
         formData.append("abbr", values.abbr);
         formData.append("gstno", values.gstno);
+        formData.append("company_name", values.company_name);
+        formData.append("company_address", values.company_address);
         formData.append(
           "club_available_service",
           JSON.stringify(values.club_available_service),
@@ -225,7 +232,7 @@ const ClubList = () => {
         setEditingClub(null);
       } catch (err) {
         console.error("API Error:", err.response?.data || err.message);
-        toast.error(err.response?.data?.errors);
+        toast.error(err.response?.data?.errors || err.response?.data?.message)
       }
     },
   });

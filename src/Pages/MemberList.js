@@ -423,7 +423,7 @@ const MemberList = () => {
   const handleRemoveFilter = (filterKey) => {
     // Exit search mode when removing filters
     if (isSearchMode) {
-      navigate("/all-members/", { replace: true });
+      navigate("/all-members", { replace: true });
     }
 
     const setterMap = {
@@ -457,7 +457,7 @@ const MemberList = () => {
   const handleApplyFiltersFromChild = () => {
     // Exit search mode when applying filters
     if (isSearchMode) {
-      navigate("/all-members/", { replace: true });
+      navigate("/all-members", { replace: true });
     }
 
     fetchMemberList("", 1);
@@ -665,7 +665,7 @@ const MemberList = () => {
                         alt="assign"
                       />
                     </Tooltip>
-                    <Tooltip
+                    {/* <Tooltip
                       id={`tooltip-send-sms`}
                       content="Bulk Send SMS"
                       place="top"
@@ -675,7 +675,7 @@ const MemberList = () => {
                         className="w-8 cursor-pointer"
                         onClick={() => handleCommunicate("sms")}
                       />
-                    </Tooltip>
+                    </Tooltip> */}
                     <Tooltip
                       id={`tooltip-send-mail`}
                       content="Bulk Send Mail"

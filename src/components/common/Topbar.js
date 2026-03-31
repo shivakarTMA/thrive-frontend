@@ -376,7 +376,7 @@ const Topbar = ({
                     </div> */}
                   {/* </DropdownMenu> */}
                 </div>
-                <div className="notification--top relative">
+                {/* <div className="notification--top relative">
                   <div className="notification--count rounded-[50px] text-white flex items-center justify-center w-[21px] h-[21px] absolute top-[-10px] right-[-5px]">
                     <span className="text-[12px]">3</span>
                   </div>
@@ -387,7 +387,7 @@ const Topbar = ({
                     }}
                     className="cursor-pointer w-6"
                   />
-                </div>
+                </div> */}
               </>
             )}
             <div className="relative">

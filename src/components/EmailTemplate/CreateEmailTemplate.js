@@ -77,7 +77,7 @@ const CreateEmailTemplate = () => {
 
       } catch (err) {
         console.error("API Error:", err.response?.data || err.message);
-        toast.error(err.response?.data?.errors)
+        toast.error(err.response?.data?.errors || err.response?.data?.message)
       }
 
       

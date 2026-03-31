@@ -680,24 +680,15 @@ const ChallengeForm = ({ setShowModal, editingOption, formik }) => {
                       Target Unit<span className="text-red-500">*</span>
                     </label>
                     <input
-                      type={isCustom ? "text" : "number"}
+                      type="text"
                       name="target_unit"
                       value={formik.values?.target_unit}
                       // onChange={formik.handleChange}
-                      onKeyDown={
-                        !isCustom
-                          ? blockInvalidNumberKeys
-                          : blockNonLettersAndNumbers
-                      }
+                      onKeyDown={blockNonLettersAndNumbers}
                       onChange={(e) => {
                         const value = e.target.value;
-                        if (isCustom) {
-                          const cleanValue = sanitizeTextWithNumbers(value);
+                        const cleanValue = sanitizeTextWithNumbers(value);
                           formik.setFieldValue("target_unit", cleanValue);
-                        } else {
-                          const cleanValue = sanitizePositiveInteger(value);
-                          formik.setFieldValue("target_unit", cleanValue);
-                        }
                       }}
                       className="custom--input w-full number--appearance-none"
                     />
@@ -759,7 +750,7 @@ const ChallengeForm = ({ setShowModal, editingOption, formik }) => {
 
                   <div>
                     <label className="mb-2 block">
-                      First Prize Coins<span className="text-red-500">*</span>
+                      First Prize<span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
                       <RiMedalLine className="absolute top-[50%] translate-y-[-50%] left-[15px]" />
@@ -789,7 +780,7 @@ const ChallengeForm = ({ setShowModal, editingOption, formik }) => {
 
                   <div>
                     <label className="mb-2 block">
-                      Second Prize Coins<span className="text-red-500">*</span>
+                      Second Prize<span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
                       <RiMedalLine className="absolute top-[50%] translate-y-[-50%] left-[15px]" />
@@ -819,7 +810,7 @@ const ChallengeForm = ({ setShowModal, editingOption, formik }) => {
 
                   <div>
                     <label className="mb-2 block">
-                      Third Prize Coins<span className="text-red-500">*</span>
+                      Third Prize<span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
                       <RiMedalLine className="absolute top-[50%] translate-y-[-50%] left-[15px]" />

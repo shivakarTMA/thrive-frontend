@@ -34,9 +34,8 @@ const CreateMemberAppointment = ({
   handleUpdate,
   clubId,
 }) => {
-  console.log(memberType, "memberType");
+
   const leadBoxRef = useRef(null);
-  const [packageList, setPackageList] = useState([]);
   const dispatch = useDispatch();
   const [memberPurchasedServices, setMemberPurchasedServices] = useState([]);
   const [staffList, setStaffList] = useState([]);
@@ -62,8 +61,6 @@ const CreateMemberAppointment = ({
         `/package/available/session/${memberID}`,
       );
       const data = res.data?.data || [];
-      console.log(data, "shivakar");
-      setPackageList(data);
       // Convert to react-select format
       const formattedOptions = data.map((item) => ({
         value: item.id, // what you want to store in Formik
@@ -119,16 +116,6 @@ const CreateMemberAppointment = ({
       value: item.id,
     })) || [];
 
-  // const appointmentTypes = [
-  //   ...(serviceList?.map((item) => ({
-  //     label: item.name,
-  //     value: item.id,
-  //   })) || []),
-  //   ...(memberType === "LEAD"
-  //     ? [{ label: "Tour / Trial", value: "TOURTRIAL" }]
-  //     : []),
-  // ];
-
   const appointmentTypes = [
     ...(serviceList
       ?.filter((item) => item.type !== "PRODUCT" && item.type !== "GROUP_CLASS")
@@ -140,8 +127,6 @@ const CreateMemberAppointment = ({
       ? [{ label: "Tour / Trial", value: "TOURTRIAL" }]
       : []),
   ];
-
-  console.log(appointmentTypes, "appointmentTypes");
 
   const appointmentCategories = [
     { value: "service", label: "Service Appointment" },

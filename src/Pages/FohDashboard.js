@@ -1104,7 +1104,7 @@ const FohDashboard = () => {
           </div> */}
         </div>
       </div>
-
+    {orders.length > 0 && (
       <div className="rounded-[15px] p-3 w-full mt-2 box--shadow bg-white">
         <div className="flex justify-between items-center mb-4">
           <h2 className="font-semibold">Pending Orders</h2>
@@ -1121,6 +1121,7 @@ const FohDashboard = () => {
           fetchOrders={fetchPendingOrdersData}
         />
       </div>
+    )}
     </div>
   );
 };

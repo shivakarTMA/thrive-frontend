@@ -166,7 +166,7 @@ const PackageCategoryList = () => {
         }
       } catch (err) {
         console.log(err)
-        toast.error(err.response?.data?.errors)
+        toast.error(err.response?.data?.errors || err.response?.data?.message)
       }
 
       // resetForm();

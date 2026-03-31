@@ -1039,7 +1039,7 @@ const CreatePackage = ({
                     </div>
 
                     {/* Earn Coins */}
-                    {service_type_check !== "RECOVERY" && (
+                    {/* {service_type_check !== "RECOVERY" && (
                       <div>
                         <label className="mb-2 block">
                           Earn Coins<span className="text-red-500">*</span>
@@ -1072,7 +1072,7 @@ const CreatePackage = ({
                             </div>
                           )}
                       </div>
-                    )}
+                    )} */}
 
                     {/* Status */}
 
@@ -1477,7 +1477,7 @@ const CreatePackage = ({
                                 )}
                             </div>
                             {/* Earn Coins */}
-                            <div>
+                            {/* <div>
                               <label className="mb-2 block">
                                 Earn Coins{" "}
                                 <span className="text-red-500">*</span>
@@ -1509,7 +1509,7 @@ const CreatePackage = ({
                                     {formik.errors.variation[index].earn_coin}
                                   </div>
                                 )}
-                            </div>
+                            </div> */}
 
                             {/* Position */}
                             <div>

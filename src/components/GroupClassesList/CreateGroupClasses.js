@@ -1052,7 +1052,7 @@ const CreateGroupClasses = ({ setShowModal, editingOption, formik }) => {
 
                     {/* Earn Coins */}
 
-                    <div>
+                    {/* <div>
                       <label className="mb-2 block">
                         Earn Coins<span className="text-red-500">*</span>
                       </label>
@@ -1082,7 +1082,7 @@ const CreateGroupClasses = ({ setShowModal, editingOption, formik }) => {
                           {formik.errors.earn_coin}
                         </div>
                       )}
-                    </div>
+                    </div> */}
 
                     {/* Status */}
                     {editingOption && editingOption && (

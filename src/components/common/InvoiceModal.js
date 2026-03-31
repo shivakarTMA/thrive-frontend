@@ -72,8 +72,18 @@ const InvoiceModal = ({ isOpen, onClose, data }) => {
               <p>
                 <strong>Company Name:</strong> {data.club_name}
               </p>
+              <p className="mb-4">
+                <strong>Company Address:</strong> {data.club_address}
+                <br />
+                {data.club_city}, {data.club_state} - {data.club_zipcode}
+                <br />
+                {data.club_country}
+              </p>
               <p>
-                {data.club_address}
+                <strong>Site Name:</strong> {data.club_name}
+              </p>
+              <p className="mb-4">
+                <strong>Site Address:</strong> {data.club_address}
                 <br />
                 {data.club_city}, {data.club_state} - {data.club_zipcode}
                 <br />
@@ -184,12 +194,12 @@ const InvoiceModal = ({ isOpen, onClose, data }) => {
                 <span className="font-bold">Grand Total:</span>
                 <span className="font-bold">₹{formatIndianNumber(data?.grand_total)}</span>
               </div>
-              {data?.redeemed_coin && (
+              {/* {data?.redeemed_coin && (
                 <div className="flex gap-2 justify-between">
                     <span className="font-bold">Thrive Coins:</span>
                     <span className="font-bold">- ₹{formatIndianNumber(data?.redeemed_coin)}</span>
                 </div>
-              )}
+              )} */}
 
               <div className="flex gap-2 justify-between border-y py-2">
                 <span className="font-bold text-lg">Total Amount:</span>
@@ -200,16 +210,15 @@ const InvoiceModal = ({ isOpen, onClose, data }) => {
 
           {/* Terms & Conditions */}
           <div className="border rounded-md mb-5 p-5">
-            <p className="font-bold mb-2 text-gray-900">Terms & Conditions:</p>
-            <ul className="list-disc list-inside space-y-1 text-sm">
-              <li>
-                Whether the Tax is payable under reverse charge basis - NO
-              </li>
-              <li>
-                For detailed Membership Terms and Conditions, please contact the
-                club staff
-              </li>
-            </ul>
+            <p className="mb-1 text-sm text-center">
+                If you have any questions about this bill, please contact Mail : <a href="mailto:thrive@dlf.in">thrive@dlf.in</a>, Phone : 84482 85864
+              </p>
+            <p className="mb-1 text-lg font-[600] text-center">
+                Thank You For Your Business!
+              </p>
+            <p className="text-sm text-center">
+                This is a computer generated invoice. No signature is required.
+              </p>
           </div>
         </div>
 

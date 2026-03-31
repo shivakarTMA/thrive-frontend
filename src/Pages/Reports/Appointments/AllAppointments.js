@@ -729,7 +729,10 @@ const AllAppointments = () => {
                               //   row?.booking_status,
                               // )}
                               options={getAllowedStatusOptions(row)}
-                              value={getSelectedStatusOption(row?.booking_status, row)}
+                              value={getSelectedStatusOption(
+                                row?.booking_status,
+                                row,
+                              )}
                               isDisabled={
                                 !canUpdateStatus(row?.booking_status)
                                 // getAllowedStatusOptions(row?.booking_status).length === 0
@@ -738,7 +741,15 @@ const AllAppointments = () => {
                                 if (!selected) return;
                                 updateAppointmentStatus(row, selected.value);
                               }}
-                              styles={customStyles}
+                              styles={{
+                                ...customStyles,
+                                menuPortal: (base) => ({
+                                  ...base,
+                                  zIndex: 9999,
+                                }),
+                              }}
+                              menuPortalTarget={document.body}
+                              menuPosition="fixed"
                             />
                           </div>
                         </td>

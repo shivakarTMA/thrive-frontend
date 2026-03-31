@@ -34,7 +34,10 @@ export const useClubDatePickerProps = (selectedDate) => {
   const nextGridSlotMinutes = getNextGridSlot(nowInMinutes, openMinutes, timeIntervals);
 
   // Today expired if next grid slot exceeds maxBookable
-  const isTodayExpired = nextGridSlotMinutes >= maxBookableMinutes;
+  // const isTodayExpired = nextGridSlotMinutes >= maxBookableMinutes;
+
+  // ✅ AFTER — today only expires when next slot goes PAST close time
+  const isTodayExpired = nextGridSlotMinutes > maxBookableMinutes;
 
   const isToday =
     selectedDate &&

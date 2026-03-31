@@ -8,6 +8,7 @@ import {
   customStyles,
   filterActiveItems,
   formatDateTimeLead,
+  formatIndianNumber,
   formatText,
 } from "../Helper/helper";
 import { authAxios } from "../config/config";
@@ -23,10 +24,7 @@ const dateFilterOptions = [
   { value: "custom", label: "Custom Date" },
 ];
 
-const formatDate = (date) => {
-  if (!date) return null;
-  return date.toISOString().split("T")[0]; // YYYY-MM-DD
-};
+const formatDate = (date) => format(date, "yyyy-MM-dd");
 
 const NourishOrders = () => {
   const [nourishOrders, setNourishOrders] = useState([]);
@@ -388,7 +386,7 @@ const NourishOrders = () => {
                 nourishOrders.map((order, index) => (
                   <tr key={index} className="border-t">
                     <td className="px-2 py-4">
-                      {order?.order_id ? order?.order_id : "--"}
+                      {order?.order_no ? order?.order_no : "--"}
                     </td>
                     <td className="px-2 py-4">
                       {order?.createdAt
@@ -402,9 +400,9 @@ const NourishOrders = () => {
                       {order?.member_name ? order?.member_name : "--"}
                     </td>
                     <td className="px-2 py-4">
-                      {order?.name ? order?.name : "--"}
+                      {order?.items_ordered ? order?.items_ordered : "--"}
                     </td>
-                    <td className="px-2 py-4">₹{order?.booking_amount ?? 0}</td>
+                    <td className="px-2 py-4">₹{formatIndianNumber(order?.total_amount) ?? 0}</td>
                     <td className="px-2 py-4">
                       {order?.payment_status
                         ? formatText(order?.payment_status)

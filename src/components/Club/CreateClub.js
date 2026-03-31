@@ -211,6 +211,8 @@ const CreateClub = ({
             close_time: data?.close_time || "",
             trial_duration: data?.trial_duration || "",
             terms_and_conditions: data.terms_and_conditions || "",
+            company_name: data.company_name || "",
+            company_address: data.company_address || "",
           });
         }
       } catch (err) {
@@ -985,8 +987,70 @@ const CreateClub = ({
                     )}
                   </div>
 
+                  {/* Company Name */}
+                  <div>
+                    <label className="mb-2 block">
+                      Company Name<span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <span className="absolute top-[50%] translate-y-[-50%] left-[15px]">
+                        <FaRegBuilding />
+                      </span>
+                      <input
+                        type="text"
+                        name="company_name"
+                        value={formik.values.company_name}
+                        onKeyDown={blockNonLettersAndNumbers}
+                        onChange={(e) => {
+                          const cleaned = sanitizeTextWithNumbers(
+                            e.target.value,
+                          );
+                          formik.setFieldValue("company_name", cleaned);
+                        }}
+                        onBlur={formik.handleBlur}
+                        className="custom--input w-full input--icon"
+                      />
+                    </div>
+                    {formik.touched.company_name && formik.errors.company_name && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {formik.errors.company_name}
+                      </p>
+                    )}
+                  </div>
+
                   {/* Address */}
                   <div className="col-span-3 grid grid-cols-2 lg:gap-4 gap-2">
+                    <div>
+                      <label className="mb-2 block">
+                        Company Address<span className="text-red-500">*</span>
+                      </label>
+                      <div className="relative">
+                        <span className="absolute top-[15px] left-[15px]">
+                          <IoLocationOutline />
+                        </span>
+                        <textarea
+                          rows={3}
+                          name="company_address"
+                          value={formik.values.company_address}
+                          // onChange={formik.handleChange}
+                          onKeyDown={blockNonLettersAndNumbers}
+                          onChange={(e) => {
+                            const cleaned = sanitizeTextWithNumbers(
+                              e.target.value,
+                            );
+                            formik.setFieldValue("company_address", cleaned);
+                          }}
+                          onBlur={formik.handleBlur}
+                          className="custom--input w-full input--icon"
+                        />
+                        {formik.touched.company_address && formik.errors.company_address && (
+                          <p className="text-red-500 text-sm mt-1">
+                            {formik.errors.company_address}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
                     <div>
                       <label className="mb-2 block">
                         Physical Address<span className="text-red-500">*</span>
@@ -1017,6 +1081,9 @@ const CreateClub = ({
                         )}
                       </div>
                     </div>
+                    
+                  </div>
+                  <div className="mt-0 col-span-3 !relative block">
                     <div>
                       <label className="mb-2 block">
                         Description<span className="text-red-500">*</span>

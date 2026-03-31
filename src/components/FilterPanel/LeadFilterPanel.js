@@ -39,43 +39,51 @@ export default function LeadFilterPanel({
   }, [dispatch]);
 
   // Fetch staff list from API
-  const fetchStaff = async () => {
-    try {
-      const requests = [authAxios().get(`/staff/list?role=FOH&club_id${clubId}`)];
+const fetchStaff = async (clubId) => {
+  try {
+    const requests = [
+      authAxios().get(`/staff/list?role=FOH&club_id=${clubId}`)
+    ];
 
-      if (userRole === "CLUB_MANAGER" || userRole === "ADMIN") {
-        requests.push(authAxios().get(`/staff/list?role=CLUB_MANAGER&club_id${clubId}`));
-      }
-
-      const responses = await Promise.all(requests);
-
-      let mergedData = [];
-
-      responses.forEach((res) => {
-        const role = res.config.url.includes("FOH") ? "FOH" : "CLUB_MANAGER";
-
-        const users = (res.data?.data || []).map((user) => ({
-          ...user,
-          role,
-        }));
-
-        mergedData.push(...users);
-      });
-
-      const uniqueData = Array.from(
-        new Map(mergedData.map((user) => [user.id, user])).values()
+    if (userRole === "CLUB_MANAGER" || userRole === "ADMIN") {
+      requests.push(
+        authAxios().get(`/staff/list?role=CLUB_MANAGER&club_id=${clubId}`)
       );
-
-      const activeOnly = filterActiveItems(uniqueData);
-      setStaffList(activeOnly);
-    } catch (err) {
-      console.error(err);
     }
-  };
 
-  useEffect(() => {
-    fetchStaff();
-  }, []);
+    const responses = await Promise.all(requests);
+
+    let mergedData = [];
+
+    responses.forEach((res) => {
+      const role = res.config.url.includes("FOH") ? "FOH" : "CLUB_MANAGER";
+
+      const users = (res.data?.data || []).map((user) => ({
+        ...user,
+        role,
+      }));
+
+      mergedData.push(...users);
+    });
+
+    const uniqueData = Array.from(
+      new Map(mergedData.map((user) => [user.id, user])).values()
+    );
+
+    const activeOnly = filterActiveItems(uniqueData);
+    setStaffList(activeOnly);
+  } catch (err) {
+    console.error(err);
+  }
+};
+
+useEffect(() => {
+  if (clubId) {
+    setStaffList([]); // prevents showing stale data
+    fetchStaff(clubId);
+  }
+}, [clubId, userRole]);
+
 
   const leadsSources = lists["LEAD_SOURCE"] || [];
   const lastCallStatusOptions = lists["LEAD_CALL_STATUS"] || [];

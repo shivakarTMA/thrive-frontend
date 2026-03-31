@@ -583,7 +583,13 @@ const StaffList = () => {
       {/* Confirm Delete */}
       {showConfirmPopup && staffToDelete && (
         <ConfirmPopup
-          message={`Are you sure you want to delete <br /> "${staffToDelete?.name}"?`}
+          message={
+            <>
+              Are you sure you want to delete
+              <br />
+              "{staffToDelete?.name}"?
+            </>
+          }
           onConfirm={handleConfirmDelete}
           onCancel={handleCancelDelete}
         />

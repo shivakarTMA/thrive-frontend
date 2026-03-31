@@ -526,13 +526,8 @@ const EmailCriteriaForm = () => {
                   ref={editorRef}
                   value={formik.values.message}
                   label="Message"
-                  // onChange={(content) =>
-                  //   formik.setFieldValue("message", content)
-                  // }
                   emitOnChange={true} 
                   onChange={(content) => {
-                    // formik.setFieldValue("message", sanitizeHtml(content));
-                    // formik.setFieldTouched("message", true);
                     formik.setFieldValue("message", content);
                     formik.setFieldTouched("message", true);
                   }}

@@ -137,7 +137,7 @@ const Studio = () => {
         // fetchStudio();
       } catch (err) {
          console.error(err);
-         toast.error(err.response?.data?.errors)
+        toast.error(err.response?.data?.message)
       }
     },
   });

@@ -773,6 +773,9 @@ const TrialAppointments = () => {
                       {...datePickerProps}
                       placeholderText="Select date & time"
                       className="custom--input w-full input--icon"
+                      onKeyDown={(e) => {
+                        e.preventDefault();
+                      }}
                     />
                   </div>
                 </div>

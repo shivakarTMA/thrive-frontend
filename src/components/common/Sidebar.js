@@ -628,12 +628,12 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                     >
                       Lead Source Performance
                     </Link>
-                    <Link
+                    {/* <Link
                       to="/reports/marketing-reports/thrive-coins-usage"
                       className="submenu-link text-white text-sm"
                     >
                       Thrive Coins Usage
-                    </Link>
+                    </Link> */}
                     <Link
                       to="/reports/marketing-reports/customer-segmentation-report"
                       className="submenu-link text-white text-sm"
@@ -820,20 +820,20 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                   <FaCircle className="menu--icon !text-[10px]" />
                   <span className="nav-text">Options List</span>
                 </Link>
-                <Link
+                {/* <Link
                   to="/role-list"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
                 >
                   <FaCircle className="menu--icon !text-[10px]" />
                   <span className="nav-text">Role List</span>
-                </Link>
-                <Link
+                </Link> */}
+                {/* <Link
                   to="/module-list"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
                 >
                   <FaCircle className="menu--icon !text-[10px]" />
                   <span className="nav-text">Module List</span>
-                </Link>
+                </Link> */}
                 <Link
                   to="/faq-category"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
@@ -1072,13 +1072,13 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                   <FaCircle className="menu--icon !text-[10px]" />
                   <span className="nav-text">SMS Delivery Report</span>
                 </Link>
-                <Link
+                {/* <Link
                   to="/reports/marketing-reports/thrive-coins-usage"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
                 >
                   <FaCircle className="menu--icon !text-[10px]" />
                   <span className="nav-text">Thrive Coins Usage</span>
-                </Link>
+                </Link> */}
               </div>
             )}
           </>

@@ -40,30 +40,6 @@ const genderOptions = [
 
 const validationSchema = Yup.object({
   full_name: Yup.string().required("Full Name is required"),
-  // mobile: Yup.string()
-  //   .required("Contact number is required")
-  //   .test("is-valid-phone", "Invalid phone number", function (value) {
-  //     const { country_code } = this.parent;
-  //     if (!value || !country_code) return false;
-
-  //     // Combine country code and number to full international format
-  //     const phoneNumberString = `+${country_code}${value}`;
-
-  //     // First check if the number is even possible (not just valid)
-  //     if (!isPossiblePhoneNumber(phoneNumberString)) return false;
-
-  //     // Parse and check validity strictly according to country
-  //     const phoneNumber = parsePhoneNumberFromString(phoneNumberString);
-  //     return phoneNumber?.isValid() || false;
-  //   }),
-  // phoneFull: Yup.string()
-  //   .required("Contact number is required")
-  //   .test("is-valid-phone", "Invalid phone number", function (value) {
-  //     if (!value) return false;
-
-  //     const phoneNumber = parsePhoneNumberFromString(value);
-  //     return phoneNumber?.isValid() || false;
-  //   }),
   phoneFull: Yup.string()
     .required("Contact number is required")
     .test("valid-phone", "Invalid phone number", function (value) {
@@ -91,7 +67,9 @@ const validationSchema = Yup.object({
       return true;
     }),
   date_of_birth: Yup.date().required("Date of birth is required"),
-  email: Yup.string().required("Email is required"),
+  email: Yup.string()
+  .email("Enter a valid email address")
+  .required("Email is required"),
   // company_name: Yup.string().required("Company is required"),
   pincode: Yup.string().required("Pincode is required"),
   company_name: Yup.string().required("Company Name is required"),
@@ -145,8 +123,6 @@ const ProfileDetails = ({ member }) => {
       // Fetch all staff needed for 'training_by' select (both roles)
       const res = await authAxios().get("/staff/list?role=TRAINER&role=FOH");
       const staff = res.data?.data || [];
-
-      console.log(staff, "updatedStaff");
 
       // --- GROUPING STAFF BY ROLE ---
       const foh = staff
@@ -362,10 +338,6 @@ const ProfileDetails = ({ member }) => {
         isValid = false;
       }
 
-      // if (!contact.phone?.trim()) {
-      //   contactErrors.phone = "Phone is required";
-      //   isValid = false;
-      // }
       if (!contact.phone) {
         contactErrors.phone = "Phone is required";
         isValid = false;
@@ -520,6 +492,7 @@ const ProfileDetails = ({ member }) => {
         navigate("/all-members");
       } catch (error) {
         console.error("Error updating profile:", error);
+        toast.error(error.response?.data?.errors || error.response?.data?.message)
       }
     },
   });
@@ -979,12 +952,12 @@ const ProfileDetails = ({ member }) => {
                       {formik.errors?.mobile || duplicateError}
                     </div>
                   )} */}
-                  {((formik.errors?.phoneFull && formik.touched?.phoneFull) ||
-                    duplicateError) && (
-                    <div className="text-red-500 text-sm">
-                      {formik.errors?.phoneFull || duplicateError}
-                    </div>
-                  )}
+                  {(formik.errors?.phoneFull || duplicateError) &&
+                    (formik.touched?.phoneFull || formik.submitCount > 0) && (
+                      <div className="text-red-500 text-sm">
+                        {formik.errors?.phoneFull || duplicateError}
+                      </div>
+                    )}
                 </div>
 
                 <div>
@@ -1331,13 +1304,6 @@ const ProfileDetails = ({ member }) => {
                         <input
                           type="text"
                           value={contact.name}
-                          // onChange={(e) =>
-                          //   updateEmergencyContactField(
-                          //     index,
-                          //     "name",
-                          //     e.target.value,
-                          //   )
-                          // }
 
                           onKeyDown={blockNonLetters}
                           onChange={(e) => {

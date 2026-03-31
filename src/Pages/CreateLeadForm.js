@@ -226,9 +226,9 @@ const CreateLeadForm = ({
         }
 
         // Remove interested_in if editing
-        if (selectedLead) {
-          delete payload.interested_in;
-        }
+        // if (selectedLead) {
+        //   delete payload.interested_in;
+        // }
 
         // Normalize dates
         payload.date_of_birth = values.date_of_birth
@@ -266,7 +266,7 @@ const CreateLeadForm = ({
         leadModalPage && handleLeadUpdate();
       } catch (err) {
         console.error("❌ API Error:", err.response?.data || err.message);
-        toast.error(err.response?.data?.errors)
+        toast.error(err.response?.data?.errors || err.response?.data?.message)
       }
     },
   });
@@ -945,9 +945,7 @@ const CreateLeadForm = ({
                         Interested In<span className="text-red-500">*</span>
                       </label>
                       <div
-                        className={`relative ${
-                          selectedLead ? "hide-clear-icon" : ""
-                        }`}
+                        className={`relative`}
                       >
                         <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
                           <FaListCheck />
@@ -968,12 +966,8 @@ const CreateLeadForm = ({
                             allItemsAreSelected: "All Interested Selected",
                             // search: "Search",
                           }}
-                          className={`custom--input w-full input--icon multi--select--new ${
-                            selectedLead
-                              ? "cursor-not-allowed pointer-events-none !bg-gray-100 !text-gray-500"
-                              : ""
-                          }`}
-                          disabled={!!selectedLead}
+                          className={`custom--input w-full input--icon multi--select--new `}
+                          // disabled={!!selectedLead}
                         />
                       </div>
                       {formik.errors?.interested_in &&

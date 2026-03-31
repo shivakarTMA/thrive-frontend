@@ -172,7 +172,7 @@ const GalleryList = () => {
         setShowModal(false);
       } catch (error) {
         console.error("API Error:", error.response?.data || error.message);
-        toast.error(error.response?.data?.errors)
+        toast.error(error.response?.data?.errors || error.response?.data?.message)
       }
 
       

@@ -293,6 +293,30 @@ const ConvertMemberForm = ({
     final_amount: 0,
     amount_pay: 0,
   };
+
+  const convertLeadAPI = async (values) => {
+    try {
+      const formData = new FormData();
+
+      Object.keys(values).forEach((key) => {
+        formData.append(key, values[key]);
+      });
+
+      await authAxios().put(
+        `/member/convert/lead/${selectedLeadMember}`,
+        formData,
+        { headers: { "Content-Type": "multipart/form-data" } }
+      );
+
+      return true;
+    } catch (error) {
+      toast.error(
+        error.response?.data?.message || "Something went wrong"
+      );
+      return false;
+    }
+  };
+
   const formik = useFormik({
     initialValues,
     validationSchema: stepValidationSchemas[step],
@@ -359,7 +383,7 @@ const ConvertMemberForm = ({
               member_id: selectedLeadMember,
             };
 
-            console.log("paymentPayload", paymentPayload);
+            // console.log("paymentPayload", paymentPayload);
 
             const res = await authAxios().post(
               "/payment/proceed",
@@ -377,18 +401,15 @@ const ConvertMemberForm = ({
             }
           }
 
-          // toast.success("Member created successfully!");
-
           // setMemberModal(false);
           onLeadUpdate();
         } catch (error) {
           console.log(error, "error");
-          toast.error(error.response?.data?.errors)
+          toast.error(error.response?.data?.errors || error.response?.data?.message);
         }
       } else {
         setStep(step + 1);
       }
-      // setStep(step + 1);
     },
   });
 
@@ -485,7 +506,7 @@ const ConvertMemberForm = ({
       console.error(err);
     }
   };
-  // Fetch companies
+
   // ✅ Fetch companies (only ACTIVE ones)
   const fetchCompanies = async (search = "") => {
     try {
@@ -580,6 +601,40 @@ const ConvertMemberForm = ({
     setShowModal(false);
   };
 
+  // const handleNextStep = async () => {
+  //   const errors = await formik.validateForm();
+
+  //   if (Object.keys(errors).length === 0) {
+  //     if (duplicateError) {
+  //       setShowDuplicateModal(true);
+  //       return;
+  //     }
+
+  //     if (step === stepValidationSchemas.length - 1) {
+  //       formik.handleSubmit();
+  //     } else {
+  //       setStep((prev) => prev + 1);
+  //     }
+  //   } else {
+  //     // Mark all nested fields as touched
+  //     const markTouched = (obj) => {
+  //       if (Array.isArray(obj)) return obj.map((item) => markTouched(item));
+  //       else if (typeof obj === "object" && obj !== null) {
+  //         const touchedObj = {};
+  //         Object.keys(obj).forEach((key) => {
+  //           touchedObj[key] = markTouched(obj[key]);
+  //         });
+  //         return touchedObj;
+  //       } else return true;
+  //     };
+
+  //     const touchedFields = markTouched(errors);
+  //     formik.setTouched(touchedFields);
+  //     console.log("Validation errors:", errors);
+  //     return { errors, touched: touchedFields };
+  //   }
+  // };
+
   const handleNextStep = async () => {
     const errors = await formik.validateForm();
 
@@ -589,31 +644,33 @@ const ConvertMemberForm = ({
         return;
       }
 
+      // ✅ CALL API ON EVERY STEP
+      const isSuccess = await convertLeadAPI(formik.values);
+
+      if (!isSuccess) return;
+
       if (step === stepValidationSchemas.length - 1) {
-        formik.handleSubmit();
+        formik.handleSubmit(); // payment flow
       } else {
         setStep((prev) => prev + 1);
       }
     } else {
-      // Mark all nested fields as touched
       const markTouched = (obj) => {
-        if (Array.isArray(obj)) return obj.map((item) => markTouched(item));
-        else if (typeof obj === "object" && obj !== null) {
+        if (Array.isArray(obj)) return obj.map(markTouched);
+        if (typeof obj === "object") {
           const touchedObj = {};
           Object.keys(obj).forEach((key) => {
             touchedObj[key] = markTouched(obj[key]);
           });
           return touchedObj;
-        } else return true;
+        }
+        return true;
       };
 
-      const touchedFields = markTouched(errors);
-      formik.setTouched(touchedFields);
-      console.log("Validation errors:", errors);
-      return { errors, touched: touchedFields };
+      formik.setTouched(markTouched(errors));
     }
   };
-
+  
   const handleProductSubmit = (product) => {
     // Convert to numbers safely
     const amount = Number(product.amount) || 0;
@@ -649,72 +706,6 @@ const ConvertMemberForm = ({
       amount_pay: finalAmount,
     });
   };
-
-  // const applyCoupon = async () => {
-  //   if (!voucherInput.trim()) return;
-
-  //   if (!formik.values.productDetails?.id) {
-  //     toast.error("Please select a product before applying a coupon");
-  //     return;
-  //   }
-
-  //   try {
-  //     setVoucherStatus("loading");
-
-  //     const payload = {
-  //       coupon: voucherInput.trim(),
-  //       applicable_ids: [formik.values.productDetails?.id],
-  //       applicable_type: "SUBSCRIPTION",
-  //       amount: formik.values.productDetails?.total_amount,
-  //       club_id: formik.values.club_id,
-  //     };
-
-  //     const res = await authAxios().post("/coupon/applicable", payload);
-  //     const data = res.data?.data;
-
-  //     const couponDiscount = Number(data.discountAmount) || 0;
-
-  //     const totalAmount =
-  //       Number(formik.values.productDetails.total_amount) || 0;
-  //     const gstPercent = Number(formik.values.productDetails.gst) || 0;
-
-  //     const discountedTotal = totalAmount - couponDiscount;
-  //     const gstAmount = (discountedTotal * gstPercent) / 100;
-  //     const finalAmount = discountedTotal + gstAmount;
-
-  //     setSelectedVoucher(data);
-  //     setVoucherStatus("success");
-
-  //     formik.setValues({
-  //       ...formik.values,
-  //       coupon: voucherInput,
-  //       discountAmount: couponDiscount,
-  //       productDetails: {
-  //         ...formik.values.productDetails,
-  //         gst_amount: gstAmount,
-  //       },
-  //       final_amount: finalAmount,
-  //       amount_pay: finalAmount,
-  //     });
-  //   } catch (err) {
-  //     setSelectedVoucher(null);
-  //     setVoucherStatus("error");
-
-  //     // ✅ SAFE fallback
-  //     const originalFinal =
-  //       Number(formik.values.productDetails?.final_amount) || 0;
-
-  //     formik.setValues({
-  //       ...formik.values,
-  //       coupon: "",
-  //       discountAmount: 0,
-  //       final_amount: originalFinal,
-  //       amount_pay: originalFinal,
-  //     });
-
-  //     toast.error(err?.response?.data?.message || "Invalid or expired coupon");
-  //   }
-  // };
 
   const applyCoupon = async () => {
     if (!voucherInput.trim()) return;
@@ -941,12 +932,6 @@ const ConvertMemberForm = ({
   const fifteenYearsAgo = new Date();
   fifteenYearsAgo.setFullYear(fifteenYearsAgo.getFullYear() - 15);
 
-  // const handleDobChange = (date) => {
-  //   if (!date) return;
-
-  //   formik.setFieldValue("date_of_birth", date);
-  // };
-
   const handleDobChange = (date) => {
     if (!date) return;
     const today = new Date();
@@ -967,9 +952,6 @@ const ConvertMemberForm = ({
       formik.setFieldValue("date_of_birth", date.toISOString()); // store ISO string
     }
   };
-
-  // const fifteenYearsAgo = new Date();
-  // fifteenYearsAgo.setFullYear(fifteenYearsAgo.getFullYear() - 15);
 
   const confirmDob = () => {
     formik.setFieldValue("date_of_birth", pendingDob);

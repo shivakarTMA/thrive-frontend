@@ -228,7 +228,7 @@ export default function MemberFilterPanel({
     setShowFilters(false);
 
     if (onApplyFilters) onApplyFilters();
-    navigate(`/all-members/`);
+    navigate(`/all-members`);
   };
 
   // Handle remove filter chip

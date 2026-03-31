@@ -28,6 +28,14 @@ const AddNewItemModal = ({
   const leadBoxRef = useRef(null);
   const { user } = useSelector((state) => state.auth);
 
+  // const dateClickedRef = useRef(false);
+  // const [dateOnlySelected, setDateOnlySelected] = useState(false);
+
+  // AFTER — add a ref mirror so onSubmit reads live value
+  const dateClickedRef = useRef(false);
+  const dateOnlySelectedRef = useRef(false);           // ← ADD THIS
+  const [dateOnlySelected, setDateOnlySelected] = useState(false);
+
   const formik = useFormik({
     initialValues: {
       image: null,
@@ -51,11 +59,24 @@ const AddNewItemModal = ({
       item_name: Yup.string().required("Item Name is required"),
       category: Yup.string().required("Category Name is required"),
       found_at_location: Yup.string().required("Location is required"),
-      found_date_time: Yup.date().required("Date & Time is required"),
+      // found_date_time: Yup.date().required("Date & Time is required"),
+      found_date_time: Yup.date()
+        .nullable()
+        .required("Date & Time is required")
+        .typeError("Invalid Date & Time")
+        .test(
+          "is-valid-date",
+          "Invalid Date & Time",
+          (value) => value instanceof Date && !isNaN(value)
+        ),
     }),
-     validateOnChange: true,
+    validateOnChange: true,
     validateOnBlur: true,
     onSubmit: async (values, { resetForm }) => {
+      if (dateOnlySelectedRef.current) {               // ← was dateOnlySelected
+        toast.error("Please select time as well");
+        return;
+      }
       try {
         // Create FormData instance
         const formData = new FormData();
@@ -87,6 +108,9 @@ const AddNewItemModal = ({
         fetchLostFoundList();
       } catch (error) {
         console.error("Error submitting form:", error);
+        toast.error(
+          error.response?.data?.errors || error.response?.data?.message,
+        );
       }
     },
   });
@@ -160,9 +184,76 @@ const AddNewItemModal = ({
     followUpFilterTime,
   );
 
-  useEffect(() => {
-    formik.setFieldValue("found_date_time", null);
-  }, [formik.values.club_id]);
+now.setSeconds(0);
+now.setMilliseconds(0);
+
+const isToday =
+  !followUpDT.selected ||
+  new Date(followUpDT.selected).toDateString() === now.toDateString();
+
+  const maxTime = isToday
+  ? now
+  : new Date(0, 0, 0, 23, 59, 59);
+
+// ✅ NEW: Combine club filter + past time restriction
+const combinedFilterTime = (time) => {
+  // First apply club timing filter
+  if (followUpFilterTime && !followUpFilterTime(time)) {
+    return false;
+  }
+
+  // Then apply "no future time for today"
+  if (isToday) {
+    return time <= now;
+  }
+
+  return true;
+};
+
+const handleDateTimeChange = (date) => {
+  const prev = followUpDT.selected;
+
+  if (!date) {
+    setDateOnlySelected(false);
+    dateOnlySelectedRef.current = false;
+    followUpDT.handleDateTime(date);
+    return;
+  }
+
+  // If no previous value OR the date portion changed → it's a date click (no time yet)
+  const isDateChange =
+    !prev ||
+    new Date(prev).toDateString() !== new Date(date).toDateString();
+
+  if (isDateChange) {
+    setDateOnlySelected(true);
+    dateOnlySelectedRef.current = true;
+  } else {
+    // Same date, different time → user picked a time slot
+    setDateOnlySelected(false);
+    dateOnlySelectedRef.current = false;
+  }
+
+  followUpDT.handleDateTime(date);
+};
+
+// const handleDateTimeChange = (date) => {
+//   if (dateClickedRef.current) {
+//     dateClickedRef.current = false;
+//     dateOnlySelectedRef.current = true;              // ← ADD THIS
+//     setDateOnlySelected(true);
+//   } else {
+//     dateOnlySelectedRef.current = false;             // ← ADD THIS
+//     setDateOnlySelected(false);
+//   }
+//   followUpDT.handleDateTime(date);
+// };
+
+useEffect(() => {
+  formik.setFieldValue("found_date_time", null);
+  dateOnlySelectedRef.current = false;              // ← ADD THIS
+  setDateOnlySelected(false);
+}, [formik.values.club_id]);
 
   const handleFileChange = (e, formik) => {
     const file = e.target.files[0];
@@ -220,32 +311,32 @@ const AddNewItemModal = ({
 
                 {/* Image Upload */}
                 {editingOption ? null : (
-                <div>
-                  <label className="mb-2 block">
-                    Image<span className="text-red-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="file"
-                      name="image"
-                      // onChange={handleFileChange} // ✅ no value prop here
-                      onChange={(e) => handleFileChange(e, formik)}
-                      onBlur={() => formik.setFieldTouched("image", true)}
-                      className={`custom--input w-full ${
-                      editingOption
-                        ? "!bg-gray-100 pointer-events-none text-gray-500"
-                        : ""
-                    }`}
-                      disabled={editingOption}
-                    />
-                  </div>
-
-                  {formik.touched.image && formik.errors.image && (
-                    <div className="text-red-500 text-sm">
-                      {formik.errors.image}
+                  <div>
+                    <label className="mb-2 block">
+                      Image<span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="file"
+                        name="image"
+                        // onChange={handleFileChange} // ✅ no value prop here
+                        onChange={(e) => handleFileChange(e, formik)}
+                        onBlur={() => formik.setFieldTouched("image", true)}
+                        className={`custom--input w-full ${
+                          editingOption
+                            ? "!bg-gray-100 pointer-events-none text-gray-500"
+                            : ""
+                        }`}
+                        disabled={editingOption}
+                      />
                     </div>
-                  )}
-                </div>
+
+                    {formik.touched.image && formik.errors.image && (
+                      <div className="text-red-500 text-sm">
+                        {formik.errors.image}
+                      </div>
+                    )}
+                  </div>
                 )}
 
                 {/* Club Dropdown */}
@@ -374,7 +465,7 @@ const AddNewItemModal = ({
                     <span className="absolute z-[1] mt-[9px] ml-[15px]">
                       <FaCalendarDays />
                     </span>
-                    <DatePicker
+                    {/* <DatePicker
                       selected={followUpDT.selected}
                       onChange={followUpDT.handleDateTime}
                       onChangeRaw={followUpDT.handleChangeRaw}
@@ -383,16 +474,44 @@ const AddNewItemModal = ({
                       dateFormat={followUpDT.dateFormat}
                       placeholderText="Select date & time"
                       maxDate={now}
-                      filterTime={followUpFilterTime}
+                      maxTime={maxTime} // ✅ ADD THIS
+                      minTime={new Date(0, 0, 0, 0, 0)} // optional but safe
+                      filterTime={combinedFilterTime}
                       disabled={editingOption || formik.values.club_id === null}
                       className="border px-3 py-2 w-full input--icon"
+                      onKeyDown={(e) => e.preventDefault()}
+                    /> */}
+                    <DatePicker
+                      selected={followUpDT.selected}
+                      onChange={handleDateTimeChange}                   
+                      onChangeRaw={followUpDT.handleChangeRaw}
+                      showTimeSelect
+                      timeFormat="hh:mm aa"
+                      dateFormat={followUpDT.dateFormat}
+                      placeholderText="Select date & time"
+                      maxDate={now}
+                      maxTime={maxTime}
+                      minTime={new Date(0, 0, 0, 0, 0)}
+                      filterTime={combinedFilterTime}
+                      disabled={editingOption || formik.values.club_id === null}
+                      className="border px-3 py-2 w-full input--icon"
+                      onKeyDown={(e) => e.preventDefault()}
                     />
                   </div>
-                  {formik.touched.found_date_time &&
+                  {/* {formik.touched.found_date_time &&
                     formik.errors.found_date_time && (
                       <p className="text-sm text-red-500 mt-1">
                         {formik.errors.found_date_time}
                       </p>
+                    )} */}
+                    {dateOnlySelected ? (
+                      <p className="text-sm text-red-500 mt-1">Please select time as well</p>
+                    ) : (
+                      formik.touched.found_date_time && formik.errors.found_date_time && (
+                        <p className="text-sm text-red-500 mt-1">
+                          {formik.errors.found_date_time}
+                        </p>
+                      )
                     )}
                 </div>
                 <div>

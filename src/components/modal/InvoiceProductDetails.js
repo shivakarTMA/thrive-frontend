@@ -129,9 +129,9 @@ const InvoiceProductDetails = ({
               <div>
                 <span className="font-medium">Validity:</span> {product?.session_validity || "N/A"} days
               </div>
-              <div>
+              {/* <div>
                 <span className="font-medium">Earn Coins:</span> {product?.earn_coin || 0}
-              </div>
+              </div> */}
             </div>
 
             <div className="mt-3 pt-3 border-t flex items-center justify-between">

@@ -28,7 +28,7 @@ const payModeTypeOptions = [
   { value: "UPI", label: "UPI" },
   { value: "WALLET", label: "Wallet" },
   { value: "NET_BANKING", label: "Net Banking" },
-  { value: "COIN", label: "Coin" },
+  // { value: "COIN", label: "Coin" },
   { value: "OTHER", label: "Other" },
 ];
 

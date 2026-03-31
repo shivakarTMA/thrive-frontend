@@ -266,9 +266,9 @@ const PackagesList = () => {
         schema = {
           ...schema,
           buddy_pt: Yup.string().required("PT Type is required"),
-          earn_coin: Yup.number()
-            .typeError("Earn Coins must be a number")
-            .required("Earn Coins is required"),
+          // earn_coin: Yup.number()
+          //   .typeError("Earn Coins must be a number")
+          //   .required("Earn Coins is required"),
         };
       }
 
@@ -341,9 +341,9 @@ const PackagesList = () => {
               //   .required("GST is required")
               //   .min(2, "GST cannot be less than 2%")
               //   .max(40, "GST cannot be greater than 40%"),
-              earn_coin: Yup.number()
-                .typeError("Earn Coins must be a number")
-                .required("Earn Coins is required"),
+              // earn_coin: Yup.number()
+              //   .typeError("Earn Coins must be a number")
+              //   .required("Earn Coins is required"),
               position: Yup.number()
                 .typeError("Position must be a number")
                 .required("Position is required"),
@@ -475,8 +475,8 @@ const PackagesList = () => {
         setEditingOption(null);
         setShowModal(false);
       } catch (err) {
-        console.log(err);
-        toast.error(err.response?.data?.errors)
+        console.log(err.response?.data?.message);
+        toast.error(err.response?.data?.errors || err.response?.data?.message)
       }
     },
   });
@@ -496,7 +496,7 @@ const PackagesList = () => {
     fd.append("discount", variation.discount || "");
     fd.append("gst", variation.gst || "");
     fd.append("position", variation.position || "");
-    fd.append("earn_coin", variation.earn_coin || "");
+    // fd.append("earn_coin", variation.earn_coin || "");
 
     if (variation.image instanceof File) {
       fd.append("image", variation.image);
@@ -522,7 +522,7 @@ const PackagesList = () => {
     fd.append("discount", variation.discount || "");
     fd.append("gst", variation.gst || "");
     fd.append("position", variation.position || "");
-    fd.append("earn_coin", variation.earn_coin || "");
+    // fd.append("earn_coin", variation.earn_coin || "");
 
     if (variation.image instanceof File) {
       fd.append("image", variation.image);

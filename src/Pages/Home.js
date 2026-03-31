@@ -1113,22 +1113,24 @@ const Home = () => {
         </div>
       </div>
 
-      <div className="rounded-[15px] p-3 w-full mt-2 box--shadow bg-white">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="font-semibold">Pending Orders</h2>
-          <a
-            href={generateUrl(`/nourish-orders?`)}
-            className="text-[#009EB2] underline text-sm"
-          >
-            View All
-          </a>
+      {orders.length > 0 && (
+        <div className="rounded-[15px] p-3 w-full mt-2 box--shadow bg-white">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="font-semibold">Pending Orders</h2>
+            <a
+              href={generateUrl(`/nourish-orders?`)}
+              className="text-[#009EB2] underline text-sm"
+            >
+              View All
+            </a>
+          </div>
+          <PendingOrderTable
+            setOrders={setOrders}
+            orders={orders}
+            fetchOrders={fetchPendingOrdersData}
+          />
         </div>
-        <PendingOrderTable
-          setOrders={setOrders}
-          orders={orders}
-          fetchOrders={fetchPendingOrdersData}
-        />
-      </div>
+      )}
     </div>
   );
 };

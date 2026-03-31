@@ -245,9 +245,9 @@ const GroupClassesList = () => {
       }),
 
     max_capacity: Yup.string().required("Max Capacity is required"),
-    earn_coin: Yup.number()
-      .typeError("Earn Coins must be a number")
-      .required("Earn Coins is required"),
+    // earn_coin: Yup.number()
+    //   .typeError("Earn Coins must be a number")
+    //   .required("Earn Coins is required"),
     waitlist_capacity: Yup.string().required("Waitlist Capacity is required"),
     is_featured: Yup.string().required("Featured Event is required"),
 
@@ -376,7 +376,7 @@ const GroupClassesList = () => {
         setShowModal(false);
       } catch (err) {
         console.error("API Error:", err.response?.data?.errors);
-        toast.error(err.response?.data?.errors)
+        toast.error(err.response?.data?.errors || err.response?.data?.message)
       }
     },
   });

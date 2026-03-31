@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import Switch from "react-switch";
 import ConfirmPopup from "./common/ConfirmPopup";
-import { formatDateTimeLead, formatText } from "../Helper/helper";
+import { formatDateTimeLead, formatIndianNumber, formatText } from "../Helper/helper";
 import { authAxios } from "../config/config";
 
 const PendingOrderTable = ({ orders, fetchOrders }) => {
@@ -61,7 +61,7 @@ const PendingOrderTable = ({ orders, fetchOrders }) => {
             orders.slice(0, 5).map((order, index) => (
               <tr key={order.id} className="border-t">
                 <td className="p-2">
-                  {order?.order_id ? order?.order_id : "--"}
+                  {order?.order_no ? order?.order_no : "--"}
                 </td>
                 <td className="p-2">
                   {order?.createdAt
@@ -74,8 +74,8 @@ const PendingOrderTable = ({ orders, fetchOrders }) => {
                 <td className="p-2">
                   {order?.member_name ? order?.member_name : "--"}
                 </td>
-                <td className="p-2">{order?.name ? order?.name : "--"}</td>
-                <td className="p-2">₹{order?.booking_amount ?? 0}</td>
+                <td className="p-2">{order?.items_ordered ? order?.items_ordered : "--"}</td>
+                <td className="p-2">₹{formatIndianNumber(order?.total_amount) ?? 0}</td>
                 <td className="p-2">
                   {order?.payment_status
                     ? formatText(order?.payment_status)

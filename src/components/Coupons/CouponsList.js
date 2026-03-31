@@ -334,6 +334,7 @@ const CouponsList = () => {
       setOriginalApplicableRules([]);
     } catch (error) {
       console.error("API Error:", error.response?.data || error.message);
+      toast.error(error.response?.data?.errors || error.response?.data?.message)
     }
   },
 });
@@ -488,11 +489,11 @@ const CouponsList = () => {
                         <div className="w-fit">
                           <Tooltip
                             id={`tooltip-edit-${item?.id}`}
-                            content="Edit Coupon"
+                            content={`Edit Coupon ${item?.status === "EXPIRED" ? "(Disabled for expired coupons)" : ""}`}
                             place="left"
                           >
                             <div
-                              className="p-1 cursor-pointer"
+                              className={`p-1 cursor-pointer ${item?.status === "EXPIRED" ? "pointer-events-none opacity-50" : ""}`}
                               onClick={() => {
                                 setEditingOption(item?.id);
                                 setShowModal(true);
@@ -552,7 +553,13 @@ const CouponsList = () => {
 
       {showConfirmPopup && couponToDelete && (
         <ConfirmPopup
-          message={`Are you sure you want to delete <br /> "${couponToDelete?.code}"?`}
+          message={
+            <>
+              Are you sure you want to delete
+              <br />
+              "{couponToDelete?.code}"?
+            </>
+          }
           onConfirm={handleConfirmDelete}
           onCancel={handleCancelDelete}
         />

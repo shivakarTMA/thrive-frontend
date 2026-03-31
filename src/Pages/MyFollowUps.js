@@ -27,10 +27,7 @@ const dateFilterOptions = [
   { value: "custom", label: "Custom Date" },
 ];
 
-const formatDate = (date) => {
-  if (!date) return null;
-  return date.toISOString().split("T")[0]; // YYYY-MM-DD
-};
+const formatDate = (date) => format(date, "yyyy-MM-dd");
 
 const MyFollowUps = () => {
   const [myFollowUps, setMyFollowUps] = useState([]);

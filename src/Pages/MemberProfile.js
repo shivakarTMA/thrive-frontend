@@ -38,7 +38,7 @@ const MemberProfile = (props) => {
     "Training",
     "Kyc Submission",
     "Health Profile",
-    "Coins",
+    // "Coins",
   ];
 
   const fetchMemberById = async (memberId) => {
@@ -126,7 +126,7 @@ const MemberProfile = (props) => {
           {/* {activeTab === "Attendance" && <AttendanceData details={member} />} */}
           {activeTab === "Training" && <WorkoutApp member={member} />}
           {activeTab === "Health Profile" && <HealthProfile details={member} />}
-          {activeTab === "Coins" && <CoinsList details={member} />}
+          {/* {activeTab === "Coins" && <CoinsList details={member} />} */}
         </div>
       </div>
     </div>

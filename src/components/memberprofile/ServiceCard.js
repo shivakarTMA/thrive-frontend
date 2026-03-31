@@ -349,7 +349,7 @@ const ServiceCard = ({ details }) => {
               )}
               
 
-              <div
+              {/* <div
                 className="flex items-center bg-white rounded-full px-2 py-1 border-[#D4D4D4] border-[2px]"
                 onClick={() => setCoinsModal(true)}
               >
@@ -358,7 +358,7 @@ const ServiceCard = ({ details }) => {
                   {membershipData?.earn_coins}
                 </span>
                 <FaCirclePlus className="text-black text-2xl cursor-pointer" />
-              </div>
+              </div> */}
             </div>
           </div>
         </div>

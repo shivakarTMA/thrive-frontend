@@ -196,7 +196,7 @@ const ProductsList = () => {
           );
       }),
     stock_quantity: Yup.string().required("Stock Quantity is required"),
-    earn_coin: Yup.string().required("Thrive Coins is required"),
+    // earn_coin: Yup.string().required("Thrive Coins is required"),
     position: Yup.string().required("Position is required"),
 
     status: Yup.string().when("editingOption", {
@@ -276,8 +276,7 @@ const ProductsList = () => {
         fetchProductList();
       } catch (err) {
         console.error("API Error:", err.response?.data || err.message);
-        const message = err.response?.data?.message?.toLowerCase() || "";
-        toast.error(err.response?.data?.errors)
+        toast.error(err.response?.data?.errors || err.response?.data?.message)
       }
     },
   });

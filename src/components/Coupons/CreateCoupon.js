@@ -50,6 +50,7 @@ const CreateCoupon = ({
   const [subscriptions, setSubscriptions] = useState([]);
   const [packages, setPackages] = useState([]);
   const [products, setProducts] = useState([]);
+  const [checkCouponStatus, setCheckCouponStatus] = useState("");
 
   const [loadingLists, setLoadingLists] = useState({
     subscriptions: false,
@@ -192,6 +193,7 @@ useEffect(() => {
 
       if (data) {
         const couponData = data?.coupon || data;
+        setCheckCouponStatus(couponData?.status || "");
 
         const clubId = couponData?.club_id;
 
@@ -260,8 +262,6 @@ useEffect(() => {
   if (types.has("PRODUCT")) fetchProducts(clubId);
 }, [formik.values?.applicable_rules, formik.values?.coupon?.club_id]);
 
-console.log("subscriptions:", subscriptions);
-console.log("selected rule:", formik.values.applicable_rules);
 
   const addApplicableRule = () => {
     const current = Array.isArray(formik.values.applicable_rules)
@@ -567,13 +567,12 @@ console.log("selected rule:", formik.values.applicable_rules);
                         // onChange={formik.handleChange}
                         onKeyDown={blockNonLettersAndNumbers}
                         onChange={(e) => {
-                          const cleaned = sanitizeTextWithNumbers(
-                            e.target.value,
-                          );
-                          formik.setFieldValue("coupon.code", cleaned);
+                          const cleaned = sanitizeTextWithNumbers(e.target.value);
+                          const uppercased = cleaned.toUpperCase();
+                          formik.setFieldValue("coupon.code", uppercased);
                         }}
                         onBlur={formik.handleBlur}
-                        className="custom--input w-full input--icon"
+                        className="custom--input w-full input--icon uppercase"
                       />
                     </div>
                     {formik.touched.coupon?.code &&
@@ -1075,25 +1074,27 @@ console.log("selected rule:", formik.values.applicable_rules);
                   </div>
                 </div>
               </div>
-              <div className="flex gap-4 py-5 px-6 justify-end bg-white border-t rounded-b-[10px]">
-                <button
-                  type="button"
-                  onClick={() => {
-                    formik.resetForm();
-                    setShowModal(false);
-                  }}
-                  className="px-4 py-2 bg-transparent border border-gray-400 text-black rounded max-w-[150px] w-full"
-                >
-                  Cancel
-                </button>
+              {checkCouponStatus !== "EXPIRED" && (
+                <div className="flex gap-4 py-5 px-6 justify-end bg-white border-t rounded-b-[10px]">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      formik.resetForm();
+                      setShowModal(false);
+                    }}
+                    className="px-4 py-2 bg-transparent border border-gray-400 text-black rounded max-w-[150px] w-full"
+                  >
+                    Cancel
+                  </button>
 
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-black text-white rounded max-w-[150px] w-full"
-                >
-                  {editingOption ? "Update" : "Submit"}
-                </button>
-              </div>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 bg-black text-white rounded max-w-[150px] w-full"
+                  >
+                    {editingOption ? "Update" : "Submit"}
+                  </button>
+                </div>
+              )}
             </div>
           </form>
         </div>

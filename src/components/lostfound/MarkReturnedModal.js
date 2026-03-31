@@ -175,10 +175,11 @@ const MarkReturnedModal = ({ lostID, onClose, clubOptions, fetchLostFoundList })
 
       if (apiData.status === true && Array.isArray(apiData.data)) {
         const matchedMember = apiData.data.find(
-          (member) =>
-            String(member.mobile) === String(formik.values.mobile) &&
-            String(member.country_code) === String(formik.values.country_code)
-        );
+  (member) =>
+    String(member.mobile) === String(formik.values.mobile) &&
+    String(member.country_code) === String(formik.values.country_code) &&
+    String(member.club_id) === String(formik.values.club_id)
+);
 
         if (matchedMember) {
           formik.setFieldValue("claimant_name", matchedMember.full_name);
@@ -186,7 +187,7 @@ const MarkReturnedModal = ({ lostID, onClose, clubOptions, fetchLostFoundList })
           setMobileError("");
         } else {
           formik.setFieldValue("claimant_name", "");
-          setMobileError("User not registered");
+          setMobileError("Member not found with this number in the club");
         }
       }
     } catch (error) {

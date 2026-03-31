@@ -232,43 +232,51 @@ const AllLeads = () => {
   };
 
   // Fetch staff list from API
-  const fetchStaff = async () => {
-    try {
-      const requests = [authAxios().get("/staff/list?role=FOH")];
+const fetchStaff = async (clubId) => {
+  try {
+    const requests = [
+      authAxios().get("/staff/list", {
+        params: { role: "FOH", club_id: clubId },
+      }),
+    ];
 
-      if (
-        userRole === "CLUB_MANAGER" ||
-        userRole === "ADMIN" ||
-        userRole === "FOH"
-      ) {
-        requests.push(authAxios().get("/staff/list?role=CLUB_MANAGER"));
-      }
-
-      const responses = await Promise.all(requests);
-
-      let mergedData = [];
-
-      responses.forEach((res) => {
-        const role = res.config.url.includes("FOH") ? "FOH" : "CLUB_MANAGER";
-
-        const users = (res.data?.data || []).map((user) => ({
-          ...user,
-          role,
-        }));
-
-        mergedData.push(...users);
-      });
-
-      const uniqueData = Array.from(
-        new Map(mergedData.map((user) => [user.id, user])).values(),
+    if (
+      userRole === "CLUB_MANAGER" ||
+      userRole === "ADMIN" ||
+      userRole === "FOH"
+    ) {
+      requests.push(
+        authAxios().get("/staff/list", {
+          params: { role: "CLUB_MANAGER", club_id: clubId },
+        })
       );
-
-      const activeOnly = filterActiveItems(uniqueData);
-      setStaffList(activeOnly);
-    } catch (err) {
-      console.error(err);
     }
-  };
+
+    const responses = await Promise.all(requests);
+
+    let mergedData = [];
+
+    responses.forEach((res) => {
+      const role = res.config.params.role; // ✅ more reliable than URL.includes
+
+      const users = (res.data?.data || []).map((user) => ({
+        ...user,
+        role,
+      }));
+
+      mergedData.push(...users);
+    });
+
+    const uniqueData = Array.from(
+      new Map(mergedData.map((user) => [user.id, user])).values()
+    );
+
+    const activeOnly = filterActiveItems(uniqueData);
+    setStaffList(activeOnly);
+  } catch (err) {
+    console.error(err);
+  }
+};
 
   // Function to fetch club list
   const fetchClub = async (search = "") => {
@@ -294,9 +302,16 @@ const AllLeads = () => {
 
   // Initial load effect
   useEffect(() => {
-    fetchStaff();
     fetchClub();
   }, []);
+
+useEffect(() => {
+  if (clubFilter?.value) {
+    fetchStaff(clubFilter.value);
+  } else {
+    fetchStaff(); // fetch without club_id
+  }
+}, [clubFilter?.value]);
 
   const staffOptions = [
     {
@@ -761,7 +776,7 @@ const AllLeads = () => {
                               alt="assign"
                             />
                           </Tooltip>
-                          <Tooltip
+                          {/* <Tooltip
                             id={`tooltip-send-sms`}
                             content="Bulk Send SMS"
                             place="top"
@@ -771,7 +786,7 @@ const AllLeads = () => {
                               className="w-8 cursor-pointer"
                               onClick={() => handleCommunicate("sms")}
                             />
-                          </Tooltip>
+                          </Tooltip> */}
                           <Tooltip
                             id={`tooltip-send-mail`}
                             content="Bulk Send Mail"
@@ -957,7 +972,7 @@ const AllLeads = () => {
                                     >
                                       <div className="p-1 cursor-pointer">
                                         <Link
-                                          to={`/lead-follow-up/${row.id}`}
+                                          to={`/lead-follow-up/${row.id}?club_id=${row.club_id}`}
                                           className="p-0"
                                         >
                                           <MdCall className="text-[25px] text-black" />

@@ -251,7 +251,7 @@ const ChallengeList = () => {
         fetchChallengeList();
       } catch (error) {
         console.error("Error submitting form:", error.response || error);
-        toast.error(error.response?.data?.errors)
+        toast.error(error.response?.data?.errors || error.response?.data?.message)
 
       }
     },

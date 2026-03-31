@@ -282,7 +282,13 @@ const ExercisesList = () => {
       {/* Confirm Delete */}
       {showConfirmPopup && exerciseToDelete && (
         <ConfirmPopup
-          message={`Are you sure you want to delete <br /> "${exerciseToDelete?.name}"?`}
+          message={
+            <>
+              Are you sure you want to delete
+              <br />
+              "{exerciseToDelete?.name}"?
+            </>
+          }
           onConfirm={handleConfirmDelete}
           onCancel={handleCancelDelete}
         />
