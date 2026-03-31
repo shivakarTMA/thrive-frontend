@@ -466,18 +466,18 @@ export const sanitizeText = (value) => {
 
   return value
     .replace(/<[^>]*>?/gm, "") // remove HTML tags
-    .replace(/[^a-zA-Z\s&%()\/,.:!\-–—'₹]/g, "") // allow only safe characters
+    .replace(/[^a-zA-Z\s&%()\/,.:!\-–—'‘’₹]/g, "") // allow only safe characters
     .trim();
 };
 
 export const allowOnlyLetters = (value) => {
   if (!value) return "";
 
-  return value.replace(/[^a-zA-Z\s&%()\/,.:!\-–—'₹]/g, "");
+  return value.replace(/[^a-zA-Z\s&%()\/,.:!\-–—'‘’₹]/g, "");
 };
 
 export const blockNonLetters = (e) => {
-  const regex = /^[a-zA-Z\s&%()\/,.:!\-–—'₹]$/;
+  const regex = /^[a-zA-Z\s&%()\/,.:!\-–—'‘’₹]$/;
 
   const allowedKeys = [
     "Backspace",
@@ -499,7 +499,7 @@ export const sanitizeTextWithNumbers = (value) => {
 
   return value
     .replace(/<[^>]*>?/gm, "")
-    .replace(/[^a-zA-Z0-9\s&%()\/,.:!\-–—₹']/g, "") // space allowed
+    .replace(/[^a-zA-Z0-9\s&%()\/,.:!\-–—₹'‘’]/g, "") // space allowed
 };
 
 export const sanitizeTextWithNumbersFaq = (value) => {
@@ -507,17 +507,17 @@ export const sanitizeTextWithNumbersFaq = (value) => {
 
   return value
     .replace(/<[^>]*>?/gm, "")
-    .replace(/[^a-zA-Z0-9&%()\/,.:!\-–—'?₹]/g, ""); // space and ? allowed
+    .replace(/[^a-zA-Z0-9&%()\/,.:!\-–—'‘’?₹]/g, ""); // space and ? allowed
 };
 
 export const allowLettersAndNumbers = (value) => {
   if (!value) return "";
 
-  return value.replace(/[^a-zA-Z0-9 &%()\/,.:!\-–—'₹]/g, "");
+  return value.replace(/[^a-zA-Z0-9 &%()\/,.:!\-–—'‘’₹]/g, "");
 };
 
 export const blockNonLettersAndNumbers = (e) => {
-  const regex = /^[a-zA-Z0-9 &%()\/,.:!\-–—'₹]$/;
+  const regex = /^[a-zA-Z0-9 &%()\/,.:!\-–—'‘’₹]$/;
 
   const allowedKeys = [
     "Backspace",
@@ -535,7 +535,7 @@ export const blockNonLettersAndNumbers = (e) => {
 };
 
 export const blockNonLettersAndNumbersFaq = (e) => {
-  const regex = /^[a-zA-Z0-9 &%()\/,.:!\-–—'?₹]$/; // ? allowed
+  const regex = /^[a-zA-Z0-9 &%()\/,.:!\-–—'‘’?₹]$/; // ? allowed
 
   const allowedKeys = [
     "Backspace",
