@@ -41,7 +41,16 @@ DOMPurify.addHook("uponSanitizeAttribute", (node, data) => {
       "padding",
       "margin",
       "border",
+      "border-bottom",
+      "border-top",
+      "border-left",
+      "border-right",
       "border-collapse",
+      "width",
+      "height",
+      "list-style",
+      "list-style-type",
+      "list-style-position",
     ];
 
     data.attrValue.split(";").forEach((style) => {
@@ -146,6 +155,8 @@ const RichTextEditorClub = forwardRef(
 
         defaultActionOnPaste: "insert_as_html",
         askBeforePasteHTML: false,
+        askBeforePasteFromWord: false, // 🔥 ADD THIS
+        processPasteFromWord: false,   // 🔥 ADD THIS (optional but recommended)
         cleanHTML: {
           removeJavascript: true,
           removeTags: ["img"],
@@ -208,7 +219,7 @@ const RichTextEditorClub = forwardRef(
         ],
 
         ALLOWED_ATTR: [
-          "style","class","colspan","rowspan",
+          "border-bottom","border-top","border-left","border-right","style","class","colspan","rowspan",
           "align","width","height","border",
           "cellpadding","cellspacing","role",
           "alt","href","target","rel"

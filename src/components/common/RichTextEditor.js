@@ -38,9 +38,16 @@ DOMPurify.addHook("uponSanitizeAttribute", (node, data) => {
       "padding",
       "margin",
       "border",
+      "border-bottom",   // ✅ ADD THIS
+      "border-top",      // ✅ ADD THIS
+      "border-left",     // ✅ ADD THIS
+      "border-right",    // ✅ ADD THIS
       "border-collapse",
       "width",
       "height",
+      "list-style",
+      "list-style-type",
+      "list-style-position",
     ];
 
     const cleanStyle = [];
@@ -188,6 +195,8 @@ const RichTextEditor = forwardRef(
 
         defaultActionOnPaste: "insert_as_html",
         askBeforePasteHTML: false,
+        askBeforePasteFromWord: false, // 🔥 ADD THIS
+        processPasteFromWord: false,   // 🔥 ADD THIS (optional but recommended)
         cleanHTML: {
           removeJavascript: true,
         },
@@ -252,13 +261,17 @@ const RichTextEditor = forwardRef(
         ],
 
         ALLOWED_ATTR: [
-          "style",
+          "border-bottom","border-top","border-left","border-right","style",
           "colspan",
           "rowspan",
           "align",
           "width",
           "height",
           "border",
+          "border-bottom",
+          "border-top",
+          "border-left",
+          "border-right",
           "cellpadding",
           "cellspacing",
           "role", // ✅ keep this
