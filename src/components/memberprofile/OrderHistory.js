@@ -107,6 +107,7 @@ const OrderHistory = ({ details }) => {
               <th className="border px-3 py-2">Name</th>
               <th className="border px-3 py-2">Method</th>
               <th className="border px-3 py-2">Payment</th>
+              <th className="border px-3 py-2">Fulfilment Status</th>
               <th className="border px-3 py-2">Amount</th>
             </tr>
           </thead>
@@ -132,6 +133,9 @@ const OrderHistory = ({ details }) => {
                   </td>
                   <td className="border px-3 py-2">
                     {formatText(order?.payment_status)}
+                  </td>
+                  <td className="border px-3 py-2">
+                    {order?.fulfilment_status ? formatText(order?.fulfilment_status) : "--"}
                   </td>
                   <td className="border px-3 py-2">₹{formatIndianNumber(order?.total_amount)}</td>
                 </tr>

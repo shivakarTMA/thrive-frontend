@@ -468,7 +468,14 @@ const StaffList = () => {
                     key={row?.id}
                     className="group bg-white border-b hover:bg-gray-50 transition duration-700"
                   >
-                    <td className="px-2 py-4">{row?.name}</td>
+                    <td className="px-2 py-4">
+                      {row?.name}
+
+                      {row?.role === "TRAINER" && (
+                        <span className="font-semibold text-sm block mt-2">Rating : {row?.rating}</span>
+                      )}
+
+                    </td>
                     {currentUserRole === "ADMIN" && (
                       <td className="px-2 py-4">{row?.mobile}</td>
                     )}

@@ -70,14 +70,10 @@ const InvoiceModal = ({ isOpen, onClose, data }) => {
             </div>
             <div className="text-right text-sm space-y-1">
               <p>
-                <strong>Company Name:</strong> {data.club_name}
+                <strong>Company Name:</strong> {data.company_name}
               </p>
-              <p className="mb-4">
-                <strong>Company Address:</strong> {data.club_address}
-                <br />
-                {data.club_city}, {data.club_state} - {data.club_zipcode}
-                <br />
-                {data.club_country}
+              <p className="!mb-4">
+                <strong>Company Address:</strong> {data.company_address}
               </p>
               <p>
                 <strong>Site Name:</strong> {data.club_name}
@@ -211,7 +207,7 @@ const InvoiceModal = ({ isOpen, onClose, data }) => {
           {/* Terms & Conditions */}
           <div className="border rounded-md mb-5 p-5">
             <p className="mb-1 text-sm text-center">
-                If you have any questions about this bill, please contact Mail : <a href="mailto:thrive@dlf.in">thrive@dlf.in</a>, Phone : 84482 85864
+                If you have any questions about this bill, please contact Mail : <a href={`mailto:${data.email}`}>{data.email}</a>, Phone : +91 {data.phone}
               </p>
             <p className="mb-1 text-lg font-[600] text-center">
                 Thank You For Your Business!

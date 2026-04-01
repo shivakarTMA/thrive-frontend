@@ -3,7 +3,7 @@ import { IoCloseCircle } from "react-icons/io5";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import ProductModal from "../components/modal/ProductDetails";
-import { customStyles, formatText, selectIcon } from "../Helper/helper";
+import { customStyles, formatIndianNumber, formatText, selectIcon } from "../Helper/helper";
 import Select from "react-select";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -263,9 +263,9 @@ const MemberSendPaymentLink = ({
     const gstPercent = Number(product.gst) || 0;
 
     // Base calculation
-    const totalAmount = amount - discount;
-    const gstAmount = (totalAmount * gstPercent) / 100;
-    const finalAmount = totalAmount + gstAmount;
+    const totalAmount = Number(product.total_amount) || 0;
+    const gstAmount = Number(product.gst_amount) || 0;
+    const finalAmount = Number(product.final_amount) || 0;
 
     // 🔥 Reset coupon when product changes
     resetVoucher();
@@ -327,7 +327,7 @@ const MemberSendPaymentLink = ({
       const gstPercent = Number(formik.values.productDetails?.gst) || 0;
 
       const discountedTotal = totalAmount - couponDiscount;
-      const gstAmount = (discountedTotal * gstPercent) / 100;
+      const gstAmount = Math.round((discountedTotal * gstPercent) / 100);
       const finalAmount = discountedTotal + gstAmount;
 
       setSelectedVoucher(data);
@@ -553,11 +553,11 @@ const MemberSendPaymentLink = ({
                         Total:{" "}
                         <span className="font-bold flex items-center gap-2">
                           <del className="text-gray-500 text-sm">
-                            ₹{formik.values.productDetails?.amount ?? 0}
+                            ₹{formatIndianNumber(formik.values.productDetails?.amount) ?? 0}
                           </del>{" "}
                           <span>
                             {" "}
-                            ₹{formik.values.productDetails?.total_amount ?? 0}
+                            ₹{formatIndianNumber(formik.values.productDetails?.total_amount) ?? 0}
                           </span>
                         </span>
                       </p>
@@ -566,7 +566,7 @@ const MemberSendPaymentLink = ({
                       <p className="flex items-center gap-2 justify-between mb-2 border-b pb-2">
                         Discount Code Applied:{" "}
                         <span className="font-bold">
-                          ₹{formik.values.discountAmount ?? 0}
+                          ₹{formatIndianNumber(formik.values.discountAmount) ?? 0}
                         </span>
                       </p>
                     </div>
@@ -574,7 +574,7 @@ const MemberSendPaymentLink = ({
                       <p className="flex items-center gap-2 justify-between mb-2 border-b pb-2">
                         GST:{" "}
                         <span className="font-bold">
-                          ₹{formik.values.productDetails?.gst_amount ?? 0}
+                          ₹{formatIndianNumber(formik.values.productDetails?.gst_amount) ?? 0}
                         </span>
                       </p>
                     </div>
@@ -582,7 +582,7 @@ const MemberSendPaymentLink = ({
                       <p className="flex items-center gap-2 justify-between mb-2 border-b pb-2">
                         Grand Total:{" "}
                         <span className="font-bold">
-                          ₹{formik.values.final_amount ?? 0}
+                          ₹{formatIndianNumber(formik.values.final_amount) ?? 0}
                         </span>
                       </p>
                     </div>
@@ -590,7 +590,7 @@ const MemberSendPaymentLink = ({
                   <p className="text-2xl font-semibold flex items-center gap-2 justify-between pb-2">
                     To Pay:{" "}
                     <span className="font-bold">
-                      ₹{formik.values.amount_pay ?? 0}
+                      ₹{formatIndianNumber(formik.values.amount_pay) ?? 0}
                     </span>
                   </p>
                 </div>

@@ -108,6 +108,7 @@ const ProfileDetails = ({ member }) => {
     company_name: "",
     designation: "",
     official_email: "",
+    general_trainer_id: "",
     interested_in: [],
   });
 
@@ -267,6 +268,7 @@ const ProfileDetails = ({ member }) => {
           company_name: data?.company_name || "",
           designation: data?.designation || "",
           official_email: data?.official_email || "",
+          general_trainer_id: data?.general_trainer_id || "",
           interested_in: Array.isArray(data?.interested_in)
             ? data.interested_in
             : [],
@@ -1121,15 +1123,15 @@ const ProfileDetails = ({ member }) => {
                     General Trainer
                   </label>
                   <Select
-                    name="gt"
+                    name="general_trainer_id"
                     value={
                       trainerList.find(
-                        (opt) => opt.value === formik.values?.gt,
+                        (opt) => opt.value === formik.values?.general_trainer_id,
                       ) || null
                     }
                     options={trainerList}
                     onChange={(option) =>
-                      formik.setFieldValue("gt", option.value)
+                      formik.setFieldValue("general_trainer_id", option.value)
                     }
                     placeholder="Select Trainer"
                     styles={customStyles}

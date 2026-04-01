@@ -10,6 +10,7 @@ import {
   blockInvalidNumberKeys,
   blockNonLetters,
   blockNonLettersAndNumbers,
+  formatIndianNumber,
   formatText,
   sanitizePositiveInteger,
   sanitizeTextWithNumbers,
@@ -305,14 +306,12 @@ const ConvertMemberForm = ({
       await authAxios().put(
         `/member/convert/lead/${selectedLeadMember}`,
         formData,
-        { headers: { "Content-Type": "multipart/form-data" } }
+        { headers: { "Content-Type": "multipart/form-data" } },
       );
 
       return true;
     } catch (error) {
-      toast.error(
-        error.response?.data?.message || "Something went wrong"
-      );
+      toast.error(error.response?.data?.message || "Something went wrong");
       return false;
     }
   };
@@ -383,7 +382,7 @@ const ConvertMemberForm = ({
               member_id: selectedLeadMember,
             };
 
-            // console.log("paymentPayload", paymentPayload);
+            console.log("paymentPayload", paymentPayload);
 
             const res = await authAxios().post(
               "/payment/proceed",
@@ -405,7 +404,9 @@ const ConvertMemberForm = ({
           onLeadUpdate();
         } catch (error) {
           console.log(error, "error");
-          toast.error(error.response?.data?.errors || error.response?.data?.message);
+          toast.error(
+            error.response?.data?.errors || error.response?.data?.message,
+          );
         }
       } else {
         setStep(step + 1);
@@ -601,40 +602,6 @@ const ConvertMemberForm = ({
     setShowModal(false);
   };
 
-  // const handleNextStep = async () => {
-  //   const errors = await formik.validateForm();
-
-  //   if (Object.keys(errors).length === 0) {
-  //     if (duplicateError) {
-  //       setShowDuplicateModal(true);
-  //       return;
-  //     }
-
-  //     if (step === stepValidationSchemas.length - 1) {
-  //       formik.handleSubmit();
-  //     } else {
-  //       setStep((prev) => prev + 1);
-  //     }
-  //   } else {
-  //     // Mark all nested fields as touched
-  //     const markTouched = (obj) => {
-  //       if (Array.isArray(obj)) return obj.map((item) => markTouched(item));
-  //       else if (typeof obj === "object" && obj !== null) {
-  //         const touchedObj = {};
-  //         Object.keys(obj).forEach((key) => {
-  //           touchedObj[key] = markTouched(obj[key]);
-  //         });
-  //         return touchedObj;
-  //       } else return true;
-  //     };
-
-  //     const touchedFields = markTouched(errors);
-  //     formik.setTouched(touchedFields);
-  //     console.log("Validation errors:", errors);
-  //     return { errors, touched: touchedFields };
-  //   }
-  // };
-
   const handleNextStep = async () => {
     const errors = await formik.validateForm();
 
@@ -644,33 +611,67 @@ const ConvertMemberForm = ({
         return;
       }
 
-      // ✅ CALL API ON EVERY STEP
-      const isSuccess = await convertLeadAPI(formik.values);
-
-      if (!isSuccess) return;
-
       if (step === stepValidationSchemas.length - 1) {
-        formik.handleSubmit(); // payment flow
+        formik.handleSubmit();
       } else {
         setStep((prev) => prev + 1);
       }
     } else {
+      // Mark all nested fields as touched
       const markTouched = (obj) => {
-        if (Array.isArray(obj)) return obj.map(markTouched);
-        if (typeof obj === "object") {
+        if (Array.isArray(obj)) return obj.map((item) => markTouched(item));
+        else if (typeof obj === "object" && obj !== null) {
           const touchedObj = {};
           Object.keys(obj).forEach((key) => {
             touchedObj[key] = markTouched(obj[key]);
           });
           return touchedObj;
-        }
-        return true;
+        } else return true;
       };
 
-      formik.setTouched(markTouched(errors));
+      const touchedFields = markTouched(errors);
+      formik.setTouched(touchedFields);
+      console.log("Validation errors:", errors);
+      return { errors, touched: touchedFields };
     }
   };
-  
+
+  // const handleNextStep = async () => {
+  //   const errors = await formik.validateForm();
+
+  //   if (Object.keys(errors).length === 0) {
+  //     if (duplicateError) {
+  //       setShowDuplicateModal(true);
+  //       return;
+  //     }
+
+  //     // ✅ CALL API ON EVERY STEP
+  //     const isSuccess = await convertLeadAPI(formik.values);
+
+  //     if (!isSuccess) return;
+
+  //     if (step === stepValidationSchemas.length - 1) {
+  //       formik.handleSubmit(); // payment flow
+  //     } else {
+  //       setStep((prev) => prev + 1);
+  //     }
+  //   } else {
+  //     const markTouched = (obj) => {
+  //       if (Array.isArray(obj)) return obj.map(markTouched);
+  //       if (typeof obj === "object") {
+  //         const touchedObj = {};
+  //         Object.keys(obj).forEach((key) => {
+  //           touchedObj[key] = markTouched(obj[key]);
+  //         });
+  //         return touchedObj;
+  //       }
+  //       return true;
+  //     };
+
+  //     formik.setTouched(markTouched(errors));
+  //   }
+  // };
+
   const handleProductSubmit = (product) => {
     // Convert to numbers safely
     const amount = Number(product.amount) || 0;
@@ -678,9 +679,9 @@ const ConvertMemberForm = ({
     const gstPercent = Number(product.gst) || 0;
 
     // Base calculation
-    const totalAmount = amount - discount;
-    const gstAmount = (totalAmount * gstPercent) / 100;
-    const finalAmount = totalAmount + gstAmount;
+    const totalAmount = Number(product.total_amount) || 0;
+    const gstAmount = Number(product.gst_amount) || 0;
+    const finalAmount = Number(product.final_amount) || 0;
 
     // 🔥 Reset coupon when product changes
     setVoucherInput("");
@@ -743,7 +744,7 @@ const ConvertMemberForm = ({
       const gstPercent = Number(formik.values.productDetails?.gst) || 0;
 
       const discountedTotal = totalAmount - couponDiscount;
-      const gstAmount = (discountedTotal * gstPercent) / 100;
+      const gstAmount = Math.round((discountedTotal * gstPercent) / 100);
       const finalAmount = discountedTotal + gstAmount;
 
       setVoucherStatus("success");
@@ -1166,7 +1167,9 @@ const ConvertMemberForm = ({
                                 // onChange={formik.handleChange}
                                 onKeyDown={blockNonLetters}
                                 onChange={(e) => {
-                                  const cleaned = allowOnlyLetters(e.target.value);
+                                  const cleaned = allowOnlyLetters(
+                                    e.target.value,
+                                  );
                                   formik.setFieldValue("full_name", cleaned);
                                 }}
                                 className="custom--input w-full input--icon"
@@ -1344,7 +1347,9 @@ const ConvertMemberForm = ({
                                 // onChange={formik.handleChange}
                                 onKeyDown={blockNonLettersAndNumbers}
                                 onChange={(e) => {
-                                  const cleaned = sanitizeTextWithNumbers(e.target.value);
+                                  const cleaned = sanitizeTextWithNumbers(
+                                    e.target.value,
+                                  );
                                   formik.setFieldValue("address", cleaned);
                                 }}
                                 className="custom--input w-full"
@@ -1525,7 +1530,9 @@ const ConvertMemberForm = ({
                               value={formik.values?.designation}
                               onKeyDown={blockNonLetters}
                               onChange={(e) => {
-                                const cleaned = allowOnlyLetters(e.target.value);
+                                const cleaned = allowOnlyLetters(
+                                  e.target.value,
+                                );
                                 formik.setFieldValue("designation", cleaned);
                               }}
                               // onChange={formik.handleChange}
@@ -1618,8 +1625,13 @@ const ConvertMemberForm = ({
                                   // onChange={formik.handleChange}
                                   onKeyDown={blockNonLetters}
                                   onChange={(e) => {
-                                    const cleaned = allowOnlyLetters(e.target.value);
-                                    formik.setFieldValue(`member_emergency_contact.${index}.name`, cleaned);
+                                    const cleaned = allowOnlyLetters(
+                                      e.target.value,
+                                    );
+                                    formik.setFieldValue(
+                                      `member_emergency_contact.${index}.name`,
+                                      cleaned,
+                                    );
                                   }}
                                   className="custom--input w-full input--icon"
                                 />
@@ -1650,7 +1662,12 @@ const ConvertMemberForm = ({
                                 onChange={(value) =>
                                   handleEmergancyPhone(value, index)
                                 } // Ensure this function handles formik update
-                                onBlur={() => formik.setFieldTouched(`member_emergency_contact.${index}.phone`, true)}
+                                onBlur={() =>
+                                  formik.setFieldTouched(
+                                    `member_emergency_contact.${index}.phone`,
+                                    true,
+                                  )
+                                }
                                 international
                                 defaultCountry="IN"
                                 countryCallingCodeEditable={false}
@@ -1976,12 +1993,12 @@ const ConvertMemberForm = ({
                               Total:{" "}
                               <span className="font-bold flex items-center gap-2">
                                 <del className="text-gray-500 text-sm">
-                                  ₹{formik.values.productDetails?.amount ?? 0}
+                                  ₹{formatIndianNumber(formik.values.productDetails?.amount) ?? 0}
                                 </del>{" "}
                                 <span>
                                   {" "}
                                   ₹
-                                  {formik.values.productDetails?.total_amount ??
+                                  {formatIndianNumber(formik.values.productDetails?.total_amount) ??
                                     0}
                                 </span>
                               </span>
@@ -1991,7 +2008,7 @@ const ConvertMemberForm = ({
                             <p className="flex items-center gap-2 justify-between mb-2 border-b pb-2">
                               Discount Code Applied:{" "}
                               <span className="font-bold">
-                                ₹{formik.values.discountAmount ?? 0}
+                                ₹{formatIndianNumber(formik.values.discountAmount) ?? 0}
                               </span>
                             </p>
                           </div>
@@ -1999,7 +2016,10 @@ const ConvertMemberForm = ({
                             <p className="flex items-center gap-2 justify-between mb-2 border-b pb-2">
                               GST:{" "}
                               <span className="font-bold">
-                                ₹{formik.values.productDetails?.gst_amount ?? 0}
+                                ₹
+                                {formatIndianNumber(
+                                  formik.values.productDetails?.gst_amount,
+                                ) ?? 0}
                               </span>
                             </p>
                           </div>
@@ -2007,7 +2027,10 @@ const ConvertMemberForm = ({
                             <p className="flex items-center gap-2 justify-between mb-2 border-b pb-2">
                               Grand Total:{" "}
                               <span className="font-bold">
-                                ₹{formik.values.final_amount ?? 0}
+                                ₹
+                                {formatIndianNumber(
+                                  formik.values.final_amount,
+                                ) ?? 0}
                               </span>
                             </p>
                           </div>
@@ -2015,7 +2038,7 @@ const ConvertMemberForm = ({
                         <p className="text-2xl font-semibold flex items-center gap-2 justify-between pb-2">
                           To Pay:{" "}
                           <span className="font-bold">
-                            ₹{formik.values.amount_pay ?? 0}
+                            ₹{formatIndianNumber(formik.values.amount_pay) ?? 0}
                           </span>
                         </p>
                       </div>
