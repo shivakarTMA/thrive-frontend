@@ -103,6 +103,8 @@ const CreateLeadForm = ({
   const [showDuplicateEmailModal, setShowDuplicateEmailModal] = useState(false);
   const [companyOptions, setCompanyOptions] = useState([]);
 
+  const [bookedSlots, setBookedSlots] = useState([]);
+
   const [club, setClub] = useState([]);
   const [staffList, setStaffList] = useState([]);
 
@@ -328,6 +330,71 @@ const CreateLeadForm = ({
     fetchLeadById(selectedLead);
   }, [selectedLead]);
 
+  const clubId = formik.values.club_id;
+
+  // Fetch Triner and FOH staff based
+  const fetchTrainerBookedSlots = async (trainerId) => {
+
+    if (!trainerId || !clubId) {
+      setBookedSlots([]);
+      return;
+    }
+    try {
+      const res = await authAxios().post("/appointment/trainer/booked/slot", {
+        club_id: clubId,
+        trainer_id: trainerId,
+      });
+      setBookedSlots(res.data?.availability || []);
+    } catch (err) {
+      console.error("Trainer slot fetch error:", err);
+      setBookedSlots([]);
+    }
+  };
+
+  const getExcludeTimesForDate = (date) => {
+    if (!date || !bookedSlots.length) return [];
+  
+    const dateStr = new Date(date).toISOString().split("T")[0];
+    const matchedDay = bookedSlots.find((item) => item.date === dateStr);
+    if (!matchedDay) return [];
+  
+    return [...new Set(matchedDay.slots)].map((timeStr) => {
+      const [hours, minutes] = timeStr.split(":").map(Number);
+      const d = new Date(date); // ← use actual picked date, NOT new Date()
+      d.setHours(hours, minutes, 0, 0);
+      return d;
+    });
+  };
+  
+  const getExcludeTimes = () => getExcludeTimesForDate(formik.values.schedule_date_time);
+  
+  const getFirstAvailableTime = (date) => {
+    let suggested = datePickerProps.getDefaultTimeForDate(date);
+    if (!suggested) return null;
+  
+    const excludedTimes = getExcludeTimesForDate(date);
+    const interval = datePickerProps.timeIntervals; // ← dynamic from hook
+    
+    // ── Compare only HH:MM to avoid date mismatch with maxTime (which is today's Date) ──
+    const toMins = (d) => d.getHours() * 60 + d.getMinutes();
+    const maxMins = toMins(datePickerProps.maxTime);
+  
+    while (toMins(suggested) <= maxMins) {
+      const suggestedMins = toMins(suggested);
+  
+      const isExcluded = excludedTimes.some(
+        (excluded) => toMins(excluded) === suggestedMins
+      );
+  
+      if (!isExcluded) return suggested; // ✅ free slot found
+  
+      // Advance by one interval
+      suggested = new Date(suggested.getTime() + interval * 60 * 1000);
+    }
+  
+    return null; // all slots blocked for this date
+  };
+
   // Fetch companies
   // ✅ Fetch companies (only ACTIVE ones)
   const fetchCompanies = async (search = "") => {
@@ -366,25 +433,34 @@ const CreateLeadForm = ({
     }
   };
 
-  // 🚀 Fetch staff list from API
   const fetchStaff = async () => {
     try {
       const schedule = formik.values?.schedule;
+      const selectedClubId = formik.values?.club_id;
 
-      let url = "/staff/list?role=TRAINER";
+      let url = `/staff/list?club_id=${selectedClubId}&role=TRAINER`;
 
       if (schedule === "TOUR") {
-        url = "/staff/list?role=TRAINER&role=FOH";
+        url = `/staff/list?club_id=${selectedClubId}&role=TRAINER&role=FOH`;
       } else if (schedule === "TRIAL") {
-        url = "/staff/list?role=TRAINER";
+        url = `/staff/list?club_id=${selectedClubId}&role=TRAINER`;
       }
 
       const res = await authAxios().get(url);
 
-      // ✅ FILTER ACTIVE STAFF HERE
-      const staff = (res.data?.data || []).filter(
-        (item) => String(item?.status).toUpperCase() === "ACTIVE",
-      );
+      // ✅ FILTER ACTIVE + CLUB MATCH
+      const staff = (res.data?.data || []).filter((item) => {
+        const isActive =
+          String(item?.status).toUpperCase() === "ACTIVE";
+
+        const matchesClub = selectedClubId
+          ? item?.staff_clubs?.some(
+              (club) => Number(club.club_id) === Number(selectedClubId)
+            )
+          : true;
+
+        return isActive && matchesClub;
+      });
 
       const foh = staff
         .filter((item) => item.role === "FOH")
@@ -436,11 +512,15 @@ const CreateLeadForm = ({
   // Function to fetch role list
 
   // Initial load effect
-  useEffect(() => {
-    fetchCompanies();
-    fetchStaff();
-    fetchClub();
-  }, [formik.values.schedule]);
+useEffect(() => {
+  fetchCompanies();
+  fetchStaff();
+  fetchClub();
+}, [formik.values.schedule, formik.values.club_id]);
+
+useEffect(() => {
+  formik.setFieldValue("assigned_staff_id", null);
+}, [formik.values.club_id]);
 
   // Club dropdown options
   const clubOptions =
@@ -1184,78 +1264,6 @@ const CreateLeadForm = ({
                             </div>
                           </div>
 
-                          {/* Date & Time Picker */}
-                          <div>
-                            <label className="mb-2 block">
-                              Date & Time
-                              {formik.values.schedule === "TRIAL" ||
-                              formik.values.schedule === "TOUR" ? (
-                                <span className="text-red-500">*</span>
-                              ) : (
-                                ""
-                              )}
-                            </label>
-                            <div className="custom--date flex-1">
-                              <span className="absolute z-[1] mt-[9px] ml-[15px]">
-                                <FaCalendarDays />
-                              </span>
-                              <DatePicker
-                                selected={
-                                  formik.values.schedule_date_time
-                                    ? new Date(formik.values.schedule_date_time)
-                                    : null
-                                }
-                                onChange={(date) => {
-                                  if (!date) {
-                                    formik.setFieldValue(
-                                      "schedule_date_time",
-                                      null,
-                                    );
-                                    return;
-                                  }
-
-                                  const prev = formik.values.schedule_date_time;
-                                  const isSameDay =
-                                    prev &&
-                                    new Date(prev).toDateString() ===
-                                      new Date(date).toDateString();
-
-                                  if (isSameDay) {
-                                    // ✅ User changed time — accept exactly what they picked
-                                    formik.setFieldValue(
-                                      "schedule_date_time",
-                                      date,
-                                    );
-                                  } else {
-                                    // ✅ User picked a new date — auto-select first valid grid slot
-                                    const dateWithTime =
-                                      datePickerProps.getDefaultTimeForDate(
-                                        date,
-                                      );
-                                    // null means today has no slots left (shouldn't reach here due to minDate)
-                                    formik.setFieldValue(
-                                      "schedule_date_time",
-                                      dateWithTime ?? null,
-                                    );
-                                  }
-                                }}
-                                {...datePickerProps}
-                                placeholderText="Select date & time"
-                                className="border px-3 py-2 w-full input--icon"
-                                disabled={
-                                  !formik.values.schedule ||
-                                  formik.values.schedule === "NOTRIAL"
-                                }
-                              />
-                            </div>
-                            {formik.touched.schedule_date_time &&
-                              formik.errors.schedule_date_time && (
-                                <p className="text-sm text-red-500 mt-1">
-                                  {formik.errors.schedule_date_time}
-                                </p>
-                              )}
-                          </div>
-
                           {/* Trainer */}
                           <div className="mb-4">
                             <label className="mb-2 block">
@@ -1288,16 +1296,21 @@ const CreateLeadForm = ({
                                     ) || null
                                 }
                                 options={staffList} // grouped options
-                                onChange={(value) =>
-                                  formik.setFieldValue(
-                                    "assigned_staff_id",
-                                    value?.value,
-                                  )
-                                }
+                                // onChange={(value) =>
+                                //   formik.setFieldValue(
+                                //     "assigned_staff_id",
+                                //     value?.value,
+                                //   )
+                                // }
+                                onChange={(selectedOption) => {
+                                  formik.setFieldValue("assigned_staff_id", selectedOption?.value || null);
+                                  formik.setFieldValue("schedule_date_time", ""); // reset date on trainer change
+                                  fetchTrainerBookedSlots(selectedOption?.value); // ← NEW
+                                }}
                                 placeholder="Select staff"
                                 styles={selectIcon}
                                 isDisabled={
-                                  !formik.values.schedule ||
+                                  !formik.values.schedule || !formik.values.club_id ||
                                   formik.values.schedule === "NOTRIAL"
                                 }
                               />
@@ -1317,6 +1330,63 @@ const CreateLeadForm = ({
                                 </p>
                               )} */}
                           </div>
+
+                          {/* Date & Time Picker */}
+                          <div>
+                            <label className="mb-2 block">
+                              Date & Time
+                              {formik.values.schedule === "TRIAL" ||
+                              formik.values.schedule === "TOUR" ? (
+                                <span className="text-red-500">*</span>
+                              ) : (
+                                ""
+                              )}
+                            </label>
+                            <div className="custom--date flex-1">
+                              <span className="absolute z-[1] mt-[9px] ml-[15px]">
+                                <FaCalendarDays />
+                              </span>
+                              <DatePicker
+                                selected={formik.values.schedule_date_time}
+                                onChange={(date) => {
+                                  if (!date) {
+                                    formik.setFieldValue("schedule_date_time", null);
+                                    return;
+                                  }
+
+                                  const prev = formik.values.schedule_date_time;
+                                  const isSameDay =
+                                    prev &&
+                                    new Date(prev).toDateString() === new Date(date).toDateString();
+
+                                  if (isSameDay) {
+                                    // User changed time manually — accept as-is
+                                    formik.setFieldValue("schedule_date_time", date);
+                                  } else {
+                                    // ── UPDATED: use getFirstAvailableTime instead of getDefaultTimeForDate ──
+                                    const dateWithTime = getFirstAvailableTime(date);
+                                    formik.setFieldValue("schedule_date_time", dateWithTime ?? null);
+                                  }
+                                }}
+                                {...datePickerProps}
+                                excludeTimes={getExcludeTimes()}
+                                onKeyDown={(e) => {
+                                  e.preventDefault();
+                                }}
+                                disabled={!formik.values.assigned_staff_id} // ← NEW
+                                placeholderText="Select date & time"
+                                className="border px-3 py-2 w-full input--icon"
+                              />
+                            </div>
+                            {formik.touched.schedule_date_time &&
+                              formik.errors.schedule_date_time && (
+                                <p className="text-sm text-red-500 mt-1">
+                                  {formik.errors.schedule_date_time}
+                                </p>
+                              )}
+                          </div>
+
+                          
                         </div>
                       </div>
                     </>

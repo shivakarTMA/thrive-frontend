@@ -125,7 +125,7 @@ const LeadCallLogs = () => {
   const { id: leadId } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
-  
+
   const logId = searchParams.get("logId");
   const clubIdFromParams = searchParams.get("club_id");
 
@@ -137,6 +137,10 @@ const LeadCallLogs = () => {
   const [staffList, setStaffList] = useState([]);
   const [editLog, setEditLog] = useState(null);
   const [clubData, setClubData] = useState(null);
+
+  const clubId = clubIdFromParams || clubData; // ✅ fallback to API club
+  const [trainerBookedSlots, setTrainerBookedSlots] = useState([]);
+  const [scheduleBookedSlots, setScheduleBookedSlots] = useState([]);
 
   // Redux state
   const dispatch = useDispatch();
@@ -258,11 +262,6 @@ const LeadCallLogs = () => {
     }
   };
 
-  // Staff select -> just the value/id
-  const handleSelectSchedule = (_, selectedOption) => {
-    formik.setFieldValue("training_by", selectedOption?.value ?? "");
-  };
-
   const now = new Date();
 
   useEffect(() => {
@@ -293,20 +292,97 @@ const LeadCallLogs = () => {
     }
   }, [editLog]);
 
+  const fetchTrainerBookedSlots = async (trainerId) => {
+  if (!trainerId || !clubId) {
+    setTrainerBookedSlots([]);
+    return;
+  }
+
+  try {
+    const res = await authAxios().post("/appointment/trainer/booked/slot", {
+      club_id: clubId,
+      trainer_id: trainerId,
+    });
+
+    setTrainerBookedSlots(res.data?.availability || []);
+  } catch (err) {
+    console.error(err);
+    setTrainerBookedSlots([]);
+  }
+};
+
+const fetchScheduleBookedSlots = async (staffId) => {
+  if (!staffId || !clubId) {
+    setScheduleBookedSlots([]);
+    return;
+  }
+
+  try {
+    const res = await authAxios().post("/appointment/trainer/booked/slot", {
+      club_id: clubId,
+      trainer_id: staffId, // same API used for FOH too
+    });
+
+    setScheduleBookedSlots(res.data?.availability || []);
+  } catch (err) {
+    console.error(err);
+    setScheduleBookedSlots([]);
+  }
+};
+  
+  
+const getExcludeTimesForDate = (date, slots) => {
+  if (!date || !slots.length) return [];
+
+  const dateStr = new Date(date).toISOString().split("T")[0];
+  const matchedDay = slots.find((item) => item.date === dateStr);
+  if (!matchedDay) return [];
+
+  return [...new Set(matchedDay.slots)].map((timeStr) => {
+    const [hours, minutes] = timeStr.split(":").map(Number);
+    const d = new Date(date);
+    d.setHours(hours, minutes, 0, 0);
+    return d;
+  });
+};
+  
+  const getFirstAvailableTime = (date, slots) => {
+    let suggested = datePickerProps.getDefaultTimeForDate(date);
+    if (!suggested) return null;
+
+    const excludedTimes = getExcludeTimesForDate(date, slots);
+    const interval = datePickerProps.timeIntervals;
+
+    const toMins = (d) => d.getHours() * 60 + d.getMinutes();
+    const maxMins = toMins(datePickerProps.maxTime);
+
+    while (toMins(suggested) <= maxMins) {
+      const suggestedMins = toMins(suggested);
+
+      const isExcluded = excludedTimes.some(
+        (excluded) => toMins(excluded) === suggestedMins
+      );
+
+      if (!isExcluded) return suggested;
+
+      suggested = new Date(suggested.getTime() + interval * 60 * 1000);
+    }
+
+    return null;
+  };
+
   const fetchStaff = async () => {
     try {
 
-          const clubId = clubIdFromParams || clubData; // ✅ fallback to API club
-
-    if (!clubId) return;
+      if (!clubId) return;
 
       // Fetch all staff needed for 'training_by' select (both roles)
-          const res = await authAxios().get("/staff/list", {
-      params: {
-        role: ["TRAINER", "FOH"],
-        club_id: clubId,
-      },
-    });
+      const res = await authAxios().get("/staff/list", {
+        params: {
+          role: ["TRAINER", "FOH"],
+          club_id: clubId,
+        },
+      });
       const staff = res.data?.data || [];
 
       const activeOnly = filterActiveItems(staff);
@@ -330,22 +406,20 @@ const LeadCallLogs = () => {
 
       // Separate arrays for each select
       setTrainerList(trainer); // For 'schedule_for'
-          setStaffList([
-      { label: "FOH", options: foh },
-      { label: "TRAINER", options: trainer },
-    ]);
+      setStaffList([
+        { label: "FOH", options: foh },
+        { label: "TRAINER", options: trainer },
+      ]);
     } catch (err) {
       console.error(err);
     }
   };
 
-useEffect(() => {
-  if (clubIdFromParams || clubData) {
-    fetchStaff();
-  }
-}, [clubIdFromParams, clubData]);
-
-
+  useEffect(() => {
+    if (clubIdFromParams || clubData) {
+      fetchStaff();
+    }
+  }, [clubIdFromParams, clubData]);
 
   useEffect(() => {
     const logToEdit = callLogs.find((log) => String(log.id) === String(logId));
@@ -356,7 +430,6 @@ useEffect(() => {
       setEditLog(null);
     }
   }, [logId, callLogs]);
-
 
   useEffect(() => {
     if (clubData) {
@@ -373,7 +446,7 @@ useEffect(() => {
     formik?.values?.trial_tour_datetime, // pass selected date for minTime logic
   );
 
-    // useEffect(() => {
+  // useEffect(() => {
   //   console.log("Formik Errors:", formik.errors);
   //   console.log("Formik Touched:", formik.touched);
   //   console.log("Formik Values:", formik.values);
@@ -442,20 +515,6 @@ useEffect(() => {
                       <span className="absolute z-[1] mt-[9px] ml-[15px]">
                         <FaCalendarDays />
                       </span>
-                      {/* <DatePicker
-                        selected={followUpDT.selected}
-                        onChange={followUpDT.handleDateTime}
-                        onChangeRaw={followUpDT.handleChangeRaw}
-                        showTimeSelect
-                        timeFormat="hh:mm aa"
-                        dateFormat={followUpDT.dateFormat}
-                        placeholderText="Select date & time"
-                        minDate={new Date()}
-                        filterTime={followUpFilterTime}
-                        className="border px-3 py-2 w-full input--icon"
-                        disabled={!!editLog}
-                      /> */}
-
                       <DatePicker
                         selected={formik.values.follow_up_datetime}
                         onChange={(date) => {
@@ -504,6 +563,36 @@ useEffect(() => {
 
               {formik?.values?.call_status === "Trial/Tour Scheduled" && (
                 <>
+                  {/* Trainer */}
+                  <div>
+                    <label className="mb-2 block">
+                      Trainer <span className="text-red-500">*</span>
+                    </label>
+                    <Select
+                      name="training_by"
+                      value={
+                        trainerList.find(
+                          (opt) => opt.value === formik.values.training_by,
+                        ) || null
+                      }
+                      options={trainerList}
+                      onChange={(selectedOption) => {
+                        formik.setFieldValue("training_by", selectedOption?.value || null);
+                        formik.setFieldValue("trial_tour_datetime", "");
+                        fetchTrainerBookedSlots(selectedOption?.value);
+                      }}
+                      placeholder="Select Trainer"
+                      styles={customStyles}
+                      isDisabled={editLog ? true : false}
+                    />
+                    {formik.touched.training_by &&
+                      formik.errors.training_by && (
+                        <p className="text-sm text-red-500 mt-1">
+                          {formik.errors.training_by}
+                        </p>
+                      )}
+                  </div>
+
                   <div>
                     <label className="mb-2 block">
                       Date & Time <span className="text-red-500">*</span>
@@ -523,30 +612,29 @@ useEffect(() => {
                           const prev = formik.values.trial_tour_datetime;
                           const isSameDay =
                             prev &&
-                            new Date(prev).toDateString() ===
-                              new Date(date).toDateString();
+                            new Date(prev).toDateString() === new Date(date).toDateString();
 
                           if (isSameDay) {
-                            // ✅ User changed time — accept exactly what they picked
+                            // User changed time manually — accept as-is
                             formik.setFieldValue("trial_tour_datetime", date);
                           } else {
-                            // ✅ User picked a new date — auto-select first valid grid slot
-                            const dateWithTime =
-                              dateTrialPickerProps.getDefaultTimeForDate(date);
-                            // null means today has no slots left (shouldn't reach here due to minDate)
-                            formik.setFieldValue(
-                              "trial_tour_datetime",
-                              dateWithTime ?? null,
-                            );
+                            // ── UPDATED: use getFirstAvailableTime instead of getDefaultTimeForDate ──
+                            const dateWithTime = getFirstAvailableTime(date, trainerBookedSlots);
+                            formik.setFieldValue("trial_tour_datetime", dateWithTime ?? null);
                           }
                         }}
-                        {...dateTrialPickerProps}
-                        placeholderText="Select date & time"
-                        className="border px-3 py-2 w-full input--icon"
-                        disabled={!!editLog}
+                        {...datePickerProps}
+                        // excludeTimes={getExcludeTimes()}
+                        excludeTimes={getExcludeTimesForDate(
+                          formik.values.trial_tour_datetime,
+                          trainerBookedSlots
+                        )}
                         onKeyDown={(e) => {
                           e.preventDefault();
                         }}
+                        disabled={!formik.values.training_by} // ← NEW
+                        placeholderText="Select date & time"
+                        className="border px-3 py-2 w-full input--icon"
                       />
                       {formik.touched.trial_tour_datetime &&
                         formik.errors.trial_tour_datetime && (
@@ -557,108 +645,15 @@ useEffect(() => {
                     </div>
                   </div>
 
-                  {/* Trainer */}
-                  <div>
-                    <label className="mb-2 block">
-                      Trainer <span className="text-red-500">*</span>
-                    </label>
-                    <Select
-                      name="training_by"
-                      value={
-                        trainerList.find(
-                          (opt) => opt.value === formik.values.training_by,
-                        ) || null
-                      }
-                      options={trainerList}
-                      onChange={(option) =>
-                        handleSelectSchedule("training_by", option)
-                      }
-                      placeholder="Select Trainer"
-                      styles={customStyles}
-                      isDisabled={editLog ? true : false}
-                    />
-                    {formik.values.schedule &&
-                      formik.values.follow_up_datetime && (
-                        <p className="text-sm text-red-500 mt-1">
-                          No trainers available at this date and time.
-                        </p>
-                      )}
-
-                    {formik.touched.training_by &&
-                      formik.errors.training_by && (
-                        <p className="text-sm text-red-500 mt-1">
-                          {formik.errors.training_by}
-                        </p>
-                      )}
-                  </div>
-
                   <div className="my-3 col-span-2 border border-gray-500 rounded-lg p-3 pt-0">
                     <h3 className="w-fit font-semibold text-black mb-1 px-2 bg-white mt-[-10px]">
                       Schedule Follow UP
                     </h3>
 
                     <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="mb-2 block">Date & Time</label>
-                        <div className="custom--date flex-1">
-                          <span className="absolute z-[1] mt-[9px] ml-[15px]">
-                            <FaCalendarDays />
-                          </span>
-                          <DatePicker
-                            selected={formik.values.follow_up_datetime}
-                            onChange={(date) => {
-                              if (!date) {
-                                formik.setFieldValue(
-                                  "follow_up_datetime",
-                                  null,
-                                );
-                                return;
-                              }
-
-                              const prev = formik.values.follow_up_datetime;
-                              const isSameDay =
-                                prev &&
-                                new Date(prev).toDateString() ===
-                                  new Date(date).toDateString();
-
-                              if (isSameDay) {
-                                // ✅ User changed time — accept exactly what they picked
-                                formik.setFieldValue(
-                                  "follow_up_datetime",
-                                  date,
-                                );
-                              } else {
-                                // ✅ User picked a new date — auto-select first valid grid slot
-                                const dateWithTime =
-                                  datePickerProps.getDefaultTimeForDate(date);
-                                // null means today has no slots left (shouldn't reach here due to minDate)
-                                formik.setFieldValue(
-                                  "follow_up_datetime",
-                                  dateWithTime ?? null,
-                                );
-                              }
-                            }}
-                            {...datePickerProps}
-                            placeholderText="Select date & time"
-                            className="border px-3 py-2 w-full input--icon"
-                            disabled={!!editLog}
-                            onKeyDown={(e) => {
-                              e.preventDefault();
-                            }}
-                          />
-                        </div>
-                        {formik.touched.follow_up_datetime &&
-                          formik.errors.follow_up_datetime && (
-                            <p className="text-sm text-red-500 mt-1">
-                              {formik.errors.follow_up_datetime}
-                            </p>
-                          )}
-                      </div>
-
                       {/* Schedule For */}
                       <div>
                         <label className="mb-2 block">Schedule For</label>
-
                         <Select
                           name="schedule_for"
                           value={
@@ -670,12 +665,12 @@ useEffect(() => {
                               ) || null
                           }
                           options={staffList}
-                          onChange={(option) =>
-                            formik.setFieldValue("schedule_for", option.value)
-                          }
-                          onBlur={() =>
-                            formik.setFieldTouched("schedule_for", true)
-                          }
+                          onChange={(selectedOption) => {
+                            formik.setFieldValue("schedule_for", selectedOption?.value || null);
+                            formik.setFieldValue("follow_up_datetime", "");
+                            fetchScheduleBookedSlots(selectedOption?.value);
+                          }}
+                          placeholder="Schedule For"
                           styles={customStyles}
                           isDisabled={editLog ? true : false}
                         />
@@ -686,6 +681,57 @@ useEffect(() => {
                             </div>
                           )}
                       </div>
+
+                      <div>
+                        <label className="mb-2 block">Date & Time</label>
+                        <div className="custom--date flex-1">
+                          <span className="absolute z-[1] mt-[9px] ml-[15px]">
+                            <FaCalendarDays />
+                          </span>
+                          <DatePicker
+                            selected={formik.values.follow_up_datetime}
+                            onChange={(date) => {
+                              if (!date) {
+                                formik.setFieldValue("follow_up_datetime", null);
+                                return;
+                              }
+
+                              const prev = formik.values.follow_up_datetime;
+                              const isSameDay =
+                                prev &&
+                                new Date(prev).toDateString() === new Date(date).toDateString();
+
+                              if (isSameDay) {
+                                // User changed time manually — accept as-is
+                                formik.setFieldValue("follow_up_datetime", date);
+                              } else {
+                                // ── UPDATED: use getFirstAvailableTime instead of getDefaultTimeForDate ──
+                                const dateWithTime = getFirstAvailableTime(date, scheduleBookedSlots);
+                                formik.setFieldValue("follow_up_datetime", dateWithTime ?? null);
+                              }
+                            }}
+                            {...datePickerProps}
+                            excludeTimes={getExcludeTimesForDate(
+                              formik.values.follow_up_datetime,
+                              scheduleBookedSlots
+                            )}
+                            onKeyDown={(e) => {
+                              e.preventDefault();
+                            }}
+                            disabled={!formik.values.schedule_for} // ← NEW
+                            placeholderText="Select date & time"
+                            className="border px-3 py-2 w-full input--icon"
+                          />
+                        </div>
+                        {formik.touched.follow_up_datetime &&
+                          formik.errors.follow_up_datetime && (
+                            <p className="text-sm text-red-500 mt-1">
+                              {formik.errors.follow_up_datetime}
+                            </p>
+                          )}
+                      </div>
+
+                      
                     </div>
                   </div>
                 </>
@@ -706,7 +752,11 @@ useEffect(() => {
                           option.value === formik.values.not_interested_reason,
                       )}
                       onChange={(option) => {
-                        formik.setFieldValue("not_interested_reason", option.value, true);
+                        formik.setFieldValue(
+                          "not_interested_reason",
+                          option.value,
+                          true,
+                        );
                         // formik.setFieldTouched("not_interested_reason", true);
                       }}
                       styles={customStyles}

@@ -56,6 +56,10 @@ const AllAppointments = () => {
   const [selectedLeadClub, setSelectedLeadClub] = useState(null);
   const [rescheduleDateTime, setRescheduleDateTime] = useState(null);
 
+  const [selectedTrainerId, setSelectedTrainerId] = useState(null);
+  const [selectedClubId, setSelectedClubId] = useState(null);
+  const [bookedSlots, setBookedSlots] = useState([]);
+
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -359,6 +363,9 @@ const AllAppointments = () => {
     setRemarks("");
 
     if (newStatus === "RESCHEDULED") {
+      // ✅ SET trainer + club from row
+      setSelectedTrainerId(row.assigned_staff_id);
+      setSelectedClubId(row.club_id);
       // ✅ Combine existing date + time into single rescheduleDateTime
       if (row.start_date && row.start_time) {
         const combined = new Date(row.start_date);
@@ -372,6 +379,75 @@ const AllAppointments = () => {
 
     setShowConfirmModal(false); // close any previous
     setTimeout(() => setShowConfirmModal(true), 0); // reopen fresh
+  };
+
+  const fetchTrainerBookedSlots = async () => {
+    if (!selectedTrainerId || !selectedClubId) {
+      setBookedSlots([]);
+      return;
+    }
+
+    try {
+      const res = await authAxios().post("/appointment/trainer/booked/slot", {
+        club_id: selectedClubId,
+        trainer_id: selectedTrainerId,
+      });
+
+      setBookedSlots(res.data?.availability || []);
+    } catch (err) {
+      console.error("Trainer slot fetch error:", err);
+      setBookedSlots([]);
+    }
+  };
+
+  useEffect(() => {
+    if (pendingStatus === "RESCHEDULED") {
+      fetchTrainerBookedSlots();
+    }
+  }, [selectedTrainerId, selectedClubId, pendingStatus]);
+
+  const getExcludeTimesForDate = (date) => {
+    if (!date || !bookedSlots.length) return [];
+
+    const dateStr = new Date(date).toISOString().split("T")[0];
+    const matchedDay = bookedSlots.find((item) => item.date === dateStr);
+    if (!matchedDay) return [];
+
+    return [...new Set(matchedDay.slots)].map((timeStr) => {
+      const [hours, minutes] = timeStr.split(":").map(Number);
+      const d = new Date(date); // ← use actual picked date, NOT new Date()
+      d.setHours(hours, minutes, 0, 0);
+      return d;
+    });
+  };
+
+  const getExcludeTimes = () => getExcludeTimesForDate(rescheduleDateTime);
+
+  const getFirstAvailableTime = (date) => {
+    let suggested = datePickerProps.getDefaultTimeForDate(date);
+    if (!suggested) return null;
+
+    const excludedTimes = getExcludeTimesForDate(date);
+    const interval = datePickerProps.timeIntervals; // ← dynamic from hook
+
+    // ── Compare only HH:MM to avoid date mismatch with maxTime (which is today's Date) ──
+    const toMins = (d) => d.getHours() * 60 + d.getMinutes();
+    const maxMins = toMins(datePickerProps.maxTime);
+
+    while (toMins(suggested) <= maxMins) {
+      const suggestedMins = toMins(suggested);
+
+      const isExcluded = excludedTimes.some(
+        (excluded) => toMins(excluded) === suggestedMins,
+      );
+
+      if (!isExcluded) return suggested; // ✅ free slot found
+
+      // Advance by one interval
+      suggested = new Date(suggested.getTime() + interval * 60 * 1000);
+    }
+
+    return null; // all slots blocked for this date
   };
 
   const confirmStatusUpdate = async () => {
@@ -792,16 +868,20 @@ const AllAppointments = () => {
         <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-[10px] w-[400px] shadow-lg">
             <h3 className="text-lg font-semibold mb-4 text-center">
-              Confirm Status Update
+              {!selectedTrainerId
+                ? "The session cannot be rescheduled yet as a trainer has not been assigned."
+                : "Confirm Status Update"}
             </h3>
 
-            <p className="text-center mb-4">
-              Are you sure you want to mark this appointment as
-              <span className="font-bold ml-1">
-                {formatText(pendingStatus)}
-              </span>
-              ?
-            </p>
+            {!selectedTrainerId ? null : (
+              <p className="text-center mb-4">
+                Are you sure you want to mark this appointment as
+                <span className="font-bold ml-1">
+                  {formatText(pendingStatus)}
+                </span>
+                ?
+              </p>
+            )}
 
             {pendingStatus === "CANCELLED" && (
               <div className="mb-4">
@@ -844,17 +924,15 @@ const AllAppointments = () => {
                             new Date(date).toDateString();
 
                         if (isSameDay) {
-                          // ✅ User changed time — accept exactly what they picked
                           setRescheduleDateTime(date);
                         } else {
-                          // ✅ User changed date — auto-select first valid grid slot
-                          const dateWithTime =
-                            datePickerProps.getDefaultTimeForDate(date);
+                          const dateWithTime = getFirstAvailableTime(date);
                           setRescheduleDateTime(dateWithTime ?? null);
                         }
                       }}
                       {...datePickerProps}
-                      placeholderText="Select date & time"
+                      excludeTimes={getExcludeTimes()}
+                      disabled={!selectedTrainerId} // ✅ IMPORTANT
                       className="custom--input w-full input--icon"
                     />
                   </div>
@@ -873,12 +951,15 @@ const AllAppointments = () => {
                     rows="3"
                     className="w-full border rounded p-2"
                     placeholder="Reason for rescheduling"
+                    disabled={!selectedTrainerId} // ✅ IMPORTANT
                   />
                 </div>
               </div>
             )}
 
-            <div className="flex justify-between gap-3">
+            <div
+              className={`flex ${!selectedTrainerId ? "justify-end" : "justify-between"} gap-3`}
+            >
               <button
                 onClick={() => {
                   setShowConfirmModal(false);
@@ -889,12 +970,14 @@ const AllAppointments = () => {
                 Cancel
               </button>
 
-              <button
-                onClick={confirmStatusUpdate}
-                className="w-1/2 bg-black text-white rounded py-2 hover:bg-gray-800"
-              >
-                Confirm
-              </button>
+              {!selectedTrainerId ? null : (
+                <button
+                  onClick={confirmStatusUpdate}
+                  className="w-1/2 bg-black text-white rounded py-2 hover:bg-gray-800"
+                >
+                  Confirm
+                </button>
+              )}
             </div>
           </div>
         </div>

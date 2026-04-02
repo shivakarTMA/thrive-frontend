@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { IoIosAddCircleOutline, IoIosSearch } from "react-icons/io";
 import { LiaEdit } from "react-icons/lia";
 import { MdCall } from "react-icons/md";
@@ -37,8 +37,10 @@ import Sidebar from "../components/common/Sidebar";
 import Topbar from "../components/common/Topbar";
 import { useFormik } from "formik";
 import { persistor } from "../Redux/store";
-import { logout } from "../Redux/Reducers/authSlice";
+import { logout, selectAuthFromToken } from "../Redux/Reducers/authSlice";
 import useAutoLogout from "../hooks/useAutoLogout";
+import { logoutUser } from "../Redux/thunks/authThunk";
+import { hasRouteAccess } from "../Routing/RolePermissions";
 
 const dateFilterOptions = [
   { value: "today", label: "Today" },
@@ -53,6 +55,10 @@ const AllLeads = () => {
   const location = useLocation();
   const dispatch = useDispatch();
   const { user, tokenExpiry, accessToken } = useSelector((state) => state.auth);
+  const authFromToken = useSelector(selectAuthFromToken);
+
+  const [showPopup, setShowPopup] = useState(false);
+  const isLoggingOut = useRef(false);
 
   const [toggleMenuBar, setToggleMenuBar] = useState(false);
 
@@ -232,51 +238,51 @@ const AllLeads = () => {
   };
 
   // Fetch staff list from API
-const fetchStaff = async (clubId) => {
-  try {
-    const requests = [
-      authAxios().get("/staff/list", {
-        params: { role: "FOH", club_id: clubId },
-      }),
-    ];
-
-    if (
-      userRole === "CLUB_MANAGER" ||
-      userRole === "ADMIN" ||
-      userRole === "FOH"
-    ) {
-      requests.push(
+  const fetchStaff = async (clubId) => {
+    try {
+      const requests = [
         authAxios().get("/staff/list", {
-          params: { role: "CLUB_MANAGER", club_id: clubId },
-        })
+          params: { role: "FOH", club_id: clubId },
+        }),
+      ];
+
+      if (
+        userRole === "CLUB_MANAGER" ||
+        userRole === "ADMIN" ||
+        userRole === "FOH"
+      ) {
+        requests.push(
+          authAxios().get("/staff/list", {
+            params: { role: "CLUB_MANAGER", club_id: clubId },
+          })
+        );
+      }
+
+      const responses = await Promise.all(requests);
+
+      let mergedData = [];
+
+      responses.forEach((res) => {
+        const role = res.config.params.role; // ✅ more reliable than URL.includes
+
+        const users = (res.data?.data || []).map((user) => ({
+          ...user,
+          role,
+        }));
+
+        mergedData.push(...users);
+      });
+
+      const uniqueData = Array.from(
+        new Map(mergedData.map((user) => [user.id, user])).values()
       );
+
+      const activeOnly = filterActiveItems(uniqueData);
+      setStaffList(activeOnly);
+    } catch (err) {
+      console.error(err);
     }
-
-    const responses = await Promise.all(requests);
-
-    let mergedData = [];
-
-    responses.forEach((res) => {
-      const role = res.config.params.role; // ✅ more reliable than URL.includes
-
-      const users = (res.data?.data || []).map((user) => ({
-        ...user,
-        role,
-      }));
-
-      mergedData.push(...users);
-    });
-
-    const uniqueData = Array.from(
-      new Map(mergedData.map((user) => [user.id, user])).values()
-    );
-
-    const activeOnly = filterActiveItems(uniqueData);
-    setStaffList(activeOnly);
-  } catch (err) {
-    console.error(err);
-  }
-};
+  };
 
   // Function to fetch club list
   const fetchClub = async (search = "") => {
@@ -405,18 +411,6 @@ useEffect(() => {
       setCustomFrom(new Date(startDate));
       setCustomTo(new Date(endDate));
     }
-
-    // if (clubId) {
-    //   const club = clubList.find((c) => c.id === Number(clubId));
-    //   if (club) {
-    //     setClubFilter({ label: club.name, value: club.id });
-    //   }
-    // } else {
-    //   setClubFilter({
-    //     label: clubList[0].name,
-    //     value: clubList[0].id,
-    //   });
-    // }
 
     if (!clubFilter) {
       if (clubId) {
@@ -551,74 +545,177 @@ useEffect(() => {
     }
   };
 
-  /* =========================
-     1️⃣ JWT EXPIRY HANDLER
-  ========================== */
-  useEffect(() => {
-    if (!tokenExpiry) return;
+  // ✅ CENTRAL LOGOUT HANDLER (API ALWAYS CALLED)
+  const logoutAndRedirect = async () => {
+    if (isLoggingOut.current) return;
+    isLoggingOut.current = true;
 
-    const remainingTime = tokenExpiry - Date.now();
-
-    if (remainingTime <= 0) {
-      handleLogout();
-      return;
+    try {
+      // ✅ ALWAYS call API manually
+      await authAxios().get("/staff/expires/token");
+    } catch (e) {
+      // ignore error
     }
 
-    const timer = setTimeout(() => {
-      handleLogout();
-    }, remainingTime);
+    try {
+      await dispatch(logoutUser()).unwrap(); // optional (keeps consistency)
+    } catch {}
 
-    return () => clearTimeout(timer);
-  }, [tokenExpiry]);
+    persistor.purge();
+    navigate("/login", { replace: true });
+  };
 
   /* =========================
-     2️⃣ STAFF VALIDATION
-  ========================== */
+       1️⃣ JWT EXPIRY HANDLER
+    ========================== */
+    useEffect(() => {
+      if (!tokenExpiry) return;
+  
+      const remainingTime = tokenExpiry - Date.now();
+  
+      if (remainingTime <= 0) {
+        toast.dismiss();
+        logoutAndRedirect();
+        return;
+      }
+  
+      const timer = setTimeout(() => {
+        toast.dismiss();
+        logoutAndRedirect();
+      }, remainingTime);
+  
+      return () => clearTimeout(timer);
+    }, [tokenExpiry]);
+
+  /* =========================
+       2️⃣ STAFF VALIDATION
+    ========================== */
   useEffect(() => {
-    if (!accessToken || !user?.id) return;
+    if (!accessToken || !authFromToken?.id) return;
 
     const validateUser = async () => {
       try {
-        const res = await authAxios().get(`/staff/${user.id}`);
+        const res = await authAxios().get(`/staff/${authFromToken.id}`);
         const staff = res?.data?.data;
 
-        // Not staff → allow access (admin, etc.)
         if (!staff) return;
 
-        // Soft deleted
-        if (staff.is_deleted === 1) {
-          handleLogout();
-          return;
-        }
-
-        // Inactive staff
-        if (staff.status !== "ACTIVE") {
-          handleLogout();
-          return;
+        if (staff.is_deleted === 1 || staff.status !== "ACTIVE") {
+          toast.dismiss();
+          logoutAndRedirect();
         }
       } catch (error) {
         if ([401, 404].includes(error.response?.status)) {
-          handleLogout();
+          toast.dismiss();
+          logoutAndRedirect();
         }
-        console.error("Staff validation failed:", error);
       }
     };
 
     validateUser();
-  }, [accessToken, user?.id, location.pathname]);
+  }, [accessToken, authFromToken?.id, location.pathname]);
 
   /* =========================
-     3️⃣ ROUTE PROTECTION
-  ========================== */
-  if (!accessToken) {
-    return <Navigate to="/login" replace />;
-  }
-
-  // Extra safety: expired before render
-  if (tokenExpiry && Date.now() > tokenExpiry) {
-    handleLogout();
-    return <Navigate to="/login" replace />;
-  }
+       3️⃣ SESSION VALIDATION
+    ========================== */
+    useEffect(() => {
+      if (!accessToken) return;
+  
+      let isCancelled = false;
+  
+      const checkSession = async () => {
+        try {
+          await authAxios().get("/staff/check/active");
+        } catch (error) {
+          if (!isCancelled && error?.response?.status === 401) {
+            setShowPopup(true);
+          }
+        }
+      };
+  
+      checkSession();
+      const interval = setInterval(checkSession, 10000);
+  
+      return () => {
+        isCancelled = true;
+        clearInterval(interval);
+      };
+    }, [accessToken]);
+  
+    /* =========================
+       4️⃣ STORAGE TAMPER DETECTION
+    ========================== */
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const token = localStorage.getItem("accessToken");
+  
+      if (!token) {
+        logoutAndRedirect();
+        return;
+      }
+  
+      try {
+        const parsed = JSON.parse(atob(token.split(".")[1]));
+  
+        // ❌ invalid structure
+        if (!parsed?.id || !parsed?.role) {
+          logoutAndRedirect();
+        }
+      } catch (e) {
+        // ❌ corrupted token
+        logoutAndRedirect();
+      }
+    };
+  
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
+  }, []);
+  
+    /* =========================
+       5️⃣ TAB FOCUS VALIDATION
+    ========================== */
+    useEffect(() => {
+      const handleVisibilityChange = () => {
+        if (document.visibilityState === "visible") {
+          if (!authFromToken) {
+            logoutAndRedirect();
+            return;
+          }
+  
+          if (!hasRouteAccess(authFromToken.role, location.pathname)) {
+            logoutAndRedirect();
+          }
+        }
+      };
+  
+      document.addEventListener("visibilitychange", handleVisibilityChange);
+      return () =>
+        document.removeEventListener("visibilitychange", handleVisibilityChange);
+    }, [authFromToken, location.pathname]);
+  
+    /* =========================
+       6️⃣ INITIAL GUARD (FIXED)
+    ========================== */
+    useEffect(() => {
+      if (!accessToken) {
+        logoutAndRedirect();
+        return;
+      }
+  
+      if (tokenExpiry && Date.now() > tokenExpiry) {
+        logoutAndRedirect();
+        return;
+      }
+  
+      if (!authFromToken) {
+        logoutAndRedirect();
+        return;
+      }
+  
+      if (!hasRouteAccess(authFromToken.role, location.pathname)) {
+        logoutAndRedirect();
+      }
+    }, [accessToken, tokenExpiry, authFromToken, location.pathname]);
 
   return (
     <>
@@ -846,7 +943,7 @@ useEffect(() => {
                           )}
                           {/* <th className="px-2 py-4">S.No</th> */}
                           <th className="px-2 py-4 min-w-[130px]">Name</th>
-                          <th className="px-2 py-4 min-w-[90px]">Gender</th>
+                          <th className="px-2 py-4 min-w-[120px]">Gender</th>
                           <th className="px-2 py-4 min-w-[140px]">Club Name</th>
                           <th className="px-2 py-4 min-w-[140px]">
                             Interested In

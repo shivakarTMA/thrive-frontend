@@ -7,7 +7,6 @@ import "react-datepicker/dist/react-datepicker.css";
 import {
   blockNonLettersAndNumbers,
   customStyles,
-  filterActiveItems,
   sanitizeTextWithNumbers,
 } from "../../Helper/helper";
 import { IoCloseCircle } from "react-icons/io5";
@@ -30,6 +29,70 @@ const CreateLeadAppointment = ({
   const dispatch = useDispatch();
   const [staffList, setStaffList] = useState([]);
   const [serviceList, setServiceList] = useState([]);
+
+  const [bookedSlots, setBookedSlots] = useState([]);
+
+  const fetchTrainerBookedSlots = async (trainerId) => {
+      if (!trainerId || !clubId) {
+        setBookedSlots([]);
+        return;
+      }
+      try {
+        const res = await authAxios().post("/appointment/trainer/booked/slot", {
+          club_id: clubId,
+          trainer_id: trainerId,
+        });
+        setBookedSlots(res.data?.availability || []);
+      } catch (err) {
+        console.error("Trainer slot fetch error:", err);
+        setBookedSlots([]);
+      }
+    };
+  
+  
+   const getExcludeTimesForDate = (date) => {
+    if (!date || !bookedSlots.length) return [];
+  
+    const dateStr = new Date(date).toISOString().split("T")[0];
+    const matchedDay = bookedSlots.find((item) => item.date === dateStr);
+    if (!matchedDay) return [];
+  
+    return [...new Set(matchedDay.slots)].map((timeStr) => {
+      const [hours, minutes] = timeStr.split(":").map(Number);
+      const d = new Date(date); // ← use actual picked date, NOT new Date()
+      d.setHours(hours, minutes, 0, 0);
+      return d;
+    });
+  };
+  
+  const getExcludeTimes = () => getExcludeTimesForDate(formik.values.appointment_date);
+  
+  const getFirstAvailableTime = (date) => {
+    let suggested = datePickerProps.getDefaultTimeForDate(date);
+    if (!suggested) return null;
+  
+    const excludedTimes = getExcludeTimesForDate(date);
+    const interval = datePickerProps.timeIntervals; // ← dynamic from hook
+    
+    // ── Compare only HH:MM to avoid date mismatch with maxTime (which is today's Date) ──
+    const toMins = (d) => d.getHours() * 60 + d.getMinutes();
+    const maxMins = toMins(datePickerProps.maxTime);
+  
+    while (toMins(suggested) <= maxMins) {
+      const suggestedMins = toMins(suggested);
+  
+      const isExcluded = excludedTimes.some(
+        (excluded) => toMins(excluded) === suggestedMins
+      );
+  
+      if (!isExcluded) return suggested; // ✅ free slot found
+  
+      // Advance by one interval
+      suggested = new Date(suggested.getTime() + interval * 60 * 1000);
+    }
+  
+    return null; // all slots blocked for this date
+  };
 
   const fetchStaff = async (clubId = null) => {
     try {
@@ -259,6 +322,44 @@ const CreateLeadAppointment = ({
             </div>
 
             <div className="grid grid-cols-2 gap-4">
+
+              {/* Trainer Select */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-black mb-2">
+                  Trainer<span className="text-red-500">*</span>
+                </label>
+
+                <Select
+                  value={
+                    formik.values.trainer_id
+                      ? staffListOptions.find(
+                          (option) => option.value === formik.values.trainer_id,
+                        )
+                      : null
+                  }
+                  // onChange={(selectedOption) =>
+                  //   formik.setFieldValue(
+                  //     "trainer_id",
+                  //     selectedOption?.value || null,
+                  //   )
+                  // }
+                  onChange={(selectedOption) => {
+                    formik.setFieldValue("trainer_id", selectedOption?.value || null);
+                    formik.setFieldValue("appointment_date", ""); // reset date on trainer change
+                    fetchTrainerBookedSlots(selectedOption?.value); // ← NEW
+                  }}
+                  options={staffListOptions}
+                  styles={customStyles}
+                  placeholder="Select trainer"
+                />
+
+                {formik.errors.trainer_id && formik.touched.trainer_id && (
+                  <div className="text-red-500 text-sm">
+                    {formik.errors.trainer_id}
+                  </div>
+                )}
+              </div>
+
               {/* DateTime Picker */}
               <div className="mb-4">
                 <label className="block text-sm font-medium text-black mb-2">
@@ -276,27 +377,23 @@ const CreateLeadAppointment = ({
                       const prev = formik.values.appointment_date;
                       const isSameDay =
                         prev &&
-                        new Date(prev).toDateString() ===
-                          new Date(date).toDateString();
+                        new Date(prev).toDateString() === new Date(date).toDateString();
 
                       if (isSameDay) {
-                        // ✅ User changed time — accept exactly what they picked
+                        // User changed time manually — accept as-is
                         formik.setFieldValue("appointment_date", date);
                       } else {
-                        // ✅ User picked a new date — auto-select first valid grid slot
-                        const dateWithTime =
-                          datePickerProps.getDefaultTimeForDate(date);
-                        // null means today has no slots left (shouldn't reach here due to minDate)
-                        formik.setFieldValue(
-                          "appointment_date",
-                          dateWithTime ?? null,
-                        );
+                        // ── UPDATED: use getFirstAvailableTime instead of getDefaultTimeForDate ──
+                        const dateWithTime = getFirstAvailableTime(date);
+                        formik.setFieldValue("appointment_date", dateWithTime ?? null);
                       }
                     }}
                     {...datePickerProps}
+                    excludeTimes={getExcludeTimes()}
                     onKeyDown={(e) => {
                       e.preventDefault();
                     }}
+                    disabled={!formik.values.trainer_id} // ← NEW
                     placeholderText="Select date & time"
                     className="custom--input !w-full"
                   />
@@ -309,37 +406,7 @@ const CreateLeadAppointment = ({
                 </div>
               </div>
 
-              {/* Trainer Select */}
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-black mb-2">
-                  Trainer<span className="text-red-500">*</span>
-                </label>
-
-                <Select
-                  value={
-                    formik.values.trainer_id
-                      ? staffListOptions.find(
-                          (option) => option.value === formik.values.trainer_id,
-                        )
-                      : null
-                  }
-                  onChange={(selectedOption) =>
-                    formik.setFieldValue(
-                      "trainer_id",
-                      selectedOption?.value || null,
-                    )
-                  }
-                  options={staffListOptions}
-                  styles={customStyles}
-                  placeholder="Select trainer"
-                />
-
-                {formik.errors.trainer_id && formik.touched.trainer_id && (
-                  <div className="text-red-500 text-sm">
-                    {formik.errors.trainer_id}
-                  </div>
-                )}
-              </div>
+              
             </div>
 
             {/* Remarks */}

@@ -58,6 +58,10 @@ const TrialAppointments = () => {
   const [selectedLeadClub, setSelectedLeadClub] = useState(null);
   const [rescheduleDateTime, setRescheduleDateTime] = useState(null);
 
+  const [selectedTrainerId, setSelectedTrainerId] = useState(null);
+  const [selectedClubId, setSelectedClubId] = useState(null);
+  const [bookedSlots, setBookedSlots] = useState([]);
+
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -338,6 +342,9 @@ const TrialAppointments = () => {
     setRemarks("");
 
     if (newStatus === "RESCHEDULED") {
+      // ✅ SET trainer + club from row
+      setSelectedTrainerId(row.assigned_staff_id);
+      setSelectedClubId(row.club_id);
       // ✅ Combine existing date + time into single rescheduleDateTime
       if (row.start_date && row.start_time) {
         const combined = new Date(row.start_date);
@@ -351,6 +358,75 @@ const TrialAppointments = () => {
 
     setShowConfirmModal(false); // close any previous
     setTimeout(() => setShowConfirmModal(true), 0); // reopen fresh
+  };
+
+  const fetchTrainerBookedSlots = async () => {
+    if (!selectedTrainerId || !selectedClubId) {
+      setBookedSlots([]);
+      return;
+    }
+
+    try {
+      const res = await authAxios().post("/appointment/trainer/booked/slot", {
+        club_id: selectedClubId,
+        trainer_id: selectedTrainerId,
+      });
+
+      setBookedSlots(res.data?.availability || []);
+    } catch (err) {
+      console.error("Trainer slot fetch error:", err);
+      setBookedSlots([]);
+    }
+  };
+
+  useEffect(() => {
+    if (pendingStatus === "RESCHEDULED") {
+      fetchTrainerBookedSlots();
+    }
+  }, [selectedTrainerId, selectedClubId, pendingStatus]);
+
+  const getExcludeTimesForDate = (date) => {
+    if (!date || !bookedSlots.length) return [];
+
+    const dateStr = new Date(date).toISOString().split("T")[0];
+    const matchedDay = bookedSlots.find((item) => item.date === dateStr);
+    if (!matchedDay) return [];
+
+    return [...new Set(matchedDay.slots)].map((timeStr) => {
+      const [hours, minutes] = timeStr.split(":").map(Number);
+      const d = new Date(date); // ← use actual picked date, NOT new Date()
+      d.setHours(hours, minutes, 0, 0);
+      return d;
+    });
+  };
+
+  const getExcludeTimes = () => getExcludeTimesForDate(rescheduleDateTime);
+
+  const getFirstAvailableTime = (date) => {
+    let suggested = datePickerProps.getDefaultTimeForDate(date);
+    if (!suggested) return null;
+
+    const excludedTimes = getExcludeTimesForDate(date);
+    const interval = datePickerProps.timeIntervals; // ← dynamic from hook
+
+    // ── Compare only HH:MM to avoid date mismatch with maxTime (which is today's Date) ──
+    const toMins = (d) => d.getHours() * 60 + d.getMinutes();
+    const maxMins = toMins(datePickerProps.maxTime);
+
+    while (toMins(suggested) <= maxMins) {
+      const suggestedMins = toMins(suggested);
+
+      const isExcluded = excludedTimes.some(
+        (excluded) => toMins(excluded) === suggestedMins,
+      );
+
+      if (!isExcluded) return suggested; // ✅ free slot found
+
+      // Advance by one interval
+      suggested = new Date(suggested.getTime() + interval * 60 * 1000);
+    }
+
+    return null; // all slots blocked for this date
   };
 
   const confirmStatusUpdate = async () => {
@@ -761,21 +837,16 @@ const TrialAppointments = () => {
                             new Date(date).toDateString();
 
                         if (isSameDay) {
-                          // ✅ User changed time — accept exactly what they picked
                           setRescheduleDateTime(date);
                         } else {
-                          // ✅ User changed date — auto-select first valid grid slot
-                          const dateWithTime =
-                            datePickerProps.getDefaultTimeForDate(date);
+                          const dateWithTime = getFirstAvailableTime(date);
                           setRescheduleDateTime(dateWithTime ?? null);
                         }
                       }}
                       {...datePickerProps}
-                      placeholderText="Select date & time"
+                      excludeTimes={getExcludeTimes()}
+                      disabled={!selectedTrainerId} // ✅ IMPORTANT
                       className="custom--input w-full input--icon"
-                      onKeyDown={(e) => {
-                        e.preventDefault();
-                      }}
                     />
                   </div>
                 </div>

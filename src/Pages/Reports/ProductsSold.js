@@ -331,13 +331,49 @@ const ProductsSold = (props) => {
     appliedFilters.payment_method,
   ]);
 
-  const handleSendInvoice = (order) => {
-    setSendModalOrder(order);
+  const handleSendInvoice = (row) => {
+      setSendModalOrder({
+        ...row,  // copies all properties including id
+      });
   };
 
-  const confirmSend = (mode) => {
-    alert(`Invoice sent to ${sendModalOrder.name} via ${mode}`);
-    setSendModalOrder(null);
+  const confirmSend = async (mode) => {
+    if (!sendModalOrder) return;
+
+    if (mode !== "Email") {
+      toast.info(`${mode} integration not implemented yet`);
+      return;
+    }
+
+    if (!sendModalOrder.member_id) {
+      toast.error("Member ID is missing. Cannot send invoice.");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const payload = {
+        invoice_no: sendModalOrder.invoice_no,
+        order_type: sendModalOrder.order_type, // PACKAGE | SUBSCRIPTION | PRODUCT
+      };
+
+      console.log(payload, "payload");
+
+      // Use dynamic id from sendModalOrder
+      await authAxios().post(
+        `/member/send/invoice/email/${sendModalOrder.member_id}`,
+        payload,
+      );
+
+      toast.success(`Invoice sent successfully on Email`);
+      setSendModalOrder(null);
+    } catch (error) {
+      console.error("Send invoice failed:", error);
+      toast.error("Failed to send invoice. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const downloadInvoice = async (row) => {
@@ -408,7 +444,7 @@ const ProductsSold = (props) => {
       document.body.appendChild(link);
       link.click();
       link.remove();
-      
+
       setExportShowModal(false);
       setClubIdExport("");
       setDateExport(null);
@@ -711,19 +747,34 @@ const ProductsSold = (props) => {
                           ₹{row?.amount ? formatIndianNumber(row?.amount) : 0}
                         </td>
                         <td className="px-2 py-4">
-                          ₹{row?.cgst_amount ? formatIndianNumber(row?.cgst_amount) : 0}
+                          ₹
+                          {row?.cgst_amount
+                            ? formatIndianNumber(row?.cgst_amount)
+                            : 0}
                         </td>
                         <td className="px-2 py-4">
-                          ₹{row?.sgst_amount ? formatIndianNumber(row?.sgst_amount) : 0}
+                          ₹
+                          {row?.sgst_amount
+                            ? formatIndianNumber(row?.sgst_amount)
+                            : 0}
                         </td>
                         <td className="px-2 py-4">
-                          ₹{row?.igst_amount ? formatIndianNumber(row?.igst_amount) : 0}
+                          ₹
+                          {row?.igst_amount
+                            ? formatIndianNumber(row?.igst_amount)
+                            : 0}
                         </td>
                         <td className="px-2 py-4">
-                          ₹{row?.booking_amount ? formatIndianNumber(row?.booking_amount) : 0}
+                          ₹
+                          {row?.booking_amount
+                            ? formatIndianNumber(row?.booking_amount)
+                            : 0}
                         </td>
                         <td className="px-2 py-4">
-                          ₹{row?.paid_amount ? formatIndianNumber(row?.paid_amount) : 0}
+                          ₹
+                          {row?.paid_amount
+                            ? formatIndianNumber(row?.paid_amount)
+                            : 0}
                         </td>
                         <td className="px-2 py-4">
                           {row?.payment_method
@@ -813,30 +864,18 @@ const ProductsSold = (props) => {
       </div>
 
       {sendModalOrder && (
-        <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-[5]">
           <div className="bg-white p-6 rounded shadow-lg w-[300px]">
             <h2 className="text-lg font-semibold mb-4">
-              Send Invoice to {sendModalOrder.name}
+              Send Invoice to {sendModalOrder?.name}
             </h2>
-            <p className="mb-3">Select communication mode:</p>
+            {/* <p className="mb-3">Select communication mode:</p> */}
             <div className="flex flex-col gap-2">
               <button
                 onClick={() => confirmSend("Email")}
                 className="bg-blue-500 text-white px-3 py-2 rounded"
               >
                 Email
-              </button>
-              <button
-                onClick={() => confirmSend("SMS")}
-                className="bg-green-500 text-white px-3 py-2 rounded"
-              >
-                SMS
-              </button>
-              <button
-                onClick={() => confirmSend("WhatsApp")}
-                className="bg-purple-500 text-white px-3 py-2 rounded"
-              >
-                WhatsApp
               </button>
             </div>
             <div className="mt-4 text-right">
