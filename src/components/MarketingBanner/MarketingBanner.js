@@ -182,7 +182,7 @@ const MarketingBanner = () => {
         setEditingClub(null);
       } catch (err) {
         console.error("API Error:", err.response?.data || err.message);
-        toast.error(err.response?.data?.errors || err.response?.data?.message)
+        toast.error(err.response?.data?.errors || err.response?.data?.message);
       }
     },
   });
@@ -207,19 +207,23 @@ const MarketingBanner = () => {
           <p className="text-sm">{`Home > App Banner`}</p>
           <h1 className="text-3xl font-semibold">App Banner</h1>
         </div>
-        <div className="flex items-end gap-2">
-          <button
-            type="button"
-            className="px-4 py-2 bg-black text-white rounded flex items-center gap-2"
-            onClick={() => {
-              setEditingClub(null);
-              formik.resetForm();
-              setShowModal(true);
-            }}
-          >
-            <FiPlus /> Create Banner
-          </button>
-        </div>
+        {(currentUserRole === "CLUB_MANAGER" ||
+          currentUserRole === "MARKETING_MANAGER" ||
+          currentUserRole === "ADMIN") && (
+          <div className="flex items-end gap-2">
+            <button
+              type="button"
+              className="px-4 py-2 bg-black text-white rounded flex items-center gap-2"
+              onClick={() => {
+                setEditingClub(null);
+                formik.resetForm();
+                setShowModal(true);
+              }}
+            >
+              <FiPlus /> Create Banner
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Filters */}
@@ -264,7 +268,11 @@ const MarketingBanner = () => {
                 <th className="px-2 py-4">Caption</th>
                 <th className="px-2 py-4 text-center">Position</th>
                 <th className="px-2 py-4">Status</th>
-                <th className="px-2 py-4">Action</th>
+                {(currentUserRole === "CLUB_MANAGER" ||
+                  currentUserRole === "MARKETING_MANAGER" ||
+                  currentUserRole === "ADMIN") && (
+                  <th className="px-2 py-4">Action</th>
+                )}
               </tr>
             </thead>
             <tbody>
@@ -315,23 +323,27 @@ const MarketingBanner = () => {
                           : ""}
                       </div>
                     </td>
-                    <td className="px-2 py-4">
-                      <Tooltip
-                        id={`tooltip-edit-${item.id || index}`}
-                        content="Edit Banner"
-                        place="top"
-                      >
-                        <div
-                          className="p-1 cursor-pointer"
-                          onClick={() => {
-                            setEditingClub(item?.id);
-                            setShowModal(true);
-                          }}
+                    {(currentUserRole === "CLUB_MANAGER" ||
+                      currentUserRole === "MARKETING_MANAGER" ||
+                      currentUserRole === "ADMIN") && (
+                      <td className="px-2 py-4">
+                        <Tooltip
+                          id={`tooltip-edit-${item.id || index}`}
+                          content="Edit Banner"
+                          place="top"
                         >
-                          <LiaEdit className="text-[25px] text-black" />
-                        </div>
-                      </Tooltip>
-                    </td>
+                          <div
+                            className="p-1 cursor-pointer"
+                            onClick={() => {
+                              setEditingClub(item?.id);
+                              setShowModal(true);
+                            }}
+                          >
+                            <LiaEdit className="text-[25px] text-black" />
+                          </div>
+                        </Tooltip>
+                      </td>
+                    )}
                   </tr>
                 ))
               )}

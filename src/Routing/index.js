@@ -111,6 +111,7 @@ import AnniversaryReport from "../Pages/Reports/AnniversaryReport";
 import ExerciesCategoryList from "../components/ExerciesCategory/ExerciesCategoryList";
 import NourishOrders from "../Pages/NourishOrders";
 import RevenueRecognitionReport from "../components/Reports/FinanceReports/RevenueRecognitionReport";
+import FitnessManagerDashboard from "../Pages/FitnessManagerDashboard";
 
 // Role-based route wrapper component
 const RoleProtectedRoute = ({ children, path, skipPrivateRoute = false }) => {
@@ -124,6 +125,7 @@ const RoleProtectedRoute = ({ children, path, skipPrivateRoute = false }) => {
       FINANCE_MANAGER: "/",
       FOH: "/",
       TRAINER: "/",
+      FITNESS_MANAGER: "/",
       CLUB_MANAGER: "/",
     };
 
@@ -154,6 +156,7 @@ const RoleBasedHome = () => {
   if (userType === "MARKETING_MANAGER") return <MarketingManagerDashboard />;
   if (userType === "FOH") return <FohDashboard />;
   if (userType === "TRAINER") return <TrainerDashboard />;
+  if (userType === "FITNESS_MANAGER") return <FitnessManagerDashboard />;
   if (userType === "CLUB_MANAGER") return <ClubManagerDashboard />;
   if (userType === "FINANCE_MANAGER") return <FinanceManagerDashboard />;
 

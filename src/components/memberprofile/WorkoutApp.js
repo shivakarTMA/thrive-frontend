@@ -8,6 +8,7 @@ import WorkoutPlan from "./WorkoutPlan";
 import { toast } from "react-toastify";
 import { authAxios } from "../../config/config";
 import { formatAutoDate, formatText } from "../../Helper/helper";
+import { useSelector } from "react-redux";
 
 const WorkoutApp = ({ member }) => {
   const memberId = member?.id;
@@ -16,6 +17,9 @@ const WorkoutApp = ({ member }) => {
   const [workoutTable, setWorkoutTable] = useState(true);
   const [workoutModal, setWorkoutModal] = useState(false);
   const [nextAvailableStartDate, setNextAvailableStartDate] = useState(null);
+
+  const { user } = useSelector((state) => state.auth);
+  const userRole = user.role;
 
   // Confirmation modal state
   const [confirmModal, setConfirmModal] = useState({
@@ -60,22 +64,22 @@ const WorkoutApp = ({ member }) => {
       setWorkouts(data);
 
       if (data.length > 0) {
-      // Get latest end_date
-      const latestWorkout = data.reduce((latest, current) => {
-        return new Date(current.end_date) > new Date(latest.end_date)
-          ? current
-          : latest;
-      });
+        // Get latest end_date
+        const latestWorkout = data.reduce((latest, current) => {
+          return new Date(current.end_date) > new Date(latest.end_date)
+            ? current
+            : latest;
+        });
 
-      const lastEndDate = new Date(latestWorkout.end_date);
+        const lastEndDate = new Date(latestWorkout.end_date);
 
-      // Add 1 day
-      lastEndDate.setDate(lastEndDate.getDate() + 1);
+        // Add 1 day
+        lastEndDate.setDate(lastEndDate.getDate() + 1);
 
-      setNextAvailableStartDate(lastEndDate);
-    } else {
-      setNextAvailableStartDate(new Date()); // if no workouts exist
-    }
+        setNextAvailableStartDate(lastEndDate);
+      } else {
+        setNextAvailableStartDate(new Date()); // if no workouts exist
+      }
     } catch (err) {
       console.error(err);
     }
@@ -99,7 +103,9 @@ const WorkoutApp = ({ member }) => {
       if (action === "cancel") {
         // ❗ If cancel also needs API, add here
         setWorkouts(
-          workouts.map((w) => (w.id === id ? { ...w, status: "Cancelled" } : w))
+          workouts.map((w) =>
+            w.id === id ? { ...w, status: "Cancelled" } : w,
+          ),
         );
         toast.info(`Workout ID: ${id} has been cancelled`);
       }
@@ -176,7 +182,12 @@ const WorkoutApp = ({ member }) => {
                 <th className="border px-3 py-2">Start Date</th>
                 <th className="border px-3 py-2">End Date</th>
                 <th className="border px-3 py-2">Status</th>
-                <th className="border px-3 py-2">Action</th>
+                {(userRole === "TRAINER" ||
+                  userRole === "FITNESS_MANAGER" ||
+                  userRole === "CLUB_MANAGER" ||
+                  userRole === "ADMIN") && (
+                  <th className="border px-3 py-2">Action</th>
+                )}
               </tr>
             </thead>
             <tbody>
@@ -197,37 +208,34 @@ const WorkoutApp = ({ member }) => {
                     <td className="border px-3 py-2">
                       {formatText(workout?.status)}
                     </td>
+                    {(userRole === "TRAINER" ||
+                      userRole === "FITNESS_MANAGER" ||
+                      userRole === "CLUB_MANAGER" ||
+                      userRole === "ADMIN") && (
+                      <td className="border px-3 py-2">
+                        <div className="flex gap-0">
+                          <Tooltip content="View/Edit" place="top">
+                            <div
+                              onClick={() => handleViewEdit(workout.id)}
+                              className="p-1 cursor-pointer"
+                            >
+                              <LiaEdit className="text-[25px] text-black" />
+                            </div>
+                          </Tooltip>
 
-                    <td className="border px-3 py-2">
-                      <div className="flex gap-0">
-                        <Tooltip content="View/Edit" place="top">
-                          <div
-                            onClick={() => handleViewEdit(workout.id)}
-                            className="p-1 cursor-pointer"
-                          >
-                            <LiaEdit className="text-[25px] text-black" />
-                          </div>
-                        </Tooltip>
-
-                        {/* <Tooltip content="Cancel" place="top">
-                          <div
-                            onClick={() => confirmAction(workout.id, "cancel")}
-                            className="p-1 cursor-pointer"
-                          >
-                            <IoCloseCircleOutline className="text-[25px] text-black" />
-                          </div>
-                        </Tooltip> */}
-
-                        <Tooltip content="Delete" place="top">
-                          <div
-                            onClick={() => confirmAction(workout.id, "delete")}
-                            className="p-1 cursor-pointer"
-                          >
-                            <AiOutlineDelete className="text-[25px] text-black" />
-                          </div>
-                        </Tooltip>
-                      </div>
-                    </td>
+                          <Tooltip content="Delete" place="top">
+                            <div
+                              onClick={() =>
+                                confirmAction(workout.id, "delete")
+                              }
+                              className="p-1 cursor-pointer"
+                            >
+                              <AiOutlineDelete className="text-[25px] text-black" />
+                            </div>
+                          </Tooltip>
+                        </div>
+                      </td>
+                    )}
                   </tr>
                 ))
               ) : (

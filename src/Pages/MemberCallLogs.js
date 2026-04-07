@@ -78,6 +78,8 @@ const MemberCallLogs = () => {
   const { id: memberId } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { user } = useSelector((state) => state.auth);
+  const userRole = user.role;
 
   const view = searchParams.get("view"); // "call-logs"
   const logId = searchParams.get("logId");
@@ -614,6 +616,11 @@ const MemberCallLogs = () => {
                   </div>
 
                   {/* Submit Button */}
+                  {(userRole === "FOH" ||
+          userRole === "TRAINER" ||
+          userRole === "FITNESS_MANAGER" ||
+          userRole === "CLUB_MANAGER" ||
+          userRole === "ADMIN") && (
                   <div className="flex items-center justify-end gap-2 mt-3">
                     {editLog && (
                       <button
@@ -635,6 +642,7 @@ const MemberCallLogs = () => {
                       Submit
                     </button>
                   </div>
+          )}
                 </form>
               </>
             )}
@@ -723,6 +731,7 @@ const MemberCallLogs = () => {
                     key={index}
                     filteredData={filteredLogs}
                     handleEditLog={setEditLog}
+                    userRole={userRole}
                   />
                 ))
               ) : (

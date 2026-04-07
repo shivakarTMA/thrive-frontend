@@ -4,7 +4,11 @@ import { useNavigate } from "react-router-dom";
 import { FaCircle } from "react-icons/fa";
 
 // Component to render individual call card details
-export default function MemberContactHistory({ filteredData, handleEditLog }) {
+export default function MemberContactHistory({
+  filteredData,
+  handleEditLog,
+  userRole,
+}) {
   const navigate = useNavigate();
   const [isExpanded, setIsExpanded] = useState(false); // State to manage remarks expand/collapse
 
@@ -122,18 +126,26 @@ export default function MemberContactHistory({ filteredData, handleEditLog }) {
         </div>
 
         <div className="flex gap-2 items-center justify-between mt-2">
-          {filteredData?.status === "PENDING" && (
-            <button
-              className="mt-3 bg-black text-white py-1 px-4 rounded-[5px] hover:bg-gray-800"
-              onClick={() => {
-                navigate(
-                  `/member/${filteredData.member_id}?view=call-logs&logId=${filteredData.id}`,
-                );
-                handleEditLog(filteredData);
-              }}
-            >
-              Update
-            </button>
+          {(userRole === "FOH" ||
+            userRole === "TRAINER" ||
+            userRole === "FITNESS_MANAGER" ||
+            userRole === "CLUB_MANAGER" ||
+            userRole === "ADMIN") && (
+            <>
+              {filteredData?.status === "PENDING" && (
+                <button
+                  className="mt-3 bg-black text-white py-1 px-4 rounded-[5px] hover:bg-gray-800"
+                  onClick={() => {
+                    navigate(
+                      `/member/${filteredData.member_id}?view=call-logs&logId=${filteredData.id}`,
+                    );
+                    handleEditLog(filteredData);
+                  }}
+                >
+                  Update
+                </button>
+              )}
+            </>
           )}
 
           {filteredData?.updatedAt && (

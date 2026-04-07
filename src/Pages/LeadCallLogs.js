@@ -125,6 +125,8 @@ const LeadCallLogs = () => {
   const { id: leadId } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { user } = useSelector((state) => state.auth);
+  const userRole = user.role;
 
   const logId = searchParams.get("logId");
   const clubIdFromParams = searchParams.get("club_id");
@@ -153,8 +155,16 @@ const LeadCallLogs = () => {
   }, [dispatch]);
 
   // Extract Redux lists
-  const callStatusOption = lists["LEAD_CALL_STATUS"] || [];
+  // const callStatusOption = lists["LEAD_CALL_STATUS"] || [];
+  const callStatusOption = (lists["LEAD_CALL_STATUS"] || []).filter(option => {
+    if (leadDetails?.is_trial_booked) {
+      return option.value !== "Trial/Tour Scheduled";
+    }
+    return true;
+  });
   const notInterestedOption = lists["NOT_INTERESTED_REASON"] || [];
+
+  console.log("Call Status Options from Redux:", callStatusOption);
 
   const [callLogs, setCallLogs] = useState([]);
   const [filterStatus, setFilterStatus] = useState("");
@@ -293,59 +303,58 @@ const LeadCallLogs = () => {
   }, [editLog]);
 
   const fetchTrainerBookedSlots = async (trainerId) => {
-  if (!trainerId || !clubId) {
-    setTrainerBookedSlots([]);
-    return;
-  }
+    if (!trainerId || !clubId) {
+      setTrainerBookedSlots([]);
+      return;
+    }
 
-  try {
-    const res = await authAxios().post("/appointment/trainer/booked/slot", {
-      club_id: clubId,
-      trainer_id: trainerId,
+    try {
+      const res = await authAxios().post("/appointment/trainer/booked/slot", {
+        club_id: clubId,
+        trainer_id: trainerId,
+      });
+
+      setTrainerBookedSlots(res.data?.availability || []);
+    } catch (err) {
+      console.error(err);
+      setTrainerBookedSlots([]);
+    }
+  };
+
+  const fetchScheduleBookedSlots = async (staffId) => {
+    if (!staffId || !clubId) {
+      setScheduleBookedSlots([]);
+      return;
+    }
+
+    try {
+      const res = await authAxios().post("/appointment/trainer/booked/slot", {
+        club_id: clubId,
+        trainer_id: staffId, // same API used for FOH too
+      });
+
+      setScheduleBookedSlots(res.data?.availability || []);
+    } catch (err) {
+      console.error(err);
+      setScheduleBookedSlots([]);
+    }
+  };
+
+  const getExcludeTimesForDate = (date, slots) => {
+    if (!date || !slots.length) return [];
+
+    const dateStr = new Date(date).toISOString().split("T")[0];
+    const matchedDay = slots.find((item) => item.date === dateStr);
+    if (!matchedDay) return [];
+
+    return [...new Set(matchedDay.slots)].map((timeStr) => {
+      const [hours, minutes] = timeStr.split(":").map(Number);
+      const d = new Date(date);
+      d.setHours(hours, minutes, 0, 0);
+      return d;
     });
+  };
 
-    setTrainerBookedSlots(res.data?.availability || []);
-  } catch (err) {
-    console.error(err);
-    setTrainerBookedSlots([]);
-  }
-};
-
-const fetchScheduleBookedSlots = async (staffId) => {
-  if (!staffId || !clubId) {
-    setScheduleBookedSlots([]);
-    return;
-  }
-
-  try {
-    const res = await authAxios().post("/appointment/trainer/booked/slot", {
-      club_id: clubId,
-      trainer_id: staffId, // same API used for FOH too
-    });
-
-    setScheduleBookedSlots(res.data?.availability || []);
-  } catch (err) {
-    console.error(err);
-    setScheduleBookedSlots([]);
-  }
-};
-  
-  
-const getExcludeTimesForDate = (date, slots) => {
-  if (!date || !slots.length) return [];
-
-  const dateStr = new Date(date).toISOString().split("T")[0];
-  const matchedDay = slots.find((item) => item.date === dateStr);
-  if (!matchedDay) return [];
-
-  return [...new Set(matchedDay.slots)].map((timeStr) => {
-    const [hours, minutes] = timeStr.split(":").map(Number);
-    const d = new Date(date);
-    d.setHours(hours, minutes, 0, 0);
-    return d;
-  });
-};
-  
   const getFirstAvailableTime = (date, slots) => {
     let suggested = datePickerProps.getDefaultTimeForDate(date);
     if (!suggested) return null;
@@ -360,7 +369,7 @@ const getExcludeTimesForDate = (date, slots) => {
       const suggestedMins = toMins(suggested);
 
       const isExcluded = excludedTimes.some(
-        (excluded) => toMins(excluded) === suggestedMins
+        (excluded) => toMins(excluded) === suggestedMins,
       );
 
       if (!isExcluded) return suggested;
@@ -373,7 +382,6 @@ const getExcludeTimesForDate = (date, slots) => {
 
   const fetchStaff = async () => {
     try {
-
       if (!clubId) return;
 
       // Fetch all staff needed for 'training_by' select (both roles)
@@ -577,7 +585,10 @@ const getExcludeTimesForDate = (date, slots) => {
                       }
                       options={trainerList}
                       onChange={(selectedOption) => {
-                        formik.setFieldValue("training_by", selectedOption?.value || null);
+                        formik.setFieldValue(
+                          "training_by",
+                          selectedOption?.value || null,
+                        );
                         formik.setFieldValue("trial_tour_datetime", "");
                         fetchTrainerBookedSlots(selectedOption?.value);
                       }}
@@ -612,27 +623,34 @@ const getExcludeTimesForDate = (date, slots) => {
                           const prev = formik.values.trial_tour_datetime;
                           const isSameDay =
                             prev &&
-                            new Date(prev).toDateString() === new Date(date).toDateString();
+                            new Date(prev).toDateString() ===
+                              new Date(date).toDateString();
 
                           if (isSameDay) {
                             // User changed time manually — accept as-is
                             formik.setFieldValue("trial_tour_datetime", date);
                           } else {
                             // ── UPDATED: use getFirstAvailableTime instead of getDefaultTimeForDate ──
-                            const dateWithTime = getFirstAvailableTime(date, trainerBookedSlots);
-                            formik.setFieldValue("trial_tour_datetime", dateWithTime ?? null);
+                            const dateWithTime = getFirstAvailableTime(
+                              date,
+                              trainerBookedSlots,
+                            );
+                            formik.setFieldValue(
+                              "trial_tour_datetime",
+                              dateWithTime ?? null,
+                            );
                           }
                         }}
                         {...datePickerProps}
                         // excludeTimes={getExcludeTimes()}
                         excludeTimes={getExcludeTimesForDate(
                           formik.values.trial_tour_datetime,
-                          trainerBookedSlots
+                          trainerBookedSlots,
                         )}
                         onKeyDown={(e) => {
                           e.preventDefault();
                         }}
-                        disabled={!formik.values.training_by} // ← NEW
+                        disabled={!formik.values.training_by || editLog ? true : false} // ← NEW
                         placeholderText="Select date & time"
                         className="border px-3 py-2 w-full input--icon"
                       />
@@ -666,7 +684,10 @@ const getExcludeTimesForDate = (date, slots) => {
                           }
                           options={staffList}
                           onChange={(selectedOption) => {
-                            formik.setFieldValue("schedule_for", selectedOption?.value || null);
+                            formik.setFieldValue(
+                              "schedule_for",
+                              selectedOption?.value || null,
+                            );
                             formik.setFieldValue("follow_up_datetime", "");
                             fetchScheduleBookedSlots(selectedOption?.value);
                           }}
@@ -692,33 +713,46 @@ const getExcludeTimesForDate = (date, slots) => {
                             selected={formik.values.follow_up_datetime}
                             onChange={(date) => {
                               if (!date) {
-                                formik.setFieldValue("follow_up_datetime", null);
+                                formik.setFieldValue(
+                                  "follow_up_datetime",
+                                  null,
+                                );
                                 return;
                               }
 
                               const prev = formik.values.follow_up_datetime;
                               const isSameDay =
                                 prev &&
-                                new Date(prev).toDateString() === new Date(date).toDateString();
+                                new Date(prev).toDateString() ===
+                                  new Date(date).toDateString();
 
                               if (isSameDay) {
                                 // User changed time manually — accept as-is
-                                formik.setFieldValue("follow_up_datetime", date);
+                                formik.setFieldValue(
+                                  "follow_up_datetime",
+                                  date,
+                                );
                               } else {
                                 // ── UPDATED: use getFirstAvailableTime instead of getDefaultTimeForDate ──
-                                const dateWithTime = getFirstAvailableTime(date, scheduleBookedSlots);
-                                formik.setFieldValue("follow_up_datetime", dateWithTime ?? null);
+                                const dateWithTime = getFirstAvailableTime(
+                                  date,
+                                  scheduleBookedSlots,
+                                );
+                                formik.setFieldValue(
+                                  "follow_up_datetime",
+                                  dateWithTime ?? null,
+                                );
                               }
                             }}
                             {...datePickerProps}
                             excludeTimes={getExcludeTimesForDate(
                               formik.values.follow_up_datetime,
-                              scheduleBookedSlots
+                              scheduleBookedSlots,
                             )}
                             onKeyDown={(e) => {
                               e.preventDefault();
                             }}
-                            disabled={!formik.values.schedule_for} // ← NEW
+                            disabled={!formik.values.schedule_for || editLog ? true : false} // ← NEW
                             placeholderText="Select date & time"
                             className="border px-3 py-2 w-full input--icon"
                           />
@@ -730,8 +764,6 @@ const getExcludeTimesForDate = (date, slots) => {
                             </p>
                           )}
                       </div>
-
-                      
                     </div>
                   </div>
                 </>
@@ -847,27 +879,33 @@ const getExcludeTimesForDate = (date, slots) => {
             </div>
 
             {/* Buttons */}
-            <div className="flex items-center justify-end gap-2 mt-3">
-              {editLog && (
+            {(userRole === "FOH" ||
+              userRole === "TRAINER" ||
+              userRole === "FITNESS_MANAGER" ||
+              userRole === "CLUB_MANAGER" ||
+              userRole === "ADMIN") && (
+              <div className="flex items-center justify-end gap-2 mt-3">
+                {editLog && (
+                  <button
+                    type="button"
+                    className="px-4 py-2 bg-white text-black border border-black rounded"
+                    onClick={() => {
+                      formik.resetForm();
+                      setEditLog(null);
+                      navigate(`/lead-follow-up/${leadId}`);
+                    }}
+                  >
+                    Clear
+                  </button>
+                )}
                 <button
-                  type="button"
-                  className="px-4 py-2 bg-white text-black border border-black rounded"
-                  onClick={() => {
-                    formik.resetForm();
-                    setEditLog(null);
-                    navigate(`/lead-follow-up/${leadId}`);
-                  }}
+                  type="submit"
+                  className="px-4 py-2 bg-black text-white rounded"
                 >
-                  Clear
+                  Submit
                 </button>
-              )}
-              <button
-                type="submit"
-                className="px-4 py-2 bg-black text-white rounded"
-              >
-                Submit
-              </button>
-            </div>
+              </div>
+            )}
           </form>
         </div>
 
@@ -941,6 +979,7 @@ const getExcludeTimesForDate = (date, slots) => {
                 key={index}
                 filteredData={filteredLogs}
                 handleEditLog={setEditLog}
+                userRole={userRole}
               />
             ))
           ) : (

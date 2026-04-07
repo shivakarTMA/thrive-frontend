@@ -29,6 +29,7 @@ const CreateLeadAppointment = ({
   const dispatch = useDispatch();
   const [staffList, setStaffList] = useState([]);
   const [serviceList, setServiceList] = useState([]);
+  const [checkTrial, setCheckTrial] = useState(false);
 
   const [bookedSlots, setBookedSlots] = useState([]);
 
@@ -120,8 +121,19 @@ const CreateLeadAppointment = ({
     }
   };
 
+  const fetchLeadTrial = async () => {
+    try {
+      const res = await authAxios().get(`/lead/${memberID}`);
+      let data = res.data?.data || res?.data || [];
+      setCheckTrial(data?.is_trial_booked);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   useEffect(() => {
     // Fetch services and staff based on clubId if provided
+    fetchLeadTrial()
     fetchStaff(clubId);
     fetchService(clubId);
     if (clubId) dispatch(fetchClubTiming(clubId));
@@ -141,7 +153,7 @@ const CreateLeadAppointment = ({
         value: item.id,
       })) || []),
     ...(memberType === "LEAD"
-      ? [{ label: "Tour / Trial", value: "TOURTRIAL" }]
+      ? !checkTrial ? [{ label: "Tour / Trial", value: "TOURTRIAL" }] : []
       : []),
   ];
 

@@ -10,12 +10,15 @@ import { Link } from "react-router-dom";
 import Pagination from "../common/Pagination";
 import { RiDeleteBin6Fill } from "react-icons/ri";
 import ConfirmPopup from "../common/ConfirmPopup";
+import { useSelector } from "react-redux";
 
 const WorkoutPlanList = () => {
   const [workouts, setWorkouts] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [workoutToDelete, setWorkoutToDelete] = useState(null);
   const [showConfirmPopup, setShowConfirmPopup] = useState(false);
+  const { user } = useSelector((state) => state.auth);
+  const userRole = user.role;
 
   const [page, setPage] = useState(1);
   const [rowsPerPage] = useState(10);
@@ -85,12 +88,17 @@ const WorkoutPlanList = () => {
             <p className="text-sm">{`Home > All Workout Plans`}</p>
             <h1 className="text-3xl font-semibold">All Workout Plans</h1>
           </div>
-          <Link
-            to="/create-workout-plan"
-            className="px-4 py-2 bg-black text-white rounded flex items-center gap-2"
-          >
-            <FiPlus /> Create Workout
-          </Link>
+          {(userRole === "TRAINER" ||
+            userRole === "FITNESS_MANAGER" ||
+            userRole === "CLUB_MANAGER" ||
+            userRole === "ADMIN") && (
+            <Link
+              to="/create-workout-plan"
+              className="px-4 py-2 bg-black text-white rounded flex items-center gap-2"
+            >
+              <FiPlus /> Create Workout
+            </Link>
+          )}
         </div>
 
         {/* Filters */}
@@ -118,7 +126,12 @@ const WorkoutPlanList = () => {
                   {/* <th className="px-2 py-4">Center Name</th> */}
                   <th className="px-2 py-4">Created By</th>
                   <th className="px-2 py-4">Status</th>
-                  <th className="px-2 py-4">Action</th>
+                  {(userRole === "TRAINER" ||
+                    userRole === "FITNESS_MANAGER" ||
+                    userRole === "CLUB_MANAGER" ||
+                    userRole === "ADMIN") && (
+                    <th className="px-2 py-4">Action</th>
+                  )}
                 </tr>
               </thead>
               <tbody>
@@ -150,40 +163,45 @@ const WorkoutPlanList = () => {
                           {row?.status == null ? "--" : formatText(row?.status)}
                         </span>
                       </td>
-                      <td className="px-2 py-4">
-                        <div className="flex gap-2 items-center">
-                          <Tooltip
-                            content="Edit Workout"
-                            id={`edit-workout-${row.id}`}
-                            place="left"
-                          >
-                            <div className="p-1 cursor-pointer">
-                              <Link
-                                to={`/create-workout-plan/${row.id}`}
-                                className="p-0"
-                              >
-                                <LiaEdit className="text-[25px] text-black" />
-                              </Link>
-                            </div>
-                          </Tooltip>
-                          {row.id === 4 ? null : (
+                      {(userRole === "TRAINER" ||
+                        userRole === "FITNESS_MANAGER" ||
+                        userRole === "CLUB_MANAGER" ||
+                        userRole === "ADMIN") && (
+                        <td className="px-2 py-4">
+                          <div className="flex gap-2 items-center">
                             <Tooltip
-                              id={`delete-workout-${row.id}`}
-                              content="Delete Exercise"
+                              content="Edit Workout"
+                              id={`edit-workout-${row.id}`}
                               place="left"
                             >
-                              <div
-                                onClick={() => handleDeleteClick(row)}
-                                className="p-1 cursor-pointer"
-                              >
-                                <RiDeleteBin6Fill
-                                  className={`text-[25px] text-black`}
-                                />
+                              <div className="p-1 cursor-pointer">
+                                <Link
+                                  to={`/create-workout-plan/${row.id}`}
+                                  className="p-0"
+                                >
+                                  <LiaEdit className="text-[25px] text-black" />
+                                </Link>
                               </div>
                             </Tooltip>
-                          )}
-                        </div>
-                      </td>
+                            {row.id === 4 ? null : (
+                              <Tooltip
+                                id={`delete-workout-${row.id}`}
+                                content="Delete Exercise"
+                                place="left"
+                              >
+                                <div
+                                  onClick={() => handleDeleteClick(row)}
+                                  className="p-1 cursor-pointer"
+                                >
+                                  <RiDeleteBin6Fill
+                                    className={`text-[25px] text-black`}
+                                  />
+                                </div>
+                              </Tooltip>
+                            )}
+                          </div>
+                        </td>
+                      )}
                     </tr>
                   ))
                 ) : (
@@ -217,9 +235,8 @@ const WorkoutPlanList = () => {
         <ConfirmPopup
           message={
             <>
-              Are you sure you want to delete 
-              <br />
-              "{workoutToDelete?.name}"?
+              Are you sure you want to delete
+              <br />"{workoutToDelete?.name}"?
             </>
           }
           onConfirm={handleConfirmDelete}

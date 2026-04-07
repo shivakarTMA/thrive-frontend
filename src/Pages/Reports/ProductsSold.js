@@ -332,9 +332,9 @@ const ProductsSold = (props) => {
   ]);
 
   const handleSendInvoice = (row) => {
-      setSendModalOrder({
-        ...row,  // copies all properties including id
-      });
+    setSendModalOrder({
+      ...row, // copies all properties including id
+    });
   };
 
   const confirmSend = async (mode) => {
@@ -538,12 +538,14 @@ const ProductsSold = (props) => {
               />
             </div>
           </div>
-          <button
-            onClick={() => setExportShowModal(true)}
-            className="px-4 py-2 bg-black text-white rounded flex items-center gap-2"
-          >
-            <LuDownload /> <span>Export</span>
-          </button>
+          {(userRole === "FINANCE_MANAGER" || userRole === "ADMIN") && (
+            <button
+              onClick={() => setExportShowModal(true)}
+              className="px-4 py-2 bg-black text-white rounded flex items-center gap-2"
+            >
+              <LuDownload /> <span>Export</span>
+            </button>
+          )}
         </div>
 
         {/* Dynamic Statistics */}

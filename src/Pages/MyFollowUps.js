@@ -326,7 +326,13 @@ const MyFollowUps = () => {
                 <th className="px-2 py-4 min-w-[120px]">Call Status</th>
                 <th className="px-2 py-4 min-w-[90px]">Status</th>
                 <th className="px-2 py-4 min-w-[130px]">Staff Name</th>
-                <th className="px-2 py-4">Action</th>
+                {(userRole === "FOH" ||
+                  userRole === "TRAINER" ||
+                  userRole === "FITNESS_MANAGER" ||
+                  userRole === "CLUB_MANAGER" ||
+                  userRole === "ADMIN") && (
+                  <th className="px-2 py-4">Action</th>
+                )}
               </tr>
             </thead>
 
@@ -379,44 +385,50 @@ const MyFollowUps = () => {
                     <td className="px-2 py-4">
                       {row.staff_name ? row.staff_name : "--"}
                     </td>
-                    <td className="px-2 py-4">
-                      {row.status !== "COMPLETE" ? (
-                        <div className="flex">
-                          {!(
-                            row.entity_type === "LEAD" && row.is_subscribed
-                          ) ? (
-                            <Tooltip
-                              id={`tooltip-update-${row.id}`}
-                              content="Update Follow Up"
-                              place="top"
-                            >
-                              <Link
-                                to={
-                                  row.entity_type === "LEAD"
-                                    ? `/lead-follow-up/${row.member_id}?logId=${row.id}`
-                                    : `/member/${row.member_id}?view=call-logs&logId=${row.id}`
-                                }
-                                className="p-1 block cursor-pointer"
+                    {(userRole === "FOH" ||
+                      userRole === "TRAINER" ||
+                      userRole === "FITNESS_MANAGER" ||
+                      userRole === "CLUB_MANAGER" ||
+                      userRole === "ADMIN") && (
+                      <td className="px-2 py-4">
+                        {row.status !== "COMPLETE" ? (
+                          <div className="flex">
+                            {!(
+                              row.entity_type === "LEAD" && row.is_subscribed
+                            ) ? (
+                              <Tooltip
+                                id={`tooltip-update-${row.id}`}
+                                content="Update Follow Up"
+                                place="top"
                               >
-                                <LiaEdit className="text-[25px] text-black" />
-                              </Link>
-                            </Tooltip>
-                          ) : (
-                            <Tooltip
-                              id={`tooltip-disabled-${row.id}`}
-                              content="Subscribed leads cannot be edited"
-                              place="top"
-                            >
-                              <span className="p-1 block cursor-not-allowed opacity-50">
-                                <LiaEdit className="text-[25px] text-gray-400" />
-                              </span>
-                            </Tooltip>
-                          )}
-                        </div>
-                      ) : (
-                        "--"
-                      )}
-                    </td>
+                                <Link
+                                  to={
+                                    row.entity_type === "LEAD"
+                                      ? `/lead-follow-up/${row.member_id}?logId=${row.id}`
+                                      : `/member/${row.member_id}?view=call-logs&logId=${row.id}`
+                                  }
+                                  className="p-1 block cursor-pointer"
+                                >
+                                  <LiaEdit className="text-[25px] text-black" />
+                                </Link>
+                              </Tooltip>
+                            ) : (
+                              <Tooltip
+                                id={`tooltip-disabled-${row.id}`}
+                                content="Subscribed leads cannot be edited"
+                                place="top"
+                              >
+                                <span className="p-1 block cursor-not-allowed opacity-50">
+                                  <LiaEdit className="text-[25px] text-gray-400" />
+                                </span>
+                              </Tooltip>
+                            )}
+                          </div>
+                        ) : (
+                          "--"
+                        )}
+                      </td>
+                    )}
                   </tr>
                 ))
               ) : (

@@ -520,51 +520,51 @@ const MemberList = () => {
               </div>
             </div> */}
             <div className="flex items-center">
-                      <div className="w-fit flex items-center gap-2 border-r">
-                        <div className="text-sm font-medium text-gray-600 flex gap-2 items-center">
-                          <FaCircle className="text-[10px] text-[#009EB2]" /> Total New
-                          Member
-                        </div>
-                        <div className="pr-2">
-                          <span className="text-sm font-semibold">
-                            {dashboardData?.snapshot?.total_new_member}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="w-fit flex items-center gap-2 border-r pl-2">
-                        <div className="text-sm font-medium text-gray-600 flex gap-2 items-center">
-                          <FaCircle className="text-[10px] text-[#1F9254]" />
-                          Total Renewal Member
-                        </div>
-                        <div className="pr-2">
-                          <span className="text-sm font-semibold">
-                            {dashboardData?.snapshot?.total_renewal_member}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="w-fit flex items-center gap-2 border-r pl-2">
-                        <div className="text-sm font-medium text-gray-600 flex gap-2 items-center">
-                          <FaCircle className="text-[10px] text-[#ff9900]" />
-                          Total Returning Member
-                        </div>
-                        <div className="pr-2">
-                          <span className="text-sm font-semibold">
-                            {dashboardData?.snapshot?.total_returning_member}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="w-fit flex items-center gap-2 pl-2">
-                        <div className="text-sm font-medium text-gray-600 flex gap-2 items-center">
-                          <FaCircle className="text-[10px] text-[#FF0000]" />
-                          Total Advanced Renewal Member
-                        </div>
-                        <div>
-                          <span className="text-sm font-semibold">
-                            {dashboardData?.snapshot?.total_advanced_renewal_member}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
+              <div className="w-fit flex items-center gap-2 border-r">
+                <div className="text-sm font-medium text-gray-600 flex gap-2 items-center">
+                  <FaCircle className="text-[10px] text-[#009EB2]" /> Total New
+                  Member
+                </div>
+                <div className="pr-2">
+                  <span className="text-sm font-semibold">
+                    {dashboardData?.snapshot?.total_new_member}
+                  </span>
+                </div>
+              </div>
+              <div className="w-fit flex items-center gap-2 border-r pl-2">
+                <div className="text-sm font-medium text-gray-600 flex gap-2 items-center">
+                  <FaCircle className="text-[10px] text-[#1F9254]" />
+                  Total Renewal Member
+                </div>
+                <div className="pr-2">
+                  <span className="text-sm font-semibold">
+                    {dashboardData?.snapshot?.total_renewal_member}
+                  </span>
+                </div>
+              </div>
+              <div className="w-fit flex items-center gap-2 border-r pl-2">
+                <div className="text-sm font-medium text-gray-600 flex gap-2 items-center">
+                  <FaCircle className="text-[10px] text-[#ff9900]" />
+                  Total Returning Member
+                </div>
+                <div className="pr-2">
+                  <span className="text-sm font-semibold">
+                    {dashboardData?.snapshot?.total_returning_member}
+                  </span>
+                </div>
+              </div>
+              <div className="w-fit flex items-center gap-2 pl-2">
+                <div className="text-sm font-medium text-gray-600 flex gap-2 items-center">
+                  <FaCircle className="text-[10px] text-[#FF0000]" />
+                  Total Advanced Renewal Member
+                </div>
+                <div>
+                  <span className="text-sm font-semibold">
+                    {dashboardData?.snapshot?.total_advanced_renewal_member}
+                  </span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -638,9 +638,7 @@ const MemberList = () => {
             </div>
             <div>
               <div className="flex gap-2 items-center">
-                {(userRole === "CLUB_MANAGER" ||
-                  userRole === "GENERAL_MANAGER" ||
-                  userRole === "ADMIN") && (
+                {(userRole === "CLUB_MANAGER" || userRole === "ADMIN") && (
                   <>
                     {showOwnerDropdown && selectedUserId.length > 0 && (
                       <div>
@@ -665,29 +663,22 @@ const MemberList = () => {
                         alt="assign"
                       />
                     </Tooltip>
-                    {/* <Tooltip
-                      id={`tooltip-send-sms`}
-                      content="Bulk Send SMS"
-                      place="top"
-                    >
-                      <img
-                        src={SmsIcon}
-                        className="w-8 cursor-pointer"
-                        onClick={() => handleCommunicate("sms")}
-                      />
-                    </Tooltip> */}
-                    <Tooltip
-                      id={`tooltip-send-mail`}
-                      content="Bulk Send Mail"
-                      place="top"
-                    >
-                      <img
-                        src={MailIcon}
-                        className="w-8 cursor-pointer"
-                        onClick={() => handleCommunicate("email")}
-                      />
-                    </Tooltip>
                   </>
+                )}
+                {(userRole === "CLUB_MANAGER" ||
+                  userRole === "ADMIN" ||
+                  userRole === "MARKETING_MANAGER") && (
+                  <Tooltip
+                    id={`tooltip-send-mail`}
+                    content="Bulk Send Mail"
+                    place="top"
+                  >
+                    <img
+                      src={MailIcon}
+                      className="w-8 cursor-pointer"
+                      onClick={() => handleCommunicate("email")}
+                    />
+                  </Tooltip>
                 )}
 
                 {/* Show confirm button after selecting an owner */}
@@ -730,19 +721,25 @@ const MemberList = () => {
                 <thead className="text-xs text-gray-700 uppercase bg-gray-50">
                   <tr>
                     {(userRole === "CLUB_MANAGER" ||
-                      userRole === "GENERAL_MANAGER" ||
-                      userRole === "ADMIN") && <th className="px-2 py-4 min-w-[50px]">#</th>}
+                      userRole === "MARKETING_MANAGER" ||
+                      userRole === "ADMIN") && (
+                      <th className="px-2 py-4 min-w-[50px]">#</th>
+                    )}
                     <th className="px-2 py-4 min-w-[120px]">Profile Image</th>
                     <th className="px-2 py-4 min-w-[130px]">Name</th>
                     <th className="px-2 py-4 min-w-[120px]">Club Name</th>
                     <th className="px-2 py-4 min-w-[70px]">Gender</th>
-                    <th className="px-2 py-4 min-w-[160px]">MemeberShip Duration</th>
+                    <th className="px-2 py-4 min-w-[160px]">
+                      MemeberShip Duration
+                    </th>
                     <th className="px-2 py-4 min-w-[90px]">Status</th>
                     <th className="px-2 py-4 min-w-[90px]">Start On</th>
                     <th className="px-2 py-4 min-w-[90px]">Expired On</th>
                     <th className="px-2 py-4 min-w-[130px]">Trainer Name</th>
                     <th className="px-2 py-4 min-w-[130px]">App Downloaded</th>
-                    <th className="px-2 py-4 min-w-[150px]">Profile Completion</th>
+                    <th className="px-2 py-4 min-w-[150px]">
+                      Profile Completion
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -752,7 +749,7 @@ const MemberList = () => {
                       className="group bg-white border-b relative hover:bg-gray-50"
                     >
                       {(userRole === "CLUB_MANAGER" ||
-                        userRole === "GENERAL_MANAGER" ||
+                        userRole === "MARKETING_MANAGER" ||
                         userRole === "ADMIN") && (
                         <td className="px-2 py-4">
                           <div className="flex items-center custom--checkbox--2">
@@ -857,12 +854,11 @@ const MemberList = () => {
                         </div>
 
                         {/* Member Action */}
-                        {/* {(userRole === "CLUB_MANAGER" ||
-                          userRole === "GENERAL_MANAGER" ||
-                          userRole === "ADMIN" ||
-                          userRole === "FOH") && ( */}
-                          <div className="absolute hidden group-hover:flex gap-2 right-0 h-full top-0 w-[50%] items-center justify-end bg-[linear-gradient(269deg,_#ffffff_30%,_transparent)] pr-5 transition duration-700">
-                            <div className="flex gap-1">
+                        <div className="absolute hidden group-hover:flex gap-2 right-0 h-full top-0 w-[50%] items-center justify-end bg-[linear-gradient(269deg,_#ffffff_30%,_transparent)] pr-5 transition duration-700">
+                          <div className="flex gap-1">
+                            {(userRole === "CLUB_MANAGER" ||
+                              userRole === "ADMIN" ||
+                              userRole === "FOH") && (
                               <Tooltip
                                 id={`edit-member-${member?.id}`}
                                 content="Edit Member"
@@ -877,7 +873,13 @@ const MemberList = () => {
                                   </Link>
                                 </div>
                               </Tooltip>
+                            )}
 
+                            {(userRole === "FOH" ||
+                              userRole === "TRAINER" ||
+                              userRole === "FITNESS_MANAGER" ||
+                              userRole === "CLUB_MANAGER" ||
+                              userRole === "ADMIN") && (
                               <Tooltip
                                 id={`member-call-${member?.id}`}
                                 content="Call Logs"
@@ -892,7 +894,9 @@ const MemberList = () => {
                                   </Link>
                                 </div>
                               </Tooltip>
+                            )}
 
+                            {member?.is_subscribed !== true ? null : (
                               <Tooltip
                                 id={`send-payment-${member?.id}`}
                                 content="Buy services"
@@ -906,49 +910,12 @@ const MemberList = () => {
                                     setSelectedLeadClub(member?.club_id);
                                   }}
                                 >
-                                  <Link to="#" className="p-0">
-                                    <IoIosAddCircleOutline className="text-[25px] text-black" />
-                                  </Link>
+                                  <IoIosAddCircleOutline className="text-[25px] text-black" />
                                 </div>
                               </Tooltip>
-                            </div>
+                            )}
                           </div>
-                        {/* // )} */}
-                        {userRole === "TRAINER" && (
-                          <div className="absolute hidden group-hover:flex gap-2 right-0 h-full top-0 w-[50%] items-center justify-end bg-[linear-gradient(269deg,_#ffffff_30%,_transparent)] pr-5 transition duration-700">
-                            <div className="flex gap-1">
-                              <Tooltip
-                                id={`edit-member-${member?.id}`}
-                                content="View Profile"
-                                place="left"
-                              >
-                                <div className="p-1 cursor-pointer">
-                                  <Link
-                                    to={`/member/${member?.id}`}
-                                    className="p-0"
-                                  >
-                                    <IoEyeOutline className="text-[25px] text-black" />
-                                  </Link>
-                                </div>
-                              </Tooltip>
-
-                              <Tooltip
-                                id={`member-call-${member?.id}`}
-                                content="Call Logs"
-                                place="left"
-                              >
-                                <div className="p-1 cursor-pointer">
-                                  <Link
-                                    to={`/member/${member?.id}?view=call-logs`}
-                                    className="p-0"
-                                  >
-                                    <MdCall className="text-[25px] text-black" />
-                                  </Link>
-                                </div>
-                              </Tooltip>
-                            </div>
-                          </div>
-                        )}
+                        </div>
                         {/* Member Action End */}
                       </td>
                     </tr>

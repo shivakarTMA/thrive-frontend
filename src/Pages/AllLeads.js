@@ -254,7 +254,7 @@ const AllLeads = () => {
         requests.push(
           authAxios().get("/staff/list", {
             params: { role: "CLUB_MANAGER", club_id: clubId },
-          })
+          }),
         );
       }
 
@@ -274,7 +274,7 @@ const AllLeads = () => {
       });
 
       const uniqueData = Array.from(
-        new Map(mergedData.map((user) => [user.id, user])).values()
+        new Map(mergedData.map((user) => [user.id, user])).values(),
       );
 
       const activeOnly = filterActiveItems(uniqueData);
@@ -311,13 +311,13 @@ const AllLeads = () => {
     fetchClub();
   }, []);
 
-useEffect(() => {
-  if (clubFilter?.value) {
-    fetchStaff(clubFilter.value);
-  } else {
-    fetchStaff(); // fetch without club_id
-  }
-}, [clubFilter?.value]);
+  useEffect(() => {
+    if (clubFilter?.value) {
+      fetchStaff(clubFilter.value);
+    } else {
+      fetchStaff(); // fetch without club_id
+    }
+  }, [clubFilter?.value]);
 
   const staffOptions = [
     {
@@ -568,24 +568,24 @@ useEffect(() => {
   /* =========================
        1️⃣ JWT EXPIRY HANDLER
     ========================== */
-    useEffect(() => {
-      if (!tokenExpiry) return;
-  
-      const remainingTime = tokenExpiry - Date.now();
-  
-      if (remainingTime <= 0) {
-        toast.dismiss();
-        logoutAndRedirect();
-        return;
-      }
-  
-      const timer = setTimeout(() => {
-        toast.dismiss();
-        logoutAndRedirect();
-      }, remainingTime);
-  
-      return () => clearTimeout(timer);
-    }, [tokenExpiry]);
+  useEffect(() => {
+    if (!tokenExpiry) return;
+
+    const remainingTime = tokenExpiry - Date.now();
+
+    if (remainingTime <= 0) {
+      toast.dismiss();
+      logoutAndRedirect();
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      toast.dismiss();
+      logoutAndRedirect();
+    }, remainingTime);
+
+    return () => clearTimeout(timer);
+  }, [tokenExpiry]);
 
   /* =========================
        2️⃣ STAFF VALIDATION
@@ -618,45 +618,45 @@ useEffect(() => {
   /* =========================
        3️⃣ SESSION VALIDATION
     ========================== */
-    useEffect(() => {
-      if (!accessToken) return;
-  
-      let isCancelled = false;
-  
-      const checkSession = async () => {
-        try {
-          await authAxios().get("/staff/check/active");
-        } catch (error) {
-          if (!isCancelled && error?.response?.status === 401) {
-            setShowPopup(true);
-          }
+  useEffect(() => {
+    if (!accessToken) return;
+
+    let isCancelled = false;
+
+    const checkSession = async () => {
+      try {
+        await authAxios().get("/staff/check/active");
+      } catch (error) {
+        if (!isCancelled && error?.response?.status === 401) {
+          setShowPopup(true);
         }
-      };
-  
-      checkSession();
-      const interval = setInterval(checkSession, 10000);
-  
-      return () => {
-        isCancelled = true;
-        clearInterval(interval);
-      };
-    }, [accessToken]);
-  
-    /* =========================
+      }
+    };
+
+    checkSession();
+    const interval = setInterval(checkSession, 10000);
+
+    return () => {
+      isCancelled = true;
+      clearInterval(interval);
+    };
+  }, [accessToken]);
+
+  /* =========================
        4️⃣ STORAGE TAMPER DETECTION
     ========================== */
   useEffect(() => {
     const handleStorageChange = () => {
       const token = localStorage.getItem("accessToken");
-  
+
       if (!token) {
         logoutAndRedirect();
         return;
       }
-  
+
       try {
         const parsed = JSON.parse(atob(token.split(".")[1]));
-  
+
         // ❌ invalid structure
         if (!parsed?.id || !parsed?.role) {
           logoutAndRedirect();
@@ -666,56 +666,56 @@ useEffect(() => {
         logoutAndRedirect();
       }
     };
-  
+
     window.addEventListener("storage", handleStorageChange);
     return () => window.removeEventListener("storage", handleStorageChange);
   }, []);
-  
-    /* =========================
+
+  /* =========================
        5️⃣ TAB FOCUS VALIDATION
     ========================== */
-    useEffect(() => {
-      const handleVisibilityChange = () => {
-        if (document.visibilityState === "visible") {
-          if (!authFromToken) {
-            logoutAndRedirect();
-            return;
-          }
-  
-          if (!hasRouteAccess(authFromToken.role, location.pathname)) {
-            logoutAndRedirect();
-          }
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        if (!authFromToken) {
+          logoutAndRedirect();
+          return;
         }
-      };
-  
-      document.addEventListener("visibilitychange", handleVisibilityChange);
-      return () =>
-        document.removeEventListener("visibilitychange", handleVisibilityChange);
-    }, [authFromToken, location.pathname]);
-  
-    /* =========================
+
+        if (!hasRouteAccess(authFromToken.role, location.pathname)) {
+          logoutAndRedirect();
+        }
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () =>
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+  }, [authFromToken, location.pathname]);
+
+  /* =========================
        6️⃣ INITIAL GUARD (FIXED)
     ========================== */
-    useEffect(() => {
-      if (!accessToken) {
-        logoutAndRedirect();
-        return;
-      }
-  
-      if (tokenExpiry && Date.now() > tokenExpiry) {
-        logoutAndRedirect();
-        return;
-      }
-  
-      if (!authFromToken) {
-        logoutAndRedirect();
-        return;
-      }
-  
-      if (!hasRouteAccess(authFromToken.role, location.pathname)) {
-        logoutAndRedirect();
-      }
-    }, [accessToken, tokenExpiry, authFromToken, location.pathname]);
+  useEffect(() => {
+    if (!accessToken) {
+      logoutAndRedirect();
+      return;
+    }
+
+    if (tokenExpiry && Date.now() > tokenExpiry) {
+      logoutAndRedirect();
+      return;
+    }
+
+    if (!authFromToken) {
+      logoutAndRedirect();
+      return;
+    }
+
+    if (!hasRouteAccess(authFromToken.role, location.pathname)) {
+      logoutAndRedirect();
+    }
+  }, [accessToken, tokenExpiry, authFromToken, location.pathname]);
 
   return (
     <>
@@ -846,8 +846,8 @@ useEffect(() => {
                   </div>
                   <div>
                     <div className="flex gap-2 items-center">
+
                       {(userRole === "CLUB_MANAGER" ||
-                        userRole === "GENERAL_MANAGER" ||
                         userRole === "ADMIN") && (
                         <>
                           {showOwnerDropdown && selectedUserId.length > 0 && (
@@ -873,7 +873,9 @@ useEffect(() => {
                               alt="assign"
                             />
                           </Tooltip>
-                          {/* <Tooltip
+                        </>
+                      )}
+                      {/* <Tooltip
                             id={`tooltip-send-sms`}
                             content="Bulk Send SMS"
                             place="top"
@@ -884,18 +886,20 @@ useEffect(() => {
                               onClick={() => handleCommunicate("sms")}
                             />
                           </Tooltip> */}
-                          <Tooltip
-                            id={`tooltip-send-mail`}
-                            content="Bulk Send Mail"
-                            place="top"
-                          >
-                            <img
-                              src={MailIcon}
-                              className="w-8 cursor-pointer"
-                              onClick={() => handleCommunicate("email")}
-                            />
-                          </Tooltip>
-                        </>
+                      {(userRole === "CLUB_MANAGER" ||
+                        userRole === "ADMIN" ||
+                        userRole === "MARKETING_MANAGER") && (
+                        <Tooltip
+                          id={`tooltip-send-mail`}
+                          content="Bulk Send Mail"
+                          place="top"
+                        >
+                          <img
+                            src={MailIcon}
+                            className="w-8 cursor-pointer"
+                            onClick={() => handleCommunicate("email")}
+                          />
+                        </Tooltip>
                       )}
 
                       {/* Show confirm button after selecting an owner */}
@@ -937,7 +941,7 @@ useEffect(() => {
                       <thead className="text-xs text-gray-700 uppercase bg-gray-50">
                         <tr>
                           {(userRole === "CLUB_MANAGER" ||
-                            userRole === "GENERAL_MANAGER" ||
+                            userRole === "MARKETING_MANAGER" ||
                             userRole === "ADMIN") && (
                             <th className="px-2 py-4">#</th>
                           )}
@@ -977,22 +981,26 @@ useEffect(() => {
                               className="group bg-white border-b hover:bg-gray-50 relative transition duration-700"
                             >
                               {(userRole === "CLUB_MANAGER" ||
-                                userRole === "GENERAL_MANAGER" ||
+                                userRole === "MARKETING_MANAGER" ||
                                 userRole === "ADMIN") && (
-                                <td className="px-2 py-4">
-                                  <div className="flex items-center custom--checkbox--2">
-                                    <input
-                                      type="checkbox"
-                                      className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
-                                      checked={selectedUserId.includes(row.id)}
-                                      onChange={() =>
-                                        handleCheckboxChange(row.id)
-                                      }
-                                    />
-                                    <span className="checkmark--custom"></span>
-                                  </div>
-                                </td>
-                              )}
+                                  <th className="px-2 py-4">#</th>
+                                ) && (
+                                  <td className="px-2 py-4">
+                                    <div className="flex items-center custom--checkbox--2">
+                                      <input
+                                        type="checkbox"
+                                        className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                                        checked={selectedUserId.includes(
+                                          row.id,
+                                        )}
+                                        onChange={() =>
+                                          handleCheckboxChange(row.id)
+                                        }
+                                      />
+                                      <span className="checkmark--custom"></span>
+                                    </div>
+                                  </td>
+                                )}
 
                               <td className="px-2 py-4">
                                 {row?.full_name ? row?.full_name : "--"}
@@ -1042,11 +1050,11 @@ useEffect(() => {
                                 {formatAutoDate(row?.updatedAt)}
 
                                 {/* Lead Actions */}
-                                {(userRole === "CLUB_MANAGER" ||
-                                  userRole === "GENERAL_MANAGER" ||
-                                  userRole === "ADMIN" ||
-                                  userRole === "FOH") && (
-                                  <div className="absolute hidden group-hover:flex gap-2 right-0 h-full top-0 w-[50%] items-center justify-end bg-[linear-gradient(269deg,_#ffffff_30%,_transparent)] pr-5 transition duration-700">
+                                {/* {(userRole === "CLUB_MANAGER" || userRole === "ADMIN" || userRole === "FOH") && ( */}
+                                <div className="absolute hidden group-hover:flex gap-2 right-0 h-full top-0 w-[50%] items-center justify-end bg-[linear-gradient(269deg,_#ffffff_30%,_transparent)] pr-5 transition duration-700">
+                                  {(userRole === "CLUB_MANAGER" ||
+                                    userRole === "ADMIN" ||
+                                    userRole === "FOH") && (
                                     <Tooltip
                                       id={`tooltip-edit-${row.id}`}
                                       content="Edit Lead"
@@ -1062,6 +1070,13 @@ useEffect(() => {
                                         <LiaEdit className="text-[25px] text-black" />
                                       </div>
                                     </Tooltip>
+                                  )}
+
+                                  {(userRole === "FOH" ||
+                                    userRole === "TRAINER" ||
+                                    userRole === "FITNESS_MANAGER" ||
+                                    userRole === "CLUB_MANAGER" ||
+                                    userRole === "ADMIN") && (
                                     <Tooltip
                                       id={`tooltip-call-${row.id}`}
                                       content="Add Call log"
@@ -1076,6 +1091,10 @@ useEffect(() => {
                                         </Link>
                                       </div>
                                     </Tooltip>
+                                  )}
+                                  {(userRole === "FOH" ||
+                                    userRole === "CLUB_MANAGER" ||
+                                    userRole === "ADMIN") && (
                                     <Tooltip
                                       id={`tooltip-convert-${row.id}`}
                                       content="Convert to member"
@@ -1091,6 +1110,10 @@ useEffect(() => {
                                         <TbArrowsExchange className="text-[25px] text-black" />
                                       </div>
                                     </Tooltip>
+                                  )}
+                                  {(userRole === "FOH" ||
+                                    userRole === "CLUB_MANAGER" ||
+                                    userRole === "ADMIN") && (
                                     <Tooltip
                                       id={`tooltip-schedule-${row.id}`}
                                       content="Schedule Trial"
@@ -1105,41 +1128,33 @@ useEffect(() => {
                                         </Link>
                                       </div>
                                     </Tooltip>
+                                  )}
 
-                                    <Tooltip
-                                      id={`tooltip-appointment-${row.id}`}
-                                      content="Add Appointment"
-                                      place="left"
-                                    >
-                                      <div
-                                        onClick={() => {
-                                          setSelectedLeadMember(row?.id);
-                                          setAppointmentModal(true);
-                                          setSelectedLeadClub(row?.club_id)
-                                        }}
-                                        className="p-1 cursor-pointer"
-                                      >
-                                        <LuCalendarPlus className="text-[25px] text-black" />
-                                      </div>
-                                    </Tooltip>
+                                  {(userRole === "FOH" ||
+                                    userRole === "TRAINER" ||
+                                    userRole === "FITNESS_MANAGER" ||
+                                    userRole === "CLUB_MANAGER" ||
+                                    userRole === "ADMIN") && (
 
-                                    {/* <Tooltip
-                                      id={`tooltip-send-${row.id}`}
-                                      content="Send Payment Link"
-                                      place="top"
+                                  <Tooltip
+                                    id={`tooltip-appointment-${row.id}`}
+                                    content="Add Appointment"
+                                    place="left"
+                                  >
+                                    <div
+                                      onClick={() => {
+                                        setSelectedLeadMember(row?.id);
+                                        setAppointmentModal(true);
+                                        setSelectedLeadClub(row?.club_id);
+                                      }}
+                                      className="p-1 cursor-pointer"
                                     >
-                                      <div
-                                        onClick={() => {
-                                          setSelectedLeadMember(row.id);
-                                          setSendPaymentModal(true);
-                                        }}
-                                        className="p-1 cursor-pointer"
-                                      >
-                                        <IoIosAddCircleOutline className="text-[25px] text-black" />
-                                      </div>
-                                    </Tooltip> */}
-                                  </div>
-                                )}
+                                      <LuCalendarPlus className="text-[25px] text-black" />
+                                    </div>
+                                  </Tooltip>
+                                  )}
+                                </div>
+                                {/* // )} */}
                                 {/* Lead Actions End */}
                               </td>
                             </tr>

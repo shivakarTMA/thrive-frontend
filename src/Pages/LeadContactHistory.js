@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { formatAutoDate, formatDateTimeLead, formatText } from "../Helper/helper";
 import { FaCircle } from "react-icons/fa";
 
-export default function LeadContactHistory({ handleEditLog, filteredData }) {
+export default function LeadContactHistory({ handleEditLog, filteredData, userRole }) {
   const [isExpanded, setIsExpanded] = useState(false);
 
   const toggleRemarks = () => {
@@ -174,6 +174,11 @@ export default function LeadContactHistory({ handleEditLog, filteredData }) {
             </div>
           )}
         </div>
+        {(userRole === "FOH" ||
+          userRole === "TRAINER" ||
+          userRole === "FITNESS_MANAGER" ||
+          userRole === "CLUB_MANAGER" ||
+          userRole === "ADMIN") && (
         <div className="flex gap-2 items-center justify-between mt-2 w-full">
           {/* Update button */}
           {filteredData?.status === "PENDING" && (
@@ -192,6 +197,7 @@ export default function LeadContactHistory({ handleEditLog, filteredData }) {
             </p>
           )}
         </div>
+          )}
       </div>
     </div>
   );

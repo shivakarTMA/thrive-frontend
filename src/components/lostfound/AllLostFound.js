@@ -84,7 +84,7 @@ const AllLostFound = () => {
       const activeOnly = filterActiveItems(data);
       setClubList(activeOnly);
     } catch (error) {
-      console.log(error)
+      console.log(error);
     }
   };
   // Function to fetch role list
@@ -354,18 +354,22 @@ const AllLostFound = () => {
               setAppliedFilters={setAppliedFilters}
             />
           </div>
-          <div>
-            <button
-              onClick={() => {
-                setEditingOption(null);
-                setModalOpen(true);
-              }}
-              type="button"
-              className="px-4 py-2 bg-black text-white rounded flex items-center gap-2"
-            >
-              <FiPlus /> Add New Item
-            </button>
-          </div>
+          {(userRole === "FOH" ||
+            userRole === "CLUB_MANAGER" ||
+            userRole === "ADMIN") && (
+            <div>
+              <button
+                onClick={() => {
+                  setEditingOption(null);
+                  setModalOpen(true);
+                }}
+                type="button"
+                className="px-4 py-2 bg-black text-white rounded flex items-center gap-2"
+              >
+                <FiPlus /> Add New Item
+              </button>
+            </div>
+          )}
         </div>
 
         <div className="table--data--bottom w-full">
@@ -384,7 +388,11 @@ const AllLostFound = () => {
                   <th className="px-2 py-4">Claimant Name</th>
                   <th className="px-2 py-4">Return By</th>
                   <th className="px-2 py-4">Return Date Time</th>
-                  <th className="px-2 py-4">Action</th>
+                  {(userRole === "FOH" ||
+                    userRole === "CLUB_MANAGER" ||
+                    userRole === "ADMIN") && (
+                    <th className="px-2 py-4">Action</th>
+                  )}
                 </tr>
               </thead>
               <tbody>
@@ -395,13 +403,13 @@ const AllLostFound = () => {
                       className="bg-white border-b hover:bg-gray-50 border-gray-200"
                     >
                       <td className="px-2 py-4">
-                          <div className="bg-gray-100 rounded-lg w-14 h-14 overflow-hidden">
-                            <img
-                              src={row?.image}
-                              className="w-full h-full object-contain"
-                            />
-                          </div>
-                        </td>
+                        <div className="bg-gray-100 rounded-lg w-14 h-14 overflow-hidden">
+                          <img
+                            src={row?.image}
+                            className="w-full h-full object-contain"
+                          />
+                        </div>
+                      </td>
                       <td className="px-2 py-4">
                         {row?.club_name ? row?.club_name : "--"}
                       </td>
@@ -440,44 +448,48 @@ const AllLostFound = () => {
                           ? "--"
                           : formatDateTimeLead(row?.return_date_time)}
                       </td>
-                      <td className="px-2 py-4">
-                        <div className="flex">
-                          <Tooltip
-                            id={`tooltip-edit-${row.id}`}
-                            content="View Details"
-                            place="left"
-                          >
-                            <div
-                              className="bg-[#F1F1F1] border border-[#D4D4D4] rounded-l-[5px] w-[32px] h-[32px] flex items-center justify-center cursor-pointer"
-                              onClick={() => {
-                                setEditingOption(row.id);
-                                setModalOpen(true);
-                              }}
+                      {(userRole === "FOH" ||
+                        userRole === "CLUB_MANAGER" ||
+                        userRole === "ADMIN") && (
+                        <td className="px-2 py-4">
+                          <div className="flex">
+                            <Tooltip
+                              id={`tooltip-edit-${row.id}`}
+                              content="View Details"
+                              place="left"
                             >
-                              <img src={viewIcon} />
-                            </div>
-                          </Tooltip>
-                          <Tooltip
-                            id={`tooltip-return-${row.id}`}
-                            content="Return Item"
-                            place="left"
-                          >
-                            <div
-                              className={`bg-[#F1F1F1] border border-[#D4D4D4] rounded-r-[5px] w-[32px] h-[32px] flex items-center justify-center ${
-                                row.status !== "AVAILABLE"
-                                  ? "cursor-not-allowed pointer-events-none opacity-[0.5]"
-                                  : "cursor-pointer"
-                              } `}
-                              onClick={() => {
-                                setReturnedModalOpen(true);
-                                setMarkReturnedData(row?.id);
-                              }}
+                              <div
+                                className="bg-[#F1F1F1] border border-[#D4D4D4] rounded-l-[5px] w-[32px] h-[32px] flex items-center justify-center cursor-pointer"
+                                onClick={() => {
+                                  setEditingOption(row.id);
+                                  setModalOpen(true);
+                                }}
+                              >
+                                <img src={viewIcon} />
+                              </div>
+                            </Tooltip>
+                            <Tooltip
+                              id={`tooltip-return-${row.id}`}
+                              content="Return Item"
+                              place="left"
                             >
-                              <img src={returnIcon} />
-                            </div>
-                          </Tooltip>
-                        </div>
-                      </td>
+                              <div
+                                className={`bg-[#F1F1F1] border border-[#D4D4D4] rounded-r-[5px] w-[32px] h-[32px] flex items-center justify-center ${
+                                  row.status !== "AVAILABLE"
+                                    ? "cursor-not-allowed pointer-events-none opacity-[0.5]"
+                                    : "cursor-pointer"
+                                } `}
+                                onClick={() => {
+                                  setReturnedModalOpen(true);
+                                  setMarkReturnedData(row?.id);
+                                }}
+                              >
+                                <img src={returnIcon} />
+                              </div>
+                            </Tooltip>
+                          </div>
+                        </td>
+                      )}
                     </tr>
                   ))
                 ) : (

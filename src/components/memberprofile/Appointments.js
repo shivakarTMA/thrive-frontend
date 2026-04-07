@@ -15,6 +15,7 @@ import { authAxios } from "../../config/config";
 import { addYears, format, subYears } from "date-fns";
 import { FaCalendarDays } from "react-icons/fa6";
 import Pagination from "../common/Pagination";
+import { useSelector } from "react-redux";
 
 const Appointments = ({ details }) => {
   const [services, setServices] = useState([]);
@@ -24,6 +25,9 @@ const Appointments = ({ details }) => {
   const [appointmentModal, setAppointmentModal] = useState(false);
   const [appointmentList, setAppointmentList] = useState([]);
   const clubId = details?.club_id;
+
+  const { user } = useSelector((state) => state.auth);
+  const userRole = user.role;
 
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [pendingAppointment, setPendingAppointment] = useState(null);
@@ -111,7 +115,7 @@ const Appointments = ({ details }) => {
       })) || []),
   ];
 
-  console.log(appointmentTypeOptions,'appointmentTypeOptions')
+  console.log(appointmentTypeOptions, "appointmentTypeOptions");
 
   const handleCancelAppointment = async () => {
     if (!remarks.trim()) {
@@ -189,14 +193,20 @@ const Appointments = ({ details }) => {
             />
           </div>
         </div>
-        <div>
-          <div
-            className="px-4 py-2 bg-black text-white rounded flex items-center gap-2 cursor-pointer"
-            onClick={() => setAppointmentModal(true)}
-          >
-            <FiPlus /> Add Appointment
+        {(userRole === "FOH" ||
+          userRole === "TRAINER" ||
+          userRole === "FITNESS_MANAGER" ||
+          userRole === "CLUB_MANAGER" ||
+          userRole === "ADMIN") && (
+          <div>
+            <div
+              className="px-4 py-2 bg-black text-white rounded flex items-center gap-2 cursor-pointer"
+              onClick={() => setAppointmentModal(true)}
+            >
+              <FiPlus /> Add Appointment
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       <div className="table--data--bottom w-full">

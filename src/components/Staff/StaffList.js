@@ -442,6 +442,7 @@ const StaffList = () => {
             <thead className="text-xs text-gray-700 uppercase bg-gray-50">
               <tr>
                 <th className="px-2 py-4">Staff Name</th>
+                <th className="px-2 py-4">Rating</th>
                 {currentUserRole === "ADMIN" && (
                   <th className="px-2 py-4">Mobile</th>
                 )}
@@ -470,11 +471,11 @@ const StaffList = () => {
                   >
                     <td className="px-2 py-4">
                       {row?.name}
-
-                      {row?.role === "TRAINER" && (
-                        <span className="font-semibold text-sm block mt-2">Rating : {row?.rating}</span>
-                      )}
-
+                    </td>
+                    <td className="px-2 py-4">
+                      {row?.role === "TRAINER" ? (
+                          row?.rating
+                      ) : ('--')}
                     </td>
                     {currentUserRole === "ADMIN" && (
                       <td className="px-2 py-4">{row?.mobile}</td>

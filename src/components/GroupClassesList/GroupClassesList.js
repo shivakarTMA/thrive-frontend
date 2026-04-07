@@ -85,7 +85,7 @@ const GroupClassesList = () => {
       const activeOnly = filterActiveItems(data);
       setClubList(activeOnly);
     } catch (error) {
-      console.log(error)
+      console.log(error);
     }
   };
   // Function to fetch role list
@@ -281,7 +281,7 @@ const GroupClassesList = () => {
                 const { amount } = this.parent;
                 if (!amount || !value) return true;
                 return value !== amount; // ❌ prevent equal
-              }
+              },
             )
             .test(
               "discount-not-greater-than-amount",
@@ -376,7 +376,7 @@ const GroupClassesList = () => {
         setShowModal(false);
       } catch (err) {
         console.error("API Error:", err.response?.data?.errors);
-        toast.error(err.response?.data?.errors || err.response?.data?.message)
+        toast.error(err.response?.data?.errors || err.response?.data?.message);
       }
     },
   });
@@ -514,18 +514,23 @@ const GroupClassesList = () => {
             <p className="text-sm">{`Home > Group Classes`}</p>
             <h1 className="text-3xl font-semibold">Group Classes</h1>
           </div>
-          <div className="flex items-end gap-2">
-            <button
-              type="button"
-              className="px-4 py-2 bg-black text-white rounded flex items-center gap-2"
-              onClick={() => {
-                setEditingOption(null);
-                setShowModal(true);
-              }}
-            >
-              <FiPlus /> Create Class
-            </button>
-          </div>
+          {(userRole === "CLUB_MANAGER" ||
+            userRole === "MARKETING_MANAGER" ||
+            userRole === "FINANCE_MANAGER" ||
+            userRole === "ADMIN") && (
+            <div className="flex items-end gap-2">
+              <button
+                type="button"
+                className="px-4 py-2 bg-black text-white rounded flex items-center gap-2"
+                onClick={() => {
+                  setEditingOption(null);
+                  setShowModal(true);
+                }}
+              >
+                <FiPlus /> Create Class
+              </button>
+            </div>
+          )}
         </div>
 
         <div className="flex gap-3 mb-4 items-center justify-between">
@@ -684,13 +689,22 @@ const GroupClassesList = () => {
                           ₹{row?.amount ? formatIndianNumber(row?.amount) : 0}
                         </td>
                         <td className="px-2 py-4">
-                          ₹{row?.discount ? formatIndianNumber(row?.discount) : 0}
+                          ₹
+                          {row?.discount
+                            ? formatIndianNumber(row?.discount)
+                            : 0}
                         </td>
                         <td className="px-2 py-4">
-                          ₹{row?.gst_amount ? formatIndianNumber(row?.gst_amount) : 0}
+                          ₹
+                          {row?.gst_amount
+                            ? formatIndianNumber(row?.gst_amount)
+                            : 0}
                         </td>
                         <td className="px-2 py-4">
-                          ₹{row?.booking_amount ? formatIndianNumber(row?.booking_amount) : 0}
+                          ₹
+                          {row?.booking_amount
+                            ? formatIndianNumber(row?.booking_amount)
+                            : 0}
                         </td>
                         <td className="px-2 py-4">
                           {formatAutoDate(row?.start_date)}{" "}
@@ -752,21 +766,26 @@ const GroupClassesList = () => {
                                 <IoEyeOutline className="text-[25px] text-black" />
                               </Link>
                             </Tooltip>
-                            <Tooltip
-                              id={`tooltip-edit-${row.id}`}
-                              content="Edit Class"
-                              place="left"
-                            >
-                              <div
-                                className="p-1 cursor-pointer block"
-                                onClick={() => {
-                                  setEditingOption(row.id);
-                                  setShowModal(true);
-                                }}
+                            {(userRole === "CLUB_MANAGER" ||
+                              userRole === "MARKETING_MANAGER" ||
+                              userRole === "FINANCE_MANAGER" ||
+                              userRole === "ADMIN") && (
+                              <Tooltip
+                                id={`tooltip-edit-${row.id}`}
+                                content="Edit Class"
+                                place="left"
                               >
-                                <LiaEdit className="text-[25px] text-black" />
-                              </div>
-                            </Tooltip>
+                                <div
+                                  className="p-1 cursor-pointer block"
+                                  onClick={() => {
+                                    setEditingOption(row.id);
+                                    setShowModal(true);
+                                  }}
+                                >
+                                  <LiaEdit className="text-[25px] text-black" />
+                                </div>
+                              </Tooltip>
+                            )}
                           </div>
                         </td>
                       </tr>

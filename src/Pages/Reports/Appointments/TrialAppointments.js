@@ -722,35 +722,45 @@ const TrialAppointments = () => {
                           {formatText(row?.last_status) || "--"}
                         </td>
                         <td className="px-2 py-4">
-                          <div className="max-w-[130px] w-full">
-                            <Select
-                              placeholder="Select"
-                              options={getAllowedStatusOptions(
-                                row?.booking_status,
-                              )}
-                              value={getSelectedStatusOption(
-                                row?.booking_status,
-                              )}
-                              isDisabled={
-                                !canUpdateStatus(row?.booking_status) ||
-                                getAllowedStatusOptions(row?.booking_status)
-                                  .length === 0
-                              }
-                              onChange={(selected) => {
-                                if (!selected) return;
-                                updateAppointmentStatus(row, selected.value);
-                              }}
-                              styles={{
-                                ...customStyles,
-                                menuPortal: (base) => ({
-                                  ...base,
-                                  zIndex: 9999,
-                                }),
-                              }}
-                              menuPortalTarget={document.body}
-                              menuPosition="fixed"
-                            />
-                          </div>
+                          {userRole === "FOH" ||
+                          userRole === "TRAINER" ||
+                          userRole === "FITNESS_MANAGER" ||
+                          userRole === "CLUB_MANAGER" ||
+                          userRole === "ADMIN" ? (
+                            <div className="max-w-[130px] w-full">
+                              <Select
+                                placeholder="Select"
+                                options={getAllowedStatusOptions(
+                                  row?.booking_status,
+                                )}
+                                value={getSelectedStatusOption(
+                                  row?.booking_status,
+                                )}
+                                isDisabled={
+                                  !canUpdateStatus(row?.booking_status) ||
+                                  getAllowedStatusOptions(row?.booking_status)
+                                    .length === 0
+                                }
+                                onChange={(selected) => {
+                                  if (!selected) return;
+                                  updateAppointmentStatus(row, selected.value);
+                                }}
+                                styles={{
+                                  ...customStyles,
+                                  menuPortal: (base) => ({
+                                    ...base,
+                                    zIndex: 9999,
+                                  }),
+                                }}
+                                menuPortalTarget={document.body}
+                                menuPosition="fixed"
+                              />
+                            </div>
+                          ) : (
+                            <span>
+                              {formatText(row?.booking_status) || "--"}
+                            </span>
+                          )}
                         </td>
                         <td className="px-2 py-4">
                           {row?.remarks ? row?.remarks : "--"}

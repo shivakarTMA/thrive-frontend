@@ -795,45 +795,45 @@ const AllAppointments = () => {
                           {formatText(row?.last_status) || "--"}
                         </td>
                         <td className="px-2 py-4">
-                          <div className="max-w-[130px] w-full">
-                            <Select
-                              placeholder="Select"
-                              // options={getAllowedStatusOptions(
-                              //   row?.booking_status,
-                              // )}
-                              // value={getSelectedStatusOption(
-                              //   row?.booking_status,
-                              // )}
-                              options={getAllowedStatusOptions(row)}
-                              value={getSelectedStatusOption(
-                                row?.booking_status,
-                                row,
-                              )}
-                              isDisabled={
-                                !canUpdateStatus(row?.booking_status)
-                                // getAllowedStatusOptions(row?.booking_status).length === 0
-                              }
-                              onChange={(selected) => {
-                                if (!selected) return;
-                                updateAppointmentStatus(row, selected.value);
-                              }}
-                              styles={{
-                                ...customStyles,
-                                menuPortal: (base) => ({
-                                  ...base,
-                                  zIndex: 9999,
-                                }),
-                              }}
-                              menuPortalTarget={document.body}
-                              menuPosition="fixed"
-                            />
-                          </div>
+                          {userRole === "FOH" ||
+                          userRole === "TRAINER" ||
+                          userRole === "FITNESS_MANAGER" ||
+                          userRole === "CLUB_MANAGER" ||
+                          userRole === "ADMIN" ? (
+                            <div className="max-w-[130px] w-full">
+                              <Select
+                                placeholder="Select"
+                                options={getAllowedStatusOptions(row)}
+                                value={getSelectedStatusOption(
+                                  row?.booking_status,
+                                  row,
+                                )}
+                                isDisabled={
+                                  !canUpdateStatus(row?.booking_status)
+                                  // getAllowedStatusOptions(row?.booking_status).length === 0
+                                }
+                                onChange={(selected) => {
+                                  if (!selected) return;
+                                  updateAppointmentStatus(row, selected.value);
+                                }}
+                                styles={{
+                                  ...customStyles,
+                                  menuPortal: (base) => ({
+                                    ...base,
+                                    zIndex: 9999,
+                                  }),
+                                }}
+                                menuPortalTarget={document.body}
+                                menuPosition="fixed"
+                              />
+                            </div>
+                          ) : (
+                            <span>
+                              {formatText(row?.booking_status) || "--"}
+                            </span>
+                          )}
                         </td>
                         <td className="px-2 py-4">
-                          {/* ✅ UPDATED: Only show remarks for CANCELLED status */}
-                          {/* {row?.booking_status === "CANCELLED" && row?.remarks
-                            ? row?.remarks
-                            : "--"} */}
                           {row?.remarks ? row?.remarks : "--"}
                         </td>
                         <td className="px-2 py-4">
@@ -868,12 +868,12 @@ const AllAppointments = () => {
         <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-[10px] w-[400px] shadow-lg">
             <h3 className="text-lg font-semibold mb-4 text-center">
-              {!selectedTrainerId
+              {!selectedTrainerId && pendingStatus === "RESCHEDULED"
                 ? "The session cannot be rescheduled yet as a trainer has not been assigned."
                 : "Confirm Status Update"}
             </h3>
 
-            {!selectedTrainerId ? null : (
+            {!selectedTrainerId && pendingStatus === "RESCHEDULED" ? null : (
               <p className="text-center mb-4">
                 Are you sure you want to mark this appointment as
                 <span className="font-bold ml-1">
@@ -970,7 +970,7 @@ const AllAppointments = () => {
                 Cancel
               </button>
 
-              {!selectedTrainerId ? null : (
+              {!selectedTrainerId && pendingStatus === "RESCHEDULED" ? null : (
                 <button
                   onClick={confirmStatusUpdate}
                   className="w-1/2 bg-black text-white rounded py-2 hover:bg-gray-800"

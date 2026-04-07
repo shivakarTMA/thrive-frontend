@@ -56,7 +56,7 @@ const CouponsList = () => {
         });
       }
     } catch (error) {
-      console.log(error)
+      console.log(error);
     }
   };
   // Function to fetch role list
@@ -103,242 +103,242 @@ const CouponsList = () => {
     }
   };
 
-  
   const formik = useFormik({
-  initialValues: {
-    coupon: {
-      club_id: null,
-      code: "",
-      description: "",
-      discount_type: "",
-      discount_value: "",
-      max_usage: "",
-      per_user_limit: "",
-      start_date: "",
-      end_date: "",
-      position: "",
-      status: "",
-    },
-    applicable_rules: [
-      {
-        applicable_type: "ALL",
-        applicable_id: null,
+    initialValues: {
+      coupon: {
+        club_id: null,
+        code: "",
+        description: "",
+        discount_type: "",
+        discount_value: "",
+        max_usage: "",
+        per_user_limit: "",
+        start_date: "",
+        end_date: "",
+        position: "",
+        status: "",
       },
-    ],
-  },
+      applicable_rules: [
+        {
+          applicable_type: "ALL",
+          applicable_id: null,
+        },
+      ],
+    },
 
-  validationSchema: Yup.object({
-    coupon: Yup.object({
-      club_id: Yup.number()
-        .typeError("Club Name must be a number")
-        .required("Club Name is required"),
+    validationSchema: Yup.object({
+      coupon: Yup.object({
+        club_id: Yup.number()
+          .typeError("Club Name must be a number")
+          .required("Club Name is required"),
 
-      code: Yup.string().required("Code is required"),
+        code: Yup.string().required("Code is required"),
 
-      description: Yup.string().required("Description is required"),
+        description: Yup.string().required("Description is required"),
 
-      discount_type: Yup.string().required("Discount type is required"),
+        discount_type: Yup.string().required("Discount type is required"),
 
-      // discount_value: Yup.string().required("Discount value is required"),
-      discount_value: Yup.number()
-      .required("Value is required")
-      .when("discount_type", {
-        is: "PERCENTAGE",
-        then: (schema) =>
-          schema.max(100, "Percentage discount cannot exceed 100"),
-        otherwise: (schema) => schema,
-      }),
+        // discount_value: Yup.string().required("Discount value is required"),
+        discount_value: Yup.number()
+          .required("Value is required")
+          .when("discount_type", {
+            is: "PERCENTAGE",
+            then: (schema) =>
+              schema.max(100, "Percentage discount cannot exceed 100"),
+            otherwise: (schema) => schema,
+          }),
 
-      // max_usage: Yup.string().required("Max Usage is required"),
-      max_usage: Yup.number()
-      .required("Max usage is required")
-      .min(1, "Max usage must be at least 1"),
+        // max_usage: Yup.string().required("Max Usage is required"),
+        max_usage: Yup.number()
+          .required("Max usage is required")
+          .min(1, "Max usage must be at least 1"),
 
-      // per_user_limit: Yup.string().required("Per User Limit is required"),
-      per_user_limit: Yup.number()
-      .required("Per user limit is required")
-      .min(1, "Per user limit must be at least 1")
-      .test(
-        "per-user-limit-check",
-        "Per user limit cannot exceed max usage", // this will show as error message
-        function (value) {
-          const { max_usage } = this.parent;
-          if (!value || !max_usage) return true;
-          return Number(value) <= Number(max_usage);
-        }
-      ),
-
-      start_date: Yup.date()
-        .typeError("Start date is invalid")
-        .required("Start date is required"),
-
-      end_date: Yup.date()
-        .typeError("End date is invalid")
-        .min(Yup.ref("start_date"), "End date cannot be before start date")
-        .required("End date is required"),
-
-      position: Yup.string().required("Position is required"),
-    }),
-
-    applicable_rules: Yup.array()
-      .of(
-        Yup.object().shape({
-          applicable_type: Yup.string().required(
-            "Applicable Type is required",
+        // per_user_limit: Yup.string().required("Per User Limit is required"),
+        per_user_limit: Yup.number()
+          .required("Per user limit is required")
+          .min(1, "Per user limit must be at least 1")
+          .test(
+            "per-user-limit-check",
+            "Per user limit cannot exceed max usage", // this will show as error message
+            function (value) {
+              const { max_usage } = this.parent;
+              if (!value || !max_usage) return true;
+              return Number(value) <= Number(max_usage);
+            },
           ),
 
-          applicable_id: Yup.mixed().when("applicable_type", {
-            is: (type) => type && type !== "ALL",
-            then: (schema) =>
-              schema
-                .required("Applicable Item is required when type is not ALL")
-                .nullable()
-                .test(
-                  "is-not-null",
-                  "Applicable Item is required",
-                  (value) => value !== null && value !== undefined,
-                ),
-            otherwise: (schema) => schema.nullable(),
+        start_date: Yup.date()
+          .typeError("Start date is invalid")
+          .required("Start date is required"),
+
+        end_date: Yup.date()
+          .typeError("End date is invalid")
+          .min(Yup.ref("start_date"), "End date cannot be before start date")
+          .required("End date is required"),
+
+        position: Yup.string().required("Position is required"),
+      }),
+
+      applicable_rules: Yup.array()
+        .of(
+          Yup.object().shape({
+            applicable_type: Yup.string().required(
+              "Applicable Type is required",
+            ),
+
+            applicable_id: Yup.mixed().when("applicable_type", {
+              is: (type) => type && type !== "ALL",
+              then: (schema) =>
+                schema
+                  .required("Applicable Item is required when type is not ALL")
+                  .nullable()
+                  .test(
+                    "is-not-null",
+                    "Applicable Item is required",
+                    (value) => value !== null && value !== undefined,
+                  ),
+              otherwise: (schema) => schema.nullable(),
+            }),
           }),
-        }),
-      )
-      .min(1, "At least one applicable rule is required"),
-  }),
+        )
+        .min(1, "At least one applicable rule is required"),
+    }),
 
-  onSubmit: async (values, { resetForm }) => {
-    try {
-      const couponPayload = {
-        club_id: Number(values.coupon.club_id),
-        code: values.coupon.code,
-        description: values.coupon.description,
-        discount_type: values.coupon.discount_type,
-        discount_value: Number(values.coupon.discount_value),
-        max_usage: Number(values.coupon.max_usage),
-        per_user_limit: Number(values.coupon.per_user_limit),
-        start_date: values.coupon.start_date,
-        end_date: values.coupon.end_date,
-        position: Number(values.coupon.position),
-        ...(editingOption && { status: values.coupon.status }),
-      };
-
-      if (editingOption) {
-        const current = Array.isArray(values.applicable_rules)
-          ? values.applicable_rules
-          : [];
-
-        const original = Array.isArray(originalApplicableRules)
-          ? originalApplicableRules
-          : [];
-
-        const mapById = (arr) => {
-          const map = new Map();
-          arr.forEach((r) => {
-            if (r && r.id != null) map.set(Number(r.id), r);
-          });
-          return map;
+    onSubmit: async (values, { resetForm }) => {
+      try {
+        const couponPayload = {
+          club_id: Number(values.coupon.club_id),
+          code: values.coupon.code,
+          description: values.coupon.description,
+          discount_type: values.coupon.discount_type,
+          discount_value: Number(values.coupon.discount_value),
+          max_usage: Number(values.coupon.max_usage),
+          per_user_limit: Number(values.coupon.per_user_limit),
+          start_date: values.coupon.start_date,
+          end_date: values.coupon.end_date,
+          position: Number(values.coupon.position),
+          ...(editingOption && { status: values.coupon.status }),
         };
 
-        const originalById = mapById(original);
-        const currentById = mapById(current);
+        if (editingOption) {
+          const current = Array.isArray(values.applicable_rules)
+            ? values.applicable_rules
+            : [];
 
-        const add = [];
-        const update = [];
-        const deleteIds = [];
+          const original = Array.isArray(originalApplicableRules)
+            ? originalApplicableRules
+            : [];
 
-        current.forEach((r) => {
-          if (!r) return;
-
-          const itemBase = {
-            applicable_type: r.applicable_type,
-            applicable_id:
-              r.applicable_type === "ALL"
-                ? null
-                : r.applicable_id == null
-                  ? null
-                  : Number(r.applicable_id),
+          const mapById = (arr) => {
+            const map = new Map();
+            arr.forEach((r) => {
+              if (r && r.id != null) map.set(Number(r.id), r);
+            });
+            return map;
           };
 
-          if (r.id == null) {
-            add.push(itemBase);
-          } else {
-            const orig = originalById.get(Number(r.id));
+          const originalById = mapById(original);
+          const currentById = mapById(current);
 
-            const origType = orig?.applicable_type ?? "";
-            const origId =
-              orig && orig.applicable_id != null
-                ? String(orig.applicable_id)
-                : null;
+          const add = [];
+          const update = [];
+          const deleteIds = [];
 
-            const currId =
-              r && r.applicable_id != null ? String(r.applicable_id) : null;
+          current.forEach((r) => {
+            if (!r) return;
 
-            const changed =
-              origType !== (r.applicable_type ?? "") ||
-              origId !== currId;
+            const itemBase = {
+              applicable_type: r.applicable_type,
+              applicable_id:
+                r.applicable_type === "ALL"
+                  ? null
+                  : r.applicable_id == null
+                    ? null
+                    : Number(r.applicable_id),
+            };
 
-            if (changed) {
-              update.push({
-                id: Number(r.id),
-                ...itemBase,
-              });
+            if (r.id == null) {
+              add.push(itemBase);
+            } else {
+              const orig = originalById.get(Number(r.id));
+
+              const origType = orig?.applicable_type ?? "";
+              const origId =
+                orig && orig.applicable_id != null
+                  ? String(orig.applicable_id)
+                  : null;
+
+              const currId =
+                r && r.applicable_id != null ? String(r.applicable_id) : null;
+
+              const changed =
+                origType !== (r.applicable_type ?? "") || origId !== currId;
+
+              if (changed) {
+                update.push({
+                  id: Number(r.id),
+                  ...itemBase,
+                });
+              }
+            }
+          });
+
+          for (const orig of original) {
+            if (orig && orig.id != null) {
+              if (!currentById.has(Number(orig.id))) {
+                deleteIds.push(Number(orig.id));
+              }
             }
           }
-        });
 
-        for (const orig of original) {
-          if (orig && orig.id != null) {
-            if (!currentById.has(Number(orig.id))) {
-              deleteIds.push(Number(orig.id));
-            }
-          }
+          const payload = {
+            coupon: couponPayload,
+            applicable_rules: {
+              add,
+              update,
+              delete: deleteIds,
+            },
+          };
+
+          await authAxios().put(`/coupon/update/${editingOption}`, payload);
+
+          toast.success("Updated Successfully");
+        } else {
+          const payload = {
+            coupon: couponPayload,
+            applicable_rules: Array.isArray(values.applicable_rules)
+              ? values.applicable_rules.map((r) => ({
+                  applicable_type: r.applicable_type,
+                  applicable_id:
+                    r.applicable_type === "ALL"
+                      ? null
+                      : r.applicable_id == null
+                        ? null
+                        : Number(r.applicable_id),
+                }))
+              : [],
+          };
+
+          await authAxios().post("/coupon/create", payload);
+
+          toast.success("Created Successfully");
         }
 
-        const payload = {
-          coupon: couponPayload,
-          applicable_rules: {
-            add,
-            update,
-            delete: deleteIds,
-          },
-        };
+        fetchCoupons();
 
-        await authAxios().put(`/coupon/update/${editingOption}`, payload);
-
-        toast.success("Updated Successfully");
-      } else {
-        const payload = {
-          coupon: couponPayload,
-          applicable_rules: Array.isArray(values.applicable_rules)
-            ? values.applicable_rules.map((r) => ({
-                applicable_type: r.applicable_type,
-                applicable_id:
-                  r.applicable_type === "ALL"
-                    ? null
-                    : r.applicable_id == null
-                      ? null
-                      : Number(r.applicable_id),
-              }))
-            : [],
-        };
-
-        await authAxios().post("/coupon/create", payload);
-
-        toast.success("Created Successfully");
+        resetForm();
+        setEditingOption(null);
+        setShowModal(false);
+        setOriginalApplicableRules([]);
+      } catch (error) {
+        console.error("API Error:", error.response?.data || error.message);
+        toast.error(
+          error.response?.data?.errors || error.response?.data?.message,
+        );
       }
+    },
+  });
 
-      fetchCoupons();
-
-      resetForm();
-      setEditingOption(null);
-      setShowModal(false);
-      setOriginalApplicableRules([]);
-    } catch (error) {
-      console.error("API Error:", error.response?.data || error.message);
-      toast.error(error.response?.data?.errors || error.response?.data?.message)
-    }
-  },
-});
-  
   const handleDeleteClick = (exercise) => {
     setCouponToDelete(exercise);
     setShowConfirmPopup(true);
@@ -373,19 +373,24 @@ const CouponsList = () => {
           <p className="text-sm">{`Home > Discount Coupons`}</p>
           <h1 className="text-3xl font-semibold">Discount Coupons</h1>
         </div>
-        <div className="flex items-end gap-2">
-          <button
-            type="button"
-            className="px-4 py-2 bg-black text-white rounded flex items-center gap-2"
-            onClick={() => {
-              setEditingOption(null);
-              formik.resetForm();
-              setShowModal(true);
-            }}
-          >
-            <FiPlus /> Create Coupon
-          </button>
-        </div>
+        {(userRole === "CLUB_MANAGER" ||
+          userRole === "FINANCE_MANAGER" ||
+          userRole === "MARKETING_MANAGER" ||
+          userRole === "ADMIN") && (
+          <div className="flex items-end gap-2">
+            <button
+              type="button"
+              className="px-4 py-2 bg-black text-white rounded flex items-center gap-2"
+              onClick={() => {
+                setEditingOption(null);
+                formik.resetForm();
+                setShowModal(true);
+              }}
+            >
+              <FiPlus /> Create Coupon
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Search and Filter Section */}
@@ -428,10 +433,21 @@ const CouponsList = () => {
                 <th className="px-2 py-4 min-w-[100px]">Type</th>
                 <th className="px-2 py-4 min-w-[100px]">Value</th>
                 <th className="px-2 py-4 min-w-[100px]">Status</th>
-                <th className="px-2 py-4 text-center min-w-[100px]">Position</th>
-                <th className="px-2 py-4 text-center min-w-[100px]">Start Date</th>
-                <th className="px-2 py-4 text-center min-w-[100px]">End Date</th>
-                <th className="px-2 py-4 min-w-[80px]">Action</th>
+                <th className="px-2 py-4 text-center min-w-[100px]">
+                  Position
+                </th>
+                <th className="px-2 py-4 text-center min-w-[100px]">
+                  Start Date
+                </th>
+                <th className="px-2 py-4 text-center min-w-[100px]">
+                  End Date
+                </th>
+                {(userRole === "CLUB_MANAGER" ||
+                  userRole === "FINANCE_MANAGER" ||
+                  userRole === "MARKETING_MANAGER" ||
+                  userRole === "ADMIN") && (
+                  <th className="px-2 py-4 min-w-[80px]">Action</th>
+                )}
               </tr>
             </thead>
             <tbody>
@@ -484,42 +500,32 @@ const CouponsList = () => {
                     <td className="px-2 py-4 text-center">
                       {formatAutoDate(item?.end_date)}
                     </td>
-                    <td className="px-2 py-4">
-                      <div className="flex items-center">
-                        <div className="w-fit">
-                          <Tooltip
-                            id={`tooltip-edit-${item?.id}`}
-                            content={`Edit Coupon ${item?.status === "EXPIRED" ? "(Disabled for expired coupons)" : ""}`}
-                            place="left"
-                          >
-                            <div
-                              className={`p-1 cursor-pointer ${item?.status === "EXPIRED" ? "pointer-events-none opacity-50" : ""}`}
-                              onClick={() => {
-                                setEditingOption(item?.id);
-                                setShowModal(true);
-                              }}
+                    {(userRole === "CLUB_MANAGER" ||
+                      userRole === "FINANCE_MANAGER" ||
+                      userRole === "MARKETING_MANAGER" ||
+                      userRole === "ADMIN") && (
+                      <td className="px-2 py-4">
+                        <div className="flex items-center">
+                          <div className="w-fit">
+                            <Tooltip
+                              id={`tooltip-edit-${item?.id}`}
+                              content={`Edit Coupon ${item?.status === "EXPIRED" ? "(Disabled for expired coupons)" : ""}`}
+                              place="left"
                             >
-                              <LiaEdit className="text-[25px] text-black" />
-                            </div>
-                          </Tooltip>
+                              <div
+                                className={`p-1 cursor-pointer ${item?.status === "EXPIRED" ? "pointer-events-none opacity-50" : ""}`}
+                                onClick={() => {
+                                  setEditingOption(item?.id);
+                                  setShowModal(true);
+                                }}
+                              >
+                                <LiaEdit className="text-[25px] text-black" />
+                              </div>
+                            </Tooltip>
+                          </div>
                         </div>
-                        {/* 
-                        <div className="w-fit ml-2">
-                          <Tooltip
-                            id={`tooltip-delete-${item?.id}`}
-                            content="Delete Coupon"
-                            place="left"
-                          >
-                            <div
-                              className="p-1 cursor-pointer"
-                              onClick={() => handleDeleteClick(item)}
-                            >
-                              <RiDeleteBin6Line className="text-[25px] text-black" />
-                            </div>
-                          </Tooltip>
-                        </div> */}
-                      </div>
-                    </td>
+                      </td>
+                    )}
                   </tr>
                 ))
               )}
@@ -556,8 +562,7 @@ const CouponsList = () => {
           message={
             <>
               Are you sure you want to delete
-              <br />
-              "{couponToDelete?.code}"?
+              <br />"{couponToDelete?.code}"?
             </>
           }
           onConfirm={handleConfirmDelete}

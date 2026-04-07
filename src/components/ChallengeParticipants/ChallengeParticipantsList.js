@@ -168,8 +168,8 @@ const handleConfirmAction = async () => {
                     className="bg-white border-b hover:bg-gray-50"
                   >
                     {/* <td className="px-2 py-4">{index + 1}</td> */}
-                    <td className="px-2 py-4">{item.member_id}</td>
-                    <td className="px-2 py-4">{item.member_name}</td>
+                    <td className="px-2 py-4">{item?.membership_number}</td>
+                    <td className="px-2 py-4">{item?.member_name}</td>
                     <td className="px-2 py-4">
                       <span
                         className={`flex items-center gap-1 rounded-full min-h-[30px] px-3 text-sm w-fit 
@@ -184,30 +184,30 @@ const handleConfirmAction = async () => {
                       </span>
                     </td>
                     <td className="px-2 py-4">
-                      {item.joined_at ? formatAutoDate(item.joined_at) : "--"}
+                      {item?.joined_at ? formatAutoDate(item?.joined_at) : "--"}
                     </td>
                     <td className="px-2 py-4">
-                      {item.challenge_type
-                        ? formatText(item.challenge_type)
+                      {item?.challenge_type
+                        ? formatText(item?.challenge_type)
                         : "--"}
                     </td>
                     <td className="px-2 py-4">
-                      {item.target_value} {item.target_unit}
+                      {item?.target_value} {item?.target_unit}
                     </td>
                     <td className="px-2 py-4">
-                      {item.challenge_type === "CUSTOM" ? item.rank === 0 ? "N/A" : item.rank : item.current_rank}
+                      {item?.challenge_type === "CUSTOM" ? item?.rank === 0 ? "N/A" : item?.rank : item?.current_rank}
                     </td>
                     <td className="px-2 py-4">
-                      {item.challenge_type === "CUSTOM" ? (
+                      {item?.challenge_type === "CUSTOM" ? (
                         <Select
                           options={actionOptions}
                           onChange={(selectedOption) =>
-                            handleActionChange(selectedOption, item.id)
+                            handleActionChange(selectedOption, item?.id)
                           }
                           placeholder="Select Action"
                           styles={customStyles}
                           menuPortalTarget={document.body} // Ensures the dropdown is rendered in the body
-                          isDisabled={item.rank !== 0}
+                          isDisabled={item?.rank !== 0}
                         />
                       ) : (
                         "—"

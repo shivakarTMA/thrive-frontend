@@ -293,7 +293,6 @@ const Topbar = ({
           {/* Right Section */}
           <div className="top--bar--menu flex items-center gap-3">
             {(user?.role === "CLUB_MANAGER" ||
-              user?.role === "GENERAL_MANAGER" ||
               user?.role === "ADMIN" ||
               user?.role === "FOH") && (
               <>

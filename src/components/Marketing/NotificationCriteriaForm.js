@@ -600,10 +600,10 @@ const NotificationCriteriaForm = () => {
                   className="px-4 py-2 bg-black text-white rounded flex items-center gap-2 mt-4 disabled:opacity-50"
                 >
                   {id
-                    ? "Send Email"
+                    ? "Send Notification"
                     : formik.values.sendType === "SCHEDULED"
-                      ? "Schedule Email"
-                      : "Send Email"}
+                      ? "Schedule Notification"
+                      : "Send Notification"}
                 </button>
               )}
             </div>
