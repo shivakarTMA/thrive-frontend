@@ -13,6 +13,7 @@ import {
   formatIndianNumber,
   formatText,
   sanitizePositiveInteger,
+  sanitizeText,
   sanitizeTextWithNumbers,
   selectIcon,
 } from "../Helper/helper";
@@ -52,6 +53,7 @@ import Webcam from "react-webcam";
 import { IoCheckmark, IoClose } from "react-icons/io5";
 import MultiSelect from "react-multi-select-component";
 import { CgFormatLineHeight } from "react-icons/cg";
+import CreatableSelect from "react-select/creatable";
 
 const planTypeOption = [
   { value: "DLF", label: "DLF" },
@@ -192,9 +194,13 @@ const ConvertMemberForm = ({
   const [showProductModal, setShowProductModal] = useState(false);
   const [step, setStep] = useState(0);
   const { user } = useSelector((state) => state.auth);
+  const userRole = user.role;
   const [companyOptions, setCompanyOptions] = useState([]);
   const [duplicateEmailError, setDuplicateEmailError] = useState("");
   const [showDuplicateEmailModal, setShowDuplicateEmailModal] = useState(false);
+
+  const [hasPlans, setHasPlans] = useState(false);
+  const [checkingPlans, setCheckingPlans] = useState(false);
 
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
   const [paymentUrl, setPaymentUrl] = useState("");
@@ -248,7 +254,7 @@ const ConvertMemberForm = ({
     height: "",
     address: "",
     pincode: "",
-    company_name: "",
+
     interested_in: [],
     lead_source: "",
     lead_type: "",
@@ -257,6 +263,7 @@ const ConvertMemberForm = ({
     schedule_date_time: "",
     created_by: null,
     staff_name: "",
+    company_id: null,
     company_name: "",
     designation: "",
     official_email: "",
@@ -295,27 +302,6 @@ const ConvertMemberForm = ({
     amount_pay: 0,
   };
 
-  const convertLeadAPI = async (values) => {
-    try {
-      const formData = new FormData();
-
-      Object.keys(values).forEach((key) => {
-        formData.append(key, values[key]);
-      });
-
-      await authAxios().put(
-        `/member/convert/lead/${selectedLeadMember}`,
-        formData,
-        { headers: { "Content-Type": "multipart/form-data" } },
-      );
-
-      return true;
-    } catch (error) {
-      toast.error(error.response?.data?.message || "Something went wrong");
-      return false;
-    }
-  };
-
   const formik = useFormik({
     initialValues,
     validationSchema: stepValidationSchemas[step],
@@ -323,10 +309,68 @@ const ConvertMemberForm = ({
     onSubmit: async (values) => {
       if (step === stepValidationSchemas.length - 1) {
         try {
+          // ===============================
+          // ✅ COMPANY HANDLING (SOURCE OF TRUTH)
+          // ===============================
+          let companyId = null;
+          let companyName = values.company_name?.trim() || "";
+
+          const existingCompany = companyOptions.find(
+            (opt) => opt.label.toLowerCase() === companyName.toLowerCase(),
+          );
+
+          if (existingCompany) {
+            companyId = existingCompany.value;
+            companyName = existingCompany.label;
+          } else if (companyName) {
+            const formData = new FormData();
+            formData.append("name", companyName);
+
+            const res = await authAxios().post("/company/create", formData, {
+              headers: { "Content-Type": "multipart/form-data" },
+            });
+
+            const createdCompany = res.data?.data || res.data;
+
+            companyId = createdCompany?.id ?? null;
+            companyName = createdCompany?.name || companyName;
+
+            if (!companyId) {
+              throw new Error("Company ID not received from API");
+            }
+
+            setCompanyOptions((prev) => [
+              ...prev,
+              { value: companyId, label: companyName },
+            ]);
+          }
+
           const formData = new FormData();
+          // Append simple fields
           Object.keys(values).forEach((key) => {
-            formData.append(key, values[key]);
+            if (["company_id", "company_name"].includes(key)) return;
+
+            const value = values[key];
+
+            if (
+              typeof value === "object" &&
+              value !== null &&
+              !(value instanceof File)
+            ) {
+              formData.append(key, JSON.stringify(value));
+            } else {
+              formData.append(key, value ?? "");
+            }
           });
+
+          // ✅ Append company LAST (source of truth)
+          if (companyId !== null) {
+            formData.set("company_id", companyId);
+          }
+
+          if (companyName) {
+            formData.set("company_name", companyName);
+          }
 
           // If selectedLeadMember exists, update using PUT request
 
@@ -525,12 +569,21 @@ const ConvertMemberForm = ({
 
       // ✅ Convert to dropdown-friendly format
       const options = activeCompanies.map((company) => ({
-        value: company.name,
+        value: company.id,
         label: company.name,
       }));
 
       // ✅ Update state
-      setCompanyOptions(options);
+      // setCompanyOptions(options);
+      setCompanyOptions((prev) => {
+        const map = new Map();
+
+        [...prev, ...options].forEach((opt) => {
+          map.set(opt.value, opt);
+        });
+
+        return Array.from(map.values());
+      });
     } catch (err) {
       console.error("❌ Failed to fetch companies:", err);
     }
@@ -636,41 +689,46 @@ const ConvertMemberForm = ({
     }
   };
 
-  // const handleNextStep = async () => {
-  //   const errors = await formik.validateForm();
+  const checkPlansAvailability = async (planType, clubId, productType) => {
+    if (!planType || !clubId || !productType) {
+      setHasPlans(false);
+      return;
+    }
 
-  //   if (Object.keys(errors).length === 0) {
-  //     if (duplicateError) {
-  //       setShowDuplicateModal(true);
-  //       return;
-  //     }
+    setCheckingPlans(true);
 
-  //     // ✅ CALL API ON EVERY STEP
-  //     const isSuccess = await convertLeadAPI(formik.values);
+    try {
+      let response;
 
-  //     if (!isSuccess) return;
+      const params = {
+        plan_type: planType,
+        club_id: clubId,
+      };
 
-  //     if (step === stepValidationSchemas.length - 1) {
-  //       formik.handleSubmit(); // payment flow
-  //     } else {
-  //       setStep((prev) => prev + 1);
-  //     }
-  //   } else {
-  //     const markTouched = (obj) => {
-  //       if (Array.isArray(obj)) return obj.map(markTouched);
-  //       if (typeof obj === "object") {
-  //         const touchedObj = {};
-  //         Object.keys(obj).forEach((key) => {
-  //           touchedObj[key] = markTouched(obj[key]);
-  //         });
-  //         return touchedObj;
-  //       }
-  //       return true;
-  //     };
+      if (productType === "MEMBERSHIP_PLAN") {
+        response = await authAxios().get("/subscription-plan/list", {
+          params,
+        });
+      }
 
-  //     formik.setTouched(markTouched(errors));
-  //   }
-  // };
+      const data = response?.data?.data || [];
+
+      setHasPlans(data.length > 0); // ✅ KEY LINE
+    } catch (err) {
+      console.error(err);
+      setHasPlans(false);
+    }
+
+    setCheckingPlans(false);
+  };
+
+  useEffect(() => {
+    checkPlansAvailability(
+      formik.values.plan_type,
+      formik.values.club_id,
+      formik.values.productType
+    );
+  }, [formik.values.plan_type, formik.values.club_id, formik.values.productType]);
 
   const handleProductSubmit = (product) => {
     // Convert to numbers safely
@@ -725,6 +783,7 @@ const ConvertMemberForm = ({
         applicable_type: "SUBSCRIPTION",
         amount: formik.values.productDetails?.total_amount,
         club_id: formik.values.club_id,
+        member_id: formik.values.id,
       };
 
       const res = await authAxios().post("/coupon/applicable", payload);
@@ -1028,16 +1087,8 @@ const ConvertMemberForm = ({
           </div>
 
           <div className="flex-1s flexs">
-            <form
-              // className="space-y-6 flex-1 flex flex-col justify-between"
-              onSubmit={formik.handleSubmit}
-            >
+            <form onSubmit={formik.handleSubmit}>
               <div className="flex bg-white rounded-b-[10px]">
-                {/* <StepProgressBar
-                  currentStep={step}
-                  totalSteps={stepValidationSchemas.length}
-                /> */}
-
                 <div className="p-6 flex-1">
                   {step === 0 && (
                     <>
@@ -1402,27 +1453,6 @@ const ConvertMemberForm = ({
                               }`}
                               disabled={!!selected}
                             />
-
-                            {/* <MultiSelect
-                              options={servicesName}
-                              value={selected} // selected objects
-                              onChange={(servicesName) => {
-                                setSelected(servicesName); // set objects
-                                const values = servicesName.map(
-                                  (opt) => opt.value
-                                ); // only IDs
-                                formik.setFieldValue("interested_in", values);
-                              }}
-                              labelledBy="Select..."
-                              hasSelectAll={false}
-                              disableSearch={true}
-                              overrideStrings={{
-                                selectSomeItems: "Select Interested...",
-                                allItemsAreSelected: "All Interested Selected",
-                                // search: "Search",
-                              }}
-                              className="custom--input w-full input--icon multi--select--new"
-                            /> */}
                           </div>
                         </div>
                         <div>
@@ -1498,6 +1528,8 @@ const ConvertMemberForm = ({
                                 }
                                 options={socialList}
                                 styles={selectIcon}
+                                readOnly={true}
+                                isDisabled={true}
                               />
                             </div>
                             {formik.errors?.platform &&
@@ -1506,6 +1538,35 @@ const ConvertMemberForm = ({
                                   {formik.errors.platform}
                                 </div>
                               )}
+                          </div>
+                        )}
+                        {formik.values.lead_source === "Events/Campaigns" && (
+                          <div>
+                            <label className="mb-2 block">
+                              Lead Sub-Source
+                              <span className="text-red-500">*</span>
+                            </label>
+                            <div className="relative">
+                              <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
+                                <FaListCheck />
+                              </span>
+                              <input
+                                type="text"
+                                name="platform"
+                                value={formik.values.platform}
+                                // onChange={formik.handleChange}
+                                onKeyDown={blockNonLetters}
+                                onChange={(e) => {
+                                  const cleaned = allowOnlyLetters(
+                                    e.target.value,
+                                  );
+                                  formik.setFieldValue("platform", cleaned);
+                                }}
+                                className="custom--input w-full input--icon  cursor-not-allowed pointer-events-none !bg-gray-100 !text-gray-500"
+                                readOnly={true}
+                                isDisabled={true}
+                              />
+                            </div>
                           </div>
                         )}
                       </div>
@@ -1548,28 +1609,110 @@ const ConvertMemberForm = ({
                             <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
                               <FaBuilding />
                             </span>
-                            <Select
-                              name="company_name"
-                              value={
-                                companyOptions.find(
-                                  (opt) =>
-                                    opt.value === formik.values.company_name,
-                                ) ||
-                                (formik.values.company_name && {
-                                  value: formik.values.company_name,
-                                  label: formik.values.company_name,
-                                }) // ✅ fallback for raw string
-                              }
-                              onChange={(option) => {
-                                formik.setFieldValue(
-                                  "company_name",
-                                  option.value,
-                                );
-                              }}
-                              options={companyOptions}
-                              isLoading={loading}
-                              styles={selectIcon}
-                            />
+                            {userRole === "ADMIN" ||
+                            userRole === "CLUB_MANAGER" ||
+                            userRole === "FOH" ||
+                            userRole === "MARKETING_MANAGER" ? (
+                              <CreatableSelect
+                                name="company_name"
+                                isClearable
+                                isLoading={loading}
+                                placeholder="Select or create a company"
+                                /* ✅ SINGLE SOURCE OF TRUTH */
+                                value={
+                                  formik.values.company_id
+                                    ? companyOptions.find(
+                                        (opt) =>
+                                          opt.value ===
+                                          formik.values.company_id,
+                                      ) || null
+                                    : formik.values.company_name
+                                      ? {
+                                          label: formik.values.company_name,
+                                          value: "__new__", // ✅ NEVER use string as ID
+                                        }
+                                      : null
+                                }
+                                onChange={(option) => {
+                                  // Clear
+                                  if (!option) {
+                                    formik.setFieldValue("company_id", null);
+                                    formik.setFieldValue("company_name", "");
+                                    return;
+                                  }
+
+                                  // ✅ Existing company (ID is number)
+                                  if (typeof option.value === "number") {
+                                    formik.setFieldValue(
+                                      "company_id",
+                                      option.value,
+                                    );
+                                    formik.setFieldValue(
+                                      "company_name",
+                                      option.label,
+                                    );
+                                    return;
+                                  }
+
+                                  // ✅ Fallback safety (should not happen)
+                                  formik.setFieldValue("company_id", null);
+                                  formik.setFieldValue(
+                                    "company_name",
+                                    option.label,
+                                  );
+                                }}
+                                /* ✅ sanitize created company name */
+                                onCreateOption={(newValue) => {
+                                  const cleaned = sanitizeText(newValue);
+
+                                  formik.setFieldValue("company_id", null);
+                                  formik.setFieldValue("company_name", cleaned);
+                                }}
+                                /* ✅ sanitize typing */
+                                onInputChange={(inputValue, { action }) => {
+                                  if (action === "input-change") {
+                                    const cleaned =
+                                      allowOnlyLetters(inputValue);
+
+                                    if (cleaned.length >= 2) {
+                                      fetchCompanies(cleaned);
+                                    }
+
+                                    return cleaned;
+                                  }
+
+                                  return inputValue;
+                                }}
+                                options={companyOptions} // must be [{ value: number, label: string }]
+                                styles={selectIcon}
+                              />
+                            ) : (
+                              <Select
+                                name="company_name"
+                                value={
+                                  formik.values?.company_name
+                                    ? companyOptions.find(
+                                        (opt) =>
+                                          opt.value ===
+                                          formik.values?.company_name,
+                                      ) || {
+                                        label: formik.values?.company_name,
+                                        value: formik.values?.company_name,
+                                      }
+                                    : null
+                                }
+                                onChange={(option) =>
+                                  formik.setFieldValue(
+                                    "company_name",
+                                    option.value,
+                                  )
+                                }
+                                options={companyOptions}
+                                isLoading={loading}
+                                styles={selectIcon}
+                                placeholder="Select Company"
+                              />
+                            )}
                           </div>
 
                           {formik.errors?.company_name &&
@@ -1869,10 +2012,9 @@ const ConvertMemberForm = ({
                           </label>
                           <div
                             className="relative"
-                            onClick={() => {
-                              setShowProductModal(true);
-                              // setSelectedType(formik.values.productType);
-                            }}
+                            // onClick={() => {
+                            //   setShowProductModal(true);
+                            // }}
                           >
                             <span className="absolute top-[50%] translate-y-[-50%] left-[15px]">
                               <FaListCheck />
@@ -1880,9 +2022,16 @@ const ConvertMemberForm = ({
                             <input
                               name="productDetails.title"
                               value={formik.values?.productDetails?.title}
-                              onChange={formik.handleChange}
-                              className="custom--input w-full input--icon"
-                              readOnly={true}
+                              readOnly
+                              disabled={!hasPlans || checkingPlans}
+                              onClick={() => {
+                                if (hasPlans) setShowProductModal(true);
+                              }}
+                              className={`custom--input w-full input--icon ${
+                                !hasPlans
+                                  ? "cursor-not-allowed pointer-events-none !bg-gray-100 text-gray-500"
+                                  : "cursor-pointer"
+                              }`}
                             />
                           </div>
                           {formik.errors?.productDetails?.title &&
@@ -1891,6 +2040,11 @@ const ConvertMemberForm = ({
                                 {formik.errors?.productDetails?.title}
                               </div>
                             )}
+                          {!checkingPlans && !hasPlans && formik.values.plan_type && (
+                            <p className="text-sm text-red-500">
+                              No plans available for selected type & club
+                            </p>
+                          )}
                         </div>
                         <div>
                           <label className="mb-2 block">Start Date</label>
@@ -1949,16 +2103,6 @@ const ConvertMemberForm = ({
                               Apply
                             </button>
                           </div>
-                          {/* {voucherStatus === "success" && (
-                            <p className="text-green-600 text-sm mt-1">
-                              Voucher applied successfully
-                            </p>
-                          )}
-                          {voucherStatus === "error" && (
-                            <p className="text-red-600 text-sm mt-1">
-                              Invalid voucher code.
-                            </p>
-                          )} */}
                           {voucherStatus === "success" && (
                             <p className="text-green-600 text-sm mt-1">
                               {voucherMessage}
@@ -1993,13 +2137,17 @@ const ConvertMemberForm = ({
                               Total:{" "}
                               <span className="font-bold flex items-center gap-2">
                                 <del className="text-gray-500 text-sm">
-                                  ₹{formatIndianNumber(formik.values.productDetails?.amount) ?? 0}
+                                  ₹
+                                  {formatIndianNumber(
+                                    formik.values.productDetails?.amount,
+                                  ) ?? 0}
                                 </del>{" "}
                                 <span>
                                   {" "}
                                   ₹
-                                  {formatIndianNumber(formik.values.productDetails?.total_amount) ??
-                                    0}
+                                  {formatIndianNumber(
+                                    formik.values.productDetails?.total_amount,
+                                  ) ?? 0}
                                 </span>
                               </span>
                             </p>
@@ -2008,7 +2156,10 @@ const ConvertMemberForm = ({
                             <p className="flex items-center gap-2 justify-between mb-2 border-b pb-2">
                               Discount Code Applied:{" "}
                               <span className="font-bold">
-                                ₹{formatIndianNumber(formik.values.discountAmount) ?? 0}
+                                ₹
+                                {formatIndianNumber(
+                                  formik.values.discountAmount,
+                                ) ?? 0}
                               </span>
                             </p>
                           </div>

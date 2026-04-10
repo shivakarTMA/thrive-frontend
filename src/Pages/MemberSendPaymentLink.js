@@ -18,7 +18,11 @@ const planTypeOption = [
 ];
 
 const validationSchema = Yup.object({
-  productType: Yup.string().required("Product Type is required"),
+  // productType: Yup.string().required("Product Type is required"),
+  plan_type: Yup.string().required("Plan Type is required"),
+  productDetails: Yup.object({
+    title: Yup.string().required("Product is required"),
+  }),
 });
 
 const MemberSendPaymentLink = ({
@@ -35,6 +39,9 @@ const MemberSendPaymentLink = ({
   const [voucherStatus, setVoucherStatus] = useState(null); // "success", "error", or null
   const [selectedVoucher, setSelectedVoucher] = useState(null);
   const [voucherMessage, setVoucherMessage] = useState("");
+
+  const [hasPlans, setHasPlans] = useState(false);
+  const [checkingPlans, setCheckingPlans] = useState(false);
 
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
   const [paymentUrl, setPaymentUrl] = useState("");
@@ -256,6 +263,47 @@ const MemberSendPaymentLink = ({
     }
   };
 
+  const checkPlansAvailability = async (planType, clubId, productType) => {
+    if (!planType || !clubId || !productType) {
+      setHasPlans(false);
+      return;
+    }
+
+    setCheckingPlans(true);
+
+    try {
+      let response;
+
+      const params = {
+        plan_type: planType,
+        club_id: clubId,
+      };
+
+      if (productType === "MEMBERSHIP_PLAN") {
+        response = await authAxios().get("/subscription-plan/list", {
+          params,
+        });
+      }
+
+      const data = response?.data?.data || [];
+
+      setHasPlans(data.length > 0); // ✅ KEY LINE
+    } catch (err) {
+      console.error(err);
+      setHasPlans(false);
+    }
+
+    setCheckingPlans(false);
+  };
+
+  useEffect(() => {
+    checkPlansAvailability(
+      formik.values.plan_type,
+      formik.values.club_id,
+      formik.values.productType
+    );
+  }, [formik.values.plan_type, formik.values.club_id, formik.values.productType]);
+
   const handleProductSubmit = (product) => {
     // Convert to numbers safely
     const amount = Number(product.amount) || 0;
@@ -308,6 +356,7 @@ const MemberSendPaymentLink = ({
         applicable_type: "SUBSCRIPTION",
         amount: formik.values.productDetails?.total_amount,
         club_id: formik.values.club_id,
+        member_id: selectedLeadMember,
       };
 
       const res = await authAxios().post("/coupon/applicable", payload);
@@ -431,20 +480,26 @@ const MemberSendPaymentLink = ({
                     </label>
                     <div
                       className="relative"
-                      onClick={() => {
-                        setShowProductModal(true);
-                        // setSelectedType(formik.values.productType);
-                      }}
+                      // onClick={() => {
+                      //   setShowProductModal(true);
+                      // }}
                     >
                       <span className="absolute top-[50%] translate-y-[-50%] left-[15px]">
                         <FaListCheck />
                       </span>
                       <input
                         name="productDetails.title"
-                        value={formik.values?.productDetails?.title || ""}
-                        onChange={formik.handleChange}
-                        className="custom--input w-full input--icon"
-                        readOnly={true}
+                        value={formik.values?.productDetails?.title}
+                        readOnly
+                        disabled={!hasPlans || checkingPlans}
+                        onClick={() => {
+                          if (hasPlans) setShowProductModal(true);
+                        }}
+                        className={`custom--input w-full input--icon ${
+                          !hasPlans
+                            ? "cursor-not-allowed pointer-events-none !bg-gray-100 text-gray-500"
+                            : "cursor-pointer"
+                        }`}
                       />
                     </div>
                     {formik.errors?.productDetails?.title &&
@@ -453,6 +508,11 @@ const MemberSendPaymentLink = ({
                           {formik.errors?.productDetails?.title}
                         </div>
                       )}
+                    {!checkingPlans && !hasPlans && formik.values.plan_type && (
+                      <p className="text-sm text-red-500">
+                        No plans available for selected type & club
+                      </p>
+                    )}
                   </div>
                   <div>
                     <label className="mb-2 block">Start Date</label>

@@ -310,10 +310,7 @@ const CreateLeadForm = ({
             company_id: data.company_id || null,
             company_name: data.company_name || "",
             interested_in: interestedList.map((i) => i.value),
-            lead_source: data.lead_source
-              ? data.lead_source.charAt(0).toUpperCase() +
-                data.lead_source.slice(1).toLowerCase()
-              : "",
+            lead_source: data.lead_source || "",
             lead_type: data.lead_type || "",
             platform: data.platform || "",
             schedule: data.schedule || "",
@@ -1188,6 +1185,7 @@ useEffect(() => {
                             }
                             options={socialList}
                             styles={selectIcon}
+                            isDisabled={!!selectedLead}
                           />
                         </div>
                         {formik.errors?.platform &&
@@ -1219,7 +1217,13 @@ useEffect(() => {
                               const cleaned = allowOnlyLetters(e.target.value);
                               formik.setFieldValue("platform", cleaned);
                             }}
-                            className="custom--input w-full input--icon "
+                            readOnly={!!selectedLead}
+                            isDisabled={!!selectedLead}
+                              className={`custom--input w-full input--icon ${
+                              selectedLead
+                                ? "cursor-not-allowed pointer-events-none !bg-gray-100 !text-gray-500"
+                                : ""
+                            }`}
                           />
                         </div>
                         {formik.errors?.platform &&

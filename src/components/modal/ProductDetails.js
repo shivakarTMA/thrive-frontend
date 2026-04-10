@@ -30,11 +30,6 @@ const ProductModal = ({ selectedType, onClose, onSubmit, planType, clubId }) => 
           });
         }
 
-        // (Add more conditions for other product types)
-        // else if (selectedType === "SOMETHING_ELSE") {
-        //   response = await authAxios().get("/other-endpoint");
-        // }
-
         // If no API matched, fallback to empty
         if (!response) {
           setFilteredProducts([]);

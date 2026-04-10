@@ -182,6 +182,7 @@ const LeadSendPaymentLink = ({ setSendPaymentModal, selectedLeadMember }) => {
         applicable_type: "SUBSCRIPTION",
         amount: formik.values.productDetails?.total_amount,
         club_id: formik.values.club_id,
+        member_id: selectedLeadMember,
       };
 
       const res = await authAxios().post("/coupon/applicable", payload);

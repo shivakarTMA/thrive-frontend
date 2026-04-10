@@ -309,17 +309,34 @@ useEffect(() => {
   };
 
   const handleApplicableIdChange = (index, option) => {
-    const id = option?.value ?? null;
+  const id = option?.value ?? null;
+  const current = [...formik.values.applicable_rules];
+  const currentType = current[index]?.applicable_type;
 
-    const current = [...formik.values.applicable_rules];
+  // ✅ If "All" selected
+  if (Number(id) === 0) {
+    const filtered = current.filter(
+      (rule, idx) =>
+        idx === index || rule?.applicable_type !== currentType
+    );
 
-    current[index] = {
-      ...current[index],
-      applicable_id: id,
+    filtered[index] = {
+      ...filtered[index],
+      applicable_id: 0,
     };
 
-    formik.setFieldValue("applicable_rules", current);
+    formik.setFieldValue("applicable_rules", filtered);
+    return;
+  }
+
+  // Normal selection
+  current[index] = {
+    ...current[index],
+    applicable_id: id,
   };
+
+  formik.setFieldValue("applicable_rules", current);
+};
 
   const getSelectedApplicableIds = (excludeIndex = null) => {
     return (formik.values.applicable_rules || [])
@@ -361,11 +378,27 @@ useEffect(() => {
 
     const selectedIds = getSelectedApplicableIds(ruleIndex);
 
-    return list.filter((opt) => !selectedIds.includes(opt.value));
+    // return list.filter((opt) => !selectedIds.includes(opt.value));
+      let filteredList = list.filter((opt) => !selectedIds.includes(opt.value));
+
+      // ✅ ADD "All" option (value = 0)
+      filteredList = [{ label: "All", value: 0 }, ...filteredList];
+
+      return filteredList;
   };
 
   const getSelectedApplicableOption = (type, id) => {
-    if (!type || id == null) return null;
+    if (!type) return null;
+
+    // ✅ handle "All"
+    // if (Number(id) === 0) {
+    //   return { label: "All", value: 0 };
+    // }
+    if (id === 0) {
+      return { label: "All", value: 0 };
+    }
+
+    if (!id) return null; // 🔥 IMPORTANT (prevents auto-select)
 
     let list = [];
 
@@ -389,78 +422,27 @@ useEffect(() => {
         return null;
     }
 
-    const found = list.find((opt) => String(opt.value) === String(id));
-
-    return found || null;
+    return list.find((opt) => String(opt.value) === String(id)) || null;
   };
 
   // ADD THIS FUNCTION ABOVE return()
 
-  const buildUpdatePayload = (values, originalRules = []) => {
-    const currentRules = values.applicable_rules || [];
+const getAvailableApplicableTypes = (currentIndex) => {
+  const rules = formik.values?.applicable_rules || [];
 
-    const payload = {
-      coupon: {
-        code: values.coupon.code,
-        description: values.coupon.description,
-        discount_type: values.coupon.discount_type,
-        discount_value: Number(values.coupon.discount_value),
-        max_usage: Number(values.coupon.max_usage),
-        per_user_limit: Number(values.coupon.per_user_limit),
-        start_date: values.coupon.start_date,
-        end_date: values.coupon.end_date,
-        position: Number(values.coupon.position),
-        status: values.coupon.status,
-      },
-      applicable_rules: {
-        add: [],
-        update: [],
-        delete: [],
-      },
-    };
+  const blockedTypes = rules
+    .filter(
+      (r, idx) =>
+        idx !== currentIndex &&
+        Number(r?.applicable_id) === 0 && // "All" selected
+        r?.applicable_type
+    )
+    .map((r) => r.applicable_type);
 
-    const originalMap = new Map();
-    originalRules.forEach((r) => {
-      if (r.id) originalMap.set(r.id, r);
-    });
-
-    const currentIds = [];
-
-    currentRules.forEach((rule) => {
-      if (!rule) return;
-
-      if (rule.id) {
-        currentIds.push(rule.id);
-
-        const original = originalMap.get(rule.id);
-
-        if (
-          original &&
-          (original.applicable_type !== rule.applicable_type ||
-            Number(original.applicable_id) !== Number(rule.applicable_id))
-        ) {
-          payload.applicable_rules.update.push({
-            id: rule.id,
-            applicable_type: rule.applicable_type,
-            applicable_id: rule.applicable_id,
-          });
-        }
-      } else {
-        payload.applicable_rules.add.push({
-          applicable_type: rule.applicable_type,
-          applicable_id: rule.applicable_id,
-        });
-      }
-    });
-
-    originalRules.forEach((r) => {
-      if (r.id && !currentIds.includes(r.id)) {
-        payload.applicable_rules.delete.push(r.id);
-      }
-    });
-
-    return payload;
-  };
+  return applicableTypeOptions.filter(
+    (opt) => !blockedTypes.includes(opt.value)
+  );
+};
 
   useEffect(() => {
     const maxUsage = Number(formik.values.coupon?.max_usage);
@@ -964,7 +946,8 @@ useEffect(() => {
                                       opt.value === rule?.applicable_type,
                                   ) || null
                                 }
-                                options={applicableTypeOptions}
+                                // options={applicableTypeOptions}
+                                options={getAvailableApplicableTypes(index)}
                                 onChange={(option) =>
                                   handleApplicableTypeChange(index, option)
                                 }
