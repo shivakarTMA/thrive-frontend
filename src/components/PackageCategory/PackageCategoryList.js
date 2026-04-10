@@ -165,8 +165,8 @@ const PackageCategoryList = () => {
           setShowModal(false);
         }
       } catch (err) {
-        console.log(err)
-        toast.error(err.response?.data?.errors || err.response?.data?.message)
+        console.log(err);
+        toast.error(err.response?.data?.errors || err.response?.data?.message);
       }
 
       // resetForm();
@@ -191,19 +191,21 @@ const PackageCategoryList = () => {
           <p className="text-sm">{`Home > Classes Category`}</p>
           <h1 className="text-3xl font-semibold">Classes Category</h1>
         </div>
-        <div className="flex items-end gap-2">
-          <button
-            type="button"
-            className="px-4 py-2 bg-black text-white rounded flex items-center gap-2"
-            onClick={() => {
-              setEditingOption(null);
-              formik.resetForm();
-              setShowModal(true);
-            }}
-          >
-            <FiPlus /> Create Category
-          </button>
-        </div>
+        {userRole === "ADMIN" && (
+          <div className="flex items-end gap-2">
+            <button
+              type="button"
+              className="px-4 py-2 bg-black text-white rounded flex items-center gap-2"
+              onClick={() => {
+                setEditingOption(null);
+                formik.resetForm();
+                setShowModal(true);
+              }}
+            >
+              <FiPlus /> Create Category
+            </button>
+          </div>
+        )}
       </div>
       <div className="flex gap-3 mb-4">
         <div className="mb-4 w-full max-w-[250px]">
@@ -255,7 +257,7 @@ const PackageCategoryList = () => {
                 <th className="px-2 py-4">Title</th>
                 <th className="px-2 py-4">Position</th>
                 <th className="px-2 py-4">Status</th>
-                <th className="px-2 py-4">Action</th>
+                {userRole === "ADMIN" && <th className="px-2 py-4">Action</th>}
               </tr>
             </thead>
             <tbody>
@@ -298,25 +300,27 @@ const PackageCategoryList = () => {
                           : ""}
                       </div>
                     </td>
-                    <td className="px-2 py-4">
-                      <div className="w-fit">
-                        <Tooltip
-                          id={`tooltip-edit-${item.id || index}`}
-                          content="Edit Category"
-                          place="left"
-                        >
-                          <div
-                            className="p-1 cursor-pointer"
-                            onClick={() => {
-                              setEditingOption(item?.id);
-                              setShowModal(true);
-                            }}
+                    {userRole === "ADMIN" && (
+                      <td className="px-2 py-4">
+                        <div className="w-fit">
+                          <Tooltip
+                            id={`tooltip-edit-${item.id || index}`}
+                            content="Edit Category"
+                            place="left"
                           >
-                            <LiaEdit className="text-[25px] text-black" />
-                          </div>
-                        </Tooltip>
-                      </div>
-                    </td>
+                            <div
+                              className="p-1 cursor-pointer"
+                              onClick={() => {
+                                setEditingOption(item?.id);
+                                setShowModal(true);
+                              }}
+                            >
+                              <LiaEdit className="text-[25px] text-black" />
+                            </div>
+                          </Tooltip>
+                        </div>
+                      </td>
+                    )}
                   </tr>
                 ))
               )}

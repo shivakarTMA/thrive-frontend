@@ -159,16 +159,23 @@ const WorkoutApp = ({ member }) => {
       )}
       {/* ---------------------------------------------------- */}
 
-      {!workoutModal && (
-        <div className="flex justify-end items-end gap-2 mb-3 w-full">
-          <button
-            type="button"
-            onClick={handleAddWorkout}
-            className="px-4 py-2 bg-black text-white rounded flex items-center gap-2"
-          >
-            <FiPlus /> Add Workout
-          </button>
-        </div>
+      {(userRole === "TRAINER" ||
+        userRole === "FITNESS_MANAGER" ||
+        userRole === "CLUB_MANAGER" ||
+        userRole === "ADMIN") && (
+        <>
+          {!workoutModal && (
+            <div className="flex justify-end items-end gap-2 mb-3 w-full">
+              <button
+                type="button"
+                onClick={handleAddWorkout}
+                className="px-4 py-2 bg-black text-white rounded flex items-center gap-2"
+              >
+                <FiPlus /> Add Workout
+              </button>
+            </div>
+          )}
+        </>
       )}
 
       {workoutTable && (

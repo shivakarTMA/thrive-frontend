@@ -6,6 +6,7 @@ import Pagination from "../../components/common/Pagination";
 import { Link, useParams } from "react-router-dom";
 import { formatAutoDate, formatTimeAppointment } from "../../Helper/helper";
 import { MdOutlineKeyboardBackspace } from "react-icons/md";
+import { useSelector } from "react-redux";
 
 const GroupClassParticipants = () => {
   const { id } = useParams();
@@ -15,6 +16,9 @@ const GroupClassParticipants = () => {
   const [remarks, setRemarks] = useState("");
   const [pendingId, setPendingId] = useState(null);
   const [pendingStatus, setPendingStatus] = useState(null);
+
+  const { user } = useSelector((state) => state.auth);
+  const userRole = user.role;
 
   const [page, setPage] = useState(1);
   const [rowsPerPage] = useState(10);
@@ -36,7 +40,7 @@ const GroupClassParticipants = () => {
       const responseData = res.data;
       const data = responseData?.data || [];
 
-      setParticipantClassTitle(responseData?.participant_class_name_title)
+      setParticipantClassTitle(responseData?.participant_class_name_title);
       setPackageParticipats(data);
       setPage(responseData?.currentPage || 1);
       setTotalPages(responseData?.totalPage || 1);
@@ -193,32 +197,44 @@ const GroupClassParticipants = () => {
                         {/* <td className="px-2 py-4">{row?.booking_status}</td> */}
 
                         <td className="px-2 py-4">
-                          {(() => {
-                            const action = getActionForStatus(
-                              row.booking_status,
-                            );
+                          {userRole === "CLUB_MANAGER" ||
+                          userRole === "MARKETING_MANAGER" ||
+                          userRole === "FITNESS_MANAGER" ||
+                          userRole === "TRAINER" ||
+                          userRole === "ADMIN" ? (
+                            <>
+                              {(() => {
+                                const action = getActionForStatus(
+                                  row.booking_status,
+                                );
 
-                            return (
-                              <div
-                                className={`px-3 py-1 rounded !text-[13px] w-fit
-                                  ${
-                                    action.disabled
-                                      ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                                      : "bg-black text-white cursor-pointer hover:bg-gray-800"
-                                  }
-                                `}
-                                onClick={() => {
-                                  if (action.disabled) return;
+                                return (
+                                  <div
+                                    className={`px-3 py-1 rounded !text-[13px] w-fit
+                                                  ${
+                                                    action.disabled
+                                                      ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                                                      : "bg-black text-white cursor-pointer hover:bg-gray-800"
+                                                  }
+                                                `}
+                                    onClick={() => {
+                                      if (action.disabled) return;
 
-                                  setPendingId(row.id);
-                                  setPendingStatus(action.nextStatus);
-                                  setShowConfirmModal(true);
-                                }}
-                              >
-                                {action.label}
-                              </div>
-                            );
-                          })()}
+                                      setPendingId(row.id);
+                                      setPendingStatus(action.nextStatus);
+                                      setShowConfirmModal(true);
+                                    }}
+                                  >
+                                    {action.label}
+                                  </div>
+                                );
+                              })()}
+                            </>
+                          ) : row?.booking_status ? (
+                            row?.booking_status
+                          ) : (
+                            "--"
+                          )}
                         </td>
                         <td className="px-2 py-4">
                           {row?.remarks ? row?.remarks : "--"}

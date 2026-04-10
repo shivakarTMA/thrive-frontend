@@ -251,6 +251,9 @@ const NotificationList = () => {
           </p>
           <h1 className="text-3xl font-semibold">Notification</h1>
         </div>
+        {(userRole === "ADMIN" ||
+          userRole === "CLUB_MANAGER" ||
+          userRole === "MARKETING_MANAGER") && (
         <div className="flex items-end gap-2">
           <Link
             to="/reports/marketing-reports/send-notification"
@@ -259,6 +262,7 @@ const NotificationList = () => {
             <BsSend /> Send Notification
           </Link>
         </div>
+        )}
       </div>
 
       {/* Filters */}
@@ -351,7 +355,11 @@ const NotificationList = () => {
                 <th className="px-2 py-4 min-w-[150px]">Created At</th>
                 <th className="px-2 py-4 min-w-[150px]">Scheduled on</th>
                 <th className="px-2 py-4 min-w-[100px]">Status</th>
+                {(userRole === "ADMIN" ||
+                  userRole === "CLUB_MANAGER" ||
+                  userRole === "MARKETING_MANAGER") && (
                 <th className="px-2 py-4 min-w-[100px]">Action</th>
+                )}
               </tr>
             </thead>
 
@@ -420,11 +428,14 @@ const NotificationList = () => {
                         {formatText(item?.status)}
                       </span>
                     </td>
+                    {(userRole === "ADMIN" ||
+                      userRole === "CLUB_MANAGER" ||
+                      userRole === "MARKETING_MANAGER") && (
                     <td className="px-2 py-4">
                       <div className="flex">
                         <Tooltip
                           id={`tooltip-edit-${item?.id}`}
-                          content="View Email"
+                          content="View Notification"
                           place="left"
                         >
                           <Link
@@ -438,7 +449,7 @@ const NotificationList = () => {
                         </Tooltip>
                         <Tooltip
                           id={`tooltip-edit-${item?.id}`}
-                          content="Edit Email"
+                          content="Edit Notification"
                           place="left"
                         >
                           <Link
@@ -454,6 +465,7 @@ const NotificationList = () => {
                         </Tooltip>
                       </div>
                     </td>
+                    )}
                   </tr>
                 ))
               ) : (

@@ -159,7 +159,7 @@ const CollectionReport = () => {
           {dateFilter?.value === "custom" && (
             <>
               <div className="custom--date dob-format flex-1 max-w-[180px] w-full">
-                <span className="absolute z-[1] mt-[11px] ml-[15px]">
+                <span className="absolute z-[1] mt-[10px] ml-[15px]">
                   <FaCalendarDays />
                 </span>
                 <DatePicker
@@ -179,7 +179,7 @@ const CollectionReport = () => {
                 />
               </div>
               <div className="custom--date dob-format flex-1 max-w-[180px] w-full">
-                <span className="absolute z-[1] mt-[11px] ml-[15px]">
+                <span className="absolute z-[1] mt-[10px] ml-[15px]">
                   <FaCalendarDays />
                 </span>
                 <DatePicker

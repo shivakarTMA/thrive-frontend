@@ -68,6 +68,9 @@ const Relations = ({ details }) => {
   const [referredBy, setReferredBy] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  const { user } = useSelector((state) => state.auth);
+  const userRole = user.role;
+
   const dispatch = useDispatch();
   const { lists } = useSelector((state) => state.optionList);
 
@@ -140,6 +143,9 @@ const Relations = ({ details }) => {
 
   return (
     <div className="p-4 bg-white rounded shadow">
+      {(userRole === "FOH" ||
+          userRole === "CLUB_MANAGER" ||
+          userRole === "ADMIN") && (
       <div className="flex justify-end mb-3">
         <button
           onClick={() => {
@@ -151,6 +157,7 @@ const Relations = ({ details }) => {
           <FiPlus /> Add Referral
         </button>
       </div>
+          )}
 
       <div className="overflow-auto">
         <table className="min-w-full border border-gray-300 text-sm">

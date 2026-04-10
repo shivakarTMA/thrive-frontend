@@ -617,32 +617,32 @@ const MemberCallLogs = () => {
 
                   {/* Submit Button */}
                   {(userRole === "FOH" ||
-          userRole === "TRAINER" ||
-          userRole === "FITNESS_MANAGER" ||
-          userRole === "CLUB_MANAGER" ||
-          userRole === "ADMIN") && (
-                  <div className="flex items-center justify-end gap-2 mt-3">
-                    {editLog && (
+                    userRole === "TRAINER" ||
+                    userRole === "FITNESS_MANAGER" ||
+                    userRole === "CLUB_MANAGER" ||
+                    userRole === "ADMIN") && (
+                    <div className="flex items-center justify-end gap-2 mt-3">
+                      {editLog && (
+                        <button
+                          type="button"
+                          className="px-4 py-2 bg-white text-black border border-black rounded"
+                          onClick={() => {
+                            formik.resetForm();
+                            setEditLog(null);
+                            navigate(`/member/${memberId}?view=call-logs`);
+                          }}
+                        >
+                          Clear
+                        </button>
+                      )}
                       <button
-                        type="button"
-                        className="px-4 py-2 bg-white text-black border border-black rounded"
-                        onClick={() => {
-                          formik.resetForm();
-                          setEditLog(null);
-                          navigate(`/member/${memberId}?view=call-logs`);
-                        }}
+                        type="submit"
+                        className="px-4 py-2 bg-black text-white rounded"
                       >
-                        Clear
+                        Submit
                       </button>
-                    )}
-                    <button
-                      type="submit"
-                      className="px-4 py-2 bg-black text-white rounded"
-                    >
-                      Submit
-                    </button>
-                  </div>
-          )}
+                    </div>
+                  )}
                 </form>
               </>
             )}

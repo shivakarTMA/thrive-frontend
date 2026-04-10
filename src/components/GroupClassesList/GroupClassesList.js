@@ -516,7 +516,8 @@ const GroupClassesList = () => {
           </div>
           {(userRole === "CLUB_MANAGER" ||
             userRole === "MARKETING_MANAGER" ||
-            userRole === "FINANCE_MANAGER" ||
+            userRole === "FITNESS_MANAGER" ||
+            userRole === "TRAINER" ||
             userRole === "ADMIN") && (
             <div className="flex items-end gap-2">
               <button
@@ -768,7 +769,8 @@ const GroupClassesList = () => {
                             </Tooltip>
                             {(userRole === "CLUB_MANAGER" ||
                               userRole === "MARKETING_MANAGER" ||
-                              userRole === "FINANCE_MANAGER" ||
+                              userRole === "FITNESS_MANAGER" ||
+                              userRole === "TRAINER" ||
                               userRole === "ADMIN") && (
                               <Tooltip
                                 id={`tooltip-edit-${row.id}`}

@@ -679,6 +679,10 @@ const PackagesList = () => {
           <p className="text-sm">{`Home > All Packages`}</p>
           <h1 className="text-3xl font-semibold">All Packages</h1>
         </div>
+        {(userRole === "ADMIN" ||
+          userRole === "CLUB_MANAGER" ||
+          userRole === "MARKETING_MANAGER" ||
+          userRole === "FINANCE_MANAGER") && (
         <div className="flex items-end gap-2">
           <button
             type="button"
@@ -691,6 +695,7 @@ const PackagesList = () => {
             <FiPlus /> Create Package
           </button>
         </div>
+        )}
       </div>
 
       {/* Filters */}
@@ -747,7 +752,12 @@ const PackagesList = () => {
                 <th className="px-2 py-4">Total Amount</th>
                 <th className="px-2 py-4 text-center">Position</th>
                 <th className="px-2 py-4">Status</th>
+                {(userRole === "ADMIN" ||
+                  userRole === "CLUB_MANAGER" ||
+                  userRole === "MARKETING_MANAGER" ||
+                  userRole === "FINANCE_MANAGER") && (
                 <th className="px-2 py-4">Action</th>
+                )}
               </tr>
             </thead>
             <tbody>
@@ -814,6 +824,10 @@ const PackagesList = () => {
                           : ""}
                       </div>
                     </td>
+                    {(userRole === "ADMIN" ||
+                      userRole === "CLUB_MANAGER" ||
+                      userRole === "MARKETING_MANAGER" ||
+                      userRole === "FINANCE_MANAGER") && (
                     <td className="px-2 py-4">
                       <div className="w-fit">
                         <Tooltip
@@ -833,6 +847,7 @@ const PackagesList = () => {
                         </Tooltip>
                       </div>
                     </td>
+                    )}
                   </tr>
                 ))
               )}

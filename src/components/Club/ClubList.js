@@ -15,6 +15,7 @@ import Select from "react-select";
 import { customStyles } from "../../Helper/helper";
 import Pagination from "../common/Pagination";
 import { QRCodeCanvas } from "qrcode.react";
+import { useSelector } from "react-redux";
 
 const ClubList = () => {
   const [showModal, setShowModal] = useState(false);
@@ -23,6 +24,9 @@ const ClubList = () => {
   const leadBoxRef = useRef(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState(null);
+
+  const { user } = useSelector((state) => state.auth);
+  const userRole = user.role;
 
   const APP_URL =
     typeof window !== "undefined" ? process.env.REACT_APP_BASEURL : "";
@@ -269,19 +273,21 @@ const ClubList = () => {
           <p className="text-sm">{`Home > All Club`}</p>
           <h1 className="text-3xl font-semibold">All Club</h1>
         </div>
-        <div className="flex items-end gap-2">
-          <button
-            type="button"
-            className="px-4 py-2 bg-black text-white rounded flex items-center gap-2"
-            onClick={() => {
-              setEditingClub(null);
-              formik.resetForm();
-              setShowModal(true);
-            }}
-          >
-            <FiPlus /> Create Club
-          </button>
-        </div>
+        {(userRole === "ADMIN" || userRole === "MARKETING_MANAGER") && (
+            <div className="flex items-end gap-2">
+              <button
+                type="button"
+                className="px-4 py-2 bg-black text-white rounded flex items-center gap-2"
+                onClick={() => {
+                  setEditingClub(null);
+                  formik.resetForm();
+                  setShowModal(true);
+                }}
+              >
+                <FiPlus /> Create Club
+              </button>
+            </div>
+          )}
       </div>
 
       {/* Filters */}
@@ -334,7 +340,9 @@ const ClubList = () => {
                   Position
                 </th>
                 <th className="px-2 py-4 min-w-[100px]">Status</th>
+                {(userRole === "ADMIN" || userRole === "MARKETING_MANAGER") && (
                 <th className="px-2 py-4 min-w-[100px]">Action</th>
+                )}
               </tr>
             </thead>
             <tbody>
@@ -430,6 +438,7 @@ const ClubList = () => {
                             : ""}
                         </div>
                       </td>
+                      {(userRole === "ADMIN" || userRole === "MARKETING_MANAGER") && (
                       <td className="px-2 py-4">
                         <Tooltip
                           id={`tooltip-edit-${club.id || index}`}
@@ -454,6 +463,7 @@ const ClubList = () => {
                           </div>
                         </Tooltip>
                       </td>
+                      )}
                     </tr>
                   );
                 })

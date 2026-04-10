@@ -937,14 +937,6 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                   <FaCircle className="menu--icon !text-[10px]" />
                   <span className="nav-text">Email Templates</span>
                 </Link>
-
-                <Link
-                  to="/marketing-banner"
-                  className="text-white flex items-center gap-[5px] mb-2 text-sm"
-                >
-                  <FaCircle className="menu--icon !text-[10px]" />
-                  <span className="nav-text">App Banner</span>
-                </Link>
                 <Link
                   to="/coupons"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"

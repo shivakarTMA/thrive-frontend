@@ -91,6 +91,9 @@ const ProfileDetails = ({ member }) => {
   const [trainerList, setTrainerList] = useState([]);
   const [profileError, setProfileError] = useState("");
 
+  const { user } = useSelector((state) => state.auth);
+  const userRole = user.role;
+
   const [initialValues, setInitialValues] = useState({
     profile_pic: DummyProfile,
     country_code: "",
@@ -1118,7 +1121,7 @@ const ProfileDetails = ({ member }) => {
                     disabled={true}
                   />
                 </div>
-                <div>
+                {/* <div>
                   <label className="block text-sm font-medium text-black mb-2">
                     General Trainer
                   </label>
@@ -1136,7 +1139,7 @@ const ProfileDetails = ({ member }) => {
                     placeholder="Select Trainer"
                     styles={customStyles}
                   />
-                </div>
+                </div> */}
                 {/* <div>
                   <label className="block text-sm font-medium text-black mb-2">
                     Personal Trainer
@@ -1534,6 +1537,8 @@ const ProfileDetails = ({ member }) => {
                   </div>
                 );
               })}
+
+            {(userRole === "ADMIN" || userRole === "FOH" || userRole === "CLUB_MANAGER") && (
               <button
                 type="button"
                 onClick={addNewEmergencyForm}
@@ -1541,6 +1546,8 @@ const ProfileDetails = ({ member }) => {
               >
                 <IoIosAddCircle className="text-2xl" /> Add More
               </button>
+            )}
+              
             </div>
 
             {/* Profile Completion */}
@@ -1601,14 +1608,16 @@ const ProfileDetails = ({ member }) => {
             </div>
           </div>
           {/* Save Button */}
-          <div className="flex justify-end mt-5">
-            <button
-              className="px-4 py-2 bg-black text-white rounded flex items-center gap-2"
-              type="submit"
-            >
-              SAVE CHANGES
-            </button>
-          </div>
+          {(userRole === "ADMIN" || userRole === "FOH" || userRole === "CLUB_MANAGER") && (
+            <div className="flex justify-end mt-5">
+              <button
+                className="px-4 py-2 bg-black text-white rounded flex items-center gap-2"
+                type="submit"
+              >
+                SAVE CHANGES
+              </button>
+            </div>
+          )}
         </div>
       </form>
 

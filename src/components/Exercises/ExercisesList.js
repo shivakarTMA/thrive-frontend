@@ -10,6 +10,7 @@ import Select from "react-select";
 import { customStyles, filterActiveItems } from "../../Helper/helper";
 import { authAxios } from "../../config/config";
 import Pagination from "../common/Pagination";
+import { useSelector } from "react-redux";
 
 
 const columns = [
@@ -29,6 +30,8 @@ const ExercisesList = () => {
   const [showConfirmPopup, setShowConfirmPopup] = useState(false);
   const [productCategory, setProductCategory] = useState([]);
   const [productFilter, setProductFilter] = useState(null);
+  const { user } = useSelector((state) => state.auth);
+  const userRole = user.role;
 
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -135,16 +138,18 @@ const ExercisesList = () => {
           <p className="text-sm">{`Home > All Exercises`}</p>
           <h1 className="text-3xl font-semibold">All Exercises</h1>
         </div>
-        <button
-          type="button"
-          className="px-4 py-2 bg-black text-white rounded flex items-center gap-2"
-          onClick={() => {
-            setEditingExercise(null);
-            setShowModal(true);
-          }}
-        >
-          <FiPlus /> Add Exercise
-        </button>
+        {(userRole === "ADMIN" || userRole === "CLUB_MANAGER" || userRole === "FITNESS_MANAGER") && (
+          <button
+            type="button"
+            className="px-4 py-2 bg-black text-white rounded flex items-center gap-2"
+            onClick={() => {
+              setEditingExercise(null);
+              setShowModal(true);
+            }}
+          >
+            <FiPlus /> Add Exercise
+          </button>
+        )}
       </div>
 
       {/* Filters */}
@@ -187,11 +192,14 @@ const ExercisesList = () => {
           <table className="w-full text-sm text-left text-gray-500">
             <thead className="text-xs text-gray-700 uppercase bg-gray-50">
               <tr>
-                {columns.map((col, idx) => (
-                  <th key={idx} className="px-2 py-4">
-                    {col}
-                  </th>
-                ))}
+                
+                  <th className="px-2 py-4">Category Name</th>
+                  <th className="px-2 py-4">Exercise Name</th>
+                  <th className="px-2 py-4">Created By</th>
+                  <th className="px-2 py-4">Position</th>
+                  {(userRole === "ADMIN" || userRole === "CLUB_MANAGER" || userRole === "FITNESS_MANAGER") && (
+                  <th className="px-2 py-4">Action</th>
+                  )}
               </tr>
             </thead>
             <tbody>
@@ -208,6 +216,7 @@ const ExercisesList = () => {
                     <td className="px-2 py-4">
                       {row?.position ? row?.position : "--"}
                     </td>
+                    {(userRole === "ADMIN" || userRole === "CLUB_MANAGER" || userRole === "FITNESS_MANAGER") && (
                     <td className="px-2 py-4">
                       <div className="flex">
                         <Tooltip
@@ -239,6 +248,7 @@ const ExercisesList = () => {
                         </Tooltip>
                       </div>
                     </td>
+                    )}
                   </tr>
                 ))
               ) : (

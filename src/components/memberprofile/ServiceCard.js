@@ -12,6 +12,7 @@ import CreateNewInvoice from "../../Pages/CreateNewInvoice";
 import MemberSendPaymentLink from "../../Pages/MemberSendPaymentLink";
 import { FiPlusCircle } from "react-icons/fi";
 import Tooltip from "../common/Tooltip";
+import { useSelector } from "react-redux";
 
 const statusOptions = [
   { value: "ACTIVE", label: "Active" },
@@ -56,6 +57,9 @@ const ServiceCard = ({ details }) => {
   const [suspendPauseModal, setSuspendPauseModal] = useState(false);
   const [membershipActionType, setMembershipActionType] = useState(null);
   const [trainerSelections, setTrainerSelections] = useState({});
+
+  const { user } = useSelector((state) => state.auth);
+  const userRole = user.role;
 
   const fetchStaff = async (clubIdParam = null) => {
     try {
@@ -317,49 +321,51 @@ const ServiceCard = ({ details }) => {
                 {formatDate(membershipData?.relationship_since)}
               </p>
             </div>
-            <div className="flex gap-2 items-center">
-              {hasUpcomingMembership ? (
-                <Tooltip
-                id={`tooltip-membership-buy`}
-                content="You already have an upcoming membership."
-                place="top"
-              >
-                <button
-                  className={`px-3 py-2 rounded-full flex items-center gap-2 border text-sm bg-gray-300 border-gray-300 cursor-not-allowed text-gray-500`}
-                  disabled={hasUpcomingMembership}
-                  onClick={() => {
-                    if (hasUpcomingMembership) return;
-                    setSendPaymentModal(true);
-                  }}
+            {(userRole === "FOH" ||
+              userRole === "CLUB_MANAGER" ||
+              userRole === "ADMIN") && (
+              <div className="flex gap-2 items-center">
+                {hasUpcomingMembership ? (
+                  <Tooltip
+                  id={`tooltip-membership-buy`}
+                  content="You already have an upcoming membership."
+                  place="top"
                 >
-                  <FiPlusCircle className="text-lg" />
-                  <span>Buy Membership</span>
-                </button>
-              </Tooltip>
-              ) : (
-                <button
-                  className={`px-3 py-2 rounded-full flex items-center gap-2 border text-sm bg-black border-black text-white`}
-                  onClick={() => {
-                    setSendPaymentModal(true);
-                  }}
+                  <button
+                    className={`px-3 py-2 rounded-full flex items-center gap-2 border text-sm bg-gray-300 border-gray-300 cursor-not-allowed text-gray-500`}
+                    disabled={hasUpcomingMembership}
+                    onClick={() => {
+                      if (hasUpcomingMembership) return;
+                      setSendPaymentModal(true);
+                    }}
+                  >
+                    <FiPlusCircle className="text-lg" />
+                    <span>Buy Membership</span>
+                  </button>
+                </Tooltip>
+                ) : (
+                  <button
+                    className={`px-3 py-2 rounded-full flex items-center gap-2 border text-sm bg-black border-black text-white`}
+                    onClick={() => {
+                      setSendPaymentModal(true);
+                    }}
+                  >
+                    <FiPlusCircle className="text-lg" />
+                    <span>Buy Membership</span>
+                  </button>
+                )}
+                {/* <div
+                  className="flex items-center bg-white rounded-full px-2 py-1 border-[#D4D4D4] border-[2px]"
+                  onClick={() => setCoinsModal(true)}
                 >
-                  <FiPlusCircle className="text-lg" />
-                  <span>Buy Membership</span>
-                </button>
+                  <img src={Coins} className="mr-1" />
+                  <span className="text-lg font-medium text-black mr-3">
+                    {membershipData?.earn_coins}
+                  </span>
+                  <FaCirclePlus className="text-black text-2xl cursor-pointer" />
+                </div> */}
+              </div>
               )}
-              
-
-              {/* <div
-                className="flex items-center bg-white rounded-full px-2 py-1 border-[#D4D4D4] border-[2px]"
-                onClick={() => setCoinsModal(true)}
-              >
-                <img src={Coins} className="mr-1" />
-                <span className="text-lg font-medium text-black mr-3">
-                  {membershipData?.earn_coins}
-                </span>
-                <FaCirclePlus className="text-black text-2xl cursor-pointer" />
-              </div> */}
-            </div>
           </div>
         </div>
 
@@ -408,15 +414,18 @@ const ServiceCard = ({ details }) => {
                   <p className="text-md text-gray-500">Relationship since</p>
                 </div>
                 <div className="flex space-x-2">
-                  <button
-                    className="px-3 py-2 bg-black text-white rounded flex items-center gap-2 border border-black text-sm"
-                    onClick={() => {
-                      setMembershipActionType("suspend");
-                      setSuspendPauseModal(true);
-                    }}
-                  >
-                    Cancel Membership
-                  </button>
+                  {(userRole === "CLUB_MANAGER" ||
+                    userRole === "ADMIN") && (
+                    <button
+                      className="px-3 py-2 bg-black text-white rounded flex items-center gap-2 border border-black text-sm"
+                      onClick={() => {
+                        setMembershipActionType("suspend");
+                        setSuspendPauseModal(true);
+                      }}
+                    >
+                      Cancel Membership
+                    </button>
+                  )}
                   {/* <button
                     onClick={() => {
                       setMembershipActionType("pause");
@@ -559,58 +568,70 @@ const ServiceCard = ({ details }) => {
                               </span>
                             </div>
 
-                            <div className="w-fit min-w-[150px]">
-                              <Select
-                                options={filteredStaffOptions}
-                                value={trainerSelections[service?.id] || null} // <-- controlled value
-                                placeholder={
-                                  service?.assigned_staff_name
-                                    ? "Change trainer"
-                                    : "Assign trainer"
-                                }
-                                onChange={(selectedOption) => {
-                                  setTrainerSelections((prev) => ({
-                                    ...prev,
-                                    [service?.id]: selectedOption,
-                                  }));
+                              {(userRole === "CLUB_MANAGER" ||
+                                userRole === "ADMIN" ||
+                                userRole === "FITNESS_MANAGER"
+                              ) && (
+                              <div className="w-fit min-w-[150px]">
+                                <Select
+                                  options={filteredStaffOptions}
+                                  value={trainerSelections[service?.id] || null} // <-- controlled value
+                                  placeholder={
+                                    service?.assigned_staff_name
+                                      ? "Change trainer"
+                                      : "Assign trainer"
+                                  }
+                                  onChange={(selectedOption) => {
+                                    setTrainerSelections((prev) => ({
+                                      ...prev,
+                                      [service?.id]: selectedOption,
+                                    }));
 
-                                  confirmAssignTrainer(
-                                    selectedOption.value,
-                                    selectedOption.label,
-                                    service?.id,
-                                    !!service?.assigned_staff_name,
-                                  );
-                                }}
-                                styles={{
-                                  ...customStyles,
-                                  menuPortal: (base) => ({
-                                    ...base,
-                                    zIndex: 9999,
-                                  }),
-                                }}
-                                menuPortalTarget={document.body}
-                                menuPosition="fixed"
-                                isDisabled={
-                                  service?.package_status !== "ACTIVE"
-                                    ? true
-                                    : false
-                                }
-                              />
-                            </div>
-
-                            {service?.package_status !== "ACTIVE" && (
-                              <div>
-                                <button
-                                  className="px-3 py-2 bg-black text-white rounded flex items-center gap-2 border border-black text-sm"
-                                  onClick={() => {
-                                    setRenewService(service);
-                                    setInvoiceModal(true);
+                                    confirmAssignTrainer(
+                                      selectedOption.value,
+                                      selectedOption.label,
+                                      service?.id,
+                                      !!service?.assigned_staff_name,
+                                    );
                                   }}
-                                >
-                                  RENEW
-                                </button>
+                                  styles={{
+                                    ...customStyles,
+                                    menuPortal: (base) => ({
+                                      ...base,
+                                      zIndex: 9999,
+                                    }),
+                                  }}
+                                  menuPortalTarget={document.body}
+                                  menuPosition="fixed"
+                                  isDisabled={
+                                    service?.package_status !== "ACTIVE"
+                                      ? true
+                                      : false
+                                  }
+                                />
                               </div>
-                            )}
+                              )}
+
+                              {(userRole === "CLUB_MANAGER" ||
+                                userRole === "ADMIN" ||
+                                userRole === "FOH"
+                              ) && (
+                                <>
+                                {service?.package_status !== "ACTIVE" && (
+                                  <div>
+                                    <button
+                                      className="px-3 py-2 bg-black text-white rounded flex items-center gap-2 border border-black text-sm"
+                                      onClick={() => {
+                                        setRenewService(service);
+                                        setInvoiceModal(true);
+                                      }}
+                                    >
+                                      RENEW
+                                    </button>
+                                  </div>
+                                )}
+                                </>
+                              )}
                           </div>
 
                           <div className="rounded-lg bg--color p-[2px] w-full">
@@ -748,19 +769,26 @@ const ServiceCard = ({ details }) => {
                               </span>
                             </div>
 
-                            {membership?.booking_status !== "UPCOMING" && (
-                              <div>
-                                <button
-                                  className="px-3 py-2 bg-black text-white rounded flex items-center gap-2 border border-black text-sm"
-                                  onClick={() => {
-                                    setRenewMembership(membership);
-                                    setModalKey((prev) => prev + 1); // ✅ always unique key
-                                    setSendPaymentModal(true);
-                                  }}
-                                >
-                                  RENEW
-                                </button>
-                              </div>
+                            {(userRole === "CLUB_MANAGER" ||
+                                userRole === "ADMIN" ||
+                                userRole === "FOH"
+                              ) && (
+                            <>
+                              {membership?.booking_status !== "UPCOMING" && (
+                                <div>
+                                  <button
+                                    className="px-3 py-2 bg-black text-white rounded flex items-center gap-2 border border-black text-sm"
+                                    onClick={() => {
+                                      setRenewMembership(membership);
+                                      setModalKey((prev) => prev + 1); // ✅ always unique key
+                                      setSendPaymentModal(true);
+                                    }}
+                                  >
+                                    RENEW
+                                  </button>
+                                </div>
+                              )}
+                              </>
                             )}
                           </div>
                           <div className="rounded-lg bg--color p-[2px] w-full">

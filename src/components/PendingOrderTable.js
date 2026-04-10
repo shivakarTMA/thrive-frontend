@@ -1,12 +1,20 @@
 import React, { useState } from "react";
 import Switch from "react-switch";
 import ConfirmPopup from "./common/ConfirmPopup";
-import { formatDateTimeLead, formatIndianNumber, formatText } from "../Helper/helper";
+import {
+  formatDateTimeLead,
+  formatIndianNumber,
+  formatText,
+} from "../Helper/helper";
 import { authAxios } from "../config/config";
+import { useSelector } from "react-redux";
 
 const PendingOrderTable = ({ orders, fetchOrders }) => {
   const [showConfirmPopup, setShowConfirmPopup] = useState(false);
   const [selectedOrderId, setSelectedOrderId] = useState(null);
+
+  const { user } = useSelector((state) => state.auth);
+  const userRole = user.role;
 
   // Open confirmation popup
   const handleMarkDeliveredClick = (orderId) => {
@@ -52,7 +60,11 @@ const PendingOrderTable = ({ orders, fetchOrders }) => {
             <th className="p-2 min-w-[150px]">Fulfilment Status</th>
             <th className="p-2 min-w-[150px]">Delivered By</th>
             <th className="p-2 min-w-[170px]">Delivered At</th>
-            <th className="p-2 min-w-[150px]">Action</th>
+            {(userRole === "CLUB_MANAGER" ||
+              userRole === "FOH" ||
+              userRole === "ADMIN") && (
+              <th className="p-2 min-w-[150px]">Action</th>
+            )}
           </tr>
         </thead>
 
@@ -74,8 +86,12 @@ const PendingOrderTable = ({ orders, fetchOrders }) => {
                 <td className="p-2">
                   {order?.member_name ? order?.member_name : "--"}
                 </td>
-                <td className="p-2">{order?.items_ordered ? order?.items_ordered : "--"}</td>
-                <td className="p-2">₹{formatIndianNumber(order?.total_amount) ?? 0}</td>
+                <td className="p-2">
+                  {order?.items_ordered ? order?.items_ordered : "--"}
+                </td>
+                <td className="p-2">
+                  ₹{formatIndianNumber(order?.total_amount) ?? 0}
+                </td>
                 <td className="p-2">
                   {order?.payment_status
                     ? formatText(order?.payment_status)
@@ -94,14 +110,18 @@ const PendingOrderTable = ({ orders, fetchOrders }) => {
                     ? formatDateTimeLead(order?.delivered_at)
                     : "--"}
                 </td>
-                <td className="p-2">
-                  <button
-                    className="bg-black text-white px-3 py-1 rounded "
-                    onClick={() => handleMarkDeliveredClick(order.id)}
-                  >
-                    Mark Delivered
-                  </button>
-                </td>
+                {(userRole === "CLUB_MANAGER" ||
+                  userRole === "FOH" ||
+                  userRole === "ADMIN") && (
+                  <td className="p-2">
+                    <button
+                      className="bg-black text-white px-3 py-1 rounded "
+                      onClick={() => handleMarkDeliveredClick(order.id)}
+                    >
+                      Mark Delivered
+                    </button>
+                  </td>
+                )}
               </tr>
             ))
           ) : (

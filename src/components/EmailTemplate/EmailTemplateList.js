@@ -5,6 +5,7 @@ import Tooltip from "../common/Tooltip";
 import { authAxios } from "../../config/config";
 import { Link } from "react-router-dom";
 import editIcon from "../../assets/images/icons/edit.svg";
+import viewIcon from "../../assets/images/icons/eye.svg";
 import deleteIcon from "../../assets/images/icons/delete.svg";
 import {
   customStyles,
@@ -40,7 +41,7 @@ const EmailTemplateList = () => {
       const activeOnly = filterActiveItems(data);
       setClubList(activeOnly);
     } catch (error) {
-      console.log(error)
+      console.log(error);
     }
   };
   // Function to fetch role list
@@ -111,14 +112,17 @@ const EmailTemplateList = () => {
             <p className="text-sm">{`Home >  Marketing >  Templates > Email Templates`}</p>
             <h1 className="text-3xl font-semibold">Email Templates</h1>
           </div>
-          <div className="flex items-end gap-2">
-            <Link
-              to="/email-template"
-              className="px-4 py-2 bg-black text-white rounded flex items-center gap-2"
-            >
-              <FiPlus /> Create Template
-            </Link>
-          </div>
+          {(userRole === "ADMIN" ||
+            userRole === "MARKETING_MANAGER") && (
+              <div className="flex items-end gap-2">
+                <Link
+                  to="/email-template"
+                  className="px-4 py-2 bg-black text-white rounded flex items-center gap-2"
+                >
+                  <FiPlus /> Create Template
+                </Link>
+              </div>
+            )}
         </div>
 
         {/* Filter section */}
@@ -167,35 +171,53 @@ const EmailTemplateList = () => {
                         {formatAutoDate(item?.createdAt)}
                       </td>
                       <td className="px-2 py-4">
-                        <div className="flex">
-                          <Tooltip
-                            id={`tooltip-edit-${item.id}`}
-                            content="Edit Template"
-                            place="left"
-                          >
-                            <Link
-                              to={`/email-template/${item?.id}`}
-                              className="bg-[#F1F1F1] border border-[#D4D4D4] rounded-l-[5px] w-[32px] h-[32px] flex items-center justify-center cursor-pointer"
+                        {(userRole === "ADMIN" ||
+                        userRole === "MARKETING_MANAGER") ? (
+                          <div className="flex">
+                            <Tooltip
+                              id={`tooltip-edit-${item.id}`}
+                              content="Edit Template"
+                              place="left"
                             >
-                              <img src={editIcon} />
-                            </Link>
-                          </Tooltip>
-                          <Tooltip
-                            id={`tooltip-delete-${item.id}`}
-                            content="Delete Template"
-                            place="left"
-                          >
-                            <div
-                              className={`bg-[#F1F1F1] border border-[#D4D4D4] rounded-r-[5px] w-[32px] h-[32px] flex items-center justify-center cursor-pointer`}
-                              onClick={() => {
-                                setSelectedDeleteId(item);
-                                setShowDeleteModal(true);
-                              }}
+                              <Link
+                                to={`/email-template/${item?.id}`}
+                                className="bg-[#F1F1F1] border border-[#D4D4D4] rounded-l-[5px] w-[32px] h-[32px] flex items-center justify-center cursor-pointer"
+                              >
+                                <img src={editIcon} />
+                              </Link>
+                            </Tooltip>
+                            <Tooltip
+                              id={`tooltip-delete-${item.id}`}
+                              content="Delete Template"
+                              place="left"
                             >
-                              <img src={deleteIcon} />
-                            </div>
-                          </Tooltip>
-                        </div>
+                              <div
+                                className={`bg-[#F1F1F1] border border-[#D4D4D4] rounded-r-[5px] w-[32px] h-[32px] flex items-center justify-center cursor-pointer`}
+                                onClick={() => {
+                                  setSelectedDeleteId(item);
+                                  setShowDeleteModal(true);
+                                }}
+                              >
+                                <img src={deleteIcon} />
+                              </div>
+                            </Tooltip>
+                          </div>
+                        ) : (
+                          <div className="flex">
+                            <Tooltip
+                              id={`tooltip-edit-${item.id}`}
+                              content="View Template"
+                              place="left"
+                            >
+                              <Link
+                                to={`/email-template/${item?.id}`}
+                                className="bg-[#F1F1F1] border border-[#D4D4D4] rounded-[5px] w-[32px] h-[32px] flex items-center justify-center cursor-pointer"
+                              >
+                                <img src={viewIcon} />
+                              </Link>
+                            </Tooltip>
+                          </div>
+                        )}
                       </td>
                     </tr>
                   ))

@@ -176,6 +176,7 @@ const ProductCategoryList = () => {
           <p className="text-sm">{`Home > Nourish Category`}</p>
           <h1 className="text-3xl font-semibold">Nourish Category</h1>
         </div>
+        {(userRole === "ADMIN" || userRole === "MARKETING_MANAGER") && (
         <div className="flex items-end gap-2">
           <button
             type="button"
@@ -189,6 +190,7 @@ const ProductCategoryList = () => {
             <FiPlus /> Create Category
           </button>
         </div>
+        )}
       </div>
       <div className="flex gap-3 mb-4">
         <div className="mb-4 w-full max-w-[250px]">
@@ -241,7 +243,9 @@ const ProductCategoryList = () => {
                 <th className="px-2 py-4">Club Name</th>
                 <th className="px-2 py-4">Position</th>
                 <th className="px-2 py-4">Status</th>
+                {(userRole === "ADMIN" || userRole === "MARKETING_MANAGER") && (
                 <th className="px-2 py-4">Action</th>
+                )}
               </tr>
             </thead>
             <tbody>
@@ -286,6 +290,7 @@ const ProductCategoryList = () => {
                           : ""}
                       </div>
                     </td>
+                    {(userRole === "ADMIN" || userRole === "MARKETING_MANAGER") && (
                     <td className="px-2 py-4">
                       <div className="w-fit">
                         <Tooltip
@@ -305,6 +310,7 @@ const ProductCategoryList = () => {
                         </Tooltip>
                       </div>
                     </td>
+                    )}
                   </tr>
                 ))
               )}

@@ -19,7 +19,7 @@ export const ROUTE_PERMISSIONS = {
   '/all-leads': ['ADMIN', 'FOH', 'CLUB_MANAGER', 'FINANCE_MANAGER', 'MARKETING_MANAGER'],
   '/all-leads/:id': ['ADMIN', 'FOH', 'CLUB_MANAGER', 'FINANCE_MANAGER', 'MARKETING_MANAGER'],
   '/edit-lead-details/:id': ['ADMIN', 'FOH', 'FINANCE_MANAGER', 'MARKETING_MANAGER'],
-  '/lead-follow-up/:id': ['FOH', 'TRAINER', 'FITNESS_MANAGER', 'CLUB_MANAGER', 'ADMIN', 'FINANCE_MANAGER', 'MARKETING_MANAGER'],
+  '/lead-follow-up/:id': ['FOH', 'TRAINER', 'FITNESS_MANAGER', 'CLUB_MANAGER', 'ADMIN'],
   '/my-follow-ups': ['FOH', 'TRAINER', 'FITNESS_MANAGER', 'CLUB_MANAGER', 'ADMIN', 'FINANCE_MANAGER', 'MARKETING_MANAGER'],
   
   // Member Management
@@ -54,7 +54,7 @@ export const ROUTE_PERMISSIONS = {
   
   // Marketing
   '/challenge-list': ['ADMIN', 'MARKETING_MANAGER', 'CLUB_MANAGER', 'FOH', 'FITNESS_MANAGER'],
-  '/challenge-participants-list/:id': ['ADMIN', 'MARKETING_MANAGER', 'CLUB_MANAGER', 'FITNESS_MANAGER'],
+  '/challenge-participants-list/:id': ['ADMIN', 'MARKETING_MANAGER', 'CLUB_MANAGER', 'FITNESS_MANAGER', 'FOH'],
   '/send-mail': ['ADMIN', 'MARKETING_MANAGER'],
   '/send-mail-list': ['ADMIN', 'MARKETING_MANAGER', 'CLUB_MANAGER'],
   '/send-mail-list/:id': ['ADMIN', 'MARKETING_MANAGER', 'CLUB_MANAGER'],
@@ -67,7 +67,7 @@ export const ROUTE_PERMISSIONS = {
   '/reports/marketing-reports/notification-list': ['ADMIN', 'MARKETING_MANAGER', 'CLUB_MANAGER'],
   '/reports/marketing-reports/send-notification': ['ADMIN', 'MARKETING_MANAGER', 'CLUB_MANAGER'],
   '/reports/marketing-reports/send-notification/:id': ['ADMIN', 'MARKETING_MANAGER', 'CLUB_MANAGER'],
-  '/marketing-banner': ['ADMIN', 'MARKETING_MANAGER', 'CLUB_MANAGER'],
+  '/marketing-banner': ['ADMIN', 'MARKETING_MANAGER'],
   '/send-whatsapp-list': ['ADMIN', 'MARKETING_MANAGER'],
   '/coupons': ['ADMIN', 'MARKETING_MANAGER', 'CLUB_MANAGER', 'FINANCE_MANAGER'],
   '/reports/marketing-reports/email-list': ['ADMIN', 'MARKETING_MANAGER', 'CLUB_MANAGER'],
@@ -79,7 +79,7 @@ export const ROUTE_PERMISSIONS = {
   '/studio': ['ADMIN', 'CLUB_MANAGER', 'MARKETING_MANAGER'],
   '/services': ['ADMIN', 'CLUB_MANAGER', 'MARKETING_MANAGER'],
   '/recovery-services': ['ADMIN', 'CLUB_MANAGER', 'MARKETING_MANAGER'],
-  '/package-category': ['ADMIN', 'FITNESS_MANAGER', 'CLUB_MANAGER', 'MARKETING_MANAGER'],
+  '/package-category': ['ADMIN', 'MARKETING_MANAGER', 'CLUB_MANAGER'],
   '/packages': ['ADMIN', 'CLUB_MANAGER', 'MARKETING_MANAGER'],
   '/group-class': ['ADMIN', 'FOH', 'FITNESS_MANAGER', 'TRAINER', 'CLUB_MANAGER', 'FINANCE_MANAGER', 'MARKETING_MANAGER'],
   '/group-class/:id': ['ADMIN', 'FOH', 'FITNESS_MANAGER', 'TRAINER', 'CLUB_MANAGER', 'FINANCE_MANAGER', 'MARKETING_MANAGER'],

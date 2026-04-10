@@ -773,7 +773,7 @@ const AllLeads = () => {
                   {dateFilter?.value === "custom" && (
                     <>
                       <div className="custom--date dob-format flex-1 max-w-[180px] w-full">
-                        <span className="absolute z-[1] mt-[11px] ml-[15px]">
+                        <span className="absolute z-[1] mt-[10px] ml-[15px]">
                           <FaCalendarDays />
                         </span>
                         <DatePicker
@@ -793,7 +793,7 @@ const AllLeads = () => {
                         />
                       </div>
                       <div className="custom--date dob-format flex-1 max-w-[180px] w-full">
-                        <span className="absolute z-[1] mt-[11px] ml-[15px]">
+                        <span className="absolute z-[1] mt-[10px] ml-[15px]">
                           <FaCalendarDays />
                         </span>
                         <DatePicker
@@ -846,7 +846,6 @@ const AllLeads = () => {
                   </div>
                   <div>
                     <div className="flex gap-2 items-center">
-
                       {(userRole === "CLUB_MANAGER" ||
                         userRole === "ADMIN") && (
                         <>
@@ -1111,47 +1110,50 @@ const AllLeads = () => {
                                       </div>
                                     </Tooltip>
                                   )}
-                                  {(userRole === "FOH" ||
-                                    userRole === "CLUB_MANAGER" ||
-                                    userRole === "ADMIN") && (
-                                    <Tooltip
-                                      id={`tooltip-schedule-${row.id}`}
-                                      content="Schedule Trial"
-                                      place="left"
-                                    >
-                                      <div className="p-1 cursor-pointer">
-                                        <Link
-                                          to={`/lead-follow-up/${row.id}?action=schedule-tour-trial`}
-                                          className="p-0"
+                                  {row?.is_trial_booked !== true ? (
+                                    <>
+                                      {(userRole === "FOH" ||
+                                        userRole === "CLUB_MANAGER" ||
+                                        userRole === "ADMIN") && (
+                                        <Tooltip
+                                          id={`tooltip-schedule-${row.id}`}
+                                          content="Schedule Trial"
+                                          place="left"
                                         >
-                                          <RiCalendarScheduleLine className="text-[25px] text-black" />
-                                        </Link>
-                                      </div>
-                                    </Tooltip>
-                                  )}
+                                          <div className="p-1 cursor-pointer">
+                                            <Link
+                                              to={`/lead-follow-up/${row.id}?action=schedule-tour-trial`}
+                                              className="p-0"
+                                            >
+                                              <RiCalendarScheduleLine className="text-[25px] text-black" />
+                                            </Link>
+                                          </div>
+                                        </Tooltip>
+                                      )}
+                                    </>
+                                  ): null}
 
                                   {(userRole === "FOH" ||
                                     userRole === "TRAINER" ||
                                     userRole === "FITNESS_MANAGER" ||
                                     userRole === "CLUB_MANAGER" ||
                                     userRole === "ADMIN") && (
-
-                                  <Tooltip
-                                    id={`tooltip-appointment-${row.id}`}
-                                    content="Add Appointment"
-                                    place="left"
-                                  >
-                                    <div
-                                      onClick={() => {
-                                        setSelectedLeadMember(row?.id);
-                                        setAppointmentModal(true);
-                                        setSelectedLeadClub(row?.club_id);
-                                      }}
-                                      className="p-1 cursor-pointer"
+                                    <Tooltip
+                                      id={`tooltip-appointment-${row.id}`}
+                                      content="Add Appointment"
+                                      place="left"
                                     >
-                                      <LuCalendarPlus className="text-[25px] text-black" />
-                                    </div>
-                                  </Tooltip>
+                                      <div
+                                        onClick={() => {
+                                          setSelectedLeadMember(row?.id);
+                                          setAppointmentModal(true);
+                                          setSelectedLeadClub(row?.club_id);
+                                        }}
+                                        className="p-1 cursor-pointer"
+                                      >
+                                        <LuCalendarPlus className="text-[25px] text-black" />
+                                      </div>
+                                    </Tooltip>
                                   )}
                                 </div>
                                 {/* // )} */}

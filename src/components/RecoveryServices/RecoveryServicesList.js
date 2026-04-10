@@ -34,7 +34,7 @@ const RecoveryServicesList = () => {
   const [statusFilter, setStatusFilter] = useState(null);
 
   const { user } = useSelector((state) => state.auth);
-  const currentUserRole = user?.role; // Example, dynamically from user info
+  const userRole = user?.role; // Example, dynamically from user info
 
   const [page, setPage] = useState(1);
   const [rowsPerPage] = useState(10);
@@ -216,6 +216,7 @@ const RecoveryServicesList = () => {
           <p className="text-sm">{`Home > Recovery Services`}</p>
           <h1 className="text-3xl font-semibold">Recovery Services</h1>
         </div>
+        {(userRole === "ADMIN" || userRole === "MARKETING_MANAGER") && (
         <div className="flex items-end gap-2">
           <button
             type="button"
@@ -229,6 +230,7 @@ const RecoveryServicesList = () => {
             <FiPlus /> Create Service
           </button>
         </div>
+        )}
       </div>
 
       {/* Search and Filter Section */}
@@ -267,7 +269,7 @@ const RecoveryServicesList = () => {
             value={clubFilter}
             options={clubOptions}
             onChange={(option) => setClubFilter(option)}
-            isClearable={currentUserRole === "ADMIN" ? true : false}
+            isClearable={userRole === "ADMIN" ? true : false}
             styles={customStyles}
             className="w-full"
           />
@@ -288,7 +290,9 @@ const RecoveryServicesList = () => {
                 {/* <th className="px-2 py-4">Package</th> */}
                 <th className="px-2 py-4">Position</th>
                 <th className="px-2 py-4">Status</th>
+                {(userRole === "ADMIN" || userRole === "MARKETING_MANAGER") && (
                 <th className="px-2 py-4">Action</th>
+                )}
               </tr>
             </thead>
             <tbody>
@@ -348,6 +352,7 @@ const RecoveryServicesList = () => {
                           : ""}
                       </div>
                     </td>
+                    {(userRole === "ADMIN" || userRole === "MARKETING_MANAGER") && (
                     <td className="px-2 py-4">
                       <div className="w-fit">
                         <Tooltip
@@ -367,6 +372,7 @@ const RecoveryServicesList = () => {
                         </Tooltip>
                       </div>
                     </td>
+                    )}
                   </tr>
                 ))
               )}

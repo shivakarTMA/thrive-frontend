@@ -12,6 +12,7 @@ import { IoSearchOutline } from "react-icons/io5";
 import Select from "react-select";
 import { customStyles } from "../../Helper/helper";
 import Pagination from "../common/Pagination";
+import { useSelector } from "react-redux";
 
 const OptionList = () => {
   const [editOptionModal, setEditOptionModal] = useState(false);
@@ -23,6 +24,8 @@ const OptionList = () => {
   const [selectedType, setSelectedType] = useState(null);
   const [statusFilter, setStatusFilter] = useState(null);
   const [optionTypes, setOptionTypes] = useState([]);
+  const { user } = useSelector((state) => state.auth);
+  const userRole = user.role;
 
   const [page, setPage] = useState(1);
   const [rowsPerPage] = useState(10);
@@ -137,17 +140,19 @@ const OptionList = () => {
           <p className="text-sm">{`Home > All Options`}</p>
           <h1 className="text-3xl font-semibold">All Options</h1>
         </div>
-        <button
-          type="button"
-          className="px-4 py-2 bg-black text-white rounded flex items-center gap-2"
-          onClick={() => {
-            setEditingOption(null);
-            formik.resetForm();
-            setShowModal(true);
-          }}
-        >
-          <FiPlus /> Create Option
-        </button>
+        {userRole === "ADMIN"  && (
+          <button
+            type="button"
+            className="px-4 py-2 bg-black text-white rounded flex items-center gap-2"
+            onClick={() => {
+              setEditingOption(null);
+              formik.resetForm();
+              setShowModal(true);
+            }}
+          >
+            <FiPlus /> Create Option
+          </button>
+        )}
       </div>
 
       {/* Filters */}
@@ -204,7 +209,9 @@ const OptionList = () => {
                 <th className="px-2 py-4">Type of list</th>
                 <th className="px-2 py-4">Position</th>
                 <th className="px-2 py-4">Status</th>
+                {userRole === "ADMIN"  && (
                 <th className="px-2 py-4">Action</th>
+                )}
               </tr>
             </thead>
             <tbody>
@@ -240,6 +247,7 @@ const OptionList = () => {
                           : ""}
                       </div>
                     </td>
+                    {userRole === "ADMIN"  && (
                     <td className="px-2 py-4">
                       <Tooltip
                         id={`tooltip-edit-${company.id || index}`}
@@ -258,6 +266,7 @@ const OptionList = () => {
                         </div>
                       </Tooltip>
                     </td>
+                    )}
                   </tr>
                 ))
               )}

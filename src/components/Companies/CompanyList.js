@@ -14,6 +14,7 @@ import { IoSearchOutline } from "react-icons/io5";
 import Select from "react-select";
 import { customStyles } from "../../Helper/helper";
 import Pagination from "../common/Pagination";
+import { useSelector } from "react-redux";
 
 const CompanyList = () => {
   const [showModal, setShowModal] = useState(false);
@@ -22,6 +23,8 @@ const CompanyList = () => {
   const leadBoxRef = useRef(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState(null);
+  const { user } = useSelector((state) => state.auth);
+  const userRole = user.role;
 
   const [page, setPage] = useState(1);
   const [rowsPerPage] = useState(10);
@@ -142,10 +145,8 @@ const CompanyList = () => {
         setShowModal(false);
       } catch (err) {
         console.error("API Error:", err.response?.data || err.message);
-        toast.error(err.response?.data?.errors || err.response?.data?.message)
+        toast.error(err.response?.data?.errors || err.response?.data?.message);
       }
-
-
     },
   });
 
@@ -156,19 +157,24 @@ const CompanyList = () => {
           <p className="text-sm">{`Home > All Company`}</p>
           <h1 className="text-3xl font-semibold">All Company</h1>
         </div>
-        <div className="flex items-end gap-2">
-          <button
-            type="button"
-            className="px-4 py-2 bg-black text-white rounded flex items-center gap-2"
-            onClick={() => {
-              setEditingCompany(null);
-              formik.resetForm();
-              setShowModal(true);
-            }}
-          >
-            <FiPlus /> Create Company
-          </button>
-        </div>
+        {(userRole === "ADMIN" ||
+          userRole === "CLUB_MANAGER" ||
+          userRole === "FOH" ||
+          userRole === "MARKETING_MANAGER") && (
+          <div className="flex items-end gap-2">
+            <button
+              type="button"
+              className="px-4 py-2 bg-black text-white rounded flex items-center gap-2"
+              onClick={() => {
+                setEditingCompany(null);
+                formik.resetForm();
+                setShowModal(true);
+              }}
+            >
+              <FiPlus /> Create Company
+            </button>
+          </div>
+        )}
       </div>
       <div className="flex gap-3 mb-4">
         <div className="mb-4 w-full max-w-[200px]">
@@ -212,7 +218,9 @@ const CompanyList = () => {
                 <th className="px-2 py-4">State</th>
                 <th className="px-2 py-4">Country</th>
                 <th className="px-2 py-4">Status</th>
-                <th className="px-2 py-4">Action</th>
+                {(userRole === "ADMIN" || userRole === "MARKETING_MANAGER") && (
+                  <th className="px-2 py-4">Action</th>
+                )}
               </tr>
             </thead>
             <tbody>
@@ -258,23 +266,25 @@ const CompanyList = () => {
                           : ""}
                       </div>
                     </td>
-                    <td className="px-2 py-4">
-                      <Tooltip
-                        id={`tooltip-edit-${company.id || index}`}
-                        content="Edit Company"
-                        place="top"
-                      >
-                        <div
-                          className="p-1 cursor-pointer"
-                          onClick={() => {
-                            setEditingCompany(company?.id);
-                            setShowModal(true);
-                          }}
+                    {(userRole === "ADMIN" || userRole === "MARKETING_MANAGER") && (
+                      <td className="px-2 py-4">
+                        <Tooltip
+                          id={`tooltip-edit-${company.id || index}`}
+                          content="Edit Company"
+                          place="top"
                         >
-                          <LiaEdit className="text-[25px] text-black" />
-                        </div>
-                      </Tooltip>
-                    </td>
+                          <div
+                            className="p-1 cursor-pointer"
+                            onClick={() => {
+                              setEditingCompany(company?.id);
+                              setShowModal(true);
+                            }}
+                          >
+                            <LiaEdit className="text-[25px] text-black" />
+                          </div>
+                        </Tooltip>
+                      </td>
+                    )}
                   </tr>
                 ))
               )}

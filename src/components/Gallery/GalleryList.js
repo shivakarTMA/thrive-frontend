@@ -20,6 +20,7 @@ import {
 } from "../../Helper/helper";
 import { RiDeleteBin6Line } from "react-icons/ri";
 import ConfirmPopup from "../common/ConfirmPopup";
+import { useSelector } from "react-redux";
 
 // Define display position options
 const displayPosition = [
@@ -42,6 +43,8 @@ const GalleryList = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const leadBoxRef = useRef(null);
+  const { user } = useSelector((state) => state.auth);
+  const userRole = user.role;
 
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedDeleteId, setSelectedDeleteId] = useState(null);
@@ -209,19 +212,21 @@ const GalleryList = () => {
           <p className="text-sm">{`Home > Club Gallery`}</p>
           <h1 className="text-3xl font-semibold">Club Gallery</h1>
         </div>
-        <div className="flex items-end gap-2">
-          <button
-            type="button"
-            className="px-4 py-2 bg-black text-white rounded flex items-center gap-2"
-            onClick={() => {
-              setEditingOption(null);
-              formik.resetForm();
-              setShowModal(true);
-            }}
-          >
-            <FiPlus /> Create Gallery
-          </button>
-        </div>
+        {(userRole === "ADMIN" || userRole === "MARKETING_MANAGER") && (
+          <div className="flex items-end gap-2">
+            <button
+              type="button"
+              className="px-4 py-2 bg-black text-white rounded flex items-center gap-2"
+              onClick={() => {
+                setEditingOption(null);
+                formik.resetForm();
+                setShowModal(true);
+              }}
+            >
+              <FiPlus /> Create Gallery
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Filter section */}
@@ -259,7 +264,9 @@ const GalleryList = () => {
                 <th className="px-2 py-4">Club Name</th>
                 <th className="px-2 py-4">Display Position</th>
                 <th className="px-2 py-4">Position</th>
+                {(userRole === "ADMIN" || userRole === "MARKETING_MANAGER") && (
                 <th className="px-2 py-4">Action</th>
+                )}
               </tr>
             </thead>
             <tbody>
@@ -293,6 +300,7 @@ const GalleryList = () => {
                       {formatText(item?.display_position)}
                     </td>
                     <td className="px-2 py-4">{item?.position}</td>
+                    {(userRole === "ADMIN" || userRole === "MARKETING_MANAGER") && (
                     <td className="px-2 py-4">
                       <div className="flex items-center">
                         <Tooltip
@@ -329,6 +337,7 @@ const GalleryList = () => {
                         </Tooltip>
                       </div>
                     </td>
+                    )}
                   </tr>
                 ))
               )}

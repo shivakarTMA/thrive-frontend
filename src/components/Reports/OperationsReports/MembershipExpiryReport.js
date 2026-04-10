@@ -261,7 +261,7 @@ const MembershipExpiryReport = () => {
           {dateFilter?.value === "custom" && (
             <>
               <div className="custom--date dob-format flex-1 max-w-[180px] w-full">
-                <span className="absolute z-[1] mt-[11px] ml-[15px]">
+                <span className="absolute z-[1] mt-[10px] ml-[15px]">
                   <FaCalendarDays />
                 </span>
                 <DatePicker
@@ -281,7 +281,7 @@ const MembershipExpiryReport = () => {
                 />
               </div>
               <div className="custom--date dob-format flex-1 max-w-[180px] w-full">
-                <span className="absolute z-[1] mt-[11px] ml-[15px]">
+                <span className="absolute z-[1] mt-[10px] ml-[15px]">
                   <FaCalendarDays />
                 </span>
                 <DatePicker
@@ -333,7 +333,11 @@ const MembershipExpiryReport = () => {
                 <th className="px-2 py-4 min-w-[120px]">Expiry Date</th>
                 <th className="px-2 py-4 min-w-[150px]">Last Check-in Date</th>
                 <th className="px-2 py-4 min-w-[150px]">Renewal Done (Y/N)</th>
+                {(userRole === "FOH" ||
+                  userRole === "CLUB_MANAGER" ||
+                  userRole === "ADMIN") && (
                 <th className="px-2 py-4 min-w-[120px]">Payment Link</th>
+                )}
                 <th className="px-2 py-4 min-w-[150px]">Company Name</th>
                 <th className="px-2 py-4 min-w-[100px]">Gender</th>
               </tr>
@@ -385,19 +389,23 @@ const MembershipExpiryReport = () => {
                       />
                       {row.is_renewal === true ? "Y" : "N"}
                     </td>
-                    <td className="px-2 py-4">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setSelectedLeadMember(row.id);
-                          setSendPaymentModal(true);
-                          setSelectedLeadClub(row?.club_id);
-                        }}
-                        className="px-3 py-1 bg-black text-white rounded flex items-center gap-2 !text-[13px]"
-                      >
-                        Send Link
-                      </button>
-                    </td>
+                    {(userRole === "FOH" ||
+                      userRole === "CLUB_MANAGER" ||
+                      userRole === "ADMIN") && (
+                        <td className="px-2 py-4">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSelectedLeadMember(row.id);
+                              setSendPaymentModal(true);
+                              setSelectedLeadClub(row?.club_id);
+                            }}
+                            className="px-3 py-1 bg-black text-white rounded flex items-center gap-2 !text-[13px]"
+                          >
+                            Send Link
+                          </button>
+                        </td>
+                      )}
                     <td className="px-2 py-4">
                       {row.company_name ? row.company_name : "--"}
                     </td>

@@ -20,7 +20,7 @@ const MarketingBanner = () => {
   const leadBoxRef = useRef(null);
 
   const { user } = useSelector((state) => state.auth);
-  const currentUserRole = user?.role; // Example, dynamically from user info
+  const userRole = user?.role; // Example, dynamically from user info
 
   const [marketingBannerData, setMarketingBannerData] = useState([]);
   const [club, setClub] = useState([]);
@@ -207,9 +207,8 @@ const MarketingBanner = () => {
           <p className="text-sm">{`Home > App Banner`}</p>
           <h1 className="text-3xl font-semibold">App Banner</h1>
         </div>
-        {(currentUserRole === "CLUB_MANAGER" ||
-          currentUserRole === "MARKETING_MANAGER" ||
-          currentUserRole === "ADMIN") && (
+        {(userRole === "MARKETING_MANAGER" ||
+          userRole === "ADMIN") && (
           <div className="flex items-end gap-2">
             <button
               type="button"
@@ -234,7 +233,7 @@ const MarketingBanner = () => {
             value={clubFilter}
             options={clubOptions}
             onChange={(option) => setClubFilter(option)}
-            isClearable={currentUserRole === "ADMIN" ? true : false}
+            isClearable={userRole === "ADMIN" ? true : false}
             styles={customStyles}
             className="w-full"
           />
@@ -268,9 +267,8 @@ const MarketingBanner = () => {
                 <th className="px-2 py-4">Caption</th>
                 <th className="px-2 py-4 text-center">Position</th>
                 <th className="px-2 py-4">Status</th>
-                {(currentUserRole === "CLUB_MANAGER" ||
-                  currentUserRole === "MARKETING_MANAGER" ||
-                  currentUserRole === "ADMIN") && (
+                {(userRole === "MARKETING_MANAGER" ||
+                  userRole === "ADMIN") && (
                   <th className="px-2 py-4">Action</th>
                 )}
               </tr>
@@ -323,9 +321,8 @@ const MarketingBanner = () => {
                           : ""}
                       </div>
                     </td>
-                    {(currentUserRole === "CLUB_MANAGER" ||
-                      currentUserRole === "MARKETING_MANAGER" ||
-                      currentUserRole === "ADMIN") && (
+                    {(userRole === "MARKETING_MANAGER" ||
+                      userRole === "ADMIN") && (
                       <td className="px-2 py-4">
                         <Tooltip
                           id={`tooltip-edit-${item.id || index}`}

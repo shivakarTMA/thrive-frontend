@@ -10,7 +10,11 @@ import CreateSubscriptionPlan from "./CreateSubscriptionPlan";
 import { authAxios } from "../../config/config";
 import { IoSearchOutline } from "react-icons/io5";
 import Select from "react-select";
-import { customStyles, filterActiveItems, formatIndianNumber } from "../../Helper/helper";
+import {
+  customStyles,
+  filterActiveItems,
+  formatIndianNumber,
+} from "../../Helper/helper";
 import Pagination from "../common/Pagination";
 import { useSelector } from "react-redux";
 
@@ -153,10 +157,10 @@ const SubscriptionPlan = () => {
             return schema.test(
               "no-discount-when-zero",
               "Discount is not allowed when amount is 0",
-              (value) => !value || value === 0
+              (value) => !value || value === 0,
             );
           }
-  
+
           return schema
             .required("Discount is required")
             .max(amount, "Discount cannot be greater than amount")
@@ -167,7 +171,7 @@ const SubscriptionPlan = () => {
                 const { amount } = this.parent; // ✅ access current amount from parent
                 if (amount === undefined) return true;
                 return value !== amount; // discount cannot equal amount
-              }
+              },
             );
         }),
       // gst: Yup.number()
@@ -199,10 +203,8 @@ const SubscriptionPlan = () => {
         setShowModal(false);
       } catch (err) {
         console.error("API Error:", err.response?.data || err.message);
-        toast.error(err.response?.data?.errors)
+        toast.error(err.response?.data?.errors);
       }
-
-      
     },
   });
 
@@ -223,19 +225,24 @@ const SubscriptionPlan = () => {
           <h1 className="text-3xl font-semibold">Membership Plans</h1>
         </div>
 
-        <div className="flex items-end gap-2">
-          <button
-            type="button"
-            className="px-4 py-2 bg-black text-white rounded flex items-center gap-2"
-            onClick={() => {
-              setEditingOption(null);
-              formik.resetForm();
-              setShowModal(true);
-            }}
-          >
-            <FiPlus /> Create Plan
-          </button>
-        </div>
+        {(userRole === "ADMIN" ||
+          userRole === "CLUB_MANAGER" ||
+          userRole === "MARKETING_MANAGER" ||
+          userRole === "FINANCE_MANAGER") && (
+          <div className="flex items-end gap-2">
+            <button
+              type="button"
+              className="px-4 py-2 bg-black text-white rounded flex items-center gap-2"
+              onClick={() => {
+                setEditingOption(null);
+                formik.resetForm();
+                setShowModal(true);
+              }}
+            >
+              <FiPlus /> Create Plan
+            </button>
+          </div>
+        )}
       </div>
 
       <div className="flex gap-3 mb-4">
@@ -309,7 +316,12 @@ const SubscriptionPlan = () => {
                 <th className="px-2 py-4 min-w-[100px]">Plan Type</th>
                 <th className="px-2 py-4 min-w-[100px]">Status</th>
                 <th className="px-2 py-4 min-w-[80px] text-center">Position</th>
+                {(userRole === "ADMIN" ||
+                  userRole === "CLUB_MANAGER" ||
+                  userRole === "MARKETING_MANAGER" ||
+                  userRole === "FINANCE_MANAGER") && (
                 <th className="px-2 py-4 min-w-[80px]">Action</th>
+                )}
               </tr>
             </thead>
             <tbody>
@@ -335,28 +347,43 @@ const SubscriptionPlan = () => {
                       {item?.duration_value} {item?.duration_type}
                     </td>
                     {/* <td className="px-2 py-4">{item?.booking_type}</td> */}
-                    <td className="px-2 py-4">₹{formatIndianNumber(item?.amount)}</td>
-                    <td className="px-2 py-4">₹{formatIndianNumber(item?.discount)}</td>
-                    <td className="px-2 py-4">₹{formatIndianNumber(item?.total_amount)}</td>
+                    <td className="px-2 py-4">
+                      ₹{formatIndianNumber(item?.amount)}
+                    </td>
+                    <td className="px-2 py-4">
+                      ₹{formatIndianNumber(item?.discount)}
+                    </td>
+                    <td className="px-2 py-4">
+                      ₹{formatIndianNumber(item?.total_amount)}
+                    </td>
                     <td className="px-2 py-4">{item?.gst}%</td>
-                    <td className="px-2 py-4">₹{formatIndianNumber(item?.gst_amount)}</td>
-                    <td className="px-2 py-4">₹{formatIndianNumber(item?.final_amount)}</td>
+                    <td className="px-2 py-4">
+                      ₹{formatIndianNumber(item?.gst_amount)}
+                    </td>
+                    <td className="px-2 py-4">
+                      ₹{formatIndianNumber(item?.final_amount)}
+                    </td>
                     <td className="px-2 py-4">{item?.plan_type}</td>
                     <td className="px-2 py-4">
                       <div
-                        className={`flex gap-1 items-center ${item?.status === "ACTIVE"
-                          ? "text-green-500"
-                          : "text-red-500"
-                          }`}
+                        className={`flex gap-1 items-center ${
+                          item?.status === "ACTIVE"
+                            ? "text-green-500"
+                            : "text-red-500"
+                        }`}
                       >
                         <FaCircle />
                         {item?.status
                           ? item.status.charAt(0) +
-                          item.status.slice(1).toLowerCase()
+                            item.status.slice(1).toLowerCase()
                           : ""}
                       </div>
                     </td>
                     <td className="px-2 py-4 text-center">{item?.position}</td>
+                    {(userRole === "ADMIN" ||
+                      userRole === "CLUB_MANAGER" ||
+                      userRole === "MARKETING_MANAGER" ||
+                      userRole === "FINANCE_MANAGER") && (
                     <td className="px-2 py-4">
                       <div className="w-fit">
                         <Tooltip
@@ -377,6 +404,7 @@ const SubscriptionPlan = () => {
                         </Tooltip>
                       </div>
                     </td>
+                    )}
                   </tr>
                 ))
               )}

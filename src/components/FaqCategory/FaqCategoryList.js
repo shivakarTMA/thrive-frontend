@@ -8,12 +8,15 @@ import { LiaEdit } from "react-icons/lia";
 import { FaCircle } from "react-icons/fa6";
 import CreateFaqCategory from "./CreateFaqCategory";
 import { authAxios } from "../../config/config";
+import { useSelector } from "react-redux";
 
 const FaqCategoryList = () => {
   const [showModal, setShowModal] = useState(false);
   const [faqCategory, setFaqCategory] = useState([]);
   const [editingOption, setEditingOption] = useState(null);
   const leadBoxRef = useRef(null);
+  const { user } = useSelector((state) => state.auth);
+  const userRole = user.role;
 
   const fetchFaqCategoryList = async () => {
     try {
@@ -78,19 +81,21 @@ const FaqCategoryList = () => {
           <p className="text-sm">{`Home > FAQ Category`}</p>
           <h1 className="text-3xl font-semibold">FAQ Category</h1>
         </div>
-        <div className="flex items-end gap-2">
-          <button
-            type="button"
-            className="px-4 py-2 bg-black text-white rounded flex items-center gap-2"
-            onClick={() => {
-              setEditingOption(null);
-              formik.resetForm();
-              setShowModal(true);
-            }}
-          >
-            <FiPlus /> Create Category
-          </button>
-        </div>
+        {(userRole === "ADMIN" || userRole === "MARKETING_MANAGER") && (
+          <div className="flex items-end gap-2">
+            <button
+              type="button"
+              className="px-4 py-2 bg-black text-white rounded flex items-center gap-2"
+              onClick={() => {
+                setEditingOption(null);
+                formik.resetForm();
+                setShowModal(true);
+              }}
+            >
+              <FiPlus /> Create Category
+            </button>
+          </div>
+          )}
       </div>
       <div className="box--shadow bg-white rounded-[15px] p-4">
         <div className="relative overflow-x-auto">
@@ -100,7 +105,9 @@ const FaqCategoryList = () => {
                 <th className="px-2 py-4">Title</th>
                 <th className="px-2 py-4">Position</th>
                 <th className="px-2 py-4">Status</th>
+                {(userRole === "ADMIN" || userRole === "MARKETING_MANAGER") && (
                 <th className="px-2 py-4">Action</th>
+                )}
               </tr>
             </thead>
             <tbody>
@@ -133,25 +140,27 @@ const FaqCategoryList = () => {
                           : ""}
                       </div>
                     </td>
-                    <td className="px-2 py-4">
-                      <div className="w-fit">
-                        <Tooltip
-                          id={`tooltip-edit-${item.id || index}`}
-                          content="Edit Category"
-                          place="left"
-                        >
-                          <div
-                            className="p-1 cursor-pointer"
-                            onClick={() => {
-                              setEditingOption(item?.id);
-                              setShowModal(true);
-                            }}
+                    {(userRole === "ADMIN" || userRole === "MARKETING_MANAGER") && (
+                      <td className="px-2 py-4">
+                        <div className="w-fit">
+                          <Tooltip
+                            id={`tooltip-edit-${item.id || index}`}
+                            content="Edit Category"
+                            place="left"
                           >
-                            <LiaEdit className="text-[25px] text-black" />
-                          </div>
-                        </Tooltip>
-                      </div>
-                    </td>
+                            <div
+                              className="p-1 cursor-pointer"
+                              onClick={() => {
+                                setEditingOption(item?.id);
+                                setShowModal(true);
+                              }}
+                            >
+                              <LiaEdit className="text-[25px] text-black" />
+                            </div>
+                          </Tooltip>
+                        </div>
+                      </td>
+                    )}
                   </tr>
                 ))
               )}

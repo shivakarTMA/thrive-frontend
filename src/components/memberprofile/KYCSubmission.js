@@ -6,10 +6,14 @@ import { toast } from "react-toastify";
 import { FiDownload, FiUpload } from "react-icons/fi";
 import { MdOutlineFileDownload } from "react-icons/md";
 import IsLoadingHOC from "../common/IsLoadingHOC";
+import { useSelector } from "react-redux";
 
 const KYCSubmission = ({ details, setLoading }) => {
   const memberId = details?.id;
   const [errors, setErrors] = useState({});
+
+  const { user } = useSelector((state) => state.auth);
+  const userRole = user.role;
 
   const [documents, setDocuments] = useState({
     aadharFront: null,
@@ -420,6 +424,9 @@ const downloadAndOpenTerms = async () => {
                           >
                             <IoEyeOutline />
                           </button>
+                          {(userRole === "FOH" ||
+                            userRole === "CLUB_MANAGER" ||
+                            userRole === "ADMIN") && (
                           <button
                             type="button"
                             onClick={() => fileInputRefs[type].current.click()}
@@ -427,6 +434,7 @@ const downloadAndOpenTerms = async () => {
                           >
                             <FiUpload />
                           </button>
+                          )}
                           <input
                             ref={fileInputRefs[type]}
                             type="file"
@@ -450,6 +458,9 @@ const downloadAndOpenTerms = async () => {
         </div>
 
         {/* Submit Button (Always Visible) */}
+        {(userRole === "FOH" ||
+          userRole === "CLUB_MANAGER" ||
+          userRole === "ADMIN") && (
         <div className="flex justify-start pt-4">
           <button
             onClick={handleSubmit}
@@ -458,6 +469,7 @@ const downloadAndOpenTerms = async () => {
             Upload / Update Documents
           </button>
         </div>
+        )}
       </div>
 
       {/* Preview Modal */}

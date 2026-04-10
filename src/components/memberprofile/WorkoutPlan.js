@@ -36,6 +36,7 @@ const WorkoutPlan = ({
   console.log(minStartDate, "minStartDate");
   const { id } = useParams();
   const { user } = useSelector((state) => state.auth);
+  const userRole = user.role;
   const createdBy = user?.id;
 
   const [deleteActions, setDeleteActions] = useState({

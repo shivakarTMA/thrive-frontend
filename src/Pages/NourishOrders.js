@@ -230,7 +230,7 @@ const NourishOrders = () => {
     customFrom,
     customTo,
     clubFilter?.value,
-    placeOrderFilter
+    placeOrderFilter,
   ]);
 
   // Open confirmation popup
@@ -377,7 +377,11 @@ const NourishOrders = () => {
                 <th className="px-2 py-4 min-w-[150px]">Fulfilment Status</th>
                 <th className="px-2 py-4 min-w-[150px]">Delivered By</th>
                 <th className="px-2 py-4 min-w-[170px]">Delivered At</th>
-                <th className="px-2 py-4 min-w-[150px]">Action</th>
+                {(userRole === "CLUB_MANAGER" ||
+                  userRole === "FOH" ||
+                  userRole === "ADMIN") && (
+                  <th className="px-2 py-4 min-w-[150px]">Action</th>
+                )}
               </tr>
             </thead>
 
@@ -402,7 +406,9 @@ const NourishOrders = () => {
                     <td className="px-2 py-4">
                       {order?.items_ordered ? order?.items_ordered : "--"}
                     </td>
-                    <td className="px-2 py-4">₹{formatIndianNumber(order?.total_amount) ?? 0}</td>
+                    <td className="px-2 py-4">
+                      ₹{formatIndianNumber(order?.total_amount) ?? 0}
+                    </td>
                     <td className="px-2 py-4">
                       {order?.payment_status
                         ? formatText(order?.payment_status)
@@ -423,17 +429,23 @@ const NourishOrders = () => {
                         ? formatDateTimeLead(order?.delivered_at)
                         : "--"}
                     </td>
-                    <td className="px-2 py-4">
-                      <button
-                        className={` ${order?.fulfilment_status === "DELIVERED" ? "bg-gray-300 text-gray-500 cursor-not-allowed" : "bg-black text-white cursor-pointer"}  px-3 py-1 rounded `}
-                        onClick={() => handleMarkDeliveredClick(order.id)}
-                        disabled={
-                          order?.fulfilment_status === "DELIVERED" ? true : false
-                        }
-                      >
-                        Mark Delivered
-                      </button>
-                    </td>
+                    {(userRole === "CLUB_MANAGER" ||
+                      userRole === "FOH" ||
+                      userRole === "ADMIN") && (
+                      <td className="px-2 py-4">
+                        <button
+                          className={` ${order?.fulfilment_status === "DELIVERED" ? "bg-gray-300 text-gray-500 cursor-not-allowed" : "bg-black text-white cursor-pointer"}  px-3 py-1 rounded `}
+                          onClick={() => handleMarkDeliveredClick(order.id)}
+                          disabled={
+                            order?.fulfilment_status === "DELIVERED"
+                              ? true
+                              : false
+                          }
+                        >
+                          Mark Delivered
+                        </button>
+                      </td>
+                    )}
                   </tr>
                 ))
               ) : (

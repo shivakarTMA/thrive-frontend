@@ -22,6 +22,7 @@ import {
 import { RiDeleteBin6Line } from "react-icons/ri";
 import ConfirmPopup from "../common/ConfirmPopup";
 import { FaCircle } from "react-icons/fa";
+import { useSelector } from "react-redux";
 
 // Define display position options
 const displayPosition = [
@@ -42,6 +43,8 @@ const ExerciesCategoryList = () => {
   const [totalCount, setTotalCount] = useState(0);
   const leadBoxRef = useRef(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const { user } = useSelector((state) => state.auth);
+  const userRole = user.role;
 
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedDeleteId, setSelectedDeleteId] = useState(null);
@@ -169,6 +172,7 @@ const ExerciesCategoryList = () => {
           <p className="text-sm">{`Home > Exercises Categories`}</p>
           <h1 className="text-3xl font-semibold">Exercises Categories</h1>
         </div>
+        {(userRole === "ADMIN" || userRole === "CLUB_MANAGER" || userRole === "FITNESS_MANAGER") && (
         <div className="flex items-end gap-2">
           <button
             type="button"
@@ -182,6 +186,7 @@ const ExerciesCategoryList = () => {
             <FiPlus /> Create Category
           </button>
         </div>
+        )}
       </div>
 
       {/* Filter section */}
@@ -219,7 +224,9 @@ const ExerciesCategoryList = () => {
                 <th className="px-2 py-4">Position</th>
                 <th className="px-2 py-4">Status</th>
                 <th className="px-2 py-4">Created At</th>
+                {(userRole === "ADMIN" || userRole === "CLUB_MANAGER" || userRole === "FITNESS_MANAGER") && (
                 <th className="px-2 py-4">Action</th>
+                )}
               </tr>
             </thead>
             <tbody>
@@ -253,6 +260,7 @@ const ExerciesCategoryList = () => {
                     <td className="px-2 py-4">
                       {formatAutoDate(item?.createdAt)}
                     </td>
+                    {(userRole === "ADMIN" || userRole === "CLUB_MANAGER" || userRole === "FITNESS_MANAGER") && (
                     <td className="px-2 py-4">
                       <div className="flex items-center">
                         <Tooltip
@@ -289,6 +297,7 @@ const ExerciesCategoryList = () => {
                         </Tooltip>
                       </div>
                     </td>
+                    )}
                   </tr>
                 ))
               )}

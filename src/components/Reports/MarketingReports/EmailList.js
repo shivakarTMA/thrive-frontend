@@ -249,14 +249,18 @@ const EmailList = () => {
           </p>
           <h1 className="text-3xl font-semibold">Email</h1>
         </div>
-        <div className="flex items-end gap-2">
-          <Link
-            to="/send-mail-list"
-            className="px-4 py-2 bg-black text-white rounded flex items-center gap-2"
-          >
-            <BsSend /> Send Email
-          </Link>
-        </div>
+        {(userRole === "ADMIN" ||
+          userRole === "CLUB_MANAGER" ||
+          userRole === "MARKETING_MANAGER") && (
+          <div className="flex items-end gap-2">
+            <Link
+              to="/send-mail-list"
+              className="px-4 py-2 bg-black text-white rounded flex items-center gap-2"
+            >
+              <BsSend /> Send Email
+            </Link>
+          </div>
+        )}
       </div>
 
       {/* Filters */}
@@ -349,7 +353,11 @@ const EmailList = () => {
                 <th className="px-2 py-4 min-w-[150px]">Created At</th>
                 <th className="px-2 py-4 min-w-[150px]">Scheduled on</th>
                 <th className="px-2 py-4 min-w-[100px]">Status</th>
+                {(userRole === "ADMIN" ||
+                  userRole === "CLUB_MANAGER" ||
+                  userRole === "MARKETING_MANAGER") && (
                 <th className="px-2 py-4 min-w-[100px]">Action</th>
+                )}
               </tr>
             </thead>
 
@@ -418,6 +426,9 @@ const EmailList = () => {
                         {formatText(item?.status)}
                       </span>
                     </td>
+                    {(userRole === "ADMIN" ||
+                      userRole === "CLUB_MANAGER" ||
+                      userRole === "MARKETING_MANAGER") && (
                     <td className="px-2 py-4">
                       <div className="flex">
                         <Tooltip
@@ -452,6 +463,7 @@ const EmailList = () => {
                         </Tooltip>
                       </div>
                     </td>
+                    )}
                   </tr>
                 ))
               ) : (

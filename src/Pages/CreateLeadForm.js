@@ -103,6 +103,9 @@ const CreateLeadForm = ({
   const [showDuplicateEmailModal, setShowDuplicateEmailModal] = useState(false);
   const [companyOptions, setCompanyOptions] = useState([]);
 
+  const { user } = useSelector((state) => state.auth);
+  const userRole = user.role;
+
   const [bookedSlots, setBookedSlots] = useState([]);
 
   const [club, setClub] = useState([]);
@@ -896,6 +899,11 @@ useEffect(() => {
                           <FaBuilding />
                         </span>
 
+                        {(userRole === "ADMIN" ||
+                          userRole === "CLUB_MANAGER" ||
+                          userRole === "FOH" ||
+                          userRole === "MARKETING_MANAGER") ? (
+
                         <CreatableSelect
                           name="company_name"
                           isClearable
@@ -961,6 +969,29 @@ useEffect(() => {
                           options={companyOptions} // must be [{ value: number, label: string }]
                           styles={selectIcon}
                         />
+                        ) : (
+                          <Select
+                            name="company_name"
+                            value={
+                              formik.values?.company_name
+                                ? companyOptions.find(
+                                    (opt) => opt.value === formik.values?.company_name,
+                                  ) || {
+                                    label: formik.values?.company_name,
+                                    value: formik.values?.company_name,
+                                  }
+                                : null
+                            }
+                            onChange={(option) =>
+                              formik.setFieldValue("company_name", option.value)
+                            }
+                            options={companyOptions}
+                            isLoading={loading}
+                            styles={selectIcon}
+                            placeholder="Select Company"
+                          />
+                        )}
+
                       </div>
                     </div>
 

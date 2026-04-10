@@ -856,9 +856,13 @@ const MemberList = () => {
                         {/* Member Action */}
                         <div className="absolute hidden group-hover:flex gap-2 right-0 h-full top-0 w-[50%] items-center justify-end bg-[linear-gradient(269deg,_#ffffff_30%,_transparent)] pr-5 transition duration-700">
                           <div className="flex gap-1">
-                            {(userRole === "CLUB_MANAGER" ||
-                              userRole === "ADMIN" ||
-                              userRole === "FOH") && (
+                            {(userRole === "ADMIN" ||
+                              userRole === "CLUB_MANAGER" ||
+                              userRole === "FOH" || 
+                              userRole === "FITNESS_MANAGER" || 
+                              userRole === "TRAINER" || 
+                              userRole === "MARKETING_MANAGER" || 
+                              userRole === "FINANCE_MANAGER") && (
                               <Tooltip
                                 id={`edit-member-${member?.id}`}
                                 content="Edit Member"
@@ -896,24 +900,30 @@ const MemberList = () => {
                               </Tooltip>
                             )}
 
-                            {member?.is_subscribed !== true ? null : (
-                              <Tooltip
-                                id={`send-payment-${member?.id}`}
-                                content="Buy services"
-                                place="left"
-                              >
-                                <div
-                                  className="p-1 cursor-pointer"
-                                  onClick={() => {
-                                    setSelectedLeadMember(member.id);
-                                    setInvoiceModal(true);
-                                    setSelectedLeadClub(member?.club_id);
-                                  }}
-                                >
-                                  <IoIosAddCircleOutline className="text-[25px] text-black" />
-                                </div>
-                              </Tooltip>
-                            )}
+                            {(userRole === "FOH" ||
+                              userRole === "CLUB_MANAGER" ||
+                              userRole === "ADMIN") && (
+                                <>
+                                {member?.is_subscribed !== true ? null : (
+                                  <Tooltip
+                                    id={`send-payment-${member?.id}`}
+                                    content="Buy services"
+                                    place="left"
+                                  >
+                                    <div
+                                      className="p-1 cursor-pointer"
+                                      onClick={() => {
+                                        setSelectedLeadMember(member.id);
+                                        setInvoiceModal(true);
+                                        setSelectedLeadClub(member?.club_id);
+                                      }}
+                                    >
+                                      <IoIosAddCircleOutline className="text-[25px] text-black" />
+                                    </div>
+                                  </Tooltip>
+                                )}
+                                </>
+                              )}
                           </div>
                         </div>
                         {/* Member Action End */}

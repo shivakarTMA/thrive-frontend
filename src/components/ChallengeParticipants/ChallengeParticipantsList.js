@@ -14,7 +14,7 @@ import { authAxios } from "../../config/config";
 import { toast } from "react-toastify";
 import { useParams } from "react-router-dom";
 import { FaCircle } from "react-icons/fa";
-
+import { useSelector } from "react-redux";
 
 const statusColors = {
   ACCEPTED: "bg-[#E8FFE6] text-[#138808]", // green
@@ -59,6 +59,9 @@ const ChallengeParticipantsList = () => {
   const [challengeData, setChallengeData] = useState([]);
   const [data, setData] = useState([]);
 
+  const { user } = useSelector((state) => state.auth);
+  const userRole = user.role;
+
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedAction, setSelectedAction] = useState(null);
   const [selectedMember, setSelectedMember] = useState(null);
@@ -67,7 +70,7 @@ const ChallengeParticipantsList = () => {
   const fetchParticipants = async () => {
     try {
       const response = await authAxios().get(
-        `/challenge/participant/member/list/${id}`
+        `/challenge/participant/member/list/${id}`,
       );
       const data = response.data?.data || response.data || [];
       setData(data);
@@ -77,22 +80,22 @@ const ChallengeParticipantsList = () => {
   };
 
   useEffect(() => {
-  const fetchChallengeById = async () => {
-    if (id) {
-      try {
-        const response = await authAxios().get(`/challenge/${id}`);
-        const data = response.data?.data || response.data || null;
-        setChallengeData(data);
-      } catch (error) {
-        console.error("Error fetching challenge:", error);
+    const fetchChallengeById = async () => {
+      if (id) {
+        try {
+          const response = await authAxios().get(`/challenge/${id}`);
+          const data = response.data?.data || response.data || null;
+          setChallengeData(data);
+        } catch (error) {
+          console.error("Error fetching challenge:", error);
+        }
+
+        await fetchParticipants(); // ✅ reuse here
       }
+    };
 
-      await fetchParticipants(); // ✅ reuse here
-    }
-  };
-
-  fetchChallengeById();
-}, [id]);
+    fetchChallengeById();
+  }, [id]);
 
   const actionOptions = [
     { value: 1, label: "Mark 1st" },
@@ -100,33 +103,33 @@ const ChallengeParticipantsList = () => {
     { value: 3, label: "Mark 3rd" },
   ];
 
-const handleActionChange = (selectedOption, challengeId) => {
-  if (!selectedOption) return;
+  const handleActionChange = (selectedOption, challengeId) => {
+    if (!selectedOption) return;
 
-  setSelectedAction(selectedOption.label);
-  setSelectedMember(challengeId);
-  setSelectedRank(selectedOption.value); // ✅ store rank
-  setModalOpen(true); // open modal only
-}
+    setSelectedAction(selectedOption.label);
+    setSelectedMember(challengeId);
+    setSelectedRank(selectedOption.value); // ✅ store rank
+    setModalOpen(true); // open modal only
+  };
 
-const handleConfirmAction = async () => {
-  try {
-    const response = await authAxios().put(
-      `/challenge/participant/${selectedMember}`,
-      {
-        rank: selectedRank, // ✅ correct payload
-      }
-    );
+  const handleConfirmAction = async () => {
+    try {
+      const response = await authAxios().put(
+        `/challenge/participant/${selectedMember}`,
+        {
+          rank: selectedRank, // ✅ correct payload
+        },
+      );
 
-    await fetchParticipants(); // ✅ refresh list after update
-    setModalOpen(false); // close modal after success
-    setSelectedRank(null); // close modal after success
-    toast.success('Challenge participant rank updated')
-  } catch (error) {
-    console.error("Error updating rank:", error);
-    toast.error(error.response?.data?.errors)
-  }
-};
+      await fetchParticipants(); // ✅ refresh list after update
+      setModalOpen(false); // close modal after success
+      setSelectedRank(null); // close modal after success
+      toast.success("Challenge participant rank updated");
+    } catch (error) {
+      console.error("Error updating rank:", error);
+      toast.error(error.response?.data?.errors);
+    }
+  };
 
   return (
     <div className="page--content">
@@ -156,7 +159,11 @@ const handleConfirmAction = async () => {
                 <th className="px-2 py-4 min-w-[150px]">Challenge Type</th>
                 <th className="px-2 py-4 min-w-[150px]">Metric So Far</th>
                 <th className="px-2 py-4 min-w-[100px]">Current Rank</th>
-                <th className="px-2 py-4 min-w-[130px]">Action</th>
+                {(userRole === "CLUB_MANAGER" ||
+                  userRole === "FITNESS_MANAGER" ||
+                  userRole === "ADMIN") && (
+                  <th className="px-2 py-4 min-w-[130px]">Action</th>
+                )}
               </tr>
             </thead>
 
@@ -195,24 +202,32 @@ const handleConfirmAction = async () => {
                       {item?.target_value} {item?.target_unit}
                     </td>
                     <td className="px-2 py-4">
-                      {item?.challenge_type === "CUSTOM" ? item?.rank === 0 ? "N/A" : item?.rank : item?.current_rank}
+                      {item?.challenge_type === "CUSTOM"
+                        ? item?.rank === 0
+                          ? "N/A"
+                          : item?.rank
+                        : item?.current_rank}
                     </td>
-                    <td className="px-2 py-4">
-                      {item?.challenge_type === "CUSTOM" ? (
-                        <Select
-                          options={actionOptions}
-                          onChange={(selectedOption) =>
-                            handleActionChange(selectedOption, item?.id)
-                          }
-                          placeholder="Select Action"
-                          styles={customStyles}
-                          menuPortalTarget={document.body} // Ensures the dropdown is rendered in the body
-                          isDisabled={item?.rank !== 0}
-                        />
-                      ) : (
-                        "—"
-                      )}
-                    </td>
+                    {(userRole === "CLUB_MANAGER" ||
+                      userRole === "FITNESS_MANAGER" ||
+                      userRole === "ADMIN") && (
+                      <td className="px-2 py-4">
+                        {item?.challenge_type === "CUSTOM" ? (
+                          <Select
+                            options={actionOptions}
+                            onChange={(selectedOption) =>
+                              handleActionChange(selectedOption, item?.id)
+                            }
+                            placeholder="Select Action"
+                            styles={customStyles}
+                            menuPortalTarget={document.body} // Ensures the dropdown is rendered in the body
+                            isDisabled={item?.rank !== 0}
+                          />
+                        ) : (
+                          "—"
+                        )}
+                      </td>
+                    )}
                   </tr>
                 ))
               ) : (

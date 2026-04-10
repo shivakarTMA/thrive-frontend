@@ -12,6 +12,7 @@ import Pagination from "../common/Pagination";
 import { IoSearchOutline } from "react-icons/io5";
 import Select from "react-select";
 import { customStyles, filterActiveItems, formatIndianNumber } from "../../Helper/helper";
+import { useSelector } from "react-redux";
 
 const ProductsList = () => {
   const [showModal, setShowModal] = useState(false);
@@ -22,6 +23,9 @@ const ProductsList = () => {
   const [productFilter, setProductFilter] = useState(null);
   const [club, setClub] = useState([]);
   const [clubFilter, setClubFilter] = useState(null);
+
+  const { user } = useSelector((state) => state.auth);
+  const userRole = user.role;
 
   const [searchTerm, setSearchTerm] = useState("");
   const [page, setPage] = useState(1);
@@ -288,6 +292,10 @@ const ProductsList = () => {
           <p className="text-sm">{`Home > Nourish Products`}</p>
           <h1 className="text-3xl font-semibold">Nourish Products</h1>
         </div>
+        {(userRole === "ADMIN" ||
+          userRole === "CLUB_MANAGER" ||
+          userRole === "MARKETING_MANAGER" ||
+          userRole === "FINANCE_MANAGER") && (
         <div className="flex items-end gap-2">
           <button
             type="button"
@@ -301,6 +309,7 @@ const ProductsList = () => {
             <FiPlus /> Create Product
           </button>
         </div>
+        )}
       </div>
 
       {/* Filters */}
@@ -359,7 +368,12 @@ const ProductsList = () => {
                 <th className="px-2 py-4 min-w-[110px]">Final Amount</th>
                 <th className="px-2 py-4 text-center min-w-[80px]">Position</th>
                 <th className="px-2 py-4 min-w-[100px]">Status</th>
+                {(userRole === "ADMIN" ||
+                  userRole === "CLUB_MANAGER" ||
+                  userRole === "MARKETING_MANAGER" ||
+                  userRole === "FINANCE_MANAGER") && (
                 <th className="px-2 py-4">Action</th>
+                )}
               </tr>
             </thead>
             <tbody>
@@ -410,6 +424,10 @@ const ProductsList = () => {
                           : ""}
                       </div>
                     </td>
+                    {(userRole === "ADMIN" ||
+                      userRole === "CLUB_MANAGER" ||
+                      userRole === "MARKETING_MANAGER" ||
+                      userRole === "FINANCE_MANAGER") && (
                     <td className="px-2 py-4">
                       <div className="w-fit">
                         <Tooltip
@@ -429,6 +447,7 @@ const ProductsList = () => {
                         </Tooltip>
                       </div>
                     </td>
+                    )}
                   </tr>
                 ))
               )}

@@ -374,17 +374,20 @@ const StaffList = () => {
           <p className="text-sm">{`Home > All Staff`}</p>
           <h1 className="text-3xl font-semibold">All Staff</h1>
         </div>
-        <button
-          type="button"
-          className="px-4 py-2 bg-black text-white rounded flex items-center gap-2"
-          onClick={() => {
-            setEditingOption(null);
-            formik.resetForm();
-            setShowModal(true);
-          }}
-        >
-          <FiPlus /> Add Staff
-        </button>
+        {(currentUserRole === "ADMIN" ||
+          currentUserRole === "CLUB_MANAGER") && (
+          <button
+            type="button"
+            className="px-4 py-2 bg-black text-white rounded flex items-center gap-2"
+            onClick={() => {
+              setEditingOption(null);
+              formik.resetForm();
+              setShowModal(true);
+            }}
+          >
+            <FiPlus /> Add Staff
+          </button>
+        )}
       </div>
 
       {/* Filters */}
@@ -450,7 +453,10 @@ const StaffList = () => {
                 <th className="px-2 py-4">Assigned Club</th>
                 <th className="px-2 py-4">Status</th>
                 <th className="px-2 py-4">Show on App</th>
+                {(currentUserRole === "ADMIN" ||
+                  currentUserRole === "CLUB_MANAGER") && (
                 <th className="px-2 py-4">Action</th>
+                )}
               </tr>
             </thead>
             <tbody>
@@ -524,7 +530,8 @@ const StaffList = () => {
                         "--"
                       )}
                     </td>
-
+                  {(currentUserRole === "ADMIN" ||
+                    currentUserRole === "CLUB_MANAGER") && (
                     <td className="px-2 py-4">
                       <div className="flex">
                         <Tooltip
@@ -558,6 +565,7 @@ const StaffList = () => {
                         )}
                       </div>
                     </td>
+                  )}
                   </tr>
                 ))
               )}

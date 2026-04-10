@@ -298,16 +298,21 @@ const ChallengeList = () => {
           <p className="text-sm">{`Home > All Challenges`}</p>
           <h1 className="text-3xl font-semibold">All Challenges</h1>
         </div>
-        <button
-          type="button"
-          className="px-4 py-2 bg-black text-white rounded flex items-center gap-2"
-          onClick={() => {
-            setEditingOption(null);
-            setShowModal(true);
-          }}
-        >
-          <FiPlus /> Create Challenge
-        </button>
+        {(userRole === "ADMIN" ||
+          userRole === "CLUB_MANAGER" ||
+          userRole === "FITNESS_MANAGER" ||
+          userRole === "MARKETING_MANAGER") && (
+          <button
+            type="button"
+            className="px-4 py-2 bg-black text-white rounded flex items-center gap-2"
+            onClick={() => {
+              setEditingOption(null);
+              setShowModal(true);
+            }}
+          >
+            <FiPlus /> Create Challenge
+          </button>
+          )}
       </div>
 
       <div className="flex flex-wrap items-center gap-2 mb-4">
@@ -419,6 +424,11 @@ const ChallengeList = () => {
                     </td>
                     <td className="px-2 py-4">
                       <div className="flex items-center">
+                        {(userRole === "CLUB_MANAGER" ||
+                            userRole === "TRAINER" ||
+                            userRole === "FITNESS_MANAGER" ||
+                            userRole === "FOH" ||
+                            userRole === "ADMIN") && (
                         <Tooltip
                           id={`tooltip-view-${item.id}`}
                           content={
@@ -445,31 +455,39 @@ const ChallengeList = () => {
                             <IoEyeOutline className="text-[25px] text-black" />
                           </Link>
                         </Tooltip>
+                            )}
 
-                        <Tooltip
-                          id={`tooltip-status-${item.id}`}
-                          content={`${
-                            item?.status === "ONGOING" ? "Mark Completed" : ""
-                          }`}
-                          place="left"
-                        >
-                          <div
-                            className={`p-1 cursor-pointer ${
-                              item?.status === "ONGOING"
-                                ? ""
-                                : "opacity-[0.5] pointer-events-none"
+                          {(userRole === "CLUB_MANAGER" ||
+                          userRole === "FITNESS_MANAGER" ||
+                          userRole === "ADMIN") && (
+                          <Tooltip
+                            id={`tooltip-status-${item.id}`}
+                            content={`${
+                              item?.status === "ONGOING" ? "Mark Completed" : ""
                             }`}
-                            onClick={() => {
-                              setSelectedChallenge({
-                                id: item.id,
-                                name: item.name,
-                              });
-                              setShowConfirmModal(true);
-                            }}
+                            place="left"
                           >
-                            <IoCheckboxOutline className="text-[22px] text-black" />
-                          </div>
-                        </Tooltip>
+                            <div
+                              className={`p-1 cursor-pointer ${
+                                item?.status === "ONGOING"
+                                  ? ""
+                                  : "opacity-[0.5] pointer-events-none"
+                              }`}
+                              onClick={() => {
+                                setSelectedChallenge({
+                                  id: item.id,
+                                  name: item.name,
+                                });
+                                setShowConfirmModal(true);
+                              }}
+                            >
+                              <IoCheckboxOutline className="text-[22px] text-black" />
+                            </div>
+                          </Tooltip>
+                          )}
+                        {(userRole === "CLUB_MANAGER" ||
+                          userRole === "FITNESS_MANAGER" ||
+                          userRole === "ADMIN") && (
                         <Tooltip
                           id={`tooltip-edit-${item.id}`}
                           content={`${
@@ -491,6 +509,7 @@ const ChallengeList = () => {
                             <LiaEdit className="text-[25px] text-black" />
                           </div>
                         </Tooltip>
+                          )}
                       </div>
                     </td>
                   </tr>

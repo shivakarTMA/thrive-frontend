@@ -12,6 +12,7 @@ import Select from "react-select";
 import { customStyles, filterActiveItems } from "../../Helper/helper";
 import { IoSearchOutline } from "react-icons/io5";
 import Pagination from "../common/Pagination";
+import { useSelector } from "react-redux";
 
 const FaqsList = () => {
   const [showModal, setShowModal] = useState(false);
@@ -20,6 +21,8 @@ const FaqsList = () => {
   const leadBoxRef = useRef(null);
   const [productCategory, setProductCategory] = useState([]);
   const [productFilter, setProductFilter] = useState(null);
+  const { user } = useSelector((state) => state.auth);
+  const userRole = user.role;
 
   const [searchTerm, setSearchTerm] = useState("");
   const [page, setPage] = useState(1);
@@ -149,6 +152,7 @@ const FaqsList = () => {
           <p className="text-sm">{`Home > FAQ List`}</p>
           <h1 className="text-3xl font-semibold">FAQ List</h1>
         </div>
+        {(userRole === "ADMIN" || userRole === "MARKETING_MANAGER") && (
         <div className="flex items-end gap-2">
           <button
             type="button"
@@ -162,6 +166,7 @@ const FaqsList = () => {
             <FiPlus /> Create FAQ
           </button>
         </div>
+        )}
       </div>
       {/* Filters */}
       <div className="flex flex-wrap gap-3 ">
@@ -201,7 +206,9 @@ const FaqsList = () => {
                 <th className="px-2 py-4">Top Search</th>
                 <th className="px-2 py-4">Position</th>
                 <th className="px-2 py-4">Status</th>
+                {(userRole === "ADMIN" || userRole === "MARKETING_MANAGER") && (
                 <th className="px-2 py-4">Action</th>
+                )}
               </tr>
             </thead>
             <tbody>
@@ -247,11 +254,12 @@ const FaqsList = () => {
                           : ""}
                       </div>
                     </td>
+                    {(userRole === "ADMIN" || userRole === "MARKETING_MANAGER") && (
                     <td className="px-2 py-4">
                       <div className="w-fit">
                         <Tooltip
                           id={`tooltip-edit-${item.id || index}`}
-                          content="Edit Category"
+                          content="Edit FAQ"
                           place="left"
                         >
                           <div
@@ -266,6 +274,7 @@ const FaqsList = () => {
                         </Tooltip>
                       </div>
                     </td>
+                    )}
                   </tr>
                 ))
               )}

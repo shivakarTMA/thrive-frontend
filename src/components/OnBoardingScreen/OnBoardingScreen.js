@@ -10,6 +10,7 @@ import CreateOnBoardingScreen from "./CreateOnBoardingScreen";
 import { authAxios } from "../../config/config";
 import { customStyles } from "../../Helper/helper";
 import Select from "react-select";
+import { useSelector } from "react-redux";
 
 const OnBoardingScreen = () => {
   const [showModal, setShowModal] = useState(false);
@@ -18,6 +19,8 @@ const OnBoardingScreen = () => {
   const [statusFilter, setStatusFilter] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const leadBoxRef = useRef(null);
+  const { user } = useSelector((state) => state.auth);
+  const userRole = user.role;
 
   const fetchOnBoardingScreen = async (search = "") => {
     try {
@@ -126,6 +129,7 @@ const OnBoardingScreen = () => {
           <p className="text-sm">{`Home > All On Boarding`}</p>
           <h1 className="text-3xl font-semibold">All On Boarding</h1>
         </div>
+        {(userRole === "ADMIN" || userRole === "MARKETING_MANAGER") && (
         <div className="flex items-end gap-2">
           <button
             type="button"
@@ -139,6 +143,7 @@ const OnBoardingScreen = () => {
             <FiPlus /> Create On Boarding
           </button>
         </div>
+        )}
       </div>
 
       {/* Filters */}
@@ -177,7 +182,9 @@ const OnBoardingScreen = () => {
                 <th className="px-2 py-4">Title</th>
                 <th className="px-2 py-4">Position</th>
                 <th className="px-2 py-4">Status</th>
+                {(userRole === "ADMIN" || userRole === "MARKETING_MANAGER") && (
                 <th className="px-2 py-4">Action</th>
+                )}
               </tr>
             </thead>
             <tbody>
@@ -223,6 +230,7 @@ const OnBoardingScreen = () => {
                           : ""}
                       </div>
                     </td>
+                    {(userRole === "ADMIN" || userRole === "MARKETING_MANAGER") && (
                     <td className="px-2 py-4">
                       <div className="w-fit">
                         <Tooltip
@@ -243,6 +251,7 @@ const OnBoardingScreen = () => {
                         </Tooltip>
                       </div>
                     </td>
+                    )}
                   </tr>
                 ))
               )}
