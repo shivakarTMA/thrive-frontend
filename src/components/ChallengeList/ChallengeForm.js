@@ -26,10 +26,10 @@ import { fetchClubTiming } from "../../Redux/Reducers/clubTimingSlice";
 import { useClubDatePickerProps } from "../../hooks/useClubDatePickerProps";
 
 const challengeType = [
-  { label: "Steps", value: "STEPS" },
-  { label: "Distance Travelled", value: "DISTANCE_TRAVELLED" },
-  { label: "Calories Burnt", value: "CALORIES_BURNT" },
-  { label: "Active Minutes", value: "ACTIVE_MINUTES" },
+  // { label: "Steps", value: "STEPS" },
+  // { label: "Distance Travelled", value: "DISTANCE_TRAVELLED" },
+  // { label: "Calories Burnt", value: "CALORIES_BURNT" },
+  // { label: "Active Minutes", value: "ACTIVE_MINUTES" },
   { label: "Custom", value: "CUSTOM" },
 ];
 const frequencyType = [

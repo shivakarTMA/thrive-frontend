@@ -29,10 +29,10 @@ const statusColors = {
 };
 
 const challengeType = [
-  { label: "Steps", value: "STEPS" },
-  { label: "Distance Travelled", value: "DISTANCE_TRAVELLED" },
-  { label: "Calories Burnt", value: "CALORIES_BURNT" },
-  { label: "Active Minutes", value: "ACTIVE_MINUTES" },
+  // { label: "Steps", value: "STEPS" },
+  // { label: "Distance Travelled", value: "DISTANCE_TRAVELLED" },
+  // { label: "Calories Burnt", value: "CALORIES_BURNT" },
+  // { label: "Active Minutes", value: "ACTIVE_MINUTES" },
   { label: "Custom", value: "CUSTOM" },
 ];
 
@@ -428,6 +428,7 @@ const ChallengeList = () => {
                             userRole === "TRAINER" ||
                             userRole === "FITNESS_MANAGER" ||
                             userRole === "FOH" ||
+                            userRole === "MARKETING_MANAGER" ||
                             userRole === "ADMIN") && (
                         <Tooltip
                           id={`tooltip-view-${item.id}`}
@@ -459,6 +460,7 @@ const ChallengeList = () => {
 
                           {(userRole === "CLUB_MANAGER" ||
                           userRole === "FITNESS_MANAGER" ||
+                          userRole === "MARKETING_MANAGER" ||
                           userRole === "ADMIN") && (
                           <Tooltip
                             id={`tooltip-status-${item.id}`}
@@ -487,6 +489,7 @@ const ChallengeList = () => {
                           )}
                         {(userRole === "CLUB_MANAGER" ||
                           userRole === "FITNESS_MANAGER" ||
+                          userRole === "MARKETING_MANAGER" ||
                           userRole === "ADMIN") && (
                         <Tooltip
                           id={`tooltip-edit-${item.id}`}

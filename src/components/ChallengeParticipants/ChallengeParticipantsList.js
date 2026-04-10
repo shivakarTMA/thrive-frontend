@@ -5,10 +5,12 @@ import { addYears, subYears } from "date-fns";
 import { FaCalendarDays } from "react-icons/fa6";
 import Select from "react-select";
 import {
+  blockNonLettersAndNumbers,
   customStyles,
   filterActiveItems,
   formatAutoDate,
   formatText,
+  sanitizeTextWithNumbers,
 } from "../../Helper/helper";
 import { authAxios } from "../../config/config";
 import { toast } from "react-toastify";
@@ -24,14 +26,28 @@ const statusColors = {
 };
 
 // Confirmation Modal Component
-const ConfirmationModal = ({ isOpen, onClose, onConfirm, actionName }) => {
+const ConfirmationModal = ({ isOpen, onClose, onConfirm, actionName, remarks, setRemarks,}) => {
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 bg-gray-600 bg-opacity-50">
       <div className="bg-white p-6 rounded-lg shadow-lg max-w-sm w-full">
-        <h2 className="text-lg font-semibold mb-4">Confirm Action</h2>
+        <h2 className="text-lg font-semibold mb-2">Confirm Action</h2>
         <p>Are you sure you want to select "{actionName}"?</p>
+
+        <textarea
+          name="remarks"
+          value={remarks}
+          onKeyDown={blockNonLettersAndNumbers}
+          onChange={(e) => {
+            const cleaned = sanitizeTextWithNumbers(e.target.value);
+            setRemarks(cleaned); // ✅ store value
+          }}
+          className="custom--input w-full mt-2"
+          rows={4}
+          placeholder="Add any additional notes..."
+        />
+
         <div className="flex justify-end space-x-4 mt-4">
           <button
             className="bg-gray-500 text-white px-4 py-2 rounded-md"
@@ -58,6 +74,7 @@ const ChallengeParticipantsList = () => {
   const { id } = useParams();
   const [challengeData, setChallengeData] = useState([]);
   const [data, setData] = useState([]);
+  const [remarks, setRemarks] = useState("");
 
   const { user } = useSelector((state) => state.auth);
   const userRole = user.role;
@@ -109,6 +126,7 @@ const ChallengeParticipantsList = () => {
     setSelectedAction(selectedOption.label);
     setSelectedMember(challengeId);
     setSelectedRank(selectedOption.value); // ✅ store rank
+    setRemarks(""); // ✅ reset on open
     setModalOpen(true); // open modal only
   };
 
@@ -118,12 +136,14 @@ const ChallengeParticipantsList = () => {
         `/challenge/participant/${selectedMember}`,
         {
           rank: selectedRank, // ✅ correct payload
+          remarks: remarks,
         },
       );
 
       await fetchParticipants(); // ✅ refresh list after update
       setModalOpen(false); // close modal after success
       setSelectedRank(null); // close modal after success
+      setRemarks(""); // ✅ reset
       toast.success("Challenge participant rank updated");
     } catch (error) {
       console.error("Error updating rank:", error);
@@ -161,6 +181,7 @@ const ChallengeParticipantsList = () => {
                 <th className="px-2 py-4 min-w-[100px]">Current Rank</th>
                 {(userRole === "CLUB_MANAGER" ||
                   userRole === "FITNESS_MANAGER" ||
+                  userRole === "MARKETING_MANAGER" ||
                   userRole === "ADMIN") && (
                   <th className="px-2 py-4 min-w-[130px]">Action</th>
                 )}
@@ -199,7 +220,7 @@ const ChallengeParticipantsList = () => {
                         : "--"}
                     </td>
                     <td className="px-2 py-4">
-                      {item?.target_value} {item?.target_unit}
+                      {item?.remarks ? item?.remarks : "--"}
                     </td>
                     <td className="px-2 py-4">
                       {item?.challenge_type === "CUSTOM"
@@ -210,6 +231,7 @@ const ChallengeParticipantsList = () => {
                     </td>
                     {(userRole === "CLUB_MANAGER" ||
                       userRole === "FITNESS_MANAGER" ||
+                      userRole === "MARKETING_MANAGER" ||
                       userRole === "ADMIN") && (
                       <td className="px-2 py-4">
                         {item?.challenge_type === "CUSTOM" ? (
@@ -247,6 +269,8 @@ const ChallengeParticipantsList = () => {
         onClose={() => setModalOpen(false)}
         onConfirm={handleConfirmAction}
         actionName={selectedAction}
+        remarks={remarks}
+        setRemarks={setRemarks}
       />
     </div>
   );
