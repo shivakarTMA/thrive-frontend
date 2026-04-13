@@ -50,6 +50,12 @@ const MemberSendPaymentLink = ({
   const leadBoxRef = useRef(null);
   const isRenewingRef = useRef(!!renewPlanMembership);
 
+  const handleCloseModal = () => {
+    formik.resetForm();
+    resetVoucher(); // optional but recommended
+    setSendPaymentModal(false);
+  };
+
   const initialValues = {
     id: "",
     club_id: null,
@@ -259,7 +265,7 @@ const MemberSendPaymentLink = ({
 
   const handleOverlayClick = (e) => {
     if (leadBoxRef.current && !leadBoxRef.current.contains(e.target)) {
-      setSendPaymentModal(false);
+      handleCloseModal()
     }
   };
 
@@ -433,7 +439,7 @@ const MemberSendPaymentLink = ({
             <h2 className="text-xl font-semibold">Send Payment Link</h2>
             <div
               className="close--lead cursor-pointer"
-              onClick={() => setSendPaymentModal(false)}
+              onClick={handleCloseModal}
             >
               <IoCloseCircle className="text-3xl" />
             </div>
@@ -661,10 +667,7 @@ const MemberSendPaymentLink = ({
               <button
                 type="button"
                 className="px-4 py-2 bg-transparent border border-white text-white font-semibold rounded max-w-[150px] w-full"
-                onClick={() => {
-                  formik.resetForm();
-                  setSendPaymentModal(false);
-                }}
+                onClick={handleCloseModal}
               >
                 Cancel
               </button>

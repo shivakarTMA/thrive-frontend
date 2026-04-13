@@ -25,8 +25,6 @@ import Highcharts from "highcharts";
 import SummaryDashboard from "../components/common/SummaryDashboard";
 import { LiaAngleLeftSolid, LiaAngleRightSolid } from "react-icons/lia";
 import { authAxios } from "../config/config";
-import { toast } from "react-toastify";
-import SolidGaugeChart from "../components/ClubManagerChild/SolidGaugeChart";
 
 const routeMap = {
   FollowUps: "/my-follow-ups",

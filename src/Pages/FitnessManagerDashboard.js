@@ -1,16 +1,9 @@
 import React, { useCallback, useEffect, useState } from "react";
 import SalesSummary from "../components/common/SalesSummary";
 import totalSalesIcon from "../assets/images/icons/rupee-box.png";
-import newClientIcon from "../assets/images/icons/clients.png";
 import renewalIcon from "../assets/images/icons/renewal.png";
-import enquiriesIcon from "../assets/images/icons/conversion.png";
 import trialIcon from "../assets/images/icons/trial.png";
-import checkInIcon from "../assets/images/icons/checkin.png";
-import dutyIcon from "../assets/images/icons/duty.svg";
-import lunchIcon from "../assets/images/icons/lunch.svg";
-import offDayIcon from "../assets/images/icons/offday.svg";
 import eyeIcon from "../assets/images/icons/eye.svg";
-import PendingOrderTable from "../components/PendingOrderTable";
 import { FaCircle } from "react-icons/fa";
 import { FaCalendarDays } from "react-icons/fa6";
 import Select from "react-select";
@@ -23,13 +16,9 @@ import {
 } from "../Helper/helper";
 import { addYears, format, subYears, addDays } from "date-fns";
 import { Link, useNavigate } from "react-router-dom";
-import HighchartsReact from "highcharts-react-official";
-import Highcharts from "highcharts";
 import SummaryDashboard from "../components/common/SummaryDashboard";
 import { LiaAngleLeftSolid, LiaAngleRightSolid } from "react-icons/lia";
 import { authAxios } from "../config/config";
-import { toast } from "react-toastify";
-import SolidGaugeChart from "../components/ClubManagerChild/SolidGaugeChart";
 import CalendarView from "../components/TrainerDashboardChild/CalendarView";
 
 const routeMap = {
@@ -50,12 +39,6 @@ const dateFilterOptions = [
   { value: "custom", label: "Custom Date" },
 ];
 
-Highcharts.setOptions({
-  accessibility: {
-    enabled: false,
-  },
-});
-
 const FitnessManagerDashboard = () => {
   const days = [
     { label: "Yesterday", value: "yesterday" },
@@ -70,19 +53,6 @@ const FitnessManagerDashboard = () => {
   const [customTo, setCustomTo] = useState(null);
   const [clubList, setClubList] = useState([]);
   const [clubFilter, setClubFilter] = useState(null);
-
-  // Product Sold
-  const [productSeries, setProductSeries] = useState([]);
-  const [productCategories, setProductCategories] = useState([]);
-  const [totalProductValue, setTotalProductValue] = useState(0);
-
-  // Enquiry
-  const [leadCategories, setLeadCategories] = useState([]);
-  const [leadSeries, setLeadSeries] = useState([]);
-  const [totalLeads, setTotalLeads] = useState(0);
-
-  // Pending Orders
-  const [orders, setOrders] = useState([]);
 
   // Summary Data
   const [summaryData, setSummaryData] = useState({});
@@ -174,44 +144,11 @@ const FitnessManagerDashboard = () => {
         ClientAnniversaries: apiSummary.client_anniversaries ?? 0,
       };
 
-      console.log(formattedSummary, "formattedSummary");
-
       setSummaryData(formattedSummary);
     } catch (error) {
       console.error("Failed to fetch summary report:", error);
     }
   }, [clubFilter, currentDayIndex]);
-
-  const fetchPendingOrdersData = async () => {
-    try {
-      const params = {};
-      // Date filter (non-custom)
-      if (dateFilter?.value && dateFilter.value !== "custom") {
-        params.dateFilter = dateFilter.value;
-      }
-
-      // Custom date filter
-      if (dateFilter?.value === "custom" && customFrom && customTo) {
-        params.startDate = format(customFrom, "yyyy-MM-dd");
-        params.endDate = format(customTo, "yyyy-MM-dd");
-      }
-
-      // Club filter
-      if (clubFilter?.value) {
-        params.club_id = clubFilter.value;
-      }
-
-      const res = await authAxios().get(
-        "/dashboard/product/pending/order/list?fulfilment_status=PLACED",
-        { params },
-      );
-      let data = res.data?.data || res.data || [];
-
-      setOrders(data);
-    } catch (err) {
-      console.error(err);
-    }
-  };
 
   const fetchDashboardData = async () => {
     try {
@@ -238,87 +175,6 @@ const FitnessManagerDashboard = () => {
       setDashboardData(data);
     } catch (err) {
       console.error(err);
-    }
-  };
-
-  const fetchProductStatus = async () => {
-    try {
-      const params = {};
-
-      // Date filter
-      if (dateFilter?.value && dateFilter.value !== "custom") {
-        params.dateFilter = dateFilter.value;
-      }
-
-      // Custom date filter
-      if (dateFilter?.value === "custom" && customFrom && customTo) {
-        params.startDate = format(customFrom, "yyyy-MM-dd");
-        params.endDate = format(customTo, "yyyy-MM-dd");
-      }
-
-      // Club filter
-      if (clubFilter?.value) {
-        params.club_id = clubFilter.value;
-      }
-
-      const res = await authAxios().get("/dashboard/service/count", { params });
-
-      const apiData = res.data?.data || {};
-      const services = apiData.service_wise_count || [];
-
-      setTotalProductValue(apiData.total_count || 0);
-
-      // 🟢 Fully dynamic
-      const categories = services.map((item) => item.service_name);
-      const seriesData = services.map((item) => item.count);
-
-      setProductCategories(categories);
-      setProductSeries(seriesData);
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
-  const fetchLeadStatus = async () => {
-    try {
-      const params = {};
-
-      // Date filter
-      if (dateFilter?.value && dateFilter.value !== "custom") {
-        params.dateFilter = dateFilter.value;
-      }
-
-      // Custom date filter
-      if (dateFilter?.value === "custom" && customFrom && customTo) {
-        params.startDate = format(customFrom, "yyyy-MM-dd");
-        params.endDate = format(customTo, "yyyy-MM-dd");
-      }
-
-      // Club filter
-      if (clubFilter?.value) {
-        params.club_id = clubFilter.value;
-      }
-
-      const res = await authAxios().get("/dashboard/enquiry/count", { params });
-
-      const apiData = res.data?.data || {};
-      const statuses = apiData.lead_status_count || [];
-
-      setTotalLeads(apiData.total_count || 0);
-
-      // Optional: Friendly names (capitalize first letter)
-      const categories = statuses.map((item) =>
-        item.lead_status
-          .split(" ")
-          .map((w) => w[0].toUpperCase() + w.slice(1))
-          .join(" "),
-      );
-      const seriesData = statuses.map((item) => item.count);
-
-      setLeadCategories(categories);
-      setLeadSeries(seriesData);
-    } catch (error) {
-      console.error(error);
     }
   };
 
@@ -363,25 +219,7 @@ const FitnessManagerDashboard = () => {
 
   useEffect(() => {
     if (dateFilter?.value !== "custom" || (customFrom && customTo)) {
-      fetchPendingOrdersData();
-    }
-  }, [dateFilter, customFrom, customTo, clubFilter]);
-
-  useEffect(() => {
-    if (dateFilter?.value !== "custom" || (customFrom && customTo)) {
       fetchDashboardData();
-    }
-  }, [dateFilter, customFrom, customTo, clubFilter]);
-
-  useEffect(() => {
-    if (dateFilter?.value !== "custom" || (customFrom && customTo)) {
-      fetchProductStatus();
-    }
-  }, [dateFilter, customFrom, customTo, clubFilter]);
-
-  useEffect(() => {
-    if (dateFilter?.value !== "custom" || (customFrom && customTo)) {
-      fetchLeadStatus();
     }
   }, [dateFilter, customFrom, customTo, clubFilter]);
 
@@ -393,196 +231,6 @@ const FitnessManagerDashboard = () => {
   const selectedClub = clubOptions.find(
     (option) => option.value === clubFilter?.value,
   );
-
-  // Enquiry line chart
-  const maxValueLeads = Math.max(...leadSeries, 0);
-
-  const leadsStatus = {
-    accessibility: {
-      enabled: false,
-    },
-    chart: { type: "column", height: 300 },
-    title: {
-      text: "Enquiries",
-      align: "left",
-      style: {
-        fontSize: "1.125rem",
-        fontWeight: "700",
-        fontFamily: "Roboto, sans-serif",
-        color: "#000",
-      },
-    },
-    xAxis: {
-      categories: leadCategories,
-      labels: {
-        style: {
-          fontSize: "13px",
-          fontWeight: "700",
-          fontFamily: "Roboto, sans-serif",
-        },
-      },
-    },
-    yAxis: {
-      min: 0,
-      tickInterval: Math.max(1, Math.ceil(maxValueLeads / 5)),
-      title: { text: null },
-    },
-    legend: { enabled: false },
-    tooltip: {
-      useHTML: true,
-      outside: true,
-      style: {
-        zIndex: 9999,
-      },
-      formatter: function () {
-        const label = this.point.category; // dynamic label
-        const value = this.y; // count
-
-        return `<b>${label}</b><br/>Count: <b>${value}</b>`;
-      },
-    },
-    plotOptions: {
-      column: {
-        pointWidth: 40,
-        borderWidth: 0,
-        pointPadding: 0.1,
-        groupPadding: 0.05,
-        width: 50,
-        color: {
-          linearGradient: { x1: 0, y1: 0, x2: 0, y2: 1 },
-          stops: [
-            [0, "#009EB2"],
-            [1, "#EC71BC"],
-          ],
-        },
-      },
-      series: {
-        cursor: "pointer",
-        point: {
-          events: {
-            click: function () {
-              const category = this.category;
-
-              let target;
-
-              if (category.toLowerCase() === "won") {
-                // 👑 Special case for Won
-                target = generateUrl(
-                  "/reports/sales-reports/membership-sales-report",
-                );
-              } else {
-                // 🔁 Default for all other statuses
-                target = generateUrl(
-                  `/reports/sales-reports/all-enquiries-report?lead_status=${category}`,
-                );
-              }
-              window.location.href = target;
-            },
-          },
-        },
-      },
-    },
-    series: [{ name: "Leads", data: leadSeries }],
-    credits: { enabled: false },
-  };
-
-  // Product Sold Chart
-  const maxValue = Math.max(...productSeries, 0);
-
-  const productStatus = {
-    accessibility: {
-      enabled: false,
-    },
-    chart: {
-      type: "column",
-      height: 300,
-    },
-    title: {
-      text: "Product Sold",
-      align: "left",
-      style: {
-        fontSize: "1.125rem",
-        fontWeight: "700",
-        fontFamily: "Roboto, sans-serif",
-        color: "#000",
-      },
-    },
-    xAxis: {
-      categories: productCategories,
-      labels: {
-        style: {
-          fontSize: "13px",
-          fontWeight: "700",
-          fontFamily: "Roboto, sans-serif",
-        },
-        formatter: function () {
-          if (this.value === "SUBSCRIPTION") return "Membership";
-          if (this.value === "PRODUCT") return "Nourish";
-          return this.value; // everything else stays dynamic
-        },
-      },
-    },
-    yAxis: {
-      min: 0,
-      tickInterval: Math.max(1, Math.ceil(maxValue / 5)),
-      title: { text: null },
-    },
-    legend: { enabled: false },
-    tooltip: {
-      outside: true,
-      formatter: function () {
-        let label = this.point.category;
-
-        console.log(label, "map label");
-
-        if (label === "SUBSCRIPTION") label = "Membership";
-        if (label === "PRODUCT") label = "Nourish";
-
-        return `<b>${label}</b><br/>Count: <b>${this.y}</b>`;
-      },
-    },
-
-    plotOptions: {
-      column: {
-        pointWidth: 40,
-        borderWidth: 0,
-        color: {
-          linearGradient: { x1: 0, y1: 0, x2: 0, y2: 1 },
-          stops: [
-            [0, "#009EB2"],
-            [1, "#EC71BC"],
-          ],
-        },
-      },
-      series: {
-        cursor: "pointer",
-        point: {
-          events: {
-            click: function () {
-              const value = this.category;
-              const isPackageType =
-                value === "SUBSCRIPTION" || value === "PRODUCT";
-
-              const paramKey = isPackageType ? "package_type" : "service_type";
-              const target = generateUrl(
-                `/reports/all-orders?${paramKey}=${value}`,
-              );
-              window.location.href = target;
-            },
-          },
-        },
-      },
-    },
-    series: [
-      {
-        name: "Service",
-        data: productSeries,
-      },
-    ],
-    credits: { enabled: false },
-  };
-
-  // End Product Sold Chart
 
   // Handler to move to previous day
   const handlePrevious = () => {
@@ -864,25 +512,18 @@ const FitnessManagerDashboard = () => {
               <SalesSummary
                 icon={renewalIcon}
                 title="Total Members"
-                // titleLink={generateUrl(`/reports/all-orders?bill_type=RENEWAL`)}
-                titleLink="#"
-                totalSales={15}
+                titleLink={generateUrl(`/reports/all-orders?package_type=SUBSCRIPTION`)}
+                totalSales={dashboardData?.summary_cards?.total_members?.total_count}
                 items={[
                   {
                     label: "New Clients",
-                    value: 10,
-                    // link: generateUrl(
-                    //   `/reports/all-orders?bill_type=RENEWAL&package_type=SUBSCRIPTION`,
-                    // ),
-                    link: "#",
+                    value: dashboardData?.summary_cards?.total_members?.newMember,
+                    link:generateUrl(`/reports/all-orders?bill_type=NEW&package_type=SUBSCRIPTION`)
                   },
                   {
                     label: "Renewals",
-                    value: 5,
-                    // link: generateUrl(
-                    //   `/reports/all-orders?bill_type=RENEWAL&package_type=PACKAGE`,
-                    // ),
-                    link: "#",
+                    value: dashboardData?.summary_cards?.total_members?.renewalMember,
+                    link:generateUrl(`/reports/all-orders?bill_type=RENEWAL&package_type=SUBSCRIPTION`)
                   },
                 ]}
               />
@@ -966,7 +607,7 @@ const FitnessManagerDashboard = () => {
           </div>
 
           {/* Calender View */}
-          <CalendarView />
+          <CalendarView clubId={clubFilter?.value} />
           {/* Calender View end */}
         </div>
 
@@ -1002,47 +643,6 @@ const FitnessManagerDashboard = () => {
                 routeMap={routeMap}
                 generateUrl={buildFilteredUrl}
               />
-            </div>
-          </div>
-          {/* <div className="rounded-[15px] p-4 box--shadow bg-white mt-4">
-            <SolidGaugeChart />
-          </div> */}
-
-          <div className="rounded-[15px] p-3 box--shadow bg-white mt-4">
-            <p className="text-lg font-[600] mb-3 text-center mt-3">
-              My Roster{" "}
-            </p>
-
-            <div className="flex border border-[#D4D4D4] rounded-[5px] py-2 px-5 gap-3 items-center mb-3">
-              <div>
-                <img src={dutyIcon} className="w-6" />
-              </div>
-              <div>
-                <h2 className="text-[#000000] text-md font-bold">
-                  Duty Timings
-                </h2>
-                <p className="text-[#6F6F6F] text-md">09:00AM - 06:00AM</p>
-              </div>
-            </div>
-            <div className="flex border border-[#D4D4D4] rounded-[5px] py-2 px-5 gap-3 items-center mb-3">
-              <div>
-                <img src={lunchIcon} className="w-6" />
-              </div>
-              <div>
-                <h2 className="text-[#000000] text-md font-bold">
-                  Lunch Break
-                </h2>
-                <p className="text-[#6F6F6F] text-md">01:00AM - 02:00PM</p>
-              </div>
-            </div>
-            <div className="flex border border-[#D4D4D4] rounded-[5px] py-2 px-5 gap-3 items-center">
-              <div>
-                <img src={offDayIcon} className="w-6" />
-              </div>
-              <div>
-                <h2 className="text-[#000000] text-md font-bold">Off Days</h2>
-                <p className="text-[#6F6F6F] text-md">Saturday & Sunday</p>
-              </div>
             </div>
           </div>
         </div>

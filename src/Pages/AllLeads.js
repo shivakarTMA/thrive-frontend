@@ -41,6 +41,7 @@ import { logout, selectAuthFromToken } from "../Redux/Reducers/authSlice";
 import useAutoLogout from "../hooks/useAutoLogout";
 import { logoutUser } from "../Redux/thunks/authThunk";
 import { hasRouteAccess } from "../Routing/RolePermissions";
+import IsLoadingHOC from "../components/common/IsLoadingHOC";
 
 const dateFilterOptions = [
   { value: "today", label: "Today" },
@@ -49,8 +50,9 @@ const dateFilterOptions = [
   { value: "custom", label: "Custom Date" },
 ];
 
-const AllLeads = () => {
+const AllLeads = (props) => {
   useAutoLogout();
+  const { setLoading } = props;
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useDispatch();
@@ -1209,6 +1211,7 @@ const AllLeads = () => {
           setMemberModal={setMemberModal}
           setSelectedLead={setSelectedLead}
           onLeadUpdate={handleLeadUpdate}
+          setLoading={setLoading}
         />
       )}
       {sendPaymentModal && (
@@ -1231,4 +1234,4 @@ const AllLeads = () => {
   );
 };
 
-export default AllLeads;
+export default IsLoadingHOC(AllLeads);

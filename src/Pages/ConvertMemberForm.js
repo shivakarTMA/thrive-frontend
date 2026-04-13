@@ -185,8 +185,8 @@ const ConvertMemberForm = ({
   setMemberModal,
   selectedLeadMember,
   onLeadUpdate,
+  setLoading,
 }) => {
-  console.log(selectedLeadMember, "selectedLeadMember");
   const [allLeads, setAllLeads] = useState([]);
   const [profileImage, setProfileImage] = useState("");
   const [showModal, setShowModal] = useState(false);
@@ -198,6 +198,9 @@ const ConvertMemberForm = ({
   const [companyOptions, setCompanyOptions] = useState([]);
   const [duplicateEmailError, setDuplicateEmailError] = useState("");
   const [showDuplicateEmailModal, setShowDuplicateEmailModal] = useState(false);
+
+  const [paymentMode, setPaymentMode] = useState("ONLINE");
+  const paymentModeRef = useRef("ONLINE");
 
   const [hasPlans, setHasPlans] = useState(false);
   const [checkingPlans, setCheckingPlans] = useState(false);
@@ -307,6 +310,7 @@ const ConvertMemberForm = ({
     validationSchema: stepValidationSchemas[step],
     enableReinitialize: true,
     onSubmit: async (values) => {
+      setLoading(true);
       if (step === stepValidationSchemas.length - 1) {
         try {
           // ===============================
@@ -424,9 +428,11 @@ const ConvertMemberForm = ({
               coupon_code: values.coupon || "",
               applicable_ids: [values.productDetails.id],
               member_id: selectedLeadMember,
+              paymentMode: paymentModeRef.current,
             };
 
             console.log("paymentPayload", paymentPayload);
+            console.log("FINAL MODE:", paymentModeRef.current);
 
             const res = await authAxios().post(
               "/payment/proceed",
@@ -434,26 +440,35 @@ const ConvertMemberForm = ({
             );
 
             if (res.data?.status) {
-              const { paymentUrl, order_no } = res.data.response;
+              // ✅ ONLINE FLOW
+              if (paymentModeRef.current === "ONLINE") {
+                const { paymentUrl, order_no } = res.data.response || {};
+                setPaymentUrl(paymentUrl);
+                setOrderNo(order_no);
+                setPaymentModalOpen(true);
+                setLoading(false);
+                toast.success("Member created and payment initiated!");
+              }
 
-              setPaymentUrl(paymentUrl);
-              setOrderNo(order_no);
-              setPaymentModalOpen(true); // ✅ OPEN MODAL
-
-              toast.success("Member created and payment initiated!");
+              // ✅ OFFLINE FLOW
+              if (paymentModeRef.current === "OFFLINE") {
+                toast.success("Member created with offline payment!");
+                setMemberModal(false);
+                setLoading(false);
+                onLeadUpdate();
+              }
             }
           }
-
-          // setMemberModal(false);
-          onLeadUpdate();
         } catch (error) {
           console.log(error, "error");
           toast.error(
             error.response?.data?.errors || error.response?.data?.message,
           );
+          setLoading(false);
         }
       } else {
         setStep(step + 1);
+        setLoading(false);
       }
     },
   });
@@ -726,9 +741,13 @@ const ConvertMemberForm = ({
     checkPlansAvailability(
       formik.values.plan_type,
       formik.values.club_id,
-      formik.values.productType
+      formik.values.productType,
     );
-  }, [formik.values.plan_type, formik.values.club_id, formik.values.productType]);
+  }, [
+    formik.values.plan_type,
+    formik.values.club_id,
+    formik.values.productType,
+  ]);
 
   const handleProductSubmit = (product) => {
     // Convert to numbers safely
@@ -1066,7 +1085,7 @@ const ConvertMemberForm = ({
   return (
     <>
       <div
-        className="bg--blur create--lead--container overflow-auto hide--overflow fixed top-0 left-0 z-[999] w-full bg-black bg-opacity-60 h-full"
+        className="bg--blur create--lead--container overflow-auto hide--overflow fixed top-0 left-0 z-[8] w-full bg-black bg-opacity-60 h-full"
         onClick={handleOverlayClick}
       >
         <div
@@ -2040,11 +2059,13 @@ const ConvertMemberForm = ({
                                 {formik.errors?.productDetails?.title}
                               </div>
                             )}
-                          {!checkingPlans && !hasPlans && formik.values.plan_type && (
-                            <p className="text-sm text-red-500">
-                              No plans available for selected type & club
-                            </p>
-                          )}
+                          {!checkingPlans &&
+                            !hasPlans &&
+                            formik.values.plan_type && (
+                              <p className="text-sm text-red-500">
+                                No plans available for selected type & club
+                              </p>
+                            )}
                         </div>
                         <div>
                           <label className="mb-2 block">Start Date</label>
@@ -2213,23 +2234,41 @@ const ConvertMemberForm = ({
                 )}
 
                 <div className="flex gap-2 items-center justify-end flex-1">
-                  <button
-                    type="button"
-                    className="px-4 py-2 bg-white text-black font-semibold rounded max-w-[150px] w-full"
-                    onClick={handleNextStep}
-                  >
-                    {step === stepValidationSchemas.length - 1
-                      ? "Pay Now"
-                      : "Next"}
-                  </button>
-                  {/* {step === stepValidationSchemas.length - 1 && (
+                  {step !== stepValidationSchemas.length - 1 && (
                     <button
                       type="button"
-                      className="px-4 py-2 bg-black text-white font-semibold rounded max-w-[150px] w-full"
+                      className="px-4 py-2 bg-white text-black font-semibold rounded max-w-[150px] w-full"
+                      onClick={handleNextStep}
                     >
-                      Online Payment
+                      Next
                     </button>
-                  )} */}
+                  )}
+
+                  {step === stepValidationSchemas.length - 1 && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          paymentModeRef.current = "ONLINE";
+                          formik.handleSubmit();
+                        }}
+                        className="px-4 py-2 bg-black text-white font-semibold rounded max-w-[150px] w-full"
+                      >
+                        Pay Online
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          paymentModeRef.current = "OFFLINE";
+                          formik.handleSubmit();
+                        }}
+                        className="px-4 py-2 border bg-white text-black font-semibold rounded max-w-[150px] w-full"
+                      >
+                        Pay Offline
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
             </form>

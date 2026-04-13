@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { Calendar, momentLocalizer } from "react-big-calendar";
 import moment from "moment";
 import "react-big-calendar/lib/css/react-big-calendar.css";
@@ -6,6 +6,8 @@ import { FaChevronLeft, FaChevronRight } from "react-icons/fa6";
 import { LuCalendarDays } from "react-icons/lu";
 import Select from "react-select";
 import { customStyles } from "../../Helper/helper";
+import { authAxios } from "../../config/config";
+import { useSelector } from "react-redux";
 
 const localizer = momentLocalizer(moment);
 
@@ -15,137 +17,138 @@ const viewOptions = [
   { value: "month", label: "Month" },
 ];
 
+// const EVENT_COLORS = {
+//   personal: { bg: "#F0FDFA", border: "#0D9488" },
+//   group: { bg: "#F0FDFA", border: "#0D9488" },
+//   trial: { bg: "#E7F0FF", border: "#2563EB" },
+// };
 const EVENT_COLORS = {
-  personal: { bg: "#F0FDFA", border: "#0D9488" },
-  pilates: { bg: "#F0FDFA", border: "#0D9488" },
-  core: { bg: "#F0FDFA", border: "#0D9488" },
-  group: { bg: "#F0FDFA", border: "#0D9488" },
-  zumba: { bg: "#F0FDFA", border: "#0D9488" },
-  yoga: { bg: "#F0FDFA", border: "#0D9488" },
-  dance: { bg: "#F0FDFA", border: "#0D9488" },
-  strength: { bg: "#F0FDFA", border: "#0D9488" },
-  trx: { bg: "#F0FDFA", border: "#0D9488" },
-  trial: { bg: "#E7F0FF", border: "#2563EB" },
+  personal: { bg: "#F0FDFA", border: "#0D9488" }, // green
+  pilates: { bg: "#FFF7ED", border: "#F97316" },  // orange
+  trial: { bg: "#E7F0FF", border: "#2563EB" },    // blue
+  group: { bg: "#F3F4F6", border: "#6B7280" },    // gray fallback
 };
 
-const CalendarView = () => {
+const CalendarView = ({ clubId }) => {
   const [view, setView] = useState("week");
-  const [date, setDate] = useState(new Date(2026, 0, 12));
+  const [date, setDate] = useState(new Date());
+  const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-  const events = [
-     {
-      id: 1,
-      title: "Personal Training",
-      start: new Date(2026, 0, 3, 7, 0),
-      end: new Date(2026, 0, 3, 8, 0),
-      trainer: "Nishant Bhatti",
-      type: "personal",
-    },
-    {
-      id: 2,
-      title: "Pilates Package",
-      start: new Date(2026, 0, 5, 10, 0),
-      end: new Date(2026, 0, 5, 11, 0),
-      trainer: "Nishant Bhatti",
-      type: "pilates",
-    },
-    {
-      id: 3,
-      title: "THE ATHLETE'S CORE 36",
-      start: new Date(2026, 0, 7, 8, 0),
-      end: new Date(2026, 0, 7, 9, 0),
-      trainer: "PRASHANT",
-      type: "core",
-    },
-    {
-      id: 4,
-      title: "THE 12 PACK PROGRESS",
-      start: new Date(2026, 0, 10, 14, 0),
-      end: new Date(2026, 0, 10, 15, 0),
-      trainer: "ARYAN TOMAR",
-      type: "core",
-    },
-    {
-      id: 5,
-      title: "PILATES POWER LINES",
-      start: new Date(2026, 0, 12, 9, 0),
-      end: new Date(2026, 0, 12, 10, 0),
-      trainer: "RAKHI",
-      type: "pilates",
-    },
-    {
-      id: 6,
-      title: "Group Class Activity",
-      start: new Date(2026, 0, 15, 13, 0),
-      end: new Date(2026, 0, 15, 14, 0),
-      trainer: "ARYAN TOMAR",
-      type: "group",
-    },
-    {
-      id: 7,
-      title: "Non-Stop Zumba",
-      start: new Date(2026, 1, 2, 7, 0),
-      end: new Date(2026, 1, 2, 8, 0),
-      trainer: "PRASHANT",
-      type: "zumba",
-    },
-    {
-      id: 8,
-      title: "Hatha Yoga",
-      start: new Date(2026, 1, 3, 6, 30),
-      end: new Date(2026, 1, 3, 7, 30),
-      trainer: "PRASHANT",
-      type: "yoga",
-    },
-    {
-      id: 9,
-      title: "Step Dance",
-      start: new Date(2026, 1, 4, 9, 0),
-      end: new Date(2026, 1, 4, 10, 0),
-      trainer: "ARYAN TOMAR",
-      type: "dance",
-    },
-    {
-      id: 10,
-      title: "Flexi Strength",
-      start: new Date(2026, 1, 5, 12, 0),
-      end: new Date(2026, 1, 5, 13, 0),
-      trainer: "ARYAN TOMAR",
-      type: "strength",
-    },
-    {
-      id: 11,
-      title: "TRX AND BOSU",
-      start: new Date(2026, 1, 6, 17, 0),
-      end: new Date(2026, 1, 6, 18, 0),
-      trainer: "Nishant Bhatti",
-      type: "trx",
-    },
-    {
-      id: 12,
-      title: "Trial",
-      start: new Date(2026, 0, 17, 10, 0),
-      end: new Date(2026, 0, 17, 11, 0),
-      trainer: "RAKHI",
-      type: "trial", // ✅ BLUE
-    },
-  ];
+  const { data } = useSelector((state) => state.clubTiming);
 
-  const eventStyleGetter = useCallback(
-    (event) => {
-      const colors = EVENT_COLORS[event.type] || EVENT_COLORS.group;
-      return {
-        style: {
-          backgroundColor: colors.bg,
-          borderLeft: `4px solid ${colors.border}`,
-          borderRadius: "0px",
-          color: "#000",
-          padding: "8px",
-        },
+  const openMinutes = data?.openMinutes ?? 360;   // fallback 6 AM
+  const closeMinutes = data?.closeMinutes ?? 1200; // fallback 8 PM
+  const timeIntervals = data?.timeIntervals ?? 30;
+
+  const minutesToDate = (minutes) => {
+    const d = new Date();
+    d.setHours(Math.floor(minutes / 60), minutes % 60, 0, 0);
+    return d;
+  };
+
+  const fetchTrainerBookings = async () => {
+    try {
+      if (!clubId) return;
+
+      setLoading(true);
+
+      const res = await authAxios().get(
+        `/appointment/trainer/upcoming/bookings?club_id=${clubId}`
+      );
+
+      const apiData = res.data?.data || [];
+
+      const typeMap = {
+        trial: "trial",
+        "Personal Training": "personal",
       };
-    },
-    []
-  );
+
+      // const formattedEvents = apiData.map((item) => {
+      //   const startDateTime = moment(
+      //     `${item.start_date} ${item.start_time}`,
+      //     "YYYY-MM-DD HH:mm:ss"
+      //   ).toDate();
+
+      //   const endDateTime = moment(
+      //     `${item.start_date} ${item.end_time}`,
+      //     "YYYY-MM-DD HH:mm:ss"
+      //   ).toDate();
+
+      //   return {
+      //     id: item.id,
+      //     title: item.package_name || item.type,
+      //     subTitle:item.member_name,
+      //     start: startDateTime,
+      //     end: endDateTime,
+      //     trainer: item.trainer_name,
+      //     type:
+      //       typeMap[item.type?.toLowerCase()] || "group",
+      //   };
+      // });
+      const formattedEvents = apiData.map((item) => {
+        const startDateTime = moment(
+          `${item.start_date} ${item.start_time}`,
+          "YYYY-MM-DD HH:mm:ss"
+        ).toDate();
+
+        const endDateTime = moment(
+          `${item.start_date} ${item.end_time}`,
+          "YYYY-MM-DD HH:mm:ss"
+        ).toDate();
+
+        const rawType = item.type?.toLowerCase() || "";
+
+        let mappedType = "group";
+
+        if (rawType.includes("trial")) {
+          mappedType = "trial";
+        } else if (rawType.includes("pilates")) {
+          mappedType = "pilates";
+        } else if (rawType.includes("personal")) {
+          mappedType = "personal";
+        }
+
+        return {
+          id: item.id,
+          title: item.package_name || item.type,
+          subTitle: item.member_name,
+          start: startDateTime,
+          end: endDateTime,
+          trainer: item.trainer_name,
+          type: mappedType,
+        };
+      });
+
+      setEvents(formattedEvents);
+    } catch (error) {
+      console.error(
+        "Error fetching bookings:",
+        error?.response || error
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (clubId) {
+      fetchTrainerBookings();
+    }
+  }, [clubId]);
+
+  const eventStyleGetter = useCallback((event) => {
+    const colors = EVENT_COLORS[event.type] || EVENT_COLORS.group;
+    return {
+      style: {
+        backgroundColor: colors.bg,
+        borderLeft: `4px solid ${colors.border}`,
+        borderRadius: "0px",
+        color: "#000",
+        padding: "8px",
+      },
+    };
+  }, []);
 
   const CustomEvent = ({ event }) => {
     const formatTime = (date) => moment(date).format("h:mm A");
@@ -153,11 +156,16 @@ const CalendarView = () => {
     return (
       <div className="h-full">
         {view === "month" ? (
-          <div className="text-xs font-medium truncate">{event.title}</div>
+          <div className="text-xs font-medium truncate">
+            {event.title}
+          </div>
         ) : (
           <>
             <div className="font-medium text-[12px] leading-tight mb-1">
               {event.title}
+            </div>
+            <div className="font-medium text-[10px] leading-tight mb-1">
+              {event.subTitle}
             </div>
             <div className="text-[10px] text-gray-600">
               {formatTime(event.start)} – {formatTime(event.end)}
@@ -224,6 +232,13 @@ const CalendarView = () => {
         </div>
       </div>
 
+      {/* Loading */}
+      {loading && (
+        <div className="text-center text-sm text-gray-500 mb-2">
+          Loading bookings...
+        </div>
+      )}
+
       {/* Calendar */}
       <Calendar
         localizer={localizer}
@@ -248,10 +263,10 @@ const CalendarView = () => {
             </div>
           ),
         }}
-        showNow={false}              // ✅ removes green line
-        min={new Date(1970, 1, 1, 7, 0)}   // ✅ correct min
-        max={new Date(1970, 1, 1, 20, 0)}  // ✅ correct max
-        step={60}
+        showNow={false}
+        min={minutesToDate(openMinutes)}     // ✅ dynamic open time
+        max={minutesToDate(closeMinutes)}   // ✅ dynamic close time
+        step={timeIntervals}                // ✅ dynamic interval (30 / 60)
         timeslots={1}
         toolbar={false}
         views={["month", "week", "day"]}

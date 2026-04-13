@@ -519,7 +519,7 @@ useEffect(() => {
 }, [formik.values.schedule, formik.values.club_id]);
 
 useEffect(() => {
-  formik.setFieldValue("assigned_staff_id", null);
+  formik.setFieldValue("assigned_staff_id", "");
 }, [formik.values.club_id]);
 
   // Club dropdown options
@@ -1338,7 +1338,7 @@ useEffect(() => {
                                 //   )
                                 // }
                                 onChange={(selectedOption) => {
-                                  formik.setFieldValue("assigned_staff_id", selectedOption?.value || null);
+                                  formik.setFieldValue("assigned_staff_id", selectedOption?.value || "");
                                   formik.setFieldValue("schedule_date_time", ""); // reset date on trainer change
                                   fetchTrainerBookedSlots(selectedOption?.value); // ← NEW
                                 }}

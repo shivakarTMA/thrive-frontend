@@ -1,12 +1,15 @@
 import React, { useEffect, useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { addYears, subYears } from "date-fns";
+import { addYears, format, subYears } from "date-fns";
 import { FaCalendarDays } from "react-icons/fa6";
 import Select from "react-select";
-import { customStyles, filterActiveItems } from "../../../Helper/helper";
+import {
+  customStyles,
+  filterActiveItems,
+} from "../../../Helper/helper";
 import { authAxios } from "../../../config/config";
-import { toast } from "react-toastify";
+import { useSelector } from "react-redux";
 
 const dateFilterOptions = [
   { value: "today", label: "Today" },
@@ -15,98 +18,15 @@ const dateFilterOptions = [
   { value: "custom", label: "Custom Date" },
 ];
 
-const formatDate = (date) => {
-  if (!date) return null;
-  return date.toISOString().split("T")[0]; // YYYY-MM-DD
-};
-
-const customerData = [
-  {
-    id: 1,
-    campaignName: "Welcome Series – New Members",
-    emailsSent: 3200,
-    openRate: "48%",
-    ctr: "12%",
-    responseRate: "6.5%",
-    unsubscribeRate: "0.8%",
-    bounceRate: "1.2%",
-  },
-  {
-    id: 2,
-    campaignName: "Trial Follow-up Reminder",
-    emailsSent: 2150,
-    openRate: "52%",
-    ctr: "15%",
-    responseRate: "8.1%",
-    unsubscribeRate: "0.6%",
-    bounceRate: "0.9%",
-  },
-  {
-    id: 3,
-    campaignName: "Membership Expiry Reminder",
-    emailsSent: 1480,
-    openRate: "58%",
-    ctr: "18%",
-    responseRate: "12.4%",
-    unsubscribeRate: "0.9%",
-    bounceRate: "0.7%",
-  },
-  {
-    id: 4,
-    campaignName: "Win-Back Campaign – Inactive Users",
-    emailsSent: 1120,
-    openRate: "41%",
-    ctr: "10%",
-    responseRate: "5.2%",
-    unsubscribeRate: "1.6%",
-    bounceRate: "1.4%",
-  },
-  {
-    id: 5,
-    campaignName: "Group Classes Weekly Newsletter",
-    emailsSent: 2760,
-    openRate: "36%",
-    ctr: "8%",
-    responseRate: "3.9%",
-    unsubscribeRate: "1.1%",
-    bounceRate: "1.0%",
-  },
-  {
-    id: 6,
-    campaignName: "PT Package Upsell",
-    emailsSent: 980,
-    openRate: "44%",
-    ctr: "14%",
-    responseRate: "7.6%",
-    unsubscribeRate: "0.7%",
-    bounceRate: "0.8%",
-  },
-  {
-    id: 7,
-    campaignName: "Corporate Wellness Update",
-    emailsSent: 640,
-    openRate: "61%",
-    ctr: "22%",
-    responseRate: "15.3%",
-    unsubscribeRate: "0.4%",
-    bounceRate: "0.5%",
-  },
-  {
-    id: 8,
-    campaignName: "Festive Offer Announcement",
-    emailsSent: 3450,
-    openRate: "39%",
-    ctr: "9%",
-    responseRate: "4.1%",
-    unsubscribeRate: "1.9%",
-    bounceRate: "1.6%",
-  },
-];
+const formatDate = (date) => format(date, "yyyy-MM-dd");
 
 const EmailAutomationReport = () => {
-  const [leadSource, setLeadSource] = useState(customerData);
+  const [emailReport, setEmailReport] = useState([]);
   const [clubList, setClubList] = useState([]);
   const [clubFilter, setClubFilter] = useState(null);
+
+  const { user } = useSelector((state) => state.auth);
+  const userRole = user.role;
 
   const [dateFilter, setDateFilter] = useState(dateFilterOptions[0]);
   const [customFrom, setCustomFrom] = useState(null);
@@ -122,7 +42,8 @@ const EmailAutomationReport = () => {
       const activeOnly = filterActiveItems(data);
       setClubList(activeOnly);
 
-      if (activeOnly.length === 1) {
+      // ✅ Set default club (index 0) ONLY if not already set
+      if (!clubFilter && activeOnly.length > 0) {
         setClubFilter(activeOnly[0].id);
       }
     } catch (error) {
@@ -140,7 +61,7 @@ const EmailAutomationReport = () => {
     value: item.id,
   }));
 
-  const fetchEmailAutomationReport = async () => {
+  const fetchLeadSourcePerformance = async () => {
     try {
       const params = {};
 
@@ -160,13 +81,13 @@ const EmailAutomationReport = () => {
       }
 
       const res = await authAxios().get(
-        "/marketing/report/lead/source/performance",
-        { params }
+        "/report/email/delivery",
+        { params },
       );
       const responseData = res.data;
       const data = responseData?.data || [];
 
-      // setLeadSource(data);
+      setEmailReport(data);
     } catch (err) {
       console.error(err);
     }
@@ -175,14 +96,18 @@ const EmailAutomationReport = () => {
     // If custom date is selected, wait for both dates
     if (dateFilter?.value === "custom") {
       if (customFrom && customTo) {
-        fetchEmailAutomationReport();
+        fetchLeadSourcePerformance();
       }
       return;
     }
 
     // For all non-custom filters
-    fetchEmailAutomationReport();
+    fetchLeadSourcePerformance();
   }, [dateFilter, customFrom, customTo, clubFilter]);
+
+  const formatPercentage = (value) => {
+    return `${parseFloat(value)}%`;
+  };
 
   return (
     <div className="page--content">
@@ -247,7 +172,7 @@ const EmailAutomationReport = () => {
                   placeholderText="To Date"
                   className="custom--input w-full input--icon"
                   minDate={customFrom || subYears(new Date(), 20)}
-                  maxDate={addYears(new Date(), 0)}
+                  // maxDate={addYears(new Date(), 0)}
                   showMonthDropdown
                   showYearDropdown
                   dropdownMode="select"
@@ -266,6 +191,7 @@ const EmailAutomationReport = () => {
               onChange={(option) => setClubFilter(option?.value)}
               styles={customStyles}
               className="w-full"
+              isClearable={userRole === "ADMIN" ? true : false}
             />
           </div>
         </div>
@@ -277,37 +203,33 @@ const EmailAutomationReport = () => {
           <table className="w-full text-sm text-left text-gray-500">
             <thead className="text-xs text-gray-700 uppercase bg-gray-50">
               <tr>
-                <th className="px-2 py-4">S.No</th>
                 <th className="px-2 py-4">Campaign Name</th>
                 <th className="px-2 py-4">Emails Sent</th>
+                <th className="px-2 py-4">Delivery Rate</th>
                 <th className="px-2 py-4">Open Rate</th>
-                <th className="px-2 py-4">CTR</th>
-                <th className="px-2 py-4">Response Rate</th>
-                <th className="px-2 py-4">Unsubscribe Rate</th>
+                <th className="px-2 py-4">Click through Rate</th>
                 <th className="px-2 py-4">Bounce Rate</th>
               </tr>
             </thead>
 
             <tbody>
-              {customerData.length ? (
-                customerData.map((item, index) => (
+              {emailReport.length ? (
+                emailReport.map((item, index) => (
                   <tr
                     key={index}
                     className="bg-white border-b hover:bg-gray-50"
                   >
-                    <td className="px-2 py-3">{index + 1}</td>
-                    <td className="px-2 py-3">{item.campaignName}</td>
-                    <td className="px-2 py-3">{item.emailsSent}</td>
-                    <td className="px-2 py-3">{item.openRate}</td>
-                    <td className="px-2 py-3">{item.ctr}</td>
-                    <td className="px-2 py-3">{item.responseRate}</td>
-                    <td className="px-2 py-3">{item.unsubscribeRate}</td>
-                    <td className="px-2 py-3">{item.bounceRate}</td>
+                    <td className="px-2 py-3">{item?.campaign_name}</td>
+                    <td className="px-2 py-3">{item?.email_sent}</td>
+                    <td className="px-2 py-3">{formatPercentage(item?.delivery_rate)}</td>
+                    <td className="px-2 py-3">{formatPercentage(item?.open_rate)}</td>
+                    <td className="px-2 py-3">{formatPercentage(item?.click_through_rate)}</td>
+                    <td className="px-2 py-3">{formatPercentage(item?.bounce_rate)}</td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan={8} className="text-center py-4">
+                  <td colSpan={6} className="text-center py-4">
                     No data found
                   </td>
                 </tr>
