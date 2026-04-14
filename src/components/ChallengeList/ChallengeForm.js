@@ -39,9 +39,9 @@ const frequencyType = [
 const statusType = [
   { label: "Active", value: "ACTIVE" },
   { label: "Inactive", value: "INACTIVE" },
-  { label: "Ongoing", value: "ONGOING" },
-  { label: "Completed", value: "COMPLETED" },
-  { label: "Upcoming", value: "UPCOMING" },
+  // { label: "Ongoing", value: "ONGOING" },
+  // { label: "Completed", value: "COMPLETED" },
+  // { label: "Upcoming", value: "UPCOMING" },
 ];
 const joinBetween = [
   { value: true, label: "Yes" },

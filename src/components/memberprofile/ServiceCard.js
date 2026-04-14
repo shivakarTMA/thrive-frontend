@@ -413,7 +413,7 @@ const ServiceCard = ({ details }) => {
                   </h3>
                   <p className="text-md text-gray-500">Relationship since</p>
                 </div>
-                <div className="flex space-x-2">
+                {/* <div className="flex space-x-2">
                   {(userRole === "CLUB_MANAGER" ||
                     userRole === "ADMIN") && (
                     <button
@@ -426,7 +426,7 @@ const ServiceCard = ({ details }) => {
                       Cancel Membership
                     </button>
                   )}
-                  {/* <button
+                  <button
                     onClick={() => {
                       setMembershipActionType("pause");
                       setSuspendPauseModal(true);
@@ -434,9 +434,9 @@ const ServiceCard = ({ details }) => {
                     className="px-3 py-2 bg-white text-black rounded flex items-center gap-2 border border-black text-sm"
                   >
                     Pause Membership
-                  </button> */}
+                  </button>
 
-                  {/* <button
+                  <button
                     className="px-4 py-2 bg-black text-white rounded flex items-center gap-2 border border-black text-sm"
                     onClick={() => {
                       setUpgradePlan(membershipData.membershipId);
@@ -444,8 +444,8 @@ const ServiceCard = ({ details }) => {
                     }}
                   >
                     UPGRADE PLAN
-                  </button> */}
-                </div>
+                  </button>
+                </div> */}
               </div>
             </div>
           </div>

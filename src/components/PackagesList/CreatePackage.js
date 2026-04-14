@@ -43,6 +43,7 @@ const CreatePackage = ({
   const [studio, setStudio] = useState([]);
   const [club, setClub] = useState([]);
   const [service, setService] = useState([]);
+  const [clubDuration, setClubDuration] = useState("");
 
   const getServiceType = (service_id, serviceOptions) => {
     const found = serviceOptions.find((s) => s.value === service_id);
@@ -66,6 +67,18 @@ const CreatePackage = ({
       console.log(err);
     }
   };
+
+  const fetchClubId = async (clubId) => {
+    try {
+      const res = await authAxios().get(`/club/${clubId}`);
+      const trialDuration = res?.data?.data?.trial_duration
+      setClubDuration(trialDuration);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  // console.log(clubDuration,'clubDuration')
 
   const fetchService = async (clubId = null) => {
     try {
@@ -101,8 +114,10 @@ const CreatePackage = ({
     if (formik.values.club_id) {
       fetchService(formik.values.club_id);
       fetchStudio(formik.values.club_id);
+      fetchClubId(formik.values.club_id);
 
       // reset dependent fields
+      formik.setFieldValue("session_duration", clubDuration || "");
       formik.setFieldValue("service_id", "");
       formik.setFieldValue("studio_id", "");
       formik.setFieldValue("trainer_id", "");
@@ -155,7 +170,7 @@ const CreatePackage = ({
                 caption: "",
                 description: "",
                 no_of_sessions: "",
-                session_duration: "",
+                session_duration: clubDuration,
                 session_validity: "",
                 amount: "",
                 discount: "",
@@ -196,8 +211,9 @@ const CreatePackage = ({
                 : data?.session_level || "",
             no_of_sessions:
               data?.no_of_sessions !== undefined ? data.no_of_sessions : "",
-            session_duration:
-              data?.session_duration !== undefined ? data.session_duration : "",
+            // session_duration:
+            //   data?.session_duration !== undefined ? data.session_duration : "",
+            session_duration:clubDuration,
             session_validity:
               data?.session_validity !== undefined ? data.session_validity : "",
             start_date: data?.start_date || "",
@@ -296,7 +312,7 @@ const CreatePackage = ({
         caption: "",
         description: "",
         no_of_sessions: "",
-        session_duration: "",
+        session_duration: clubDuration,
         session_validity: "",
         amount: "",
         discount: "",
@@ -317,7 +333,7 @@ const CreatePackage = ({
           caption: "",
           description: "",
           no_of_sessions: "",
-          session_duration: "",
+          session_duration: clubDuration,
           session_validity: "",
           amount: "",
           discount: "",
@@ -383,6 +399,21 @@ const CreatePackage = ({
       formik.setFieldValue("end_time", "");
     }
   }, [formik.values.start_time]);
+
+  useEffect(() => {
+    if (clubDuration) {
+      formik.setFieldValue("session_duration", clubDuration);
+
+      // also update variations
+      if (formik.values.variation?.length) {
+        const updated = formik.values.variation.map((item) => ({
+          ...item,
+          session_duration: clubDuration,
+        }));
+        formik.setFieldValue("variation", updated);
+      }
+    }
+  }, [clubDuration]);
 
   return (
     <>
@@ -729,7 +760,7 @@ const CreatePackage = ({
                             <span className="text-red-500">*</span>
                           </label>
                           <div className="relative">
-                            <input
+                            {/* <input
                               type="number"
                               name="session_duration"
                               value={
@@ -750,6 +781,13 @@ const CreatePackage = ({
                               }}
                               onBlur={formik.handleBlur}
                               className="custom--input w-full number--appearance-none"
+                            /> */}
+                            <input
+                              type="number"
+                              name="session_duration"
+                              value={formik.values.session_duration || ""}
+                              disabled={true}
+                              className="custom--input w-full number--appearance-none cursor-not-allowed pointer-events-none !bg-gray-100 !text-gray-500"
                             />
                           </div>
                           {formik.touched.session_duration &&
@@ -1304,7 +1342,7 @@ const CreatePackage = ({
                                 Session Duration (Mins){" "}
                                 <span className="text-red-500">*</span>
                               </label>
-                              <input
+                              {/* <input
                                 type="number"
                                 name={`variation[${index}].session_duration`}
                                 value={
@@ -1324,6 +1362,13 @@ const CreatePackage = ({
                                 }}
                                 onBlur={formik.handleBlur}
                                 className="custom--input w-full number--appearance-none"
+                              /> */}
+                              <input
+                                type="number"
+                                name={`variation[${index}].session_duration`}
+                                value={formik.values.variation[index]?.session_duration ?? ""}
+                                disabled={true}
+                                className="custom--input w-full number--appearance-none cursor-not-allowed pointer-events-none !bg-gray-100 !text-gray-500"
                               />
                               {formik.touched.variation?.[index]
                                 ?.session_duration &&
