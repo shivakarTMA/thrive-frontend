@@ -431,8 +431,8 @@ const ConvertMemberForm = ({
               paymentMode: paymentModeRef.current,
             };
 
-            console.log("paymentPayload", paymentPayload);
-            console.log("FINAL MODE:", paymentModeRef.current);
+            // console.log("paymentPayload", paymentPayload);
+            // console.log("FINAL MODE:", paymentModeRef.current);
 
             const res = await authAxios().post(
               "/payment/proceed",
@@ -447,7 +447,7 @@ const ConvertMemberForm = ({
                 setOrderNo(order_no);
                 setPaymentModalOpen(true);
                 setLoading(false);
-                toast.success("Member created and payment initiated!");
+                toast.success("Payment send successfully!");
               }
 
               // ✅ OFFLINE FLOW

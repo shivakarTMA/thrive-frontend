@@ -20,6 +20,7 @@ import SummaryDashboard from "../components/common/SummaryDashboard";
 import { LiaAngleLeftSolid, LiaAngleRightSolid } from "react-icons/lia";
 import { authAxios } from "../config/config";
 import CalendarView from "../components/TrainerDashboardChild/CalendarView";
+import { useSelector } from "react-redux";
 
 const routeMap = {
   FollowUps: "/my-follow-ups",
@@ -59,6 +60,76 @@ const TrainerDashboard = () => {
 
   // Class Performance
   const [classPerformance, setClassPerformance] = useState([]);
+
+  const { user } = useSelector((state) => state.auth);
+  const [profileData, setUserClubs] = useState("");
+  const [hasProductServices, setHasProductServices] = useState(false);
+  // const [hasRecoveryServices, setHasRecoveryServices] = useState(false);
+  
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const fetchStaffById = async (id) => {
+      try {
+        const res = await authAxios().get(`/staff/${id}`);
+        const data = res.data?.data || res.data || null;
+
+        if (data) {
+          setUserClubs(data?.staff_clubs);
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    fetchStaffById(user?.id);
+  }, [user?.id]);
+
+  // Function to fetch services
+  const fetchServices = async () => {
+    try {
+      if (!profileData?.length) return;
+
+      const productRequests = profileData.map((club) =>
+        authAxios().get("/service/list", {
+          params: { type: "PRODUCT", club_id: club.club_id },
+        }),
+      );
+
+      const recoveryRequests = profileData.map((club) =>
+        authAxios().get("/service/list", {
+          params: { type: "RECOVERY", club_id: club.club_id },
+        }),
+      );
+
+      const [productResponses, recoveryResponses] = await Promise.all([
+        Promise.all(productRequests),
+        Promise.all(recoveryRequests),
+      ]);
+
+      // ✅ Check PRODUCT
+      const hasProduct = productResponses.some((res) => {
+        const data = res.data?.data || res.data || [];
+        return data.length > 0;
+      });
+
+      // ✅ Check RECOVERY
+      const hasRecovery = recoveryResponses.some((res) => {
+        const data = res.data?.data || res.data || [];
+        return data.length > 0;
+      });
+
+      setHasProductServices(hasProduct);
+      // setHasRecoveryServices(hasRecovery);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  // Load initial data
+  useEffect(() => {
+    fetchServices();
+  }, [profileData]);
 
   const fetchClassPerformanceData = async () => {
     try {
@@ -496,16 +567,27 @@ const TrainerDashboard = () => {
                       `/reports/all-orders?package_type=PACKAGE`,
                     ),
                   },
-                  {
-                    label: "Nourish",
-                    value: `₹${formatIndianNumber(
-                      dashboardData?.summary_cards?.total_sales?.breakup
-                        ?.products,
-                    )}`,
-                    link: generateUrl(
-                      `/reports/all-orders?package_type=PRODUCT`,
-                    ),
-                  },
+                  // {
+                  //   label: "Nourish",
+                    // value: `₹${formatIndianNumber(
+                    //   dashboardData?.summary_cards?.total_sales?.breakup
+                    //     ?.products,
+                    // )}`,
+                    // link: generateUrl(
+                    //   `/reports/all-orders?package_type=PRODUCT`,
+                    // ),
+                  // },
+                  ...(hasProductServices
+                  ? [
+                      {
+                        label: "Nourish",
+                        value: `₹${formatIndianNumber(dashboardData?.summary_cards?.total_sales?.breakup?.products)}`,
+                        link: generateUrl(
+                          `/reports/all-orders?package_type=PRODUCT`,
+                        ),
+                      },
+                    ]
+                  : []),
                 ]}
               />
 

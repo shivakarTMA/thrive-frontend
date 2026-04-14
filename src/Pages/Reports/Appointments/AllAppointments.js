@@ -662,7 +662,7 @@ const AllAppointments = () => {
         <div className="grid grid-cols-5 gap-5 mb-5 p-3 border bg-white shodow--box rounded-[10px]">
           <div className="border rounded-[5px] overflow-hidden w-full">
             <div className="flex justify-center bg-[#F1F1F1] p-4 py-3">
-              <div className="text-lg font-bold">Scheduled</div>
+              <div className="text-lg font-bold">All</div>
             </div>
             <p className="text-3xl font-bold text-center py-5">{scheduled}</p>
           </div>

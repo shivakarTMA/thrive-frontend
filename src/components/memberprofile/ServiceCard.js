@@ -779,8 +779,9 @@ const ServiceCard = ({ details }) => {
                                   <button
                                     className="px-3 py-2 bg-black text-white rounded flex items-center gap-2 border border-black text-sm"
                                     onClick={() => {
-                                      setRenewMembership(membership);
-                                      setModalKey((prev) => prev + 1); // ✅ always unique key
+                                      // setRenewMembership(membership);
+                                      // setModalKey((prev) => prev + 1); // ✅ always unique key
+                                      // setSendPaymentModal(true);
                                       setSendPaymentModal(true);
                                     }}
                                   >
@@ -899,13 +900,15 @@ const ServiceCard = ({ details }) => {
         <MemberSendPaymentLink
           setSendPaymentModal={(val) => {
             setSendPaymentModal(val);
-            if (!val) setRenewMembership(null);
+            // if (!val) setRenewMembership(null);
           }}
           selectedLeadMember={details?.id}
           startDateNext={membershipData?.end_date}
           clubId={clubId}
           renewPlanMembership={renewPlanMembership}
           key={modalKey} // ✅ always forces full remount
+          fetchPurchasedMemberships={fetchPurchasedMemberships}
+          memberProfile={true}
         />
       )}
 

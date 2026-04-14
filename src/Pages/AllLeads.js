@@ -42,6 +42,7 @@ import useAutoLogout from "../hooks/useAutoLogout";
 import { logoutUser } from "../Redux/thunks/authThunk";
 import { hasRouteAccess } from "../Routing/RolePermissions";
 import IsLoadingHOC from "../components/common/IsLoadingHOC";
+import { IoCloseCircle } from "react-icons/io5";
 
 const dateFilterOptions = [
   { value: "today", label: "Today" },
@@ -1229,6 +1230,34 @@ const AllLeads = (props) => {
           handleLeadUpdate={fetchLeadList}
           clubId={selectedLeadClub}
         />
+      )}
+      {showPopup && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+          <div className="bg-white p-5 py-6 rounded shadow-lg text-center max-w-[300px] w-full relative">
+            <button
+              onClick={handleLogout}
+              className="absolute top-[-5px] right-[-5px] bg-white rounded-full"
+            >
+              <IoCloseCircle className="text-2xl" />
+            </button>
+
+            <p className="mb-2 text-lg font-semibold">Session Ended</p>
+
+            <p className="mb-4 text-[12px] font-[500]">
+              You have been logged out since you have logged in from another
+              computer.
+            </p>
+
+            <div className="flex justify-center gap-4">
+              <button
+                onClick={handleLogout}
+                className="bg-black text-white px-4 py-2 rounded max-w-[100px] w-full"
+              >
+                Ok
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </>
   );

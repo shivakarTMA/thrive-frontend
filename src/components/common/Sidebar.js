@@ -28,13 +28,18 @@ import {
   MdOutlineLocalActivity,
 } from "react-icons/md";
 import { BsCake2 } from "react-icons/bs";
+import { authAxios } from "../../config/config";
 
 const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
   const location = useLocation();
   const { accessToken } = useSelector((state) => state.auth);
   const userType = useSelector((state) => state.auth?.user?.role);
+  const { user } = useSelector((state) => state.auth);
 
   const [dropdownToggles, setDropdownToggles] = useState({});
+  const [profileData, setUserClubs] = useState("");
+  const [hasProductServices, setHasProductServices] = useState(false);
+  const [hasRecoveryServices, setHasRecoveryServices] = useState(false);
 
   const [reportsOpen, setReportsOpen] = useState(false);
   const [salesReportsOpen, setSalesReportsOpen] = useState(false);
@@ -70,6 +75,71 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
       setDropdownToggles({});
     }
   }, [toggleMenuBar]);
+
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const fetchStaffById = async (id) => {
+      try {
+        const res = await authAxios().get(`/staff/${id}`);
+        const data = res.data?.data || res.data || null;
+
+        if (data) {
+          setUserClubs(data?.staff_clubs);
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    fetchStaffById(user?.id);
+  }, [user?.id]);
+
+  // Function to fetch services
+  const fetchServices = async () => {
+    try {
+      if (!profileData?.length) return;
+
+      const productRequests = profileData.map((club) =>
+        authAxios().get("/service/list", {
+          params: { type: "PRODUCT", club_id: club.club_id },
+        }),
+      );
+
+      const recoveryRequests = profileData.map((club) =>
+        authAxios().get("/service/list", {
+          params: { type: "RECOVERY", club_id: club.club_id },
+        }),
+      );
+
+      const [productResponses, recoveryResponses] = await Promise.all([
+        Promise.all(productRequests),
+        Promise.all(recoveryRequests),
+      ]);
+
+      // ✅ Check PRODUCT
+      const hasProduct = productResponses.some((res) => {
+        const data = res.data?.data || res.data || [];
+        return data.length > 0;
+      });
+
+      // ✅ Check RECOVERY
+      const hasRecovery = recoveryResponses.some((res) => {
+        const data = res.data?.data || res.data || [];
+        return data.length > 0;
+      });
+
+      setHasProductServices(hasProduct);
+      setHasRecoveryServices(hasRecovery);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  // Load initial data
+  useEffect(() => {
+    fetchServices();
+  }, [profileData]);
 
   return (
     <div className={`sidebar ${toggleMenuBar ? "activetoggle" : ""}`}>
@@ -206,15 +276,17 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
               <FaReact className="menu--icon" />
               <span className="nav-text">Group Class</span>
             </Link>
-            <Link
-              to="/nourish-orders"
-              className={`nav-link mb-2 ${
-                location.pathname === "/nourish-orders" ? "active" : ""
-              }`}
-            >
-              <IoFastFoodOutline className="menu--icon" />
-              <span className="nav-text">Nourish Orders</span>
-            </Link>
+            {hasProductServices && (
+              <Link
+                to="/nourish-orders"
+                className={`nav-link mb-2 ${
+                  location.pathname === "/nourish-orders" ? "active" : ""
+                }`}
+              >
+                <IoFastFoodOutline className="menu--icon" />
+                <span className="nav-text">Nourish Orders</span>
+              </Link>
+            )}
 
             <div
               className="nav-link d-flex justify-between align-items-center mb-2"
@@ -720,20 +792,24 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                   <FaCircle className="menu--icon !text-[10px]" />
                   <span className="nav-text">Club Services</span>
                 </Link>
-                <Link
-                  to="/recovery-services"
-                  className="text-white flex items-center gap-[5px] mb-2 text-sm"
-                >
-                  <FaCircle className="menu--icon !text-[10px]" />
-                  <span className="nav-text">Recovery Services</span>
-                </Link>
-                <Link
-                  to="/product-category"
-                  className="text-white flex items-center gap-[5px] mb-2 text-sm"
-                >
-                  <FaCircle className="menu--icon !text-[10px]" />
-                  <span className="nav-text">Nourish Category</span>
-                </Link>
+                {hasRecoveryServices && (
+                  <Link
+                    to="/recovery-services"
+                    className="text-white flex items-center gap-[5px] mb-2 text-sm"
+                  >
+                    <FaCircle className="menu--icon !text-[10px]" />
+                    <span className="nav-text">Recovery Services</span>
+                  </Link>
+                )}
+                {hasProductServices && (
+                  <Link
+                    to="/product-category"
+                    className="text-white flex items-center gap-[5px] mb-2 text-sm"
+                  >
+                    <FaCircle className="menu--icon !text-[10px]" />
+                    <span className="nav-text">Nourish Category</span>
+                  </Link>
+                )}
                 <Link
                   to="/subscription-plan"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
@@ -741,13 +817,15 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                   <FaCircle className="menu--icon !text-[10px]" />
                   <span className="nav-text">Membership Plans</span>
                 </Link>
-                <Link
-                  to="/products"
-                  className="text-white flex items-center gap-[5px] mb-2 text-sm"
-                >
-                  <FaCircle className="menu--icon !text-[10px]" />
-                  <span className="nav-text">Nourish Products</span>
-                </Link>
+                {hasProductServices && (
+                  <Link
+                    to="/products"
+                    className="text-white flex items-center gap-[5px] mb-2 text-sm"
+                  >
+                    <FaCircle className="menu--icon !text-[10px]" />
+                    <span className="nav-text">Nourish Products</span>
+                  </Link>
+                )}
                 <Link
                   to="/packages"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
@@ -885,15 +963,17 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
               <FaReact className="menu--icon" />
               <span className="nav-text">Group Class</span>
             </Link>
-            <Link
-              to="/nourish-orders"
-              className={`nav-link mb-2 ${
-                location.pathname === "/nourish-orders" ? "active" : ""
-              }`}
-            >
-              <IoFastFoodOutline className="menu--icon" />
-              <span className="nav-text">Nourish Orders</span>
-            </Link>
+            {hasProductServices && (
+              <Link
+                to="/nourish-orders"
+                className={`nav-link mb-2 ${
+                  location.pathname === "/nourish-orders" ? "active" : ""
+                }`}
+              >
+                <IoFastFoodOutline className="menu--icon" />
+                <span className="nav-text">Nourish Orders</span>
+              </Link>
+            )}
             <div
               className="nav-link d-flex justify-between align-items-center mb-2"
               onClick={() => toggleMenu("clubmanagermarketing")}
@@ -1263,20 +1343,24 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                   <FaCircle className="menu--icon !text-[10px]" />
                   <span className="nav-text">Club Services</span>
                 </Link>
-                <Link
-                  to="/recovery-services"
-                  className="text-white flex items-center gap-[5px] mb-2 text-sm"
-                >
-                  <FaCircle className="menu--icon !text-[10px]" />
-                  <span className="nav-text">Recovery Services</span>
-                </Link>
-                <Link
-                  to="/product-category"
-                  className="text-white flex items-center gap-[5px] mb-2 text-sm"
-                >
-                  <FaCircle className="menu--icon !text-[10px]" />
-                  <span className="nav-text">Nourish Category</span>
-                </Link>
+                {hasRecoveryServices && (
+                  <Link
+                    to="/recovery-services"
+                    className="text-white flex items-center gap-[5px] mb-2 text-sm"
+                  >
+                    <FaCircle className="menu--icon !text-[10px]" />
+                    <span className="nav-text">Recovery Services</span>
+                  </Link>
+                )}
+                {hasProductServices && (
+                  <Link
+                    to="/product-category"
+                    className="text-white flex items-center gap-[5px] mb-2 text-sm"
+                  >
+                    <FaCircle className="menu--icon !text-[10px]" />
+                    <span className="nav-text">Nourish Category</span>
+                  </Link>
+                )}
                 <Link
                   to="/subscription-plan"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
@@ -1284,13 +1368,15 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                   <FaCircle className="menu--icon !text-[10px]" />
                   <span className="nav-text">Membership Plans</span>
                 </Link>
-                <Link
-                  to="/products"
-                  className="text-white flex items-center gap-[5px] mb-2 text-sm"
-                >
-                  <FaCircle className="menu--icon !text-[10px]" />
-                  <span className="nav-text">Nourish Products</span>
-                </Link>
+                {hasProductServices && (
+                  <Link
+                    to="/products"
+                    className="text-white flex items-center gap-[5px] mb-2 text-sm"
+                  >
+                    <FaCircle className="menu--icon !text-[10px]" />
+                    <span className="nav-text">Nourish Products</span>
+                  </Link>
+                )}
                 <Link
                   to="/packages"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
@@ -1405,15 +1491,17 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
               <FaReact className="menu--icon" />
               <span className="nav-text">Group Class</span>
             </Link>
-            <Link
-              to="/nourish-orders"
-              className={`nav-link mb-2 ${
-                location.pathname === "/nourish-orders" ? "active" : ""
-              }`}
-            >
-              <IoFastFoodOutline className="menu--icon" />
-              <span className="nav-text">Nourish Orders</span>
-            </Link>
+            {hasProductServices && (
+              <Link
+                to="/nourish-orders"
+                className={`nav-link mb-2 ${
+                  location.pathname === "/nourish-orders" ? "active" : ""
+                }`}
+              >
+                <IoFastFoodOutline className="menu--icon" />
+                <span className="nav-text">Nourish Orders</span>
+              </Link>
+            )}
 
             <Link
               to="/challenge-list"
@@ -1954,15 +2042,17 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
               <FaReact className="menu--icon" />
               <span className="nav-text">Group Class</span>
             </Link>
-            <Link
-              to="/nourish-orders"
-              className={`nav-link mb-2 ${
-                location.pathname === "/nourish-orders" ? "active" : ""
-              }`}
-            >
-              <IoFastFoodOutline className="menu--icon" />
-              <span className="nav-text">Nourish Orders</span>
-            </Link>
+            {hasProductServices && (
+              <Link
+                to="/nourish-orders"
+                className={`nav-link mb-2 ${
+                  location.pathname === "/nourish-orders" ? "active" : ""
+                }`}
+              >
+                <IoFastFoodOutline className="menu--icon" />
+                <span className="nav-text">Nourish Orders</span>
+              </Link>
+            )}
 
             <Link
               to="/coupons"
@@ -2258,13 +2348,15 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                   <FaCircle className="menu--icon !text-[10px]" />
                   <span className="nav-text">Membership Plans</span>
                 </Link>
-                <Link
-                  to="/products"
-                  className="text-white flex items-center gap-[5px] mb-2 text-sm"
-                >
-                  <FaCircle className="menu--icon !text-[10px]" />
-                  <span className="nav-text">Nourish Products</span>
-                </Link>
+                {hasProductServices && (
+                  <Link
+                    to="/products"
+                    className="text-white flex items-center gap-[5px] mb-2 text-sm"
+                  >
+                    <FaCircle className="menu--icon !text-[10px]" />
+                    <span className="nav-text">Nourish Products</span>
+                  </Link>
+                )}
                 <Link
                   to="/packages"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
@@ -2346,15 +2438,17 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
               <FaReact className="menu--icon" />
               <span className="nav-text">Group Class</span>
             </Link>
-            <Link
-              to="/nourish-orders"
-              className={`nav-link mb-2 ${
-                location.pathname === "/nourish-orders" ? "active" : ""
-              }`}
-            >
-              <IoFastFoodOutline className="menu--icon" />
-              <span className="nav-text">Nourish Orders</span>
-            </Link>
+            {hasProductServices && (
+              <Link
+                to="/nourish-orders"
+                className={`nav-link mb-2 ${
+                  location.pathname === "/nourish-orders" ? "active" : ""
+                }`}
+              >
+                <IoFastFoodOutline className="menu--icon" />
+                <span className="nav-text">Nourish Orders</span>
+              </Link>
+            )}
 
             <div
               className="nav-link d-flex justify-between align-items-center mb-2"
@@ -2699,13 +2793,15 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                   <FaCircle className="menu--icon !text-[10px]" />
                   <span className="nav-text">Membership Plans</span>
                 </Link>
-                <Link
-                  to="/products"
-                  className="text-white flex items-center gap-[5px] mb-2 text-sm"
-                >
-                  <FaCircle className="menu--icon !text-[10px]" />
-                  <span className="nav-text">Nourish Products</span>
-                </Link>
+                {hasProductServices && (
+                  <Link
+                    to="/products"
+                    className="text-white flex items-center gap-[5px] mb-2 text-sm"
+                  >
+                    <FaCircle className="menu--icon !text-[10px]" />
+                    <span className="nav-text">Nourish Products</span>
+                  </Link>
+                )}
                 <Link
                   to="/packages"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"

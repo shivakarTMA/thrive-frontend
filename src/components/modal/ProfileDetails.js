@@ -40,6 +40,8 @@ const ProfileDetails = ({ staffID, setProfileModal }) => {
     setProfileModal(false);
   };
 
+  // console.log(profileData?.staff_clubs,'profileData?.staff_clubs')
+
   return (
     <div
       className="bg--blur create--lead--container fixed top-0 left-0 z-[999] w-full bg-black bg-opacity-60 h-full"

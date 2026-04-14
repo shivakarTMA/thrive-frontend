@@ -28,7 +28,6 @@ const CreateService = ({
     { label: "Group Classes", value: "GROUP_CLASS" },
     { label: "Personal Trainer", value: "PERSONAL_TRAINER" },
     { label: "Recovery", value: "RECOVERY" },
-    { label: "Recreation", value: "RECREATION" },
     { label: "Product", value: "PRODUCT" },
   ];
 

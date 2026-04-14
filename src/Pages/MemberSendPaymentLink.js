@@ -3,7 +3,12 @@ import { IoCloseCircle } from "react-icons/io5";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import ProductModal from "../components/modal/ProductDetails";
-import { customStyles, formatIndianNumber, formatText, selectIcon } from "../Helper/helper";
+import {
+  customStyles,
+  formatIndianNumber,
+  formatText,
+  selectIcon,
+} from "../Helper/helper";
 import Select from "react-select";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -31,6 +36,8 @@ const MemberSendPaymentLink = ({
   clubId,
   renewPlanMembership,
   startDateNext,
+  fetchPurchasedMemberships,
+  memberProfile,
 }) => {
   const [showProductModal, setShowProductModal] = useState(false);
   const [minStartDate, setMinStartDate] = useState(new Date());
@@ -39,6 +46,8 @@ const MemberSendPaymentLink = ({
   const [voucherStatus, setVoucherStatus] = useState(null); // "success", "error", or null
   const [selectedVoucher, setSelectedVoucher] = useState(null);
   const [voucherMessage, setVoucherMessage] = useState("");
+
+  const paymentModeRef = useRef("ONLINE");
 
   const [hasPlans, setHasPlans] = useState(false);
   const [checkingPlans, setCheckingPlans] = useState(false);
@@ -98,20 +107,29 @@ const MemberSendPaymentLink = ({
           coupon_code: values.coupon || "",
           applicable_ids: [values.productDetails.id],
           member_id: selectedLeadMember,
+          paymentMode: paymentModeRef.current,
         };
 
-        console.log("paymentPayload", paymentPayload);
+        // console.log("paymentPayload", paymentPayload);
 
         const res = await authAxios().post("/payment/proceed", paymentPayload);
 
         if (res.data?.status) {
-          const { paymentUrl, order_no } = res.data.response;
+          // ✅ ONLINE FLOW
+          if (paymentModeRef.current === "ONLINE") {
+            const { paymentUrl, order_no } = res.data.response || {};
+            setPaymentUrl(paymentUrl);
+            setOrderNo(order_no);
+            setPaymentModalOpen(true);
+            toast.success("Payment send successfully!");
+          }
 
-          setPaymentUrl(paymentUrl);
-          setOrderNo(order_no);
-          setPaymentModalOpen(true); // ✅ OPEN MODAL
-
-          toast.success("Payment send successfully!");
+          // ✅ OFFLINE FLOW
+          if (paymentModeRef.current === "OFFLINE") {
+            toast.success("Member created with offline payment!");
+            handleCloseModal();
+            fetchPurchasedMemberships();
+          }
         }
       }
     },
@@ -182,7 +200,7 @@ const MemberSendPaymentLink = ({
   // console.log(startDateNext, "startDateNext");
 
   useEffect(() => {
-  if (!formik.values.productDetails?.id) return;
+    if (!formik.values.productDetails?.id) return;
     resetVoucher();
   }, [formik.values.productDetails?.id]);
 
@@ -265,7 +283,7 @@ const MemberSendPaymentLink = ({
 
   const handleOverlayClick = (e) => {
     if (leadBoxRef.current && !leadBoxRef.current.contains(e.target)) {
-      handleCloseModal()
+      handleCloseModal();
     }
   };
 
@@ -306,9 +324,13 @@ const MemberSendPaymentLink = ({
     checkPlansAvailability(
       formik.values.plan_type,
       formik.values.club_id,
-      formik.values.productType
+      formik.values.productType,
     );
-  }, [formik.values.plan_type, formik.values.club_id, formik.values.productType]);
+  }, [
+    formik.values.plan_type,
+    formik.values.club_id,
+    formik.values.productType,
+  ]);
 
   const handleProductSubmit = (product) => {
     // Convert to numbers safely
@@ -619,11 +641,17 @@ const MemberSendPaymentLink = ({
                         Total:{" "}
                         <span className="font-bold flex items-center gap-2">
                           <del className="text-gray-500 text-sm">
-                            ₹{formatIndianNumber(formik.values.productDetails?.amount) ?? 0}
+                            ₹
+                            {formatIndianNumber(
+                              formik.values.productDetails?.amount,
+                            ) ?? 0}
                           </del>{" "}
                           <span>
                             {" "}
-                            ₹{formatIndianNumber(formik.values.productDetails?.total_amount) ?? 0}
+                            ₹
+                            {formatIndianNumber(
+                              formik.values.productDetails?.total_amount,
+                            ) ?? 0}
                           </span>
                         </span>
                       </p>
@@ -632,7 +660,9 @@ const MemberSendPaymentLink = ({
                       <p className="flex items-center gap-2 justify-between mb-2 border-b pb-2">
                         Discount Code Applied:{" "}
                         <span className="font-bold">
-                          ₹{formatIndianNumber(formik.values.discountAmount) ?? 0}
+                          ₹
+                          {formatIndianNumber(formik.values.discountAmount) ??
+                            0}
                         </span>
                       </p>
                     </div>
@@ -640,7 +670,10 @@ const MemberSendPaymentLink = ({
                       <p className="flex items-center gap-2 justify-between mb-2 border-b pb-2">
                         GST:{" "}
                         <span className="font-bold">
-                          ₹{formatIndianNumber(formik.values.productDetails?.gst_amount) ?? 0}
+                          ₹
+                          {formatIndianNumber(
+                            formik.values.productDetails?.gst_amount,
+                          ) ?? 0}
                         </span>
                       </p>
                     </div>
@@ -671,12 +704,42 @@ const MemberSendPaymentLink = ({
               >
                 Cancel
               </button>
-              <button
-                type="submit"
-                className="px-4 py-2 bg-white text-black font-semibold rounded max-w-[150px] w-full"
-              >
-                Send Payment
-              </button>
+              {memberProfile === true ? (
+                <div className="flex gap-2 items-center justify-end flex-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      paymentModeRef.current = "ONLINE";
+                      formik.handleSubmit();
+                    }}
+                    className="px-4 py-2 bg-black text-white font-semibold rounded max-w-[150px] w-full"
+                  >
+                    Pay Online
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      paymentModeRef.current = "OFFLINE";
+                      formik.handleSubmit();
+                    }}
+                    className="px-4 py-2 border bg-white text-black font-semibold rounded max-w-[150px] w-full"
+                  >
+                    Pay Offline
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="submit"
+                  onClick={() => {
+                    paymentModeRef.current = "ONLINE";
+                    formik.handleSubmit();
+                  }}
+                  className="px-4 py-2 bg-white text-black font-semibold rounded max-w-[150px] w-full"
+                >
+                  Send Payment
+                </button>
+              )}
             </div>
           </form>
         </div>
