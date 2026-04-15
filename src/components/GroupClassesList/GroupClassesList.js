@@ -767,27 +767,31 @@ const GroupClassesList = () => {
                                 <IoEyeOutline className="text-[25px] text-black" />
                               </Link>
                             </Tooltip>
-                            {(userRole === "CLUB_MANAGER" ||
-                              userRole === "MARKETING_MANAGER" ||
-                              userRole === "FITNESS_MANAGER" ||
-                              userRole === "TRAINER" ||
-                              userRole === "ADMIN") && (
-                              <Tooltip
-                                id={`tooltip-edit-${row.id}`}
-                                content="Edit Class"
-                                place="left"
-                              >
-                                <div
-                                  className="p-1 cursor-pointer block"
-                                  onClick={() => {
-                                    setEditingOption(row.id);
-                                    setShowModal(true);
-                                  }}
+                            {row?.status !== "EXPIRED" && (
+                              <>
+                              {(userRole === "CLUB_MANAGER" ||
+                                userRole === "MARKETING_MANAGER" ||
+                                userRole === "FITNESS_MANAGER" ||
+                                userRole === "TRAINER" ||
+                                userRole === "ADMIN") && (
+                                <Tooltip
+                                  id={`tooltip-edit-${row.id}`}
+                                  content="Edit Class"
+                                  place="left"
                                 >
-                                  <LiaEdit className="text-[25px] text-black" />
-                                </div>
-                              </Tooltip>
-                            )}
+                                  <div
+                                    className="p-1 cursor-pointer block"
+                                    onClick={() => {
+                                      setEditingOption(row.id);
+                                      setShowModal(true);
+                                    }}
+                                  >
+                                    <LiaEdit className="text-[25px] text-black" />
+                                  </div>
+                                </Tooltip>
+                              )}
+                              </>
+                              )}
                           </div>
                         </td>
                       </tr>

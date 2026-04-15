@@ -132,7 +132,7 @@ const OrderHistory = ({ details }) => {
                     {order?.payment_method ? formatText(order?.payment_method) : "--"}
                   </td>
                   <td className="border px-3 py-2">
-                    {formatText(order?.payment_status)}
+                    {order?.payment_status ? formatText(order?.payment_status === "UNPAID" ? "FAILED" : order?.payment_status) : "--"}
                   </td>
                   <td className="border px-3 py-2">
                     {order?.fulfilment_status ? formatText(order?.fulfilment_status) : "--"}

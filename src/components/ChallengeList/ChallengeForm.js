@@ -55,6 +55,8 @@ const ChallengeForm = ({ setShowModal, editingOption, formik }) => {
   const [club, setClub] = useState([]);
   const dispatch = useDispatch();
 
+  const MAX_LENGTH = 40;
+
   // 👉 Local states for Terms of Play
   const [conditionList, setConditionList] = useState([]);
   const [tempCondition, setTempCondition] = useState("");
@@ -848,20 +850,27 @@ const ChallengeForm = ({ setShowModal, editingOption, formik }) => {
                         type="text"
                         name="winning_caption_heading"
                         value={formik.values?.winning_caption_heading}
-                        // onChange={formik.handleChange}
+                        maxLength={MAX_LENGTH} // 🔥 stops typing at 40
                         onKeyDown={blockNonLettersAndNumbers}
                         onChange={(e) => {
-                          const cleaned = sanitizeTextWithNumbers(
-                            e.target.value,
-                          );
-                          formik.setFieldValue(
-                            "winning_caption_heading",
-                            cleaned,
-                          );
+                          let value = e.target.value;
+
+                          // sanitize input
+                          let cleaned = sanitizeTextWithNumbers(value);
+
+                          // enforce max length after sanitization (important for paste cases)
+                          if (cleaned.length > MAX_LENGTH) {
+                            cleaned = cleaned.slice(0, MAX_LENGTH);
+                          }
+
+                          formik.setFieldValue("winning_caption_heading", cleaned);
                         }}
                         onBlur={formik.handleBlur}
                         className="custom--input w-full"
                       />
+                      <small>
+                        {(formik.values.winning_caption_heading || "").length}/40
+                      </small>
                     </div>
                     {formik.touched.winning_caption_heading &&
                       formik.errors.winning_caption_heading && (
@@ -881,20 +890,27 @@ const ChallengeForm = ({ setShowModal, editingOption, formik }) => {
                         type="text"
                         name="winning_caption_subheading"
                         value={formik.values?.winning_caption_subheading}
-                        // onChange={formik.handleChange}
+                        maxLength={MAX_LENGTH} // 🔥 stops typing at 40
                         onKeyDown={blockNonLettersAndNumbers}
                         onChange={(e) => {
-                          const cleaned = sanitizeTextWithNumbers(
-                            e.target.value,
-                          );
-                          formik.setFieldValue(
-                            "winning_caption_subheading",
-                            cleaned,
-                          );
+                          let value = e.target.value;
+
+                          // sanitize input
+                          let cleaned = sanitizeTextWithNumbers(value);
+
+                          // enforce max length after sanitization (important for paste cases)
+                          if (cleaned.length > MAX_LENGTH) {
+                            cleaned = cleaned.slice(0, MAX_LENGTH);
+                          }
+
+                          formik.setFieldValue("winning_caption_subheading", cleaned);
                         }}
                         onBlur={formik.handleBlur}
                         className="custom--input w-full"
                       />
+                      <small>
+                        {(formik.values.winning_caption_subheading || "").length}/40
+                      </small>
                     </div>
                     {formik.touched.winning_caption_subheading &&
                       formik.errors.winning_caption_subheading && (
@@ -914,20 +930,27 @@ const ChallengeForm = ({ setShowModal, editingOption, formik }) => {
                         type="text"
                         name="progress_caption_heading"
                         value={formik.values?.progress_caption_heading}
-                        // onChange={formik.handleChange}
+                        maxLength={MAX_LENGTH} // 🔥 stops typing at 40
                         onKeyDown={blockNonLettersAndNumbers}
                         onChange={(e) => {
-                          const cleaned = sanitizeTextWithNumbers(
-                            e.target.value,
-                          );
-                          formik.setFieldValue(
-                            "progress_caption_heading",
-                            cleaned,
-                          );
+                          let value = e.target.value;
+
+                          // sanitize input
+                          let cleaned = sanitizeTextWithNumbers(value);
+
+                          // enforce max length after sanitization (important for paste cases)
+                          if (cleaned.length > MAX_LENGTH) {
+                            cleaned = cleaned.slice(0, MAX_LENGTH);
+                          }
+
+                          formik.setFieldValue("progress_caption_heading", cleaned);
                         }}
                         onBlur={formik.handleBlur}
                         className="custom--input w-full"
                       />
+                      <small>
+                        {(formik.values.progress_caption_heading || "").length}/40
+                      </small>
                     </div>
                     {formik.touched.progress_caption_heading &&
                       formik.errors.progress_caption_heading && (
@@ -947,20 +970,27 @@ const ChallengeForm = ({ setShowModal, editingOption, formik }) => {
                         type="text"
                         name="progress_caption_subheading"
                         value={formik.values?.progress_caption_subheading}
-                        // onChange={formik.handleChange}
+                        maxLength={MAX_LENGTH} // 🔥 stops typing at 40
                         onKeyDown={blockNonLettersAndNumbers}
                         onChange={(e) => {
-                          const cleaned = sanitizeTextWithNumbers(
-                            e.target.value,
-                          );
-                          formik.setFieldValue(
-                            "progress_caption_subheading",
-                            cleaned,
-                          );
+                          let value = e.target.value;
+
+                          // sanitize input
+                          let cleaned = sanitizeTextWithNumbers(value);
+
+                          // enforce max length after sanitization (important for paste cases)
+                          if (cleaned.length > MAX_LENGTH) {
+                            cleaned = cleaned.slice(0, MAX_LENGTH);
+                          }
+
+                          formik.setFieldValue("progress_caption_subheading", cleaned);
                         }}
                         onBlur={formik.handleBlur}
                         className="custom--input w-full"
                       />
+                      <small>
+                        {(formik.values.progress_caption_subheading || "").length}/40
+                      </small>
                     </div>
                     {formik.touched.progress_caption_subheading &&
                       formik.errors.progress_caption_subheading && (

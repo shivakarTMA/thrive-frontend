@@ -470,6 +470,21 @@ export const sanitizeText = (value) => {
     .trim();
 };
 
+export const sanitizeAlphaNumeric = (value) => {
+  if (!value) return "";
+
+  return value
+    .replace(/[^a-zA-Z0-9\s]/g, "")
+    .replace(/\s+/g, " ") // remove extra spaces
+    .trim();
+};
+
+export const allowAlphaNumericWithSpace = (value) => {
+  if (!value) return "";
+
+  return value.replace(/[^a-zA-Z0-9\s]/g, "");
+};
+
 export const allowOnlyLetters = (value) => {
   if (!value) return "";
 
@@ -507,7 +522,7 @@ export const sanitizeTextWithNumbersFaq = (value) => {
 
   return value
     .replace(/<[^>]*>?/gm, "")
-    .replace(/[^a-zA-Z0-9&%()\/,.:!\-–—'‘’?₹]/g, ""); // space and ? allowed
+    .replace(/[^a-zA-Z0-9 &%()\/,.:!\-–—'‘’?₹]/g, ""); // space and ? allowed
 };
 
 export const allowLettersAndNumbers = (value) => {

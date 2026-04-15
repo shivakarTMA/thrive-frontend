@@ -10,8 +10,10 @@ import {
   blockInvalidNumberKeys,
   blockNonLetters,
   blockNonLettersAndNumbers,
+  customStyles,
   formatIndianNumber,
   formatText,
+  sanitizeAlphaNumeric,
   sanitizePositiveInteger,
   sanitizeText,
   sanitizeTextWithNumbers,
@@ -63,6 +65,13 @@ const genderOptions = [
   { value: "MALE", label: "Male" },
   { value: "FEMALE", label: "Female" },
   { value: "NOTDISCLOSE", label: "Prefer Not To Say" },
+];
+
+const paymentMethodOptions = [
+  { value: "UPI", label: "UPI" },
+  { value: "CREDIT_CARD", label: "Credit Card" },
+  { value: "DEBIT_CARD", label: "Debit Card" },
+  { value: "CHEQUE", label: "cheque" },
 ];
 
 const stepValidationSchemas = [
@@ -199,7 +208,10 @@ const ConvertMemberForm = ({
   const [duplicateEmailError, setDuplicateEmailError] = useState("");
   const [showDuplicateEmailModal, setShowDuplicateEmailModal] = useState(false);
 
-  const [paymentMode, setPaymentMode] = useState("ONLINE");
+  const [offlinePaymentDetails, setOfflinePaymentDetails] = useState({
+    method: null,
+    transactionId: "",
+  });
   const paymentModeRef = useRef("ONLINE");
 
   const [hasPlans, setHasPlans] = useState(false);
@@ -429,6 +441,8 @@ const ConvertMemberForm = ({
               applicable_ids: [values.productDetails.id],
               member_id: selectedLeadMember,
               paymentMode: paymentModeRef.current,
+              mode_of_payment: offlinePaymentDetails.method?.value,
+              transaction_id: offlinePaymentDetails.transactionId,
             };
 
             // console.log("paymentPayload", paymentPayload);
@@ -452,6 +466,15 @@ const ConvertMemberForm = ({
 
               // ✅ OFFLINE FLOW
               if (paymentModeRef.current === "OFFLINE") {
+                if (
+                  !offlinePaymentDetails.method ||
+                  !offlinePaymentDetails.method.value ||
+                  !offlinePaymentDetails.transactionId
+                ) {
+                  toast.error("Please fill all offline payment details");
+                  setLoading(false);
+                  return;
+                }
                 toast.success("Member created with offline payment!");
                 setMemberModal(false);
                 setLoading(false);
@@ -472,6 +495,32 @@ const ConvertMemberForm = ({
       }
     },
   });
+
+  const handleFinalSubmit = async (mode) => {
+    paymentModeRef.current = mode;
+
+    const errors = await formik.validateForm();
+
+    if (Object.keys(errors).length > 0) {
+      // mark all fields touched
+      const touchedFields = {};
+      Object.keys(errors).forEach((key) => {
+        touchedFields[key] = true;
+      });
+
+      formik.setTouched(touchedFields);
+
+      toast.error("Please fill all required fields");
+      return;
+    }
+
+    // ✅ If valid → proceed
+    if (mode === "OFFLINE") {
+      setPaymentModalOpen(true); // open offline modal
+    } else {
+      formik.handleSubmit(); // continue normal flow
+    }
+  };
 
   // ✅ Fetch lead details when selectedId changes
   useEffect(() => {
@@ -2248,10 +2297,11 @@ const ConvertMemberForm = ({
                     <>
                       <button
                         type="button"
-                        onClick={() => {
-                          paymentModeRef.current = "ONLINE";
-                          formik.handleSubmit();
-                        }}
+                        // onClick={() => {
+                        //   paymentModeRef.current = "ONLINE";
+                        //   formik.handleSubmit();
+                        // }}
+                        onClick={() => handleFinalSubmit("ONLINE")}
                         className="px-4 py-2 bg-black text-white font-semibold rounded max-w-[150px] w-full"
                       >
                         Pay Online
@@ -2259,10 +2309,11 @@ const ConvertMemberForm = ({
 
                       <button
                         type="button"
-                        onClick={() => {
-                          paymentModeRef.current = "OFFLINE";
-                          formik.handleSubmit();
-                        }}
+                        // onClick={() => {
+                        //   paymentModeRef.current = "OFFLINE";
+                        //   formik.handleSubmit();
+                        // }}
+                        onClick={() => handleFinalSubmit("OFFLINE")}
                         className="px-4 py-2 border bg-white text-black font-semibold rounded max-w-[150px] w-full"
                       >
                         Pay Offline
@@ -2316,44 +2367,113 @@ const ConvertMemberForm = ({
       )}
 
       {paymentModalOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[8]">
           <div className="bg-white rounded-lg w-[500px] p-6">
-            <h2 className="text-lg font-semibold mb-2">
-              Complete Your Payment
-            </h2>
 
-            <p className="text-sm text-gray-600 mb-3">
-              Order No: <span className="font-medium">{orderNo}</span>
-            </p>
+            {/* ✅ ONLINE UI */}
+            {paymentModeRef.current === "ONLINE" && (
+              <>
+                <h2 className="text-lg font-semibold mb-2">
+                  Complete Your Payment
+                </h2>
 
-            <textarea
-              readOnly
-              value={paymentUrl}
-              className="w-full h-[120px] border rounded p-2 text-sm"
-            />
+                <p className="text-sm text-gray-600 mb-3">
+                  Order No: <span className="font-medium">{orderNo}</span>
+                </p>
 
-            <div className="flex justify-end gap-3 mt-4">
-              <button
-                onClick={() => {
-                  navigator.clipboard.writeText(paymentUrl);
-                  toast.success("Payment URL copied");
-                }}
-                className="px-4 py-2 bg-black text-white rounded"
-              >
-                Copy URL
-              </button>
+                <textarea
+                  readOnly
+                  value={paymentUrl}
+                  className="w-full h-[120px] border rounded p-2 text-sm"
+                />
 
-              <button
-                onClick={() => {
-                  setPaymentModalOpen(false);
-                  setMemberModal(false);
-                  formik.resetForm(); // optional
-                }}
-                className="px-4 py-2 border rounded"
-              >
-                Close
-              </button>
-            </div>
+                <div className="flex justify-end gap-3 mt-4">
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(paymentUrl);
+                      toast.success("Payment URL copied");
+                    }}
+                    className="px-4 py-2 bg-black text-white rounded"
+                  >
+                    Copy URL
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setPaymentModalOpen(false);
+                      setMemberModal(false);
+                    }}
+                    className="px-4 py-2 border rounded"
+                  >
+                    Close
+                  </button>
+                </div>
+              </>
+            )}
+
+            {/* ✅ OFFLINE UI */}
+            {paymentModeRef.current === "OFFLINE" && (
+              <>
+                <h2 className="text-lg font-semibold mb-4">
+                  Offline Payment Details
+                </h2>
+
+                {/* Payment Method */}
+                <Select
+                  options={paymentMethodOptions}
+                  value={offlinePaymentDetails.method}
+                  onChange={(option) =>
+                    setOfflinePaymentDetails({
+                      ...offlinePaymentDetails,
+                      method: option,
+                    })
+                  }
+                  placeholder="Select Payment Method"
+                  className="mb-3"
+                  styles={{
+                    ...customStyles,
+                    menuPortal: (base) => ({
+                      ...base,
+                      zIndex: 9999,
+                    }),
+                  }}
+                  menuPortalTarget={document.body}
+                  menuPosition="fixed"
+                />
+
+                {/* Transaction ID */}
+                <input
+                  type="text"
+                  placeholder="Enter Transaction ID"
+                  className="custom--input w-full mb-3"
+                  value={offlinePaymentDetails.transactionId}
+                  onChange={(e) => {
+                    const cleaned = sanitizeAlphaNumeric(e.target.value);
+
+                    setOfflinePaymentDetails({
+                      ...offlinePaymentDetails,
+                      transactionId: cleaned,
+                    });
+                  }}
+                />
+
+                <div className="flex justify-end gap-3">
+                  <button
+                    onClick={() => setPaymentModalOpen(false)}
+                    className="px-4 py-2 border rounded"
+                  >
+                    Cancel
+                  </button>
+
+                  <button
+                    onClick={() => formik.handleSubmit()}
+                    className="px-4 py-2 bg-black text-white rounded"
+                  >
+                    Submit Payment
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}

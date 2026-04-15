@@ -72,7 +72,7 @@ const InvoiceModal = ({ isOpen, onClose, data }) => {
               <p>
                 <strong>Company Name:</strong> {data.company_name}
               </p>
-              <p className="!mb-4">
+              <p className="!mb-4 w-[55%] ml-auto">
                 <strong>Company Address:</strong> {data.company_address}
               </p>
               <p>
@@ -159,9 +159,7 @@ const InvoiceModal = ({ isOpen, onClose, data }) => {
           {/* Footer / Totals */}
           <div className="flex justify-between mb-5 text-sm">
             <div className="w-full">
-              <p>
-                <b className="text-gray-900">Payment mode:</b> Online
-              </p>
+           
             </div>
             <div className="text-right space-y-1 w-full">
               <div className="flex gap-2 justify-between">
@@ -214,6 +212,9 @@ const InvoiceModal = ({ isOpen, onClose, data }) => {
               </p>
             <p className="text-sm text-center">
                 This is a computer generated invoice. No signature is required.
+              </p>
+            <p className="text-[12px] text-center">
+                Government Taxes and levies are subject to change as applicable. 
               </p>
           </div>
         </div>

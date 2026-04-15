@@ -593,7 +593,7 @@ const FitnessManagerDashboard = () => {
 
               <SalesSummary
                 icon={renewalIcon}
-                title="Total Members"
+                title="Membership Sold"
                 titleLink={generateUrl(`/reports/all-orders?package_type=SUBSCRIPTION`)}
                 totalSales={dashboardData?.summary_cards?.total_members?.total_count}
                 items={[
@@ -606,6 +606,16 @@ const FitnessManagerDashboard = () => {
                     label: "Renewals",
                     value: dashboardData?.summary_cards?.total_members?.renewalMember,
                     link:generateUrl(`/reports/all-orders?bill_type=RENEWAL&package_type=SUBSCRIPTION`)
+                  },
+                                    {
+                    label: "Advanced renewal",
+                    value: dashboardData?.summary_cards?.total_members?.advanceRenewalMember,
+                    link:generateUrl(`/reports/all-orders?bill_type=ADVANCED_RENEWAL&package_type=SUBSCRIPTION`)
+                  },
+                  {
+                    label: "Returning User",
+                    value: dashboardData?.summary_cards?.total_members?.returningMember,
+                    link:generateUrl(`/reports/all-orders?bill_type=RETURNING&package_type=SUBSCRIPTION`)
                   },
                 ]}
               />

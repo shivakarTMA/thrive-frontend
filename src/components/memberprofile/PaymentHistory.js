@@ -141,7 +141,9 @@ const PaymentHistory = ({ details, setLoading }) => {
                 <th className="border px-3 py-2">Order Type</th>
                 <th className="border px-3 py-2">Amount</th>
 
-                <th className="border px-3 py-2">Mode</th>
+                <th className="border px-3 py-2">Payment Method</th>
+                <th className="border px-3 py-2">Mode of Payment</th>
+                <th className="border px-3 py-2">Transaction ID</th>
                 <th className="border px-3 py-2">Status</th>
                 <th className="border px-3 py-2">Action</th>
               </tr>
@@ -164,9 +166,19 @@ const PaymentHistory = ({ details, setLoading }) => {
                     </td>
 
                     <td className="border px-3 py-2">
+                      {order?.transaction_method
+                        ? formatText(order.transaction_method)
+                        : "--"}
+                    </td>
+                    <td className="border px-3 py-2">
                       {order?.payment_mode
                         ? formatText(order.payment_mode)
-                        : "N/A"}
+                        : "--"}
+                    </td>
+                    <td className="border px-3 py-2">
+                      {order?.transaction_id
+                        ? order.transaction_id
+                        : "--"}
                     </td>
                     <td className="border px-3 py-2">
                       {formatText(order?.payment_status)}

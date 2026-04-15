@@ -17,11 +17,6 @@ const viewOptions = [
   { value: "month", label: "Month" },
 ];
 
-// const EVENT_COLORS = {
-//   personal: { bg: "#F0FDFA", border: "#0D9488" },
-//   group: { bg: "#F0FDFA", border: "#0D9488" },
-//   trial: { bg: "#E7F0FF", border: "#2563EB" },
-// };
 const EVENT_COLORS = {
   personal: { bg: "#F0FDFA", border: "#0D9488" }, // green
   pilates: { bg: "#FFF7ED", border: "#F97316" },  // orange
@@ -59,33 +54,6 @@ const CalendarView = ({ clubId }) => {
 
       const apiData = res.data?.data || [];
 
-      const typeMap = {
-        trial: "trial",
-        "Personal Training": "personal",
-      };
-
-      // const formattedEvents = apiData.map((item) => {
-      //   const startDateTime = moment(
-      //     `${item.start_date} ${item.start_time}`,
-      //     "YYYY-MM-DD HH:mm:ss"
-      //   ).toDate();
-
-      //   const endDateTime = moment(
-      //     `${item.start_date} ${item.end_time}`,
-      //     "YYYY-MM-DD HH:mm:ss"
-      //   ).toDate();
-
-      //   return {
-      //     id: item.id,
-      //     title: item.package_name || item.type,
-      //     subTitle:item.member_name,
-      //     start: startDateTime,
-      //     end: endDateTime,
-      //     trainer: item.trainer_name,
-      //     type:
-      //       typeMap[item.type?.toLowerCase()] || "group",
-      //   };
-      // });
       const formattedEvents = apiData.map((item) => {
         const startDateTime = moment(
           `${item.start_date} ${item.start_time}`,

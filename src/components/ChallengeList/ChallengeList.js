@@ -199,18 +199,25 @@ const ChallengeList = () => {
         "Challenge Essentials is required",
       ),
       // position: Yup.string().required("Position is required"),
-      winning_caption_heading: Yup.string().required(
-        "Winning heading is required",
-      ),
-      winning_caption_subheading: Yup.string().required(
-        "Winning subheading is required",
-      ),
-      progress_caption_heading: Yup.string().required(
-        "Progress heading is required",
-      ),
-      progress_caption_subheading: Yup.string().required(
-        "Progress subheading is required",
-      ),
+      winning_caption_heading: Yup.string()
+        .required("Winning heading is required")
+        .min(10, "must be at least 10 characters")
+        .max(40, "must be at most 40 characters"),
+
+      winning_caption_subheading: Yup.string()
+        .required("Winning subheading is required")
+        .min(10, "must be at least 10 characters")
+        .max(40, "must be at most 40 characters"),
+
+      progress_caption_heading: Yup.string()
+        .required("Progress heading is required")
+        .min(10, "must be at least 10 characters")
+        .max(40, "must be at most 40 characters"),
+
+      progress_caption_subheading: Yup.string()
+        .required("Progress subheading is required")
+        .min(10, "must be at least 10 characters")
+        .max(40, "must be at most 40 characters"),
       status: Yup.string().required(
         "Status is required",
       ),
