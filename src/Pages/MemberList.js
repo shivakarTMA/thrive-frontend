@@ -964,6 +964,8 @@ const MemberList = () => {
           setInvoiceModal={setInvoiceModal}
           selectedLeadMember={selectedLeadMember}
           clubId={selectedLeadClub}
+          memberProfile={true}
+          onMemberUpdate={handleMemberUpdate}
         />
       )}
     </>

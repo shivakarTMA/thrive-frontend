@@ -2295,24 +2295,16 @@ const ConvertMemberForm = ({
 
                   {step === stepValidationSchemas.length - 1 && (
                     <>
-                      <button
+                      {/* <button
                         type="button"
-                        // onClick={() => {
-                        //   paymentModeRef.current = "ONLINE";
-                        //   formik.handleSubmit();
-                        // }}
                         onClick={() => handleFinalSubmit("ONLINE")}
                         className="px-4 py-2 bg-black text-white font-semibold rounded max-w-[150px] w-full"
                       >
                         Pay Online
-                      </button>
+                      </button> */}
 
                       <button
                         type="button"
-                        // onClick={() => {
-                        //   paymentModeRef.current = "OFFLINE";
-                        //   formik.handleSubmit();
-                        // }}
                         onClick={() => handleFinalSubmit("OFFLINE")}
                         className="px-4 py-2 border bg-white text-black font-semibold rounded max-w-[150px] w-full"
                       >

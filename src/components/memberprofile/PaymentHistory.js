@@ -185,6 +185,7 @@ const PaymentHistory = ({ details, setLoading }) => {
                     </td>
 
                     <td className="border px-3 py-2">
+                      {order?.payment_status !== "FAILED" ? (
                       <div className="flex items-center gap-2">
                         <Tooltip content="View Invoice">
                           <button
@@ -211,6 +212,7 @@ const PaymentHistory = ({ details, setLoading }) => {
                           </button>
                         </Tooltip>
                       </div>
+                      ):("--") }
                     </td>
                   </tr>
                 ))

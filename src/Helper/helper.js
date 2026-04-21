@@ -385,12 +385,23 @@ export const filterActiveItems = (data) => {
   );
 };
 
+// export const formatIndianNumber = (value) => {
+//   const number = Number(value);
+
+//   if (isNaN(number)) return 0; // or return "-" if you prefer
+
+//   return new Intl.NumberFormat("en-IN").format(number);
+// };
+
 export const formatIndianNumber = (value) => {
   const number = Number(value);
 
-  if (isNaN(number)) return 0; // or return "-" if you prefer
+  if (isNaN(number)) return "0.00";
 
-  return new Intl.NumberFormat("en-IN").format(number);
+  return new Intl.NumberFormat("en-IN", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(number);
 };
 
 export const sanitizePositiveInteger = (value) => {
@@ -522,7 +533,7 @@ export const sanitizeTextWithNumbersFaq = (value) => {
 
   return value
     .replace(/<[^>]*>?/gm, "")
-    .replace(/[^a-zA-Z0-9 &%()\/,.:!\-–—'‘’?₹]/g, ""); // space and ? allowed
+    .replace(/[^a-zA-Z0-9 &%()\/,.:!\-–—'‘’?₹"]/g, ""); // space and ? allowed
 };
 
 export const allowLettersAndNumbers = (value) => {
@@ -550,7 +561,7 @@ export const blockNonLettersAndNumbers = (e) => {
 };
 
 export const blockNonLettersAndNumbersFaq = (e) => {
-  const regex = /^[a-zA-Z0-9 &%()\/,.:!\-–—'‘’?₹]$/; // ? allowed
+  const regex = /^[a-zA-Z0-9 &%()\/,.:!\-–—'‘’?₹"]$/; // ? allowed
 
   const allowedKeys = [
     "Backspace",

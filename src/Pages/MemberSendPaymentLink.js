@@ -157,7 +157,6 @@ const MemberSendPaymentLink = ({
     },
   });
 
-  
   const handleFinalSubmit = async (mode) => {
     paymentModeRef.current = mode;
 
@@ -755,13 +754,13 @@ const MemberSendPaymentLink = ({
               </button>
               {memberProfile === true ? (
                 <div className="flex gap-2 items-center justify-end flex-1">
-                  <button
+                  {/* <button
                     type="button"
                     onClick={() => handleFinalSubmit("ONLINE")}
                     className="px-4 py-2 bg-black text-white font-semibold rounded max-w-[150px] w-full"
                   >
                     Pay Online
-                  </button>
+                  </button> */}
 
                   <button
                     type="button"
@@ -798,10 +797,9 @@ const MemberSendPaymentLink = ({
         />
       )}
 
-            {paymentModalOpen && (
+      {paymentModalOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]">
           <div className="bg-white rounded-lg w-[500px] p-6">
-
             {/* ✅ ONLINE UI */}
             {paymentModeRef.current === "ONLINE" && (
               <>
@@ -910,7 +908,6 @@ const MemberSendPaymentLink = ({
           </div>
         </div>
       )}
-
     </>
   );
 };

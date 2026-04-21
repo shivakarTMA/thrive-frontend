@@ -615,33 +615,17 @@ const LeadCallLogs = () => {
                       <DatePicker
                         selected={formik.values.trial_tour_datetime}
                         onChange={(date) => {
-                          if (!date) {
-                            formik.setFieldValue("trial_tour_datetime", null);
-                            return;
-                          }
-
+                          if (!date) { formik.setFieldValue("trial_tour_datetime", null); return; }
                           const prev = formik.values.trial_tour_datetime;
-                          const isSameDay =
-                            prev &&
-                            new Date(prev).toDateString() ===
-                              new Date(date).toDateString();
-
+                          const isSameDay = prev && new Date(prev).toDateString() === new Date(date).toDateString();
                           if (isSameDay) {
-                            // User changed time manually — accept as-is
                             formik.setFieldValue("trial_tour_datetime", date);
                           } else {
-                            // ── UPDATED: use getFirstAvailableTime instead of getDefaultTimeForDate ──
-                            const dateWithTime = getFirstAvailableTime(
-                              date,
-                              trainerBookedSlots,
-                            );
-                            formik.setFieldValue(
-                              "trial_tour_datetime",
-                              dateWithTime ?? null,
-                            );
+                            const dateWithTime = getFirstAvailableTime(date, trainerBookedSlots); // ✅ already correct
+                            formik.setFieldValue("trial_tour_datetime", dateWithTime ?? null);
                           }
                         }}
-                        {...datePickerProps}
+                        {...dateTrialPickerProps} 
                         // excludeTimes={getExcludeTimes()}
                         excludeTimes={getExcludeTimesForDate(
                           formik.values.trial_tour_datetime,

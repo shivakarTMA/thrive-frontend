@@ -26,7 +26,14 @@ const statusColors = {
 };
 
 // Confirmation Modal Component
-const ConfirmationModal = ({ isOpen, onClose, onConfirm, actionName, remarks, setRemarks,}) => {
+const ConfirmationModal = ({
+  isOpen,
+  onClose,
+  onConfirm,
+  actionName,
+  remarks,
+  setRemarks,
+}) => {
   if (!isOpen) return null;
 
   return (
@@ -151,6 +158,8 @@ const ChallengeParticipantsList = () => {
     }
   };
 
+  console.log(challengeData?.status, "challengeData status");
+
   return (
     <div className="page--content">
       {/* Header */}
@@ -229,24 +238,31 @@ const ChallengeParticipantsList = () => {
                           : item?.rank
                         : item?.current_rank}
                     </td>
+
                     {(userRole === "CLUB_MANAGER" ||
                       userRole === "FITNESS_MANAGER" ||
                       userRole === "MARKETING_MANAGER" ||
                       userRole === "ADMIN") && (
                       <td className="px-2 py-4">
-                        {item?.challenge_type === "CUSTOM" ? (
-                          <Select
-                            options={actionOptions}
-                            onChange={(selectedOption) =>
-                              handleActionChange(selectedOption, item?.id)
-                            }
-                            placeholder="Select Action"
-                            styles={customStyles}
-                            menuPortalTarget={document.body} // Ensures the dropdown is rendered in the body
-                            isDisabled={item?.rank !== 0}
-                          />
+                        {challengeData?.status === "COMPLETED" ? (
+                          <>
+                            {item?.challenge_type === "CUSTOM" ? (
+                              <Select
+                                options={actionOptions}
+                                onChange={(selectedOption) =>
+                                  handleActionChange(selectedOption, item?.id)
+                                }
+                                placeholder="Select Action"
+                                styles={customStyles}
+                                menuPortalTarget={document.body} // Ensures the dropdown is rendered in the body
+                                isDisabled={item?.rank !== 0}
+                              />
+                            ) : (
+                              "--"
+                            )}
+                          </>
                         ) : (
-                          "—"
+                          "--"
                         )}
                       </td>
                     )}

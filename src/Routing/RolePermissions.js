@@ -55,7 +55,7 @@ export const ROUTE_PERMISSIONS = {
   // Marketing
   '/challenge-list': ['ADMIN', 'MARKETING_MANAGER', 'CLUB_MANAGER', 'FOH', 'FITNESS_MANAGER'],
   '/challenge-participants-list/:id': ['ADMIN', 'MARKETING_MANAGER', 'CLUB_MANAGER', 'FITNESS_MANAGER', 'FOH'],
-  '/send-mail': ['ADMIN', 'MARKETING_MANAGER'],
+  '/send-mail': ['ADMIN', 'MARKETING_MANAGER','CLUB_MANAGER'],
   '/send-mail-list': ['ADMIN', 'MARKETING_MANAGER', 'CLUB_MANAGER'],
   '/send-mail-list/:id': ['ADMIN', 'MARKETING_MANAGER', 'CLUB_MANAGER'],
   '/email-template-list': ['ADMIN', 'MARKETING_MANAGER', 'CLUB_MANAGER'],

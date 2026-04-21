@@ -30,6 +30,8 @@ const CreateEmailTemplate = () => {
   const { id: editingOption } = useParams();
   const [clubList, setClubList] = useState([]);
 
+  console.log(editingOption,'editingOption')
+
   const { user } = useSelector((state) => state.auth);
   const userRole = user.role;
 
@@ -114,6 +116,11 @@ const CreateEmailTemplate = () => {
     fetchTemplateById(editingOption);
   }, [editingOption]);
 
+  console.log(userRole,'userRole')
+
+  const isAllowed =
+  userRole === "ADMIN" || userRole === "MARKETING_MANAGER";
+
   return (
     <div className="page--content">
       <div className=" flex items-end justify-between gap-2 mb-0">
@@ -155,7 +162,7 @@ const CreateEmailTemplate = () => {
                   }
                   onBlur={() => formik.setFieldTouched("club_id", true)}
                   styles={customStyles}
-                  isDisabled={userRole !== "ADMIN" || userRole !== "MARKETING_MANAGER"}
+                  isDisabled={!isAllowed}
                 />
                 {formik.touched.club_id && formik.errors.club_id && (
                   <p className="text-red-500 text-sm mt-1">
@@ -170,7 +177,7 @@ const CreateEmailTemplate = () => {
                 <input
                   type="text"
                   name="name"
-                  className={`custom--input w-full ${userRole !== "ADMIN" || userRole !== "MARKETING_MANAGER" ? "cursor-not-allowed !bg-gray-100" : ""}`}
+                  className={`custom--input w-full ${!isAllowed ? "cursor-not-allowed !bg-gray-100" : ""}`}
                   value={formik.values.name}
                   // onChange={formik.handleChange}
                   onKeyDown={blockNonLettersAndNumbers}
@@ -180,7 +187,7 @@ const CreateEmailTemplate = () => {
                   }}
                   onBlur={formik.handleBlur}
                   placeholder="Enter Template Name"
-                  disabled={userRole !== "ADMIN" || userRole !== "MARKETING_MANAGER"}
+                  disabled={!isAllowed}
                 />
                 {formik.touched.name && formik.errors.name && (
                   <p className="text-red-500 text-sm mt-1">
@@ -197,7 +204,7 @@ const CreateEmailTemplate = () => {
                 <input
                   type="text"
                   name="subject"
-                  className={`custom--input w-full ${userRole !== "ADMIN" || userRole !== "MARKETING_MANAGER" ? "cursor-not-allowed !bg-gray-100" : ""}`}
+                  className={`custom--input w-full ${!isAllowed ? "cursor-not-allowed !bg-gray-100" : ""}`}
                   value={formik.values.subject}
                   // onChange={formik.handleChange}
                   // onKeyDown={blockNonLetters}
@@ -212,7 +219,7 @@ const CreateEmailTemplate = () => {
                   }}
                   onBlur={formik.handleBlur}
                   placeholder="Enter subject"
-                  disabled={userRole !== "ADMIN" || userRole !== "MARKETING_MANAGER"}
+                  disabled={!isAllowed}
                 />
                 {formik.touched.subject && formik.errors.subject && (
                   <p className="text-red-500 text-sm mt-1">
@@ -237,7 +244,7 @@ const CreateEmailTemplate = () => {
                 }}
                 placeholder="Enter your email message..."
                 height={400}
-                editMode={userRole !== "ADMIN" || userRole !== "MARKETING_MANAGER" ? true : false}
+                editMode={!isAllowed ? true : false}
               />
 
               {formik.touched.body_html && formik.errors.body_html && (
@@ -248,7 +255,7 @@ const CreateEmailTemplate = () => {
             </div>
 
             {/* --- SUBMIT BUTTON --- */}
-            {userRole === "ADMIN" || userRole === "MARKETING_MANAGER" && (
+            {!isAllowed && (
               <button
                 type="submit"
                 className="px-4 py-2 bg-black text-white rounded flex items-center gap-2 mt-4"

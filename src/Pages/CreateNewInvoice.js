@@ -8,13 +8,25 @@ import DatePicker from "react-datepicker";
 import { useSelector } from "react-redux";
 import { RiDiscountPercentFill } from "react-icons/ri";
 import { FaCalendarDays, FaListCheck } from "react-icons/fa6";
-import { selectIcon } from "../Helper/helper";
+import {
+  customStyles,
+  formatIndianNumber,
+  sanitizeAlphaNumeric,
+  selectIcon,
+} from "../Helper/helper";
 import { toast } from "react-toastify";
 import { authAxios } from "../config/config";
 import { GoClock } from "react-icons/go";
 
 // Service types that require date/time fields
 const SERVICES_WITH_DATETIME = ["PERSONAL TRAINING", "PILATES", "RECOVERY"];
+
+const paymentMethodOptions = [
+  { value: "UPI", label: "UPI" },
+  { value: "CREDIT_CARD", label: "Credit Card" },
+  { value: "DEBIT_CARD", label: "Debit Card" },
+  { value: "CHEQUE", label: "cheque" },
+];
 
 const getTodayAtTime = (hours, minutes = 0) => {
   const d = new Date();
@@ -77,42 +89,13 @@ const formatDateTimeWithMicroseconds = (date) => {
   return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${microseconds}`;
 };
 
-const buildPaymentPayload = ({ values, user, selectedPackageType }) => {
-  const payload = {
-    package_id: values.productDetails.id,
-    order_type: "PACKAGE",
-    package_type: selectedPackageType || "CLASS",
-    applicable_ids: [values.productDetails.id],
-    member_id: values.member_id || user?.id,
-    club_id: values.club_id || user?.club_id,
-  };
-
-  if (values.coupon) payload.coupon_code = values.coupon;
-  if (values.coins > 0) payload.coins = values.coins;
-
-  // ✅ ADD start_date for ALL datetime-based services
-  if (SERVICES_WITH_DATETIME.includes(values.service_name?.toUpperCase())) {
-    const date = new Date(values.start_date);
-    const [h, m] = values.start_time.split(":");
-    date.setHours(+h, +m, 0, 0);
-
-    payload.start_date = formatDateTimeWithMicroseconds(date);
-  }
-
-  // ✅ Recovery-only fields
-  if (values.service_name?.toUpperCase() === "RECOVERY") {
-    payload.package_type = "SESSION";
-    payload.package_variation_id = values.variation.id;
-  }
-
-  return payload;
-};
-
 const CreateNewInvoice = ({
   setInvoiceModal,
   selectedLeadMember,
   clubId,
   renewPlanService,
+  memberProfile,
+  onMemberUpdate,
 }) => {
   const { user } = useSelector((state) => state.auth);
 
@@ -128,7 +111,47 @@ const CreateNewInvoice = ({
   const [paymentUrl, setPaymentUrl] = useState("");
   const [orderNo, setOrderNo] = useState("");
 
+  const [offlinePaymentDetails, setOfflinePaymentDetails] = useState({
+    method: null,
+    transactionId: "",
+  });
+  const paymentModeRef = useRef("ONLINE");
+
   const leadBoxRef = useRef(null);
+
+  const buildPaymentPayload = ({ values, user, selectedPackageType }) => {
+    const payload = {
+      package_id: values.productDetails.id,
+      order_type: "PACKAGE",
+      package_type: selectedPackageType || "CLASS",
+      applicable_ids: [values.productDetails.id],
+      member_id: values.member_id || user?.id,
+      club_id: values.club_id || user?.club_id,
+      paymentMode: paymentModeRef.current,
+      mode_of_payment: offlinePaymentDetails.method?.value,
+      transaction_id: offlinePaymentDetails.transactionId,
+    };
+
+    if (values.coupon) payload.coupon_code = values.coupon;
+    if (values.coins > 0) payload.coins = values.coins;
+
+    // ✅ ADD start_date for ALL datetime-based services
+    if (SERVICES_WITH_DATETIME.includes(values.service_name?.toUpperCase())) {
+      const date = new Date(values.start_date);
+      const [h, m] = values.start_time.split(":");
+      date.setHours(+h, +m, 0, 0);
+
+      payload.start_date = formatDateTimeWithMicroseconds(date);
+    }
+
+    // ✅ Recovery-only fields
+    if (values.service_name?.toUpperCase() === "RECOVERY") {
+      payload.package_type = "SESSION";
+      payload.package_variation_id = values.variation.id;
+    }
+
+    return payload;
+  };
 
   /* ================= INITIAL VALUES ================= */
 
@@ -233,46 +256,84 @@ const CreateNewInvoice = ({
 
         const res = await authAxios().post("/payment/proceed", payload);
 
-        if (res.data?.status) {
-          const { paymentUrl, order_no } = res.data.response;
+        // if (res.data?.status) {
+        //   const { paymentUrl, order_no } = res.data.response;
 
-          if (paymentUrl && order_no) {
+        //   if (paymentUrl && order_no) {
+        //     setPaymentUrl(paymentUrl);
+        //     setOrderNo(order_no);
+        //     setPaymentModalOpen(true); // ✅ OPEN PAYMENT MODAL
+        //     toast.success("Payment initiated successfully");
+        //   } else {
+        //     // ❌ Status true but required data missing
+        //     setInvoiceModal(false);
+        //     toast.success("Service booked successfully");
+        //   }
+        // } else {
+        //   // ❌ API status false
+        //   setInvoiceModal(false);
+        //   toast.success("Service booked successfully");
+        // }
+
+        if (res.data?.status) {
+          // ✅ ONLINE FLOW
+          if (paymentModeRef.current === "ONLINE") {
+            const { paymentUrl, order_no } = res.data.response || {};
             setPaymentUrl(paymentUrl);
             setOrderNo(order_no);
-            setPaymentModalOpen(true); // ✅ OPEN PAYMENT MODAL
-            toast.success("Payment initiated successfully");
-          } else {
-            // ❌ Status true but required data missing
-            setInvoiceModal(false);
-            toast.success("Service booked successfully");
+            setPaymentModalOpen(true);
+            toast.success("Service booked successfully!");
           }
-        } else {
-          // ❌ API status false
-          setInvoiceModal(false);
-          toast.success("Service booked successfully");
-        }
 
-        // if (res.data?.status) {
-        //   toast.success("Payment initiated successfully");
-        //   helpers.resetForm();
-        //   setInvoiceModal(false);
-        // }
+          // ✅ OFFLINE FLOW
+          if (paymentModeRef.current === "OFFLINE") {
+            if (
+              !offlinePaymentDetails.method ||
+              !offlinePaymentDetails.method.value ||
+              !offlinePaymentDetails.transactionId
+            ) {
+              toast.error("Please fill all offline payment details");
+              return;
+            }
+            toast.success("Service booked with offline payment!");
+            handleCloseModal();
+            onMemberUpdate();
+          }
+        }
       } catch (err) {
         setInvoiceModal(false);
         console.error(err);
+      } finally {
+        helpers.setSubmitting(false); // ✅ IMPORTANT
       }
     },
   });
 
-  /* ================= DATA ================= */
+  const handleFinalSubmit = async (mode) => {
+    paymentModeRef.current = mode;
 
-  // useEffect(() => {
-  //   authAxios()
-  //     .get(`/service/list?club_id${clubId}`)
-  //     .then((res) =>
-  //       setService(res.data.data.filter((s) => s.status === "ACTIVE")),
-  //     );
-  // }, [clubId]);
+    const errors = await formik.validateForm();
+
+    if (Object.keys(errors).length > 0) {
+      // mark all fields touched
+      const touchedFields = {};
+      Object.keys(errors).forEach((key) => {
+        touchedFields[key] = true;
+      });
+
+      formik.setTouched(touchedFields);
+
+      toast.error("Please fill all required fields");
+      return;
+    }
+
+    // ✅ If valid → proceed
+    if (mode === "OFFLINE") {
+      setPaymentModalOpen(true); // open offline modal
+    } else {
+      formik.handleSubmit(); // continue normal flow
+    }
+  };
 
   // ✅ Fetch lead details when selectedId changes
   useEffect(() => {
@@ -495,7 +556,6 @@ const CreateNewInvoice = ({
       setService(activeService);
     } catch (err) {
       console.error(err);
-
     }
   };
 
@@ -517,106 +577,106 @@ const CreateNewInvoice = ({
   };
 
   useEffect(() => {
-  if (!renewPlanService) return;
+    if (!renewPlanService) return;
 
-  const {
-    service_id,
-    service_name,
-    package_id,
-    package_name,
-    package_type,
-    session_duration,
-    amount,
-    discount,
-    gst,
-    gst_amount,
-    total_amount,
-    booking_amount,
-    package_variation_id,
-  } = renewPlanService;
+    const {
+      service_id,
+      service_name,
+      package_id,
+      package_name,
+      package_type,
+      session_duration,
+      amount,
+      discount,
+      gst,
+      gst_amount,
+      total_amount,
+      booking_amount,
+      package_variation_id,
+    } = renewPlanService;
 
-  const parsedAmount = Number(amount) || 0;
-  const parsedDiscount = Number(discount) || 0;
-  const parsedGst = Number(gst) || 0;
-  const parsedGstAmount = Number(gst_amount) || 0;
-  const parsedTotal = Number(total_amount) || 0;
-  const parsedFinal = Number(booking_amount) || 0;
+    const parsedAmount = Number(amount) || 0;
+    const parsedDiscount = Number(discount) || 0;
+    const parsedGst = Number(gst) || 0;
+    const parsedGstAmount = Number(gst_amount) || 0;
+    const parsedTotal = Number(total_amount) || 0;
+    const parsedFinal = Number(booking_amount) || 0;
 
-  formik.setFieldValue("product_type", service_id);
-  formik.setFieldValue("service_name", service_name);
-  setSelectedPackageType(package_type || "SESSION");
+    formik.setFieldValue("product_type", service_id);
+    formik.setFieldValue("service_name", service_name);
+    setSelectedPackageType(package_type || "SESSION");
 
-  formik.setFieldValue("productDetails", {
-    id: package_id,
-    title: package_name,
-    duration_value: session_duration,
-    duration_type: "minutes",
-    amount: parsedAmount,
-    discount: parsedDiscount,
-    total_amount: parsedTotal,
-    gst: parsedGst,
-    gst_amount: parsedGstAmount,
-    final_amount: parsedFinal,
-  });
+    formik.setFieldValue("productDetails", {
+      id: package_id,
+      title: package_name,
+      duration_value: session_duration,
+      duration_type: "minutes",
+      amount: parsedAmount,
+      discount: parsedDiscount,
+      total_amount: parsedTotal,
+      gst: parsedGst,
+      gst_amount: parsedGstAmount,
+      final_amount: parsedFinal,
+    });
 
-  formik.setFieldValue("final_amount", parsedFinal);
-  formik.setFieldValue("amount_pay", parsedFinal);
+    formik.setFieldValue("final_amount", parsedFinal);
+    formik.setFieldValue("amount_pay", parsedFinal);
 
-  // ✅ Fetch variation details by package_variation_id
-  if (
-    service_name?.toUpperCase() === "RECOVERY" &&
-    package_variation_id &&
-    package_variation_id !== 0
-  ) {
-    const fetchVariationById = async () => {
-      try {
-        const res = await authAxios().get(`/package/variation/${package_variation_id}`);
-        const variation = res.data?.data || res.data || null;
+    // ✅ Fetch variation details by package_variation_id
+    if (
+      service_name?.toUpperCase() === "RECOVERY" &&
+      package_variation_id &&
+      package_variation_id !== 0
+    ) {
+      const fetchVariationById = async () => {
+        try {
+          const res = await authAxios().get(
+            `/package/variation/${package_variation_id}`,
+          );
+          const variation = res.data?.data || res.data || null;
 
-        if (variation) {
-          formik.setFieldValue("variation", {
-            id: variation.id,
-            name: variation.name,
-            no_of_sessions: variation.no_of_sessions,
-            session_duration: variation.session_duration,
-            session_validity: variation.session_validity,
-          });
+          if (variation) {
+            formik.setFieldValue("variation", {
+              id: variation.id,
+              name: variation.name,
+              no_of_sessions: variation.no_of_sessions,
+              session_duration: variation.session_duration,
+              session_validity: variation.session_validity,
+            });
+          }
+        } catch (err) {
+          console.error(err);
         }
-      } catch (err) {
-        console.error(err);
+      };
 
-      }
-    };
+      fetchVariationById();
+    }
+  }, [renewPlanService]);
 
-    fetchVariationById();
-  }
+  const resetVoucher = () => {
+    setVoucherInput("");
+    setVoucherStatus(null);
+    setVoucherMessage("");
 
-}, [renewPlanService]);
+    const baseFinal = formik.values.productDetails?.final_amount || 0;
 
-const resetVoucher = () => {
-  setVoucherInput("");
-  setVoucherStatus(null);
-  setVoucherMessage("");
+    formik.setFieldValue("coupon", "");
+    formik.setFieldValue("discountAmount", 0);
+    formik.setFieldValue("final_amount", baseFinal);
+    formik.setFieldValue("amount_pay", baseFinal);
+  };
 
-  const baseFinal = formik.values.productDetails?.final_amount || 0;
+  useEffect(() => {
+    if (!formik.values.productDetails?.id) return;
 
-  formik.setFieldValue("coupon", "");
-  formik.setFieldValue("discountAmount", 0);
-  formik.setFieldValue("final_amount", baseFinal);
-  formik.setFieldValue("amount_pay", baseFinal);
-};
+    resetVoucher();
+  }, [formik.values.productDetails?.id]);
 
-useEffect(() => {
-  if (!formik.values.productDetails?.id) return;
-
-  resetVoucher();
-}, [formik.values.productDetails?.id]);
-
-  // useEffect(() => {
-  //   console.log("Formik Errors:", formik.errors);
-  //   console.log("Formik Touched:", formik.touched);
-  // console.log("Formik Values:", formik.values);
-  // }, [formik.errors, formik.touched, formik.values]);
+  const handleCloseModal = () => {
+    formik.resetForm();
+    resetVoucher(); // optional but recommended
+    setPaymentModalOpen(false);
+  };
 
   return (
     <>
@@ -669,7 +729,7 @@ useEffect(() => {
                             formik.setFieldValue("variation", null);
                             formik.setFieldValue("start_date", null);
                             formik.setFieldValue("start_time", "");
-                            resetVoucher(); 
+                            resetVoucher();
                           }}
                           styles={selectIcon}
                         />
@@ -962,10 +1022,16 @@ useEffect(() => {
                           Total:{" "}
                           <span className="font-bold flex items-center gap-2">
                             <del className="text-gray-500 text-sm">
-                              ₹{formik.values.productDetails?.amount ?? 0}
+                              ₹
+                              {formatIndianNumber(
+                                formik.values.productDetails?.amount,
+                              ) ?? 0}
                             </del>{" "}
                             <span>
-                              ₹{formik.values.productDetails?.total_amount ?? 0}
+                              ₹
+                              {formatIndianNumber(
+                                formik.values.productDetails?.total_amount,
+                              ) ?? 0}
                             </span>
                           </span>
                         </p>
@@ -974,7 +1040,9 @@ useEffect(() => {
                         <p className="flex items-center gap-2 justify-between mb-2 border-b pb-2">
                           Discount Code Applied:{" "}
                           <span className="font-bold">
-                            ₹{formik.values.discountAmount ?? 0}
+                            ₹
+                            {formatIndianNumber(formik.values.discountAmount) ??
+                              0}
                           </span>
                         </p>
                       </div>
@@ -982,7 +1050,10 @@ useEffect(() => {
                         <p className="flex items-center gap-2 justify-between mb-2 border-b pb-2">
                           GST:{" "}
                           <span className="font-bold">
-                            ₹{formik.values.productDetails?.gst_amount ?? 0}
+                            ₹
+                            {formatIndianNumber(
+                              formik.values.productDetails?.gst_amount,
+                            ) ?? 0}
                           </span>
                         </p>
                       </div>
@@ -990,7 +1061,9 @@ useEffect(() => {
                         <p className="flex items-center gap-2 justify-between mb-2 border-b pb-2">
                           Grand Total:{" "}
                           <span className="font-bold">
-                            ₹{formik.values.final_amount ?? 0}
+                            ₹
+                            {formatIndianNumber(formik.values.final_amount) ??
+                              0}
                           </span>
                         </p>
                       </div>
@@ -998,7 +1071,7 @@ useEffect(() => {
                     <p className="text-2xl font-semibold flex items-center gap-2 justify-between pb-2">
                       To Pay:{" "}
                       <span className="font-bold">
-                        ₹{formik.values.amount_pay ?? 0}
+                        ₹{formatIndianNumber(formik.values.amount_pay) ?? 0}
                       </span>
                     </p>
                   </div>
@@ -1016,12 +1089,42 @@ useEffect(() => {
                 >
                   Cancel
                 </button>
-                <button
+                {/* <button
                   type="submit"
                   className="px-4 py-2 bg-white text-black font-semibold rounded max-w-[150px] w-full hover:bg-gray-100"
                 >
                   Make Payment
-                </button>
+                </button> */}
+                {memberProfile === true ? (
+                  <div className="flex gap-2 items-center justify-end flex-1">
+                    {/* <button
+                    type="button"
+                    onClick={() => handleFinalSubmit("ONLINE")}
+                    className="px-4 py-2 bg-black text-white font-semibold rounded max-w-[150px] w-full"
+                  >
+                    Pay Online
+                  </button> */}
+
+                    <button
+                      type="button"
+                      onClick={() => handleFinalSubmit("OFFLINE")}
+                      className="px-4 py-2 border bg-white text-black font-semibold rounded max-w-[150px] w-full"
+                    >
+                      Pay Offline
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    type="submit"
+                    onClick={() => {
+                      paymentModeRef.current = "ONLINE";
+                      formik.handleSubmit();
+                    }}
+                    className="px-4 py-2 bg-white text-black font-semibold rounded max-w-[150px] w-full"
+                  >
+                    Send Payment
+                  </button>
+                )}
               </div>
             </form>
           </div>
@@ -1053,41 +1156,117 @@ useEffect(() => {
       {paymentModalOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]">
           <div className="bg-white rounded-lg w-[500px] p-6">
-            <h2 className="text-lg font-semibold mb-2">
-              Complete Your Payment
-            </h2>
+            {/* ✅ ONLINE UI */}
+            {paymentModeRef.current === "ONLINE" && (
+              <>
+                <h2 className="text-lg font-semibold mb-2">
+                  Complete Your Payment
+                </h2>
 
-            <p className="text-sm text-gray-600 mb-3">
-              Order No: <span className="font-medium">{orderNo}</span>
-            </p>
+                <p className="text-sm text-gray-600 mb-3">
+                  Order No: <span className="font-medium">{orderNo}</span>
+                </p>
 
-            <textarea
-              readOnly
-              value={paymentUrl}
-              className="w-full h-[120px] border rounded p-2 text-sm"
-            />
+                <textarea
+                  readOnly
+                  value={paymentUrl}
+                  className="w-full h-[120px] border rounded p-2 text-sm"
+                />
 
-            <div className="flex justify-end gap-3 mt-4">
-              <button
-                onClick={() => {
-                  navigator.clipboard.writeText(paymentUrl);
-                  toast.success("Payment URL copied");
-                }}
-                className="px-4 py-2 bg-black text-white rounded"
-              >
-                Copy URL
-              </button>
+                <div className="flex justify-end gap-3 mt-4">
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(paymentUrl);
+                      toast.success("Payment URL copied");
+                    }}
+                    className="px-4 py-2 bg-black text-white rounded"
+                  >
+                    Copy URL
+                  </button>
 
-              <button
-                onClick={() => {
-                  setPaymentModalOpen(false);
-                  formik.resetForm(); // optional
-                }}
-                className="px-4 py-2 border rounded"
-              >
-                Close
-              </button>
-            </div>
+                  <button
+                    onClick={() => {
+                      setPaymentModalOpen(false);
+                      setPaymentModalOpen(false);
+                      formik.resetForm(); // optional
+                    }}
+                    className="px-4 py-2 border rounded"
+                  >
+                    Close
+                  </button>
+                </div>
+              </>
+            )}
+
+            {/* ✅ OFFLINE UI */}
+            {paymentModeRef.current === "OFFLINE" && (
+              <>
+                <h2 className="text-lg font-semibold mb-4">
+                  Offline Payment Details
+                </h2>
+
+                {/* Payment Method */}
+                <Select
+                  options={paymentMethodOptions}
+                  value={offlinePaymentDetails.method}
+                  onChange={(option) =>
+                    setOfflinePaymentDetails({
+                      ...offlinePaymentDetails,
+                      method: option,
+                    })
+                  }
+                  placeholder="Select Payment Method"
+                  className="mb-3"
+                  styles={{
+                    ...customStyles,
+                    menuPortal: (base) => ({
+                      ...base,
+                      zIndex: 9999,
+                    }),
+                  }}
+                  menuPortalTarget={document.body}
+                  menuPosition="fixed"
+                />
+
+                {/* Transaction ID */}
+                <input
+                  type="text"
+                  placeholder="Enter Transaction ID"
+                  className="custom--input w-full mb-3"
+                  value={offlinePaymentDetails.transactionId}
+                  onChange={(e) => {
+                    const cleaned = sanitizeAlphaNumeric(e.target.value);
+
+                    setOfflinePaymentDetails({
+                      ...offlinePaymentDetails,
+                      transactionId: cleaned,
+                    });
+                  }}
+                />
+
+                <div className="flex justify-end gap-3">
+                  <button
+                    onClick={() => setPaymentModalOpen(false)}
+                    disabled={formik.isSubmitting}
+                    className="px-4 py-2 border rounded"
+                  >
+                    Cancel
+                  </button>
+
+                  <button
+                    onClick={() => formik.handleSubmit()}
+                    disabled={formik.isSubmitting}
+                    className={`px-4 py-2 rounded text-white ${
+                      formik.isSubmitting
+                        ? "bg-gray-400 cursor-not-allowed"
+                        : "bg-black"
+                    }`}
+                  >
+                    {formik.isSubmitting ? "Processing..." : "Submit Payment"}
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}

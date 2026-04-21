@@ -138,6 +138,24 @@ const Appointments = ({ details }) => {
     }
   };
 
+  const isInProgress = (row) => {
+    if (row?.booking_status !== "ACTIVE") return false;
+
+    if (!row?.start_date || !row?.start_time) return false;
+
+    const now = new Date();
+
+    const start = new Date(row.start_date);
+    const [hours, minutes] = row.start_time.split(":");
+    start.setHours(Number(hours), Number(minutes), 0, 0);
+
+    // Optional: define a session duration (e.g. 1 hour)
+    const end = new Date(start);
+    end.setHours(end.getHours() + 1);
+
+    return now >= start && now <= end;
+  };
+
   return (
     <div className="p-4 bg-white rounded shadow">
       <div className="flex gap-3 justify-between mb-4">
@@ -236,82 +254,100 @@ const Appointments = ({ details }) => {
             </thead>
             <tbody>
               {appointmentList.length > 0 ? (
-                appointmentList.map((appt, idx) => (
-                  <tr key={idx} className="hover:bg-gray-50">
-                    {/* <td className="border px-3 py-2">{appt?.id}</td> */}
-                    <td className="border px-3 py-2">
-                      {formatAutoDate(appt?.createdAt)}{" "}
-                    </td>
-                    <td className="border px-3 py-2">
-                      {appt?.appointment_category
-                        ? formatText(appt?.appointment_category)
-                        : "--"}
-                    </td>
-                    <td className="border px-3 py-2">
-                      {appt?.appointment_type === "CLUB"
-                        ? "Trial/Tour"
-                        : appt?.service_name}
-                    </td>
-                    <td className="border px-3 py-2">
-                      {appt?.package_name
-                        ? formatText(appt?.package_name)
-                        : "--"}
-                    </td>
+                appointmentList.map((appt, idx) => {
+                  const isDisabled =
+                    appt?.booking_status === "CANCELLED" ||
+                    appt?.booking_status === "COMPLETED" ||
+                    isInProgress(appt);
 
-                    <td className="border px-3 py-2">
-                      {appt?.package_variation_name
-                        ? formatText(appt?.package_variation_name)
-                        : "--"}
-                    </td>
-                    <td className="border px-3 py-2">
-                      {appt?.session_name
-                        ? formatText(appt?.session_name)
-                        : "--"}
-                    </td>
-                    <td className="border px-3 py-2">
-                      {formatAutoDate(appt?.start_date)}{" "}
-                      {formatTimeAppointment(appt?.start_time)}
-                    </td>
+                  return (
+                    <tr key={idx} className="hover:bg-gray-50">
+                      {/* <td className="border px-3 py-2">{appt?.id}</td> */}
+                      <td className="border px-3 py-2">
+                        {formatAutoDate(appt?.createdAt)}{" "}
+                      </td>
+                      <td className="border px-3 py-2">
+                        {appt?.appointment_category
+                          ? formatText(appt?.appointment_category)
+                          : "--"}
+                      </td>
+                      <td className="border px-3 py-2">
+                        {appt?.appointment_type === "CLUB"
+                          ? "Trial/Tour"
+                          : appt?.service_name}
+                      </td>
+                      <td className="border px-3 py-2">
+                        {appt?.package_name
+                          ? formatText(appt?.package_name)
+                          : "--"}
+                      </td>
 
-                    <td className="border px-3 py-2">
-                      {appt.assigned_staff_name
-                        ? appt.assigned_staff_name
-                        : "--"}
-                    </td>
-                    {/* <td className="border px-3 py-2">
+                      <td className="border px-3 py-2">
+                        {appt?.package_variation_name
+                          ? formatText(appt?.package_variation_name)
+                          : "--"}
+                      </td>
+                      <td className="border px-3 py-2">
+                        {appt?.session_name
+                          ? formatText(appt?.session_name)
+                          : "--"}
+                      </td>
+                      <td className="border px-3 py-2">
+                        {formatAutoDate(appt?.start_date)}{" "}
+                        {formatTimeAppointment(appt?.start_time)}
+                      </td>
+
+                      <td className="border px-3 py-2">
+                        {appt.assigned_staff_name
+                          ? appt.assigned_staff_name
+                          : "--"}
+                      </td>
+                      {/* <td className="border px-3 py-2">
                         {appt.staff_name ? appt.staff_name : "--"}
                       </td> */}
-                    <td className="border px-3 py-2">
-                      {formatText(
+                      <td className="border px-3 py-2">
+                        {/* {formatText(
                         appt?.booking_status === "ACTIVE"
                           ? "Upcoming"
                           : appt?.booking_status,
-                      )}
-                    </td>
-                    <td className="border px-3 py-2">
-                      {appt?.vas_rating ? appt?.vas_rating : "--"}
-                    </td>
-                    <td className="border px-3 py-2">
-                      {appt?.rating ? appt?.rating : "--"}
-                    </td>
+                      )} */}
+                        {formatText(
+                          appt?.booking_status === "ACTIVE"
+                            ? isInProgress(appt)
+                              ? "In Progress"
+                              : "Upcoming"
+                            : appt?.booking_status
+                        )}
+                      </td>
+                      <td className="border px-3 py-2">
+                        {appt?.vas_rating ? appt?.vas_rating : "--"}
+                      </td>
+                      <td className="border px-3 py-2">
+                        {appt?.rating ? appt?.rating : "--"}
+                      </td>
 
-                    <td className="border px-3 py-2">
-                      <button
-                        onClick={() => {
-                          setPendingAppointment(appt);
-                          setPendingStatus("CANCELLED");
-                          setShowConfirmModal(true);
-                        }}
-                        className={` rounded py-2 px-2 ${appt?.booking_status === "CANCELLED" || appt?.booking_status === "COMPLETED" ? "opacity-[0.5] pointer-events-none cursor-not-allowed bg-gray-300 text-gray-800" : "bg-black text-white"}`}
-                      >
-                        Cancel
-                      </button>
-                    </td>
-                    <td className="border px-3 py-2">
-                      {appt?.remarks ? appt?.remarks : "--"}
-                    </td>
-                  </tr>
-                ))
+                      <td className="border px-3 py-2">
+                        <button
+                          onClick={() => {
+                            setPendingAppointment(appt);
+                            setPendingStatus("CANCELLED");
+                            setShowConfirmModal(true);
+                          }}
+                          className={`rounded py-2 px-2 ${
+                            isDisabled
+                              ? "opacity-[0.5] pointer-events-none cursor-not-allowed bg-gray-300 text-gray-800"
+                              : "bg-black text-white"
+                          }`}
+                        >
+                          Cancel
+                        </button>
+                      </td>
+                      <td className="border px-3 py-2">
+                        {appt?.remarks ? appt?.remarks : "--"}
+                      </td>
+                    </tr>
+                  );
+                })
               ) : (
                 <tr>
                   <td colSpan="12" className="text-center py-4 text-gray-500">

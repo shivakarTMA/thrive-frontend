@@ -65,7 +65,7 @@ const InvoiceModal = ({ isOpen, onClose, data }) => {
                 <strong>Email:</strong> {data.member_email}
               </p>
               <p>
-                <strong>Mobile:</strong> {data.member_mobile}
+                <strong>Mobile:</strong> +{data?.member_country_code} {data.member_mobile}
               </p>
             </div>
             <div className="text-right text-sm space-y-1">
@@ -89,7 +89,7 @@ const InvoiceModal = ({ isOpen, onClose, data }) => {
                 <strong>Email:</strong> {data.club_email}
               </p>
               <p>
-                <strong>Phone:</strong> {data.club_phone}
+                <strong>Phone:</strong> +91 {data.club_phone.slice(-10)}
               </p>
               <p>
                 <strong>GSTIN:</strong> {data.club_gstno}
@@ -205,7 +205,7 @@ const InvoiceModal = ({ isOpen, onClose, data }) => {
           {/* Terms & Conditions */}
           <div className="border rounded-md mb-5 p-5">
             <p className="mb-1 text-sm text-center">
-                If you have any questions about this bill, please contact Mail : <a href={`mailto:${data.email}`}>{data.email}</a>, Phone : +91 {data.phone}
+                If you have any questions about this bill, please contact Mail : <a href={`mailto:${data.email}`}>{data.email}</a>, Phone : +91 {data.club_phone.slice(-10)}
               </p>
             <p className="mb-1 text-lg font-[600] text-center">
                 Thank You For Your Business!
