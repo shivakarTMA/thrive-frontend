@@ -80,7 +80,7 @@ const KYCSubmission = ({ details, setLoading }) => {
             corporateId: corp
               ? {
                   preview: corp.document_front_file,
-                  name: "Corporate ID (Uploaded)",
+                  name: "Passport Photo (Uploaded)",
                   id: corp.id,
                   uploaded: true,
                   status: corp.status,
@@ -145,7 +145,7 @@ const KYCSubmission = ({ details, setLoading }) => {
       (!documents.corporateId?.file && !documents.corporateId?.uploaded) ||
       !documents.corporateId?.preview
     ) {
-      newErrors.corporateId = "Please upload your Corporate ID image.";
+      newErrors.corporateId = "Please upload your Passport Photo image.";
       hasError = true;
     }
 

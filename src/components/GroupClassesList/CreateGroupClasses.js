@@ -9,6 +9,7 @@ import {
   filterActiveItems,
   sanitizePositiveInteger,
   sanitizeTextWithNumbers,
+  selectIcon,
 } from "../../Helper/helper";
 import DatePicker from "react-datepicker"; // Date picker component
 import "react-datepicker/dist/react-datepicker.css"; // Date picker styles
@@ -17,8 +18,6 @@ import { authAxios } from "../../config/config";
 import { toast } from "react-toastify";
 import { PiImageFill } from "react-icons/pi";
 import { useDispatch } from "react-redux";
-import { useClubDatePickerProps } from "../../hooks/useClubDatePickerProps";
-import { fetchClubTiming } from "../../Redux/Reducers/clubTimingSlice";
 
 // status type options for dropdown
 const statusType = [
@@ -44,6 +43,7 @@ const CreateGroupClasses = ({ setShowModal, editingOption, formik }) => {
   const [service, setService] = useState([]);
   const [staffList, setStaffList] = useState([]);
   const [packageCategory, setPackageCategory] = useState([]);
+  const [clubTiming, setClubTiming] = useState([]);
   const dispatch = useDispatch();
 
   const fetchClub = async (search = "") => {
@@ -56,7 +56,19 @@ const CreateGroupClasses = ({ setShowModal, editingOption, formik }) => {
       setClub(activeOnly);
     } catch (err) {
       console.error(err);
+    }
+  };
 
+  const fetchClubTimingAPI = async (clubId) => {
+    try {
+      if (!clubId) return;
+
+      const res = await authAxios().get(`/club/fetch/timing/${clubId}`);
+
+      setClubTiming(res.data?.data?.time || []);
+    } catch (err) {
+      console.error("Club timing error:", err);
+      setClubTiming([]);
     }
   };
 
@@ -129,7 +141,7 @@ const CreateGroupClasses = ({ setShowModal, editingOption, formik }) => {
       fetchStudio(formik.values.club_id);
       fetchStaff(formik.values.club_id);
       fetchPackageCategory(formik.values.club_id);
-      dispatch(fetchClubTiming(formik.values.club_id)); // ✅ ADD THIS
+      fetchClubTimingAPI(formik.values.club_id);
 
       // ❌ reset ONLY when NOT editing
       if (!editingOption) {
@@ -137,8 +149,8 @@ const CreateGroupClasses = ({ setShowModal, editingOption, formik }) => {
         formik.setFieldValue("studio_id", "");
         formik.setFieldValue("trainer_id", "");
         formik.setFieldValue("package_category_id", "");
-        formik.setFieldValue("start_time", "");  // ✅ ADD
-        formik.setFieldValue("end_time", "");    // ✅ ADD
+        formik.setFieldValue("start_time", ""); // ✅ ADD
+        formik.setFieldValue("end_time", ""); // ✅ ADD
       }
     } else {
       setService([]);
@@ -147,6 +159,64 @@ const CreateGroupClasses = ({ setShowModal, editingOption, formik }) => {
       setPackageCategory([]);
     }
   }, [formik.values.club_id]);
+
+  const formatTo12Hour = (time24) => {
+    const [h, m] = time24.split(":").map(Number);
+    const ampm = h >= 12 ? "PM" : "AM";
+    const hour = h % 12 || 12;
+
+    return `${hour}:${m.toString().padStart(2, "0")} ${ampm}`;
+  };
+
+  const startTimeOptions = clubTiming.map((time) => {
+    const now = new Date();
+    const selectedDate = formik.values.start_date;
+
+    let isDisabled = false;
+
+    if (selectedDate) {
+      const [h, m] = time.split(":").map(Number);
+
+      const timeDate = new Date(selectedDate);
+      timeDate.setHours(h, m, 0, 0);
+
+      const isToday =
+        new Date(selectedDate).toDateString() === now.toDateString();
+
+      // ❌ disable past time
+      if (isToday && timeDate <= now) {
+        isDisabled = true;
+      }
+    }
+
+    return {
+      label: formatTo12Hour(time),
+      value: time,
+      isDisabled,
+    };
+  });
+
+  const endTimeOptions = clubTiming.map((time) => {
+    let isDisabled = false;
+
+    if (formik.values.start_time) {
+      const [sh, sm] = formik.values.start_time.split(":").map(Number);
+      const [eh, em] = time.split(":").map(Number);
+
+      const startMinutes = sh * 60 + sm;
+      const endMinutes = eh * 60 + em;
+
+      if (endMinutes <= startMinutes) {
+        isDisabled = true;
+      }
+    }
+
+    return {
+      label: formatTo12Hour(time),
+      value: time,
+      isDisabled,
+    };
+  });
 
   const trainerOptions =
     staffList?.map((item) => ({
@@ -199,8 +269,8 @@ const CreateGroupClasses = ({ setShowModal, editingOption, formik }) => {
             description: data?.description || "",
             image: data?.image || null,
             start_date: data?.start_date || "",
-            start_time: data?.start_time || "",
-            end_time: data?.end_time || "",
+            start_time: data?.start_time ? data.start_time.slice(0, 5) : "",
+            end_time: data?.end_time ? data.end_time.slice(0, 5) : "",
             max_capacity:
               data?.max_capacity !== undefined ? data.max_capacity : "",
             waitlist_capacity:
@@ -235,27 +305,6 @@ const CreateGroupClasses = ({ setShowModal, editingOption, formik }) => {
     }
   }, [editingOption]);
 
-  const parseTime = (timeString) => {
-    if (!timeString) return null;
-
-    let d = new Date();
-    let [time, modifier] = timeString.split(" ");
-
-    let [hours, minutes] = time.split(":");
-
-    hours = parseInt(hours);
-    minutes = parseInt(minutes);
-
-    // Handle AM/PM
-    if (modifier) {
-      if (modifier === "PM" && hours !== 12) hours += 12;
-      if (modifier === "AM" && hours === 12) hours = 0;
-    }
-
-    d.setHours(hours, minutes, 0, 0);
-    return d;
-  };
-
   const handleFileChange = (e, formik) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -266,33 +315,6 @@ const CreateGroupClasses = ({ setShowModal, editingOption, formik }) => {
     if (leadBoxRef.current && !leadBoxRef.current.contains(e.target)) {
       setShowModal(false);
     }
-  };
-
-  useEffect(() => {
-    if (
-      formik.values.start_time &&
-      formik.values.end_time &&
-      parseTime(formik.values.end_time) < parseTime(formik.values.start_time)
-    ) {
-      formik.setFieldValue("end_time", "");
-    }
-  }, [formik.values.start_time]);
-
-  // ✅ Pass start_time combined with start_date for correct today minTime logic
-  const startDateTimeForHook =
-    formik.values.start_date && formik.values.start_time
-      ? new Date(`${formik.values.start_date} ${formik.values.start_time}`)
-      : formik.values.start_date
-        ? new Date(formik.values.start_date)
-        : null;
-
-  const datePickerProps = useClubDatePickerProps(startDateTimeForHook);
-
-  const filterEndTime = (time) => {
-    if (!formik.values.start_time) return true;
-
-    const start = parseTime(formik.values.start_time);
-    return time.getTime() !== start.getTime(); // remove exact start time
   };
 
   return (
@@ -638,45 +660,23 @@ const CreateGroupClasses = ({ setShowModal, editingOption, formik }) => {
                         <span className="absolute z-[1] mt-[11px] ml-[15px]">
                           <FiClock />
                         </span>
-                        <DatePicker
-                          selected={
-                            formik.values.start_time
-                              ? parseTime(formik.values.start_time)
-                              : null
+                        <Select
+                          name="start_time"
+                          value={
+                            startTimeOptions.find(
+                              (opt) => opt.value === formik.values.start_time,
+                            ) || null
                           }
-                          onChange={(date) => {
-                            if (!date) {
-                              formik.setFieldValue("start_time", "");
-                              return;
-                            }
-                            formik.setFieldValue(
-                              "start_time",
-                              date.toLocaleTimeString([], {
-                                hour: "2-digit",
-                                minute: "2-digit",
-                                hour12: false,
-                              }),
-                            );
-                            // ✅ Reset end_time when start changes
+                          onChange={(option) => {
+                            formik.setFieldValue("start_time", option.value);
+
+                            // reset end time
                             formik.setFieldValue("end_time", "");
                           }}
-                          showTimeSelect
-                          showTimeSelectOnly
-                          // ✅ Use club intervals
-                          timeIntervals={datePickerProps.timeIntervals}
-                          dateFormat="hh:mm aa"
-                          className="custom--input w-full input--icon"
-                          // ✅ today → club minTime, future → club open time
-                          minTime={
-                            formik.values.start_date &&
-                            new Date(
-                              formik.values.start_date,
-                            ).toDateString() === new Date().toDateString()
-                              ? datePickerProps.minTime // club-aware minTime for today
-                              : datePickerProps.minTime // club open time for future
-                          }
-                          maxTime={datePickerProps.maxTime} // ✅ close - trial_duration
-                          onKeyDown={(e) => e.preventDefault()}
+                          options={startTimeOptions}
+                          placeholder="Select Start Time"
+                          isDisabled={!formik.values.start_date}
+                          styles={selectIcon}
                         />
                       </div>
                       {formik.touched.start_time &&
@@ -696,52 +696,21 @@ const CreateGroupClasses = ({ setShowModal, editingOption, formik }) => {
                         <span className="absolute z-[1] mt-[11px] ml-[15px]">
                           <FiClock />
                         </span>
-                        <DatePicker
-                          selected={
-                            formik.values.end_time
-                              ? parseTime(formik.values.end_time)
-                              : null
+
+                        <Select
+                          name="end_time"
+                          value={
+                            endTimeOptions.find(
+                              (opt) => opt.value === formik.values.end_time,
+                            ) || null
                           }
-                          onChange={(date) => {
-                            if (!date) {
-                              formik.setFieldValue("end_time", "");
-                              return;
-                            }
-                            formik.setFieldValue(
-                              "end_time",
-                              date.toLocaleTimeString([], {
-                                hour: "2-digit",
-                                minute: "2-digit",
-                                hour12: false,
-                              }),
-                            );
+                          onChange={(option) => {
+                            formik.setFieldValue("end_time", option.value);
                           }}
-                          onBlur={() =>
-                            formik.setFieldTouched("end_time", true)
-                          }
-                          showTimeSelect
-                          showTimeSelectOnly
-                          // ✅ Use club intervals
-                          timeIntervals={datePickerProps.timeIntervals}
-                          dateFormat="hh:mm aa"
-                          className="custom--input w-full input--icon"
-                          // ✅ end time must be after start time, within club close time
-                          // minTime={
-                          //   formik.values.start_time
-                          //     ? parseTime(formik.values.start_time)
-                          //     : datePickerProps.minTime
-                          // }
-                          minTime={
-                            formik.values.start_time
-                              ? new Date(
-                                  parseTime(formik.values.start_time).getTime() +
-                                    datePickerProps.timeIntervals * 60000
-                                )
-                              : datePickerProps.minTime
-                          }
-                          maxTime={datePickerProps.maxTime} // ✅ close time (no trial_duration deduction for end time)
-                          filterTime={filterEndTime}
-                          onKeyDown={(e) => e.preventDefault()}
+                          options={endTimeOptions}
+                          placeholder="Select End Time"
+                          isDisabled={!formik.values.start_time}
+                          styles={selectIcon}
                         />
                       </div>
                       {formik.touched.end_time && formik.errors.end_time && (

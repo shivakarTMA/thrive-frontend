@@ -3,7 +3,11 @@ import Select from "react-select";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import PhoneInput from "react-phone-number-input";
-import { blockNonLettersAndNumbers, customStyles, sanitizeTextWithNumbers } from "../Helper/helper";
+import {
+  blockNonLettersAndNumbers,
+  customStyles,
+  sanitizeTextWithNumbers,
+} from "../Helper/helper";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { useDispatch, useSelector } from "react-redux";
@@ -17,8 +21,6 @@ import { BsExclamationCircle } from "react-icons/bs";
 import LeadContactHistory from "./LeadContactHistory";
 import { addYears, subYears } from "date-fns";
 import { useParams, useSearchParams, useNavigate } from "react-router-dom";
-import { useClubDatePickerProps } from "../hooks/useClubDatePickerProps";
-import { fetchClubTiming } from "../Redux/Reducers/clubTimingSlice";
 
 // Validation schema with conditional required fields
 const validationSchema = Yup.object().shape({
@@ -61,15 +63,7 @@ const validationSchema = Yup.object().shape({
           "Busy Tone",
           "Future Prospect",
         ].includes(call_status),
-      then: (schema) =>
-        schema
-          .required("Date & Time is required")
-          .test("has-time", "Please select a time as well", (value) => {
-            if (!value) return false;
-            const date = new Date(value);
-            // ✅ If hours and minutes are both 0 → only date was selected, no time
-            return !(date.getHours() === 0 && date.getMinutes() === 0);
-          }),
+      then: (schema) => schema.required("Date & Time is required"),
       otherwise: (schema) => schema.nullable(),
     }),
 });
@@ -95,6 +89,7 @@ const MemberCallLogs = () => {
   const [memberEnquiry, setMemberEnquiry] = useState([]);
   const [editLog, setEditLog] = useState(null);
   const [clubData, setClubData] = useState(null);
+  const [clubTiming, setClubTiming] = useState([]);
 
   const now = new Date();
   const minTime = new Date();
@@ -102,7 +97,6 @@ const MemberCallLogs = () => {
 
   const maxTime = new Date();
   maxTime.setHours(22, 0, 0, 0);
-
 
   const fetchMemberEnquiery = async (memberId, filters = {}) => {
     try {
@@ -204,6 +198,8 @@ const MemberCallLogs = () => {
     call_type: "",
     call_status: "",
     not_interested_reason: "",
+    follow_up_date: null,
+    follow_up_time: null,
     follow_up_datetime: "",
     remark: "",
   };
@@ -215,6 +211,25 @@ const MemberCallLogs = () => {
     onSubmit: async (values, { resetForm }) => {
       console.log(values, " values");
       console.log(values.id, " values.id");
+
+      if (
+        values.follow_up_date &&
+        values.follow_up_time &&
+        !values.follow_up_datetime
+      ) {
+        const [h, m] = values.follow_up_time.split(":").map(Number);
+
+        const combined = new Date(values.follow_up_date);
+        combined.setHours(h, m, 0, 0);
+
+        values.follow_up_datetime = combined.toISOString(); // ✅ FORCE SET
+      }
+
+      if (showScheduleFields && !values.follow_up_datetime) {
+        formik.setFieldTouched("follow_up_datetime", true);
+        toast.error("Please select date and time");
+        return;
+      }
 
       try {
         if (values.id) {
@@ -252,7 +267,6 @@ const MemberCallLogs = () => {
       }
     },
   });
-
 
   useEffect(() => {
     let filtered = [];
@@ -335,15 +349,30 @@ const MemberCallLogs = () => {
     showNotInterestedTypes.includes(formik.values?.call_type) &&
     formik.values?.call_status === "Not Interested";
 
-
   useEffect(() => {
     if (editLog) {
+      let date = null;
+      let time = null;
+
+      if (editLog?.follow_up_datetime) {
+        const d = new Date(editLog.follow_up_datetime);
+
+        date = d;
+
+        const hours = d.getHours().toString().padStart(2, "0");
+        const minutes = d.getMinutes().toString().padStart(2, "0");
+
+        time = `${hours}:${minutes}`;
+      }
+
       formik.setValues({
         call_status: editLog.call_status,
         member_id: memberDetails?.id,
         call_type: editLog.call_type || "",
         call_status: editLog.call_status || "",
         not_interested_reason: editLog.not_interested_reason || "",
+        follow_up_date: date,
+        follow_up_time: time,
         follow_up_datetime: editLog.follow_up_datetime || "",
         remark: editLog.remark || "",
         id: editLog.id, // <-- VERY IMPORTANT for update mode
@@ -372,16 +401,69 @@ const MemberCallLogs = () => {
     }
   }, [logId, callDataList]);
 
+  const fetchClubTimingAPI = async () => {
+    try {
+      const res = await authAxios().get(`/club/fetch/timing/${clubData}`);
+
+      setClubTiming(res.data?.data?.time || []);
+    } catch (err) {
+      console.error(err);
+      setClubTiming([]);
+    }
+  };
+
   useEffect(() => {
     if (clubData) {
-      dispatch(fetchClubTiming(clubData));
+      fetchClubTimingAPI();
     }
   }, [clubData]);
 
-    // ── NEW: get ready-to-use DatePicker props from Redux timing ──
-  const datePickerProps = useClubDatePickerProps(
-    formik?.values?.follow_up_datetime, // pass selected date for minTime logic
-  );
+  const formatTo12Hour = (time24) => {
+    const [h, m] = time24.split(":").map(Number);
+    const ampm = h >= 12 ? "PM" : "AM";
+    const hour = h % 12 || 12;
+    return `${hour}:${m.toString().padStart(2, "0")} ${ampm}`;
+  };
+
+  const timeOptions = clubTiming.map((time) => {
+    const now = new Date();
+
+    const selectedDate = formik.values.follow_up_date;
+
+    let isPast = false;
+
+    if (selectedDate) {
+      const [h, m] = time.split(":").map(Number);
+      const timeDate = new Date(selectedDate);
+      timeDate.setHours(h, m, 0, 0);
+
+      const isToday = selectedDate.toDateString() === now.toDateString();
+
+      if (isToday && timeDate <= now) {
+        isPast = true; // ❌ disable past time
+      }
+    }
+
+    return {
+      label: formatTo12Hour(time),
+      value: time,
+      isDisabled: isPast,
+    };
+  });
+
+  const combineDateTime = (date, time) => {
+    if (!date || !time) return;
+
+    const [h, m] = time.split(":").map(Number);
+
+    const combined = new Date(date);
+    combined.setHours(h, m, 0, 0);
+
+    formik.setFieldValue("follow_up_datetime", combined.toISOString());
+
+    // ✅ IMPORTANT
+    formik.setFieldTouched("follow_up_datetime", true);
+  };
 
   return (
     <div className="">
@@ -526,62 +608,67 @@ const MemberCallLogs = () => {
 
                     {/* Conditional Schedule Date */}
                     {showScheduleFields && (
-                      <div>
+                      <div className="col-span-2">
                         <label className="mb-2 block">
                           Date & Time<span className="text-red-500">*</span>
                         </label>
-                        <div className="custom--date flex-1">
-                          <span className="absolute z-[1] mt-[11px] ml-[15px]">
-                            <FaCalendarDays />
-                          </span>
-                          <DatePicker
-                            selected={formik.values.follow_up_datetime}
-                            onChange={(date) => {
-                              if (!date) {
-                                formik.setFieldValue(
-                                  "follow_up_datetime",
-                                  null,
-                                );
-                                return;
-                              }
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="custom--date flex-1">
+                            <span className="absolute z-[1] mt-[11px] ml-[15px]">
+                              <FaCalendarDays />
+                            </span>
+                            <DatePicker
+                              selected={formik.values.follow_up_date}
+                              onChange={(date) => {
+                                formik.setFieldValue("follow_up_date", date);
 
-                              const prev = formik.values.follow_up_datetime;
-                              const isSameDay =
-                                prev &&
-                                new Date(prev).toDateString() ===
-                                  new Date(date).toDateString();
+                                // reset time
+                                formik.setFieldValue("follow_up_time", null);
+                                formik.setFieldValue("follow_up_datetime", "");
+                              }}
+                              dateFormat="dd/MM/yyyy"
+                              minDate={new Date()} // ✅ disable past dates
+                              placeholderText="Select date"
+                              className="border px-3 py-2 w-full input--icon"
+                              disabled={!!editLog}
+                            />
+                          </div>
 
-                              if (isSameDay) {
-                                // ✅ User changed time — accept exactly what they picked
-                                formik.setFieldValue(
-                                  "follow_up_datetime",
-                                  date,
-                                );
-                              } else {
-                                // ✅ User picked a new date — auto-select first valid grid slot
-                                const dateWithTime =
-                                  datePickerProps.getDefaultTimeForDate(date);
-                                // null means today has no slots left (shouldn't reach here due to minDate)
-                                formik.setFieldValue(
-                                  "follow_up_datetime",
-                                  dateWithTime ?? null,
-                                );
+                          <div>
+                            <Select
+                              key={formik.values.follow_up_date}
+                              value={
+                                formik.values.follow_up_time
+                                  ? timeOptions.find(
+                                      (opt) =>
+                                        opt.value ===
+                                        formik.values.follow_up_time,
+                                    )
+                                  : null
                               }
-                            }}
-                            {...datePickerProps}
-                            placeholderText="Select date & time"
-                            className="border px-3 py-2 w-full input--icon"
-                            disabled={!!editLog}
-                            onKeyDown={(e) => {
-                              e.preventDefault();
-                            }}
-                          />
+                              onChange={(option) => {
+                                formik.setFieldValue(
+                                  "follow_up_time",
+                                  option.value,
+                                );
+
+                                combineDateTime(
+                                  formik.values.follow_up_date,
+                                  option.value,
+                                );
+                              }}
+                              options={timeOptions}
+                              placeholder="Select time"
+                              isDisabled={!formik.values.follow_up_date || !!editLog}
+                              styles={customStyles}
+                            />
+                          </div>
                         </div>
 
-                        {formik.errors?.follow_up_datetime &&
-                          formik.touched?.follow_up_datetime && (
+                        {formik.touched.follow_up_datetime &&
+                          formik.errors.follow_up_datetime && (
                             <div className="text-red-500 text-sm">
-                              {formik.errors?.follow_up_datetime}
+                              {formik.errors.follow_up_datetime}
                             </div>
                           )}
                       </div>
@@ -735,7 +822,9 @@ const MemberCallLogs = () => {
                   />
                 ))
               ) : (
-                <p className="text-center text-gray-500 pt-5">No records found</p>
+                <p className="text-center text-gray-500 pt-5">
+                  No records found
+                </p>
               )}
             </>
           ) : (
@@ -798,7 +887,9 @@ const MemberCallLogs = () => {
                   <LeadContactHistory key={index} filteredData={filteredLogs} />
                 ))
               ) : (
-                <p className="text-center text-gray-500 pt-5">No records found</p>
+                <p className="text-center text-gray-500 pt-5">
+                  No records found
+                </p>
               )}
             </>
           )}

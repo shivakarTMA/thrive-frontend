@@ -417,18 +417,6 @@ const GroupClassesList = () => {
 
     // Club filter - only set from URL if present, otherwise default to first club
     const clubId = params.get("club_id");
-    // if (clubId) {
-    //   const club = clubList.find((c) => c.id === Number(clubId));
-    //   if (club) {
-    //     setClubFilter({ label: club.name, value: club.id });
-    //   }
-    // } else {
-    //   // Set default club only on initial load
-    //   setClubFilter({
-    //     label: clubList[0].name,
-    //     value: clubList[0].id,
-    //   });
-    // }
     if (!clubFilter) {
       if (clubId) {
         const club = clubList.find((c) => c.id === Number(clubId));

@@ -500,7 +500,7 @@ const ServiceCard = ({ details }) => {
               <div className="p-4 px-0 pt-0">
                 <div className="flex items-center justify-between">
                   <h2 className="text-lg font-bold text-gray-900">
-                    Total Services ({purchasedServicesCount})
+                    Total Services ({purchasedServicesCount ?? 0})
                   </h2>
                   <Select
                     name="status"

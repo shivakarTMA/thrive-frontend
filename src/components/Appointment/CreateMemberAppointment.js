@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import Select from "react-select";
@@ -7,15 +7,11 @@ import "react-datepicker/dist/react-datepicker.css";
 import {
   blockNonLettersAndNumbers,
   customStyles,
-  filterActiveItems,
   sanitizeTextWithNumbers,
 } from "../../Helper/helper";
 import { IoCloseCircle } from "react-icons/io5";
 import { toast } from "react-toastify";
 import { authAxios } from "../../config/config";
-import { useClubDatePickerProps } from "../../hooks/useClubDatePickerProps";
-import { fetchClubTiming } from "../../Redux/Reducers/clubTimingSlice";
-import { useDispatch } from "react-redux";
 
 function toCapitalizedCase(inputString) {
   return inputString
@@ -25,86 +21,56 @@ function toCapitalizedCase(inputString) {
     .join(" "); // Join words back into a single string with spaces
 }
 
-// Main component
 const CreateMemberAppointment = ({
   setAppointmentModal,
   defaultCategory,
   memberID,
-  memberType,
   handleUpdate,
   clubId,
+  memberType,
 }) => {
-
   const leadBoxRef = useRef(null);
-  const dispatch = useDispatch();
-  const [memberPurchasedServices, setMemberPurchasedServices] = useState([]);
+
   const [staffList, setStaffList] = useState([]);
   const [serviceList, setServiceList] = useState([]);
-
+  const [clubTiming, setClubTiming] = useState([]);
   const [bookedSlots, setBookedSlots] = useState([]);
+  const [checkTrial, setCheckTrial] = useState(false);
+  const [memberPurchasedServices, setMemberPurchasedServices] = useState([]);
 
+  // ===============================
+  // FETCH CLUB TIMING
+  // ===============================
+  const fetchClubTiming = async () => {
+    try {
+      const res = await authAxios().get(`/club/fetch/timing/${clubId}`);
+      setClubTiming(res.data?.data?.time || []);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  // ===============================
+  // FETCH TRAINER SLOTS
+  // ===============================
   const fetchTrainerBookedSlots = async (trainerId) => {
     if (!trainerId || !clubId) {
       setBookedSlots([]);
       return;
     }
+
     try {
       const res = await authAxios().post("/appointment/trainer/booked/slot", {
         club_id: clubId,
         trainer_id: trainerId,
       });
+
       setBookedSlots(res.data?.availability || []);
     } catch (err) {
-      console.error("Trainer slot fetch error:", err);
+      console.error(err);
       setBookedSlots([]);
     }
   };
-
-
- const getExcludeTimesForDate = (date) => {
-  if (!date || !bookedSlots.length) return [];
-
-  const dateStr = new Date(date).toISOString().split("T")[0];
-  const matchedDay = bookedSlots.find((item) => item.date === dateStr);
-  if (!matchedDay) return [];
-
-  return [...new Set(matchedDay.slots)].map((timeStr) => {
-    const [hours, minutes] = timeStr.split(":").map(Number);
-    const d = new Date(date); // ← use actual picked date, NOT new Date()
-    d.setHours(hours, minutes, 0, 0);
-    return d;
-  });
-};
-
-const getExcludeTimes = () => getExcludeTimesForDate(formik.values.appointment_date);
-
-const getFirstAvailableTime = (date) => {
-  let suggested = datePickerProps.getDefaultTimeForDate(date);
-  if (!suggested) return null;
-
-  const excludedTimes = getExcludeTimesForDate(date);
-  const interval = datePickerProps.timeIntervals; // ← dynamic from hook
-  
-  // ── Compare only HH:MM to avoid date mismatch with maxTime (which is today's Date) ──
-  const toMins = (d) => d.getHours() * 60 + d.getMinutes();
-  const maxMins = toMins(datePickerProps.maxTime);
-
-  while (toMins(suggested) <= maxMins) {
-    const suggestedMins = toMins(suggested);
-
-    const isExcluded = excludedTimes.some(
-      (excluded) => toMins(excluded) === suggestedMins
-    );
-
-    if (!isExcluded) return suggested; // ✅ free slot found
-
-    // Advance by one interval
-    suggested = new Date(suggested.getTime() + interval * 60 * 1000);
-  }
-
-  return null; // all slots blocked for this date
-};
-
 
   const fetchPackageAvailable = async () => {
     try {
@@ -126,47 +92,51 @@ const getFirstAvailableTime = (date) => {
     }
   };
 
-  const fetchStaff = async (clubId = null) => {
+  // ===============================
+  // MATCH DATE → SLOTS
+  // ===============================
+  const getBookedSlotsForSelectedDate = (date) => {
+    if (!date || !bookedSlots.length) return [];
+
+    const dateStr = date.toLocaleDateString("en-CA");
+
+    const matched = bookedSlots.find((d) => d.date === dateStr);
+
+    return matched?.slots || [];
+  };
+
+  // ===============================
+  // FORMAT TIME
+  // ===============================
+  const formatTo12Hour = (time24) => {
+    const [h, m] = time24.split(":").map(Number);
+    const ampm = h >= 12 ? "PM" : "AM";
+    const hour = h % 12 || 12;
+    return `${hour}:${m.toString().padStart(2, "0")} ${ampm}`;
+  };
+
+  const fetchLeadTrial = async () => {
     try {
-      const params = {};
-      if (clubId) params.club_id = clubId;
-      const res = await authAxios().get("/staff/list?role=TRAINER", { params });
+      const res = await authAxios().get(`/lead/${memberID}`);
       let data = res.data?.data || res?.data || [];
-      const activeService = data?.filter((item) => item?.status === "ACTIVE");
-      setStaffList(activeService);
+      setCheckTrial(data?.is_trial_booked);
     } catch (err) {
       console.error(err);
     }
   };
 
-  const fetchService = async (clubId = null) => {
-    try {
-      const params = {};
-      if (clubId) params.club_id = clubId;
-      const res = await authAxios().get("/service/list", { params });
-      let data = res.data?.data || res?.data || [];
-      const activeService = data?.filter((item) => item?.status === "ACTIVE");
-      setServiceList(activeService);
-    } catch (err) {
-      console.error(err);
-    }
-  };
+  // ===============================
+  // FORM OPTIONS
+  // ===============================
+  const staffOptions = staffList.map((s) => ({
+    label: s.name,
+    value: s.id,
+  }));
 
-  useEffect(() => {
-    fetchPackageAvailable();
-  }, []);
-
-  useEffect(() => {
-    // Fetch services and staff based on clubId if provided
-    fetchStaff(clubId);
-    fetchService(clubId);
-  }, [clubId]); // <-- dependency added
-
-  const staffListOptions =
-    staffList?.map((item) => ({
-      label: item.name,
-      value: item.id,
-    })) || [];
+  const serviceOptions = serviceList.map((s) => ({
+    label: s.name,
+    value: s.id,
+  }));
 
   const appointmentTypes = [
     ...(serviceList
@@ -176,7 +146,9 @@ const getFirstAvailableTime = (date) => {
         value: item.id,
       })) || []),
     ...(memberType === "LEAD"
-      ? [{ label: "Tour / Trial", value: "TOURTRIAL" }]
+      ? !checkTrial
+        ? [{ label: "Tour / Trial", value: "TOURTRIAL" }]
+        : []
       : []),
   ];
 
@@ -185,19 +157,9 @@ const getFirstAvailableTime = (date) => {
     { value: "complementary", label: "Complimentary Appointment" },
   ];
 
-  const formatDateTime = (date) => {
-    const pad = (n) => (n < 10 ? "0" + n : n);
-
-    const year = date.getFullYear();
-    const month = pad(date.getMonth() + 1); // Months are 0-indexed
-    const day = pad(date.getDate());
-    const hours = pad(date.getHours());
-    const minutes = pad(date.getMinutes());
-    const seconds = pad(date.getSeconds());
-
-    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
-  };
-
+  // ===============================
+  // VALIDATION
+  // ===============================
   const validationSchema = Yup.object({
     appointment_category: Yup.string().required(
       "Appointment category is required",
@@ -215,7 +177,7 @@ const getFirstAvailableTime = (date) => {
       otherwise: (schema) => schema.nullable(),
     }),
 
-    appointment_date: Yup.date().required("Date & Time is required"),
+    appointment_date: Yup.string().required("Date & Time is required"),
 
     trainer_id: Yup.string().required("Trainer selection is required"),
   });
@@ -228,7 +190,7 @@ const getFirstAvailableTime = (date) => {
   const buildPayload = (values) => {
     const basePayload = {
       member_id: memberID,
-      appointment_date: formatDateTime(values.appointment_date),
+      appointment_date: values.appointment_date,
       trainer_id: values.trainer_id,
       remarks: values.remarks,
       appointment_category: values.appointment_category,
@@ -251,24 +213,32 @@ const getFirstAvailableTime = (date) => {
     return basePayload;
   };
 
-  // Formik setup
+  // ===============================
+  // FORMIK
+  // ===============================
   const formik = useFormik({
     initialValues: {
-      member_id: memberID,
+      appointment_category: defaultCategory || "complementary", // ✅ FIX
       service_id: null,
-      appointment_date: "",
-      trainer_id: null,
-      remarks: "",
-      appointment_category: "service",
       package_booking_id: null,
+      trainer_id: null,
+      appointment_date_only: null,
+      appointment_time: null,
+      appointment_date: null,
+      remarks: "",
     },
-    validationSchema: validationSchema,
-    context: { memberType },
+    validationSchema,
     onSubmit: async (values, { resetForm }) => {
       const endpoint = APPOINTMENT_API[values.appointment_category];
 
       if (!endpoint) {
         toast.error("Invalid appointment category");
+        return;
+      }
+
+      if (!values.appointment_date) {
+        formik.setFieldTouched("appointment_date", true);
+        toast.error("Please select date and time");
         return;
       }
 
@@ -288,7 +258,7 @@ const getFirstAvailableTime = (date) => {
         handleAppointmentModal();
       } catch (error) {
         console.error("Appointment API Error:", error);
-        toast.error(error.response?.data?.errors)
+        toast.error(error.response?.data?.errors);
       }
     },
   });
@@ -296,32 +266,111 @@ const getFirstAvailableTime = (date) => {
   // Reset logic based on appointment_category
   const handleReset = (category) => {
     setBookedSlots([]);
-    if (category === "service") {
-      formik.setValues({
-        ...formik.values,
-        appointment_category: "service",
-        package_booking_id: null,
-        // serviceVariation: null,
-        service_id: null,
-        appointment_date: "",
-        trainer_id: null,
-        remarks: "",
-      });
-    } else if (category === "complementary") {
-      formik.setValues({
-        ...formik.values,
-        appointment_category: "complementary",
-        package_booking_id: null,
-        // serviceVariation: null,
-        service_id: null,
-        appointment_date: "",
-        trainer_id: null,
-        remarks: "",
-      });
-    } else {
-      formik.resetForm();
-    }
+
+    formik.setValues({
+      ...formik.values,
+      appointment_category: category,
+      package_booking_id: null,
+      service_id: null,
+      trainer_id: null,
+      appointment_date_only: null,
+      appointment_time: null,
+      appointment_date: null,
+      remarks: "",
+    });
   };
+
+  // ===============================
+  // COMBINE DATE + TIME
+  // ===============================
+  const combineDateTime = (date, time) => {
+    if (!date || !time) return;
+
+    const [h, m] = time.split(":").map(Number);
+
+    const combined = new Date(date);
+    combined.setHours(h, m, 0, 0);
+
+    formik.setFieldValue("appointment_date", combined.toISOString());
+  };
+
+  // ===============================
+  // TIME OPTIONS
+  // ===============================
+  const timeOptions = useMemo(() => {
+    const booked = getBookedSlotsForSelectedDate(
+      formik.values.appointment_date_only,
+    );
+
+    return clubTiming.map((time) => {
+      const isBooked = booked.includes(time);
+
+      return {
+        label: formatTo12Hour(time),
+        value: time,
+        isDisabled: isBooked,
+      };
+    });
+  }, [clubTiming, bookedSlots, formik.values.appointment_date_only]);
+
+  // ===============================
+  // FETCH INITIAL DATA
+  // ===============================
+
+  const fetchStaff = async () => {
+    const res = await authAxios().get(
+      `/staff/list?club_id=${clubId}&role=TRAINER`,
+    );
+    setStaffList(res.data?.data || []);
+  };
+
+  const fetchService = async () => {
+    const res = await authAxios().get(`/service/list?club_id=${clubId}`);
+    setServiceList(res.data?.data || []);
+  };
+
+  useEffect(() => {
+    fetchPackageAvailable();
+  }, []);
+
+  useEffect(() => {
+    if (!clubId) return;
+
+    if (memberType === "LEAD") {
+      fetchLeadTrial(); // ✅ only for lead
+    }
+
+    fetchStaff();
+    fetchService();
+    fetchClubTiming();
+  }, [clubId]);
+
+  useEffect(() => {
+    formik.setFieldValue("trainer_id", null);
+    formik.setFieldValue("appointment_date_only", null);
+    formik.setFieldValue("appointment_time", null);
+    formik.setFieldValue("appointment_date", null);
+
+    setBookedSlots([]);
+  }, [clubId]);
+
+  useEffect(() => {
+    if (defaultCategory) {
+      formik.setFieldValue("appointment_category", defaultCategory);
+    }
+  }, [defaultCategory]);
+
+  useEffect(() => {
+  if (formik.values.appointment_date_only) {
+    const booked = getBookedSlotsForSelectedDate(
+      formik.values.appointment_date_only
+    );
+
+    if (booked.length >= clubTiming.length) {
+      toast.error("No slots available for selected date");
+    }
+  }
+}, [formik.values.appointment_date_only, bookedSlots]);
 
   const handleOverlayClick = (e) => {
     if (leadBoxRef.current && !leadBoxRef.current.contains(e.target)) {
@@ -332,24 +381,6 @@ const getFirstAvailableTime = (date) => {
   const handleAppointmentModal = () => {
     setAppointmentModal(false);
   };
-
-  useEffect(() => {
-    if (defaultCategory) {
-      formik.setFieldValue("appointment_category", defaultCategory);
-    }
-  }, [defaultCategory]);
-
-  useEffect(() => {
-    if (clubId) {
-      dispatch(fetchClubTiming(clubId));
-    }
-  }, [clubId]);
-
-  // ── NEW: get ready-to-use DatePicker props from Redux timing ──
-  const datePickerProps = useClubDatePickerProps(
-    formik?.values?.appointment_date, // pass selected date for minTime logic
-  );
-
   return (
     <div
       className="bg--blur create--lead--container overflow-auto fixed top-0 left-0 z-[999] w-full bg-black bg-opacity-60 h-full"
@@ -368,8 +399,7 @@ const getFirstAvailableTime = (date) => {
             <IoCloseCircle className="text-3xl" />
           </div>
         </div>
-
-        <form onSubmit={formik.handleSubmit} className="space-y-6">
+        <form onSubmit={formik.handleSubmit}>
           <div className=" p-6 bg-white rounded-b-[10px]">
             {/* Appointment Category Radio */}
             <div className="mb-4">
@@ -417,11 +447,10 @@ const getFirstAvailableTime = (date) => {
               </div>
             </div>
 
-            {/* Service Appointment Inputs */}
-            {formik.values.appointment_category === "service" && (
-              <>
-                {/* Service Select */}
-                <div className="mb-4">
+            {/* SERVICE */}
+            <div className="flex gap-2">
+              {formik.values.appointment_category === "service" && (
+                <div className="mb-4 w-[50%]">
                   <label className="block text-sm font-medium text-black mb-2">
                     Service<span className="text-red-500">*</span>
                   </label>
@@ -447,171 +476,129 @@ const getFirstAvailableTime = (date) => {
                       </div>
                     )}
                 </div>
-
-                {/* Service Variation */}
-                {/* <div className="mb-4">
+              )}
+              {formik.values.appointment_category === "complementary" && (
+                <div className="mb-4 w-[50%]">
                   <label className="block text-sm font-medium text-black mb-2">
-                    Service Variation <span className="text-red-500">*</span>
+                    Appointment Type<span className="text-red-500">*</span>
                   </label>
                   <Select
-                    value={formik.values.serviceVariation}
-                    onChange={(value) =>
-                      formik.setFieldValue("serviceVariation", value)
-                    }
-                    options={serviceVariations}
-                    styles={customStyles}
-                    placeholder="Select service variation..."
-                  />
-                  {formik.errors.serviceVariation &&
-                    formik.touched.serviceVariation && (
-                      <div className="text-red-500 text-sm">
-                        {formik.errors.serviceVariation}
-                      </div>
+                    value={appointmentTypes.find(
+                      (option) => option.value === formik.values.service_id,
                     )}
-                </div> */}
-              </>
-            )}
-
-            {/* Complimentary Appointment Inputs */}
-            {formik.values.appointment_category === "complementary" && (
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-black mb-2">
-                  Appointment Type<span className="text-red-500">*</span>
-                </label>
-                <Select
-                  value={appointmentTypes.find(
-                    (option) => option.value === formik.values.service_id,
+                    onChange={(selectedOption) =>
+                      formik.setFieldValue(
+                        "service_id",
+                        selectedOption?.value || null,
+                      )
+                    }
+                    options={appointmentTypes}
+                    styles={customStyles}
+                  />
+                  {formik.errors.service_id && formik.touched.service_id && (
+                    <div className="text-red-500 text-sm">
+                      {formik.errors.service_id}
+                    </div>
                   )}
-                  onChange={(selectedOption) =>
-                    formik.setFieldValue(
-                      "service_id",
-                      selectedOption?.value || null,
-                    )
-                  }
-                  options={appointmentTypes}
-                  styles={customStyles}
-                  placeholder="Select type"
-                />
-                {formik.errors.service_id && formik.touched.service_id && (
-                  <div className="text-red-500 text-sm">
-                    {formik.errors.service_id}
-                  </div>
-                )}
-              </div>
-            )}
+                </div>
+              )}
 
-            <div className="grid grid-cols-2 gap-4">
-              {/* Trainer Select */}
-              <div className="mb-4">
+              {/* TRAINER */}
+              <div className="mb-4 w-[50%]">
                 <label className="block text-sm font-medium text-black mb-2">
                   Trainer<span className="text-red-500">*</span>
                 </label>
-
                 <Select
                   value={
                     formik.values.trainer_id
-                      ? staffListOptions.find(
-                          (option) => option.value === formik.values.trainer_id,
+                      ? staffOptions.find(
+                          (o) => o.value === formik.values.trainer_id,
                         )
                       : null
                   }
-                  // onChange={(selectedOption) =>
-                  //   formik.setFieldValue(
-                  //     "trainer_id",
-                  //     selectedOption?.value || null,
-                  //   )
-                  // }
-                  onChange={(selectedOption) => {
-                    formik.setFieldValue("trainer_id", selectedOption?.value || null);
-                    formik.setFieldValue("appointment_date", ""); // reset date on trainer change
-                    fetchTrainerBookedSlots(selectedOption?.value); // ← NEW
+                  onChange={(opt) => {
+                    const trainerId = opt?.value || null;
+
+                    formik.setFieldValue("trainer_id", trainerId);
+
+                    formik.setFieldValue("appointment_date_only", null);
+                    formik.setFieldValue("appointment_time", null);
+                    formik.setFieldValue("appointment_date", null);
+
+                    setBookedSlots([]);
+
+                    if (trainerId) fetchTrainerBookedSlots(trainerId);
                   }}
-                  options={staffListOptions}
+                  options={staffOptions}
                   styles={customStyles}
                   placeholder="Select trainer"
+                  isDisabled={!formik.values.appointment_category}
                 />
-
                 {formik.errors.trainer_id && formik.touched.trainer_id && (
                   <div className="text-red-500 text-sm">
                     {formik.errors.trainer_id}
                   </div>
                 )}
               </div>
+            </div>
 
-              {/* DateTime Picker */}
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-black mb-2">
-                  Date & Time<span className="text-red-500">*</span>
-                </label>
-                <div className="custom--date">
+            {/* DATE */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-black mb-2">
+                Date & Time<span className="text-red-500">*</span>
+              </label>
+              <div className="flex gap-2">
+                <div className="custom--date w-[50%]">
                   <DatePicker
-                    selected={formik.values.appointment_date}
-                    // onChange={(date) => {
-                    //   if (!date) {
-                    //     formik.setFieldValue("appointment_date", null);
-                    //     return;
-                    //   }
-
-                    //   const prev = formik.values.appointment_date;
-                    //   const isSameDay =
-                    //     prev &&
-                    //     new Date(prev).toDateString() ===
-                    //       new Date(date).toDateString();
-
-                    //   if (isSameDay) {
-                    //     // ✅ User changed time — accept exactly what they picked
-                    //     formik.setFieldValue("appointment_date", date);
-                    //   } else {
-                    //     // ✅ User picked a new date — auto-select first valid grid slot
-                    //     const dateWithTime =
-                    //       datePickerProps.getDefaultTimeForDate(date);
-                    //     // null means today has no slots left (shouldn't reach here due to minDate)
-                    //     formik.setFieldValue(
-                    //       "appointment_date",
-                    //       dateWithTime ?? null,
-                    //     );
-                    //   }
-                    // }}
+                    selected={formik.values.appointment_date_only}
                     onChange={(date) => {
-                      if (!date) {
-                        formik.setFieldValue("appointment_date", null);
-                        return;
-                      }
+                      formik.setFieldValue("appointment_date_only", date);
 
-                      const prev = formik.values.appointment_date;
-                      const isSameDay =
-                        prev &&
-                        new Date(prev).toDateString() === new Date(date).toDateString();
-
-                      if (isSameDay) {
-                        // User changed time manually — accept as-is
-                        formik.setFieldValue("appointment_date", date);
-                      } else {
-                        // ── UPDATED: use getFirstAvailableTime instead of getDefaultTimeForDate ──
-                        const dateWithTime = getFirstAvailableTime(date);
-                        formik.setFieldValue("appointment_date", dateWithTime ?? null);
-                      }
+                      formik.setFieldValue("appointment_time", null);
+                      formik.setFieldValue("appointment_date", null);
                     }}
-                    {...datePickerProps}
-                    excludeTimes={getExcludeTimes()}
+                    dateFormat="dd/MM/yyyy"
+                    minDate={new Date()}
                     onKeyDown={(e) => {
                       e.preventDefault();
                     }}
-                    disabled={!formik.values.trainer_id} // ← NEW
-                    placeholderText="Select date & time"
+                    disabled={!formik.values.trainer_id}
+                    placeholderText="Select Date"
                     className="custom--input !w-full"
                   />
+                </div>
+                <div className=" w-[50%]">
+                  {/* TIME */}
+                  <Select
+                    key={`${formik.values.trainer_id}-${formik.values.appointment_date_only}`}
+                    value={
+                      formik.values.appointment_time
+                        ? timeOptions.find(
+                            (o) => o.value === formik.values.appointment_time,
+                          )
+                        : null
+                    }
+                    onChange={(opt) => {
+                      formik.setFieldValue("appointment_time", opt.value);
 
-                  {formik.errors.appointment_date &&
-                    formik.touched.appointment_date && (
-                      <div className="text-red-500 text-sm">
-                        {formik.errors.appointment_date}
-                      </div>
-                    )}
+                      combineDateTime(
+                        formik.values.appointment_date_only,
+                        opt.value,
+                      );
+                    }}
+                    options={timeOptions}
+                    isDisabled={!formik.values.appointment_date_only}
+                    placeholder="Select Time"
+                    styles={customStyles}
+                  />
                 </div>
               </div>
-
-              
+              {formik.touched.appointment_date &&
+                formik.errors.appointment_date && (
+                  <div className="text-red-500">
+                    {formik.errors.appointment_date}
+                  </div>
+                )}
             </div>
 
             {/* Remarks */}
@@ -622,7 +609,6 @@ const getFirstAvailableTime = (date) => {
               <textarea
                 name="remarks"
                 value={formik.values.remarks}
-                // onChange={formik.handleChange}
                 onKeyDown={blockNonLettersAndNumbers}
                 onChange={(e) => {
                   const cleaned = sanitizeTextWithNumbers(e.target.value);
@@ -636,7 +622,7 @@ const getFirstAvailableTime = (date) => {
           </div>
 
           {/* Action Buttons */}
-          <div className="flex gap-4 justify-end">
+          <div className="flex gap-4 justify-end mt-2">
             <button
               type="button"
               onClick={handleAppointmentModal}

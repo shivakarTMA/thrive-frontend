@@ -7,7 +7,6 @@ import { LuCalendarDays } from "react-icons/lu";
 import Select from "react-select";
 import { customStyles } from "../../Helper/helper";
 import { authAxios } from "../../config/config";
-import { useSelector } from "react-redux";
 
 const localizer = momentLocalizer(moment);
 
@@ -19,9 +18,9 @@ const viewOptions = [
 
 const EVENT_COLORS = {
   personal: { bg: "#F0FDFA", border: "#0D9488" }, // green
-  pilates: { bg: "#FFF7ED", border: "#F97316" },  // orange
-  trial: { bg: "#E7F0FF", border: "#2563EB" },    // blue
-  group: { bg: "#F3F4F6", border: "#6B7280" },    // gray fallback
+  pilates: { bg: "#FFF7ED", border: "#F97316" }, // orange
+  trial: { bg: "#E7F0FF", border: "#2563EB" }, // blue
+  group: { bg: "#F3F4F6", border: "#6B7280" }, // gray fallback
 };
 
 const CalendarView = ({ clubId }) => {
@@ -29,18 +28,50 @@ const CalendarView = ({ clubId }) => {
   const [date, setDate] = useState(new Date());
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(false);
-
-  const { data } = useSelector((state) => state.clubTiming);
-
-  const openMinutes = data?.openMinutes ?? 360;   // fallback 6 AM
-  const closeMinutes = data?.closeMinutes ?? 1200; // fallback 8 PM
-  const timeIntervals = data?.timeIntervals ?? 30;
+  const [clubTiming, setClubTiming] = useState([]);
 
   const minutesToDate = (minutes) => {
     const d = new Date();
     d.setHours(Math.floor(minutes / 60), minutes % 60, 0, 0);
     return d;
   };
+
+  const fetchClubTimingAPI = async () => {
+    try {
+      if (!clubId) return;
+
+      const res = await authAxios().get(`/club/fetch/timing/${clubId}`);
+
+      setClubTiming(res.data?.data?.time || []);
+    } catch (err) {
+      console.error("Club timing error:", err);
+      setClubTiming([]);
+    }
+  };
+
+  useEffect(() => {
+    if (clubId) {
+      fetchClubTimingAPI();
+    }
+  }, [clubId]);
+
+  const timeToMinutes = (time) => {
+    const [h, m] = time.split(":").map(Number);
+    return h * 60 + m;
+  };
+
+  const openMinutes = clubTiming.length
+    ? timeToMinutes(clubTiming[0]) // first time = open
+    : 360;
+
+  const closeMinutes = clubTiming.length
+    ? timeToMinutes(clubTiming[clubTiming.length - 1]) // last time = close
+    : 1200;
+
+  const timeIntervals =
+    clubTiming.length > 1
+      ? timeToMinutes(clubTiming[1]) - timeToMinutes(clubTiming[0])
+      : 60;
 
   const fetchTrainerBookings = async () => {
     try {
@@ -49,7 +80,7 @@ const CalendarView = ({ clubId }) => {
       setLoading(true);
 
       const res = await authAxios().get(
-        `/appointment/trainer/upcoming/bookings?club_id=${clubId}`
+        `/appointment/trainer/upcoming/bookings?club_id=${clubId}`,
       );
 
       const apiData = res.data?.data || [];
@@ -57,12 +88,12 @@ const CalendarView = ({ clubId }) => {
       const formattedEvents = apiData.map((item) => {
         const startDateTime = moment(
           `${item.start_date} ${item.start_time}`,
-          "YYYY-MM-DD HH:mm:ss"
+          "YYYY-MM-DD HH:mm:ss",
         ).toDate();
 
         const endDateTime = moment(
           `${item.start_date} ${item.end_time}`,
-          "YYYY-MM-DD HH:mm:ss"
+          "YYYY-MM-DD HH:mm:ss",
         ).toDate();
 
         const rawType = item.type?.toLowerCase() || "";
@@ -90,10 +121,7 @@ const CalendarView = ({ clubId }) => {
 
       setEvents(formattedEvents);
     } catch (error) {
-      console.error(
-        "Error fetching bookings:",
-        error?.response || error
-      );
+      console.error("Error fetching bookings:", error?.response || error);
     } finally {
       setLoading(false);
     }
@@ -124,9 +152,7 @@ const CalendarView = ({ clubId }) => {
     return (
       <div className="h-full">
         {view === "month" ? (
-          <div className="text-xs font-medium truncate">
-            {event.title}
-          </div>
+          <div className="text-xs font-medium truncate">{event.title}</div>
         ) : (
           <>
             <div className="font-medium text-[12px] leading-tight mb-1">
@@ -232,9 +258,9 @@ const CalendarView = ({ clubId }) => {
           ),
         }}
         showNow={false}
-        min={minutesToDate(openMinutes)}     // ✅ dynamic open time
-        max={minutesToDate(closeMinutes)}   // ✅ dynamic close time
-        step={timeIntervals}                // ✅ dynamic interval (30 / 60)
+        min={minutesToDate(openMinutes)}
+        max={minutesToDate(closeMinutes + timeIntervals)}
+        step={timeIntervals}
         timeslots={1}
         toolbar={false}
         views={["month", "week", "day"]}

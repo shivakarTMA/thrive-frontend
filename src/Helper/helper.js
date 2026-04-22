@@ -46,9 +46,10 @@ export const customStyles = {
     minHeight: "28px",
     borderRadius: "5px",
     paddingLeft: "3px",
-    backgroundColor: state.isDisabled ? "#f3f4f6" : "#fff", // Added disabled background
-    cursor: state.isDisabled ? "not-allowed" : "default", // Optional: change cursor
+    backgroundColor: state.isDisabled ? "#f3f4f6" : "#fff",
+    cursor: state.isDisabled ? "not-allowed" : "default",
   }),
+
   dropdownIndicator: (base) => ({
     ...base,
     color: "#666",
@@ -58,18 +59,22 @@ export const customStyles = {
       height: "14px",
     },
   }),
+
   clearIndicator: (base) => ({
     ...base,
     padding: 0,
   }),
+
   multiValue: (base) => ({
     ...base,
     backgroundColor: "#f3f3f3",
   }),
+
   multiValueLabel: (base) => ({
     ...base,
     color: "#333",
   }),
+
   multiValueRemove: (base) => ({
     ...base,
     color: "#666",
@@ -78,17 +83,33 @@ export const customStyles = {
       color: "black",
     },
   }),
-  option: (base, state) => ({
-    ...base,
-    backgroundColor: state.isFocused ? "#000000" : "#ffffff", // Hover background
-    color: state.isFocused ? "#ffffff" : "#000000", // Hover text color
-    cursor: "pointer",
-    fontSize: "13px",
-  }),
+
+  option: (base, state) => {
+    const isDisabled = state.isDisabled;
+    const isFocused = state.isFocused;
+
+    return {
+      ...base,
+      backgroundColor: isDisabled
+        ? "#f5f5f5"
+        : isFocused
+        ? "#000"
+        : "#fff",
+      color: isDisabled
+        ? "#999"
+        : isFocused
+        ? "#fff"
+        : "#000",
+      cursor: isDisabled ? "not-allowed" : "pointer",
+      fontSize: "13px",
+    };
+  },
+
   menu: (base) => ({
     ...base,
-    zIndex: 9999, // Keeps the dropdown on top of other elements
+    zIndex: 9999,
   }),
+
   indicatorSeparator: () => ({
     display: "none",
   }),
@@ -188,13 +209,26 @@ export const selectIcon = {
       color: "black",
     },
   }),
-  option: (base, state) => ({
-    ...base,
-    backgroundColor: state.isFocused ? "#000000" : "#ffffff", // Hover background
-    color: state.isFocused ? "#ffffff" : "#000000", // Hover text color
-    cursor: "pointer",
-    fontSize: "14px",
-  }),
+  option: (base, state) => {
+    const isDisabled = state.isDisabled;
+    const isFocused = state.isFocused;
+
+    return {
+      ...base,
+      backgroundColor: isDisabled
+        ? "#f5f5f5"
+        : isFocused
+        ? "#000"
+        : "#fff",
+      color: isDisabled
+        ? "#999"
+        : isFocused
+        ? "#fff"
+        : "#000",
+      cursor: isDisabled ? "not-allowed" : "pointer",
+      fontSize: "13px",
+    };
+  },
   menu: (base) => ({
     ...base,
     zIndex: 9999, // Keeps the dropdown on top of other elements
