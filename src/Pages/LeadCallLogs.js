@@ -520,67 +520,63 @@ const LeadCallLogs = () => {
   const timeOptions = clubTiming.map((time) => {
     const now = new Date();
     const selectedDate = formik.values.trial_tour_date;
-
     let isDisabled = false;
 
     if (selectedDate) {
       const [h, m] = time.split(":").map(Number);
-
       const timeDate = new Date(selectedDate);
       timeDate.setHours(h, m, 0, 0);
 
       const isToday = selectedDate.toDateString() === now.toDateString();
+      if (isToday && timeDate <= now) isDisabled = true;
 
-      // ❌ disable past time
-      if (isToday && timeDate <= now) {
-        isDisabled = true;
+      // ── Tomorrow: disable slots ≤ current time-of-day ──────────────────
+      const tom = new Date();
+      tom.setDate(tom.getDate() + 1);
+      const isTomorrow = selectedDate.toDateString() === tom.toDateString();
+      if (isTomorrow) {
+        const slotTimeOnly = new Date();
+        slotTimeOnly.setHours(h, m, 0, 0);
+        if (slotTimeOnly <= now) isDisabled = true;
       }
+      // ───────────────────────────────────────────────────────────────────
 
-      // ❌ disable booked slots
       const booked = getBookedSlotsForDate(selectedDate);
-      if (booked.includes(time)) {
-        isDisabled = true;
-      }
+      if (booked.includes(time)) isDisabled = true;
     }
 
-    return {
-      label: formatTo12Hour(time),
-      value: time,
-      isDisabled,
-    };
+    return { label: formatTo12Hour(time), value: time, isDisabled };
   });
 
   const scheduleTimeOptions = clubTiming.map((time) => {
     const now = new Date();
     const selectedDate = formik.values.follow_up_date;
-
     let isDisabled = false;
 
     if (selectedDate) {
       const [h, m] = time.split(":").map(Number);
-
       const timeDate = new Date(selectedDate);
       timeDate.setHours(h, m, 0, 0);
 
       const isToday = selectedDate.toDateString() === now.toDateString();
+      if (isToday && timeDate <= now) isDisabled = true;
 
-      // ❌ past time
-      if (isToday && timeDate <= now) {
-        isDisabled = true;
+      // ── Tomorrow: disable slots ≤ current time-of-day ──────────────────
+      const tom = new Date();
+      tom.setDate(tom.getDate() + 1);
+      const isTomorrow = selectedDate.toDateString() === tom.toDateString();
+      if (isTomorrow) {
+        const slotTimeOnly = new Date();
+        slotTimeOnly.setHours(h, m, 0, 0);
+        if (slotTimeOnly <= now) isDisabled = true;
       }
+      // ───────────────────────────────────────────────────────────────────
 
-      // ❌ booked slots
       const booked = getScheduleBookedSlotsForDate(selectedDate);
-      if (booked.includes(time)) {
-        isDisabled = true;
-      }
+      if (booked.includes(time)) isDisabled = true;
     }
 
-    return {
-      label: formatTo12Hour(time),
-      value: time,
-      isDisabled,
-    };
+    return { label: formatTo12Hour(time), value: time, isDisabled };
   });
 
   const combineDateTime = (date, time) => {
@@ -791,7 +787,7 @@ const LeadCallLogs = () => {
                             formik.setFieldValue("trial_tour_datetime", "");
                           }}
                           dateFormat="dd/MM/yyyy"
-                          minDate={new Date()}
+                          minDate={new Date(new Date().setDate(new Date().getDate() + 1))} // ✅ disables today + past
                           placeholderText="Select Date"
                           onKeyDown={(e) => {
                             e.preventDefault();
@@ -900,7 +896,7 @@ const LeadCallLogs = () => {
                                 formik.setFieldValue("follow_up_datetime", "");
                               }}
                               dateFormat="dd/MM/yyyy"
-                              minDate={new Date()}
+                              minDate={new Date(new Date().setDate(new Date().getDate() + 1))} // ✅ disables today + past
                               placeholderText="Select Date"
                               onKeyDown={(e) => {
                                 e.preventDefault();

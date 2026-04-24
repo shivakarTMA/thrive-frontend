@@ -305,10 +305,44 @@ const CreateMemberAppointment = ({
     return clubTiming.map((time) => {
       const isBooked = booked.includes(time);
 
+      // ── Past-time-of-day check ──────────────────────────────────────────
+      let isPastTime = false;
+      const selectedDate = formik.values.appointment_date_only;
+
+      if (selectedDate) {
+        const now = new Date();
+        const [h, m] = time.split(":").map(Number);
+
+        const tom = new Date();
+        tom.setDate(tom.getDate() + 1);
+
+        const selectedIsToday =
+          new Date(selectedDate).toDateString() === now.toDateString();
+        const selectedIsTomorrow =
+          new Date(selectedDate).toDateString() === tom.toDateString();
+
+        if (selectedIsToday) {
+          // safety guard (minDate should prevent today from being picked)
+          const slotTime = new Date(selectedDate);
+          slotTime.setHours(h, m, 0, 0);
+          if (slotTime <= now) isPastTime = true;
+        }
+
+        if (selectedIsTomorrow) {
+          // compare slot HH:mm against current time-of-day only
+          const slotTimeOnly = new Date();
+          slotTimeOnly.setHours(h, m, 0, 0);
+          if (slotTimeOnly <= now) isPastTime = true;
+        }
+
+        // 25th and beyond → isPastTime stays false, all slots open
+      }
+      // ───────────────────────────────────────────────────────────────────
+
       return {
         label: formatTo12Hour(time),
         value: time,
-        isDisabled: isBooked,
+        isDisabled: isBooked || isPastTime, // ✅ both combined
       };
     });
   }, [clubTiming, bookedSlots, formik.values.appointment_date_only]);
@@ -558,7 +592,7 @@ const CreateMemberAppointment = ({
                       formik.setFieldValue("appointment_date", null);
                     }}
                     dateFormat="dd/MM/yyyy"
-                    minDate={new Date()}
+                    minDate={new Date(new Date().setDate(new Date().getDate() + 1))} // ✅ disables today + past
                     onKeyDown={(e) => {
                       e.preventDefault();
                     }}

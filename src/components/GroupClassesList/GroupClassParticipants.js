@@ -154,7 +154,7 @@ const GroupClassParticipants = () => {
                     <th className="px-2 py-4 min-w-[110px]">Scheduled At</th>
                     <th className="px-2 py-4 min-w-[130px]">Member Name</th>
                     <th className="px-2 py-4 min-w-[130px]">Trainer Name</th>
-                    {/* <th className="px-2 py-4 min-w-[130px]">Booking Status</th> */}
+                    <th className="px-2 py-4 min-w-[130px]">Booking Status</th>
                     <th className="px-2 py-4 min-w-[100px]">Cancel Booking</th>
                     <th className="px-2 py-4 min-w-[150px]">Remarks</th>
                   </tr>
@@ -194,7 +194,20 @@ const GroupClassParticipants = () => {
                             ? row?.assigned_staff_name
                             : "--"}
                         </td>
-                        {/* <td className="px-2 py-4">{row?.booking_status}</td> */}
+                        <td className="px-2 py-4">
+                          <span
+                            className={`
+                              flex items-center justify-between gap-1 rounded-full min-h-[30px] px-3 text-sm w-fit
+                            ${
+                              row?.is_waitlist !== true
+                                ? "bg-[#E8FFE6] text-[#138808]"
+                                : "bg-orange-100 text-orange-500"
+                            }
+                            `}
+                          >
+                          {row?.is_waitlist === true ? "Waiting" : "Booked"}
+                        </span>
+                        </td>
 
                         <td className="px-2 py-4">
                           {userRole === "CLUB_MANAGER" ||

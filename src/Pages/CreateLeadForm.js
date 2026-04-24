@@ -586,17 +586,50 @@ useEffect(() => {
     return matched?.slots || [];
   };
 
-  const timeOptionsWithDisabled = clubTiming.map((time) => {
-    const bookedSlotsForDate = getBookedSlotsForSelectedDate();
+const timeOptionsWithDisabled = clubTiming.map((time) => {
+  const bookedSlotsForDate = getBookedSlotsForSelectedDate();
+  const isBooked = bookedSlotsForDate.includes(time);
 
-    const isBooked = bookedSlotsForDate.includes(time);
+  // ── Past-time-of-day check (same logic as CreateNewInvoice) ──────────────
+  let isPastTime = false;
+  const selectedDate = formik.values.schedule_date;
 
-    return {
-      label: formatTo12Hour(time),
-      value: time,
-      isDisabled: isBooked, // ✅ THIS IS KEY
-    };
-  });
+  if (selectedDate) {
+    const now = new Date();
+    const [h, m] = time.split(":").map(Number);
+
+    const tom = new Date();
+    tom.setDate(tom.getDate() + 1);
+    const selectedIsTomorrow =
+      new Date(selectedDate).toDateString() === tom.toDateString();
+
+    const selectedIsToday =
+      new Date(selectedDate).toDateString() === now.toDateString();
+
+    if (selectedIsToday) {
+      // edge-case guard (minDate should prevent this, kept for safety)
+      const slotTime = new Date(selectedDate);
+      slotTime.setHours(h, m, 0, 0);
+      if (slotTime <= now) isPastTime = true;
+    }
+
+    if (selectedIsTomorrow) {
+      // compare slot HH:mm against current time-of-day only
+      const slotTimeOnly = new Date();
+      slotTimeOnly.setHours(h, m, 0, 0);
+      if (slotTimeOnly <= now) isPastTime = true;
+    }
+
+    // 25th and beyond → isPastTime stays false
+  }
+  // ─────────────────────────────────────────────────────────────────────────
+
+  return {
+    label: formatTo12Hour(time),
+    value: time,
+    isDisabled: isBooked || isPastTime, // ✅ both conditions combined
+  };
+});
 
   useEffect(() => {
     if (formik.values.schedule_date && formik.values.assigned_staff_id) {
@@ -1465,7 +1498,7 @@ useEffect(() => {
                                     }}
                                     dateFormat="dd MMM yyyy"
                                     placeholderText="Select date"
-                                    minDate={new Date()} // ✅ disable past dates
+                                    minDate={new Date(new Date().setDate(new Date().getDate() + 1))} // ✅ disables today + past
                                     disabled={
                                       !formik.values.schedule ||
                                       formik.values.schedule === "NOTRIAL" ||

@@ -148,7 +148,7 @@ const InvoiceModal = ({ isOpen, onClose, data }) => {
                     </td>
                     )}
                     <td className="border px-4 py-2 text-right">
-                      ₹{formatIndianNumber(item?.amount)}
+                      ₹{formatIndianNumber(item?.total_amount)}
                     </td>
                   </tr>
                 ))}

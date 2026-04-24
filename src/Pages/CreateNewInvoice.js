@@ -106,6 +106,7 @@ const CreateNewInvoice = ({
   const [voucherInput, setVoucherInput] = useState("");
   const [voucherStatus, setVoucherStatus] = useState(null);
   const [voucherMessage, setVoucherMessage] = useState("");
+  const [clubTiming, setClubTiming] = useState([]);
 
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
   const [paymentUrl, setPaymentUrl] = useState("");
@@ -256,25 +257,6 @@ const CreateNewInvoice = ({
 
         const res = await authAxios().post("/payment/proceed", payload);
 
-        // if (res.data?.status) {
-        //   const { paymentUrl, order_no } = res.data.response;
-
-        //   if (paymentUrl && order_no) {
-        //     setPaymentUrl(paymentUrl);
-        //     setOrderNo(order_no);
-        //     setPaymentModalOpen(true); // ✅ OPEN PAYMENT MODAL
-        //     toast.success("Payment initiated successfully");
-        //   } else {
-        //     // ❌ Status true but required data missing
-        //     setInvoiceModal(false);
-        //     toast.success("Service booked successfully");
-        //   }
-        // } else {
-        //   // ❌ API status false
-        //   setInvoiceModal(false);
-        //   toast.success("Service booked successfully");
-        // }
-
         if (res.data?.status) {
           // ✅ ONLINE FLOW
           if (paymentModeRef.current === "ONLINE") {
@@ -308,6 +290,76 @@ const CreateNewInvoice = ({
       }
     },
   });
+
+  const fetchClubTimingAPI = async () => {
+    try {
+      if (!formik.values.club_id) return;
+
+      const res = await authAxios().get(
+        `/club/fetch/timing/${formik.values.club_id}`,
+      );
+
+      setClubTiming(res.data?.data?.time || []);
+    } catch (err) {
+      console.error("Club timing error:", err);
+      setClubTiming([]);
+    }
+  };
+
+  useEffect(() => {
+    if (formik.values.club_id) {
+      fetchClubTimingAPI();
+    }
+  }, [formik.values.club_id]);
+
+  const formatTo12Hour = (time24) => {
+    const [h, m] = time24.split(":").map(Number);
+    const ampm = h >= 12 ? "PM" : "AM";
+    const hour = h % 12 || 12;
+
+    return `${hour}:${m.toString().padStart(2, "0")} ${ampm}`;
+  };
+
+  const startTimeOptions = clubTiming.map((time) => {
+  const now = new Date();
+  const selectedDate = formik.values.start_date;
+  let isDisabled = false;
+
+  if (selectedDate) {
+    const [h, m] = time.split(":").map(Number);
+    const timeDate = new Date(selectedDate);
+    timeDate.setHours(h, m, 0, 0);
+
+    const selectedIsToday =
+      new Date(selectedDate).toDateString() === now.toDateString();
+
+    // ── NEW: detect if selected date is tomorrow ──────────────────────────
+    const tom = new Date();
+    tom.setDate(tom.getDate() + 1);
+    const selectedIsTomorrow =
+      new Date(selectedDate).toDateString() === tom.toDateString();
+    // ─────────────────────────────────────────────────────────────────────
+
+    // Today edge-case (minDate guard)
+    if (selectedIsToday && timeDate <= now) {
+      isDisabled = true;
+    }
+
+    // ── NEW: tomorrow → disable slots at/before current time-of-day ──────
+    // e.g. if now is 2:30 PM on the 23rd, disable 6:30 AM–2:30 PM on the 24th
+    if (selectedIsTomorrow) {
+      const slotTimeOnly = new Date();        // same calendar day as now
+      slotTimeOnly.setHours(h, m, 0, 0);     // but set to the slot's HH:mm
+      if (slotTimeOnly <= now) {
+        isDisabled = true;
+      }
+    }
+    // For 25th and beyond → isDisabled stays false, all slots enabled
+    // ─────────────────────────────────────────────────────────────────────
+  }
+
+  return { label: formatTo12Hour(time), value: time, isDisabled };
+});
 
   const handleFinalSubmit = async (mode) => {
     paymentModeRef.current = mode;
@@ -854,7 +906,10 @@ const CreateNewInvoice = ({
                               onBlur={() =>
                                 formik.setFieldTouched("start_date", true, true)
                               }
-                              minDate={new Date()}
+                              minDate={new Date(new Date().setDate(new Date().getDate() + 1))} // ✅ disables today + past
+                              onKeyDown={(e) => {
+                                e.preventDefault();
+                              }}
                               dateFormat="dd MMM yyyy"
                               placeholderText="Select date"
                               className={`input--icon ${
@@ -882,65 +937,36 @@ const CreateNewInvoice = ({
                             <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[10]">
                               <GoClock />
                             </span>
-                            <DatePicker
-                              selected={
-                                formik.values.start_time
-                                  ? parseTime(formik.values.start_time)
-                                  : null
+                            <Select
+                              name="start_time"
+                              value={
+                                startTimeOptions.find(
+                                  (opt) =>
+                                    opt.value === formik.values.start_time,
+                                ) || null
                               }
-                              onChange={(date) => {
-                                if (date) {
-                                  formik.setFieldValue(
-                                    "start_time",
-                                    date.toLocaleTimeString([], {
-                                      hour: "2-digit",
-                                      minute: "2-digit",
-                                      hour12: false,
-                                    }),
-                                  );
-                                } else {
-                                  formik.setFieldValue("start_time", "");
-                                }
+                              onChange={(option) => {
+                                formik.setFieldValue(
+                                  "start_time",
+                                  option.value,
+                                );
+
+                                // 🔥 IMPORTANT FIX
                                 formik.setFieldTouched(
                                   "start_time",
                                   true,
-                                  true,
+                                  false,
                                 );
+                                formik.validateField("start_time");
                               }}
-                              onBlur={() =>
-                                formik.setFieldTouched("start_time", true, true)
-                              }
-                              /* ✅ 1. Disable if start date not selected */
-                              disabled={!formik.values.start_date}
-                              showTimeSelect
-                              showTimeSelectOnly
-                              timeIntervals={30}
-                              dateFormat="hh:mm aa"
-                              placeholderText="Select time"
-                              isClearable
-                              /* ✅ CHANGE TIME RANGE */
-                              minTime={
-                                isToday(formik.values.start_date)
-                                  ? roundUpToNextInterval(new Date(), 30)
-                                  : getTodayAtTime(6, 0) // 6:00 AM
-                              }
-                              maxTime={getTodayAtTime(22, 0)} // 10:00 PM
-                              /* Optional: prevent selecting past times even if user clicks */
-                              filterTime={(time) => {
-                                if (!isToday(formik.values.start_date))
-                                  return true;
-                                return time >= new Date();
-                              }}
-                              className={`custom--input w-full input--icon ${
-                                formik.errors?.start_time &&
-                                formik.touched?.start_time
-                                  ? "border-red-500"
-                                  : ""
-                              }`}
+                              options={startTimeOptions}
+                              placeholder="Select time"
+                              isDisabled={!formik.values.start_date}
+                              styles={selectIcon}
                             />
                           </div>
-                          {formik.errors?.start_time &&
-                            formik.touched?.start_time && (
+                          {formik.touched.start_time &&
+                            formik.errors.start_time && (
                               <div className="text-red-500 text-sm mt-1">
                                 {formik.errors.start_time}
                               </div>
@@ -1097,13 +1123,13 @@ const CreateNewInvoice = ({
                 </button> */}
                 {memberProfile === true ? (
                   <div className="flex gap-2 items-center justify-end flex-1">
-                    {/* <button
-                    type="button"
-                    onClick={() => handleFinalSubmit("ONLINE")}
-                    className="px-4 py-2 bg-black text-white font-semibold rounded max-w-[150px] w-full"
-                  >
-                    Pay Online
-                  </button> */}
+                    <button
+                      type="button"
+                      onClick={() => handleFinalSubmit("ONLINE")}
+                      className="px-4 py-2 bg-black text-white font-semibold rounded max-w-[150px] w-full"
+                    >
+                      Pay Online
+                    </button>
 
                     <button
                       type="button"

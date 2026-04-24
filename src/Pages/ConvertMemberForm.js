@@ -871,7 +871,7 @@ const ConvertMemberForm = ({
       const gstPercent = Number(formik.values.productDetails?.gst) || 0;
 
       const discountedTotal = totalAmount - couponDiscount;
-      const gstAmount = Math.round((discountedTotal * gstPercent) / 100);
+      const gstAmount = (discountedTotal * gstPercent) / 100 ;
       const finalAmount = discountedTotal + gstAmount;
 
       setVoucherStatus("success");
@@ -2295,13 +2295,13 @@ const ConvertMemberForm = ({
 
                   {step === stepValidationSchemas.length - 1 && (
                     <>
-                      {/* <button
+                      <button
                         type="button"
                         onClick={() => handleFinalSubmit("ONLINE")}
                         className="px-4 py-2 bg-black text-white font-semibold rounded max-w-[150px] w-full"
                       >
                         Pay Online
-                      </button> */}
+                      </button>
 
                       <button
                         type="button"

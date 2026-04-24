@@ -482,7 +482,7 @@ const MemberCheckInsReport = () => {
                         <td className="px-2 py-4">{r?.club_name}</td>
                         <td className="px-2 py-4">{r?.membership_number}</td>
                         <td className="px-2 py-4">{r?.member_name}</td>
-                        <td className="px-2 py-4">{r?.subscription_title}</td>
+                        <td className="px-2 py-4">{r?.current_subscription_plan}</td>
                         <td className="px-2 py-4">{r?.date}</td>
                         <td className="px-2 py-4 text-green-600">
                           {r?.check_in || "--"}
