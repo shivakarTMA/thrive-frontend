@@ -10,6 +10,7 @@ import {
   blockNonLettersAndNumbers,
   customStyles,
   sanitizeTextWithNumbers,
+  selectIcon,
 } from "../../Helper/helper";
 import Select from "react-select";
 import { FaCalendarDays } from "react-icons/fa6";
@@ -18,6 +19,7 @@ import { authAxios } from "../../config/config";
 import { useClubDateTime } from "../../hooks/useClubDateTime";
 import { useDateTimePicker } from "../../hooks/useDateTimePicker";
 import { PiImageFill } from "react-icons/pi";
+import { FiClock } from "react-icons/fi";
 
 const AddNewItemModal = ({
   onClose,
@@ -27,14 +29,7 @@ const AddNewItemModal = ({
 }) => {
   const leadBoxRef = useRef(null);
   const { user } = useSelector((state) => state.auth);
-
-  // const dateClickedRef = useRef(false);
-  // const [dateOnlySelected, setDateOnlySelected] = useState(false);
-
-  // AFTER — add a ref mirror so onSubmit reads live value
-  const dateClickedRef = useRef(false);
-  const dateOnlySelectedRef = useRef(false);           // ← ADD THIS
-  const [dateOnlySelected, setDateOnlySelected] = useState(false);
+  const [clubTiming, setClubTiming] = useState([]);
 
   const formik = useFormik({
     initialValues: {
@@ -44,7 +39,9 @@ const AddNewItemModal = ({
       category: null,
       description: "",
       found_at_location: null,
-      found_date_time: null,
+      found_date: "",
+      found_time: "",
+      found_date_time: "",
       loggedBy: user?.name,
       verification_notes: "",
       status: "AVAILABLE",
@@ -59,24 +56,13 @@ const AddNewItemModal = ({
       item_name: Yup.string().required("Item Name is required"),
       category: Yup.string().required("Category Name is required"),
       found_at_location: Yup.string().required("Location is required"),
-      // found_date_time: Yup.date().required("Date & Time is required"),
-      found_date_time: Yup.date()
-        .nullable()
-        .required("Date & Time is required")
-        .typeError("Invalid Date & Time")
-        .test(
-          "is-valid-date",
-          "Invalid Date & Time",
-          (value) => value instanceof Date && !isNaN(value)
-        ),
+      found_date_time: Yup.string().required("Date & Time is required"),
     }),
     validateOnChange: true,
     validateOnBlur: true,
     onSubmit: async (values, { resetForm }) => {
-      if (dateOnlySelectedRef.current) {               // ← was dateOnlySelected
-        toast.error("Please select time as well");
-        return;
-      }
+      console.log("Submitting with values:", values);
+
       try {
         // Create FormData instance
         const formData = new FormData();
@@ -115,13 +101,78 @@ const AddNewItemModal = ({
     },
   });
 
+  const fetchClubTimingAPI = async () => {
+    try {
+      if (!formik.values.club_id) return;
+
+      const res = await authAxios().get(
+        `/club/fetch/timing/${formik.values.club_id}`,
+      );
+
+      setClubTiming(res.data?.data?.time || []);
+    } catch (err) {
+      console.error("Club timing error:", err);
+      setClubTiming([]);
+    }
+  };
+
   useEffect(() => {
-    const fetchProductById = async (id) => {
+    if (formik.values.club_id) {
+      fetchClubTimingAPI();
+    }
+  }, [formik.values.club_id]);
+
+  const formatTo12Hour = (time24) => {
+    const [h, m] = time24.split(":").map(Number);
+    const ampm = h >= 12 ? "PM" : "AM";
+    const hour = h % 12 || 12;
+
+    return `${hour}:${m.toString().padStart(2, "0")} ${ampm}`;
+  };
+
+  const startTimeOptions = clubTiming.map((time) => {
+    const now = new Date();
+    const selectedDate = formik.values.found_date;
+    let isDisabled = false;
+
+    if (selectedDate) {
+      const [h, m] = time.split(":").map(Number);
+      const slotTime = new Date();
+      slotTime.setHours(h, m, 0, 0);
+
+      const isToday =
+        new Date(selectedDate).toDateString() === now.toDateString();
+
+      // ✅ For today: only past/current slots are valid (item was already found)
+      // Disable future slots
+      if (isToday && slotTime > now) {
+        isDisabled = true;
+      }
+      // Past dates → all slots enabled (item could have been found any time)
+    }
+
+    return { label: formatTo12Hour(time), value: time, isDisabled };
+  });
+
+  useEffect(() => {
+    const fetchLostItemById = async (id) => {
       try {
         const res = await authAxios().get(`/lost/found/${id}`);
         const data = res.data?.data || res.data || null;
 
         if (data) {
+          // ✅ Parse found_date_time → found_date + found_time
+          let parsedDate = "";
+          let parsedTime = "";
+
+          if (data?.found_date_time) {
+            const dt = new Date(data.found_date_time);
+            parsedDate = dt.toLocaleDateString("en-CA"); // "YYYY-MM-DD"
+            const hh = String(dt.getHours()).padStart(2, "0");
+            const mm = String(dt.getMinutes()).padStart(2, "0");
+            parsedTime = `${hh}:${mm}`; // "HH:mm"
+          }
+
           formik.setValues({
             image: data?.image || null,
             club_id: data?.club_id || null,
@@ -129,9 +180,9 @@ const AddNewItemModal = ({
             category: data?.category || null,
             description: data?.description || "",
             found_at_location: data?.found_at_location || null,
-            found_date_time: data?.found_date_time
-              ? new Date(data.found_date_time)
-              : null,
+            found_date: parsedDate, // ✅ "YYYY-MM-DD"
+            found_time: parsedTime, // ✅ "HH:mm"
+            found_date_time: data?.found_date_time || "", // ✅ original ISO string
             loggedBy: data?.loggedBy || user?.name,
             verification_notes: data?.verification_notes || "",
             status: data?.status || "AVAILABLE",
@@ -143,9 +194,23 @@ const AddNewItemModal = ({
     };
 
     if (editingOption) {
-      fetchProductById(editingOption);
+      fetchLostItemById(editingOption);
     }
   }, [editingOption]);
+
+  useEffect(() => {
+    const { found_date, found_time } = formik.values;
+
+    if (found_date && found_time) {
+      const [h, m] = found_time.split(":").map(Number);
+      const combined = new Date(found_date);
+      combined.setHours(h, m, 0, 0);
+      // ✅ ISO format: 2026-03-18T16:45:00Z
+      formik.setFieldValue("found_date_time", combined.toISOString());
+    } else {
+      formik.setFieldValue("found_date_time", "");
+    }
+  }, [formik.values.found_date, formik.values.found_time]);
 
   // Redux state
   const dispatch = useDispatch();
@@ -167,94 +232,6 @@ const AddNewItemModal = ({
     }
   };
 
-  const now = new Date();
-
-  const selectedClub = clubOptions.find(
-    (club) => club.value?.toString() === formik.values.club_id?.toString(),
-  );
-
-  const { filterTime: followUpFilterTime } = useClubDateTime(
-    formik.values.found_date_time,
-    selectedClub,
-  );
-
-  const followUpDT = useDateTimePicker(
-    formik,
-    "found_date_time",
-    followUpFilterTime,
-  );
-
-now.setSeconds(0);
-now.setMilliseconds(0);
-
-const isToday =
-  !followUpDT.selected ||
-  new Date(followUpDT.selected).toDateString() === now.toDateString();
-
-  const maxTime = isToday
-  ? now
-  : new Date(0, 0, 0, 23, 59, 59);
-
-// ✅ NEW: Combine club filter + past time restriction
-const combinedFilterTime = (time) => {
-  // First apply club timing filter
-  if (followUpFilterTime && !followUpFilterTime(time)) {
-    return false;
-  }
-
-  // Then apply "no future time for today"
-  if (isToday) {
-    return time <= now;
-  }
-
-  return true;
-};
-
-const handleDateTimeChange = (date) => {
-  const prev = followUpDT.selected;
-
-  if (!date) {
-    setDateOnlySelected(false);
-    dateOnlySelectedRef.current = false;
-    followUpDT.handleDateTime(date);
-    return;
-  }
-
-  // If no previous value OR the date portion changed → it's a date click (no time yet)
-  const isDateChange =
-    !prev ||
-    new Date(prev).toDateString() !== new Date(date).toDateString();
-
-  if (isDateChange) {
-    setDateOnlySelected(true);
-    dateOnlySelectedRef.current = true;
-  } else {
-    // Same date, different time → user picked a time slot
-    setDateOnlySelected(false);
-    dateOnlySelectedRef.current = false;
-  }
-
-  followUpDT.handleDateTime(date);
-};
-
-// const handleDateTimeChange = (date) => {
-//   if (dateClickedRef.current) {
-//     dateClickedRef.current = false;
-//     dateOnlySelectedRef.current = true;              // ← ADD THIS
-//     setDateOnlySelected(true);
-//   } else {
-//     dateOnlySelectedRef.current = false;             // ← ADD THIS
-//     setDateOnlySelected(false);
-//   }
-//   followUpDT.handleDateTime(date);
-// };
-
-useEffect(() => {
-  formik.setFieldValue("found_date_time", null);
-  dateOnlySelectedRef.current = false;              // ← ADD THIS
-  setDateOnlySelected(false);
-}, [formik.values.club_id]);
-
   const handleFileChange = (e, formik) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -267,7 +244,7 @@ useEffect(() => {
       onClick={handleOverlayClick}
     >
       <div
-        className="min-h-[70vh]  w-[95%] max-w-xl mx-auto mt-[100px] mb-[100px] container--leadbox rounded-[10px] flex flex-col"
+        className="min-h-[70vh]  w-[95%] max-w-[630px] mx-auto mt-[100px] mb-[100px] container--leadbox rounded-[10px] flex flex-col"
         ref={leadBoxRef}
         onClick={(e) => e.stopPropagation()}
       >
@@ -284,7 +261,7 @@ useEffect(() => {
             onSubmit={formik.handleSubmit}
             className="flex flex-col gap-3 mt-0"
           >
-            <div className="p-6 flex-1 bg-white rounded-b-[10px]">
+            <div className="p-4 flex-1 bg-white rounded-b-[10px]">
               <div className="grid grid-cols-2 gap-4">
                 {/* Image Preview */}
                 <div className="row-span-2">
@@ -457,63 +434,71 @@ useEffect(() => {
                       </div>
                     )}
                 </div>
+
+                {/* Start Date Field */}
                 <div>
                   <label className="mb-2 block">
-                    Date & Time <span className="text-red-500">*</span>
+                    Date & Time<span className="text-red-500">*</span>
                   </label>
-                  <div className="custom--date flex-1">
-                    <span className="absolute z-[1] mt-[9px] ml-[15px]">
-                      <FaCalendarDays />
-                    </span>
-                    {/* <DatePicker
-                      selected={followUpDT.selected}
-                      onChange={followUpDT.handleDateTime}
-                      onChangeRaw={followUpDT.handleChangeRaw}
-                      showTimeSelect
-                      timeFormat="hh:mm aa"
-                      dateFormat={followUpDT.dateFormat}
-                      placeholderText="Select date & time"
-                      maxDate={now}
-                      maxTime={maxTime} // ✅ ADD THIS
-                      minTime={new Date(0, 0, 0, 0, 0)} // optional but safe
-                      filterTime={combinedFilterTime}
-                      disabled={editingOption || formik.values.club_id === null}
-                      className="border px-3 py-2 w-full input--icon"
-                      onKeyDown={(e) => e.preventDefault()}
-                    /> */}
-                    <DatePicker
-                      selected={followUpDT.selected}
-                      onChange={handleDateTimeChange}                   
-                      onChangeRaw={followUpDT.handleChangeRaw}
-                      showTimeSelect
-                      timeFormat="hh:mm aa"
-                      dateFormat={followUpDT.dateFormat}
-                      placeholderText="Select date & time"
-                      maxDate={now}
-                      maxTime={maxTime}
-                      minTime={new Date(0, 0, 0, 0, 0)}
-                      filterTime={combinedFilterTime}
-                      disabled={editingOption || formik.values.club_id === null}
-                      className="border px-3 py-2 w-full input--icon"
-                      onKeyDown={(e) => e.preventDefault()}
-                    />
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="custom--date relative">
+                      {/* Calendar Icon */}
+                      <span className="absolute z-[1] mt-[11px] ml-[15px]">
+                        <FaCalendarDays />
+                      </span>
+                      <DatePicker
+                        selected={
+                          formik.values.found_date
+                            ? new Date(formik.values.found_date)
+                            : null
+                        }
+                        onChange={(date) => {
+                          formik.setFieldValue(
+                            "found_date",
+                            date.toLocaleDateString("en-CA"),
+                          );
+                          formik.setFieldValue("found_time", ""); // reset time on date change
+                        }}
+                        onBlur={() =>
+                          formik.setFieldTouched("found_date", true)
+                        }
+                        dateFormat="dd-MM-yyyy"
+                        maxDate={new Date()} // ✅ no future dates
+                        placeholderText="Date"
+                        className="custom--input w-full input--icon"
+                        onKeyDown={(e) => e.preventDefault()}
+                        disabled={editingOption}
+                      />
+                    </div>
+                    <div className="custom--date relative">
+                      <span className="absolute z-[1] mt-[11px] ml-[15px]">
+                        <FiClock />
+                      </span>
+                      <Select
+                        name="found_time"
+                        value={
+                          startTimeOptions.find(
+                            (opt) => opt.value === formik.values.found_time,
+                          ) || null
+                        }
+                        onChange={(option) => {
+                          formik.setFieldValue("found_time", option.value);
+                        }}
+                        options={startTimeOptions}
+                        placeholder="Time"
+                        isDisabled={!formik.values.found_date || editingOption}
+                        styles={selectIcon}
+                      />
+                    </div>
                   </div>
-                  {/* {formik.touched.found_date_time &&
+                  {formik.touched.found_date_time &&
                     formik.errors.found_date_time && (
-                      <p className="text-sm text-red-500 mt-1">
+                      <div className="text-red-500 text-sm mt-1">
                         {formik.errors.found_date_time}
-                      </p>
-                    )} */}
-                    {dateOnlySelected ? (
-                      <p className="text-sm text-red-500 mt-1">Please select time as well</p>
-                    ) : (
-                      formik.touched.found_date_time && formik.errors.found_date_time && (
-                        <p className="text-sm text-red-500 mt-1">
-                          {formik.errors.found_date_time}
-                        </p>
-                      )
+                      </div>
                     )}
                 </div>
+
                 <div>
                   <label className="mb-2 block">Logged By</label>
                   <input

@@ -616,12 +616,12 @@ const LeadCallLogs = () => {
         </div>
       </div>
 
-      <Link
-        to={logId ? "/my-follow-ups" : "/all-leads"}
+      <button
+        onClick={() => navigate(-1)}
         className="flex items-center gap-2 mt-5 cursor-pointer border rounded-full w-fit border-black px-3 py-1 bg-black text-white"
       >
         <MdOutlineKeyboardBackspace /> <span>Back</span>
-      </Link>
+      </button>
 
       <div className="flex gap-5 mt-5">
         <div className="z-[222] relative max-w-[500px] bg-white p-4 rounded-[10px] w-full box--shadow">

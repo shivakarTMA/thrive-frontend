@@ -3,13 +3,14 @@ import React, { useEffect, useState } from "react";
 import { authAxios } from "../../config/config";
 import { toast } from "react-toastify";
 import Pagination from "../../components/common/Pagination";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useNavigate } from "react-router-dom";
 import { formatAutoDate, formatTimeAppointment } from "../../Helper/helper";
 import { MdOutlineKeyboardBackspace } from "react-icons/md";
 import { useSelector } from "react-redux";
 
 const GroupClassParticipants = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [participantClassTitle, setParticipantClassTitle] = useState("");
   const [packageParticipats, setPackageParticipats] = useState([]);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
@@ -133,12 +134,12 @@ const GroupClassParticipants = () => {
           </div>
         </div>
 
-        <Link
-          to="/group-class"
+        <button
+          onClick={() => navigate(-1)}
           className="flex items-center gap-2 mt-5 cursor-pointer border rounded-full w-fit border-black px-3 py-1 bg-black text-white"
         >
           <MdOutlineKeyboardBackspace /> <span>Back</span>
-        </Link>
+        </button>
 
         <div className="w-full p-3 border bg-white shodow--box rounded-[10px] mt-5">
           <div className="table--data--bottom w-full">
