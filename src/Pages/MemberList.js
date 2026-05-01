@@ -281,48 +281,68 @@ const MemberList = () => {
   };
 
   // 🚀 Fetch staff list from API
-  const fetchStaff = async () => {
-    try {
-      const requests = [authAxios().get("/staff/list?role=FOH")];
-
-      if (
-        userRole === "CLUB_MANAGER" ||
-        userRole === "ADMIN" ||
-        userRole === "FOH"
-      ) {
-        requests.push(authAxios().get("/staff/list?role=CLUB_MANAGER"));
-      }
-
-      const responses = await Promise.all(requests);
-
-      let mergedData = [];
-
-      responses.forEach((res) => {
-        const role = res.config.url.includes("FOH") ? "FOH" : "CLUB_MANAGER";
-
-        const users = (res.data?.data || []).map((user) => ({
-          ...user,
-          role,
-        }));
-
-        mergedData.push(...users);
-      });
-
-      const uniqueData = Array.from(
-        new Map(mergedData.map((user) => [user.id, user])).values(),
-      );
-
-      const activeOnly = filterActiveItems(uniqueData);
-      setStaffList(activeOnly);
-    } catch (err) {
-      console.error(err);
-    }
-  };
+ const fetchStaff = async (clubId) => {
+     try {
+       const requests = [
+         authAxios().get("/staff/list", {
+           params: { role: "FOH", club_id: clubId },
+         }),
+       ];
+ 
+       if (
+         userRole === "CLUB_MANAGER"
+       ) {
+         requests.push(
+           authAxios().get("/staff/list", {
+             params: { role: "FOH", club_id: clubId },
+           }),
+         );
+       }
+ 
+       if (
+         userRole === "ADMIN"
+       ) {
+         requests.push(
+           authAxios().get("/staff/list", {
+             params: { role: "CLUB_MANAGER", club_id: clubId },
+           }),
+         );
+       }
+ 
+       const responses = await Promise.all(requests);
+ 
+       let mergedData = [];
+ 
+       responses.forEach((res) => {
+         const role = res.config.params.role; // ✅ more reliable than URL.includes
+ 
+         const users = (res.data?.data || []).map((user) => ({
+           ...user,
+           role,
+         }));
+ 
+         mergedData.push(...users);
+       });
+ 
+       const uniqueData = Array.from(
+         new Map(mergedData.map((user) => [user.id, user])).values(),
+       );
+ 
+       const activeOnly = filterActiveItems(uniqueData);
+       setStaffList(activeOnly);
+     } catch (err) {
+       console.error(err);
+     }
+   };
 
   // Initial load effect
   useEffect(() => {
-    fetchStaff();
-  }, []);
+    if (clubFilter?.value) {
+      fetchStaff(clubFilter.value);
+    } else {
+      fetchStaff(); // fetch without club_id
+    }
+  }, [clubFilter?.value]);
 
   const staffOptions = [
     {
@@ -640,7 +660,7 @@ const MemberList = () => {
               <div className="flex gap-2 items-center">
                 {(userRole === "CLUB_MANAGER" || userRole === "ADMIN") && (
                   <>
-                    {showOwnerDropdown && selectedUserId.length > 0 && (
+                    {selectedUserId.length > 0 && (
                       <div>
                         <Select
                           options={staffOptions}

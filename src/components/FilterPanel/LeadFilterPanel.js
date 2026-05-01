@@ -45,9 +45,15 @@ const fetchStaff = async (clubId) => {
       authAxios().get(`/staff/list?role=FOH&club_id=${clubId}`)
     ];
 
-    if (userRole === "CLUB_MANAGER" || userRole === "ADMIN") {
+    if (userRole === "ADMIN") {
       requests.push(
         authAxios().get(`/staff/list?role=CLUB_MANAGER&club_id=${clubId}`)
+      );
+    }
+
+    if (userRole === "CLUB_MANAGER") {
+      requests.push(
+        authAxios().get(`/staff/list?role=FOH&club_id=${clubId}`)
       );
     }
 

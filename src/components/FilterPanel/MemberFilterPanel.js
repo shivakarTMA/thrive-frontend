@@ -83,10 +83,18 @@ export default function MemberFilterPanel({
         }),
       ];
 
-      if (userRole === "CLUB_MANAGER" || userRole === "ADMIN") {
+      if (userRole === "ADMIN") {
         requests.push(
           authAxios().get("/staff/list", {
             params: { role: "CLUB_MANAGER", club_id: clubId },
+          })
+        );
+      }
+
+      if (userRole === "CLUB_MANAGER") {
+        requests.push(
+          authAxios().get("/staff/list", {
+            params: { role: "FOH", club_id: clubId },
           })
         );
       }

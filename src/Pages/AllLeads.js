@@ -250,9 +250,17 @@ const AllLeads = (props) => {
       ];
 
       if (
-        userRole === "CLUB_MANAGER" ||
-        userRole === "ADMIN" ||
-        userRole === "FOH"
+        userRole === "CLUB_MANAGER"
+      ) {
+        requests.push(
+          authAxios().get("/staff/list", {
+            params: { role: "FOH", club_id: clubId },
+          }),
+        );
+      }
+
+      if (
+        userRole === "ADMIN"
       ) {
         requests.push(
           authAxios().get("/staff/list", {
@@ -852,7 +860,7 @@ const AllLeads = (props) => {
                       {(userRole === "CLUB_MANAGER" ||
                         userRole === "ADMIN") && (
                         <>
-                          {showOwnerDropdown && selectedUserId.length > 0 && (
+                          {selectedUserId.length > 0 && (
                             <div>
                               <Select
                                 options={staffOptions}
