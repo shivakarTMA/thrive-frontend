@@ -46,6 +46,13 @@ const Topbar = ({
   const [activeDropdown, setActiveDropdown] = useState(null);
   const [leadTopModal, setLeadTopModal] = useState(false);
   const [notificationList, setNotificationList] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [notificationData, setNotificationData] = useState([]);
+  const [page, setPage] = useState(1);
+  const [limit] = useState(10);
+  const [totalPage, setTotalPage] = useState(1);
+  const [loading, setLoading] = useState(false);
+
   const [memberModal, setMemberModal] = useState(false);
   const [invoiceModal, setInvoiceModal] = useState(false);
   const [profileModal, setProfileModal] = useState(false);
@@ -77,6 +84,86 @@ const Topbar = ({
   const handleToggleMenu = () => {
     setToggleMenuBar(!toggleMenuBar);
   };
+
+  // Notification Dropdown Logic
+  const fetchNotificationList = async (pageNumber = 1) => {
+    try {
+      setLoading(true);
+
+      const res = await authAxios().get(
+        `/staff/notification/list?page=${pageNumber}&limit=${limit}`,
+      );
+
+      const data = res.data?.data || [];
+
+      setUnreadCount(res.data?.unread_count || 0);
+      setTotalPage(res.data?.totalPage || 1);
+
+      // 👇 important: append vs replace
+      if (pageNumber === 1) {
+        setNotificationData(data);
+      } else {
+        setNotificationData((prev) => [...prev, ...data]);
+      }
+    } catch (err) {
+      console.error("notification error:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateNotifications = async () => {
+    try {
+      await authAxios().put("/staff/notification/update");
+    } catch (err) {
+      console.error("update error:", err);
+    }
+  };
+
+  const handleBellClick = async () => {
+    setNotificationList(true); // open immediately (better UX)
+
+    try {
+      setPage(1); // 👈 reset page
+      setNotificationData([]); // 👈 clear old data
+      await updateNotifications(); // mark as read
+      await fetchNotificationList(); // refresh list + unread count
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  useEffect(() => {
+    fetchNotificationList(1);
+  }, []);
+
+  const isToday = (dateString) => {
+    const today = new Date();
+    const date = new Date(dateString);
+
+    return (
+      date.getDate() === today.getDate() &&
+      date.getMonth() === today.getMonth() &&
+      date.getFullYear() === today.getFullYear()
+    );
+  };
+
+  const todayNotifications = notificationData.filter((item) =>
+    isToday(item.createdAt),
+  );
+
+  const olderNotifications = notificationData.filter(
+    (item) => !isToday(item.createdAt),
+  );
+
+  const handleShowMore = () => {
+    if (page < totalPage && !loading) {
+      const nextPage = page + 1;
+      setPage(nextPage);
+      fetchNotificationList(nextPage);
+    }
+  };
+  // end Notification Dropdown Logic
 
   const fetchSearchResults = async (searchTerm) => {
     try {
@@ -375,18 +462,22 @@ const Topbar = ({
                     </div> */}
                   {/* </DropdownMenu> */}
                 </div>
-                {/* <div className="notification--top relative">
-                  <div className="notification--count rounded-[50px] text-white flex items-center justify-center w-[21px] h-[21px] absolute top-[-10px] right-[-5px]">
-                    <span className="text-[12px]">3</span>
+
+                {(user?.role === "CLUB_MANAGER" ||
+                  user?.role === "FITNESS_MANAGER" ||
+                  user?.role === "TRAINER" ||
+                  user?.role === "FOH") && (
+                  <div className="notification--top relative">
+                    <div className="notification--count rounded-[50px] text-white flex items-center justify-center w-[21px] h-[21px] absolute top-[-10px] right-[-5px]">
+                      <span className="text-[12px]">{unreadCount}</span>
+                    </div>
+                    <img
+                      src={notificationBell}
+                      onClick={handleBellClick}
+                      className="cursor-pointer w-6"
+                    />
                   </div>
-                  <img
-                    src={notificationBell}
-                    onClick={() => {
-                      setNotificationList(true);
-                    }}
-                    className="cursor-pointer w-6"
-                  />
-                </div> */}
+                )}
               </>
             )}
             <div className="relative">
@@ -431,7 +522,15 @@ const Topbar = ({
 
         {/* Notification Dropdown */}
         {notificationList && (
-          <NotificationDropdown setNotificationList={setNotificationList} />
+          <NotificationDropdown
+            setNotificationList={setNotificationList}
+            todayNotifications={todayNotifications}
+            olderNotifications={olderNotifications}
+            handleShowMore={handleShowMore}
+            page={page}
+            totalPage={totalPage}
+            loading={loading}
+          />
         )}
 
         {/* Notification Dropdown end */}

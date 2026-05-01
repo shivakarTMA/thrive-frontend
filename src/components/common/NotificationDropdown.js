@@ -1,28 +1,37 @@
-import React, { useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import NotificationIcon from "../../assets/images/icon-notification.png";
 import ViewAll from "../../assets/images/all-notification.svg";
+import { authAxios } from "../../config/config";
 
-const notifications = [
-  {
-    title: "New Lead Assigned",
-    time: "2 mins ago",
-    description:
-      "A new lead has been assigned to you. Reach out to get started.",
-  },
-  {
-    title: "Meeting Scheduled",
-    time: "10 mins ago",
-    description: "Your meeting with the client has been scheduled.",
-  },
-  {
-    title: "Lead Updated",
-    time: "1 hour ago",
-    description: "Lead information has been updated successfully.",
-  },
-];
-
-const NotificationDropdown = ({ setNotificationList }) => {
+const NotificationDropdown = ({
+  setNotificationList,
+  setUnreadCount,
+  todayNotifications,
+  olderNotifications,
+  handleShowMore,
+  page,
+  totalPage,
+  loading,
+}) => {
   const notificationRef = useRef(null);
+
+  const getTimeAgo = (dateString) => {
+    const now = new Date();
+    const past = new Date(dateString);
+
+    const diffInSeconds = Math.floor((now - past) / 1000);
+
+    if (diffInSeconds < 60) return "Just now";
+
+    const minutes = Math.floor(diffInSeconds / 60);
+    if (minutes < 60) return `${minutes} min${minutes > 1 ? "s" : ""} ago`;
+
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours} hour${hours > 1 ? "s" : ""} ago`;
+
+    const days = Math.floor(hours / 24);
+    return `${days} day${days > 1 ? "s" : ""} ago`;
+  };
 
   const handleOverlayClick = (e) => {
     if (
@@ -46,43 +55,100 @@ const NotificationDropdown = ({ setNotificationList }) => {
           <div className="font-semibold text-black">
             <span>Notifications</span>
           </div>
-          <div className="cursor-pointer bg-[#F1F1F1] rounded-[5px] w-[28px] h-[28px] flex items-center justify-center">
-            <img src={ViewAll} width={15} height={15} alt="" />
-          </div>
         </div>
-        <div>
-          <span className="font-[500] text-[#949494] text-sm block p-3 pb-0">
-            Today
-          </span>
+        <div className="max-h-[calc(100vh-115px)] overflow-auto">
+          {todayNotifications.length > 0 && (
+            <>
+              <span className="font-[500] text-[#949494] text-sm block p-3 pb-0">
+                Today
+              </span>
+              <div>
+                {todayNotifications.map((item, index) => (
+                  <div
+                    key={index}
+                    className={`flex gap-[10px] p-3 notification--item border-b border-[#D4D4D4]
+              ${index === todayNotifications.length - 1 ? "border-b-0" : ""}`}
+                  >
+                    <div className="w-[36px]">
+                      <img
+                        src={NotificationIcon}
+                        width={36}
+                        height={36}
+                        alt=""
+                      />
+                    </div>
 
-          <div>
-            {notifications.map((item, index) => (
-              <div
-                key={index}
-                className={`flex gap-[10px] p-3 notification--item border-b border-[#D4D4D4]
-              ${index === notifications.length - 1 ? "border-b-0" : ""}`}
-              >
-                <div className="w-[36px]">
-                  <img src={NotificationIcon} width={36} height={36} alt="" />
-                </div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 justify-between w-full">
+                        <span className="text-black font-[500] block text-md">
+                          {item.subject}
+                        </span>
+                        <span className="text-[#949494] text-sm font-[400] block">
+                          {getTimeAgo(item.createdAt)}
+                        </span>
+                      </div>
 
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 justify-between w-full">
-                    <span className="text-black font-[500] block text-md">
-                      {item.title}
-                    </span>
-                    <span className="text-[#949494] text-sm font-[400] block">
-                      {item.time}
-                    </span>
+                      <p className="text-[#949494] leading-[normal] text-md">
+                        {item.body}
+                      </p>
+                    </div>
                   </div>
-
-                  <p className="text-[#949494] leading-[normal] text-md">
-                    {item.description}
-                  </p>
-                </div>
+                ))}
               </div>
-            ))}
-          </div>
+            </>
+          )}
+
+          {olderNotifications.length > 0 && (
+            <>
+              <span className="font-[500] text-[#949494] text-sm block p-3 pb-0">
+                Earlier
+              </span>
+              <div>
+                {olderNotifications.map((item, index) => (
+                  <div
+                    key={index}
+                    className={`flex gap-[10px] p-3 notification--item border-b border-[#D4D4D4]
+              ${index === olderNotifications.length - 1 ? "border-b-0" : ""}`}
+                  >
+                    <div className="w-[36px]">
+                      <img
+                        src={NotificationIcon}
+                        width={36}
+                        height={36}
+                        alt=""
+                      />
+                    </div>
+
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 justify-between w-full">
+                        <span className="text-black font-[500] block text-md">
+                          {item.subject}
+                        </span>
+                        <span className="text-[#949494] text-sm font-[400] block">
+                          {getTimeAgo(item.createdAt)}
+                        </span>
+                      </div>
+
+                      <p className="text-[#949494] leading-[normal] text-md">
+                        {item.body}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+          {page < totalPage && (
+            <div className="p-3 text-center border-t border-[#D4D4D4]">
+              <button
+                onClick={handleShowMore}
+                className="text-black text-sm font-medium underline"
+                disabled={loading}
+              >
+                {loading ? "Loading..." : "Show More"}
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>
