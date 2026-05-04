@@ -627,6 +627,9 @@ const MemberCallLogs = () => {
                                 formik.setFieldValue("follow_up_datetime", "");
                               }}
                               dateFormat="dd/MM/yyyy"
+                              onKeyDown={(e) => {
+                                e.preventDefault();
+                              }}
                               minDate={new Date()} // ✅ disable past dates
                               placeholderText="Select date"
                               className="border px-3 py-2 w-full input--icon"

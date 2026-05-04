@@ -142,6 +142,7 @@ const CreateLeadAppointment = ({
   // ===============================
   const formik = useFormik({
     initialValues: {
+      appointment_category: "complementary",
       service_id: null,
       trainer_id: null,
       appointment_date_only: null,
@@ -156,15 +157,20 @@ const CreateLeadAppointment = ({
         return;
       }
 
+      const payload = {
+        member_id: memberID,
+        appointment_category: values.appointment_category,
+        service_id: values.service_id,
+        trainer_id: values.trainer_id,
+        club_id: clubId,
+        appointment_date: values.appointment_date,
+        remarks: values.remarks,
+      }
+
+      // console.log("Payload to submit:", payload);
+
       try {
-        await authAxios().post("/appointment/complimentary/create", {
-          member_id: memberID,
-          service_id: values.service_id,
-          trainer_id: values.trainer_id,
-          club_id: clubId,
-          appointment_date: values.appointment_date,
-          remarks: values.remarks,
-        });
+        await authAxios().post("/appointment/complimentary/create", payload);
 
         toast.success("Appointment booked successfully!");
         resetForm();

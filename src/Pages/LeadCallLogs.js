@@ -123,6 +123,7 @@ const LeadCallLogs = () => {
   const [staffList, setStaffList] = useState([]);
   const [editLog, setEditLog] = useState(null);
   const [clubData, setClubData] = useState(null);
+  const [clubEndTime, setClubEndTime] = useState('');
 
   const clubId = clubIdFromParams || clubData; // ✅ fallback to API club
   const [trainerBookedSlots, setTrainerBookedSlots] = useState([]);
@@ -484,9 +485,23 @@ const LeadCallLogs = () => {
     }
   };
 
+  const fetchClubID = async () => {
+    try {
+      if (!clubId) return;
+
+      const res = await authAxios().get(`/club/${clubId}`);
+      const data = res.data?.data?.close_time;
+      setClubEndTime(data);
+      
+    } catch (err) {
+      console.error("Club timing error:", err);
+    }
+  };
+
   useEffect(() => {
     if (clubId) {
       fetchClubTimingAPI();
+      fetchClubID();
     }
   }, [clubId]);
 
@@ -575,6 +590,71 @@ const LeadCallLogs = () => {
       const booked = getScheduleBookedSlotsForDate(selectedDate);
       if (booked.includes(time)) isDisabled = true;
     }
+
+    return { label: formatTo12Hour(time), value: time, isDisabled };
+  });
+
+  const firstTime = clubTiming[0]; // "06:30"
+  const lastTime = clubTiming[clubTiming.length - 1]; // "20:30"
+
+  const generateTimeSlots = (start, end, interval = 10) => {
+    if (!start || !end) return [];
+
+    const slots = [];
+
+    const [startH, startM] = start.split(":").map(Number);
+    const [endH, endM] = end.split(":").map(Number);
+
+    const current = new Date();
+    current.setHours(startH, startM, 0, 0);
+
+    const endDate = new Date();
+    endDate.setHours(endH, endM, 0, 0);
+
+    // 👇 changed here
+    while (current < endDate) {
+      const h = String(current.getHours()).padStart(2, "0");
+      const m = String(current.getMinutes()).padStart(2, "0");
+
+      slots.push(`${h}:${m}`);
+      current.setMinutes(current.getMinutes() + interval);
+    }
+
+    return slots;
+  };
+
+  const newClubTiming = generateTimeSlots(firstTime, lastTime, 10);
+
+  const cleanTime = clubEndTime?.slice(0, 5);
+
+  const updatedTiming =
+  clubTiming && clubTiming.length > 0
+    ? generateTimeSlots(
+        clubTiming[0],
+        cleanTime,
+        10
+      )
+    : [];
+
+  const timeFollowUpOptions = updatedTiming.map((time) => {
+    const now = new Date();
+    const selectedDate = formik.values.follow_up_date;
+    let isDisabled = false;
+
+    if (selectedDate) {
+        const [h, m] = time.split(":").map(Number);
+        const timeDate = new Date(selectedDate);
+        timeDate.setHours(h, m, 0, 0);
+
+        const isToday = selectedDate.toDateString() === new Date().toDateString();
+
+        if (isToday && timeDate <= new Date()) {
+          isDisabled = true;
+        }
+
+        const booked = getBookedSlotsForDate(selectedDate);
+        if (booked.includes(time)) isDisabled = true;
+      }
 
     return { label: formatTo12Hour(time), value: time, isDisabled };
   });
@@ -680,6 +760,9 @@ const LeadCallLogs = () => {
                             formik.setFieldValue("follow_up_time", null);
                             formik.setFieldValue("follow_up_datetime", "");
                           }}
+                          onKeyDown={(e) => {
+                            e.preventDefault();
+                          }}
                           dateFormat="dd/MM/yyyy"
                           minDate={new Date()} // ✅ disable past dates
                           placeholderText="Select date"
@@ -693,7 +776,7 @@ const LeadCallLogs = () => {
                           key={formik.values.follow_up_date}
                           value={
                             formik.values.follow_up_time
-                              ? timeOptions.find(
+                              ? timeFollowUpOptions.find(
                                   (opt) =>
                                     opt.value === formik.values.follow_up_time,
                                 )
@@ -710,7 +793,7 @@ const LeadCallLogs = () => {
                               option.value,
                             );
                           }}
-                          options={timeOptions}
+                          options={timeFollowUpOptions}
                           placeholder="Select time"
                           isDisabled={
                             !formik.values.follow_up_date || !!editLog
