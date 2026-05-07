@@ -1,0 +1,157 @@
+import React, { useEffect, useState } from "react";
+import Select from "react-select";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import { customStyles, formatAutoDate, formatIndianNumber, formatText } from "../../Helper/helper";
+import { authAxios } from "../../config/config";
+import { toast } from "react-toastify";
+import { addYears, subYears } from "date-fns";
+import { FaCalendarDays } from "react-icons/fa6";
+
+const OrderHistory = ({ details }) => {
+  const [category, setCategory] = useState({ value: "All", label: "All" });
+  const [dateFrom, setDateFrom] = useState(null);
+  const [dateTo, setDateTo] = useState(null);
+  const [ordersList, setOrdersList] = useState([]);
+
+  const categoryOptions = [
+    { value: "All", label: "All" },
+    { value: "Membership", label: "Membership" },
+    { value: "Cafe Items", label: "Cafe Items" },
+    { value: "Merchandise", label: "Merchandise" },
+    { value: "Spa", label: "Spa" },
+    { value: "Physiotherapy", label: "Physiotherapy" },
+    { value: "NC", label: "NC" },
+    { value: "GX", label: "GX" },
+    { value: "Sports", label: "Sports" },
+  ];
+
+  // Fetch coins with filters applied
+  const fetchMemberOrders = async () => {
+    try {
+      // Make the API call with query parameters
+      const res = await authAxios().get(`/member/order/${details?.id}`);
+      const data = res.data?.data || [];
+      setOrdersList(data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  useEffect(() => {
+    fetchMemberOrders();
+  }, []);
+
+  return (
+    <div className="p-4 bg-white rounded shadow">
+      {/* Filters */}
+      {/* <div className="flex flex-wrap items-center gap-2 mb-4">
+        <Select
+          options={categoryOptions}
+          value={category}
+          onChange={setCategory}
+          placeholder="Select Category"
+          styles={customStyles}
+          className="w-40"
+        />
+        <div className="custom--date dob-format">
+          <span className="absolute z-[1] mt-[11px] ml-[15px]">
+            <FaCalendarDays />
+          </span>
+          <DatePicker
+            isClearable
+            selected={dateFrom}
+            onChange={(date) => {
+              setDateFrom(date);
+              setDateTo(null);
+            }}
+            showMonthDropdown
+            showYearDropdown
+            maxDate={new Date()}
+            dateFormat="dd MMM yyyy"
+            dropdownMode="select"
+            placeholderText="From date"
+            className="custom--input w-full input--icon"
+          />
+        </div>
+        <div className="custom--date dob-format">
+          <span className="absolute z-[1] mt-[11px] ml-[15px]">
+            <FaCalendarDays />
+          </span>
+          <DatePicker
+            isClearable
+            selected={dateTo}
+            onChange={(date) => setDateTo(date)}
+            showMonthDropdown
+            showYearDropdown
+            minDate={dateFrom || subYears(new Date(), 20)}
+            maxDate={addYears(new Date(), 0)}
+            dateFormat="dd MMM yyyy"
+            dropdownMode="select"
+            placeholderText="To date"
+            className="custom--input w-full input--icon"
+            disabled={!dateFrom}
+          />
+        </div>
+      </div> */}
+
+      {/* Table */}
+      <div className="overflow-auto">
+        <table className="min-w-full border border-gray-300 text-sm">
+          <thead className="bg-gray-100 text-left">
+            <tr>
+              <th className="border px-3 py-2">Order ID</th>
+              <th className="border px-3 py-2">Date</th>
+              <th className="border px-3 py-2">Status</th>
+              <th className="border px-3 py-2">Type</th>
+              <th className="border px-3 py-2">Name</th>
+              <th className="border px-3 py-2">Method</th>
+              <th className="border px-3 py-2">Payment</th>
+              <th className="border px-3 py-2">Fulfilment Status</th>
+              <th className="border px-3 py-2">Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            {ordersList.length > 0 ? (
+              ordersList.map((order) => (
+                <tr key={order.orderId} className="hover:bg-gray-50">
+                  <td className="border px-3 py-2">{order?.order_no}</td>
+                  <td className="border px-3 py-2">
+                    {formatAutoDate(order?.order_date)}
+                  </td>
+                  <td className="border px-3 py-2">
+                    {formatText(order?.order_status)}
+                  </td>
+                  <td className="border px-3 py-2">
+                    {formatText(order?.order_type)}
+                  </td>
+                  <td className="border px-3 py-2">
+                    {order?.name}
+                  </td>
+                  <td className="border px-3 py-2">
+                    {order?.payment_method ? formatText(order?.payment_method) : "--"}
+                  </td>
+                  <td className="border px-3 py-2">
+                    {order?.payment_status ? formatText(order?.payment_status === "UNPAID" ? "FAILED" : order?.payment_status) : "--"}
+                  </td>
+                  <td className="border px-3 py-2">
+                    {order?.fulfilment_status ? formatText(order?.fulfilment_status) : "--"}
+                  </td>
+                  <td className="border px-3 py-2">₹{formatIndianNumber(order?.total_amount)}</td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="7" className="text-center py-4 text-gray-500">
+                  No orders found.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+};
+
+export default OrderHistory;

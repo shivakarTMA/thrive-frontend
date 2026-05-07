@@ -1,0 +1,884 @@
+import React, { useEffect, useState } from "react";
+import { FiPlus } from "react-icons/fi";
+import { useFormik } from "formik";
+import * as Yup from "yup";
+import { toast } from "react-toastify";
+import Tooltip from "../common/Tooltip";
+import { LiaEdit } from "react-icons/lia";
+import { FaCircle } from "react-icons/fa6";
+import CreatePackage from "./CreatePackage";
+import { authAxios } from "../../config/config";
+import Pagination from "../common/Pagination";
+import { IoSearchOutline } from "react-icons/io5";
+import Select from "react-select";
+import {
+  customStyles,
+  filterActiveItems,
+  formatIndianNumber,
+  formatText,
+} from "../../Helper/helper";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchOptionList } from "../../Redux/Reducers/optionListSlice";
+
+const PackagesList = () => {
+  const [showModal, setShowModal] = useState(false);
+  const [packages, setPackages] = useState([]);
+  const [editingOption, setEditingOption] = useState(null);
+  const [service, setService] = useState([]);
+  const [serviceFilter, setServiceFilter] = useState(null);
+  const [club, setClub] = useState([]);
+  const [clubFilter, setClubFilter] = useState(null);
+  const { user } = useSelector((state) => state.auth);
+  const userRole = user.role;
+
+  const [sessionLevelValue, setSessionLevelValue] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [page, setPage] = useState(1);
+  const [rowsPerPage] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+
+  const dispatch = useDispatch();
+  const { lists } = useSelector((state) => state.optionList);
+
+  // Fetch option lists
+  useEffect(() => {
+    dispatch(fetchOptionList("SESSION_LEVEL"));
+  }, [dispatch]);
+
+  const sessionLevel = lists["SESSION_LEVEL"] || [];
+
+  const fetchService = async (clubId = null) => {
+    try {
+      const params = {};
+      if (clubId) params.club_id = clubId;
+      const res = await authAxios().get("/service/list", { params });
+      let data = res.data?.data || res.data || [];
+      const activeService = data.filter((item) => item.status === "ACTIVE");
+      // console.log(activeService, "activeService");
+      setService(activeService);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const serviceOptions =
+    service
+      ?.map((item) => ({
+        label: item.name,
+        value: item.id,
+        type: item.type,
+      }))
+      .filter(
+        (item) => item.type !== "PRODUCT" && item.type !== "GROUP_CLASS",
+      ) || [];
+
+  const fetchClub = async (search = "") => {
+    try {
+      const res = await authAxios().get("/club/list", {
+        params: search ? { search } : {},
+      });
+      let data = res.data?.data || res.data || [];
+
+      const activeOnly = filterActiveItems(data);
+      setClub(activeOnly);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const fetchPackagesList = async (search = searchTerm, currentPage = page) => {
+    try {
+      const params = {
+        page: currentPage,
+        limit: rowsPerPage,
+      };
+      // Search param
+      if (search) params.search = search;
+
+      if (serviceFilter?.value) {
+        params.service_id = serviceFilter.value;
+      }
+      if (clubFilter?.value) {
+        params.club_id = clubFilter.value;
+      }
+
+      const res = await authAxios().get("/package/list?package_type=SESSION", {
+        params,
+      });
+      const responseData = res.data;
+      const data = responseData?.data || [];
+
+      setPackages(data);
+
+      setPage(responseData?.currentPage || 1);
+      setTotalPages(responseData?.totalPage || 1);
+      setTotalCount(responseData?.totalCount || data.length);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  // Initial fetch
+  useEffect(() => {
+    fetchPackagesList();
+    fetchClub();
+  }, []);
+
+  const clubOptions =
+    club?.map((item) => ({
+      label: item.name, // Show club name
+      value: item.id, // Store club_id as ID
+    })) || [];
+
+  // Fetch packages again when search or service filter changes
+  useEffect(() => {
+    const delayDebounce = setTimeout(() => {
+      fetchPackagesList(searchTerm, 1);
+      setPage(1);
+    }, 300);
+
+    return () => clearTimeout(delayDebounce);
+  }, [searchTerm, serviceFilter, clubFilter]);
+
+  const getServiceType = (service_id, serviceOptions) => {
+    const service = serviceOptions.find((s) => s.value === service_id);
+    return service?.type || null;
+  };
+
+  const getValidationSchema = (serviceOptions) =>
+    Yup.lazy((values) => {
+      const service_type = getServiceType(values.service_id, serviceOptions);
+
+      let schema = {
+        image: Yup.mixed()
+          .required("Image is required")
+          .test("fileType", "Only JPG, PNG, or WEBP allowed", (value) => {
+            if (!value) return false;
+
+            // If editing and already have image URL
+            if (typeof value === "string") return true;
+
+            return ["image/jpeg", "image/png", "image/webp"].includes(
+              value.type,
+            );
+          }),
+        service_id: Yup.number().required("Service is required"),
+        club_id: Yup.number().required("Club is required"),
+        session_level: Yup.string().required("Level is required"),
+        name: Yup.string().required("Name is required"),
+        caption:
+          service_type === "GROUP_CLASS"
+            ? Yup.string() // not required if editing
+            : Yup.string().required("Caption is required"),
+        tags: Yup.string().required("Tags is required"),
+        trainer_id:
+          service_type !== "GROUP_CLASS"
+            ? Yup.string() // not required if editing
+            : Yup.string().required("Trainer Name is required"),
+        position: Yup.string().required("Position is required"),
+        status: Yup.string().required("Status is required"),
+        description: Yup.string().required("Description is required"),
+      };
+
+      if (service_type !== "RECOVERY") {
+        schema = {
+          ...schema,
+
+          booking_type: Yup.string()
+            .oneOf(["PAID", "FREE"])
+            .required("Booking Type is required"),
+
+          amount: Yup.number()
+            .typeError("Amount must be a number")
+            .when("booking_type", {
+              is: "PAID",
+              then: (schema) =>
+                schema
+                  .required("Amount is required")
+                  .min(1, "Amount must be greater than 0"),
+              otherwise: (schema) => schema.nullable(),
+            }),
+
+          discount: Yup.number()
+            .typeError("Discount must be a number")
+            .when(["booking_type", "amount"], {
+              is: (booking_type) => booking_type === "PAID",
+              then: (schema) =>
+                schema
+                  .required("Discount is required")
+                  .min(0, "Discount cannot be negative")
+                  .test(
+                    "not-equal-amount",
+                    "Discount cannot be equal to Amount",
+                    function (value) {
+                      const { amount } = this.parent;
+                      if (!amount || !value) return true;
+                      return value !== amount; // ❌ prevent equal
+                    }
+                  )
+                  .test(
+                    "discount-not-greater-than-amount",
+                    "Discount cannot be greater than Amount",
+                    function (value) {
+                      const { amount } = this.parent;
+                      if (!amount || amount === 0) {
+                        return value === 0 || !value;
+                      }
+                      return value <= amount;
+                    },
+                  ),
+              otherwise: (schema) => schema.nullable(),
+            }),
+
+          // gst: Yup.number()
+          //   .typeError("GST must be a number")
+          //   .min(2, "GST cannot be less than 2%")
+          //   .max(40, "GST cannot be greater than 40%")
+          //   .when("booking_type", {
+          //     is: "PAID",
+          //     then: (schema) => schema.required("GST is required"),
+          //     otherwise: (schema) => schema.nullable().notRequired(),
+          //   }),
+        };
+      }
+
+      if (
+        service_type === "RECREATION" ||
+        service_type === "PERSONAL_TRAINER"
+      ) {
+        schema = {
+          ...schema,
+          session_duration: Yup.number()
+            .required("Session duration is required")
+            .min(1, "duration must be greater than 0"),
+          session_validity: Yup.number()
+            .required("Validity is required")
+            .min(1, "Validity must be greater than 0"),
+          no_of_sessions: Yup.number()
+            .required("No. of Sessions is required")
+            .min(1, "Sessions must be greater than 0")
+            .min(1, "Sessions must be greater than 0"),
+        };
+      }
+
+      if (service_type === "PERSONAL_TRAINER") {
+        schema = {
+          ...schema,
+          buddy_pt: Yup.string().required("PT Type is required"),
+          // earn_coin: Yup.number()
+          //   .typeError("Earn Coins must be a number")
+          //   .required("Earn Coins is required"),
+        };
+      }
+
+      if (service_type === "RECOVERY") {
+        schema = {
+          ...schema,
+          studio_id: Yup.string().required("Studio is required"),
+          variation: Yup.array().of(
+            Yup.object({
+              name: Yup.string().required("Name is required"),
+              image: Yup.mixed()
+                .required("Image is required")
+                .test("fileType", "Only JPG, PNG, or WEBP allowed", (value) => {
+                  if (!value) return false;
+
+                  // If editing and already have image URL
+                  if (typeof value === "string") return true;
+
+                  return ["image/jpeg", "image/png", "image/webp"].includes(
+                    value.type,
+                  );
+                }),
+              recovery_goals: Yup.string().required(
+                "Recovery Goals are required",
+              ),
+              caption: Yup.string().required("Caption is required"),
+              description: Yup.string().required("Description is required"),
+              no_of_sessions: Yup.number()
+                .typeError("No. of Sessions must be a number")
+                .required("No. of Sessions is required")
+                .min(1, "Sessions must be greater than 0"),
+              session_duration: Yup.number()
+                .typeError("Session Duration must be a number")
+                .required("Session Duration is required")
+                .min(1, "Duration must be greater than 0"),
+              session_validity: Yup.number()
+                .typeError("Validity must be a number")
+                .required("Validity is required")
+                .min(1, "Validity must be greater than 0"),
+              amount: Yup.number()
+                .typeError("Amount must be a number")
+                .required("Amount is required")
+                .min(1, "Amount must be greater than 0"),
+
+              discount: Yup.number()
+                .typeError("Discount must be a number")
+                .min(0, "Discount cannot be negative")
+                .when("amount", (amount, schema) => {
+                  if (amount === 0) {
+                    // Case 1: Amount = 0 → Discount must be 0 or empty
+                    return schema.test(
+                      "no-discount-when-zero",
+                      "Discount must be 0 or empty when amount is 0",
+                      (value) => !value || value === 0
+                    );
+                  }
+
+                  // Case 2: Amount > 0 → Discount is required, ≤ amount, and ≠ amount
+                  return schema
+                    .required("Discount is required")
+                    .max(amount, "Discount cannot be greater than amount")
+                    .test(
+                      "not-equal-amount",
+                      "Discount cannot be equal to amount",
+                      (value) => value !== amount
+                    );
+                }),
+              // gst: Yup.number()
+              //   .typeError("GST must be a number")
+              //   .required("GST is required")
+              //   .min(2, "GST cannot be less than 2%")
+              //   .max(40, "GST cannot be greater than 40%"),
+              // earn_coin: Yup.number()
+              //   .typeError("Earn Coins must be a number")
+              //   .required("Earn Coins is required"),
+              position: Yup.number()
+                .typeError("Position must be a number")
+                .required("Position is required"),
+            }),
+          ),
+        };
+      }
+
+      return Yup.object(schema);
+    });
+
+  const initialValues = {
+    name: "",
+    service_id: "",
+    trainer_id: "",
+    buddy_pt: "",
+    club_id: null,
+    studio_id: null,
+    package_category_id: "",
+    caption: "",
+    description: "",
+    image: null,
+    session_level: "",
+    no_of_sessions: "",
+    session_duration: "",
+    session_validity: "",
+    start_date: "",
+    start_time: "",
+    end_time: "",
+    max_capacity: "",
+    waitlist_capacity: "",
+    tags: "",
+    amount: "",
+    discount: "",
+    booking_type: "",
+    gst: "",
+    earn_coin: "",
+    position: "",
+    hsn_sac_code: "",
+    is_featured: "",
+    equipment: "",
+    status: "",
+    variation: [
+      {
+        name: "",
+        image: "",
+        recovery_goals: "",
+        caption: "",
+        description: "",
+        no_of_sessions: "",
+        session_duration: "",
+        session_validity: "",
+        amount: "",
+        discount: "",
+        gst: "",
+        earn_coin: "",
+        position: "",
+      },
+    ],
+  };
+
+  const formik = useFormik({
+    initialValues,
+    validationSchema: getValidationSchema(serviceOptions),
+    validateOnChange: true,
+    validateOnBlur: true,
+    onSubmit: async (values, { resetForm }) => {
+      // console.log(values,'SHIVAKAR')
+      try {
+        const formData = new FormData();
+
+        Object.keys(values).forEach((key) => {
+          if (key === "image" && typeof values.image === "string") return;
+          if (key === "variation") return; // IMPORTANT → variation handled separately
+          formData.append(key, values[key]);
+        });
+
+        if (values.image instanceof File) {
+          formData.append("file", values.image);
+        }
+
+        // Auto set booking type
+        if (getServiceType(values.service_id, serviceOptions) === "RECOVERY") {
+          formik.setFieldValue("booking_type", "PAID");
+        }
+
+        let packageId = editingOption;
+
+        // -------------------------------------
+        // ✅ CREATE PACKAGE
+        // -------------------------------------
+        if (!editingOption) {
+          const res = await authAxios().post("/package/create", formData, {
+            headers: { "Content-Type": "multipart/form-data" },
+          });
+
+          packageId = res.data?.data?.id;
+
+          // CREATE ALL VARIATIONS
+          for (const v of values.variation) {
+            await createPackageVariation(packageId, v);
+          }
+
+          toast.success("Package Created Successfully");
+        }
+
+        // -------------------------------------
+        // ✅ UPDATE PACKAGE
+        // -------------------------------------
+        else {
+          await authAxios().put(`/package/${editingOption}`, formData, {
+            headers: { "Content-Type": "multipart/form-data" },
+          });
+
+          // UPDATE ALL VARIATIONS
+          for (const v of values.variation) {
+            if (v.id) {
+              await updatePackageFeature(editingOption, v);
+            } else {
+              await createPackageVariation(editingOption, v);
+            }
+          }
+
+          toast.success("Package Updated Successfully");
+        }
+
+        fetchPackagesList();
+        resetForm();
+        setEditingOption(null);
+        setShowModal(false);
+      } catch (err) {
+        console.log(err.response?.data?.message);
+        toast.error(err.response?.data?.errors || err.response?.data?.message)
+      }
+    },
+  });
+
+  const createPackageVariation = async (packageId, variation) => {
+    const fd = new FormData();
+
+    fd.append("package_id", packageId);
+    fd.append("name", variation.name || "");
+    fd.append("recovery_goals", variation.recovery_goals || "");
+    fd.append("caption", variation.caption || "");
+    fd.append("description", variation.description || "");
+    fd.append("no_of_sessions", variation.no_of_sessions || "");
+    fd.append("session_duration", variation.session_duration || "");
+    fd.append("session_validity", variation.session_validity || "");
+    fd.append("amount", variation.amount || "");
+    fd.append("discount", variation.discount || "");
+    fd.append("gst", variation.gst || "");
+    fd.append("position", variation.position || "");
+    // fd.append("earn_coin", variation.earn_coin || "");
+
+    if (variation.image instanceof File) {
+      fd.append("image", variation.image);
+    }
+
+    return authAxios().post("/package/variation/create", fd, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+  };
+
+  const updatePackageFeature = async (packageId, variation) => {
+    const fd = new FormData();
+
+    fd.append("package_id", packageId);
+    fd.append("name", variation.name || "");
+    fd.append("recovery_goals", variation.recovery_goals || "");
+    fd.append("caption", variation.caption || "");
+    fd.append("description", variation.description || "");
+    fd.append("no_of_sessions", variation.no_of_sessions || "");
+    fd.append("session_duration", variation.session_duration || "");
+    fd.append("session_validity", variation.session_validity || "");
+    fd.append("amount", variation.amount || "");
+    fd.append("discount", variation.discount || "");
+    fd.append("gst", variation.gst || "");
+    fd.append("position", variation.position || "");
+    // fd.append("earn_coin", variation.earn_coin || "");
+
+    if (variation.image instanceof File) {
+      fd.append("image", variation.image);
+    }
+
+    return authAxios().put(`/package/variation/${variation.id}`, fd, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+  };
+
+  useEffect(() => {
+    const type = getServiceType(formik.values.service_id, serviceOptions);
+
+    // Common fields reset for both GROUP_CLASS & RECOVERY
+    if (type === "RECOVERY") {
+      formik.setValues({
+        ...formik.values,
+        buddy_pt: "",
+        trainer_id: "",
+        no_of_sessions: "",
+        session_duration: "",
+        session_validity: "",
+        booking_type: "PAID",
+        amount: "",
+        discount: "",
+        start_date: "",
+        start_time: "",
+        end_time: "",
+        max_capacity: "",
+        waitlist_capacity: "",
+        gst: "",
+        earn_coin: "",
+        // RESET VARIATION ONLY WHEN RECOVERY
+        variation:
+          type === "RECOVERY"
+            ? [
+                {
+                  name: "",
+                  image: "",
+                  recovery_goals: "",
+                  caption: "",
+                  description: "",
+                  no_of_sessions: "",
+                  session_duration: "",
+                  session_validity: "",
+                  amount: "",
+                  discount: "",
+                  gst: "",
+                  earn_coin: "",
+                  position: "",
+                },
+              ]
+            : formik.values.variation, // keep existing variation for GROUP_CLASS
+      });
+    }
+
+    if (type === "PERSONAL_TRAINER") {
+      formik.setValues({
+        ...formik.values,
+        studio_id: "",
+        trainer_id: "",
+        package_category_id: "",
+        start_date: "",
+        start_time: "",
+        end_time: "",
+        max_capacity: "",
+        waitlist_capacity: "",
+        is_featured: "",
+        variation:
+          type === "PERSONAL_TRAINER"
+            ? [
+                {
+                  name: "",
+                  image: "",
+                  recovery_goals: "",
+                  caption: "",
+                  description: "",
+                  no_of_sessions: "",
+                  session_duration: "",
+                  session_validity: "",
+                  amount: "",
+                  discount: "",
+                  gst: "",
+                  earn_coin: "",
+                  position: "",
+                },
+              ]
+            : formik.values.variation,
+      });
+    }
+  }, [formik.values.service_id]);
+
+  useEffect(() => {
+    if (formik.values.booking_type !== "PAID") {
+      formik.setValues({
+        ...formik.values,
+        amount: "",
+        discount: "",
+        gst: "",
+      });
+    }
+  }, [formik.values.booking_type]);
+
+  useEffect(() => {
+    formik.validateForm();
+  }, [formik.values.service_id]);
+
+  useEffect(() => {
+    if (club.length > 0 && !clubFilter) {
+      setClubFilter({
+        label: club[0].name,
+        value: club[0].id,
+      });
+    }
+  }, [club]);
+
+  useEffect(() => {
+    fetchService(clubFilter?.value || null); // Fetch services for selected club
+    setServiceFilter(null); // Reset selected service when club changes
+  }, [clubFilter]);
+
+  useEffect(() => {
+    const type = getServiceType(formik.values.service_id, serviceOptions);
+
+    // RECOVERY → variation GST = 5
+    if (type === "RECOVERY") {
+      const updatedVariation = (formik.values.variation || []).map((v) => ({
+        ...v,
+        gst: 5,
+      }));
+
+      formik.setFieldValue("variation", updatedVariation);
+      formik.setFieldValue("gst", "");
+    }
+
+    // NOT RECOVERY
+    else {
+      if (formik.values.booking_type === "PAID") {
+        formik.setFieldValue("gst", 5);
+      } else {
+        formik.setFieldValue("gst", 0);
+      }
+    }
+  }, [formik.values.service_id, formik.values.booking_type]);
+
+  // console.log(formik.values, "SHIVAKAR values");
+  // console.log(formik.errors, "SHIVAKAR ERRORS");
+  // console.log(formik.values, "SHIVAKAR values");
+
+  return (
+    <div className="page--content">
+      <div className="flex items-end justify-between gap-2 mb-5">
+        <div className="title--breadcrumbs">
+          <p className="text-sm">{`Home > All Packages`}</p>
+          <h1 className="text-3xl font-semibold">All Packages</h1>
+        </div>
+        {(userRole === "ADMIN" ||
+          userRole === "CLUB_MANAGER" ||
+          userRole === "MARKETING_MANAGER" ||
+          userRole === "FINANCE_MANAGER") && (
+        <div className="flex items-end gap-2">
+          <button
+            type="button"
+            className="px-4 py-2 bg-black text-white rounded flex items-center gap-2"
+            onClick={() => {
+              setEditingOption(null);
+              setShowModal(true);
+            }}
+          >
+            <FiPlus /> Create Package
+          </button>
+        </div>
+        )}
+      </div>
+
+      {/* Filters */}
+      <div className="flex flex-wrap gap-3 mb-4">
+        <div className="mb-4 w-full max-w-[250px]">
+          <div className="relative">
+            <span className="absolute top-[50%] translate-y-[-50%] left-[15px]">
+              <IoSearchOutline />
+            </span>
+            <input
+              type="text"
+              placeholder="Search package..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="custom--input w-full input--icon"
+            />
+          </div>
+        </div>
+        <div className="w-fit min-w-[180px]">
+          <Select
+            placeholder="Filter by club"
+            options={clubOptions}
+            value={clubFilter}
+            onChange={setClubFilter}
+            isClearable={userRole === "ADMIN" ? true : false}
+            styles={customStyles}
+          />
+        </div>
+        <div className="w-full max-w-[200px]">
+          <Select
+            placeholder="Filter by Service"
+            options={serviceOptions}
+            value={serviceFilter}
+            onChange={(option) => setServiceFilter(option)}
+            isClearable
+            styles={customStyles}
+          />
+        </div>
+      </div>
+      <div className="box--shadow bg-white rounded-[15px] p-4">
+        <div className="relative overflow-x-auto">
+          <table className="w-full text-sm text-left text-gray-500">
+            <thead className="text-xs text-gray-700 uppercase bg-gray-50">
+              <tr>
+                {/* <th className="px-2 py-4">Module ID</th> */}
+                <th className="px-2 py-4">Image</th>
+                <th className="px-2 py-4">Title</th>
+                <th className="px-2 py-4">Club Name</th>
+                <th className="px-2 py-4">Booking Type</th>
+                <th className="px-2 py-4">Service</th>
+                <th className="px-2 py-4">Amount</th>
+                <th className="px-2 py-4">Discount</th>
+                <th className="px-2 py-4">gst</th>
+                <th className="px-2 py-4">Total Amount</th>
+                <th className="px-2 py-4 text-center">Position</th>
+                <th className="px-2 py-4">Status</th>
+                {(userRole === "ADMIN" ||
+                  userRole === "CLUB_MANAGER" ||
+                  userRole === "MARKETING_MANAGER" ||
+                  userRole === "FINANCE_MANAGER") && (
+                <th className="px-2 py-4">Action</th>
+                )}
+              </tr>
+            </thead>
+            <tbody>
+              {packages.length === 0 ? (
+                <tr>
+                  <td colSpan="12" className="text-center py-4">
+                    No packages found.
+                  </td>
+                </tr>
+              ) : (
+                packages.map((item, index) => (
+                  <tr
+                    key={item.id || index}
+                    className="group bg-white border-b hover:bg-gray-50 relative transition duration-700"
+                  >
+                    {/* <td className="px-2 py-4">{item?.id || "—"}</td> */}
+                    <td>
+                      <div className="bg-black rounded-lg w-14 h-14 overflow-hidden">
+                        <img
+                          src={item.image}
+                          className="w-full h-full object-contain"
+                        />
+                      </div>
+                    </td>
+                    <td className="px-2 py-4">{item?.name}</td>
+                    <td className="px-2 py-4">{item?.club_name}</td>
+                    <td className="px-2 py-4">
+                      {formatText(item?.booking_type)}
+                    </td>
+                    <td className="px-2 py-4">
+                      {formatText(item?.service_name)}
+                    </td>
+                    <td className="px-2 py-4">
+                      {item?.service_type === "RECOVERY" ? "--" : `₹${formatIndianNumber(item?.amount)}`}
+                    </td>
+                    <td className="px-2 py-4">
+                      {item?.service_type === "RECOVERY"
+                        ? "--"
+                        : `₹${formatIndianNumber(item?.discount)}`}
+                    </td>
+                    <td className="px-2 py-4">
+                      {item?.service_type === "RECOVERY"
+                        ? "--"
+                        : `${item?.gst}%`}
+                    </td>
+                    <td className="px-2 py-4">
+                      {item?.service_type === "RECOVERY"
+                        ? "--"
+                        : `₹${formatIndianNumber(item?.booking_amount)}`}
+                    </td>
+                    <td className="px-2 py-4 text-center">{item.position}</td>
+                    <td className="px-2 py-4">
+                      <div
+                        className={`flex gap-1 items-center ${
+                          item?.status === "ACTIVE"
+                            ? "text-green-500"
+                            : "text-red-500"
+                        }`}
+                      >
+                        <FaCircle />
+                        {item?.status
+                          ? item.status.charAt(0) +
+                            item.status.slice(1).toLowerCase()
+                          : ""}
+                      </div>
+                    </td>
+                    {(userRole === "ADMIN" ||
+                      userRole === "CLUB_MANAGER" ||
+                      userRole === "MARKETING_MANAGER" ||
+                      userRole === "FINANCE_MANAGER") && (
+                    <td className="px-2 py-4">
+                      <div className="w-fit">
+                        <Tooltip
+                          id={`tooltip-edit-${item.id}`}
+                          content="Edit Package"
+                          place="left"
+                        >
+                          <div
+                            className="p-1 cursor-pointer"
+                            onClick={() => {
+                              setEditingOption(item.id);
+                              setShowModal(true);
+                            }}
+                          >
+                            <LiaEdit className="text-[25px] text-black" />
+                          </div>
+                        </Tooltip>
+                      </div>
+                    </td>
+                    )}
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+        {/* Pagination */}
+        <Pagination
+          page={page}
+          totalPages={totalPages}
+          rowsPerPage={rowsPerPage}
+          totalCount={totalCount}
+          currentDataLength={packages.length}
+          onPageChange={(newPage) => {
+            setPage(newPage);
+            fetchPackagesList(searchTerm, newPage);
+          }}
+        />
+      </div>
+      {showModal && (
+        <CreatePackage
+          setShowModal={setShowModal}
+          editingOption={editingOption}
+          formik={formik}
+          setSessionLevelValue={setSessionLevelValue}
+          sessionLevel={sessionLevel}
+          sessionLevelValue={sessionLevelValue}
+        />
+      )}
+    </div>
+  );
+};
+
+export default PackagesList;

@@ -1,0 +1,1765 @@
+import React, { useEffect, useRef, useState } from "react";
+import { FiPlus, FiTrash2 } from "react-icons/fi";
+import { IoCloseCircle } from "react-icons/io5";
+import Select from "react-select";
+import {
+  blockInvalidNumberKeys,
+  blockNonLettersAndNumbers,
+  customStyles,
+  filterActiveItems,
+  sanitizePositiveInteger,
+  sanitizeTextWithNumbers,
+} from "../../Helper/helper";
+import { authAxios } from "../../config/config";
+import { toast } from "react-toastify";
+import { PiImageFill } from "react-icons/pi";
+
+// status type options for dropdown
+const statusType = [
+  { label: "Active", value: "ACTIVE" },
+  { label: "Inactive", value: "INACTIVE" },
+];
+// Booking type options for dropdown
+const bookingType = [
+  { label: "Paid", value: "PAID" },
+  { label: "Free", value: "FREE" },
+];
+// Booking type options for dropdown
+const ptType = [
+  { label: "Solo Plan", value: "SINGLE" },
+  { label: "Duo Plan (2 members)", value: "DOUBLE" },
+  { label: "Trio Plan (3 members)", value: "TRIPLE" },
+];
+
+const CreatePackage = ({
+  setShowModal,
+  editingOption,
+  formik,
+  setSessionLevelValue,
+  sessionLevel,
+  sessionLevelValue,
+}) => {
+  const leadBoxRef = useRef(null);
+  const [studio, setStudio] = useState([]);
+  const [club, setClub] = useState([]);
+  const [service, setService] = useState([]);
+  const [clubDuration, setClubDuration] = useState("");
+
+  const getServiceType = (service_id, serviceOptions) => {
+    const found = serviceOptions.find((s) => s.value === service_id);
+    return found?.type || null;
+  };
+  const [confirmDelete, setConfirmDelete] = useState({
+    open: false,
+    index: null,
+    id: null,
+  });
+
+  const fetchClub = async (search = "") => {
+    try {
+      const res = await authAxios().get("/club/list", {
+        params: search ? { search } : {},
+      });
+      let data = res.data?.data || res.data || [];
+      const activeOnly = filterActiveItems(data);
+      setClub(activeOnly);
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  const fetchClubId = async (clubId) => {
+    try {
+      const res = await authAxios().get(`/club/${clubId}`);
+      const trialDuration = res?.data?.data?.trial_duration
+      setClubDuration(trialDuration);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  // console.log(clubDuration,'clubDuration')
+
+  const fetchService = async (clubId = null) => {
+    try {
+      const params = {};
+      if (clubId) params.club_id = clubId;
+      const res = await authAxios().get("/service/list", { params });
+      let data = res.data?.data || res.data || [];
+      const activeService = data.filter((item) => item.status === "ACTIVE");
+      setService(activeService);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const fetchStudio = async (clubId = null) => {
+    try {
+      const params = {};
+      if (clubId) params.club_id = clubId;
+      const res = await authAxios().get("/studio/list", { params });
+      let data = res.data?.data || res.data || [];
+      const activeService = data.filter((item) => item.status === "ACTIVE");
+      setStudio(activeService);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  useEffect(() => {
+    fetchClub();
+  }, []);
+
+  useEffect(() => {
+    if (formik.values.club_id) {
+      fetchService(formik.values.club_id);
+      fetchStudio(formik.values.club_id);
+      fetchClubId(formik.values.club_id);
+
+      // reset dependent fields
+      formik.setFieldValue("session_duration", clubDuration || "");
+      formik.setFieldValue("service_id", "");
+      formik.setFieldValue("studio_id", "");
+      formik.setFieldValue("trainer_id", "");
+    } else {
+      setService([]);
+    }
+  }, [formik.values.club_id]);
+
+  const clubOptions =
+    club?.map((item) => ({
+      label: item.name,
+      value: item.id,
+    })) || [];
+
+  const studioOptions =
+    studio?.map((item) => ({
+      label: item.name,
+      value: item.id,
+    })) || [];
+
+  const serviceOptions =
+    service
+      ?.map((item) => ({
+        label: item.name,
+        value: item.id,
+        type: item.type,
+      }))
+      .filter(
+        (item) => item.type !== "PRODUCT" && item.type !== "GROUP_CLASS",
+      ) || [];
+
+  const fetchVariationList = async (packageId) => {
+    try {
+      const res = await authAxios().get(`/package/variation/list`, {
+        params: { package_id: packageId },
+      });
+
+      const data = res.data?.data || [];
+
+      // set variations in Formik
+      formik.setFieldValue(
+        "variation",
+        data.length > 0
+          ? data
+          : [
+              {
+                name: "",
+                image: "",
+                recovery_goals: "",
+                caption: "",
+                description: "",
+                no_of_sessions: "",
+                session_duration: clubDuration,
+                session_validity: "",
+                amount: "",
+                discount: "",
+                gst: "",
+                earn_coin: "",
+                position: "",
+              },
+            ],
+      );
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  // ✅ Reset fields except image when service_id changes
+  useEffect(() => {
+    const fetchPackageById = async (id) => {
+      try {
+        const res = await authAxios().get(`/package/${id}`);
+        const data = res.data?.data || res.data || null;
+
+        if (data) {
+          formik.setValues({
+            name: data?.name || "",
+            service_id: data?.service_id || "",
+            trainer_id: data?.trainer_id || "",
+            club_id: data?.club_id || "",
+            buddy_pt: data?.buddy_pt || "",
+            studio_id: data?.studio_id || null,
+            package_category_id: data?.package_category_id || "",
+            caption:
+              sessionLevelValue === "GROUP_CLASS" ? "" : data?.caption || "",
+            description: data?.description || "",
+            image: data?.image || null,
+            session_level:
+              sessionLevelValue === "GROUP_CLASS"
+                ? sessionLevel[0].value
+                : data?.session_level || "",
+            no_of_sessions:
+              data?.no_of_sessions !== undefined ? data.no_of_sessions : "",
+            // session_duration:
+            //   data?.session_duration !== undefined ? data.session_duration : "",
+            session_duration:clubDuration,
+            session_validity:
+              data?.session_validity !== undefined ? data.session_validity : "",
+            start_date: data?.start_date || "",
+            start_time: data?.start_time || "",
+            end_time: data?.end_time || "",
+            max_capacity:
+              data?.max_capacity !== undefined ? data.max_capacity : "",
+            waitlist_capacity:
+              data?.waitlist_capacity !== undefined
+                ? data.waitlist_capacity
+                : "",
+            tags: data?.tags || "",
+            amount: data?.amount !== undefined ? data.amount : "",
+            discount: data?.discount !== undefined ? data.discount : "",
+            booking_type: data?.booking_type || "",
+            gst: data?.gst !== undefined ? data.gst : "",
+            position: data?.position !== undefined ? data.position : "",
+            hsn_sac_code: data?.hsn_sac_code || "",
+            is_featured:
+              data?.is_featured === true
+                ? true
+                : data?.is_featured === false
+                  ? false
+                  : null,
+
+            equipment: data?.equipment || "",
+            earn_coin: data?.earn_coin !== undefined ? data.earn_coin : "",
+            status: data?.status || "",
+            variation: [],
+          });
+
+          fetchVariationList(id);
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    if (editingOption) {
+      fetchPackageById(editingOption);
+    }
+  }, [editingOption]);
+
+  const deletePackageVariation = async (id) => {
+    return authAxios().delete(`/package/variation/${id}`);
+  };
+
+  const handleConfirmDelete = async () => {
+    const { index, id } = confirmDelete;
+
+    try {
+      // If variation exists in DB → call API
+      if (id) {
+        await deletePackageVariation(id);
+        toast.success("Variation deleted successfully");
+      }
+
+      // Remove from Formik list
+      const updated = formik.values.variation.filter((_, i) => i !== index);
+      formik.setFieldValue("variation", updated);
+    } catch (err) {
+      console.log(err)
+    }
+
+    // Close modal
+    setConfirmDelete({ open: false, index: null, id: null });
+  };
+
+  const service_type_check = getServiceType(
+    formik.values?.service_id,
+    serviceOptions,
+  );
+
+  useEffect(() => {
+    if (
+      service_type_check === "GROUP_CLASS" &&
+      sessionLevelValue !== "GROUP_CLASS"
+    ) {
+      setSessionLevelValue(service_type_check);
+    }
+
+    // Optional: clear when not GROUP_CLASS
+    if (service_type_check !== "GROUP_CLASS" && sessionLevelValue !== "") {
+      setSessionLevelValue("");
+    }
+  }, [service_type_check, sessionLevelValue]);
+
+  // Add new row
+  const handleAddSessionRow = () => {
+    formik.setFieldValue("variation", [
+      ...formik.values.variation,
+      {
+        name: "",
+        image: "",
+        recovery_goals: "",
+        caption: "",
+        description: "",
+        no_of_sessions: "",
+        session_duration: clubDuration,
+        session_validity: "",
+        amount: "",
+        discount: "",
+        gst: 5,
+        earn_coin: "",
+        position: "",
+      },
+    ]);
+  };
+
+  useEffect(() => {
+    if (!formik.values.variation || formik.values.variation.length === 0) {
+      formik.setFieldValue("variation", [
+        {
+          name: "",
+          image: "",
+          recovery_goals: "",
+          caption: "",
+          description: "",
+          no_of_sessions: "",
+          session_duration: clubDuration,
+          session_validity: "",
+          amount: "",
+          discount: "",
+          gst: "",
+          earn_coin: "",
+          position: "",
+        },
+      ]);
+    }
+  }, [formik.values.variation]);
+
+  const parseTime = (timeString) => {
+    if (!timeString) return null;
+
+    let d = new Date();
+    let [time, modifier] = timeString.split(" ");
+
+    let [hours, minutes] = time.split(":");
+
+    hours = parseInt(hours);
+    minutes = parseInt(minutes);
+
+    // Handle AM/PM
+    if (modifier) {
+      if (modifier === "PM" && hours !== 12) hours += 12;
+      if (modifier === "AM" && hours === 12) hours = 0;
+    }
+
+    d.setHours(hours, minutes, 0, 0);
+    return d;
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+
+    if (file) {
+      formik.setFieldValue("image", file); // store actual file
+    } else {
+      formik.setFieldValue("image", null);
+    }
+  };
+
+  const handleVariationImageUpload = (e, index, formik) => {
+    const file = e.target.files?.[0];
+
+    if (!file) return;
+
+    formik.setFieldValue(`variation[${index}].image`, file);
+  };
+
+  const handleOverlayClick = (e) => {
+    if (leadBoxRef.current && !leadBoxRef.current.contains(e.target)) {
+      setShowModal(false);
+    }
+  };
+
+  useEffect(() => {
+    if (
+      formik.values.start_time &&
+      formik.values.end_time &&
+      parseTime(formik.values.end_time) < parseTime(formik.values.start_time)
+    ) {
+      formik.setFieldValue("end_time", "");
+    }
+  }, [formik.values.start_time]);
+
+  useEffect(() => {
+    if (clubDuration) {
+      formik.setFieldValue("session_duration", clubDuration);
+
+      // also update variations
+      if (formik.values.variation?.length) {
+        const updated = formik.values.variation.map((item) => ({
+          ...item,
+          session_duration: clubDuration,
+        }));
+        formik.setFieldValue("variation", updated);
+      }
+    }
+  }, [clubDuration]);
+
+  return (
+    <>
+      <div
+        className="bg--blur create--lead--container overflow-auto hide--overflow fixed top-0 left-0 z-[999] w-full bg-black bg-opacity-60 h-full"
+        onClick={handleOverlayClick}
+      >
+        <div
+          className="min-h-[70vh] w-[95%] max-w-5xl mx-auto mt-[100px] mb-[100px] container--leadbox rounded-[10px] flex flex-col"
+          ref={leadBoxRef}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Header */}
+          <div className="bg-white rounded-t-[10px] flex gap-3 items-center justify-between py-4 px-4 border-b">
+            <h2 className="text-xl font-semibold">
+              {editingOption ? "Edit Package" : "Create Package"}
+            </h2>
+            <div
+              className="close--lead cursor-pointer"
+              onClick={() => {
+                formik.resetForm();
+                setShowModal(false);
+              }}
+            >
+              <IoCloseCircle className="text-3xl" />
+            </div>
+          </div>
+
+          {/* Form */}
+          <div className="flex-1">
+            <form onSubmit={formik.handleSubmit} className="space-y-6">
+              <div className="flex bg-white rounded-b-[10px]">
+                <div className="p-6 flex-1">
+                  {/* <div className="flex gap-3"> */}
+
+                  <div className="grid md:grid-cols-4 grid-cols-1 gap-4 gap-y-2">
+                    {/* Image Preview */}
+                    <div className="row-span-2">
+                      <div className="bg-gray-100 rounded-lg w-full h-[160px] overflow-hidden">
+                        {formik.values?.image ? (
+                          <img
+                            src={
+                              typeof formik.values.image === "string"
+                                ? formik.values.image
+                                : URL.createObjectURL(formik.values.image)
+                            }
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex flex-col items-center justify-center">
+                            <PiImageFill className="text-gray-300 text-7xl" />
+                            <span className="text-gray-500 text-sm">
+                              Upload Image
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Image Upload */}
+                    <div>
+                      <label className="mb-2 block">
+                        Image<span className="text-red-500">*</span>
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="file"
+                          name="image"
+                          accept="image/png, image/jpeg, image/jpg, image/webp"
+                          onChange={handleFileChange} // ✅ no value prop here
+                          onBlur={() => formik.setFieldTouched("image", true)}
+                          className="custom--input w-full"
+                        />
+                      </div>
+
+                      {formik.touched.image && formik.errors.image && (
+                        <div className="text-red-500 text-sm">
+                          {formik.errors.image}
+                        </div>
+                      )}
+                    </div>
+                    {/* Club Dropdown */}
+                    <div>
+                      <label className="mb-2 block">
+                        Club<span className="text-red-500">*</span>
+                      </label>
+                      <div className="relative">
+                        <Select
+                          name="club_id"
+                          value={
+                            clubOptions.find(
+                              (option) =>
+                                option.value.toString() ===
+                                formik.values.club_id?.toString(),
+                            ) || null
+                          }
+                          options={clubOptions}
+                          onChange={(option) =>
+                            formik.setFieldValue("club_id", option.value)
+                          }
+                          onBlur={() => formik.setFieldTouched("club_id", true)}
+                          styles={customStyles}
+                          className="!capitalize"
+                        />
+                      </div>
+                      {formik.touched.club_id && formik.errors.club_id && (
+                        <p className="text-red-500 text-sm mt-1">
+                          {formik.errors.club_id}
+                        </p>
+                      )}
+                    </div>
+                    {/* Service ID */}
+                    <div>
+                      <label className="mb-2 block">
+                        Service<span className="text-red-500">*</span>
+                      </label>
+                      <Select
+                        name="service_id"
+                        value={
+                          serviceOptions.find(
+                            (opt) => opt.value === formik.values.service_id,
+                          ) || null
+                        }
+                        options={serviceOptions}
+                        onChange={(option) => {
+                          formik.setFieldValue("service_id", option.value);
+                        }}
+                        onBlur={() =>
+                          formik.setFieldTouched("service_id", true)
+                        }
+                        styles={customStyles}
+                      />
+                      {formik.touched.service_id &&
+                        formik.errors.service_id && (
+                          <div className="text-red-500 text-sm">
+                            {formik.errors.service_id}
+                          </div>
+                        )}
+                    </div>
+
+                    {/* PT Type */}
+                    {service_type_check &&
+                      service_type_check === "PERSONAL_TRAINER" && (
+                        <div>
+                          <label className="mb-2 block">
+                            PT Type<span className="text-red-500">*</span>
+                          </label>
+                          <Select
+                            name="buddy_pt"
+                            value={
+                              ptType.find(
+                                (opt) => opt.value === formik.values.buddy_pt,
+                              ) || null
+                            }
+                            options={ptType}
+                            onChange={(option) => {
+                              formik.setFieldValue("buddy_pt", option.value);
+                            }}
+                            onBlur={() =>
+                              formik.setFieldTouched("buddy_pt", true)
+                            }
+                            styles={customStyles}
+                          />
+                          {formik.touched.buddy_pt &&
+                            formik.errors.buddy_pt && (
+                              <div className="text-red-500 text-sm">
+                                {formik.errors.buddy_pt}
+                              </div>
+                            )}
+                        </div>
+                      )}
+
+                    {/* Name */}
+                    <div>
+                      <label className="mb-2 block">
+                        Name<span className="text-red-500">*</span>
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="text"
+                          name="name"
+                          value={formik.values.name}
+                          // onChange={formik.handleChange}
+                          onKeyDown={blockNonLettersAndNumbers}
+                          onChange={(e) => {
+                            const cleaned = sanitizeTextWithNumbers(
+                              e.target.value,
+                            );
+                            formik.setFieldValue("name", cleaned);
+                          }}
+                          onBlur={formik.handleBlur}
+                          className="custom--input w-full"
+                        />
+                      </div>
+
+                      {formik.touched.name && formik.errors.name && (
+                        <div className="text-red-500 text-sm">
+                          {formik.errors.name}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Caption */}
+                    {service_type_check &&
+                      service_type_check !== "GROUP_CLASS" && (
+                        <div>
+                          <label className="mb-2 block">
+                            Caption
+                            {formik.values.service_id === 1 ? (
+                              ""
+                            ) : (
+                              <span className="text-red-500">*</span>
+                            )}
+                          </label>
+                          <div className="relative">
+                            <input
+                              type="text"
+                              name="caption"
+                              value={formik.values.caption}
+                              // onChange={formik.handleChange}
+                              onKeyDown={blockNonLettersAndNumbers}
+                              onChange={(e) => {
+                                const cleaned = sanitizeTextWithNumbers(
+                                  e.target.value,
+                                );
+                                formik.setFieldValue("caption", cleaned);
+                              }}
+                              onBlur={formik.handleBlur}
+                              className="custom--input w-full"
+                            />
+                          </div>
+                          {formik.touched.caption && formik.errors.caption && (
+                            <div className="text-red-500 text-sm">
+                              {formik.errors.caption}
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                    {/* Tags */}
+                    <div>
+                      <label className="mb-2 block">
+                        Tags<span className="text-red-500">*</span>
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="text"
+                          name="tags"
+                          value={formik.values.tags}
+                          // onChange={formik.handleChange}
+                          onKeyDown={blockNonLettersAndNumbers}
+                          onChange={(e) => {
+                            const cleaned = sanitizeTextWithNumbers(
+                              e.target.value,
+                            );
+                            formik.setFieldValue("tags", cleaned);
+                          }}
+                          onBlur={formik.handleBlur}
+                          className="custom--input w-full"
+                        />
+                      </div>
+                      {formik.touched.tags && formik.errors.tags && (
+                        <div className="text-red-500 text-sm">
+                          {formik.errors.tags}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Studio */}
+                    {service_type_check === "RECOVERY" ||
+                    service_type_check === "GROUP_CLASS" ? (
+                      <div>
+                        <label className="mb-2 block">
+                          Studio <span className="text-red-500">*</span>
+                        </label>
+                        <Select
+                          name="studio_id"
+                          value={
+                            studioOptions.find(
+                              (opt) => opt.value === formik.values.studio_id,
+                            ) || null
+                          }
+                          options={studioOptions}
+                          onChange={(option) =>
+                            formik.setFieldValue("studio_id", option.value)
+                          }
+                          onBlur={() =>
+                            formik.setFieldTouched("studio_id", true)
+                          }
+                          styles={customStyles}
+                        />
+                        {formik.touched.studio_id &&
+                          formik.errors.studio_id && (
+                            <div className="text-red-500 text-sm">
+                              {formik.errors.studio_id}
+                            </div>
+                          )}
+                      </div>
+                    ) : null}
+
+                    {service_type_check !== "GROUP_CLASS" &&
+                    service_type_check !== "RECOVERY" ? (
+                      <>
+                        <div>
+                          <label className="mb-2 block">
+                            No. of Sessions
+                            <span className="text-red-500">*</span>
+                          </label>
+                          <div className="relative">
+                            <input
+                              type="number"
+                              name="no_of_sessions"
+                              value={
+                                formik.values.no_of_sessions !== null
+                                  ? formik.values.no_of_sessions
+                                  : ""
+                              }
+                              // onChange={formik.handleChange}
+                              onKeyDown={blockInvalidNumberKeys} // ⛔ blocks typing -, e, etc.
+                              onChange={(e) => {
+                                const cleanValue = sanitizePositiveInteger(
+                                  e.target.value,
+                                );
+                                formik.setFieldValue(
+                                  "no_of_sessions",
+                                  cleanValue,
+                                );
+                              }}
+                              onBlur={formik.handleBlur}
+                              className="custom--input w-full number--appearance-none"
+                            />
+                          </div>
+                          {formik.touched.no_of_sessions &&
+                            formik.errors.no_of_sessions && (
+                              <div className="text-red-500 text-sm">
+                                {formik.errors.no_of_sessions}
+                              </div>
+                            )}
+                        </div>
+                        <div>
+                          <label className="mb-2 block">
+                            Session Duration{" "}
+                            <span className="text-sm">(In Mins)</span>
+                            <span className="text-red-500">*</span>
+                          </label>
+                          <div className="relative">
+                            {/* <input
+                              type="number"
+                              name="session_duration"
+                              value={
+                                formik.values.session_duration !== null
+                                  ? formik.values.session_duration
+                                  : ""
+                              }
+                              // onChange={formik.handleChange}
+                              onKeyDown={blockInvalidNumberKeys} // ⛔ blocks typing -, e, etc.
+                              onChange={(e) => {
+                                const cleanValue = sanitizePositiveInteger(
+                                  e.target.value,
+                                );
+                                formik.setFieldValue(
+                                  "session_duration",
+                                  cleanValue,
+                                );
+                              }}
+                              onBlur={formik.handleBlur}
+                              className="custom--input w-full number--appearance-none"
+                            /> */}
+                            <input
+                              type="number"
+                              name="session_duration"
+                              value={formik.values.session_duration || ""}
+                              disabled={true}
+                              className="custom--input w-full number--appearance-none cursor-not-allowed pointer-events-none !bg-gray-100 !text-gray-500"
+                            />
+                          </div>
+                          {formik.touched.session_duration &&
+                            formik.errors.session_duration && (
+                              <div className="text-red-500 text-sm">
+                                {formik.errors.session_duration}
+                              </div>
+                            )}
+                        </div>
+                        <div>
+                          <label className="mb-2 block">
+                            Validity <span className="text-sm">(In Days)</span>
+                            <span className="text-red-500">*</span>
+                          </label>
+                          <div className="relative">
+                            <input
+                              type="number"
+                              name="session_validity"
+                              value={
+                                formik.values.session_validity !== null
+                                  ? formik.values.session_validity
+                                  : ""
+                              }
+                              // onChange={formik.handleChange}
+                              onKeyDown={blockInvalidNumberKeys} // ⛔ blocks typing -, e, etc.
+                              onChange={(e) => {
+                                const cleanValue = sanitizePositiveInteger(
+                                  e.target.value,
+                                );
+                                formik.setFieldValue(
+                                  "session_validity",
+                                  cleanValue,
+                                );
+                              }}
+                              onBlur={formik.handleBlur}
+                              className="custom--input w-full number--appearance-none"
+                            />
+                          </div>
+                          {formik.touched.session_validity &&
+                            formik.errors.session_validity && (
+                              <div className="text-red-500 text-sm">
+                                {formik.errors.session_validity}
+                              </div>
+                            )}
+                        </div>
+                      </>
+                    ) : null}
+
+                    {/* Session Level */}
+                    {service_type_check &&
+                      service_type_check !== "GROUP_CLASS" && (
+                        <div>
+                          <label className="mb-2 block">
+                            Level<span className="text-red-500">*</span>
+                          </label>
+                          <div className="relative">
+                            <Select
+                              name="session_level"
+                              value={
+                                sessionLevel.find(
+                                  (opt) =>
+                                    opt.value === formik.values.session_level,
+                                ) || null
+                              }
+                              options={sessionLevel}
+                              onChange={(option) =>
+                                formik.setFieldValue(
+                                  "session_level",
+                                  option.value,
+                                )
+                              }
+                              onBlur={() =>
+                                formik.setFieldTouched("session_level", true)
+                              }
+                              styles={customStyles}
+                            />
+                          </div>
+                          {formik.touched.session_level &&
+                            formik.errors.session_level && (
+                              <div className="text-red-500 text-sm">
+                                {formik.errors.session_level}
+                              </div>
+                            )}
+                        </div>
+                      )}
+
+                    {/* Booking Type */}
+                    {service_type_check !== "RECOVERY" && (
+                      <div>
+                        <label className="mb-2 block">
+                          Booking Type<span className="text-red-500">*</span>
+                        </label>
+                        <div className="relative">
+                          <Select
+                            name="booking_type"
+                            value={
+                              bookingType.find(
+                                (opt) =>
+                                  opt.value === formik.values?.booking_type,
+                              ) || null
+                            }
+                            options={bookingType}
+                            onChange={(option) =>
+                              formik.setFieldValue("booking_type", option.value)
+                            }
+                            onBlur={() =>
+                              formik.setFieldTouched("booking_type", true)
+                            }
+                            styles={customStyles}
+                          />
+                        </div>
+                        {formik.touched.booking_type &&
+                          formik.errors.booking_type && (
+                            <div className="text-red-500 text-sm">
+                              {formik.errors.booking_type}
+                            </div>
+                          )}
+                      </div>
+                    )}
+
+                    {formik.values?.booking_type === "PAID" &&
+                      service_type_check !== "RECOVERY" && (
+                        <div>
+                          <label className="mb-2 block">
+                            Amount (₹)<span className="text-red-500">*</span>
+                          </label>
+                          <div className="relative">
+                            <input
+                              type="number"
+                              name="amount"
+                              value={
+                                formik.values.amount !== null
+                                  ? formik.values.amount
+                                  : ""
+                              }
+                              // onChange={formik.handleChange}
+                              onKeyDown={blockInvalidNumberKeys} // ⛔ blocks typing -, e, etc.
+                              onChange={(e) => {
+                                const cleanValue = sanitizePositiveInteger(
+                                  e.target.value,
+                                );
+                                formik.setFieldValue("amount", cleanValue);
+                              }}
+                              onBlur={formik.handleBlur}
+                              className="custom--input w-full number--appearance-none"
+                            />
+                          </div>
+
+                          {formik.touched.amount && formik.errors.amount && (
+                            <div className="text-red-500 text-sm">
+                              {formik.errors.amount}
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                    {formik.values?.booking_type === "PAID" &&
+                      service_type_check !== "RECOVERY" && (
+                        <div>
+                          <label className="mb-2 block">
+                            Discount (₹)
+                            <span className="text-red-500">*</span>
+                          </label>
+                          <div className="relative">
+                            <input
+                              type="number"
+                              name="discount"
+                              value={
+                                formik.values.discount !== null
+                                  ? formik.values.discount
+                                  : ""
+                              }
+                              // onChange={formik.handleChange}
+                              onKeyDown={blockInvalidNumberKeys} // ⛔ blocks typing -, e, etc.
+                              onChange={(e) => {
+                                const cleanValue = sanitizePositiveInteger(
+                                  e.target.value,
+                                );
+                                formik.setFieldValue("discount", cleanValue);
+                              }}
+                              onBlur={formik.handleBlur}
+                              className="custom--input w-full number--appearance-none"
+                            />
+                          </div>
+                          {formik.touched.discount &&
+                            formik.errors.discount && (
+                              <div className="text-red-500 text-sm">
+                                {formik.errors.discount}
+                              </div>
+                            )}
+                        </div>
+                      )}
+
+                    {formik.values?.booking_type === "PAID" &&
+                      service_type_check !== "RECOVERY" && (
+                        <div>
+                          <label className="mb-2 block">GST (%)</label>
+                          <div className="relative">
+                            <input
+                              type="number"
+                              name="gst"
+                              value={
+                                formik.values.gst !== null
+                                  ? formik.values.gst
+                                  : ""
+                              }
+                              // onChange={formik.handleChange}
+                              onKeyDown={blockInvalidNumberKeys} // ⛔ blocks typing -, e, etc.
+                              onChange={(e) => {
+                                const cleanValue = sanitizePositiveInteger(
+                                  e.target.value,
+                                );
+                                formik.setFieldValue("gst", cleanValue);
+                              }}
+                              onBlur={formik.handleBlur}
+                              disabled={true}
+                              className="custom--input w-full number--appearance-none cursor-not-allowed pointer-events-none !bg-gray-100 !text-gray-500"
+                            />
+                          </div>
+                          {formik.touched.gst && formik.errors.gst && (
+                            <div className="text-red-500 text-sm">
+                              {formik.errors.gst}
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                    {/* HSN SAC Code */}
+                    <div>
+                      <label className="mb-2 block">HSN SAC Code</label>
+                      <div className="relative">
+                        <input
+                          type="text"
+                          name="hsn_sac_code"
+                          value={formik.values.hsn_sac_code}
+                          // onChange={formik.handleChange}
+                          onKeyDown={blockNonLettersAndNumbers}
+                          onChange={(e) => {
+                            const cleaned = sanitizeTextWithNumbers(
+                              e.target.value,
+                            );
+                            formik.setFieldValue("hsn_sac_code", cleaned);
+                          }}
+                          onBlur={formik.handleBlur}
+                          className="custom--input w-full"
+                        />
+                      </div>
+                      {formik.touched.hsn_sac_code &&
+                        formik.errors.hsn_sac_code && (
+                          <div className="text-red-500 text-sm">
+                            {formik.errors.hsn_sac_code}
+                          </div>
+                        )}
+                    </div>
+
+                    {/* Position */}
+                    <div>
+                      <label className="mb-2 block">
+                        Position<span className="text-red-500">*</span>
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="number"
+                          name="position"
+                          value={
+                            formik.values.position !== null
+                              ? formik.values.position
+                              : ""
+                          }
+                          // onChange={formik.handleChange}
+                          onKeyDown={blockInvalidNumberKeys} // ⛔ blocks typing -, e, etc.
+                          onChange={(e) => {
+                            const cleanValue = sanitizePositiveInteger(
+                              e.target.value,
+                            );
+                            formik.setFieldValue("position", cleanValue);
+                          }}
+                          onBlur={formik.handleBlur}
+                          className="custom--input w-full"
+                        />
+                      </div>
+                      {formik.touched.position && formik.errors.position && (
+                        <div className="text-red-500 text-sm">
+                          {formik.errors.position}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Earn Coins */}
+                    {/* {service_type_check !== "RECOVERY" && (
+                      <div>
+                        <label className="mb-2 block">
+                          Earn Coins<span className="text-red-500">*</span>
+                        </label>
+                        <div className="relative">
+                          <input
+                            type="number"
+                            name="earn_coin"
+                            value={
+                              formik.values.earn_coin !== null
+                                ? formik.values.earn_coin
+                                : ""
+                            }
+                            // onChange={formik.handleChange}
+                            onKeyDown={blockInvalidNumberKeys} // ⛔ blocks typing -, e, etc.
+                            onChange={(e) => {
+                              const cleanValue = sanitizePositiveInteger(
+                                e.target.value,
+                              );
+                              formik.setFieldValue("earn_coin", cleanValue);
+                            }}
+                            onBlur={formik.handleBlur}
+                            className="custom--input w-full number--appearance-none"
+                          />
+                        </div>
+                        {formik.touched.earn_coin &&
+                          formik.errors.earn_coin && (
+                            <div className="text-red-500 text-sm">
+                              {formik.errors.earn_coin}
+                            </div>
+                          )}
+                      </div>
+                    )} */}
+
+                    {/* Status */}
+
+                    <div>
+                      <label className="mb-2 block">Status</label>
+                      <div className="relative">
+                        <Select
+                          name="status"
+                          value={
+                            statusType.find(
+                              (opt) => opt.value === formik.values.status,
+                            ) || null
+                          }
+                          options={statusType}
+                          onChange={(option) =>
+                            formik.setFieldValue(
+                              "status",
+                              option ? option.value : "",
+                            )
+                          }
+                          onBlur={() => formik.setFieldTouched("status", true)}
+                          styles={customStyles}
+                          placeholder="Select Status"
+                        />
+                      </div>
+                      {formik.touched.status && formik.errors.status && (
+                        <div className="text-red-500 text-sm">
+                          {formik.errors.status}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  {/* </div> */}
+                  {service_type_check === "RECOVERY" && (
+                    <div className="space-y-3">
+                      {(formik.values.variation || []).map((row, index) => (
+                        <div
+                          key={index}
+                          className="relative flex items-end gap-4 border-2 border-dashed border-gray-300 bg-gray-100 rounded-lg p-4 mt-5"
+                        >
+                          <div className="grid md:grid-cols-4 grid-cols-1 gap-4 gap-y-2 w-full">
+                            {/* Image Preview */}
+                            <div className="row-span-2">
+                              <div className="bg-white rounded-lg w-full h-[160px] overflow-hidden">
+                                {formik.values?.variation?.[index]?.image ? (
+                                  <img
+                                    src={
+                                      formik.values.variation[index]
+                                        .image instanceof File
+                                        ? URL.createObjectURL(
+                                            formik.values.variation[index]
+                                              .image,
+                                          )
+                                        : formik.values.variation[index].image
+                                    }
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : (
+                                  <div className="w-full h-full flex flex-col items-center justify-center">
+                                    <PiImageFill className="text-gray-300 text-7xl" />
+                                    <span className="text-gray-500 text-sm">
+                                      Upload Image
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Image */}
+                            <div>
+                              <label className="mb-2 block">
+                                Image <span className="text-red-500">*</span>
+                              </label>
+                              <input
+                                type="file"
+                                accept="image/png,image/jpeg,image/webp"
+                                onChange={(e) =>
+                                  handleVariationImageUpload(e, index, formik)
+                                }
+                                onBlur={() =>
+                                  formik.setFieldTouched(
+                                    `variation[${index}].image`,
+                                    true,
+                                  )
+                                }
+                                className="custom--input w-full"
+                              />
+                              {formik.touched.variation?.[index]?.image &&
+                                formik.errors.variation?.[index]?.image && (
+                                  <div className="text-red-500 text-sm">
+                                    {formik.errors.variation[index].image}
+                                  </div>
+                                )}
+                            </div>
+
+                            {/* Name */}
+                            <div>
+                              <label className="mb-2 block">
+                                Name <span className="text-red-500">*</span>
+                              </label>
+                              <input
+                                type="text"
+                                name={`variation[${index}].name`}
+                                value={
+                                  formik.values.variation[index]?.name || ""
+                                }
+                                // onChange={formik.handleChange}
+                                onKeyDown={blockNonLettersAndNumbers}
+                                onChange={(e) => {
+                                  const cleaned = sanitizeTextWithNumbers(e.target.value);
+                                  formik.setFieldValue(`variation[${index}].name`, cleaned);
+                                }}
+                                onBlur={formik.handleBlur}
+                                className="custom--input w-full"
+                              />
+                              {formik.touched.variation?.[index]?.name &&
+                                formik.errors.variation?.[index]?.name && (
+                                  <div className="text-red-500 text-sm">
+                                    {formik.errors.variation[index].name}
+                                  </div>
+                                )}
+                            </div>
+
+                            {/* Recovery Goals */}
+                            <div>
+                              <label className="mb-2 block">
+                                Recovery Goals{" "}
+                                <span className="text-red-500">*</span>
+                              </label>
+                              <input
+                                type="text"
+                                name={`variation[${index}].recovery_goals`}
+                                value={
+                                  formik.values.variation[index]
+                                    ?.recovery_goals || ""
+                                }
+                                // onChange={formik.handleChange}
+                                onKeyDown={blockNonLettersAndNumbers}
+                                onChange={(e) => {
+                                  const cleaned = sanitizeTextWithNumbers(e.target.value);
+                                  formik.setFieldValue(`variation[${index}].recovery_goals`, cleaned);
+                                }}
+                                onBlur={formik.handleBlur}
+                                className="custom--input w-full"
+                              />
+                              {formik.touched.variation?.[index]
+                                ?.recovery_goals &&
+                                formik.errors.variation?.[index]
+                                  ?.recovery_goals && (
+                                  <div className="text-red-500 text-sm">
+                                    {
+                                      formik.errors.variation[index]
+                                        .recovery_goals
+                                    }
+                                  </div>
+                                )}
+                            </div>
+
+                            {/* Caption */}
+                            <div>
+                              <label className="mb-2 block">
+                                Caption <span className="text-red-500">*</span>
+                              </label>
+                              <input
+                                type="text"
+                                name={`variation[${index}].caption`}
+                                value={
+                                  formik.values.variation[index]?.caption || ""
+                                }
+                                // onChange={formik.handleChange}
+                                onKeyDown={blockNonLettersAndNumbers}
+                                onChange={(e) => {
+                                  const cleaned = sanitizeTextWithNumbers(e.target.value);
+                                  formik.setFieldValue(`variation[${index}].caption`, cleaned);
+                                }}
+                                onBlur={formik.handleBlur}
+                                className="custom--input w-full"
+                              />
+                              {formik.touched.variation?.[index]?.caption &&
+                                formik.errors.variation?.[index]?.caption && (
+                                  <div className="text-red-500 text-sm">
+                                    {formik.errors.variation[index].caption}
+                                  </div>
+                                )}
+                            </div>
+
+                            {/* No. of Sessions */}
+                            <div>
+                              <label className="mb-2 block">
+                                No. of Sessions{" "}
+                                <span className="text-red-500">*</span>
+                              </label>
+                              <input
+                                type="number"
+                                name={`variation[${index}].no_of_sessions`}
+                                value={
+                                  formik.values.variation[index]
+                                    ?.no_of_sessions ?? ""
+                                }
+                                onKeyDown={blockInvalidNumberKeys}
+                                onChange={(e) => {
+                                  const cleanValue = sanitizePositiveInteger(
+                                    e.target.value,
+                                  );
+                                  formik.setFieldValue(
+                                    `variation[${index}].no_of_sessions`,
+                                    cleanValue,
+                                  );
+                                }}
+                                onBlur={formik.handleBlur}
+                                className="custom--input w-full number--appearance-none"
+                              />
+                              {formik.touched.variation?.[index]
+                                ?.no_of_sessions &&
+                                formik.errors.variation?.[index]
+                                  ?.no_of_sessions && (
+                                  <div className="text-red-500 text-sm">
+                                    {
+                                      formik.errors.variation[index]
+                                        .no_of_sessions
+                                    }
+                                  </div>
+                                )}
+                            </div>
+
+                            {/* Session Duration */}
+                            <div>
+                              <label className="mb-2 block">
+                                Session Duration (Mins){" "}
+                                <span className="text-red-500">*</span>
+                              </label>
+                              {/* <input
+                                type="number"
+                                name={`variation[${index}].session_duration`}
+                                value={
+                                  formik.values.variation[index]
+                                    ?.session_duration ?? ""
+                                }
+                                // onChange={formik.handleChange}
+                                onKeyDown={blockInvalidNumberKeys}
+                                onChange={(e) => {
+                                  const cleanValue = sanitizePositiveInteger(
+                                    e.target.value,
+                                  );
+                                  formik.setFieldValue(
+                                    `variation[${index}].session_duration`,
+                                    cleanValue,
+                                  );
+                                }}
+                                onBlur={formik.handleBlur}
+                                className="custom--input w-full number--appearance-none"
+                              /> */}
+                              <input
+                                type="number"
+                                name={`variation[${index}].session_duration`}
+                                value={formik.values.variation[index]?.session_duration ?? ""}
+                                disabled={true}
+                                className="custom--input w-full number--appearance-none cursor-not-allowed pointer-events-none !bg-gray-100 !text-gray-500"
+                              />
+                              {formik.touched.variation?.[index]
+                                ?.session_duration &&
+                                formik.errors.variation?.[index]
+                                  ?.session_duration && (
+                                  <div className="text-red-500 text-sm">
+                                    {
+                                      formik.errors.variation[index]
+                                        .session_duration
+                                    }
+                                  </div>
+                                )}
+                            </div>
+                            {/* Session Duration */}
+                            <div>
+                              <label className="mb-2 block">
+                                Validity (In Days){" "}
+                                <span className="text-red-500">*</span>
+                              </label>
+                              <input
+                                type="number"
+                                name={`variation[${index}].session_validity`}
+                                value={
+                                  formik.values.variation[index]
+                                    ?.session_validity ?? ""
+                                }
+                                // onChange={formik.handleChange}
+                                onKeyDown={blockInvalidNumberKeys}
+                                onChange={(e) => {
+                                  const cleanValue = sanitizePositiveInteger(
+                                    e.target.value,
+                                  );
+                                  formik.setFieldValue(
+                                    `variation[${index}].session_validity`,
+                                    cleanValue,
+                                  );
+                                }}
+                                onBlur={formik.handleBlur}
+                                className="custom--input w-full number--appearance-none"
+                              />
+                              {formik.touched.variation?.[index]
+                                ?.session_validity &&
+                                formik.errors.variation?.[index]
+                                  ?.session_validity && (
+                                  <div className="text-red-500 text-sm">
+                                    {
+                                      formik.errors.variation[index]
+                                        .session_validity
+                                    }
+                                  </div>
+                                )}
+                            </div>
+
+                            {/* Amount */}
+                            <div>
+                              <label className="mb-2 block">
+                                Amount (₹){" "}
+                                <span className="text-red-500">*</span>
+                              </label>
+                              <input
+                                type="number"
+                                name={`variation[${index}].amount`}
+                                value={
+                                  formik.values.variation[index]?.amount ?? ""
+                                }
+                                // onChange={formik.handleChange}
+                                onKeyDown={blockInvalidNumberKeys}
+                                onChange={(e) => {
+                                  const cleanValue = sanitizePositiveInteger(
+                                    e.target.value,
+                                  );
+                                  formik.setFieldValue(
+                                    `variation[${index}].amount`,
+                                    cleanValue,
+                                  );
+                                }}
+                                onBlur={formik.handleBlur}
+                                className="custom--input w-full number--appearance-none"
+                              />
+                              {formik.touched.variation?.[index]?.amount &&
+                                formik.errors.variation?.[index]?.amount && (
+                                  <div className="text-red-500 text-sm">
+                                    {formik.errors.variation[index].amount}
+                                  </div>
+                                )}
+                            </div>
+
+                            {/* Discount */}
+                            <div>
+                              <label className="mb-2 block">
+                                Discount (₹){" "}
+                                <span className="text-red-500">*</span>
+                              </label>
+                              <input
+                                type="number"
+                                name={`variation[${index}].discount`}
+                                value={
+                                  formik.values.variation[index]?.discount ?? ""
+                                }
+                                // onChange={formik.handleChange}
+                                onKeyDown={blockInvalidNumberKeys}
+                                onChange={(e) => {
+                                  const cleanValue = sanitizePositiveInteger(
+                                    e.target.value,
+                                  );
+                                  formik.setFieldValue(
+                                    `variation[${index}].discount`,
+                                    cleanValue,
+                                  );
+                                }}
+                                onBlur={formik.handleBlur}
+                                className="custom--input w-full number--appearance-none"
+                              />
+                              {formik.touched.variation?.[index]?.discount &&
+                                formik.errors.variation?.[index]?.discount && (
+                                  <div className="text-red-500 text-sm">
+                                    {formik.errors.variation[index].discount}
+                                  </div>
+                                )}
+                            </div>
+
+                            {/* GST */}
+                            <div>
+                              <label className="mb-2 block">GST (%)</label>
+                              <input
+                                type="number"
+                                name={`variation[${index}].gst`}
+                                value={
+                                  formik.values.variation[index]?.gst ?? ""
+                                }
+                                // onChange={formik.handleChange}
+                                onKeyDown={blockInvalidNumberKeys}
+                                onChange={(e) => {
+                                  const cleanValue = sanitizePositiveInteger(
+                                    e.target.value,
+                                  );
+                                  formik.setFieldValue(
+                                    `variation[${index}].gst`,
+                                    cleanValue,
+                                  );
+                                }}
+                                onBlur={formik.handleBlur}
+                                className="custom--input w-full number--appearance-none cursor-not-allowed pointer-events-none !bg-gray-100 !text-gray-500"
+                                disabled={true}
+                              />
+                              {formik.touched.variation?.[index]?.gst &&
+                                formik.errors.variation?.[index]?.gst && (
+                                  <div className="text-red-500 text-sm">
+                                    {formik.errors.variation[index].gst}
+                                  </div>
+                                )}
+                            </div>
+                            {/* Earn Coins */}
+                            {/* <div>
+                              <label className="mb-2 block">
+                                Earn Coins{" "}
+                                <span className="text-red-500">*</span>
+                              </label>
+                              <input
+                                type="number"
+                                name={`variation[${index}].earn_coin`}
+                                value={
+                                  formik.values.variation[index]?.earn_coin ??
+                                  ""
+                                }
+                                // onChange={formik.handleChange}
+                                onKeyDown={blockInvalidNumberKeys}
+                                onChange={(e) => {
+                                  const cleanValue = sanitizePositiveInteger(
+                                    e.target.value,
+                                  );
+                                  formik.setFieldValue(
+                                    `variation[${index}].earn_coin`,
+                                    cleanValue,
+                                  );
+                                }}
+                                onBlur={formik.handleBlur}
+                                className="custom--input w-full number--appearance-none"
+                              />
+                              {formik.touched.variation?.[index]?.earn_coin &&
+                                formik.errors.variation?.[index]?.earn_coin && (
+                                  <div className="text-red-500 text-sm">
+                                    {formik.errors.variation[index].earn_coin}
+                                  </div>
+                                )}
+                            </div> */}
+
+                            {/* Position */}
+                            <div>
+                              <label className="mb-2 block">
+                                Position <span className="text-red-500">*</span>
+                              </label>
+                              <input
+                                type="number"
+                                name={`variation[${index}].position`}
+                                value={
+                                  formik.values.variation[index]?.position ?? ""
+                                }
+                                // onChange={formik.handleChange}
+                                onKeyDown={blockInvalidNumberKeys}
+                                onChange={(e) => {
+                                  const cleanValue = sanitizePositiveInteger(
+                                    e.target.value,
+                                  );
+                                  formik.setFieldValue(
+                                    `variation[${index}].position`,
+                                    cleanValue,
+                                  );
+                                }}
+                                onBlur={formik.handleBlur}
+                                className="custom--input w-full"
+                              />
+                              {formik.touched.variation?.[index]?.position &&
+                                formik.errors.variation?.[index]?.position && (
+                                  <div className="text-red-500 text-sm">
+                                    {formik.errors.variation[index].position}
+                                  </div>
+                                )}
+                            </div>
+
+                            {/* Description */}
+                            <div className="md:col-span-2">
+                              <label className="mb-2 block">
+                                Description{" "}
+                                <span className="text-red-500">*</span>
+                              </label>
+                              <input
+                                type="text"
+                                name={`variation[${index}].description`}
+                                value={
+                                  formik.values.variation[index]?.description ||
+                                  ""
+                                }
+                                // onChange={formik.handleChange}
+                                onKeyDown={blockNonLettersAndNumbers}
+                                onChange={(e) => {
+                                  const cleaned = sanitizeTextWithNumbers(e.target.value);
+                                  formik.setFieldValue(`variation[${index}].description`, cleaned);
+                                }}
+                                onBlur={formik.handleBlur}
+                                className="custom--input w-full"
+                              />
+                              {formik.touched.variation?.[index]?.description &&
+                                formik.errors.variation?.[index]
+                                  ?.description && (
+                                  <div className="text-red-500 text-sm">
+                                    {formik.errors.variation[index].description}
+                                  </div>
+                                )}
+                            </div>
+                          </div>
+
+                          {/* Delete Button */}
+                          {index !== 0 && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setConfirmDelete({
+                                  open: true,
+                                  index,
+                                  id: row.id || null, // If exists in DB, it has ID
+                                });
+                              }}
+                              className="absolute flex items-center justify-center px-1 py-1 bg-red-600 text-white rounded-full w-9 h-9 top-[-5px] right-[-5px]"
+                            >
+                              <FiTrash2 />
+                            </button>
+                          )}
+                        </div>
+                      ))}
+
+                      {/* Add Variation */}
+                      <button
+                        type="button"
+                        onClick={handleAddSessionRow}
+                        className="flex items-center justify-center px-2 py-1 bg-black text-white rounded text-sm"
+                      >
+                        <FiPlus /> Add Variation
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Equipment */}
+                  <div className="my-3">
+                    <label className="mb-2 block">Equipment</label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        name="equipment"
+                        value={formik.values.equipment}
+                        // onChange={formik.handleChange}
+                        onKeyDown={blockNonLettersAndNumbers}
+                        onChange={(e) => {
+                          const cleaned = sanitizeTextWithNumbers(
+                            e.target.value,
+                          );
+                          formik.setFieldValue("equipment", cleaned);
+                        }}
+                        onBlur={formik.handleBlur}
+                        className="custom--input w-full"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Description */}
+                  <div>
+                    <label className="mb-2 block">
+                      Description<span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <textarea
+                        rows={3}
+                        name="description"
+                        value={formik.values.description}
+                        // onChange={formik.handleChange}
+                        onKeyDown={blockNonLettersAndNumbers}
+                        onChange={(e) => {
+                          const cleaned = sanitizeTextWithNumbers(
+                            e.target.value,
+                          );
+                          formik.setFieldValue("description", cleaned);
+                        }}
+                        onBlur={formik.handleBlur}
+                        className="custom--input w-full"
+                      />
+                    </div>
+
+                    {formik.touched.description &&
+                      formik.errors.description && (
+                        <div className="text-red-500 text-sm">
+                          {formik.errors.description}
+                        </div>
+                      )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Submit Button */}
+              <div className="flex gap-4 justify-end">
+                <button
+                  type="button"
+                  onClick={() => {
+                    formik.resetForm();
+                    setShowModal(false);
+                  }}
+                  className="px-4 py-2 bg-transparent border border-white text-white font-semibold rounded max-w-[150px] w-full"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-white text-black font-semibold rounded max-w-[150px] w-full"
+                >
+                  Submit
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+      {confirmDelete.open && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-[350px]">
+            <h3 className="text-lg font-semibold mb-4">Delete Variation?</h3>
+            <p className="text-sm text-gray-600 mb-6">
+              Are you sure you want to delete this variation? This action cannot
+              be undone.
+            </p>
+
+            <div className="flex justify-end gap-3">
+              <button
+                className="px-4 py-2 bg-gray-200 text-gray-700 rounded"
+                onClick={() =>
+                  setConfirmDelete({ open: false, index: null, id: null })
+                }
+              >
+                Cancel
+              </button>
+
+              <button
+                className="px-4 py-2 bg-red-600 text-white rounded"
+                onClick={handleConfirmDelete}
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+};
+
+export default CreatePackage;

@@ -1,0 +1,145 @@
+.rbc-day-slot .rbc-events-container {
+    margin-right: 0px;
+}
+
+.rbc-header {
+    padding: 12px 4px !important;
+    font-weight: 600 !important;
+    font-size: 14px !important;
+    text-transform: uppercase !important;
+    text-align: left !important;
+    color: #6b7280 !important;
+    border-bottom: 2px solid #e5e7eb !important;
+    background-color: #fff !important;
+    padding-left: 15px !important;
+}
+
+.rbc-time-view {
+    border: none !important;
+}
+
+.rbc-time-view .rbc-header {
+    border-bottom: 1px solid #e5e7eb !important;
+}
+
+.rbc-time-content {
+    border-top: none !important;
+}
+
+.rbc-day-slot .rbc-time-slot {
+    border-top: 1px solid #f3f4f6;
+}
+
+.rbc-timeslot-group {
+    min-height: 70px !important;
+    border-left: 1px solid #e5e7eb !important;
+}
+.rbc-time-gutter.rbc-time-column * {
+    border: none !important;
+}
+
+.rbc-time-header-content {
+    border-left: 1px solid #e5e7eb;
+}
+
+.rbc-day-slot .rbc-event {
+    border: none;
+    padding: 4px 6px;
+}
+
+.rbc-event-label {
+    display: none !important;
+}
+
+.rbc-today {
+    background-color: #fef3c7;
+}
+
+.rbc-time-view .rbc-today {
+    background-color: transparent;
+}
+
+.rbc-current-time-indicator {
+    background-color: #ef4444;
+    height: 2px;
+}
+
+.rbc-toolbar {
+    display: none;
+}
+
+.rbc-time-gutter .rbc-timeslot-group {
+    border: none;
+}
+
+.rbc-label {
+    padding: 8px 8px 0 0;
+    font-size: 13px;
+    color: #6b7280;
+    text-align: right;
+}
+
+.rbc-month-view {
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.rbc-month-row {
+    border-top: 1px solid #e5e7eb;
+    min-height: 100px;
+}
+
+.rbc-date-cell {
+    padding: 8px;
+}
+
+.rbc-off-range-bg {
+    background-color: #f9fafb;
+}
+
+.rbc-event {
+    padding: 2px 5px;
+}
+
+.rbc-selected-cell {
+    background-color: #dbeafe;
+}
+
+.rbc-day-bg+.rbc-day-bg {
+    border-left: 1px solid #e5e7eb;
+}
+
+.rbc-month-view .rbc-day-bg {
+    border-left: 1px solid #e5e7eb;
+}
+
+.rbc-time-content>*+*>* {
+    border-left: 1px solid #e5e7eb !important;
+}
+
+.rbc-event {
+    box-shadow: none !important;
+    /* remove default shadow */
+}
+
+.rbc-event-content {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.rbc-time-view .rbc-allday-cell,
+.active--day .rbc-time-header.rbc-overflowing {
+    display: none;
+}
+
+.rbc-day-slot .rbc-events-container{
+    margin-right: 0 !important;
+}
+.rbc-day-slot .rbc-event{
+    border-top: none !important;
+    border-bottom: none !important;
+    border-right: none !important;
+}
+/* calendar view end */

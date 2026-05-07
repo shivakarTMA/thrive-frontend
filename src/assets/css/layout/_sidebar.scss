@@ -1,0 +1,125 @@
+.sidebar {
+  background: linear-gradient(180deg, #000000 0%, #474747 100%);
+  min-height: 100vh;
+  position: fixed;
+  width: 220px;
+  transition: 0.3s;
+
+  @media (max-width: 1200px) {
+    width: 200px;
+  }
+
+  .sidebar-logo {
+    padding: 17px;
+    color: white;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .sidebar--menu--list {
+    overflow: auto;
+    height: calc(100vh - 78px);
+    padding-bottom: 30px;
+  }
+
+  .menu--head {
+    font-size: 10px;
+    text-transform: uppercase;
+  }
+
+  .nav-link {
+    color: rgba(255, 255, 255, 0.75);
+    padding: 10px 15px;
+    display: flex;
+    align-items: center;
+    border-radius: 5px;
+    transition: 0.3s;
+    font-size: 14px;
+    &:hover {
+      color: white;
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+    svg {
+      margin-right: 5px;
+      font-size: 20px;
+      width: 25px;
+    }
+  }
+  .nav-link.active {
+    color: white;
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+
+  .submenu-link:before {
+    margin-right: 3px;
+    width: 10px;
+    height: 1px;
+    display: block;
+    background: #fff;
+    content: '';
+}
+
+.submenu-link {
+    display: flex;
+    align-items: center;
+    gap: 1px;
+}
+}
+
+.sidebar.activetoggle {
+  width: 100px;
+}
+.sidebar--menu--list::-webkit-scrollbar {
+  width: 5px;
+}
+
+.sidebar--menu--list::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 10px;
+}
+
+.side--content--area{
+    transition: 0.3s;
+    // background-color: var(--bgContent);
+}
+
+.sidebar.activetoggle .nav-link {
+    min-height: 50px;
+    padding: 5px;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 10px;
+}
+
+.sidebar.activetoggle .nav-link .menu--icon {
+    font-size: 22px;
+    margin-right: 0px;
+}
+.sidebar.activetoggle .sidebar--menu--list {
+    padding: 5px;
+}
+.sidebar.activetoggle .menu--head {
+    display: none;
+}
+
+// .sidebar.activetoggle .nav-link .nav-text, .sidebar.activetoggle .nav-link .downmenu {
+//     display: none;
+// }
+
+.sidebar.activetoggle .nav-link {
+    flex-direction: column;
+    font-size: 11px;
+    text-align: center;
+}
+
+.sidebar.activetoggle .nav-link > .flex {
+    flex-direction: column;
+}
+
+@media (max-width: 1200px) {
+  .side--content--area {
+    width: calc(100% - 200px);
+  }
+  .sidebar.activetoggle + .side--content--area{
+    width: calc(100% - 70px);
+  }
+}
