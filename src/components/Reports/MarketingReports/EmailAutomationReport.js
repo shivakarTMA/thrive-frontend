@@ -34,7 +34,7 @@ const EmailAutomationReport = () => {
   const [customTo, setCustomTo] = useState(null);
 
   const [page, setPage] = useState(1);
-  const [rowsPerPage] = useState(1);
+  const [rowsPerPage] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
 

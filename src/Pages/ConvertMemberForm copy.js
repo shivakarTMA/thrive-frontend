@@ -70,11 +70,14 @@ const genderOptions = [
 ];
 
 const paymentMethodOptions = [
-  { value: "UPI", label: "UPI" },
-  { value: "CREDIT_CARD", label: "Credit Card" },
+  { value: "NET_BANKING", label: "Net Banking" },
   { value: "DEBIT_CARD", label: "Debit Card" },
+  { value: "CREDIT_CARD", label: "Credit Card" },
+  { value: "UPI_ICICI", label: "UPI" },
   // { value: "CHEQUE", label: "cheque" },
 ];
+
+//  'CREDIT_CARD','DEBIT_CARD','UPI_ICICI','NET_BANKING'
 
 const FILE_TYPES = [
   "image/jpeg",
@@ -3013,6 +3016,7 @@ const ConvertMemberForm = ({
                 <div className="flex justify-end gap-3">
                   <button
                     onClick={() => setPaymentModalOpen(false)}
+                    disabled={formik.isSubmitting}
                     className="px-4 py-2 border rounded"
                   >
                     Cancel
@@ -3022,7 +3026,7 @@ const ConvertMemberForm = ({
                     onClick={() => formik.handleSubmit()}
                     className="px-4 py-2 bg-black text-white rounded"
                   >
-                    Submit Payment
+                    {formik.isSubmitting ? "Processing..." : "Submit Payment"}
                   </button>
                 </div>
               </>

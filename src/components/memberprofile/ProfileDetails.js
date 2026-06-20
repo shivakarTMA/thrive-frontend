@@ -122,50 +122,50 @@ const ProfileDetails = ({ member }) => {
     new: {},
   });
 
-  const fetchStaff = async () => {
-    try {
-      // Fetch all staff needed for 'training_by' select (both roles)
-      const res = await authAxios().get("/staff/list?role=TRAINER&role=FOH");
-      const staff = res.data?.data || [];
+  // const fetchStaff = async () => {
+  //   try {
+  //     // Fetch all staff needed for 'training_by' select (both roles)
+  //     const res = await authAxios().get("/staff/list?role=TRAINER&role=FOH");
+  //     const staff = res.data?.data || [];
 
-      // --- GROUPING STAFF BY ROLE ---
-      const foh = staff
-        .filter((item) => item.role === "FOH")
-        .map((item) => ({
-          value: item.id,
-          label: item.name,
-        }));
+  //     // --- GROUPING STAFF BY ROLE ---
+  //     const foh = staff
+  //       .filter((item) => item.role === "FOH")
+  //       .map((item) => ({
+  //         value: item.id,
+  //         label: item.name,
+  //       }));
 
-      const trainer = staff
-        .filter((item) => item.role === "TRAINER")
-        .map((item) => ({
-          value: item.id,
-          label: item.name,
-        }));
+  //     const trainer = staff
+  //       .filter((item) => item.role === "TRAINER")
+  //       .map((item) => ({
+  //         value: item.id,
+  //         label: item.name,
+  //       }));
 
-      // Final grouped structure for 'training_by' select
-      const groupedOptions = [
-        {
-          label: "FOH",
-          options: foh,
-        },
-        {
-          label: "TRAINER",
-          options: trainer,
-        },
-      ];
+  //     // Final grouped structure for 'training_by' select
+  //     const groupedOptions = [
+  //       {
+  //         label: "FOH",
+  //         options: foh,
+  //       },
+  //       {
+  //         label: "TRAINER",
+  //         options: trainer,
+  //       },
+  //     ];
 
-      // Separate arrays for each select
-      setTrainerList(trainer); // For 'schedule_for'
-      setStaffList(groupedOptions); // For 'training_by'
-    } catch (err) {
-      console.error(err);
-    }
-  };
+  //     // Separate arrays for each select
+  //     setTrainerList(trainer); // For 'schedule_for'
+  //     setStaffList(groupedOptions); // For 'training_by'
+  //   } catch (err) {
+  //     console.error(err);
+  //   }
+  // };
 
-  useEffect(() => {
-    fetchStaff();
-  }, []);
+  // useEffect(() => {
+  //   fetchStaff();
+  // }, []);
 
   // Fetch emergency contact list by member ID
   const fetchEmergencyContacts = async () => {

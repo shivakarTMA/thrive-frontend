@@ -208,6 +208,7 @@ const ProductsList = () => {
       then: (schema) => schema.notRequired(), // not required
       otherwise: (schema) => schema.required("Status is required"), // required otherwise
     }),
+    show_on_app: Yup.string().required("Show on App is required"),
     editingOption: Yup.mixed().nullable(),
   });
 
@@ -236,6 +237,7 @@ const ProductsList = () => {
     earn_coin: "",
     position: "",
     status: "",
+    show_on_app:"",
     editingOption: null,
   };
 

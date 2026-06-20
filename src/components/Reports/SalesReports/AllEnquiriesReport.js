@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { FaCircle } from "react-icons/fa";
 import Select from "react-select";
 import {
+  ALLOWED_ROLES,
   customStyles,
   filterActiveItems,
   formatAutoDate,
@@ -21,6 +22,8 @@ import { FaCalendarDays } from "react-icons/fa6";
 import AllEnquiresFilterPanel from "../../../components/FilterPanel/AllEnquiresFilterPanel";
 import { useSelector } from "react-redux";
 import { useFormik } from "formik";
+import IsLoadingHOC from "../../common/IsLoadingHOC";
+import { LuDownload } from "react-icons/lu";
 
 const dateFilterOptions = [
   { value: "today", label: "Today" },
@@ -29,7 +32,8 @@ const dateFilterOptions = [
   { value: "custom", label: "Custom Date" },
 ];
 
-const AllEnquiriesReport = () => {
+const AllEnquiriesReport = (props) => {
+  const { setLoading } = props;
   const location = useLocation();
   const navigate = useNavigate();
   const { user } = useSelector((state) => state.auth);
@@ -291,6 +295,70 @@ const AllEnquiriesReport = () => {
     appliedFilters.owner_id,
   ]);
 
+  const handleExportEnquiries = async () => {
+    try {
+      setLoading(true);
+
+      const params = {};
+
+      // 📅 Date filters
+      if (dateFilter?.value && dateFilter.value !== "custom") {
+        params.dateFilter = dateFilter.value;
+      }
+
+      if (dateFilter?.value === "custom" && customFrom && customTo) {
+        params.startDate = format(customFrom, "yyyy-MM-dd");
+        params.endDate = format(customTo, "yyyy-MM-dd");
+      }
+
+      // 🏢 Club filter
+      if (clubFilter?.value) {
+        params.club_id = clubFilter.value;
+      }
+
+      // 🎯 Applied filters
+      Object.entries(appliedFilters).forEach(([key, value]) => {
+        if (value !== null && value !== undefined) {
+          params[key] = value;
+        }
+      });
+
+      console.log("📥 Download Params:", params);
+
+      const response = await authAxios().get("/marketing/report/enquiry/download", {
+        params,
+        responseType: "blob",
+      });
+
+      // 📄 Create download
+      const blob = new Blob([response.data]);
+
+      const url = window.URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+
+      link.href = url;
+
+      link.setAttribute("download", "enquiries-report.xlsx");
+
+      document.body.appendChild(link);
+
+      link.click();
+
+      link.remove();
+
+      window.URL.revokeObjectURL(url);
+
+      toast.success("Enquiries report downloaded successfully!");
+    } catch (error) {
+      console.error(error);
+
+      toast.error("Failed to download enquiries report.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <>
       <div className="content--area">
@@ -375,6 +443,22 @@ const AllEnquiriesReport = () => {
                 />
               </div>
             </div>
+            {!ALLOWED_ROLES.includes(userRole) && (
+              <div className="w-full max-w-[170px]">
+                <button
+                  onClick={handleExportEnquiries}
+                  disabled={allLeads.length === 0 || (dateFilter?.value === "custom" && (!customFrom || !customTo))}
+                  className={`ms-auto px-4 py-2 rounded flex items-center gap-2
+                  ${
+                    allLeads.length === 0 || (dateFilter?.value === "custom" && (!customFrom || !customTo))
+                      ? "bg-gray-400 cursor-not-allowed text-white"
+                      : "bg-black text-white hover:bg-gray-800"
+                  }`}
+                >
+                  <LuDownload /> <span>Download Report</span>
+                </button>
+              </div>
+            )}
           </div>
 
           <div className="w-full p-3 border bg-white shodow--box rounded-[10px]">
@@ -513,4 +597,4 @@ const AllEnquiriesReport = () => {
   );
 };
 
-export default AllEnquiriesReport;
+export default IsLoadingHOC(AllEnquiriesReport);

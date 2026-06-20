@@ -6,6 +6,7 @@ import Select from "react-select";
 import {
   blockInvalidNumberKeys,
   blockNonLettersAndNumbers,
+  customStyles,
   durationValueInteger,
   sanitizePositiveInteger,
   sanitizeTextWithNumbers,
@@ -54,6 +55,12 @@ const CreateSubscriptionPlan = ({
             is_spouse_plan: data?.is_spouse_plan || false,
             status: data?.status || "ACTIVE",
             // position: data?.position || "",
+            show_on_app:
+              data?.show_on_app === true
+                ? true
+                : data?.show_on_app === false
+                  ? false
+                  : null,
             position:
               data?.position !== null && data?.position !== undefined
                 ? String(data.position)
@@ -542,6 +549,37 @@ const CreateSubscriptionPlan = ({
                         {formik.errors.position}
                       </p>
                     )}
+                  </div>
+
+                  <div>
+                    <label className="mb-2 block">
+                      Show on App<span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <Select
+                        name="show_on_app"
+                        value={subscriptionOption.find(
+                          (opt) => opt.value === formik.values.show_on_app,
+                        )}
+                        options={subscriptionOption}
+                        onChange={(option) =>
+                          formik.setFieldValue(
+                            "show_on_app",
+                            option?.value ?? null,
+                          )
+                        }
+                        onBlur={() =>
+                          formik.setFieldTouched("show_on_app", true)
+                        }
+                        styles={customStyles}
+                      />
+                    </div>
+                    {formik.touched.show_on_app &&
+                      formik.errors.show_on_app && (
+                        <div className="text-red-500 text-sm">
+                          {formik.errors.show_on_app}
+                        </div>
+                      )}
                   </div>
 
                   <div>

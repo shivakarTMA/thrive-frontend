@@ -1,9 +1,8 @@
 import React, { useRef } from "react";
-import { formatIndianNumber, formatText } from "../../Helper/helper";
+import { formatIndianNumber } from "../../Helper/helper";
 
 const InvoiceModal = ({ isOpen, onClose, data }) => {
   const leadBoxRef = useRef(null);
-  const orderTypeCheck = data?.order_type
   if (!isOpen || !data) return null;
 
   const handleOverlayClick = (e) => {
@@ -53,21 +52,9 @@ const InvoiceModal = ({ isOpen, onClose, data }) => {
               <p>
                 <strong>Customer Name:</strong> {data.member_full_name}
               </p>
-              {data?.gst_registration_number && (
-                <p>
-                  <strong>Customer GSTIN:</strong> {data.gst_registration_number}
-                </p>
-              )}
-              {data?.gst_registered_company_name && (
-                <p>
-                  <strong>Customer Company Name:</strong> {data.gst_registered_company_name}
-                </p>
-              )}
-              {data?.gst_registered_company_address && (
-                <p>
-                  <strong>Customer Company Address:</strong> {data.gst_registered_company_address}
-                </p>
-              )}
+              <p>
+                <strong>Customer GSTIN:</strong> N/A
+              </p>
               <p>
                 <strong>Address:</strong> {data.member_address || "--"}
               </p>
@@ -128,17 +115,15 @@ const InvoiceModal = ({ isOpen, onClose, data }) => {
                     HSN/SAC Code
                   </th>
                   <th className="border px-4 py-2 text-left font-semibold text-gray-900">
-                    {orderTypeCheck === "PRODUCT" ? "Order Status" : "Validity"}
+                    Validity
                   </th>
                   <th className="border px-4 py-2 text-left font-semibold text-gray-900">
-                    {orderTypeCheck === "PRODUCT" ? "Scheduled at" : "Start Date"}
+                    Start Date
                   </th>
-                  {orderTypeCheck !== "PRODUCT" && (
-                    <th className="border px-4 py-2 text-left font-semibold text-gray-900">
-                      End Date
-                    </th>
-                  )}
-                  {orderTypeCheck === "PRODUCT" && (
+                  <th className="border px-4 py-2 text-left font-semibold text-gray-900">
+                    End Date
+                  </th>
+                  {data?.order_type === "PRODUCT" && (
                     <th className="border px-4 py-2 text-right font-semibold text-gray-900">
                         Qty.
                     </th>
@@ -154,19 +139,13 @@ const InvoiceModal = ({ isOpen, onClose, data }) => {
                     <td className="border px-4 py-2">{index + 1}</td>
                     <td className="border px-4 py-2">{item?.name}</td>
                     <td className="border px-4 py-2">{item?.hsn_sac ? item?.hsn_sac : "--"}</td>
-                    <td className="border px-4 py-2">
-                      {orderTypeCheck === "PRODUCT" ? item?.fulfilment_status : item?.validity ?? "--"}
+                    <td className="border px-4 py-2">{item?.validity ? item?.validity : "--"}</td>
+                    <td className="border px-4 py-2">{item?.start_date ? item?.start_date : "--"}</td>
+                    <td className="border px-4 py-2">{item?.end_date ? item?.end_date : "--"}</td>
+                    {data?.order_type === "PRODUCT" && (
+                    <td className="border px-4 py-2 text-right">
+                      {item?.quantity}
                     </td>
-                    <td className="border px-4 py-2">
-                      {orderTypeCheck === "PRODUCT" ? item?.scheduled_at : item?.start_date ?? "--"}
-                    </td>
-                    {orderTypeCheck !== "PRODUCT" && (
-                      <td className="border px-4 py-2">{item?.end_date ? item?.end_date : "--"}</td>
-                    )}
-                    {orderTypeCheck === "PRODUCT" && (
-                      <td className="border px-4 py-2 text-right">
-                        {item?.quantity}
-                      </td>
                     )}
                     <td className="border px-4 py-2 text-right">
                       ₹{formatIndianNumber(item?.total_amount)}
@@ -180,12 +159,7 @@ const InvoiceModal = ({ isOpen, onClose, data }) => {
           {/* Footer / Totals */}
           <div className="flex justify-between mb-5 text-sm">
             <div className="w-full">
-              <div className="flex gap-1">
-                <span className="font-bold">Payment Mode:</span>
-                <span className="font-bold">
-                  {data?.payment_mode === "UPI_ICICI" ? "UPI": formatText(data?.payment_mode)}
-                </span>
-              </div>
+           
             </div>
             <div className="text-right space-y-1 w-full">
               <div className="flex gap-2 justify-between">
@@ -209,22 +183,6 @@ const InvoiceModal = ({ isOpen, onClose, data }) => {
               <div className="flex gap-2 justify-between">
                 <span className="font-bold">IGST @5%:</span>
                 <span className="font-bold">₹{data?.igst_amount ? formatIndianNumber(data?.igst_amount) : "--"}</span>
-              </div>
-              <div className="flex gap-2 justify-between">
-                <span className="font-bold">Total Tax @ 5%:</span>
-                <span className="font-bold">
-
-                  ₹{
-                      data?.gsttyp === "C-SGST"
-                        ? formatIndianNumber(
-                            Number(data?.cgst_amount || 0) +
-                            Number(data?.sgst_amount || 0)
-                          )
-                        : data?.igst_amount
-                          ? formatIndianNumber(Number(data?.igst_amount))
-                          : "--"
-                    }
-                </span>
               </div>
               <div className="flex gap-2 justify-between">
                 <span className="font-bold">Grand Total:</span>

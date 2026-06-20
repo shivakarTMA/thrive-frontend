@@ -9,6 +9,8 @@ import { useSelector } from "react-redux";
 import { RiDiscountPercentFill } from "react-icons/ri";
 import { FaCalendarDays, FaListCheck } from "react-icons/fa6";
 import {
+  allowLettersAndNumbers,
+  blockNonLettersAndNumbers,
   customStyles,
   formatIndianNumber,
   sanitizeAlphaNumeric,
@@ -22,11 +24,14 @@ import { GoClock } from "react-icons/go";
 const SERVICES_WITH_DATETIME = ["PERSONAL TRAINING", "PILATES", "RECOVERY"];
 
 const paymentMethodOptions = [
-  { value: "UPI", label: "UPI" },
-  { value: "CREDIT_CARD", label: "Credit Card" },
+  { value: "NET_BANKING", label: "Net Banking" },
   { value: "DEBIT_CARD", label: "Debit Card" },
-  { value: "CHEQUE", label: "cheque" },
+  { value: "CREDIT_CARD", label: "Credit Card" },
+  { value: "UPI_ICICI", label: "UPI" },
+  // { value: "CHEQUE", label: "cheque" },
 ];
+
+//  'CREDIT_CARD','DEBIT_CARD','UPI_ICICI','NET_BANKING'
 
 const getTodayAtTime = (hours, minutes = 0) => {
   const d = new Date();
@@ -111,14 +116,78 @@ const CreateNewInvoice = ({
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
   const [paymentUrl, setPaymentUrl] = useState("");
   const [orderNo, setOrderNo] = useState("");
+  const [clubGstType, setClubGstType] = useState("");
 
   const [offlinePaymentDetails, setOfflinePaymentDetails] = useState({
     method: null,
     transactionId: "",
   });
+  const [offlineErrors, setOfflineErrors] = useState({
+    method: "",
+    transactionId: "",
+  });
+  const [showGstDetails, setShowGstDetails] = useState(false);
+  const initialGstState = {
+    gst_registration_number: "",
+    gst_registered_company_name: "",
+    gst_registered_company_address: "",
+  };
+  const [customerGstData, setCustomerGstData] = useState(initialGstState);
+
+  const [gstErrors, setGstErrors] = useState({
+    gst_registration_number: "",
+    gst_registered_company_name: "",
+    gst_registered_company_address: "",
+  });
+  const [savedGstData, setSavedGstData] = useState(initialGstState);
   const paymentModeRef = useRef("ONLINE");
 
   const leadBoxRef = useRef(null);
+
+  
+  // Customer GST
+  const handleGstCheckbox = (e) => {
+    const checked = e.target.checked;
+
+    setShowGstDetails(checked);
+
+    if (!checked) {
+      // ✅ Clear only visible form values
+      setCustomerGstData(initialGstState);
+
+      setGstErrors({
+        gst_registration_number: "",
+        gst_registered_company_name: "",
+        gst_registered_company_address: "",
+      });
+    } else {
+      // ✅ Restore API values when checked again
+      setCustomerGstData(savedGstData);
+    }
+  };
+
+  const validateGstFields = () => {
+    let errors = {};
+
+    if (showGstDetails) {
+      if (!customerGstData.gst_registration_number.trim()) {
+        errors.gst_registration_number = "GST Number is required";
+      }
+
+      if (!customerGstData.gst_registered_company_name.trim()) {
+        errors.gst_registered_company_name = "Company Name is required";
+      }
+
+      if (!customerGstData.gst_registered_company_address.trim()) {
+        errors.gst_registered_company_address = "Company Address is required";
+      }
+    }
+
+    setGstErrors(errors);
+
+    return Object.keys(errors).length === 0;
+  };
+  // Customer GST end
 
   const buildPaymentPayload = ({ values, user, selectedPackageType }) => {
     const payload = {
@@ -149,6 +218,17 @@ const CreateNewInvoice = ({
     if (values.service_name?.toUpperCase() === "RECOVERY") {
       payload.package_type = "SESSION";
       payload.package_variation_id = values.variation.id;
+    }
+
+    // ✅ Add GST details only when checkbox checked
+    if (showGstDetails) {
+      payload.gst_registration_number = customerGstData.gst_registration_number;
+
+      payload.gst_registered_company_name =
+        customerGstData.gst_registered_company_name;
+
+      payload.gst_registered_company_address =
+        customerGstData.gst_registered_company_address;
     }
 
     return payload;
@@ -219,6 +299,69 @@ const CreateNewInvoice = ({
 
   /* ================= FORMIK ================= */
 
+  const validateOfflinePayment = () => {
+    let errors = {
+      method: "",
+      transactionId: "",
+    };
+
+    if (paymentModeRef.current === "OFFLINE") {
+      if (!offlinePaymentDetails.method?.value) {
+        errors.method = "Payment method is required";
+      }
+
+      if (!offlinePaymentDetails.transactionId) {
+        errors.transactionId = "Transaction ID is required";
+      }
+    }
+
+    setOfflineErrors(errors);
+
+    // return true if no errors
+    return !errors.method && !errors.transactionId;
+  };
+
+  const resetAllStates = () => {
+    // Reset Formik
+    formik.resetForm();
+
+    // Reset voucher
+    setVoucherInput("");
+    setVoucherStatus(null);
+    setVoucherMessage("");
+
+    // Reset payment states
+    setOfflinePaymentDetails({
+      method: null,
+      transactionId: "",
+    });
+
+    setOfflineErrors({
+      method: "",
+      transactionId: "",
+    });
+
+    paymentModeRef.current = "ONLINE";
+
+    // Reset modal states
+    setPaymentModalOpen(false);
+    setPaymentUrl("");
+    setOrderNo("");
+
+    // Reset product states
+    setSelectedPackageType("");
+    setShowProductModal(false);
+    setShowVariationModal(false);
+
+    // Reset GST
+    setShowGstDetails(false);
+    setGstErrors({
+      gst_registration_number: "",
+      gst_registered_company_name: "",
+      gst_registered_company_address: "",
+    });
+  };
+
   const formik = useFormik({
     initialValues,
     validationSchema,
@@ -226,7 +369,6 @@ const CreateNewInvoice = ({
     validateOnBlur: true,
     validateOnMount: true,
     onSubmit: async (values, helpers) => {
-      console.log(values, "values");
 
       await helpers.validateForm();
 
@@ -245,7 +387,24 @@ const CreateNewInvoice = ({
         return;
       }
 
+      if (showGstDetails) {
+        const isGstValid = validateGstFields();
+
+        if (!isGstValid) {
+          return;
+        }
+      }
+
       try {
+        // ✅ OFFLINE FLOW
+        if (paymentModeRef.current === "OFFLINE") {
+          const isValid = validateOfflinePayment();
+
+          if (!isValid) {
+            toast.error("Please fill all offline payment details");
+            return;
+          }
+        }
         const payload = buildPaymentPayload({
           values,
           user,
@@ -276,15 +435,19 @@ const CreateNewInvoice = ({
             ) {
               toast.error("Please fill all offline payment details");
               return;
+            } else{
+              toast.success("Service booked with offline payment!");
             }
-            toast.success("Service booked with offline payment!");
+            resetAllStates();
+            setInvoiceModal(false);
             handleCloseModal();
             onMemberUpdate();
           }
         }
+        // setInvoiceModal(false);
       } catch (err) {
-        setInvoiceModal(false);
-        console.error(err);
+        toast.error(err.response.data?.message);
+        console.error(err.response.data?.message);
       } finally {
         helpers.setSubmitting(false); // ✅ IMPORTANT
       }
@@ -347,13 +510,13 @@ const CreateNewInvoice = ({
 
     // ── NEW: tomorrow → disable slots at/before current time-of-day ──────
     // e.g. if now is 2:30 PM on the 23rd, disable 6:30 AM–2:30 PM on the 24th
-    if (selectedIsTomorrow) {
-      const slotTimeOnly = new Date();        // same calendar day as now
-      slotTimeOnly.setHours(h, m, 0, 0);     // but set to the slot's HH:mm
-      if (slotTimeOnly <= now) {
-        isDisabled = true;
-      }
-    }
+    // if (selectedIsTomorrow) {
+    //   const slotTimeOnly = new Date();        // same calendar day as now
+    //   slotTimeOnly.setHours(h, m, 0, 0);     // but set to the slot's HH:mm
+    //   if (slotTimeOnly <= now) {
+    //     isDisabled = true;
+    //   }
+    // }
     // For 25th and beyond → isDisabled stays false, all slots enabled
     // ─────────────────────────────────────────────────────────────────────
   }
@@ -365,6 +528,14 @@ const CreateNewInvoice = ({
     paymentModeRef.current = mode;
 
     const errors = await formik.validateForm();
+
+    if (showGstDetails) {
+      const isGstValid = validateGstFields();
+
+      if (!isGstValid) {
+        return;
+      }
+    }
 
     if (Object.keys(errors).length > 0) {
       // mark all fields touched
@@ -399,6 +570,22 @@ const CreateNewInvoice = ({
         if (data) {
           formik.setFieldValue("member_id", data.id || null);
           formik.setFieldValue("club_id", data.club_id || null);
+
+          // ✅ Only set values
+          const gstData = {
+            gst_registration_number: data.gst_registration_number || "",
+
+            gst_registered_company_name: data.gst_registered_company_name || "",
+
+            gst_registered_company_address:
+              data.gst_registered_company_address || "",
+          };
+
+          // ✅ Save original API data
+          setSavedGstData(gstData);
+
+          // ✅ Fill current form state
+          setCustomerGstData(gstData);
         }
       } catch (err) {
         console.error(err);
@@ -422,6 +609,19 @@ const CreateNewInvoice = ({
       })
       .catch(() => toast.error("Failed to fetch member"));
   }, [selectedLeadMember]);
+
+  useEffect(() => {
+    if (!formik.values.club_id) return;
+
+    authAxios()
+      .get(`/club/${formik.values.club_id}`)
+      .then((res) => {
+        const data = res.data?.data?.gsttyp;
+        console.log("Club data:", data);
+        setClubGstType(data);
+      })
+      .catch(() => toast.error("Failed to fetch club"));
+  }, [formik.values.club_id]);
 
   useEffect(() => {
     const selected = service.find((s) => s.id === formik.values.product_type);
@@ -453,8 +653,22 @@ const CreateNewInvoice = ({
     setSelectedPackageType(product.package_type || "CLASS");
 
     const total = product.amount - product.discount;
-    const gstAmount = (total * product.gst) / 100;
-    const finalAmount = total + gstAmount;
+
+    let igstAmount = 0;
+    let cgstAmount = 0;
+    let sgstAmount = 0;
+    let gstAmount = 0;
+
+    if (clubGstType === "IGST") {
+      igstAmount = (total * product.gst) / 100;
+      gstAmount = igstAmount;
+    } else {
+      cgstAmount = (total * (product.gst / 2)) / 100;
+      sgstAmount = (total * (product.gst / 2)) / 100;
+      gstAmount =  Number(formatIndianNumber(cgstAmount).replace(/,/g, "")) + Number(formatIndianNumber(sgstAmount).replace(/,/g, ""));
+    }
+
+  const finalAmount = total + gstAmount;
 
     formik.setValues({
       ...formik.values,
@@ -483,8 +697,28 @@ const CreateNewInvoice = ({
     const discount = Number(variation.discount) || 0;
     const gstPercent = Number(variation.gst) || 0;
 
+    // const gstAmount = (totalAmount * gstPercent) / 100;
+    // const finalAmount = totalAmount + gstAmount;
+
     const totalAmount = amount - discount;
-    const gstAmount = (totalAmount * gstPercent) / 100;
+
+    let igstAmount = 0;
+    let cgstAmount = 0;
+    let sgstAmount = 0;
+    let gstAmount = 0;
+
+    if (clubGstType === "IGST") {
+      igstAmount = (totalAmount * gstPercent) / 100;
+      gstAmount = igstAmount;
+    } else {
+      cgstAmount = (totalAmount * (gstPercent / 2)) / 100;
+      sgstAmount = (totalAmount * (gstPercent / 2)) / 100;
+
+      gstAmount =
+        Number(cgstAmount.toFixed(2)) +
+        Number(sgstAmount.toFixed(2));
+    }
+
     const finalAmount = totalAmount + gstAmount;
 
     // Update with variation pricing
@@ -559,7 +793,23 @@ const CreateNewInvoice = ({
       const gstPercent = Number(formik.values.productDetails?.gst) || 0;
 
       const discountedTotal = totalAmount - couponDiscount;
-      const gstAmount = (discountedTotal * gstPercent) / 100;
+      let igstAmount = 0;
+      let cgstAmount = 0;
+      let sgstAmount = 0;
+      let gstAmount = 0;
+
+      if (clubGstType === "IGST") {
+        igstAmount = (discountedTotal * gstPercent) / 100;
+        gstAmount = igstAmount;
+      } else {
+        cgstAmount = (discountedTotal * (gstPercent / 2)) / 100;
+        sgstAmount = (discountedTotal * (gstPercent / 2)) / 100;
+
+        gstAmount =
+          Number(cgstAmount.toFixed(2)) +
+          Number(sgstAmount.toFixed(2));
+      }
+
       const finalAmount = discountedTotal + gstAmount;
 
       setVoucherStatus("success");
@@ -582,15 +832,46 @@ const CreateNewInvoice = ({
       setVoucherStatus("error");
       setVoucherMessage(err?.message || "Invalid or expired coupon");
 
-      const originalFinal =
-        Number(formik.values.productDetails?.final_amount) || 0;
+      const totalAmount =
+        Number(formik.values.productDetails?.total_amount) || 0;
+
+      const gstPercent =
+        Number(formik.values.productDetails?.gst) || 0;
+
+      const discountedTotal = totalAmount; // ❌ no discount applied
+
+      let igstAmount = 0;
+      let cgstAmount = 0;
+      let sgstAmount = 0;
+      let gstAmount = 0;
+
+      if (clubGstType === "IGST") {
+        igstAmount = (discountedTotal * gstPercent) / 100;
+        gstAmount = igstAmount;
+      } else {
+        cgstAmount = (discountedTotal * (gstPercent / 2)) / 100;
+        sgstAmount = (discountedTotal * (gstPercent / 2)) / 100;
+
+        gstAmount =
+          Number(cgstAmount.toFixed(2)) +
+          Number(sgstAmount.toFixed(2));
+      }
+
+      const finalAmount = discountedTotal + gstAmount;
 
       formik.setValues({
         ...formik.values,
         coupon: "",
         discountAmount: 0,
-        final_amount: originalFinal,
-        amount_pay: originalFinal,
+        productDetails: {
+          ...formik.values.productDetails,
+          gst_amount: gstAmount,
+          cgst_amount: cgstAmount,
+          sgst_amount: sgstAmount,
+          igst_amount: igstAmount,
+        },
+        final_amount: finalAmount,
+        amount_pay: finalAmount,
       });
 
       // toast.error(err?.message || "Invalid or expired coupon");
@@ -906,7 +1187,8 @@ const CreateNewInvoice = ({
                               onBlur={() =>
                                 formik.setFieldTouched("start_date", true, true)
                               }
-                              minDate={new Date(new Date().setDate(new Date().getDate() + 1))} // ✅ disables today + past
+                              // minDate={new Date(new Date().setDate(new Date().getDate() + 1))} // ✅ disables today + past
+                              minDate={new Date()}
                               onKeyDown={(e) => {
                                 e.preventDefault();
                               }}
@@ -1028,21 +1310,155 @@ const CreateNewInvoice = ({
                     </div>
                   </div>
 
+                  <div className="mt-3 flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={showGstDetails}
+                      onChange={handleGstCheckbox}
+                    />
+
+                    <label>Add GST Details</label>
+                  </div>
+
+                  {showGstDetails && (
+                    <>
+                      <h3 className="text-2xl font-semibold mb-2 mt-4">
+                        Add GST Details
+                      </h3>
+
+                      <div className="grid grid-cols-3 gap-4">
+                        {/* GST Number */}
+                        <div>
+                          <label className="mb-2 block">
+                            GST Number
+                            <span className="text-red-500">*</span>
+                          </label>
+
+                          <input
+                            type="text"
+                            placeholder="GST Number"
+                            className="custom--input w-full"
+                            maxLength={15}
+                            value={customerGstData.gst_registration_number}
+                            onKeyDown={(e) => {
+                              const allowedKeys = [
+                                "Backspace",
+                                "Delete",
+                                "ArrowLeft",
+                                "ArrowRight",
+                                "Tab",
+                              ];
+
+                              // allow letters + numbers only
+                              if (
+                                !/^[a-zA-Z0-9]$/.test(e.key) &&
+                                !allowedKeys.includes(e.key)
+                              ) {
+                                e.preventDefault();
+                              }
+                            }}
+                            onChange={(e) => {
+                              const cleaned = sanitizeAlphaNumeric(
+                                e.target.value.toUpperCase(),
+                              );
+
+                              // limit 15 chars manually
+                              if (cleaned.length <= 15) {
+                                setCustomerGstData({
+                                  ...customerGstData,
+                                  gst_registration_number: cleaned,
+                                });
+
+                                setGstErrors({
+                                  ...gstErrors,
+                                  gst_registration_number: "",
+                                });
+                              }
+                            }}
+                          />
+
+                          {gstErrors.gst_registration_number && (
+                            <p className="text-red-500 text-sm mt-1">
+                              {gstErrors.gst_registration_number}
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Company Name */}
+                        <div>
+                          <label className="mb-2 block">
+                            Company Name
+                            <span className="text-red-500">*</span>
+                          </label>
+
+                          <input
+                            type="text"
+                            placeholder="Company Name"
+                            className="custom--input w-full"
+                            value={customerGstData.gst_registered_company_name}
+                            onKeyDown={blockNonLettersAndNumbers}
+                            onChange={(e) => {
+                              const cleaned = allowLettersAndNumbers(
+                                e.target.value,
+                              );
+
+                              setCustomerGstData({
+                                ...customerGstData,
+                                gst_registered_company_name: cleaned,
+                              });
+                            }}
+                          />
+
+                          {gstErrors.gst_registered_company_name && (
+                            <p className="text-red-500 text-sm mt-1">
+                              {gstErrors.gst_registered_company_name}
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Company Address */}
+                        <div>
+                          <label className="mb-2 block">
+                            Company Address
+                            <span className="text-red-500">*</span>
+                          </label>
+
+                          <input
+                            type="text"
+                            placeholder="Company Address"
+                            className="custom--input w-full"
+                            value={
+                              customerGstData.gst_registered_company_address
+                            }
+                            onKeyDown={blockNonLettersAndNumbers}
+                            onChange={(e) => {
+                              const cleaned = allowLettersAndNumbers(
+                                e.target.value,
+                              );
+
+                              setCustomerGstData({
+                                ...customerGstData,
+                                gst_registered_company_address: cleaned,
+                              });
+                            }}
+                          />
+
+                          {gstErrors.gst_registered_company_address && (
+                            <p className="text-red-500 text-sm mt-1">
+                              {gstErrors.gst_registered_company_address}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </>
+                  )}
+
                   {/* Price Calculation */}
                   <div className="mt-5 bg-[#f7f7f7] p-[20px] rounded-[10px]">
                     <h3 className="text-2xl font-semibold">
                       Price Calculation
                     </h3>
                     <div className="price--calculation2 my-5">
-                      <div className="price--item">
-                        <p className="flex items-center gap-2 justify-between mb-2 border-b pb-2">
-                          Duration:{" "}
-                          <span className="font-bold">
-                            {formik.values.productDetails?.duration_value ?? 0}{" "}
-                            {formik.values.productDetails?.duration_type}
-                          </span>
-                        </p>
-                      </div>
                       <div className="price--item">
                         <p className="flex items-center gap-2 justify-between mb-2 border-b pb-2">
                           Total:{" "}
@@ -1077,9 +1493,7 @@ const CreateNewInvoice = ({
                           GST:{" "}
                           <span className="font-bold">
                             ₹
-                            {formatIndianNumber(
-                              formik.values.productDetails?.gst_amount,
-                            ) ?? 0}
+                            {formik.values.productDetails?.gst_amount ?? 0}
                           </span>
                         </p>
                       </div>
@@ -1125,6 +1539,7 @@ const CreateNewInvoice = ({
                   <div className="flex gap-2 items-center justify-end flex-1">
                     <button
                       type="button"
+                      disabled={formik.isSubmitting}
                       onClick={() => handleFinalSubmit("ONLINE")}
                       className="px-4 py-2 bg-black text-white font-semibold rounded max-w-[150px] w-full"
                     >
@@ -1133,6 +1548,7 @@ const CreateNewInvoice = ({
 
                     <button
                       type="button"
+                      disabled={formik.isSubmitting}
                       onClick={() => handleFinalSubmit("OFFLINE")}
                       className="px-4 py-2 border bg-white text-black font-semibold rounded max-w-[150px] w-full"
                     >
@@ -1141,7 +1557,8 @@ const CreateNewInvoice = ({
                   </div>
                 ) : (
                   <button
-                    type="submit"
+                    type="button"
+                    disabled={formik.isSubmitting}
                     onClick={() => {
                       paymentModeRef.current = "ONLINE";
                       formik.handleSubmit();
@@ -1235,12 +1652,14 @@ const CreateNewInvoice = ({
                 <Select
                   options={paymentMethodOptions}
                   value={offlinePaymentDetails.method}
-                  onChange={(option) =>
+                  onChange={(option) => {
                     setOfflinePaymentDetails({
                       ...offlinePaymentDetails,
                       method: option,
-                    })
-                  }
+                    });
+
+                    setOfflineErrors((prev) => ({ ...prev, method: "" }));
+                  }}
                   placeholder="Select Payment Method"
                   className="mb-3"
                   styles={{
@@ -1253,6 +1672,9 @@ const CreateNewInvoice = ({
                   menuPortalTarget={document.body}
                   menuPosition="fixed"
                 />
+                {offlineErrors.method && (
+                  <p className="text-red-500 text-sm">{offlineErrors.method}</p>
+                )}
 
                 {/* Transaction ID */}
                 <input
@@ -1267,8 +1689,16 @@ const CreateNewInvoice = ({
                       ...offlinePaymentDetails,
                       transactionId: cleaned,
                     });
+
+                    setOfflineErrors((prev) => ({ ...prev, transactionId: "" }));
                   }}
                 />
+
+                {offlineErrors.transactionId && (
+                  <p className="text-red-500 text-sm">
+                    {offlineErrors.transactionId}
+                  </p>
+                )}
 
                 <div className="flex justify-end gap-3">
                   <button

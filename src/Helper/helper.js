@@ -473,6 +473,71 @@ export const blockInvalidNumberKeys = (e) => {
   }
 };
 
+export const blockInvalidNumberKeysProduct = (e) => {
+  const invalidKeys = ["-", "+", "e", "E", ","];
+
+  // Prevent invalid keys
+  if (invalidKeys.includes(e.key)) {
+    e.preventDefault();
+  }
+
+  // Allow only one decimal point
+  if (e.key === "." && e.target.value.includes(".")) {
+    e.preventDefault();
+  }
+
+  // Limit to 2 digits after decimal
+  const value = e.target.value;
+
+  if (value.includes(".")) {
+    const decimalPart = value.split(".")[1];
+
+    // If cursor is after decimal and already 2 digits
+    if (
+      decimalPart.length >= 2 &&
+      e.target.selectionStart > value.indexOf(".")
+    ) {
+      e.preventDefault();
+    }
+  }
+};
+
+export const sanitizePositiveDecimalProduct = (value) => {
+  if (value === "") return "";
+
+  // Keep only digits and dots
+  let sanitized = value.replace(/[^0-9.]/g, "");
+
+  // Allow only one decimal point
+  const firstDotIndex = sanitized.indexOf(".");
+
+  if (firstDotIndex !== -1) {
+    sanitized =
+      sanitized.slice(0, firstDotIndex + 1) +
+      sanitized
+        .slice(firstDotIndex + 1)
+        .replace(/\./g, "");
+  }
+
+  // Split integer & decimal
+  const [integerPart, decimalPart] = sanitized.split(".");
+
+  // Remove unnecessary leading zeros
+  let cleanInteger = integerPart.replace(/^0+(?=\d)/, "");
+
+  // Keep single zero before decimal
+  if (cleanInteger === "") {
+    cleanInteger = "0";
+  }
+
+  // Return with max 2 decimal places
+  if (sanitized.includes(".")) {
+    return `${cleanInteger}.${(decimalPart || "").slice(0, 2)}`;
+  }
+
+  return cleanInteger;
+};
+
 // Check Datetime past time
 // Check if two dates are the same calendar day
 export const isSameDay = (date1, date2) => {
@@ -618,3 +683,5 @@ export const optionTypeCreation = (value) => {
 
   return value.replace(/[^a-zA-Z_]/g, "");
 };
+
+export const ALLOWED_ROLES = ["TRAINER", "FOH", "FITNESS_MANAGER"];

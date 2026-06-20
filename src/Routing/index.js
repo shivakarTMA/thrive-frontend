@@ -73,8 +73,8 @@ import ActiveClientSummaryReport from "../components/Reports/OperationsReports/A
 import InactiveClientSummaryReport from "../components/Reports/OperationsReports/InactiveClientSummaryReport";
 import MembershipFrozenReport from "../components/Reports/OperationsReports/MembershipFrozenReport";
 import AttendanceHeatmapReport from "../components/Reports/OperationsReports/AttendanceHeatmapReport";
-import PtRevenueReport from "../components/Reports/SalesReports/PtRevenueReport";
-import PtRevenueListReport from "../components/Reports/SalesReports/PtRevenueListReport";
+// import PtRevenueReport from "../components/Reports/SalesReports/PtRevenueReport";
+// import PtRevenueListReport from "../components/Reports/SalesReports/PtRevenueListReport";
 import LeadSourceReport from "../components/Reports/SalesReports/LeadSourceReport";
 import GroupClassesUtilizationReport from "../components/Reports/SalesReports/GroupClassesUtilizationReport";
 import TDSReport from "../components/Reports/FinanceReports/TDSReport";
@@ -112,6 +112,12 @@ import ExerciesCategoryList from "../components/ExerciesCategory/ExerciesCategor
 import NourishOrders from "../Pages/NourishOrders";
 import RevenueRecognitionReport from "../components/Reports/FinanceReports/RevenueRecognitionReport";
 import FitnessManagerDashboard from "../Pages/FitnessManagerDashboard";
+import SalesRevenueReport from "../components/Reports/LeaderBoard/SalesRevenueReport";
+import SalesCallLogs from "../components/Reports/LeaderBoard/SalesCallLogs";
+import SalesCallLogsReport from "../components/Reports/LeaderBoard/SalesCallLogsReport";
+import PtRevenueReport from "../components/Reports/LeaderBoard/PtRevenueReport";
+import PtRevenueListReport from "../components/Reports/LeaderBoard/PtRevenueListReport";
+import PtSessionsReport from "../components/Reports/LeaderBoard/PtSessionsReport";
 // import KycDocumentsList from "../components/KycDocuments/KycDocumentsList";
 
 // Role-based route wrapper component
@@ -735,7 +741,7 @@ export default function Routing() {
             </RoleProtectedRoute>
           }
         />
-        <Route
+        {/* <Route
           path="/reports/sales-reports/pt-revenue-report"
           element={
             <RoleProtectedRoute path="/reports/sales-reports/pt-revenue-report">
@@ -750,7 +756,7 @@ export default function Routing() {
               <PtRevenueListReport />
             </RoleProtectedRoute>
           }
-        />
+        /> */}
         <Route
           path="/reports/sales-reports/lead-source-report"
           element={
@@ -1010,6 +1016,54 @@ export default function Routing() {
           element={
             <RoleProtectedRoute path="/reports/marketing-reports/event-community-engagement">
               <EventCommunityEngagement />
+            </RoleProtectedRoute>
+          }
+        />
+        <Route
+          path="/leaderboard/sales/revenue-report"
+          element={
+            <RoleProtectedRoute path="/leaderboard/sales/revenue-report">
+              <SalesRevenueReport />
+            </RoleProtectedRoute>
+          }
+        />
+        <Route
+          path="/leaderboard/sales/call-logs"
+          element={
+            <RoleProtectedRoute path="/leaderboard/sales/call-logs">
+              <SalesCallLogs />
+            </RoleProtectedRoute>
+          }
+        />
+        <Route
+          path="/leaderboard/sales/call-logs/call-log-report"
+          element={
+            <RoleProtectedRoute path="/leaderboard/sales/call-logs/call-log-report">
+              <SalesCallLogsReport />
+            </RoleProtectedRoute>
+          }
+        />
+        <Route
+          path="/leaderboard/pt-report/pt-revenue"
+          element={
+            <RoleProtectedRoute path="/leaderboard/pt-report/pt-revenue">
+              <PtRevenueReport />
+            </RoleProtectedRoute>
+          }
+        />
+        <Route
+          path="/leaderboard/pt-report/pt-revenue/:id"
+          element={
+            <RoleProtectedRoute path="/leaderboard/pt-report/pt-revenue/:id">
+              <PtRevenueListReport />
+            </RoleProtectedRoute>
+          }
+        />
+        <Route
+          path="/leaderboard/pt-report/pt-sessions"
+          element={
+            <RoleProtectedRoute path="/leaderboard/pt-report/pt-sessions">
+              <PtSessionsReport />
             </RoleProtectedRoute>
           }
         />

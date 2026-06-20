@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { FaCircle } from "react-icons/fa";
 import Select from "react-select";
 import {
+  ALLOWED_ROLES,
   customStyles,
   dasboardStyles,
   filterActiveItems,
@@ -26,11 +27,15 @@ import { useSelector } from "react-redux";
 import DummyProfile from "../assets/images/dummy-profile.png";
 import CreateNewInvoice from "./CreateNewInvoice";
 import { IoEyeOutline } from "react-icons/io5";
+import { LuDownload } from "react-icons/lu";
+import IsLoadingHOC from "../components/common/IsLoadingHOC";
 
-const MemberList = () => {
+const MemberList = (props) => {
   const { id } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
+
+  const { setLoading } = props;
 
   const { user } = useSelector((state) => state.auth);
   const userRole = user.role;
@@ -60,6 +65,8 @@ const MemberList = () => {
   const [filterTrainer, setFilterTrainer] = useState(null);
   const [filterFitness, setFilterFitness] = useState(null);
   const [filterGender, setFilterGender] = useState(null);
+  const [filterDownloadApp, setFilterDownloadApp] = useState(null);
+  const [filterCompanyName, setFilterCompanyName] = useState(null);
 
   const [page, setPage] = useState(1);
   const [rowsPerPage] = useState(10);
@@ -141,6 +148,12 @@ const MemberList = () => {
           gender: overrideSelected.hasOwnProperty("gender")
             ? overrideSelected.gender
             : filterGender,
+          app_downloaded: overrideSelected.hasOwnProperty("app_downloaded")
+            ? overrideSelected.app_downloaded
+            : filterDownloadApp,
+          company_name: overrideSelected.hasOwnProperty("company_name")
+            ? overrideSelected.company_name
+            : filterCompanyName,
           club_id: overrideSelected.hasOwnProperty("club_id")
             ? overrideSelected.club_id
             : clubFilter,
@@ -455,6 +468,8 @@ const MemberList = () => {
       staff: setFilterTrainer,
       fitness: setFilterFitness,
       gender: setFilterGender,
+      app_downloaded: setFilterDownloadApp,
+      company_name: setFilterCompanyName,
     };
 
     setterMap[filterKey]?.(null);
@@ -468,6 +483,8 @@ const MemberList = () => {
       staff: filterKey === "staff" ? null : filterTrainer,
       fitness: filterKey === "fitness" ? null : filterFitness,
       gender: filterKey === "gender" ? null : filterGender,
+      app_downloaded: filterKey === "app_downloaded" ? null : filterDownloadApp,
+      company_name: filterKey === "company_name" ? null : filterCompanyName,
       club_id: clubFilter,
     };
 
@@ -481,6 +498,75 @@ const MemberList = () => {
     }
 
     fetchMemberList("", 1);
+  };
+
+  const handleDownloadMembers = async () => {
+    try {
+      setLoading(true);
+      const params = {};
+
+      // Search mode support
+      if (memberIdFromUrl) {
+        params.id = memberIdFromUrl;
+
+        if (clubIdFromUrl) {
+          params.club_id = clubIdFromUrl;
+        }
+      } else {
+        const filters = {
+          is_subscribed: filterStatus,
+          service_id: filterService,
+          age_range: filterAgeGroup,
+          lead_source: filterLeadSource,
+          lead_owner: filterLeadOwner,
+          staff: filterTrainer,
+          fitness: filterFitness,
+          gender: filterGender,
+          app_downloaded: filterDownloadApp,
+          company_name: filterCompanyName,
+          // kyc_status: filterKYCDocumentStatus,
+          club_id: clubFilter,
+        };
+
+        // Convert select objects into values
+        Object.entries(filters).forEach(([key, val]) => {
+          if (val !== null && val !== undefined) {
+            params[key] = val?.value !== undefined ? val.value : val;
+          }
+        });
+      }
+
+      console.log("📥 Download Params:", params);
+
+      const response = await authAxios().get("/member/download/list", {
+        params,
+        responseType: "blob", // Important for file download
+      });
+
+      // Create file download
+      const blob = new Blob([response.data]);
+      const url = window.URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+      link.href = url;
+
+      // File name
+      link.setAttribute("download", "member-list.xlsx");
+
+      document.body.appendChild(link);
+      link.click();
+
+      link.remove();
+      window.URL.revokeObjectURL(url);
+
+      toast.success("Member list downloaded successfully!");
+      setLoading(false);
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to download member list.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -601,6 +687,22 @@ const MemberList = () => {
               />
             </div>
           </div>
+          {!ALLOWED_ROLES.includes(userRole) && (
+            <div className="w-full">
+              <button
+                onClick={handleDownloadMembers}
+                disabled={memberList.length === 0}
+                className={`ms-auto px-4 py-2 rounded flex items-center gap-2
+                ${
+                  memberList.length === 0
+                    ? "bg-gray-400 cursor-not-allowed text-white"
+                    : "bg-black text-white hover:bg-gray-800"
+                }`}
+              >
+                <LuDownload /> <span>Download Report</span>
+              </button>
+            </div>
+          )}
         </div>
 
         {showConfirm && (
@@ -652,6 +754,10 @@ const MemberList = () => {
                 setFilterFitness={setFilterFitness}
                 filterGender={filterGender}
                 setFilterGender={setFilterGender}
+                filterDownloadApp={filterDownloadApp}
+                setFilterDownloadApp={setFilterDownloadApp}
+                filterCompanyName={filterCompanyName}
+                setFilterCompanyName={setFilterCompanyName}
                 onApplyFilters={handleApplyFiltersFromChild}
                 onRemoveFilter={handleRemoveFilter}
               />
@@ -710,8 +816,8 @@ const MemberList = () => {
                         Confirm Assignment
                       </h2>
                       <p className="mb-4">
-                        Are you sure you want to change{" "}
-                        <strong>{selectedUserId.length}</strong> Trainer to{" "}
+                        Are you sure you want to assign{" "}
+                        <strong>{selectedUserId.length}</strong> member(s) to{" "}
                         <strong>{bulkOwner?.label}</strong>?
                       </p>
                       <div className="flex justify-center gap-4">
@@ -747,7 +853,9 @@ const MemberList = () => {
                     )}
                     <th className="px-2 py-4 min-w-[120px]">Profile Image</th>
                     <th className="px-2 py-4 min-w-[130px]">Name</th>
+                    <th className="px-2 py-4 min-w-[130px]">Membership ID</th>
                     <th className="px-2 py-4 min-w-[120px]">Club Name</th>
+                    <th className="px-2 py-4 min-w-[130px]">Company Name</th>
                     <th className="px-2 py-4 min-w-[70px]">Gender</th>
                     <th className="px-2 py-4 min-w-[160px]">
                       MemeberShip Duration
@@ -796,13 +904,20 @@ const MemberList = () => {
                               className="w-full h-full object-cover object-center"
                             />
                           )}
+                          
                         </div>
                       </td>
                       <td className="px-2 py-4">
                         {member?.full_name ? member?.full_name : "--"}
                       </td>
                       <td className="px-2 py-4">
+                        {member?.membership_number ? member?.membership_number : "--"}
+                      </td>
+                      <td className="px-2 py-4">
                         {member?.club_name ? member?.club_name : "--"}
+                      </td>
+                      <td className="px-2 py-4">
+                        {member?.company_name ? member?.company_name : "--"}
                       </td>
                       <td className="px-2 py-4">
                         {formatText(
@@ -992,4 +1107,4 @@ const MemberList = () => {
   );
 };
 
-export default MemberList;
+export default IsLoadingHOC(MemberList);

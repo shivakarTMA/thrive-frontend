@@ -16,6 +16,11 @@ const memberStatus = [
   { value: false, label: "Inactive" },
 ];
 
+const downloadApp = [
+  { value: true, label: "Yes" },
+  { value: false, label: "No" },
+];
+
 const ageGroupOptions = [
   { value: "15-20", label: "15-20" },
   { value: "21-30", label: "21-30" },
@@ -45,6 +50,10 @@ export default function MemberFilterPanel({
   setFilterFitness,
   filterGender,
   setFilterGender,
+  filterDownloadApp,
+  setFilterDownloadApp,
+  filterCompanyName,
+  setFilterCompanyName,
   onApplyFilters,
   onRemoveFilter,
   userRole,
@@ -55,6 +64,7 @@ export default function MemberFilterPanel({
   const [trainerList, setTrainerList] = useState([]);
   const [serviceList, setServiceList] = useState([]);
   const [clubList, setClubList] = useState([]);
+  const [companyList, setCompanyList] = useState([]);
   const navigate = useNavigate();
 
   const [appliedFilters, setAppliedFilters] = useState({});
@@ -63,17 +73,43 @@ export default function MemberFilterPanel({
     try {
       const res = await authAxios().get("/staff/list", {
         params: {
-          role: "TRAINER",
+          role: "TRAINER,FITNESS_MANAGER,ASS_FITNESS_MANAGER",
           club_id: clubId,
         },
       });
       const data = res.data?.data || [];
-      const activeStaff = data.filter((item) => item.status === "ACTIVE");
+      const activeStaff = data.filter(
+        (item) =>
+          item.status === "ACTIVE" &&
+          ["TRAINER", "FITNESS_MANAGER", "ASS_FITNESS_MANAGER"].includes(
+            item.role,
+          ),
+      );
       setTrainerList(activeStaff);
     } catch (err) {
       console.error(err);
     }
   };
+
+  const fetchCompanyList = async (clubId) => {
+    try {
+      const res = await authAxios().get("/company/list");
+      // ✅ Extract company data safely
+      const data = res.data?.data || [];
+
+      // ✅ Filter only active companies
+      const activeCompanies = data.filter(
+        (company) => company.status === "ACTIVE",
+      );
+      setCompanyList(activeCompanies);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  useEffect(() =>{
+    fetchCompanyList();
+  },[])
 
   const fetchStaffList = async (clubId) => {
     try {
@@ -182,6 +218,11 @@ export default function MemberFilterPanel({
     label: item.name,
     value: item.id,
   }));
+  
+  const companyOptions = companyList.map((item) => ({
+    label: item.name,
+    value: item.name,
+  }));
 
   const genderOptions = [
     { value: "MALE", label: "Male" },
@@ -232,6 +273,11 @@ export default function MemberFilterPanel({
       staff: filterTrainer,
       fitness: filterFitness,
       gender: filterGender,
+      app_downloaded:
+        filterDownloadApp !== null
+          ? downloadApp.find((option) => option.value === filterDownloadApp)
+          : null,
+      company_name: filterCompanyName,
     });
     setShowFilters(false);
 
@@ -251,6 +297,8 @@ export default function MemberFilterPanel({
       staff: setFilterTrainer,
       fitness: setFilterFitness,
       gender: setFilterGender,
+      app_downloaded: setFilterDownloadApp,
+      company_name: setFilterCompanyName,
     };
 
     // Clear UI state
@@ -416,8 +464,44 @@ export default function MemberFilterPanel({
                   styles={customStyles}
                 />
               </div>
-            </div>
 
+              {/* Download App */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Download App
+                </label>
+                <Select
+                  value={downloadApp.find(
+                    (option) => option.value === filterDownloadApp
+                  )}
+                  onChange={(selectedOption) => {
+                    // Store only the value (true/false) in state
+                    setFilterDownloadApp(selectedOption?.value ?? null);
+                  }}
+                  options={downloadApp}
+                  // isClearable
+                  placeholder="Select Download App"
+                  styles={customStyles}
+                />
+              </div>
+
+              {/* Company Name */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Company Name
+                </label>
+                <Select
+                  value={filterCompanyName}
+                  onChange={setFilterCompanyName}
+                  options={companyOptions}
+                  // isClearable
+                  placeholder="Select Company Name"
+                  styles={customStyles}
+                />
+              </div>
+
+
+            </div>
             {/* Reset */}
             <div className="flex justify-between pt-3">
               <button

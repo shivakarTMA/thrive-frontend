@@ -6,6 +6,7 @@ import "react-phone-number-input/style.css";
 import PhoneInput, { isValidPhoneNumber } from "react-phone-number-input";
 import { parsePhoneNumberFromString } from "libphonenumber-js";
 import {
+  allowLettersAndNumbers,
   allowOnlyLetters,
   blockInvalidNumberKeys,
   blockNonLetters,
@@ -70,11 +71,14 @@ const genderOptions = [
 ];
 
 const paymentMethodOptions = [
-  { value: "UPI", label: "UPI" },
-  { value: "CREDIT_CARD", label: "Credit Card" },
+  { value: "NET_BANKING", label: "Net Banking" },
   { value: "DEBIT_CARD", label: "Debit Card" },
+  { value: "CREDIT_CARD", label: "Credit Card" },
+  { value: "UPI_ICICI", label: "UPI" },
   // { value: "CHEQUE", label: "cheque" },
 ];
+
+//  'CREDIT_CARD','DEBIT_CARD','UPI_ICICI','NET_BANKING'
 
 
 const stepValidationSchemas = [
@@ -200,6 +204,7 @@ const ConvertMemberForm = ({
   const [companyOptions, setCompanyOptions] = useState([]);
   const [duplicateEmailError, setDuplicateEmailError] = useState("");
   const [showDuplicateEmailModal, setShowDuplicateEmailModal] = useState(false);
+  const [clubGstType, setClubGstType] = useState("");
 
   const [offlinePaymentDetails, setOfflinePaymentDetails] = useState({
     method: null,
@@ -208,6 +213,19 @@ const ConvertMemberForm = ({
   const [offlineErrors, setOfflineErrors] = useState({
     method: "",
     transactionId: "",
+  });
+  const [showGstDetails, setShowGstDetails] = useState(false);
+  const initialGstState = {
+    gst_registration_number: "",
+    gst_registered_company_name: "",
+    gst_registered_company_address: "",
+  };
+  const [customerGstData, setCustomerGstData] = useState(initialGstState);
+
+  const [gstErrors, setGstErrors] = useState({
+    gst_registration_number: "",
+    gst_registered_company_name: "",
+    gst_registered_company_address: "",
   });
   const paymentModeRef = useRef("ONLINE");
 
@@ -251,6 +269,48 @@ const ConvertMemberForm = ({
   const servicesName = lists["GOAL"] || [];
   const relationList = lists["RELATIONSHIP"] || [];
   const socialList = lists["SOCIAL_MEDIA"] || [];
+
+
+    // Customer GST
+  const handleGstCheckbox = (e) => {
+    const checked = e.target.checked;
+
+    setShowGstDetails(checked);
+
+    // Reset fields + errors when unchecked
+    if (!checked) {
+      setCustomerGstData(initialGstState);
+
+      setGstErrors({
+        gst_registration_number: "",
+        gst_registered_company_name: "",
+        gst_registered_company_address: "",
+      });
+    }
+  };
+
+  const validateGstFields = () => {
+    let errors = {};
+
+    if (showGstDetails) {
+      if (!customerGstData.gst_registration_number.trim()) {
+        errors.gst_registration_number = "GST Number is required";
+      }
+
+      if (!customerGstData.gst_registered_company_name.trim()) {
+        errors.gst_registered_company_name = "Company Name is required";
+      }
+
+      if (!customerGstData.gst_registered_company_address.trim()) {
+        errors.gst_registered_company_address = "Company Address is required";
+      }
+    }
+
+    setGstErrors(errors);
+
+    return Object.keys(errors).length === 0;
+  };
+  // Customer GST end
 
   const validateOfflinePayment = () => {
     let errors = {
@@ -354,56 +414,6 @@ const ConvertMemberForm = ({
                 return;
               }
             }
-          // Proceed to payment (IMPORTANT PART)
-          if (values.productDetails?.id) {
-            const paymentPayload = {
-              subscription_plan_id: values.productDetails.id,
-              order_type: "SUBSCRIPTION",
-              start_date: values.start_date
-                ? new Date(values.start_date).toISOString().split("T")[0]
-                : null,
-              coins: 0,
-              coupon_code: values.coupon || "",
-              applicable_ids: [values.productDetails.id],
-              member_id: selectedLeadMember,
-              paymentMode: paymentModeRef.current,
-              mode_of_payment: offlinePaymentDetails.method?.value,
-              transaction_id: offlinePaymentDetails.transactionId,
-            };
-
-            const res = await authAxios().post(
-              "/payment/proceed",
-              paymentPayload,
-            );
-
-            if (res.data?.status) {
-              // ✅ ONLINE FLOW
-              if (paymentModeRef.current === "ONLINE") {
-                const { paymentUrl, order_no } = res.data.response || {};
-                setPaymentUrl(paymentUrl);
-                setOrderNo(order_no);
-                setPaymentModalOpen(true);
-                setLoading(false);
-                toast.success("Payment send successfully!");
-              }
-             
-              if (paymentModeRef.current === "OFFLINE") {
-                if (
-                  !offlinePaymentDetails.method ||
-                  !offlinePaymentDetails.method.value ||
-                  !offlinePaymentDetails.transactionId
-                ) {
-                  toast.error("Please fill all offline payment details");
-                  setLoading(false);
-                  return;
-                }
-                toast.success("Member created with offline payment!");
-                setMemberModal(false);
-                setLoading(false);
-                onLeadUpdate();
-              }
-            }
-          }
 
           // ===============================
           // ✅ COMPANY HANDLING (SOURCE OF TRUTH)
@@ -505,6 +515,70 @@ const ConvertMemberForm = ({
               }
             }
           }
+
+          // Proceed to payment (IMPORTANT PART)
+          if (values.productDetails?.id) {
+            const paymentPayload = {
+              subscription_plan_id: values.productDetails.id,
+              order_type: "SUBSCRIPTION",
+              start_date: values.start_date
+                ? new Date(values.start_date).toISOString().split("T")[0]
+                : null,
+              coins: 0,
+              coupon_code: values.coupon || "",
+              applicable_ids: [values.productDetails.id],
+              member_id: selectedLeadMember,
+              paymentMode: paymentModeRef.current,
+              mode_of_payment: offlinePaymentDetails.method?.value,
+              transaction_id: offlinePaymentDetails.transactionId,
+              // ✅ Add GST fields directly in payload
+              ...(showGstDetails && {
+                gst_registration_number:
+                  customerGstData.gst_registration_number,
+
+                gst_registered_company_name:
+                  customerGstData.gst_registered_company_name,
+
+                gst_registered_company_address:
+                  customerGstData.gst_registered_company_address,
+              }),
+            };
+
+            const res = await authAxios().post(
+              "/payment/proceed",
+              paymentPayload,
+            );
+
+            if (res.data?.status) {
+              // ✅ ONLINE FLOW
+              if (paymentModeRef.current === "ONLINE") {
+                const { paymentUrl, order_no } = res.data.response || {};
+                setPaymentUrl(paymentUrl);
+                setOrderNo(order_no);
+                setPaymentModalOpen(true);
+                setLoading(false);
+                toast.success("Payment send successfully!");
+              }
+             
+              if (paymentModeRef.current === "OFFLINE") {
+                if (
+                  !offlinePaymentDetails.method ||
+                  !offlinePaymentDetails.method.value ||
+                  !offlinePaymentDetails.transactionId
+                ) {
+                  toast.error("Please fill all offline payment details");
+                  setLoading(false);
+                  return;
+                }
+                toast.success("Member created with offline payment!");
+                setMemberModal(false);
+                setLoading(false);
+                onLeadUpdate();
+              }
+            }
+          }
+
+          
         } catch (error) {
           console.log(error, "error");
           toast.error(
@@ -821,6 +895,19 @@ const ConvertMemberForm = ({
     formik.values.productType,
   ]);
 
+  useEffect(() => {
+    if (!formik.values.club_id) return;
+
+    authAxios()
+      .get(`/club/${formik.values.club_id}`)
+      .then((res) => {
+        const data = res.data?.data?.gsttyp;
+        console.log("Club data:", data);
+        setClubGstType(data);
+      })
+      .catch(() => toast.error("Failed to fetch club"));
+  }, [formik.values.club_id]);
+
   const handleProductSubmit = (product) => {
     // Convert to numbers safely
     const amount = Number(product.amount) || 0;
@@ -829,7 +916,19 @@ const ConvertMemberForm = ({
 
     // Base calculation
     const totalAmount = Number(product.total_amount) || 0;
-    const gstAmount = Number(product.gst_amount) || 0;
+    let igstAmount = 0;
+    let cgstAmount = 0;
+    let sgstAmount = 0;
+    let gstAmount = 0;
+
+    if (clubGstType === "IGST") {
+      igstAmount = (totalAmount * gstPercent) / 100;
+      gstAmount = igstAmount;
+    } else {
+      cgstAmount = (totalAmount * (gstPercent / 2)) / 100;
+      sgstAmount = (totalAmount * (gstPercent / 2)) / 100;
+      gstAmount =  Number(formatIndianNumber(cgstAmount).replace(/,/g, "")) + Number(formatIndianNumber(sgstAmount).replace(/,/g, ""));
+    }
     const finalAmount = Number(product.final_amount) || 0;
 
     // 🔥 Reset coupon when product changes
@@ -894,7 +993,23 @@ const ConvertMemberForm = ({
       const gstPercent = Number(formik.values.productDetails?.gst) || 0;
 
       const discountedTotal = totalAmount - couponDiscount;
-      const gstAmount = (discountedTotal * gstPercent) / 100 ;
+      // const gstAmount = (discountedTotal * gstPercent) / 100 ;
+      let igstAmount = 0;
+      let cgstAmount = 0;
+      let sgstAmount = 0;
+      let gstAmount = 0;
+
+      if (clubGstType === "IGST") {
+        igstAmount = (discountedTotal * gstPercent) / 100;
+        gstAmount = igstAmount;
+      } else {
+        cgstAmount = (discountedTotal * (gstPercent / 2)) / 100;
+        sgstAmount = (discountedTotal * (gstPercent / 2)) / 100;
+
+        gstAmount =
+          Number(cgstAmount.toFixed(2)) +
+          Number(sgstAmount.toFixed(2));
+      }
       const finalAmount = discountedTotal + gstAmount;
 
       setVoucherStatus("success");
@@ -917,15 +1032,46 @@ const ConvertMemberForm = ({
       setVoucherStatus("error");
       setVoucherMessage(err?.message || "Invalid or expired coupon");
 
-      const originalFinal =
-        Number(formik.values.productDetails?.final_amount) || 0;
+      const totalAmount =
+        Number(formik.values.productDetails?.total_amount) || 0;
+
+      const gstPercent =
+        Number(formik.values.productDetails?.gst) || 0;
+
+      const discountedTotal = totalAmount; // ❌ no discount applied
+
+      let igstAmount = 0;
+      let cgstAmount = 0;
+      let sgstAmount = 0;
+      let gstAmount = 0;
+
+      if (clubGstType === "IGST") {
+        igstAmount = (discountedTotal * gstPercent) / 100;
+        gstAmount = igstAmount;
+      } else {
+        cgstAmount = (discountedTotal * (gstPercent / 2)) / 100;
+        sgstAmount = (discountedTotal * (gstPercent / 2)) / 100;
+
+        gstAmount =
+          Number(cgstAmount.toFixed(2)) +
+          Number(sgstAmount.toFixed(2));
+      }
+
+      const finalAmount = discountedTotal + gstAmount;
 
       formik.setValues({
         ...formik.values,
         coupon: "",
         discountAmount: 0,
-        final_amount: originalFinal,
-        amount_pay: originalFinal,
+        productDetails: {
+          ...formik.values.productDetails,
+          gst_amount: gstAmount,
+          cgst_amount: cgstAmount,
+          sgst_amount: sgstAmount,
+          igst_amount: igstAmount,
+        },
+        final_amount: finalAmount,
+        amount_pay: finalAmount,
       });
     }
   };
@@ -2207,12 +2353,157 @@ const ConvertMemberForm = ({
                         </div>
                       </div>
 
+                      <div className="mt-3 flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={showGstDetails}
+                          onChange={handleGstCheckbox}
+                        />
+
+                        <label>Add GST Details</label>
+                      </div>
+
+                      {showGstDetails && (
+                        <>
+                          <h3 className="text-2xl font-semibold mb-2 mt-4">
+                            Add GST Details
+                          </h3>
+
+                          <div className="grid grid-cols-3 gap-4">
+                            {/* GST Number */}
+                            <div>
+                              <label className="mb-2 block">
+                                GST Number
+                                <span className="text-red-500">*</span>
+                              </label>
+
+                              <input
+                                type="text"
+                                placeholder="GST Number"
+                                className="custom--input w-full"
+                                maxLength={15}
+                                value={customerGstData.gst_registration_number}
+                                onKeyDown={(e) => {
+                                  const allowedKeys = [
+                                    "Backspace",
+                                    "Delete",
+                                    "ArrowLeft",
+                                    "ArrowRight",
+                                    "Tab",
+                                  ];
+
+                                  // allow letters + numbers only
+                                  if (
+                                    !/^[a-zA-Z0-9]$/.test(e.key) &&
+                                    !allowedKeys.includes(e.key)
+                                  ) {
+                                    e.preventDefault();
+                                  }
+                                }}
+                                onChange={(e) => {
+                                  const cleaned = sanitizeAlphaNumeric(
+                                    e.target.value.toUpperCase(),
+                                  );
+
+                                  // limit 15 chars manually
+                                  if (cleaned.length <= 15) {
+                                    setCustomerGstData({
+                                      ...customerGstData,
+                                      gst_registration_number: cleaned,
+                                    });
+
+                                    setGstErrors({
+                                      ...gstErrors,
+                                      gst_registration_number: "",
+                                    });
+                                  }
+                                }}
+                              />
+
+                              {gstErrors.gst_registration_number && (
+                                <p className="text-red-500 text-sm mt-1">
+                                  {gstErrors.gst_registration_number}
+                                </p>
+                              )}
+                            </div>
+
+                            {/* Company Name */}
+                            <div>
+                              <label className="mb-2 block">
+                                Company Name
+                                <span className="text-red-500">*</span>
+                              </label>
+
+                              <input
+                                type="text"
+                                placeholder="Company Name"
+                                className="custom--input w-full"
+                                value={
+                                  customerGstData.gst_registered_company_name
+                                }
+                                onKeyDown={blockNonLettersAndNumbers}
+                                onChange={(e) => {
+                                  const cleaned = allowLettersAndNumbers(
+                                    e.target.value,
+                                  );
+
+                                  setCustomerGstData({
+                                    ...customerGstData,
+                                    gst_registered_company_name: cleaned,
+                                  });
+                                }}
+                              />
+
+                              {gstErrors.gst_registered_company_name && (
+                                <p className="text-red-500 text-sm mt-1">
+                                  {gstErrors.gst_registered_company_name}
+                                </p>
+                              )}
+                            </div>
+
+                            {/* Company Address */}
+                            <div>
+                              <label className="mb-2 block">
+                                Company Address
+                                <span className="text-red-500">*</span>
+                              </label>
+
+                              <input
+                                type="text"
+                                placeholder="Company Address"
+                                className="custom--input w-full"
+                                value={
+                                  customerGstData.gst_registered_company_address
+                                }
+                                onKeyDown={blockNonLettersAndNumbers}
+                                onChange={(e) => {
+                                  const cleaned = allowLettersAndNumbers(
+                                    e.target.value,
+                                  );
+
+                                  setCustomerGstData({
+                                    ...customerGstData,
+                                    gst_registered_company_address: cleaned,
+                                  });
+                                }}
+                              />
+
+                              {gstErrors.gst_registered_company_address && (
+                                <p className="text-red-500 text-sm mt-1">
+                                  {gstErrors.gst_registered_company_address}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        </>
+                      )}
+
                       <div className="mt-5 bg-[#f7f7f7] p-[20px] rounded-[10px]">
                         <h3 className="text-2xl font-semibold">
                           Price Calculation
                         </h3>
                         <div className="price--calculation2 my-5">
-                          <div className="price--item">
+                          {/* <div className="price--item">
                             <p className="flex items-center gap-2 justify-between mb-2 border-b pb-2">
                               Duration:{" "}
                               <span className="font-bold">
@@ -2221,7 +2512,7 @@ const ConvertMemberForm = ({
                                 {formik.values.productDetails?.duration_type}
                               </span>
                             </p>
-                          </div>
+                          </div> */}
                           <div className="price--item">
                             <p className="flex items-center gap-2 justify-between mb-2 border-b pb-2">
                               Total:{" "}

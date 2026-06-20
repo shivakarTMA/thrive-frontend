@@ -33,7 +33,14 @@ export default function TrialAppointmentPanel({
   // ✅ Fetch trainers based on club_id (if provided) or all trainers
   const fetchTrainer = async (club_id = null) => {
     try {
-      const params = { role: "TRAINER" };
+      const roles = [
+        "TRAINER",
+        "FITNESS_MANAGER",
+        "ASS_FITNESS_MANAGER",
+      ];
+      const params = {
+        role: roles.join(","), // IMPORTANT FIX
+      };
 
       // ✅ If club_id is provided, filter by club, otherwise show all
       if (club_id) {
@@ -42,7 +49,9 @@ export default function TrialAppointmentPanel({
 
       const response = await authAxios().get("/staff/list", { params });
       const data = response.data?.data || [];
-      const activeOnly = filterActiveItems(data);
+      const activeOnly = filterActiveItems(data).filter((item) =>
+        roles.includes(item.role)
+      );
       setTrainerList(activeOnly);
     } catch (error) {
       console.error("Failed to fetch trainers:", error);

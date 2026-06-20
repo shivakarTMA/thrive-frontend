@@ -2,8 +2,10 @@ import React, { useEffect, useRef } from "react";
 import Select from "react-select";
 import {
   blockInvalidNumberKeys,
+  blockInvalidNumberKeysProduct,
   blockNonLettersAndNumbers,
   customStyles,
+  sanitizePositiveDecimalProduct,
   sanitizePositiveInteger,
   sanitizeTextWithNumbers,
 } from "../../Helper/helper";
@@ -32,6 +34,11 @@ const foodTypeOptions = [
 const statusType = [
   { label: "Active", value: "ACTIVE" },
   { label: "Inactive", value: "INACTIVE" },
+];
+
+const showOnAppOptions = [
+  { label: "Yes", value: true },
+  { label: "No", value: false },
 ];
 
 const CreateProduct = ({
@@ -89,6 +96,12 @@ const CreateProduct = ({
                 ? String(data.position)
                 : "",
             status: data?.status || "",
+            show_on_app:
+              data?.show_on_app === true
+                ? true
+                : data?.show_on_app === false
+                  ? false
+                  : null,
           });
         }
       } catch (err) {
@@ -600,9 +613,9 @@ const CreateProduct = ({
                         name="calorie"
                         value={formik.values.calorie}
                         // onChange={formik.handleChange}
-                        onKeyDown={blockInvalidNumberKeys} // ⛔ blocks typing -, e, etc.
+                        onKeyDown={blockInvalidNumberKeysProduct} // ⛔ blocks typing -, e, etc.
                         onChange={(e) => {
-                          const cleanValue = sanitizePositiveInteger(
+                          const cleanValue = sanitizePositiveDecimalProduct(
                             e.target.value,
                           );
                           formik.setFieldValue("calorie", cleanValue);
@@ -628,9 +641,9 @@ const CreateProduct = ({
                         name="protein"
                         value={formik.values.protein}
                         // onChange={formik.handleChange}
-                        onKeyDown={blockInvalidNumberKeys} // ⛔ blocks typing -, e, etc.
+                        onKeyDown={blockInvalidNumberKeysProduct} // ⛔ blocks typing -, e, etc.
                         onChange={(e) => {
-                          const cleanValue = sanitizePositiveInteger(
+                          const cleanValue = sanitizePositiveDecimalProduct(
                             e.target.value,
                           );
                           formik.setFieldValue("protein", cleanValue);
@@ -656,9 +669,9 @@ const CreateProduct = ({
                         name="carbohydrate"
                         value={formik.values.carbohydrate}
                         // onChange={formik.handleChange}
-                        onKeyDown={blockInvalidNumberKeys} // ⛔ blocks typing -, e, etc.
+                        onKeyDown={blockInvalidNumberKeysProduct} // ⛔ blocks typing -, e, etc.
                         onChange={(e) => {
-                          const cleanValue = sanitizePositiveInteger(
+                          const cleanValue = sanitizePositiveDecimalProduct(
                             e.target.value,
                           );
                           formik.setFieldValue("carbohydrate", cleanValue);
@@ -685,9 +698,9 @@ const CreateProduct = ({
                         name="fat"
                         value={formik.values.fat}
                         // onChange={formik.handleChange}
-                        onKeyDown={blockInvalidNumberKeys} // ⛔ blocks typing -, e, etc.
+                        onKeyDown={blockInvalidNumberKeysProduct} // ⛔ blocks typing -, e, etc.
                         onChange={(e) => {
-                          const cleanValue = sanitizePositiveInteger(
+                          const cleanValue = sanitizePositiveDecimalProduct(
                             e.target.value,
                           );
                           formik.setFieldValue("fat", cleanValue);
@@ -781,6 +794,36 @@ const CreateProduct = ({
                         <p className="text-red-500 text-sm mt-1">
                           {formik.errors.short_description}
                         </p>
+                      )}
+                  </div>
+                  <div>
+                    <label className="mb-2 block">
+                      Show on App<span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <Select
+                        name="show_on_app"
+                        value={showOnAppOptions.find(
+                          (opt) => opt.value === formik.values.show_on_app,
+                        )}
+                        options={showOnAppOptions}
+                        onChange={(option) =>
+                          formik.setFieldValue(
+                            "show_on_app",
+                            option?.value ?? null,
+                          )
+                        }
+                        onBlur={() =>
+                          formik.setFieldTouched("show_on_app", true)
+                        }
+                        styles={customStyles}
+                      />
+                    </div>
+                    {formik.touched.show_on_app &&
+                      formik.errors.show_on_app && (
+                        <div className="text-red-500 text-sm">
+                          {formik.errors.show_on_app}
+                        </div>
                       )}
                   </div>
                   {/* Status */}

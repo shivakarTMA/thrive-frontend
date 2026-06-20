@@ -63,14 +63,31 @@ const ServiceCard = ({ details }) => {
 
   const fetchStaff = async (clubIdParam = null) => {
     try {
-      const params = {};
-      if (clubIdParam) params.club_id = clubIdParam;
+      const roles = [
+        "TRAINER",
+        "FITNESS_MANAGER",
+        "ASS_FITNESS_MANAGER",
+      ];
+      const params = {
+        role: roles.join(","), // TRAINER,FITNESS_MANAGER,ASS_FITNESS_MANAGER
+      };
 
-      const res = await authAxios().get("/staff/list?role=TRAINER", { params });
+      if (clubIdParam) {
+        params.club_id = clubIdParam;
+      }
+
+      const res = await authAxios().get("/staff/list", { params });
+
       const data = res.data?.data || res?.data || [];
-      setStaffList(data.filter((item) => item?.status === "ACTIVE"));
-    } catch(error) {
-      console.log(error)
+      setStaffList(
+        data.filter(
+          (item) =>
+            item?.status === "ACTIVE" &&
+            roles.includes(item?.role)
+        )
+      );
+    } catch (error) {
+      console.log(error);
     }
   };
 
@@ -411,7 +428,7 @@ const ServiceCard = ({ details }) => {
                   <h3 className="text-lg font-bold text-gray-900 mb-0">
                     {formatDate(membershipData?.start_date)}
                   </h3>
-                  <p className="text-md text-gray-500">Relationship since</p>
+                  <p className="text-md text-gray-500">Starts From</p>
                 </div>
                 {/* <div className="flex space-x-2">
                   {(userRole === "CLUB_MANAGER" ||
@@ -572,7 +589,7 @@ const ServiceCard = ({ details }) => {
                                 userRole === "ADMIN" ||
                                 userRole === "FITNESS_MANAGER"
                               ) && (
-                              <div className="w-fit min-w-[150px]">
+                              <div className="w-fit min-w-[180px]">
                                 <Select
                                   options={filteredStaffOptions}
                                   value={trainerSelections[service?.id] || null} // <-- controlled value
