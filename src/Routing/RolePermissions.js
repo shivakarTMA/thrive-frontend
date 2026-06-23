@@ -141,7 +141,7 @@ export const ROUTE_PERMISSIONS = {
 
   // ─── Products & Companies ───────────────────────────────────────────────────
   '/products': [
-    'ADMIN', 'CLUB_MANAGER', 'ASS_CLUB_MANAGER', 'PROGRAM_SPECIALIST',
+    'ADMIN', 'CLUB_MANAGER', 'ASS_CLUB_MANAGER', 'PROGRAM_SPECIALIST', 'FOH',
     'FITNESS_MANAGER', 'ASS_FITNESS_MANAGER', 'TRAINER',
     'MARKETING_MANAGER', 'FINANCE_MANAGER', 'FINANCE_MANAGER_CLUB', 'FINANCE_MANAGER_CORPORATE',
   ],

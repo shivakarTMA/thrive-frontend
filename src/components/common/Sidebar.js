@@ -2336,76 +2336,321 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
               </Link>
             )}
 
-            <Link
-              to="/challenge-list"
-              className={`nav-link mb-2 ${
-                location.pathname === "/challenge-list" ? "active" : ""
-              }`}
-            >
-              <MdOutlineLocalActivity className="menu--icon" />
-              <span className="nav-text">Challenges</span>
-            </Link>
-
             <div
               className="nav-link d-flex justify-between align-items-center mb-2"
-              onClick={() => toggleMenu("fohreports")}
+              onClick={() => toggleMenu("marketing")}
               style={{ cursor: "pointer" }}
             >
               <div className="flex items-center">
-                <IoDocumentTextOutline className="menu--icon" />
-                <span className="nav-text">Reports</span>
+                <TfiAnnouncement className="menu--icon" />
+                <span className="nav-text">Marketing</span>
               </div>
               <FaAngleDown
                 className={`downmenu transition ${
-                  dropdownToggles["fohreports"] ? "rotate-[180deg]" : ""
+                  dropdownToggles["marketing"] ? "rotate-[180deg]" : ""
                 }`}
               />
             </div>
 
-            {dropdownToggles["fohreports"] && (
+            {dropdownToggles["marketing"] && (
               <div className="mt-2 pl-5 relative">
                 <div className="absolute h-[calc(100%-15px)] w-[2px] bg-white left-[23px] top-[8px]"></div>
                 <Link
-                  to="/reports/sales-reports/membership-sales-report"
+                  to="/coupons"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
                 >
                   <FaCircle className="menu--icon !text-[10px]" />
-                  <span className="nav-text">Membership Sales Report</span>
+                  <span className="nav-text">Discount Coupons</span>
                 </Link>
                 <Link
-                  to="/reports/sales-reports/active-member-report"
+                  to="/challenge-list"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
                 >
                   <FaCircle className="menu--icon !text-[10px]" />
-                  <span className="nav-text">Active Member Report</span>
+                  <span className="nav-text">Challenges</span>
+                </Link>
+              </div>
+            )}
+
+            <div
+              className="nav-link d-flex justify-between align-items-center mb-2"
+              onClick={toggleReports}
+              style={{ cursor: "pointer" }}
+            >
+              <div className="flex items-center">
+                <IoDocumentTextOutline className="menu--icon" />
+                <span className="nav-text">All Reports</span>
+              </div>
+              <FaAngleDown
+                className={`downmenu transition ${
+                  reportsOpen ? "rotate-[180deg]" : ""
+                }`}
+              />
+            </div>
+
+            {reportsOpen && (
+              <div className="mt-2 pl-5 relative">
+                <div className="absolute h-[calc(100%-15px)] w-[2px] bg-white left-[23px] top-[8px]"></div>
+
+                  {/* SALES REPORTS */}
+                  <div
+                    className="text-white flex justify-between items-center cursor-pointer text-sm mb-2"
+                    onClick={toggleSalesReports}
+                  >
+                    <div className="flex gap-[5px] items-center cursor-pointer">
+                      <FaCircle className="menu--icon !text-[10px]" />
+                      <span className="nav-text">Sales Reports</span>
+                    </div>
+                    <FaAngleDown
+                      className={`downmenu transition ${
+                        salesReportsOpen ? "rotate-[180deg]" : ""
+                      }`}
+                    />
+                  </div>
+
+                  {salesReportsOpen && (
+                    <div className="pl-[5px] flex flex-col gap-1 mb-3">
+                      <Link
+                        to="/reports/sales-reports/membership-sales-report"
+                        className="submenu-link text-white text-sm"
+                      >
+                        Membership Sales Report
+                      </Link>
+
+                      <Link
+                        to="/reports/sales-reports/active-member-report"
+                        className="submenu-link text-white text-sm"
+                      >
+                        Active Member Report
+                      </Link>
+                      <Link
+                        to="/reports/sales-reports/group-classes-report"
+                        className="submenu-link text-white text-sm"
+                      >
+                        Group Classes Report
+                      </Link>
+                    </div>
+                  )}
+
+                  {/* FINANCE REPORTS */}
+                  <div
+                    className="text-white flex justify-between items-center cursor-pointer text-sm mb-2"
+                    onClick={toggleFinanceReports}
+                  >
+                    <div className="flex gap-[5px] items-center cursor-pointer">
+                      <FaCircle className="menu--icon !text-[10px]" />
+                      <span className="nav-text">Finance Reports</span>
+                    </div>
+                    <FaAngleDown
+                      className={`downmenu transition ${
+                        financeReportsOpen ? "rotate-[180deg]" : ""
+                      }`}
+                    />
+                  </div>
+
+                  {financeReportsOpen && (
+                    <div className="pl-[5px] flex flex-col gap-1 mb-3">
+                      <Link
+                        to="/reports/finance-reports/all-invoice-report"
+                        className="submenu-link text-white text-sm"
+                      >
+                        All Invoice Report
+                      </Link>
+
+                      {/* <Link
+                        to="/reports/finance-reports/cancelled-paid-invoice"
+                        className="submenu-link text-white text-sm"
+                      >
+                        Cancelled Paid Invoices
+                      </Link> */}
+                      {/* <Link
+                        to="/reports/finance-reports/refund-report"
+                        className="submenu-link text-white text-sm"
+                      >
+                        Refund Report
+                      </Link> */}
+                      {/* <Link
+                        to="/reports/finance-reports/collection-report"
+                        className="submenu-link text-white text-sm"
+                      >
+                        Collection Report
+                      </Link> */}
+                    </div>
+                  )}
+
+                  {/* OPERATIONS REPORTS */}
+                  <div
+                    className="text-white flex justify-between items-center cursor-pointer text-sm mb-2"
+                    onClick={toggleOperationsReports}
+                  >
+                    <div className="flex gap-[5px] items-center cursor-pointer">
+                      <FaCircle className="menu--icon !text-[10px]" />
+                      <span className="nav-text">Operations Reports</span>
+                    </div>
+                    <FaAngleDown
+                      className={`downmenu transition ${
+                        operationsReportsOpen ? "rotate-[180deg]" : ""
+                      }`}
+                    />
+                  </div>
+
+                  {operationsReportsOpen && (
+                    <div className="pl-[5px] flex flex-col gap-1 mb-3">
+                      {/* <Link
+                        to="/reports/operations-reports/renewal-report"
+                        className="submenu-link text-white text-sm"
+                      >
+                        Renewal Report
+                      </Link> */}
+                      <Link
+                        to="/reports/operations-reports/member-checkins-report"
+                        className="submenu-link text-white text-sm"
+                      >
+                        Member Checkins
+                      </Link>
+                      <Link
+                        to="/reports/operations-reports/membership-expiry-report"
+                        className="submenu-link text-white text-sm"
+                      >
+                        Membership Expiry Report
+                      </Link>
+                      <Link
+                        to="/reports/operations-reports/service-expiry-report"
+                        className="submenu-link text-white text-sm"
+                      >
+                        Service Expiry Report
+                      </Link>
+                      <Link
+                        to="/reports/operations-reports/irregular-members-report"
+                        className="submenu-link text-white text-sm"
+                      >
+                        Irregular Members Report
+                      </Link>
+                      {/* <Link
+                        to="/reports/operations-reports/attendance-heatmap-report"
+                        className="submenu-link text-white text-sm"
+                      >
+                        Attendance Heatmap Report
+                      </Link> */}
+                      {/* <Link
+                        to="/reports/operations-reports/referral-report"
+                        className="submenu-link text-white text-sm"
+                      >
+                        Referral Report
+                      </Link> */}
+                    </div>
+                  )}
+              </div>
+            )}
+            <div
+              className="nav-link d-flex justify-between align-items-center mb-2"
+              onClick={() => toggleMenu("configure")}
+              style={{ cursor: "pointer" }}
+            >
+              <div className="flex items-center">
+                <IoSettingsOutline className="menu--icon" />
+                <span className="nav-text">Configure</span>
+              </div>
+              <FaAngleDown
+                className={`downmenu transition ${
+                  dropdownToggles["configure"] ? "rotate-[180deg]" : ""
+                }`}
+              />
+            </div>
+
+            {dropdownToggles["configure"] && (
+              <div className="mt-2 pl-5 relative">
+                <div className="absolute h-[calc(100%-15px)] w-[2px] bg-white left-[23px] top-[8px]"></div>
+                <Link
+                  to="/staff"
+                  className="text-white flex items-center gap-[5px] mb-2 text-sm"
+                >
+                  <FaCircle className="menu--icon !text-[10px]" />
+                  <span className="nav-text">All Staff</span>
+                </Link>
+                
+                <Link
+                  to="/package-category"
+                  className="text-white flex items-center gap-[5px] mb-2 text-sm"
+                >
+                  <FaCircle className="menu--icon !text-[10px]" />
+                  <span className="nav-text">Classes Category</span>
                 </Link>
                 <Link
-                  to="/reports/operations-reports/member-checkins-report"
+                  to="/companies"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
                 >
                   <FaCircle className="menu--icon !text-[10px]" />
-                  <span className="nav-text">Member Check-ins</span>
+                  <span className="nav-text">Companies</span>
                 </Link>
                 <Link
-                  to="/reports/operations-reports/membership-expiry-report"
+                  to="/club"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
                 >
                   <FaCircle className="menu--icon !text-[10px]" />
-                  <span className="nav-text">Membership Expiry Report</span>
+                  <span className="nav-text">Club</span>
                 </Link>
                 <Link
-                  to="/reports/operations-reports/service-expiry-report"
+                  to="/studio"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
                 >
                   <FaCircle className="menu--icon !text-[10px]" />
-                  <span className="nav-text">Service Expiry Report</span>
+                  <span className="nav-text">Studio</span>
                 </Link>
                 <Link
-                  to="/reports/operations-reports/irregular-members-report"
+                  to="/services"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
                 >
                   <FaCircle className="menu--icon !text-[10px]" />
-                  <span className="nav-text">Irregular Members Report</span>
+                  <span className="nav-text">Club Services</span>
+                </Link>
+                {hasRecoveryServices && (
+                  <Link
+                    to="/recovery-services"
+                    className="text-white flex items-center gap-[5px] mb-2 text-sm"
+                  >
+                    <FaCircle className="menu--icon !text-[10px]" />
+                    <span className="nav-text">Recovery Services</span>
+                  </Link>
+                )}
+                {hasProductServices && (
+                  <Link
+                    to="/product-category"
+                    className="text-white flex items-center gap-[5px] mb-2 text-sm"
+                  >
+                    <FaCircle className="menu--icon !text-[10px]" />
+                    <span className="nav-text">Nourish Category</span>
+                  </Link>
+                )}
+                <Link
+                  to="/subscription-plan"
+                  className="text-white flex items-center gap-[5px] mb-2 text-sm"
+                >
+                  <FaCircle className="menu--icon !text-[10px]" />
+                  <span className="nav-text">Membership Plans</span>
+                </Link>
+                {hasProductServices && (
+                  <Link
+                    to="/products"
+                    className="text-white flex items-center gap-[5px] mb-2 text-sm"
+                  >
+                    <FaCircle className="menu--icon !text-[10px]" />
+                    <span className="nav-text">Nourish Products</span>
+                  </Link>
+                )}
+                <Link
+                  to="/packages"
+                  className="text-white flex items-center gap-[5px] mb-2 text-sm"
+                >
+                  <FaCircle className="menu--icon !text-[10px]" />
+                  <span className="nav-text">Packages</span>
+                </Link>
+                <Link
+                  to="/option-list"
+                  className="text-white flex items-center gap-[5px] mb-2 text-sm"
+                >
+                  <FaCircle className="menu--icon !text-[10px]" />
+                  <span className="nav-text">Options List</span>
                 </Link>
               </div>
             )}

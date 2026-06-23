@@ -340,6 +340,8 @@ const ServiceCard = ({ details }) => {
             </div>
             {(userRole === "FOH" ||
               userRole === "CLUB_MANAGER" ||
+              userRole === "ASS_CLUB_MANAGER" ||
+              userRole === "PROGRAM_SPECIALIST" ||
               userRole === "ADMIN") && (
               <div className="flex gap-2 items-center">
                 {hasUpcomingMembership ? (

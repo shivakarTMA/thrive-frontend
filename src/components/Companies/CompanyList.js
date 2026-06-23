@@ -219,7 +219,7 @@ const CompanyList = () => {
                 <th className="px-2 py-4">State</th>
                 <th className="px-2 py-4">Country</th>
                 <th className="px-2 py-4">Status</th>
-                {(userRole === "ADMIN" || userRole === "MARKETING_MANAGER" || userRole === "CLUB_MANAGER" || userRole === "ASS_CLUB_MANAGER") && (
+                {(userRole === "ADMIN" || userRole === "MARKETING_MANAGER" || userRole === "CLUB_MANAGER" || userRole === "ASS_CLUB_MANAGER" || userRole === "FOH") && (
                   <th className="px-2 py-4">Action</th>
                 )}
               </tr>
@@ -267,7 +267,7 @@ const CompanyList = () => {
                           : ""}
                       </div>
                     </td>
-                    {(userRole === "ADMIN" || userRole === "MARKETING_MANAGER" || userRole === "CLUB_MANAGER" || userRole === "ASS_CLUB_MANAGER") && (
+                    {(userRole === "ADMIN" || userRole === "MARKETING_MANAGER" || userRole === "CLUB_MANAGER" || userRole === "ASS_CLUB_MANAGER" || userRole === "FOH") && (
                       <td className="px-2 py-4">
                         <Tooltip
                           id={`tooltip-edit-${company.id || index}`}
