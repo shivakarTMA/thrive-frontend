@@ -1050,6 +1050,7 @@ const CreateClub = ({
                         }
                         onBlur={() => formik.setFieldTouched("gsttyp", true)}
                         styles={selectIcon}
+                        isDisabled={editingClub ? true : false}
                       />
                     </div>
 
