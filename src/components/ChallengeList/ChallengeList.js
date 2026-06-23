@@ -83,7 +83,7 @@ const ChallengeList = () => {
         });
       }
     } catch (error) {
-      console.log(error)
+      console.log(error);
     }
   };
   // Function to fetch role list
@@ -123,7 +123,7 @@ const ChallengeList = () => {
   }));
 
   const selectedClub =
-  clubOptions.find((opt) => opt.value === clubFilter?.value) || null;
+    clubOptions.find((opt) => opt.value === clubFilter?.value) || null;
 
   useEffect(() => {
     const delayDebounce = setTimeout(() => {
@@ -165,11 +165,11 @@ const ChallengeList = () => {
     validationSchema: Yup.object({
       club_id: Yup.string().required("Club is required"),
       image: Yup.mixed()
-            .required("Image is required")
-            .test("fileType", "Only JPG, PNG, or WEBP allowed", (value) => {
-              if (!value || typeof value === "string") return true;
-              return ["image/jpeg", "image/png", "image/webp"].includes(value.type);
-            }),
+        .required("Image is required")
+        .test("fileType", "Only JPG, PNG, or WEBP allowed", (value) => {
+          if (!value || typeof value === "string") return true;
+          return ["image/jpeg", "image/png", "image/webp"].includes(value.type);
+        }),
       name: Yup.string().required("Challenge Name is required"),
       caption: Yup.string().required("Caption is required"),
       condition: Yup.string()
@@ -218,9 +218,7 @@ const ChallengeList = () => {
         .required("Progress subheading is required")
         .min(10, "must be at least 10 characters")
         .max(40, "must be at most 40 characters"),
-      status: Yup.string().required(
-        "Status is required",
-      ),
+      status: Yup.string().required("Status is required"),
     }),
 
     onSubmit: async (values, { resetForm }) => {
@@ -258,8 +256,9 @@ const ChallengeList = () => {
         fetchChallengeList();
       } catch (error) {
         console.error("Error submitting form:", error.response || error);
-        toast.error(error.response?.data?.errors || error.response?.data?.message)
-
+        toast.error(
+          error.response?.data?.errors || error.response?.data?.message,
+        );
       }
     },
   });
@@ -321,7 +320,7 @@ const ChallengeList = () => {
           >
             <FiPlus /> Create Challenge
           </button>
-          )}
+        )}
       </div>
 
       <div className="flex flex-wrap items-center gap-2 mb-4">
@@ -434,42 +433,42 @@ const ChallengeList = () => {
                     <td className="px-2 py-4">
                       <div className="flex items-center">
                         {(userRole === "CLUB_MANAGER" ||
-                            userRole === "ASS_CLUB_MANAGER" ||
-                            userRole === "TRAINER" ||
-                            userRole === "FITNESS_MANAGER" ||
-                            userRole === "ASS_FITNESS_MANAGER" ||
-                            userRole === "FOH" ||
-                            userRole === "MARKETING_MANAGER" ||
-                            userRole === "ADMIN") && (
-                        <Tooltip
-                          id={`tooltip-view-${item.id}`}
-                          content={
-                            item?.status === "ONGOING" ||
-                            item?.status === "COMPLETED"
-                              ? item?.total_participants > 0
-                                ? "View Participants"
-                                : "No participants yet"
-                              : "Challenge not started"
-                          }
-                          place="left"
-                        >
-                          <Link
-                            to={`/challenge-participants-list/${item.id}`}
-                            className={`p-1 cursor-pointer ${
+                          userRole === "ASS_CLUB_MANAGER" ||
+                          userRole === "TRAINER" ||
+                          userRole === "FITNESS_MANAGER" ||
+                          userRole === "ASS_FITNESS_MANAGER" ||
+                          userRole === "FOH" ||
+                          userRole === "MARKETING_MANAGER" ||
+                          userRole === "ADMIN") && (
+                          <Tooltip
+                            id={`tooltip-view-${item.id}`}
+                            content={
                               item?.status === "ONGOING" ||
                               item?.status === "COMPLETED"
                                 ? item?.total_participants > 0
-                                  ? ""
-                                  : "opacity-[0.5] pointer-events-none"
-                                : "opacity-[0.5] pointer-events-none"
-                            }`}
+                                  ? "View Participants"
+                                  : "No participants yet"
+                                : "Challenge not started"
+                            }
+                            place="left"
                           >
-                            <IoEyeOutline className="text-[25px] text-black" />
-                          </Link>
-                        </Tooltip>
-                            )}
+                            <Link
+                              to={`/challenge-participants-list/${item.id}`}
+                              className={`p-1 cursor-pointer ${
+                                item?.status === "ONGOING" ||
+                                item?.status === "COMPLETED"
+                                  ? item?.total_participants > 0
+                                    ? ""
+                                    : "opacity-[0.5] pointer-events-none"
+                                  : "opacity-[0.5] pointer-events-none"
+                              }`}
+                            >
+                              <IoEyeOutline className="text-[25px] text-black" />
+                            </Link>
+                          </Tooltip>
+                        )}
 
-                          {(userRole === "CLUB_MANAGER" ||
+                        {(userRole === "CLUB_MANAGER" ||
                           userRole === "ASS_CLUB_MANAGER" ||
                           userRole === "FITNESS_MANAGER" ||
                           userRole === "ASS_FITNESS_MANAGER" ||
@@ -499,35 +498,37 @@ const ChallengeList = () => {
                               <IoCheckboxOutline className="text-[22px] text-black" />
                             </div>
                           </Tooltip>
-                          )}
+                        )}
                         {(userRole === "CLUB_MANAGER" ||
                           userRole === "ASS_CLUB_MANAGER" ||
                           userRole === "FITNESS_MANAGER" ||
                           userRole === "ASS_FITNESS_MANAGER" ||
                           userRole === "MARKETING_MANAGER" ||
                           userRole === "ADMIN") && (
-                        <Tooltip
-                          id={`tooltip-edit-${item.id}`}
-                          content={`${
-                            item?.status === "COMPLETED" ? "" : "Edit Challenge"
-                          }`}
-                          place="left"
-                        >
-                          <div
-                            className={`p-1 cursor-pointer ${
+                          <Tooltip
+                            id={`tooltip-edit-${item.id}`}
+                            content={`${
                               item?.status === "COMPLETED"
-                                ? "opacity-[0.5] pointer-events-none"
-                                : ""
+                                ? ""
+                                : "Edit Challenge"
                             }`}
-                            onClick={() => {
-                              setEditingOption(item.id);
-                              setShowModal(true);
-                            }}
+                            place="left"
                           >
-                            <LiaEdit className="text-[25px] text-black" />
-                          </div>
-                        </Tooltip>
-                          )}
+                            <div
+                              className={`p-1 cursor-pointer ${
+                                item?.status === "COMPLETED"
+                                  ? "opacity-[0.5] pointer-events-none"
+                                  : ""
+                              }`}
+                              onClick={() => {
+                                setEditingOption(item.id);
+                                setShowModal(true);
+                              }}
+                            >
+                              <LiaEdit className="text-[25px] text-black" />
+                            </div>
+                          </Tooltip>
+                        )}
                       </div>
                     </td>
                   </tr>

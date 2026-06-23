@@ -458,7 +458,7 @@ const NourishOrders = (props) => {
                 <th className="px-2 py-4 min-w-[150px]">Fulfilment Status</th>
                 <th className="px-2 py-4 min-w-[150px]">Delivered By</th>
                 <th className="px-2 py-4 min-w-[170px]">Delivered At</th>
-                {(userRole === "CLUB_MANAGER" ||
+                {(userRole === "CLUB_MANAGER" || userRole === "ASS_CLUB_MANAGER" || userRole === "PROGRAM_SPECIALIST" ||
                   userRole === "FOH" ||
                   userRole === "ADMIN") && (
                   <th className="px-2 py-4 min-w-[150px]">Action</th>
@@ -510,7 +510,7 @@ const NourishOrders = (props) => {
                         ? formatDateTimeLead(order?.delivered_at)
                         : "--"}
                     </td>
-                    {(userRole === "CLUB_MANAGER" ||
+                    {(userRole === "CLUB_MANAGER" || userRole === "ASS_CLUB_MANAGER" || userRole === "PROGRAM_SPECIALIST" || 
                       userRole === "FOH" ||
                       userRole === "ADMIN") && (
                       <td className="px-2 py-4">

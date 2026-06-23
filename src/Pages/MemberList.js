@@ -1000,6 +1000,7 @@ const MemberList = (props) => {
                               userRole === "ASS_FITNESS_MANAGER" || 
                               userRole === "TRAINER" || 
                               userRole === "MARKETING_MANAGER" || 
+                              userRole === "PROGRAM_SPECIALIST" || 
                               userRole === "FINANCE_MANAGER") && (
                               <Tooltip
                                 id={`edit-member-${member?.id}`}
@@ -1023,6 +1024,7 @@ const MemberList = (props) => {
                               userRole === "ASS_FITNESS_MANAGER" ||
                               userRole === "CLUB_MANAGER" ||
                               userRole === "ASS_CLUB_MANAGER" ||
+                              userRole === "PROGRAM_SPECIALIST" ||
                               userRole === "ADMIN") && (
                               <Tooltip
                                 id={`member-call-${member?.id}`}
@@ -1043,6 +1045,7 @@ const MemberList = (props) => {
                             {(userRole === "FOH" ||
                               userRole === "CLUB_MANAGER" ||
                               userRole === "ASS_CLUB_MANAGER" ||
+                              userRole === "PROGRAM_SPECIALIST" ||
                               userRole === "ADMIN") && (
                                 <>
                                 {member?.is_subscribed !== true ? null : (

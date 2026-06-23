@@ -118,6 +118,7 @@ import SalesCallLogsReport from "../components/Reports/LeaderBoard/SalesCallLogs
 import PtRevenueReport from "../components/Reports/LeaderBoard/PtRevenueReport";
 import PtRevenueListReport from "../components/Reports/LeaderBoard/PtRevenueListReport";
 import PtSessionsReport from "../components/Reports/LeaderBoard/PtSessionsReport";
+import ProgramSpecialistDashboard from "../Pages/ProgramSpecialistDashboard";
 // import KycDocumentsList from "../components/KycDocuments/KycDocumentsList";
 
 // Role-based route wrapper component
@@ -138,6 +139,7 @@ const RoleProtectedRoute = ({ children, path, skipPrivateRoute = false }) => {
       ASS_FITNESS_MANAGER: "/",
       CLUB_MANAGER: "/",
       ASS_CLUB_MANAGER: "/",
+      PROGRAM_SPECIALIST: "/",
     };
 
     // const dashboardMap = {
@@ -174,6 +176,7 @@ const RoleBasedHome = () => {
   if (userType === "FINANCE_MANAGER") return <FinanceManagerDashboard />;
   if (userType === "FINANCE_MANAGER_CLUB") return <FinanceManagerDashboard />;
   if (userType === "FINANCE_MANAGER_CORPORATE") return <FinanceManagerDashboard />;
+  if (userType === "PROGRAM_SPECIALIST") return <ProgramSpecialistDashboard />;
 
   return <Navigate to="/login" />;
 };

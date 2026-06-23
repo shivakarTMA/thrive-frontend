@@ -1161,11 +1161,11 @@ const AllLeads = (props) => {
                                 {formatAutoDate(row?.updatedAt)}
 
                                 {/* Lead Actions */}
-                                {/* {(userRole === "CLUB_MANAGER" || userRole === "ADMIN" || userRole === "FOH") && ( */}
                                 <div className="absolute hidden group-hover:flex gap-2 right-0 h-full top-0 w-[50%] items-center justify-end bg-[linear-gradient(269deg,_#ffffff_30%,_transparent)] pr-5 transition duration-700">
                                   {(userRole === "CLUB_MANAGER" ||
                                     userRole === "ASS_CLUB_MANAGER" ||
                                     userRole === "ADMIN" ||
+                                    userRole === "PROGRAM_SPECIALIST" ||
                                     userRole === "FOH") && (
                                     <Tooltip
                                       id={`tooltip-edit-${row.id}`}
@@ -1190,6 +1190,7 @@ const AllLeads = (props) => {
                                     userRole === "ASS_FITNESS_MANAGER" ||
                                     userRole === "CLUB_MANAGER" ||
                                     userRole === "ASS_CLUB_MANAGER" ||
+                                    userRole === "PROGRAM_SPECIALIST" ||
                                     userRole === "ADMIN") && (
                                     <Tooltip
                                       id={`tooltip-call-${row.id}`}
@@ -1209,6 +1210,7 @@ const AllLeads = (props) => {
                                   {(userRole === "FOH" ||
                                     userRole === "CLUB_MANAGER" ||
                                     userRole === "ASS_CLUB_MANAGER" ||
+                                    userRole === "PROGRAM_SPECIALIST" ||
                                     userRole === "ADMIN") && (
                                     <Tooltip
                                       id={`tooltip-convert-${row.id}`}
@@ -1231,6 +1233,7 @@ const AllLeads = (props) => {
                                       {(userRole === "FOH" ||
                                         userRole === "CLUB_MANAGER" ||
                                         userRole === "ASS_CLUB_MANAGER" ||
+                                        userRole === "PROGRAM_SPECIALIST" ||
                                         userRole === "ADMIN") && (
                                         <Tooltip
                                           id={`tooltip-schedule-${row.id}`}
@@ -1256,6 +1259,7 @@ const AllLeads = (props) => {
                                     userRole === "ASS_FITNESS_MANAGER" ||
                                     userRole === "CLUB_MANAGER" ||
                                     userRole === "ASS_CLUB_MANAGER" ||
+                                    userRole === "PROGRAM_SPECIALIST" ||
                                     userRole === "ADMIN") && (
                                     <Tooltip
                                       id={`tooltip-appointment-${row.id}`}

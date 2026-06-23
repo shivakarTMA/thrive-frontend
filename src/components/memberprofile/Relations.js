@@ -145,6 +145,8 @@ const Relations = ({ details }) => {
     <div className="p-4 bg-white rounded shadow">
       {(userRole === "FOH" ||
           userRole === "CLUB_MANAGER" ||
+          userRole === "ASS_CLUB_MANAGER" ||
+          userRole === "PROGRAM_SPECIALIST" ||
           userRole === "ADMIN") && (
       <div className="flex justify-end mb-3">
         <button
