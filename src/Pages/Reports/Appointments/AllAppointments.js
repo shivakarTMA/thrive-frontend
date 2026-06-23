@@ -911,6 +911,7 @@ const AllAppointments = (props) => {
                           userRole === "FITNESS_MANAGER" ||
                           userRole === "ASS_FITNESS_MANAGER" ||
                           userRole === "CLUB_MANAGER" ||
+                          userRole === "ASS_CLUB_MANAGER" ||
                           userRole === "ADMIN" ? (
                             <div className="max-w-[130px] w-full">
                               <Select

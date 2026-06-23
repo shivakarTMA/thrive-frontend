@@ -846,6 +846,7 @@ const MemberList = (props) => {
                 <thead className="text-xs text-gray-700 uppercase bg-gray-50">
                   <tr>
                     {(userRole === "CLUB_MANAGER" ||
+                      userRole === "ASS_CLUB_MANAGER" ||
                       userRole === "MARKETING_MANAGER" ||
                       userRole === "ADMIN") && (
                       <th className="px-2 py-4 min-w-[50px]">#</th>
@@ -876,6 +877,7 @@ const MemberList = (props) => {
                       className="group bg-white border-b relative hover:bg-gray-50"
                     >
                       {(userRole === "CLUB_MANAGER" ||
+                        userRole === "ASS_CLUB_MANAGER" ||
                         userRole === "MARKETING_MANAGER" ||
                         userRole === "ADMIN") && (
                         <td className="px-2 py-4">
@@ -992,6 +994,7 @@ const MemberList = (props) => {
                           <div className="flex gap-1">
                             {(userRole === "ADMIN" ||
                               userRole === "CLUB_MANAGER" ||
+                              userRole === "ASS_CLUB_MANAGER" ||
                               userRole === "FOH" || 
                               userRole === "FITNESS_MANAGER" || 
                               userRole === "ASS_FITNESS_MANAGER" || 
@@ -1019,6 +1022,7 @@ const MemberList = (props) => {
                               userRole === "FITNESS_MANAGER" ||
                               userRole === "ASS_FITNESS_MANAGER" ||
                               userRole === "CLUB_MANAGER" ||
+                              userRole === "ASS_CLUB_MANAGER" ||
                               userRole === "ADMIN") && (
                               <Tooltip
                                 id={`member-call-${member?.id}`}
@@ -1038,6 +1042,7 @@ const MemberList = (props) => {
 
                             {(userRole === "FOH" ||
                               userRole === "CLUB_MANAGER" ||
+                              userRole === "ASS_CLUB_MANAGER" ||
                               userRole === "ADMIN") && (
                                 <>
                                 {member?.is_subscribed !== true ? null : (

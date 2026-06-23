@@ -307,6 +307,7 @@ const ChallengeList = () => {
         </div>
         {(userRole === "ADMIN" ||
           userRole === "CLUB_MANAGER" ||
+          userRole === "ASS_CLUB_MANAGER" ||
           userRole === "FITNESS_MANAGER" ||
           userRole === "ASS_FITNESS_MANAGER" ||
           userRole === "MARKETING_MANAGER") && (
@@ -433,6 +434,7 @@ const ChallengeList = () => {
                     <td className="px-2 py-4">
                       <div className="flex items-center">
                         {(userRole === "CLUB_MANAGER" ||
+                            userRole === "ASS_CLUB_MANAGER" ||
                             userRole === "TRAINER" ||
                             userRole === "FITNESS_MANAGER" ||
                             userRole === "ASS_FITNESS_MANAGER" ||
@@ -468,6 +470,7 @@ const ChallengeList = () => {
                             )}
 
                           {(userRole === "CLUB_MANAGER" ||
+                          userRole === "ASS_CLUB_MANAGER" ||
                           userRole === "FITNESS_MANAGER" ||
                           userRole === "ASS_FITNESS_MANAGER" ||
                           userRole === "MARKETING_MANAGER" ||
@@ -498,6 +501,7 @@ const ChallengeList = () => {
                           </Tooltip>
                           )}
                         {(userRole === "CLUB_MANAGER" ||
+                          userRole === "ASS_CLUB_MANAGER" ||
                           userRole === "FITNESS_MANAGER" ||
                           userRole === "ASS_FITNESS_MANAGER" ||
                           userRole === "MARKETING_MANAGER" ||

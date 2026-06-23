@@ -159,6 +159,7 @@ const CompanyList = () => {
         </div>
         {(userRole === "ADMIN" ||
           userRole === "CLUB_MANAGER" ||
+          userRole === "ASS_CLUB_MANAGER" ||
           userRole === "FOH" ||
           userRole === "MARKETING_MANAGER") && (
           <div className="flex items-end gap-2">
@@ -218,7 +219,7 @@ const CompanyList = () => {
                 <th className="px-2 py-4">State</th>
                 <th className="px-2 py-4">Country</th>
                 <th className="px-2 py-4">Status</th>
-                {(userRole === "ADMIN" || userRole === "MARKETING_MANAGER") && (
+                {(userRole === "ADMIN" || userRole === "MARKETING_MANAGER" || userRole === "CLUB_MANAGER" || userRole === "ASS_CLUB_MANAGER") && (
                   <th className="px-2 py-4">Action</th>
                 )}
               </tr>
@@ -266,7 +267,7 @@ const CompanyList = () => {
                           : ""}
                       </div>
                     </td>
-                    {(userRole === "ADMIN" || userRole === "MARKETING_MANAGER") && (
+                    {(userRole === "ADMIN" || userRole === "MARKETING_MANAGER" || userRole === "CLUB_MANAGER" || userRole === "ASS_CLUB_MANAGER") && (
                       <td className="px-2 py-4">
                         <Tooltip
                           id={`tooltip-edit-${company.id || index}`}

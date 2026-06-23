@@ -92,6 +92,7 @@ const WorkoutPlanList = () => {
             userRole === "FITNESS_MANAGER" ||
             userRole === "ASS_FITNESS_MANAGER" ||
             userRole === "CLUB_MANAGER" ||
+            userRole === "ASS_CLUB_MANAGER" ||
             userRole === "ADMIN") && (
             <Link
               to="/create-workout-plan"
@@ -131,6 +132,7 @@ const WorkoutPlanList = () => {
                     userRole === "FITNESS_MANAGER" ||
                     userRole === "ASS_FITNESS_MANAGER" ||
                     userRole === "CLUB_MANAGER" ||
+                    userRole === "ASS_CLUB_MANAGER" ||
                     userRole === "ADMIN") && (
                     <th className="px-2 py-4">Action</th>
                   )}
@@ -169,6 +171,7 @@ const WorkoutPlanList = () => {
                         userRole === "FITNESS_MANAGER" ||
                         userRole === "ASS_FITNESS_MANAGER" ||
                         userRole === "CLUB_MANAGER" ||
+                        userRole === "ASS_CLUB_MANAGER" ||
                         userRole === "ADMIN") && (
                         <td className="px-2 py-4">
                           <div className="flex gap-2 items-center">

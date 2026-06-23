@@ -373,8 +373,7 @@ const CouponsList = () => {
           <p className="text-sm">{`Home > Discount Coupons`}</p>
           <h1 className="text-3xl font-semibold">Discount Coupons</h1>
         </div>
-        {(userRole === "CLUB_MANAGER" ||
-          userRole === "FINANCE_MANAGER" ||
+        {(userRole === "FINANCE_MANAGER" ||
           userRole === "MARKETING_MANAGER" ||
           userRole === "ADMIN") && (
           <div className="flex items-end gap-2">
@@ -442,8 +441,7 @@ const CouponsList = () => {
                 <th className="px-2 py-4 text-center min-w-[100px]">
                   End Date
                 </th>
-                {(userRole === "CLUB_MANAGER" ||
-                  userRole === "FINANCE_MANAGER" ||
+                {(userRole === "FINANCE_MANAGER" ||
                   userRole === "MARKETING_MANAGER" ||
                   userRole === "ADMIN") && (
                   <th className="px-2 py-4 min-w-[80px]">Action</th>
@@ -500,8 +498,7 @@ const CouponsList = () => {
                     <td className="px-2 py-4 text-center">
                       {formatAutoDate(item?.end_date)}
                     </td>
-                    {(userRole === "CLUB_MANAGER" ||
-                      userRole === "FINANCE_MANAGER" ||
+                    {(userRole === "FINANCE_MANAGER" ||
                       userRole === "MARKETING_MANAGER" ||
                       userRole === "ADMIN") && (
                       <td className="px-2 py-4">

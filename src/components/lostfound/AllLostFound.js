@@ -356,6 +356,7 @@ const AllLostFound = () => {
           </div>
           {(userRole === "FOH" ||
             userRole === "CLUB_MANAGER" ||
+            userRole === "ASS_CLUB_MANAGER" ||
             userRole === "ADMIN") && (
             <div>
               <button
@@ -390,6 +391,7 @@ const AllLostFound = () => {
                   <th className="px-2 py-4">Return Date Time</th>
                   {(userRole === "FOH" ||
                     userRole === "CLUB_MANAGER" ||
+                    userRole === "ASS_CLUB_MANAGER" ||
                     userRole === "ADMIN") && (
                     <th className="px-2 py-4">Action</th>
                   )}
@@ -450,6 +452,7 @@ const AllLostFound = () => {
                       </td>
                       {(userRole === "FOH" ||
                         userRole === "CLUB_MANAGER" ||
+                        userRole === "ASS_CLUB_MANAGER" ||
                         userRole === "ADMIN") && (
                         <td className="px-2 py-4">
                           <div className="flex">

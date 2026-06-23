@@ -650,6 +650,7 @@ const GroupClassesList = (props) => {
           </div>
           
           {(userRole === "CLUB_MANAGER" ||
+            userRole === "ASS_CLUB_MANAGER" ||
             userRole === "MARKETING_MANAGER" ||
             userRole === "FITNESS_MANAGER" ||
             userRole === "ASS_FITNESS_MANAGER" ||
@@ -848,6 +849,7 @@ const GroupClassesList = (props) => {
                               {/* <> */}
                               {(userRole === "CLUB_MANAGER" ||
                                 userRole === "MARKETING_MANAGER" ||
+                                userRole === "ASS_CLUB_MANAGER" ||
                                 userRole === "FITNESS_MANAGER" ||
                                 userRole === "ASS_FITNESS_MANAGER" ||
                                 userRole === "TRAINER" ||

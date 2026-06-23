@@ -296,6 +296,7 @@ const ProductsList = () => {
         </div>
         {(userRole === "ADMIN" ||
           userRole === "CLUB_MANAGER" ||
+          userRole === "ASS_CLUB_MANAGER" ||
           userRole === "MARKETING_MANAGER" ||
           userRole === "FINANCE_MANAGER") && (
         <div className="flex items-end gap-2">
@@ -372,6 +373,7 @@ const ProductsList = () => {
                 <th className="px-2 py-4 min-w-[100px]">Status</th>
                 {(userRole === "ADMIN" ||
                   userRole === "CLUB_MANAGER" ||
+                  userRole === "ASS_CLUB_MANAGER" ||
                   userRole === "MARKETING_MANAGER" ||
                   userRole === "FINANCE_MANAGER") && (
                 <th className="px-2 py-4">Action</th>
@@ -428,6 +430,7 @@ const ProductsList = () => {
                     </td>
                     {(userRole === "ADMIN" ||
                       userRole === "CLUB_MANAGER" ||
+                      userRole === "ASS_CLUB_MANAGER" ||
                       userRole === "MARKETING_MANAGER" ||
                       userRole === "FINANCE_MANAGER") && (
                     <td className="px-2 py-4">

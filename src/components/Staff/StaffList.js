@@ -42,6 +42,13 @@ export const roleOptionsByUser = {
   ],
   CLUB_MANAGER: [
     { value: "FOH", label: "FOH (Front of House)" },
+    { value: "ASS_CLUB_MANAGER", label: "Ass Club Manager" },
+    { value: "TRAINER", label: "Trainer" },
+    { value: "FITNESS_MANAGER", label: "Fitness Manager" },
+    { value: "ASS_FITNESS_MANAGER", label: "Ass Fitness Manager" },
+  ],
+  ASS_CLUB_MANAGER: [
+    { value: "FOH", label: "FOH (Front of House)" },
     { value: "TRAINER", label: "Trainer" },
     { value: "FITNESS_MANAGER", label: "Fitness Manager" },
     { value: "ASS_FITNESS_MANAGER", label: "Ass Fitness Manager" },
@@ -390,7 +397,7 @@ const StaffList = () => {
           <h1 className="text-3xl font-semibold">All Staff</h1>
         </div>
         {(currentUserRole === "ADMIN" ||
-          currentUserRole === "CLUB_MANAGER") && (
+          currentUserRole === "CLUB_MANAGER" || currentUserRole === "ASS_CLUB_MANAGER") && (
           <button
             type="button"
             className="px-4 py-2 bg-black text-white rounded flex items-center gap-2"
@@ -469,7 +476,7 @@ const StaffList = () => {
                 <th className="px-2 py-4">Status</th>
                 <th className="px-2 py-4">Show on App</th>
                 {(currentUserRole === "ADMIN" ||
-                  currentUserRole === "CLUB_MANAGER") && (
+                  currentUserRole === "CLUB_MANAGER" || currentUserRole === "ASS_CLUB_MANAGER") && (
                 <th className="px-2 py-4">Action</th>
                 )}
               </tr>
@@ -546,7 +553,7 @@ const StaffList = () => {
                       )}
                     </td>
                   {(currentUserRole === "ADMIN" ||
-                    currentUserRole === "CLUB_MANAGER") && (
+                    currentUserRole === "CLUB_MANAGER" || currentUserRole === "ASS_CLUB_MANAGER") && (
                     <td className="px-2 py-4">
                       <div className="flex">
                         <Tooltip

@@ -460,6 +460,7 @@ const MembershipExpiryReport = (props) => {
                 <th className="px-2 py-4 min-w-[150px]">Renewal Done (Y/N)</th>
                 {(userRole === "FOH" ||
                   userRole === "CLUB_MANAGER" ||
+                  userRole === "ASS_CLUB_MANAGER" ||
                   userRole === "ADMIN") && (
                 <th className="px-2 py-4 min-w-[120px]">Payment Link</th>
                 )}
@@ -516,6 +517,7 @@ const MembershipExpiryReport = (props) => {
                     </td>
                     {(userRole === "FOH" ||
                       userRole === "CLUB_MANAGER" ||
+                      userRole === "ASS_CLUB_MANAGER" ||
                       userRole === "ADMIN") && (
                         <td className="px-2 py-4">
                           <button

@@ -1014,6 +1014,7 @@ const timeOptionsWithDisabled = clubTiming.map((time) => {
 
                         {userRole === "ADMIN" ||
                         userRole === "CLUB_MANAGER" ||
+                        userRole === "ASS_CLUB_MANAGER" ||
                         userRole === "FOH" ||
                         userRole === "MARKETING_MANAGER" ? (
                           <CreatableSelect

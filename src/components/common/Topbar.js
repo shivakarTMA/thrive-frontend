@@ -380,6 +380,7 @@ const Topbar = ({
           {/* Right Section */}
           <div className="top--bar--menu flex items-center gap-3">
             {(user?.role === "CLUB_MANAGER" ||
+              user?.role === "ASS_CLUB_MANAGER" ||
               user?.role === "ADMIN" ||
               user?.role === "FOH") && (
               <>
@@ -464,7 +465,9 @@ const Topbar = ({
                 </div>
 
                 {(user?.role === "CLUB_MANAGER" ||
+                  user?.role === "ASS_CLUB_MANAGER" ||
                   user?.role === "FITNESS_MANAGER" ||
+                  user?.role === "ASS_FITNESS_MANAGER" ||
                   user?.role === "TRAINER" ||
                   user?.role === "FOH") && (
                   <div className="notification--top relative">
