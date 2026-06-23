@@ -35,7 +35,7 @@ export const roleOptionsByUser = {
     { value: "ASS_FITNESS_MANAGER", label: "Ass Fitness Manager" },
     { value: "FINANCE_MANAGER_CLUB", label: "Finance Manager Club" },
     { value: "FINANCE_MANAGER_CORPORATE", label: "Finance Manager Corporate" },
-    // { value: "FINANCE_MANAGER", label: "Finance Manager" },
+
     { value: "MARKETING_MANAGER", label: "Marketing Manager" },
     // { value: "GENERAL_MANAGER", label: "General Manager" },
     { value: "PROGRAM_SPECIALIST", label: "Program Specialist" },
@@ -44,6 +44,10 @@ export const roleOptionsByUser = {
     { value: "FOH", label: "FOH (Front of House)" },
     { value: "TRAINER", label: "Trainer" },
     { value: "FITNESS_MANAGER", label: "Fitness Manager" },
+    { value: "ASS_FITNESS_MANAGER", label: "Ass Fitness Manager" },
+  ],
+  FITNESS_MANAGER: [
+    { value: "TRAINER", label: "Trainer" },
     { value: "ASS_FITNESS_MANAGER", label: "Ass Fitness Manager" },
   ],
   // GENERAL_MANAGER: [

@@ -308,6 +308,7 @@ const ChallengeList = () => {
         {(userRole === "ADMIN" ||
           userRole === "CLUB_MANAGER" ||
           userRole === "FITNESS_MANAGER" ||
+          userRole === "ASS_FITNESS_MANAGER" ||
           userRole === "MARKETING_MANAGER") && (
           <button
             type="button"
@@ -434,6 +435,7 @@ const ChallengeList = () => {
                         {(userRole === "CLUB_MANAGER" ||
                             userRole === "TRAINER" ||
                             userRole === "FITNESS_MANAGER" ||
+                            userRole === "ASS_FITNESS_MANAGER" ||
                             userRole === "FOH" ||
                             userRole === "MARKETING_MANAGER" ||
                             userRole === "ADMIN") && (
@@ -467,6 +469,7 @@ const ChallengeList = () => {
 
                           {(userRole === "CLUB_MANAGER" ||
                           userRole === "FITNESS_MANAGER" ||
+                          userRole === "ASS_FITNESS_MANAGER" ||
                           userRole === "MARKETING_MANAGER" ||
                           userRole === "ADMIN") && (
                           <Tooltip
@@ -496,6 +499,7 @@ const ChallengeList = () => {
                           )}
                         {(userRole === "CLUB_MANAGER" ||
                           userRole === "FITNESS_MANAGER" ||
+                          userRole === "ASS_FITNESS_MANAGER" ||
                           userRole === "MARKETING_MANAGER" ||
                           userRole === "ADMIN") && (
                         <Tooltip

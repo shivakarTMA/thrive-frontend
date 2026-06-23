@@ -26,7 +26,7 @@ export const ROUTE_PERMISSIONS = {
 
   // ─── Lead Management ────────────────────────────────────────────────────────
   '/all-leads': [
-    'ADMIN', 'CLUB_MANAGER', 'ASS_CLUB_MANAGER', 'FOH', 'PROGRAM_SPECIALIST',
+    'ADMIN', 'CLUB_MANAGER', 'ASS_CLUB_MANAGER', 'FOH', 'PROGRAM_SPECIALIST', 'FITNESS_MANAGER', 'ASS_FITNESS_MANAGER',
     'MARKETING_MANAGER', 'FINANCE_MANAGER', 'FINANCE_MANAGER_CLUB', 'FINANCE_MANAGER_CORPORATE',
   ],
   '/all-leads/:id': [
@@ -119,7 +119,7 @@ export const ROUTE_PERMISSIONS = {
     'FINANCE_MANAGER', 'FINANCE_MANAGER_CLUB', 'FINANCE_MANAGER_CORPORATE',
   ],
   '/reports/all-orders': [
-    'ADMIN', 'CLUB_MANAGER', 'ASS_CLUB_MANAGER', 'FOH', 'PROGRAM_SPECIALIST',
+    'ADMIN', 'CLUB_MANAGER', 'ASS_CLUB_MANAGER', 'FOH', 'PROGRAM_SPECIALIST', 'FITNESS_MANAGER',
     'MARKETING_MANAGER', 'FINANCE_MANAGER', 'FINANCE_MANAGER_CLUB', 'FINANCE_MANAGER_CORPORATE',
   ],
   '/nourish-orders': [
@@ -265,7 +265,7 @@ export const ROUTE_PERMISSIONS = {
     'TRAINER', 'MARKETING_MANAGER', 'FINANCE_MANAGER_CORPORATE',
   ],
   '/faq-category': ['ADMIN', 'PROGRAM_SPECIALIST', 'FITNESS_MANAGER', 'ASS_FITNESS_MANAGER', 'TRAINER', 'MARKETING_MANAGER'],
-  '/faq-list': ['ADMIN', 'PROGRAM_SPECIALIST', 'FITNESS_MANAGER', 'TRAINER', 'MARKETING_MANAGER'],
+  '/faq-list': ['ADMIN', 'PROGRAM_SPECIALIST', 'FITNESS_MANAGER', 'ASS_FITNESS_MANAGER', 'TRAINER', 'MARKETING_MANAGER'],
 
   // ─── Sales Reports ──────────────────────────────────────────────────────────
   '/reports/sales-reports/membership-sales-report': [

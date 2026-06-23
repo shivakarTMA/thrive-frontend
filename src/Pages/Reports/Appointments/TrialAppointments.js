@@ -809,6 +809,7 @@ const TrialAppointments = (props) => {
                           {userRole === "FOH" ||
                           userRole === "TRAINER" ||
                           userRole === "FITNESS_MANAGER" ||
+                          userRole === "ASS_FITNESS_MANAGER" ||
                           userRole === "CLUB_MANAGER" ||
                           userRole === "ADMIN" ? (
                             <div className="max-w-[130px] w-full">

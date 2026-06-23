@@ -652,6 +652,7 @@ const GroupClassesList = (props) => {
           {(userRole === "CLUB_MANAGER" ||
             userRole === "MARKETING_MANAGER" ||
             userRole === "FITNESS_MANAGER" ||
+            userRole === "ASS_FITNESS_MANAGER" ||
             userRole === "TRAINER" ||
             userRole === "ADMIN") && (
             <div className="max-w-[140px] w-full">
@@ -848,6 +849,7 @@ const GroupClassesList = (props) => {
                               {(userRole === "CLUB_MANAGER" ||
                                 userRole === "MARKETING_MANAGER" ||
                                 userRole === "FITNESS_MANAGER" ||
+                                userRole === "ASS_FITNESS_MANAGER" ||
                                 userRole === "TRAINER" ||
                                 userRole === "ADMIN") && (
                                 <Tooltip

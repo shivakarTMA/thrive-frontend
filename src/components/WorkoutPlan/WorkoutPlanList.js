@@ -90,6 +90,7 @@ const WorkoutPlanList = () => {
           </div>
           {(userRole === "TRAINER" ||
             userRole === "FITNESS_MANAGER" ||
+            userRole === "ASS_FITNESS_MANAGER" ||
             userRole === "CLUB_MANAGER" ||
             userRole === "ADMIN") && (
             <Link
@@ -128,6 +129,7 @@ const WorkoutPlanList = () => {
                   <th className="px-2 py-4">Status</th>
                   {(userRole === "TRAINER" ||
                     userRole === "FITNESS_MANAGER" ||
+                    userRole === "ASS_FITNESS_MANAGER" ||
                     userRole === "CLUB_MANAGER" ||
                     userRole === "ADMIN") && (
                     <th className="px-2 py-4">Action</th>
@@ -165,6 +167,7 @@ const WorkoutPlanList = () => {
                       </td>
                       {(userRole === "TRAINER" ||
                         userRole === "FITNESS_MANAGER" ||
+                        userRole === "ASS_FITNESS_MANAGER" ||
                         userRole === "CLUB_MANAGER" ||
                         userRole === "ADMIN") && (
                         <td className="px-2 py-4">
