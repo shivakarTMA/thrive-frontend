@@ -684,4 +684,4 @@ export const optionTypeCreation = (value) => {
   return value.replace(/[^a-zA-Z_]/g, "");
 };
 
-export const ALLOWED_ROLES = ["TRAINER", "FOH", "FITNESS_MANAGER"];
+export const ALLOWED_ROLES = ["TRAINER", "FOH", "FITNESS_MANAGER", "ASS_FITNESS_MANAGER"];

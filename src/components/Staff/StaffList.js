@@ -48,6 +48,11 @@ export const roleOptionsByUser = {
   ],
   FITNESS_MANAGER: [
     { value: "TRAINER", label: "Trainer" },
+    { value: "FITNESS_MANAGER", label: "Fitness Manager" },
+    { value: "ASS_FITNESS_MANAGER", label: "Ass Fitness Manager" },
+  ],
+  ASS_FITNESS_MANAGER: [
+    { value: "TRAINER", label: "Trainer" },
     { value: "ASS_FITNESS_MANAGER", label: "Ass Fitness Manager" },
   ],
   // GENERAL_MANAGER: [

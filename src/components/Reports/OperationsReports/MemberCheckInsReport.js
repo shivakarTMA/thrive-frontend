@@ -495,7 +495,7 @@ const MemberCheckInsReport = (props) => {
                   null
                 }
                 onChange={(o) => setMemberPlanFilter(o?.value || null)}
-                isClearable={userRole === "ADMIN" ? true : false}
+                isClearable
                 isDisabled={!clubFilter} // ✅ disable if no club selected
               />
             </div>

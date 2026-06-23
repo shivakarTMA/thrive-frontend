@@ -130,10 +130,14 @@ const RoleProtectedRoute = ({ children, path, skipPrivateRoute = false }) => {
       ADMIN: "/",
       MARKETING_MANAGER: "/",
       FINANCE_MANAGER: "/",
+      FINANCE_MANAGER_CLUB: "/",
+      FINANCE_MANAGER_CORPORATE: "/",
       FOH: "/",
       TRAINER: "/",
       FITNESS_MANAGER: "/",
+      ASS_FITNESS_MANAGER: "/",
       CLUB_MANAGER: "/",
+      ASS_CLUB_MANAGER: "/",
     };
 
     // const dashboardMap = {
@@ -164,8 +168,12 @@ const RoleBasedHome = () => {
   if (userType === "FOH") return <FohDashboard />;
   if (userType === "TRAINER") return <TrainerDashboard />;
   if (userType === "FITNESS_MANAGER") return <FitnessManagerDashboard />;
+  if (userType === "ASS_FITNESS_MANAGER") return <FitnessManagerDashboard />;
   if (userType === "CLUB_MANAGER") return <ClubManagerDashboard />;
+  if (userType === "ASS_CLUB_MANAGER") return <ClubManagerDashboard />;
   if (userType === "FINANCE_MANAGER") return <FinanceManagerDashboard />;
+  if (userType === "FINANCE_MANAGER_CLUB") return <FinanceManagerDashboard />;
+  if (userType === "FINANCE_MANAGER_CORPORATE") return <FinanceManagerDashboard />;
 
   return <Navigate to="/login" />;
 };
