@@ -123,6 +123,21 @@ export const roleOptionsByUser = {
     // { value: "GENERAL_MANAGER", label: "General Manager" },
     { value: "PROGRAM_SPECIALIST", label: "Program Specialist" },
   ],
+  PROGRAM_SPECIALIST: [
+    { value: "ADMIN", label: "Admin" },
+    { value: "FOH", label: "FOH (Front of House)" },
+    { value: "TRAINER", label: "Trainer" },
+    { value: "CLUB_MANAGER", label: "Club Manager" },
+    { value: "ASS_CLUB_MANAGER", label: "Ass Club Manager" },
+    { value: "FITNESS_MANAGER", label: "Fitness Manager" },
+    { value: "ASS_FITNESS_MANAGER", label: "Ass Fitness Manager" },
+    { value: "FINANCE_MANAGER_CLUB", label: "Finance Manager Club" },
+    { value: "FINANCE_MANAGER_CORPORATE", label: "Finance Manager Corporate" },
+
+    { value: "MARKETING_MANAGER", label: "Marketing Manager" },
+    // { value: "GENERAL_MANAGER", label: "General Manager" },
+    { value: "PROGRAM_SPECIALIST", label: "Program Specialist" },
+  ],
   // GENERAL_MANAGER: [
   //   { value: "FOH", label: "FOH (Front of House)" },
   //   { value: "TRAINER", label: "Trainer" },
