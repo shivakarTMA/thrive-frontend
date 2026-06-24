@@ -40,6 +40,18 @@ export const roleOptionsByUser = {
     // { value: "GENERAL_MANAGER", label: "General Manager" },
     { value: "PROGRAM_SPECIALIST", label: "Program Specialist" },
   ],
+  FOH: [
+    { value: "FOH", label: "FOH (Front of House)" },
+    { value: "TRAINER", label: "Trainer" },
+    { value: "CLUB_MANAGER", label: "Club Manager" },
+    { value: "ASS_CLUB_MANAGER", label: "Ass Club Manager" },
+    { value: "FITNESS_MANAGER", label: "Fitness Manager" },
+    { value: "ASS_FITNESS_MANAGER", label: "Ass Fitness Manager" },
+    { value: "FINANCE_MANAGER_CLUB", label: "Finance Manager Club" },
+    { value: "FINANCE_MANAGER_CORPORATE", label: "Finance Manager Corporate" },
+    { value: "MARKETING_MANAGER", label: "Marketing Manager" },
+    { value: "PROGRAM_SPECIALIST", label: "Program Specialist" },
+  ],
   CLUB_MANAGER: [
     { value: "FOH", label: "FOH (Front of House)" },
     { value: "ASS_CLUB_MANAGER", label: "Ass Club Manager" },
@@ -396,8 +408,7 @@ const StaffList = () => {
           <p className="text-sm">{`Home > All Staff`}</p>
           <h1 className="text-3xl font-semibold">All Staff</h1>
         </div>
-        {(currentUserRole === "ADMIN" ||
-          currentUserRole === "CLUB_MANAGER" || currentUserRole === "ASS_CLUB_MANAGER") && (
+        {(currentUserRole === "ADMIN" ||  currentUserRole === "CLUB_MANAGER" || currentUserRole === "ASS_CLUB_MANAGER") && (
           <button
             type="button"
             className="px-4 py-2 bg-black text-white rounded flex items-center gap-2"
@@ -457,6 +468,7 @@ const StaffList = () => {
               className="w-full"
             />
           </div>
+
         </div>
       </div>
 

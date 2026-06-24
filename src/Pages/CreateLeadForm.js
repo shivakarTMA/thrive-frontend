@@ -1103,7 +1103,7 @@ const timeOptionsWithDisabled = clubTiming.map((time) => {
                                 : null
                             }
                             onChange={(option) =>
-                              formik.setFieldValue("company_name", option.value)
+                              formik.setFieldValue("company_name", option?.label || "")
                             }
                             options={companyOptions}
                             isLoading={loading}
