@@ -79,7 +79,7 @@ export const roleOptionsByUser = {
     { value: "ASS_FITNESS_MANAGER", label: "Ass Fitness Manager" },
   ],
   MARKETING_MANAGER: [
-    { value: "ADMIN", label: "Admin" },
+    // { value: "ADMIN", label: "Admin" },
     { value: "FOH", label: "FOH (Front of House)" },
     { value: "TRAINER", label: "Trainer" },
     { value: "CLUB_MANAGER", label: "Club Manager" },
@@ -94,7 +94,7 @@ export const roleOptionsByUser = {
     { value: "PROGRAM_SPECIALIST", label: "Program Specialist" },
   ],
   FINANCE_MANAGER_CLUB: [
-    { value: "ADMIN", label: "Admin" },
+    // { value: "ADMIN", label: "Admin" },
     { value: "FOH", label: "FOH (Front of House)" },
     { value: "TRAINER", label: "Trainer" },
     { value: "CLUB_MANAGER", label: "Club Manager" },
@@ -109,7 +109,7 @@ export const roleOptionsByUser = {
     { value: "PROGRAM_SPECIALIST", label: "Program Specialist" },
   ],
   FINANCE_MANAGER_CORPORATE: [
-    { value: "ADMIN", label: "Admin" },
+    // { value: "ADMIN", label: "Admin" },
     { value: "FOH", label: "FOH (Front of House)" },
     { value: "TRAINER", label: "Trainer" },
     { value: "CLUB_MANAGER", label: "Club Manager" },
@@ -124,7 +124,7 @@ export const roleOptionsByUser = {
     { value: "PROGRAM_SPECIALIST", label: "Program Specialist" },
   ],
   PROGRAM_SPECIALIST: [
-    { value: "ADMIN", label: "Admin" },
+    // { value: "ADMIN", label: "Admin" },
     { value: "FOH", label: "FOH (Front of House)" },
     { value: "TRAINER", label: "Trainer" },
     { value: "CLUB_MANAGER", label: "Club Manager" },
