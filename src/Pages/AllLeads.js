@@ -813,6 +813,60 @@ const AllLeads = (props) => {
     }
   };
 
+  const permissions = {
+  canEdit: [
+    "CLUB_MANAGER",
+    "ASS_CLUB_MANAGER",
+    "ADMIN",
+    "PROGRAM_SPECIALIST",
+    "FOH",
+  ],
+
+  canCallLog: [
+    "FOH",
+    "TRAINER",
+    "FITNESS_MANAGER",
+    "ASS_FITNESS_MANAGER",
+    "CLUB_MANAGER",
+    "ASS_CLUB_MANAGER",
+    "PROGRAM_SPECIALIST",
+    "ADMIN",
+  ],
+
+  canConvert: [
+    "FOH",
+    "TRAINER",
+    "FITNESS_MANAGER",
+    "ASS_FITNESS_MANAGER",
+    "CLUB_MANAGER",
+    "ASS_CLUB_MANAGER",
+    "PROGRAM_SPECIALIST",
+    "ADMIN",
+  ],
+
+  canScheduleTrial: [
+    "FOH",
+    "CLUB_MANAGER",
+    "ASS_CLUB_MANAGER",
+    "PROGRAM_SPECIALIST",
+    "ADMIN",
+  ],
+
+  canAppointment: [
+    "FOH",
+    "TRAINER",
+    "FITNESS_MANAGER",
+    "ASS_FITNESS_MANAGER",
+    "CLUB_MANAGER",
+    "ASS_CLUB_MANAGER",
+    "PROGRAM_SPECIALIST",
+    "ADMIN",
+  ],
+};
+
+const hasPermission = (permission) =>
+  permissions[permission]?.includes(userRole);
+
   return (
     <>
       <div className="flex  h-full w-full">
@@ -1161,7 +1215,20 @@ const AllLeads = (props) => {
                                 {formatAutoDate(row?.updatedAt)}
 
                                 {/* Lead Actions */}
-                                <div className="absolute hidden group-hover:flex gap-2 right-0 h-full top-0 w-[50%] items-center justify-end bg-[linear-gradient(269deg,_#ffffff_30%,_transparent)] pr-5 transition duration-700">
+                                <div
+                                  className={`absolute right-0 top-0 h-full w-[50%] items-center justify-end gap-2 pr-5
+                                  bg-[linear-gradient(269deg,_#ffffff_30%,_transparent)]
+                                  transition duration-700
+                                  ${
+                                    hasPermission("canEdit") ||
+                                    hasPermission("canCallLog") ||
+                                    hasPermission("canConvert") ||
+                                    hasPermission("canScheduleTrial") ||
+                                    hasPermission("canAppointment")
+                                      ? "hidden group-hover:flex"
+                                      : "hidden"
+                                  }`}
+                                >
                                   {(userRole === "CLUB_MANAGER" ||
                                     userRole === "ASS_CLUB_MANAGER" ||
                                     userRole === "ADMIN" ||

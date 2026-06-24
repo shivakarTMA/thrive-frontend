@@ -5126,18 +5126,6 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
               <span className="nav-text">All Members</span>
             </Link>
             <Link
-              to="/reports/appointments/all-trial-appointments"
-              className={`nav-link mb-2 ${
-                location.pathname ===
-                "/reports/appointments/all-trial-appointments"
-                  ? "active"
-                  : ""
-              }`}
-            >
-              <SlCalender className="menu--icon" />
-              <span className="nav-text">Trial Appointments</span>
-            </Link>
-            <Link
               to="/reports/all-bookings"
               className={`nav-link mb-2 ${
                 location.pathname === "/reports/all-bookings" ? "active" : ""
@@ -5176,15 +5164,41 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
               </Link>
             )}
 
-            <Link
-              to="/coupons"
-              className={`nav-link mb-2 ${
-                location.pathname === "/coupons" ? "active" : ""
-              }`}
+            <div
+              className="nav-link d-flex justify-between align-items-center mb-2"
+              onClick={() => toggleMenu("marketing")}
+              style={{ cursor: "pointer" }}
             >
-              <MdOutlineDiscount className="menu--icon" />
-              <span className="nav-text">Discount Coupons</span>
-            </Link>
+              <div className="flex items-center">
+                <TfiAnnouncement className="menu--icon" />
+                <span className="nav-text">Marketing</span>
+              </div>
+              <FaAngleDown
+                className={`downmenu transition ${
+                  dropdownToggles["marketing"] ? "rotate-[180deg]" : ""
+                }`}
+              />
+            </div>
+
+            {dropdownToggles["marketing"] && (
+              <div className="mt-2 pl-5 relative">
+                <div className="absolute h-[calc(100%-15px)] w-[2px] bg-white left-[23px] top-[8px]"></div>
+                <Link
+                  to="/coupons"
+                  className="text-white flex items-center gap-[5px] mb-2 text-sm"
+                >
+                  <FaCircle className="menu--icon !text-[10px]" />
+                  <span className="nav-text">Discount Coupons</span>
+                </Link>
+                <Link
+                  to="/challenge-list"
+                  className="text-white flex items-center gap-[5px] mb-2 text-sm"
+                >
+                  <FaCircle className="menu--icon !text-[10px]" />
+                  <span className="nav-text">Challenges</span>
+                </Link>
+              </div>
+            )}
 
             <div
               className="nav-link d-flex justify-between align-items-center mb-2"
@@ -5438,6 +5452,18 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                     >
                       Discount Codes Performance
                     </Link>
+                    <Link
+                      to="/reports/marketing-reports/engagement-tracking-report"
+                      className="submenu-link text-white text-sm"
+                    >
+                      Engagement Tracking
+                    </Link>
+                    <Link
+                      to="/reports/marketing-reports/email-automation-report"
+                      className="submenu-link text-white text-sm"
+                    >
+                      Email Delivery Report
+                    </Link>
                   </div>
                 )}
               </div>
@@ -5553,7 +5579,68 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
             {dropdownToggles["configure"] && (
               <div className="mt-2 pl-5 relative">
                 <div className="absolute h-[calc(100%-15px)] w-[2px] bg-white left-[23px] top-[8px]"></div>
-
+                <Link
+                  to="/staff"
+                  className="text-white flex items-center gap-[5px] mb-2 text-sm"
+                >
+                  <FaCircle className="menu--icon !text-[10px]" />
+                  <span className="nav-text">All Staff</span>
+                </Link>
+                <Link
+                  to="/package-category"
+                  className="text-white flex items-center gap-[5px] mb-2 text-sm"
+                >
+                  <FaCircle className="menu--icon !text-[10px]" />
+                  <span className="nav-text">Classes Category</span>
+                </Link>
+                
+                <Link
+                  to="/companies"
+                  className="text-white flex items-center gap-[5px] mb-2 text-sm"
+                >
+                  <FaCircle className="menu--icon !text-[10px]" />
+                  <span className="nav-text">Companies</span>
+                </Link>
+                <Link
+                  to="/club"
+                  className="text-white flex items-center gap-[5px] mb-2 text-sm"
+                >
+                  <FaCircle className="menu--icon !text-[10px]" />
+                  <span className="nav-text">Club</span>
+                </Link>
+                <Link
+                  to="/studio"
+                  className="text-white flex items-center gap-[5px] mb-2 text-sm"
+                >
+                  <FaCircle className="menu--icon !text-[10px]" />
+                  <span className="nav-text">Studio</span>
+                </Link>
+                
+                <Link
+                  to="/services"
+                  className="text-white flex items-center gap-[5px] mb-2 text-sm"
+                >
+                  <FaCircle className="menu--icon !text-[10px]" />
+                  <span className="nav-text">Club Services</span>
+                </Link>
+                {hasRecoveryServices && (
+                  <Link
+                    to="/recovery-services"
+                    className="text-white flex items-center gap-[5px] mb-2 text-sm"
+                  >
+                    <FaCircle className="menu--icon !text-[10px]" />
+                    <span className="nav-text">Recovery Services</span>
+                  </Link>
+                )}
+                {hasProductServices && (
+                  <Link
+                    to="/product-category"
+                    className="text-white flex items-center gap-[5px] mb-2 text-sm"
+                  >
+                    <FaCircle className="menu--icon !text-[10px]" />
+                    <span className="nav-text">Nourish Category</span>
+                  </Link>
+                )}
                 <Link
                   to="/subscription-plan"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
@@ -5576,6 +5663,13 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                 >
                   <FaCircle className="menu--icon !text-[10px]" />
                   <span className="nav-text">Packages</span>
+                </Link>
+                <Link
+                  to="/option-list"
+                  className="text-white flex items-center gap-[5px] mb-2 text-sm"
+                >
+                  <FaCircle className="menu--icon !text-[10px]" />
+                  <span className="nav-text">Options List</span>
                 </Link>
               </div>
             )}
@@ -5613,16 +5707,22 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
               <span className="nav-text">All Members</span>
             </Link>
             <Link
-              to="/reports/appointments/all-trial-appointments"
+              to="/birthday-report"
               className={`nav-link mb-2 ${
-                location.pathname ===
-                "/reports/appointments/all-trial-appointments"
-                  ? "active"
-                  : ""
+                location.pathname === "/birthday-report" ? "active" : ""
               }`}
             >
-              <SlCalender className="menu--icon" />
-              <span className="nav-text">Trial Appointments</span>
+              <BsCake2 className="menu--icon" />
+              <span className="nav-text">Client Birthdays</span>
+            </Link>
+            <Link
+              to="/anniversary-report"
+              className={`nav-link mb-2 ${
+                location.pathname === "/anniversary-report" ? "active" : ""
+              }`}
+            >
+              <LuPartyPopper className="menu--icon" />
+              <span className="nav-text">Client Anniversary</span>
             </Link>
             <Link
               to="/reports/all-bookings"
@@ -5663,15 +5763,41 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
               </Link>
             )}
 
-            <Link
-              to="/coupons"
-              className={`nav-link mb-2 ${
-                location.pathname === "/coupons" ? "active" : ""
-              }`}
+            <div
+              className="nav-link d-flex justify-between align-items-center mb-2"
+              onClick={() => toggleMenu("marketing")}
+              style={{ cursor: "pointer" }}
             >
-              <MdOutlineDiscount className="menu--icon" />
-              <span className="nav-text">Discount Coupons</span>
-            </Link>
+              <div className="flex items-center">
+                <TfiAnnouncement className="menu--icon" />
+                <span className="nav-text">Marketing</span>
+              </div>
+              <FaAngleDown
+                className={`downmenu transition ${
+                  dropdownToggles["marketing"] ? "rotate-[180deg]" : ""
+                }`}
+              />
+            </div>
+
+            {dropdownToggles["marketing"] && (
+              <div className="mt-2 pl-5 relative">
+                <div className="absolute h-[calc(100%-15px)] w-[2px] bg-white left-[23px] top-[8px]"></div>
+                <Link
+                  to="/coupons"
+                  className="text-white flex items-center gap-[5px] mb-2 text-sm"
+                >
+                  <FaCircle className="menu--icon !text-[10px]" />
+                  <span className="nav-text">Discount Coupons</span>
+                </Link>
+                <Link
+                  to="/challenge-list"
+                  className="text-white flex items-center gap-[5px] mb-2 text-sm"
+                >
+                  <FaCircle className="menu--icon !text-[10px]" />
+                  <span className="nav-text">Challenges</span>
+                </Link>
+              </div>
+            )}
 
             <div
               className="nav-link d-flex justify-between align-items-center mb-2"
@@ -5925,6 +6051,18 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                     >
                       Discount Codes Performance
                     </Link>
+                    <Link
+                      to="/reports/marketing-reports/engagement-tracking-report"
+                      className="submenu-link text-white text-sm"
+                    >
+                      Engagement Tracking
+                    </Link>
+                    <Link
+                      to="/reports/marketing-reports/email-automation-report"
+                      className="submenu-link text-white text-sm"
+                    >
+                      Email Delivery Report
+                    </Link>
                   </div>
                 )}
               </div>
@@ -6040,7 +6178,96 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
             {dropdownToggles["configure"] && (
               <div className="mt-2 pl-5 relative">
                 <div className="absolute h-[calc(100%-15px)] w-[2px] bg-white left-[23px] top-[8px]"></div>
-
+                <Link
+                  to="/staff"
+                  className="text-white flex items-center gap-[5px] mb-2 text-sm"
+                >
+                  <FaCircle className="menu--icon !text-[10px]" />
+                  <span className="nav-text">All Staff</span>
+                </Link>
+                <Link
+                  to="/exercises"
+                  className="text-white flex items-center gap-[5px] mb-2 text-sm"
+                >
+                  <FaCircle className="menu--icon !text-[10px]" />
+                  <span className="nav-text">Exercises</span>
+                </Link>
+                <Link
+                  to="/exercises-categories"
+                  className="text-white flex items-center gap-[5px] mb-2 text-sm"
+                >
+                  <FaCircle className="menu--icon !text-[10px]" />
+                  <span className="nav-text">Exercises Categories</span>
+                </Link>
+                <Link
+                  to="/package-category"
+                  className="text-white flex items-center gap-[5px] mb-2 text-sm"
+                >
+                  <FaCircle className="menu--icon !text-[10px]" />
+                  <span className="nav-text">Classes Category</span>
+                </Link>
+                <Link
+                  to="/on-boarding-list"
+                  className="text-white flex items-center gap-[5px] mb-2 text-sm"
+                >
+                  <FaCircle className="menu--icon !text-[10px]" />
+                  <span className="nav-text">On Boarding List</span>
+                </Link>
+                
+                <Link
+                  to="/companies"
+                  className="text-white flex items-center gap-[5px] mb-2 text-sm"
+                >
+                  <FaCircle className="menu--icon !text-[10px]" />
+                  <span className="nav-text">Companies</span>
+                </Link>
+                <Link
+                  to="/club"
+                  className="text-white flex items-center gap-[5px] mb-2 text-sm"
+                >
+                  <FaCircle className="menu--icon !text-[10px]" />
+                  <span className="nav-text">Club</span>
+                </Link>
+                <Link
+                  to="/studio"
+                  className="text-white flex items-center gap-[5px] mb-2 text-sm"
+                >
+                  <FaCircle className="menu--icon !text-[10px]" />
+                  <span className="nav-text">Studio</span>
+                </Link>
+                <Link
+                  to="/club-gallery"
+                  className="text-white flex items-center gap-[5px] mb-2 text-sm"
+                >
+                  <FaCircle className="menu--icon !text-[10px]" />
+                  <span className="nav-text">Club Gallery</span>
+                </Link>
+                
+                <Link
+                  to="/services"
+                  className="text-white flex items-center gap-[5px] mb-2 text-sm"
+                >
+                  <FaCircle className="menu--icon !text-[10px]" />
+                  <span className="nav-text">Club Services</span>
+                </Link>
+                {hasRecoveryServices && (
+                  <Link
+                    to="/recovery-services"
+                    className="text-white flex items-center gap-[5px] mb-2 text-sm"
+                  >
+                    <FaCircle className="menu--icon !text-[10px]" />
+                    <span className="nav-text">Recovery Services</span>
+                  </Link>
+                )}
+                {hasProductServices && (
+                  <Link
+                    to="/product-category"
+                    className="text-white flex items-center gap-[5px] mb-2 text-sm"
+                  >
+                    <FaCircle className="menu--icon !text-[10px]" />
+                    <span className="nav-text">Nourish Category</span>
+                  </Link>
+                )}
                 <Link
                   to="/subscription-plan"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
@@ -6063,6 +6290,27 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                 >
                   <FaCircle className="menu--icon !text-[10px]" />
                   <span className="nav-text">Packages</span>
+                </Link>
+                <Link
+                  to="/option-list"
+                  className="text-white flex items-center gap-[5px] mb-2 text-sm"
+                >
+                  <FaCircle className="menu--icon !text-[10px]" />
+                  <span className="nav-text">Options List</span>
+                </Link>
+                <Link
+                  to="/faq-category"
+                  className="text-white flex items-center gap-[5px] mb-2 text-sm"
+                >
+                  <FaCircle className="menu--icon !text-[10px]" />
+                  <span className="nav-text">FAQ Category</span>
+                </Link>
+                <Link
+                  to="/faq-list"
+                  className="text-white flex items-center gap-[5px] mb-2 text-sm"
+                >
+                  <FaCircle className="menu--icon !text-[10px]" />
+                  <span className="nav-text">FAQ List</span>
                 </Link>
               </div>
             )}
@@ -6098,6 +6346,42 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
             >
               <FiUsers className="menu--icon" />
               <span className="nav-text">All Members</span>
+            </Link>
+            <Link
+              to="/workout-plans"
+              className={`nav-link mb-2 ${
+                location.pathname === "/workout-plans" ? "active" : ""
+              }`}
+            >
+              <TbGymnastics className="menu--icon" />
+              <span className="nav-text">Workout Plans</span>
+            </Link>
+
+            <Link
+              to="/lost-found"
+              className={`nav-link mb-2 ${location.pathname === "/lost-found" ? "active" : ""}`}
+            >
+              <GoTools className="menu--icon" />
+              <span className="nav-text">Lost & Found</span>
+            </Link>
+
+            <Link
+              to="/birthday-report"
+              className={`nav-link mb-2 ${
+                location.pathname === "/birthday-report" ? "active" : ""
+              }`}
+            >
+              <BsCake2 className="menu--icon" />
+              <span className="nav-text">Client Birthdays</span>
+            </Link>
+            <Link
+              to="/anniversary-report"
+              className={`nav-link mb-2 ${
+                location.pathname === "/anniversary-report" ? "active" : ""
+              }`}
+            >
+              <LuPartyPopper className="menu--icon" />
+              <span className="nav-text">Client Anniversary</span>
             </Link>
             <Link
               to="/reports/appointments/all-trial-appointments"
@@ -6455,13 +6739,12 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
             {dropdownToggles["configure"] && (
               <div className="mt-2 pl-5 relative">
                 <div className="absolute h-[calc(100%-15px)] w-[2px] bg-white left-[23px] top-[8px]"></div>
-
                 <Link
-                  to="/email-template-list"
+                  to="/staff"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
                 >
                   <FaCircle className="menu--icon !text-[10px]" />
-                  <span className="nav-text">Email Template</span>
+                  <span className="nav-text">All Staff</span>
                 </Link>
                 <Link
                   to="/package-category"
@@ -6477,7 +6760,27 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                   <FaCircle className="menu--icon !text-[10px]" />
                   <span className="nav-text">On Boarding List</span>
                 </Link>
-
+                <Link
+                  to="/companies"
+                  className="text-white flex items-center gap-[5px] mb-2 text-sm"
+                >
+                  <FaCircle className="menu--icon !text-[10px]" />
+                  <span className="nav-text">Companies</span>
+                </Link>
+                <Link
+                  to="/club"
+                  className="text-white flex items-center gap-[5px] mb-2 text-sm"
+                >
+                  <FaCircle className="menu--icon !text-[10px]" />
+                  <span className="nav-text">Club</span>
+                </Link>
+                <Link
+                  to="/studio"
+                  className="text-white flex items-center gap-[5px] mb-2 text-sm"
+                >
+                  <FaCircle className="menu--icon !text-[10px]" />
+                  <span className="nav-text">Studio</span>
+                </Link>
                 <Link
                   to="/club-gallery"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
@@ -6485,7 +6788,31 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                   <FaCircle className="menu--icon !text-[10px]" />
                   <span className="nav-text">Club Gallery</span>
                 </Link>
-
+                <Link
+                  to="/services"
+                  className="text-white flex items-center gap-[5px] mb-2 text-sm"
+                >
+                  <FaCircle className="menu--icon !text-[10px]" />
+                  <span className="nav-text">Club Services</span>
+                </Link>
+                {hasRecoveryServices && (
+                  <Link
+                    to="/recovery-services"
+                    className="text-white flex items-center gap-[5px] mb-2 text-sm"
+                  >
+                    <FaCircle className="menu--icon !text-[10px]" />
+                    <span className="nav-text">Recovery Services</span>
+                  </Link>
+                )}
+                {hasProductServices && (
+                  <Link
+                    to="/product-category"
+                    className="text-white flex items-center gap-[5px] mb-2 text-sm"
+                  >
+                    <FaCircle className="menu--icon !text-[10px]" />
+                    <span className="nav-text">Nourish Category</span>
+                  </Link>
+                )}
                 <Link
                   to="/subscription-plan"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
@@ -6509,7 +6836,13 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                   <FaCircle className="menu--icon !text-[10px]" />
                   <span className="nav-text">Packages</span>
                 </Link>
-
+                <Link
+                  to="/option-list"
+                  className="text-white flex items-center gap-[5px] mb-2 text-sm"
+                >
+                  <FaCircle className="menu--icon !text-[10px]" />
+                  <span className="nav-text">Options List</span>
+                </Link>
                 <Link
                   to="/faq-category"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"

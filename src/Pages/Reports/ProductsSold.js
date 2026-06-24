@@ -822,14 +822,19 @@ const ProductsSold = (props) => {
                             : "--"}
                         </td>
                         <td className="px-2 py-4">
-                          {/* {row?.member_name ? 
-                            row?.member_name
-                           : "--"} */}
-                          <Link to={`/member/${row.member_id}`}>
-                            <span className="text-[#009EB2] font-medium">
-                              {row.member_name || "--"}
-                            </span>
-                          </Link>
+                          {!(
+                            userRole === "MARKETING_MANAGER" ||
+                            userRole === "FINANCE_MANAGER_CLUB" ||
+                            userRole === "FINANCE_MANAGER_CORPORATE"
+                          ) ? (
+                            <Link to={`/member/${row.member_id}`}>
+                              <span className="text-[#009EB2] font-medium">
+                                {row.member_name || "--"}
+                              </span>
+                            </Link>
+                          ) : (
+                            row?.member_name || "--"
+                          )}
                         </td>
                         <td className="px-2 py-4">
                           {row?.invoice_no ? row?.invoice_no : "--"}

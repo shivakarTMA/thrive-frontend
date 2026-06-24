@@ -569,6 +569,42 @@ const MemberList = (props) => {
     }
   };
 
+  const memberPermissions = {
+  canEditMember: [
+    "ADMIN",
+    "CLUB_MANAGER",
+    "ASS_CLUB_MANAGER",
+    "FOH",
+    "FITNESS_MANAGER",
+    "ASS_FITNESS_MANAGER",
+    "TRAINER",
+    "PROGRAM_SPECIALIST",
+    "FINANCE_MANAGER",
+  ],
+
+  canViewCallLogs: [
+    "FOH",
+    "TRAINER",
+    "FITNESS_MANAGER",
+    "ASS_FITNESS_MANAGER",
+    "CLUB_MANAGER",
+    "ASS_CLUB_MANAGER",
+    "PROGRAM_SPECIALIST",
+    "ADMIN",
+  ],
+
+  canBuyServices: [
+    "FOH",
+    "CLUB_MANAGER",
+    "ASS_CLUB_MANAGER",
+    "PROGRAM_SPECIALIST",
+    "ADMIN",
+  ],
+};
+
+const hasMemberPermission = (permission) =>
+  memberPermissions[permission]?.includes(userRole);
+
   return (
     <>
       <div className="page--content">
@@ -990,7 +1026,20 @@ const MemberList = (props) => {
                         </div>
 
                         {/* Member Action */}
-                        <div className="absolute hidden group-hover:flex gap-2 right-0 h-full top-0 w-[50%] items-center justify-end bg-[linear-gradient(269deg,_#ffffff_30%,_transparent)] pr-5 transition duration-700">
+                        {/* <div className="absolute hidden group-hover:flex gap-2 right-0 h-full top-0 w-[50%] items-center justify-end bg-[linear-gradient(269deg,_#ffffff_30%,_transparent)] pr-5 transition duration-700"> */}
+                        <div
+                          className={`absolute gap-2 right-0 h-full top-0 w-[50%] items-center justify-end
+                          bg-[linear-gradient(269deg,_#ffffff_30%,_transparent)]
+                          pr-5 transition duration-700
+                          ${
+                            hasMemberPermission("canEditMember") ||
+                            hasMemberPermission("canViewCallLogs") ||
+                            (hasMemberPermission("canBuyServices") &&
+                              member?.is_subscribed === true)
+                              ? "hidden group-hover:flex"
+                              : "hidden"
+                          }`}
+                        >
                           <div className="flex gap-1">
                             {(userRole === "ADMIN" ||
                               userRole === "CLUB_MANAGER" ||
@@ -999,7 +1048,6 @@ const MemberList = (props) => {
                               userRole === "FITNESS_MANAGER" || 
                               userRole === "ASS_FITNESS_MANAGER" || 
                               userRole === "TRAINER" || 
-                              userRole === "MARKETING_MANAGER" || 
                               userRole === "PROGRAM_SPECIALIST" || 
                               userRole === "FINANCE_MANAGER") && (
                               <Tooltip

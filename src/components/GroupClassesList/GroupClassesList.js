@@ -651,7 +651,6 @@ const GroupClassesList = (props) => {
           
           {(userRole === "CLUB_MANAGER" ||
             userRole === "ASS_CLUB_MANAGER" ||
-            userRole === "MARKETING_MANAGER" ||
             userRole === "FITNESS_MANAGER" ||
             userRole === "ASS_FITNESS_MANAGER" ||
             userRole === "ADMIN") && (
@@ -847,7 +846,6 @@ const GroupClassesList = (props) => {
                             {/* {row?.status !== "EXPIRED" && ( */}
                               {/* <> */}
                               {(userRole === "CLUB_MANAGER" ||
-                                userRole === "MARKETING_MANAGER" ||
                                 userRole === "ASS_CLUB_MANAGER" ||
                                 userRole === "FITNESS_MANAGER" ||
                                 userRole === "ASS_FITNESS_MANAGER" ||

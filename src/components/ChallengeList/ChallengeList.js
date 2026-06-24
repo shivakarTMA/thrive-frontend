@@ -308,8 +308,7 @@ const ChallengeList = () => {
           userRole === "CLUB_MANAGER" ||
           userRole === "ASS_CLUB_MANAGER" ||
           userRole === "FITNESS_MANAGER" ||
-          userRole === "ASS_FITNESS_MANAGER" ||
-          userRole === "MARKETING_MANAGER") && (
+          userRole === "ASS_FITNESS_MANAGER") && (
           <button
             type="button"
             className="px-4 py-2 bg-black text-white rounded flex items-center gap-2"
@@ -439,6 +438,8 @@ const ChallengeList = () => {
                           userRole === "ASS_FITNESS_MANAGER" ||
                           userRole === "FOH" ||
                           userRole === "MARKETING_MANAGER" ||
+                          userRole === "FINANCE_MANAGER_CLUB" ||
+                          userRole === "FINANCE_MANAGER_CORPORATE" ||
                           userRole === "ADMIN") && (
                           <Tooltip
                             id={`tooltip-view-${item.id}`}
@@ -472,7 +473,6 @@ const ChallengeList = () => {
                           userRole === "ASS_CLUB_MANAGER" ||
                           userRole === "FITNESS_MANAGER" ||
                           userRole === "ASS_FITNESS_MANAGER" ||
-                          userRole === "MARKETING_MANAGER" ||
                           userRole === "ADMIN") && (
                           <Tooltip
                             id={`tooltip-status-${item.id}`}
@@ -503,7 +503,6 @@ const ChallengeList = () => {
                           userRole === "ASS_CLUB_MANAGER" ||
                           userRole === "FITNESS_MANAGER" ||
                           userRole === "ASS_FITNESS_MANAGER" ||
-                          userRole === "MARKETING_MANAGER" ||
                           userRole === "ADMIN") && (
                           <Tooltip
                             id={`tooltip-edit-${item.id}`}

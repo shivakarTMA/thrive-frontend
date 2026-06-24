@@ -12,17 +12,31 @@ const DEFAULT_KEYS = {
   ClientAnniversaries: 0,
 };
 
-function SummaryDashboard({ data = {}, routeMap = {}, generateUrl }) {
+function SummaryDashboard({ data = {}, routeMap = {}, generateUrl, currentUserRole }) {
 
   // Merge API data with default keys
   const mergedData = { ...DEFAULT_KEYS, ...data };
+
+  const hiddenRoles = [
+    "FINANCE_MANAGER_CLUB",
+    "FINANCE_MANAGER_CORPORATE",
+  ];
+
+
+  const filteredData = hiddenRoles.includes(currentUserRole)
+  ? Object.fromEntries(
+      Object.entries(mergedData).filter(
+        ([key]) => key !== "Tour/Trials"
+      )
+    )
+  : mergedData;
 
   return (
     <div className="mt-2 space-y-2">
 
       {/* Empty State Message */}
 
-      {Object.entries(mergedData).map(([key, value]) => {
+      {Object.entries(filteredData).map(([key, value]) => {
         const stringValue = String(value);
         const route = routeMap[key];
 

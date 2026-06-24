@@ -103,6 +103,7 @@ const FinanceManagerDashboard = () => {
   const [summaryData, setSummaryData] = useState({});
 
   const { user } = useSelector((state) => state.auth);
+  const currentUserRole = user?.role; // Example, dynamically from user info
   const [profileData, setUserClubs] = useState("");
   const [hasProductServices, setHasProductServices] = useState(false);
   // const [hasRecoveryServices, setHasRecoveryServices] = useState(false);
@@ -774,353 +775,355 @@ const FinanceManagerDashboard = () => {
       </div>
 
       <div className="flex gap-3">
-        <div className="rounded-[15px] p-3 box--shadow bg-white w-[100%]">
-          <div className="flex gap-2 w-full mb-4">
-            <div className="max-w-[180px] w-full">
-              <Select
-                placeholder="Date Filter"
-                options={dateFilterOptions}
-                value={dateFilter}
-                onChange={(selected) => {
-                  setDateFilter(selected);
-                  if (selected?.value !== "custom") {
-                    setCustomFrom(null);
-                    setCustomTo(null);
-                  }
-                }}
-                // isClearable
-                styles={customStyles}
-                className="w-full"
+        <div className="w-[75%]">
+          <div className="rounded-[15px] p-3 box--shadow bg-white">
+            <div className="flex gap-2 w-full mb-4">
+              <div className="max-w-[180px] w-full">
+                <Select
+                  placeholder="Date Filter"
+                  options={dateFilterOptions}
+                  value={dateFilter}
+                  onChange={(selected) => {
+                    setDateFilter(selected);
+                    if (selected?.value !== "custom") {
+                      setCustomFrom(null);
+                      setCustomTo(null);
+                    }
+                  }}
+                  // isClearable
+                  styles={customStyles}
+                  className="w-full"
+                />
+              </div>
+
+              {dateFilter?.value === "custom" && (
+                <>
+                  <div className="custom--date dob-format flex-1 max-w-[180px] w-full">
+                    <span className="absolute z-[1] mt-[11px] ml-[15px]">
+                      <FaCalendarDays />
+                    </span>
+                    <DatePicker
+                      selected={customFrom}
+                      onChange={(date) => {
+                        setCustomFrom(date);
+                        setCustomTo(null); // ✅ reset To Date if From Date changes
+                      }}
+                      placeholderText="From Date"
+                      className="custom--input w-full input--icon"
+                      minDate={subYears(new Date(), 20)}
+                      maxDate={addYears(new Date(), 0)}
+                      dateFormat="dd-MM-yyyy"
+                      showMonthDropdown
+                      showYearDropdown
+                      dropdownMode="select"
+                    />
+                  </div>
+                  <div className="custom--date dob-format flex-1 max-w-[180px] w-full">
+                    <span className="absolute z-[1] mt-[11px] ml-[15px]">
+                      <FaCalendarDays />
+                    </span>
+                    <DatePicker
+                      selected={customTo}
+                      onChange={(date) => setCustomTo(date)}
+                      placeholderText="To Date"
+                      className="custom--input w-full input--icon"
+                      minDate={customFrom || subYears(new Date(), 20)}
+                      maxDate={addYears(new Date(), 0)}
+                      showMonthDropdown
+                      showYearDropdown
+                      dropdownMode="select"
+                      dateFormat="dd-MM-yyyy"
+                      disabled={!customFrom}
+                    />
+                  </div>
+                </>
+              )}
+            </div>
+
+            <div className="grid grid-cols-3 gap-3">
+              <SalesSummary
+                icon={totalSalesIcon}
+                title="Total Sales"
+                titleLink={generateUrl(`/reports/all-orders?`)}
+                totalSales={`₹${formatIndianNumber(
+                  dashboardData?.summary_cards?.total_sales?.amount,
+                )}`}
+                items={[
+                  {
+                    label: "Memberships",
+                    value: `₹${formatIndianNumber(
+                      dashboardData?.summary_cards?.total_sales?.breakup
+                        ?.memberships,
+                    )}`,
+                    link: generateUrl(
+                      `/reports/all-orders?package_type=SUBSCRIPTION`,
+                    ),
+                  },
+                  {
+                    label: "Packages",
+                    value: `₹${formatIndianNumber(
+                      dashboardData?.summary_cards?.total_sales?.breakup
+                        ?.packages,
+                    )}`,
+                    link: generateUrl(`/reports/all-orders?package_type=PACKAGE`),
+                  },
+                  // {
+                  //   label: "Nourish",
+                    // value: `₹${formatIndianNumber(
+                    //   dashboardData?.summary_cards?.total_sales?.breakup
+                    //     ?.products,
+                    // )}`,
+                    // link: generateUrl(`/reports/all-orders?package_type=PRODUCT`),
+                  // },
+                  ...(hasProductServices
+                    ? [
+                        {
+                          label: "Nourish",
+                          value: `₹${formatIndianNumber(dashboardData?.summary_cards?.total_sales?.breakup?.products)}`,
+                          link: generateUrl(`/reports/all-orders?package_type=PRODUCT`),
+                        },
+                      ]
+                    : []),
+                ]}
+              />
+
+              <SalesSummary
+                icon={newClientIcon}
+                title="New Sales"
+                titleLink={generateUrl(`/reports/all-orders?bill_type=NEW`)}
+                totalSales={dashboardData?.summary_cards?.new_clients?.total}
+                items={[
+                  {
+                    label: "Memberships",
+                    value:
+                      dashboardData?.summary_cards?.new_clients?.breakup
+                        ?.memberships,
+                    link: generateUrl(
+                      `/reports/all-orders?bill_type=NEW&package_type=SUBSCRIPTION`,
+                    ),
+                  },
+                  {
+                    label: "Packages",
+                    value:
+                      dashboardData?.summary_cards?.new_clients?.breakup
+                        ?.packages,
+                    link: generateUrl(
+                      `/reports/all-orders?bill_type=NEW&package_type=PACKAGE`,
+                    ),
+                  },
+                  // {
+                  //   label: "Nourish",
+                    // value:
+                    //   dashboardData?.summary_cards?.new_clients?.breakup
+                    //     ?.products,
+                    // link: generateUrl(
+                    //   `/reports/all-orders?bill_type=NEW&package_type=PRODUCT`,
+                    // ),
+                  // },
+                  ...(hasProductServices
+                    ? [
+                        {
+                          label: "Nourish",
+                          value: dashboardData?.summary_cards?.new_clients?.breakup?.products,
+                          link: generateUrl(
+                            `/reports/all-orders?bill_type=NEW&package_type=PRODUCT`,
+                          ),
+                        },
+                      ]
+                    : []),
+
+                ]}
+              />
+              <SalesSummary
+                icon={renewalIcon}
+                title="Renewal"
+                titleLink={generateUrl(`/reports/all-orders?bill_type=RENEWAL`)}
+                totalSales={dashboardData?.summary_cards?.renewals?.total}
+                items={[
+                  {
+                    label: "Memberships",
+                    value:
+                      dashboardData?.summary_cards?.renewals?.breakup
+                        ?.memberships,
+                    link: generateUrl(
+                      `/reports/all-orders?bill_type=RENEWAL&package_type=SUBSCRIPTION`,
+                    ),
+                  },
+                  {
+                    label: "Packages",
+                    value:
+                      dashboardData?.summary_cards?.renewals?.breakup?.packages,
+                    link: generateUrl(
+                      `/reports/all-orders?bill_type=RENEWAL&package_type=PACKAGE`,
+                    ),
+                  },
+                  // {
+                  //   label: "Nourish",
+                    // value:
+                    //   dashboardData?.summary_cards?.renewals?.breakup?.products,
+                    // link: generateUrl(
+                    //   `/reports/all-orders?bill_type=RENEWAL&package_type=PRODUCT`,
+                    // ),
+                  // },
+                  ...(hasProductServices
+                    ? [
+                        {
+                          label: "Nourish",
+                          value: dashboardData?.summary_cards?.renewals?.breakup?.products,
+                          link: generateUrl(
+                            `/reports/all-orders?bill_type=RENEWAL&package_type=PRODUCT`,
+                          ),
+                        },
+                      ]
+                    : []),
+                ]}
+              />
+
+              <SalesSummary
+                icon={trialIcon}
+                title="Trials"
+                titleLink={generateUrl(
+                  `/reports/appointments/all-trial-appointments?`,
+                )}
+                totalSales={dashboardData?.summary_cards?.trials?.total}
+                items={[
+                  {
+                    label: "Scheduled",
+                    value: dashboardData?.summary_cards?.trials?.scheduled,
+                    link: generateUrl(
+                      `/reports/appointments/all-trial-appointments?`,
+                    ),
+                  },
+                  {
+                    label: "Completed",
+                    value: dashboardData?.summary_cards?.trials?.completed,
+                    link: generateUrl(
+                      `/reports/appointments/all-trial-appointments?booking_status=COMPLETED`,
+                    ),
+                  },
+                  {
+                    label: "No-Show",
+                    value: dashboardData?.summary_cards?.trials?.no_show,
+                    link: generateUrl(
+                      `/reports/appointments/all-trial-appointments?booking_status=NO_SHOW`,
+                    ),
+                  },
+                ]}
+              />
+              <SalesSummary
+                icon={enquiriesIcon}
+                title="Conversion"
+                titleLink={generateUrl(
+                  `/reports/sales-reports/membership-sales-report`,
+                )}
+                totalSales={`${dashboardData?.summary_cards?.conversion?.overall_percentage}%`}
+                items={[
+                  {
+                    label: "Lead To Trial",
+                    value: `${dashboardData?.summary_cards?.conversion?.lead_to_trial_percentage}%`,
+                    link: generateUrl(
+                      `/reports/appointments/all-trial-appointments`,
+                    ),
+                  },
+                  {
+                    label: "Trial To Membership",
+                    value: `${dashboardData?.summary_cards?.conversion?.trial_to_membership_percentage}%`,
+                    link: generateUrl(
+                      `/reports/sales-reports/membership-sales-report?trial_type=TRIAL`,
+                    ),
+                  },
+                ]}
+              />
+              <SalesSummary
+                icon={checkInIcon}
+                title="Check-ins"
+                titleLink={generateUrl(
+                  `/reports/operations-reports/member-checkins-report?`,
+                )}
+                totalSales={dashboardData?.summary_cards?.check_ins?.total}
+                items={[
+                  {
+                    label: "Unique Check-ins",
+                    value:
+                      dashboardData?.summary_cards?.check_ins?.unique_check_ins,
+                    link: generateUrl(
+                      `/reports/operations-reports/member-checkins-report?checkin-type=unique-check-in`,
+                    ),
+                  },
+                  {
+                    label: "Unique Members",
+                    value:
+                      dashboardData?.summary_cards?.check_ins?.unique_members,
+                    link: generateUrl(
+                      `/reports/operations-reports/member-checkins-report?checkin-type=unique-members`,
+                    ),
+                  },
+                ]}
               />
             </div>
-
-            {dateFilter?.value === "custom" && (
-              <>
-                <div className="custom--date dob-format flex-1 max-w-[180px] w-full">
-                  <span className="absolute z-[1] mt-[11px] ml-[15px]">
-                    <FaCalendarDays />
-                  </span>
-                  <DatePicker
-                    selected={customFrom}
-                    onChange={(date) => {
-                      setCustomFrom(date);
-                      setCustomTo(null); // ✅ reset To Date if From Date changes
-                    }}
-                    placeholderText="From Date"
-                    className="custom--input w-full input--icon"
-                    minDate={subYears(new Date(), 20)}
-                    maxDate={addYears(new Date(), 0)}
-                    dateFormat="dd-MM-yyyy"
-                    showMonthDropdown
-                    showYearDropdown
-                    dropdownMode="select"
-                  />
-                </div>
-                <div className="custom--date dob-format flex-1 max-w-[180px] w-full">
-                  <span className="absolute z-[1] mt-[11px] ml-[15px]">
-                    <FaCalendarDays />
-                  </span>
-                  <DatePicker
-                    selected={customTo}
-                    onChange={(date) => setCustomTo(date)}
-                    placeholderText="To Date"
-                    className="custom--input w-full input--icon"
-                    minDate={customFrom || subYears(new Date(), 20)}
-                    maxDate={addYears(new Date(), 0)}
-                    showMonthDropdown
-                    showYearDropdown
-                    dropdownMode="select"
-                    dateFormat="dd-MM-yyyy"
-                    disabled={!customFrom}
-                  />
-                </div>
-              </>
-            )}
-          </div>
-
-          <div className="grid grid-cols-3 gap-3">
-            <SalesSummary
-              icon={totalSalesIcon}
-              title="Total Sales"
-              titleLink={generateUrl(`/reports/all-orders?`)}
-              totalSales={`₹${formatIndianNumber(
-                dashboardData?.summary_cards?.total_sales?.amount,
-              )}`}
-              items={[
-                {
-                  label: "Memberships",
-                  value: `₹${formatIndianNumber(
-                    dashboardData?.summary_cards?.total_sales?.breakup
-                      ?.memberships,
-                  )}`,
-                  link: generateUrl(
-                    `/reports/all-orders?package_type=SUBSCRIPTION`,
-                  ),
-                },
-                {
-                  label: "Packages",
-                  value: `₹${formatIndianNumber(
-                    dashboardData?.summary_cards?.total_sales?.breakup
-                      ?.packages,
-                  )}`,
-                  link: generateUrl(`/reports/all-orders?package_type=PACKAGE`),
-                },
-                // {
-                //   label: "Nourish",
-                  // value: `₹${formatIndianNumber(
-                  //   dashboardData?.summary_cards?.total_sales?.breakup
-                  //     ?.products,
-                  // )}`,
-                  // link: generateUrl(`/reports/all-orders?package_type=PRODUCT`),
-                // },
-                ...(hasProductServices
-                  ? [
-                      {
-                        label: "Nourish",
-                        value: `₹${formatIndianNumber(dashboardData?.summary_cards?.total_sales?.breakup?.products)}`,
-                        link: generateUrl(`/reports/all-orders?package_type=PRODUCT`),
-                      },
-                    ]
-                  : []),
-              ]}
-            />
-
-            <SalesSummary
-              icon={newClientIcon}
-              title="New Sales"
-              titleLink={generateUrl(`/reports/all-orders?bill_type=NEW`)}
-              totalSales={dashboardData?.summary_cards?.new_clients?.total}
-              items={[
-                {
-                  label: "Memberships",
-                  value:
-                    dashboardData?.summary_cards?.new_clients?.breakup
-                      ?.memberships,
-                  link: generateUrl(
-                    `/reports/all-orders?bill_type=NEW&package_type=SUBSCRIPTION`,
-                  ),
-                },
-                {
-                  label: "Packages",
-                  value:
-                    dashboardData?.summary_cards?.new_clients?.breakup
-                      ?.packages,
-                  link: generateUrl(
-                    `/reports/all-orders?bill_type=NEW&package_type=PACKAGE`,
-                  ),
-                },
-                // {
-                //   label: "Nourish",
-                  // value:
-                  //   dashboardData?.summary_cards?.new_clients?.breakup
-                  //     ?.products,
-                  // link: generateUrl(
-                  //   `/reports/all-orders?bill_type=NEW&package_type=PRODUCT`,
-                  // ),
-                // },
-                ...(hasProductServices
-                  ? [
-                      {
-                        label: "Nourish",
-                        value: dashboardData?.summary_cards?.new_clients?.breakup?.products,
-                        link: generateUrl(
-                          `/reports/all-orders?bill_type=NEW&package_type=PRODUCT`,
-                        ),
-                      },
-                    ]
-                  : []),
-
-              ]}
-            />
-            <SalesSummary
-              icon={renewalIcon}
-              title="Renewal"
-              titleLink={generateUrl(`/reports/all-orders?bill_type=RENEWAL`)}
-              totalSales={dashboardData?.summary_cards?.renewals?.total}
-              items={[
-                {
-                  label: "Memberships",
-                  value:
-                    dashboardData?.summary_cards?.renewals?.breakup
-                      ?.memberships,
-                  link: generateUrl(
-                    `/reports/all-orders?bill_type=RENEWAL&package_type=SUBSCRIPTION`,
-                  ),
-                },
-                {
-                  label: "Packages",
-                  value:
-                    dashboardData?.summary_cards?.renewals?.breakup?.packages,
-                  link: generateUrl(
-                    `/reports/all-orders?bill_type=RENEWAL&package_type=PACKAGE`,
-                  ),
-                },
-                // {
-                //   label: "Nourish",
-                  // value:
-                  //   dashboardData?.summary_cards?.renewals?.breakup?.products,
-                  // link: generateUrl(
-                  //   `/reports/all-orders?bill_type=RENEWAL&package_type=PRODUCT`,
-                  // ),
-                // },
-                ...(hasProductServices
-                  ? [
-                      {
-                        label: "Nourish",
-                        value: dashboardData?.summary_cards?.renewals?.breakup?.products,
-                        link: generateUrl(
-                          `/reports/all-orders?bill_type=RENEWAL&package_type=PRODUCT`,
-                        ),
-                      },
-                    ]
-                  : []),
-              ]}
-            />
-
-            <SalesSummary
-              icon={trialIcon}
-              title="Trials"
-              titleLink={generateUrl(
-                `/reports/appointments/all-trial-appointments?`,
-              )}
-              totalSales={dashboardData?.summary_cards?.trials?.total}
-              items={[
-                {
-                  label: "Scheduled",
-                  value: dashboardData?.summary_cards?.trials?.scheduled,
-                  link: generateUrl(
-                    `/reports/appointments/all-trial-appointments?`,
-                  ),
-                },
-                {
-                  label: "Completed",
-                  value: dashboardData?.summary_cards?.trials?.completed,
-                  link: generateUrl(
-                    `/reports/appointments/all-trial-appointments?booking_status=COMPLETED`,
-                  ),
-                },
-                {
-                  label: "No-Show",
-                  value: dashboardData?.summary_cards?.trials?.no_show,
-                  link: generateUrl(
-                    `/reports/appointments/all-trial-appointments?booking_status=NO_SHOW`,
-                  ),
-                },
-              ]}
-            />
-            <SalesSummary
-              icon={enquiriesIcon}
-              title="Conversion"
-              titleLink={generateUrl(
-                `/reports/sales-reports/membership-sales-report`,
-              )}
-              totalSales={`${dashboardData?.summary_cards?.conversion?.overall_percentage}%`}
-              items={[
-                {
-                  label: "Lead To Trial",
-                  value: `${dashboardData?.summary_cards?.conversion?.lead_to_trial_percentage}%`,
-                  link: generateUrl(
-                    `/reports/appointments/all-trial-appointments`,
-                  ),
-                },
-                {
-                  label: "Trial To Membership",
-                  value: `${dashboardData?.summary_cards?.conversion?.trial_to_membership_percentage}%`,
-                  link: generateUrl(
-                    `/reports/sales-reports/membership-sales-report?trial_type=TRIAL`,
-                  ),
-                },
-              ]}
-            />
-            <SalesSummary
-              icon={checkInIcon}
-              title="Check-ins"
-              titleLink={generateUrl(
-                `/reports/operations-reports/member-checkins-report?`,
-              )}
-              totalSales={dashboardData?.summary_cards?.check_ins?.total}
-              items={[
-                {
-                  label: "Unique Check-ins",
-                  value:
-                    dashboardData?.summary_cards?.check_ins?.unique_check_ins,
-                  link: generateUrl(
-                    `/reports/operations-reports/member-checkins-report?checkin-type=unique-check-in`,
-                  ),
-                },
-                {
-                  label: "Unique Members",
-                  value:
-                    dashboardData?.summary_cards?.check_ins?.unique_members,
-                  link: generateUrl(
-                    `/reports/operations-reports/member-checkins-report?checkin-type=unique-members`,
-                  ),
-                },
-              ]}
-            />
-          </div>
-          <div className="mt-3 w-full grid grid-cols-8 gap-3">
-            <div className="border border-[#D4D4D4] rounded-[5px] bg-white p-1 pb-1 w-full relative col-span-4">
-              <span className="absolute top-[10px] right-[20px] z-[2] text-lg font-bold">
-                {totalProductValue}
-              </span>
-              <HighchartsReact
-                highcharts={Highcharts}
-                options={productStatus}
-              />
+            <div className="mt-3 w-full grid grid-cols-8 gap-3">
+              <div className="border border-[#D4D4D4] rounded-[5px] bg-white p-1 pb-1 w-full relative col-span-4">
+                <span className="absolute top-[10px] right-[20px] z-[2] text-lg font-bold">
+                  {totalProductValue}
+                </span>
+                <HighchartsReact
+                  highcharts={Highcharts}
+                  options={productStatus}
+                />
+              </div>
+              <div className="border border-[#D4D4D4] rounded-[5px] bg-white p-1 pb-1 w-full relative col-span-4">
+                <span className="absolute top-[10px] right-[20px] z-[2] text-lg font-bold">
+                  {totalLeads}
+                </span>
+                <HighchartsReact highcharts={Highcharts} options={leadsStatus} />
+              </div>
             </div>
-            <div className="border border-[#D4D4D4] rounded-[5px] bg-white p-1 pb-1 w-full relative col-span-4">
-              <span className="absolute top-[10px] right-[20px] z-[2] text-lg font-bold">
-                {totalLeads}
-              </span>
-              <HighchartsReact highcharts={Highcharts} options={leadsStatus} />
-            </div>
-          </div>
 
-          {/* <div className="border border-[#D4D4D4] rounded-[5px] bg-white p-2 pb-1 w-full relative mt-3">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="font-semibold">Class Performances Overview</h2>
-            </div>
-            <div className="relative overflow-x-auto">
-              <table className="min-w-full text-sm text-left">
-                <thead className="bg-[#F1F1F1]">
-                  <tr>
-                    <th className="p-2">Class Type</th>
-                    <th className="p-2">Scheduled</th>
-                    <th className="p-2">Bookings</th>
-                    <th className="p-2">Cancellations</th>
-                    <th className="p-2">Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {classPerformance.map((item, index) => (
-                    <tr key={item.id} className="border-t">
-                      <td className="p-2">{item.classType}</td>
-                      <td className="p-2">
-                        {String(item.bookings).padStart(2, "0")}
-                      </td>
-                      <td className="p-2">
-                        {String(item.reservations).padStart(2, "0")}
-                      </td>
-                      <td className="p-2">
-                        {String(item.cancellations).padStart(2, "0")}
-                      </td>
-                      <td className="p-2">
-                        <Link
-                          to={generateUrl(item.url)}
-                          className="bg-[#F1F1F1] border border-[#D4D4D4] rounded-[5px] w-[32px] h-[32px] flex items-center justify-center cursor-pointer"
-                        >
-                          <img src={eyeIcon} />
-                        </Link>
-                      </td>
+            {/* <div className="border border-[#D4D4D4] rounded-[5px] bg-white p-2 pb-1 w-full relative mt-3">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="font-semibold">Class Performances Overview</h2>
+              </div>
+              <div className="relative overflow-x-auto">
+                <table className="min-w-full text-sm text-left">
+                  <thead className="bg-[#F1F1F1]">
+                    <tr>
+                      <th className="p-2">Class Type</th>
+                      <th className="p-2">Scheduled</th>
+                      <th className="p-2">Bookings</th>
+                      <th className="p-2">Cancellations</th>
+                      <th className="p-2">Action</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div> */}
+                  </thead>
+                  <tbody>
+                    {classPerformance.map((item, index) => (
+                      <tr key={item.id} className="border-t">
+                        <td className="p-2">{item.classType}</td>
+                        <td className="p-2">
+                          {String(item.bookings).padStart(2, "0")}
+                        </td>
+                        <td className="p-2">
+                          {String(item.reservations).padStart(2, "0")}
+                        </td>
+                        <td className="p-2">
+                          {String(item.cancellations).padStart(2, "0")}
+                        </td>
+                        <td className="p-2">
+                          <Link
+                            to={generateUrl(item.url)}
+                            className="bg-[#F1F1F1] border border-[#D4D4D4] rounded-[5px] w-[32px] h-[32px] flex items-center justify-center cursor-pointer"
+                          >
+                            <img src={eyeIcon} />
+                          </Link>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div> */}
+          </div>
         </div>
-        {/* <div className="w-[25%]">
+        <div className="w-[25%]">
           <div className="rounded-[15px] p-4 box--shadow bg-white">
             <div>
               <p className="text-lg font-[600] mb-3 text-center">Summary </p>
@@ -1151,13 +1154,14 @@ const FinanceManagerDashboard = () => {
                 data={currentData}
                 routeMap={routeMap}
                 generateUrl={buildFilteredUrl}
+                currentUserRole={currentUserRole}
               />
             </div>
           </div>
-          <div className="rounded-[15px] p-4 box--shadow bg-white mt-4">
+          {/* <div className="rounded-[15px] p-4 box--shadow bg-white mt-4">
             <SolidGaugeChart />
-          </div>
-        </div> */}
+          </div> */}
+        </div>
       </div>
 
       {/* <div className="rounded-[15px] p-4 w-full mt-2 box--shadow bg-white">

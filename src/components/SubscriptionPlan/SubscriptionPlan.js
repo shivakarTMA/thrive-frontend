@@ -229,7 +229,7 @@ const SubscriptionPlan = () => {
 
         {(userRole === "ADMIN" ||
           userRole === "CLUB_MANAGER" ||
-          userRole === "MARKETING_MANAGER" ||
+          userRole === "FINANCE_MANAGER_CORPORATE" ||
           userRole === "FINANCE_MANAGER") && (
           <div className="flex items-end gap-2">
             <button
@@ -320,7 +320,7 @@ const SubscriptionPlan = () => {
                 <th className="px-2 py-4 min-w-[80px] text-center">Position</th>
                 {(userRole === "ADMIN" ||
                   userRole === "CLUB_MANAGER" ||
-                  userRole === "MARKETING_MANAGER" ||
+                  userRole === "FINANCE_MANAGER_CORPORATE" ||
                   userRole === "FINANCE_MANAGER") && (
                 <th className="px-2 py-4 min-w-[80px]">Action</th>
                 )}
@@ -384,7 +384,7 @@ const SubscriptionPlan = () => {
                     <td className="px-2 py-4 text-center">{item?.position}</td>
                     {(userRole === "ADMIN" ||
                       userRole === "CLUB_MANAGER" ||
-                      userRole === "MARKETING_MANAGER" ||
+                      userRole === "FINANCE_MANAGER_CORPORATE" ||
                       userRole === "FINANCE_MANAGER") && (
                     <td className="px-2 py-4">
                       <div className="w-fit">

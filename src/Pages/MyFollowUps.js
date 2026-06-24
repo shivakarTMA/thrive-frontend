@@ -75,9 +75,22 @@ const MyFollowUps = () => {
 
     const fetchStaff = async () => {
       try {
+        let roles = [
+          "ADMIN",
+          "FOH",
+          "TRAINER",
+          "CLUB_MANAGER",
+          "ASS_CLUB_MANAGER",
+          "FITNESS_MANAGER",
+          "ASS_FITNESS_MANAGER",
+        ];
+        // Remove ADMIN if current user is not ADMIN
+        if (userRole !== "ADMIN") {
+          roles = roles.filter((role) => role !== "ADMIN");
+        }
         const res = await authAxios().get("/staff/list", {
           params: {
-            role: "ADMIN,FOH,TRAINER,CLUB_MANAGER,ASS_CLUB_MANAGER,FITNESS_MANAGER,ASS_FITNESS_MANAGER",
+            role: roles.join(","),
             club_id: clubFilter.value,
           },
         });

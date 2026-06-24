@@ -68,7 +68,7 @@ export const ROUTE_PERMISSIONS = {
   // ─── Workout Plans ──────────────────────────────────────────────────────────
   '/workout-plans': [
     'ADMIN', 'CLUB_MANAGER', 'ASS_CLUB_MANAGER', 'PROGRAM_SPECIALIST',
-    'FITNESS_MANAGER', 'ASS_FITNESS_MANAGER', 'TRAINER',
+    'FITNESS_MANAGER', 'ASS_FITNESS_MANAGER', 'TRAINER', 'MARKETING_MANAGER',
   ],
   '/create-workout-plan': [
     'ADMIN', 'CLUB_MANAGER', 'ASS_CLUB_MANAGER', 'PROGRAM_SPECIALIST',
@@ -82,17 +82,17 @@ export const ROUTE_PERMISSIONS = {
   // ─── Exercises ──────────────────────────────────────────────────────────────
   '/exercises': [
     'ADMIN', 'CLUB_MANAGER', 'ASS_CLUB_MANAGER', 'PROGRAM_SPECIALIST',
-    'FITNESS_MANAGER', 'ASS_FITNESS_MANAGER', 'TRAINER',
+    'FITNESS_MANAGER', 'ASS_FITNESS_MANAGER', 'TRAINER', 'FINANCE_MANAGER_CORPORATE',
   ],
   '/exercises-categories': [
     'ADMIN', 'CLUB_MANAGER', 'ASS_CLUB_MANAGER', 'PROGRAM_SPECIALIST',
-    'FITNESS_MANAGER', 'ASS_FITNESS_MANAGER', 'TRAINER', 'MARKETING_MANAGER',
+    'FITNESS_MANAGER', 'ASS_FITNESS_MANAGER', 'TRAINER', 'MARKETING_MANAGER', 'FINANCE_MANAGER_CORPORATE',
   ],
 
   // ─── Lost & Found ───────────────────────────────────────────────────────────
   '/lost-found': [
     'ADMIN', 'CLUB_MANAGER', 'ASS_CLUB_MANAGER', 'FOH', 'PROGRAM_SPECIALIST',
-    'FITNESS_MANAGER', 'ASS_FITNESS_MANAGER', 'TRAINER',
+    'FITNESS_MANAGER', 'ASS_FITNESS_MANAGER', 'TRAINER', 'MARKETING_MANAGER'
   ],
 
   // ─── Birthday / Anniversary ─────────────────────────────────────────────────
@@ -264,8 +264,8 @@ export const ROUTE_PERMISSIONS = {
     'ADMIN', 'PROGRAM_SPECIALIST', 'FITNESS_MANAGER', 'ASS_FITNESS_MANAGER',
     'TRAINER', 'MARKETING_MANAGER', 'FINANCE_MANAGER_CORPORATE',
   ],
-  '/faq-category': ['ADMIN', 'PROGRAM_SPECIALIST', 'FITNESS_MANAGER', 'ASS_FITNESS_MANAGER', 'TRAINER', 'MARKETING_MANAGER'],
-  '/faq-list': ['ADMIN', 'PROGRAM_SPECIALIST', 'FITNESS_MANAGER', 'ASS_FITNESS_MANAGER', 'TRAINER', 'MARKETING_MANAGER'],
+  '/faq-category': ['ADMIN', 'PROGRAM_SPECIALIST', 'FITNESS_MANAGER', 'ASS_FITNESS_MANAGER', 'TRAINER', 'MARKETING_MANAGER', 'FINANCE_MANAGER_CORPORATE'],
+  '/faq-list': ['ADMIN', 'PROGRAM_SPECIALIST', 'FITNESS_MANAGER', 'ASS_FITNESS_MANAGER', 'TRAINER', 'MARKETING_MANAGER', 'FINANCE_MANAGER_CORPORATE'],
 
   // ─── Sales Reports ──────────────────────────────────────────────────────────
   '/reports/sales-reports/membership-sales-report': [

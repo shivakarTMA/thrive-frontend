@@ -297,7 +297,7 @@ const ProductsList = () => {
         {(userRole === "ADMIN" ||
           userRole === "CLUB_MANAGER" ||
           userRole === "ASS_CLUB_MANAGER" ||
-          userRole === "MARKETING_MANAGER" ||
+          userRole === "FINANCE_MANAGER_CORPORATE" ||
           userRole === "FINANCE_MANAGER") && (
         <div className="flex items-end gap-2">
           <button
@@ -374,7 +374,7 @@ const ProductsList = () => {
                 {(userRole === "ADMIN" ||
                   userRole === "CLUB_MANAGER" ||
                   userRole === "ASS_CLUB_MANAGER" ||
-                  userRole === "MARKETING_MANAGER" ||
+                  userRole === "FINANCE_MANAGER_CORPORATE" ||
                   userRole === "FINANCE_MANAGER") && (
                 <th className="px-2 py-4">Action</th>
                 )}
@@ -431,7 +431,7 @@ const ProductsList = () => {
                     {(userRole === "ADMIN" ||
                       userRole === "CLUB_MANAGER" ||
                       userRole === "ASS_CLUB_MANAGER" ||
-                      userRole === "MARKETING_MANAGER" ||
+                      userRole === "FINANCE_MANAGER_CORPORATE" ||
                       userRole === "FINANCE_MANAGER") && (
                     <td className="px-2 py-4">
                       <div className="w-fit">

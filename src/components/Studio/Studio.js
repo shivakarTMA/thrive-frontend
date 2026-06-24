@@ -157,7 +157,11 @@ const Studio = () => {
           <h1 className="text-3xl font-semibold">All Studio</h1>
         </div>
 
-      {(userRole === "ADMIN" || userRole === "MARKETING_MANAGER" || userRole === "CLUB_MANAGER" || userRole === "ASS_CLUB_MANAGER") && (
+      {(
+        userRole === "ADMIN" || 
+        userRole === "CLUB_MANAGER" || 
+        userRole === "ASS_CLUB_MANAGER"
+      ) && (
         <div className="flex items-end gap-2">
           <button
             type="button"
@@ -223,7 +227,11 @@ const Studio = () => {
                 <th className="px-2 py-4">Club Name</th>
                 <th className="px-2 py-4">Position</th>
                 <th className="px-2 py-4">Status</th>
-                {(userRole === "ADMIN" || userRole === "MARKETING_MANAGER" || userRole === "CLUB_MANAGER" || userRole === "ASS_CLUB_MANAGER") && (
+                {(
+                  userRole === "ADMIN" || 
+                  userRole === "CLUB_MANAGER" || 
+                  userRole === "ASS_CLUB_MANAGER"
+                ) && (
                 <th className="px-2 py-4">Action</th>
                 )}
               </tr>
@@ -260,7 +268,11 @@ const Studio = () => {
                           : ""}
                       </div>
                     </td>
-                    {(userRole === "ADMIN" || userRole === "MARKETING_MANAGER" || userRole === "CLUB_MANAGER" || userRole === "ASS_CLUB_MANAGER") && (
+                    {(
+                      userRole === "ADMIN" || 
+                      userRole === "CLUB_MANAGER" || 
+                      userRole === "ASS_CLUB_MANAGER"
+                    ) && (
                     <td className="px-2 py-4">
                       <div className="w-fit">
                         <Tooltip

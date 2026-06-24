@@ -375,6 +375,7 @@ const CouponsList = () => {
         </div>
         {(userRole === "FINANCE_MANAGER" ||
           userRole === "MARKETING_MANAGER" ||
+          userRole === "FINANCE_MANAGER_CORPORATE" ||
           userRole === "ADMIN") && (
           <div className="flex items-end gap-2">
             <button
@@ -443,6 +444,7 @@ const CouponsList = () => {
                 </th>
                 {(userRole === "FINANCE_MANAGER" ||
                   userRole === "MARKETING_MANAGER" ||
+                  userRole === "FINANCE_MANAGER_CORPORATE" ||
                   userRole === "ADMIN") && (
                   <th className="px-2 py-4 min-w-[80px]">Action</th>
                 )}
@@ -500,6 +502,7 @@ const CouponsList = () => {
                     </td>
                     {(userRole === "FINANCE_MANAGER" ||
                       userRole === "MARKETING_MANAGER" ||
+                      userRole === "FINANCE_MANAGER_CORPORATE" ||
                       userRole === "ADMIN") && (
                       <td className="px-2 py-4">
                         <div className="flex items-center">
