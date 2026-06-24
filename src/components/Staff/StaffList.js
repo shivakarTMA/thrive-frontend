@@ -74,6 +74,10 @@ export const roleOptionsByUser = {
     { value: "TRAINER", label: "Trainer" },
     { value: "ASS_FITNESS_MANAGER", label: "Ass Fitness Manager" },
   ],
+  TRAINER: [
+    { value: "TRAINER", label: "Trainer" },
+    { value: "ASS_FITNESS_MANAGER", label: "Ass Fitness Manager" },
+  ],
   // GENERAL_MANAGER: [
   //   { value: "FOH", label: "FOH (Front of House)" },
   //   { value: "TRAINER", label: "Trainer" },
@@ -463,7 +467,8 @@ const StaffList = () => {
               value={roleFilter}
               options={roleOptions}
               onChange={(option) => setRoleFilter(option)}
-              isClearable={currentUserRole === "ADMIN" ? true : false}
+              // isClearable={currentUserRole === "ADMIN" ? true : false}
+              isClearable
               styles={customStyles}
               className="w-full"
             />

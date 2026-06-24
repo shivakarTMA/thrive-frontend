@@ -1210,6 +1210,9 @@ const AllLeads = (props) => {
                                   {(userRole === "FOH" ||
                                     userRole === "CLUB_MANAGER" ||
                                     userRole === "ASS_CLUB_MANAGER" ||
+                                    userRole === "TRAINER" ||
+                                    userRole === "FITNESS_MANAGER" ||
+                                    userRole === "ASS_FITNESS_MANAGER" ||
                                     userRole === "PROGRAM_SPECIALIST" ||
                                     userRole === "ADMIN") && (
                                     <Tooltip

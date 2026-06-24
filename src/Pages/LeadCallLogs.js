@@ -568,14 +568,14 @@ const LeadCallLogs = () => {
       if (isToday && timeDate <= now) isDisabled = true;
 
       // ── Tomorrow: disable slots ≤ current time-of-day ──────────────────
-      const tom = new Date();
-      tom.setDate(tom.getDate() + 1);
-      const isTomorrow = selectedDate.toDateString() === tom.toDateString();
-      if (isTomorrow) {
-        const slotTimeOnly = new Date();
-        slotTimeOnly.setHours(h, m, 0, 0);
-        if (slotTimeOnly <= now) isDisabled = true;
-      }
+      // const tom = new Date();
+      // tom.setDate(tom.getDate() + 1);
+      // const isTomorrow = selectedDate.toDateString() === tom.toDateString();
+      // if (isTomorrow) {
+      //   const slotTimeOnly = new Date();
+      //   slotTimeOnly.setHours(h, m, 0, 0);
+      //   if (slotTimeOnly <= now) isDisabled = true;
+      // }
       // ───────────────────────────────────────────────────────────────────
 
       const booked = getBookedSlotsForDate(selectedDate);
@@ -599,14 +599,14 @@ const LeadCallLogs = () => {
       if (isToday && timeDate <= now) isDisabled = true;
 
       // ── Tomorrow: disable slots ≤ current time-of-day ──────────────────
-      const tom = new Date();
-      tom.setDate(tom.getDate() + 1);
-      const isTomorrow = selectedDate.toDateString() === tom.toDateString();
-      if (isTomorrow) {
-        const slotTimeOnly = new Date();
-        slotTimeOnly.setHours(h, m, 0, 0);
-        if (slotTimeOnly <= now) isDisabled = true;
-      }
+      // const tom = new Date();
+      // tom.setDate(tom.getDate() + 1);
+      // const isTomorrow = selectedDate.toDateString() === tom.toDateString();
+      // if (isTomorrow) {
+      //   const slotTimeOnly = new Date();
+      //   slotTimeOnly.setHours(h, m, 0, 0);
+      //   if (slotTimeOnly <= now) isDisabled = true;
+      // }
       // ───────────────────────────────────────────────────────────────────
 
       const booked = getScheduleBookedSlotsForDate(selectedDate);
@@ -892,7 +892,8 @@ const LeadCallLogs = () => {
                             formik.setFieldValue("trial_tour_datetime", "");
                           }}
                           dateFormat="dd/MM/yyyy"
-                          minDate={new Date(new Date().setDate(new Date().getDate() + 1))} // ✅ disables today + past
+                          // minDate={new Date(new Date().setDate(new Date().getDate() + 1))} // ✅ disables today + past
+                          minDate={new Date()} // ✅ disable past dates
                           placeholderText="Select Date"
                           onKeyDown={(e) => {
                             e.preventDefault();
@@ -1001,7 +1002,8 @@ const LeadCallLogs = () => {
                                 formik.setFieldValue("follow_up_datetime", "");
                               }}
                               dateFormat="dd/MM/yyyy"
-                              minDate={new Date(new Date().setDate(new Date().getDate() + 1))} // ✅ disables today + past
+                              // minDate={new Date(new Date().setDate(new Date().getDate() + 1))} // ✅ disables today + past
+                              minDate={new Date()} // ✅ disable past dates
                               placeholderText="Select Date"
                               onKeyDown={(e) => {
                                 e.preventDefault();

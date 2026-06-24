@@ -138,7 +138,14 @@ const ExercisesList = () => {
           <p className="text-sm">{`Home > All Exercises`}</p>
           <h1 className="text-3xl font-semibold">All Exercises</h1>
         </div>
-        {(userRole === "ADMIN" || userRole === "CLUB_MANAGER" || userRole === "ASS_CLUB_MANAGER" || userRole === "FITNESS_MANAGER" || userRole === "ASS_FITNESS_MANAGER") && (
+        {(
+          userRole === "ADMIN" || 
+          userRole === "CLUB_MANAGER" || 
+          userRole === "ASS_CLUB_MANAGER" || 
+          userRole === "FITNESS_MANAGER" || 
+          userRole === "ASS_FITNESS_MANAGER" || 
+          userRole === "TRAINER"
+        ) && (
           <button
             type="button"
             className="px-4 py-2 bg-black text-white rounded flex items-center gap-2"
@@ -197,7 +204,14 @@ const ExercisesList = () => {
                   <th className="px-2 py-4">Exercise Name</th>
                   <th className="px-2 py-4">Created By</th>
                   <th className="px-2 py-4">Position</th>
-                  {(userRole === "ADMIN" || userRole === "CLUB_MANAGER" || userRole === "ASS_CLUB_MANAGER" || userRole === "FITNESS_MANAGER" || userRole === "ASS_FITNESS_MANAGER") && (
+                  {(
+                    userRole === "ADMIN" || 
+                    userRole === "CLUB_MANAGER" || 
+                    userRole === "ASS_CLUB_MANAGER" || 
+                    userRole === "FITNESS_MANAGER" || 
+                    userRole === "ASS_FITNESS_MANAGER" ||
+                    userRole === "TRAINER"
+                  ) && (
                   <th className="px-2 py-4">Action</th>
                   )}
               </tr>
@@ -216,7 +230,14 @@ const ExercisesList = () => {
                     <td className="px-2 py-4">
                       {row?.position ? row?.position : "--"}
                     </td>
-                    {(userRole === "ADMIN" || userRole === "CLUB_MANAGER" || userRole === "ASS_CLUB_MANAGER" || userRole === "FITNESS_MANAGER" || userRole === "ASS_FITNESS_MANAGER") && (
+                    {(
+                      userRole === "ADMIN" || 
+                      userRole === "CLUB_MANAGER" || 
+                      userRole === "ASS_CLUB_MANAGER" || 
+                      userRole === "FITNESS_MANAGER" || 
+                      userRole === "ASS_FITNESS_MANAGER" ||
+                      userRole === "TRAINER"
+                    ) && (
                     <td className="px-2 py-4">
                       <div className="flex">
                         <Tooltip

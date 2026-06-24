@@ -214,7 +214,6 @@ const GroupClassParticipants = () => {
                           {userRole === "CLUB_MANAGER" ||
                           userRole === "MARKETING_MANAGER" ||
                           userRole === "FITNESS_MANAGER" ||
-                          userRole === "TRAINER" ||
                           userRole === "ADMIN" ? (
                             <>
                               {(() => {
