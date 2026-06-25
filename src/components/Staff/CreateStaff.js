@@ -71,7 +71,7 @@ const CreateStaff = ({
   const currentUserRole = user.role; // Example, dynamically from user info
   const roleOptions = roleOptionsByUser[currentUserRole] || [];
 
-  console.log("roleOptions", roleOptions);
+  // console.log("roleOptions", roleOptions);
   // Function to fetch club list
   const fetchClub = async () => {
     try {

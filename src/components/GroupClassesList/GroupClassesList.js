@@ -650,14 +650,14 @@ const GroupClassesList = (props) => {
           </div>
           
           {(userRole === "CLUB_MANAGER" ||
-            userRole === "MARKETING_MANAGER" ||
+            userRole === "ASS_CLUB_MANAGER" ||
             userRole === "FITNESS_MANAGER" ||
-            userRole === "TRAINER" ||
+            userRole === "ASS_FITNESS_MANAGER" ||
             userRole === "ADMIN") && (
             <div className="max-w-[140px] w-full">
               <button
                 type="button"
-                className="px-4 py-2 bg-black text-white rounded flex items-center justify-center gap-2 w-full"
+                className="px-4 py-2 bg-black text-white rounded flex items-center gap-2 w-full"
                 onClick={() => {
                   setEditingOption(null);
                   setShowModal(true);
@@ -843,31 +843,31 @@ const GroupClassesList = (props) => {
                                 <IoEyeOutline className="text-[25px] text-black" />
                               </Link>
                             </Tooltip>
-                            {/* {row?.status !== "EXPIRED" && (
-                              <> */}
-                            {(userRole === "CLUB_MANAGER" ||
-                              userRole === "MARKETING_MANAGER" ||
-                              userRole === "FITNESS_MANAGER" ||
-                              userRole === "TRAINER" ||
-                              userRole === "ADMIN") && (
-                              <Tooltip
-                                id={`tooltip-edit-${row.id}`}
-                                content="Edit Class"
-                                place="left"
-                              >
-                                <div
-                                  className="p-1 cursor-pointer block"
-                                  onClick={() => {
-                                    setEditingOption(row.id);
-                                    setShowModal(true);
-                                  }}
+                            {/* {row?.status !== "EXPIRED" && ( */}
+                              {/* <> */}
+                              {(userRole === "CLUB_MANAGER" ||
+                                userRole === "ASS_CLUB_MANAGER" ||
+                                userRole === "FITNESS_MANAGER" ||
+                                userRole === "ASS_FITNESS_MANAGER" ||
+                                userRole === "ADMIN") && (
+                                <Tooltip
+                                  id={`tooltip-edit-${row.id}`}
+                                  content="Edit Class"
+                                  place="left"
                                 >
-                                  <LiaEdit className="text-[25px] text-black" />
-                                </div>
-                              </Tooltip>
-                            )}
-                            {/* </>
-                              )} */}
+                                  <div
+                                    className="p-1 cursor-pointer block"
+                                    onClick={() => {
+                                      setEditingOption(row.id);
+                                      setShowModal(true);
+                                    }}
+                                  >
+                                    <LiaEdit className="text-[25px] text-black" />
+                                  </div>
+                                </Tooltip>
+                              )}
+                              {/* </> */}
+                            {/* )} */}
                           </div>
                         </td>
                       </tr>

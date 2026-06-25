@@ -1132,7 +1132,6 @@ const CreateClub = ({
                       </p>
                     )}
                   </div>
-
                   {/* Address */}
                   <div className="col-span-3 grid grid-cols-2 lg:gap-4 gap-2">
                     <div>

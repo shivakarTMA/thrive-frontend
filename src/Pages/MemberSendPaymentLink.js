@@ -330,7 +330,6 @@ const MemberSendPaymentLink = ({
         if (data) {
           formik.setFieldValue("id", data.id || "");
           formik.setFieldValue("club_id", data.club_id || null);
-
           // ✅ Only set values
           const gstData = {
             gst_registration_number: data.gst_registration_number || "",

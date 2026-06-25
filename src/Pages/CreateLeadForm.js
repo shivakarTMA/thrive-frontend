@@ -448,8 +448,15 @@ const CreateLeadForm = ({
         "ASS_FITNESS_MANAGER",
       ];
 
-      // console.log(schedule,'schedule')
+      // let url = `/staff/list?club_id=${selectedClubId}&role=TRAINER&role=FITNESS_MANAGER&role=ASS_FITNESS_MANAGER`;
 
+      // if (schedule === "TOUR") {
+      //   url = `/staff/list?club_id=${selectedClubId}&role=TRAINER&role=FITNESS_MANAGER&role=ASS_FITNESS_MANAGER&role=FOH`;
+      // } else if (schedule === "TRIAL") {
+      //   url = `/staff/list?club_id=${selectedClubId}&role=TRAINER&role=FITNESS_MANAGER&role=ASS_FITNESS_MANAGER`;
+      // }
+
+      // const res = await authAxios().get(url);
       if (schedule === "TOUR") {
         roles.push("FOH");
       }
@@ -481,6 +488,12 @@ const CreateLeadForm = ({
           label: item.name,
         }));
 
+      // const trainer = staff
+      //   .filter((item) => item.role === "TRAINER")
+      //   .map((item) => ({
+      //     value: item.id,
+      //     label: item.name,
+      //   }));
       const trainer = staff
       .filter((item) =>
         ["TRAINER", "FITNESS_MANAGER", "ASS_FITNESS_MANAGER"].includes(item.role),
@@ -1001,6 +1014,7 @@ const timeOptionsWithDisabled = clubTiming.map((time) => {
 
                         {userRole === "ADMIN" ||
                         userRole === "CLUB_MANAGER" ||
+                        userRole === "ASS_CLUB_MANAGER" ||
                         userRole === "FOH" ||
                         userRole === "MARKETING_MANAGER" ? (
                           <CreatableSelect

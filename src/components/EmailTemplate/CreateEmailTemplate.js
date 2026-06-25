@@ -118,8 +118,7 @@ const CreateEmailTemplate = () => {
 
   console.log(userRole,'userRole')
 
-  const isAllowed =
-  userRole === "ADMIN" || userRole === "MARKETING_MANAGER";
+  const isAllowed =  userRole === "ADMIN" || userRole === "MARKETING_MANAGER";
 
   return (
     <div className="page--content">
@@ -255,7 +254,7 @@ const CreateEmailTemplate = () => {
             </div>
 
             {/* --- SUBMIT BUTTON --- */}
-            {!isAllowed && (
+            {isAllowed && (
               <button
                 type="submit"
                 className="px-4 py-2 bg-black text-white rounded flex items-center gap-2 mt-4"

@@ -1216,7 +1216,6 @@ const hasPermission = (permission) =>
                                 {formatAutoDate(row?.updatedAt)}
 
                                 {/* Lead Actions */}
-                                {/* {(userRole === "CLUB_MANAGER" || userRole === "ADMIN" || userRole === "FOH") && ( */}
                                 <div
                                   className={`absolute right-0 top-0 h-full w-[50%] items-center justify-end gap-2 pr-5
                                   bg-[linear-gradient(269deg,_#ffffff_30%,_transparent)]
@@ -1232,7 +1231,9 @@ const hasPermission = (permission) =>
                                   }`}
                                 >
                                   {(userRole === "CLUB_MANAGER" ||
+                                    userRole === "ASS_CLUB_MANAGER" ||
                                     userRole === "ADMIN" ||
+                                    userRole === "PROGRAM_SPECIALIST" ||
                                     userRole === "FOH") && (
                                     <Tooltip
                                       id={`tooltip-edit-${row.id}`}
@@ -1254,7 +1255,10 @@ const hasPermission = (permission) =>
                                   {(userRole === "FOH" ||
                                     userRole === "TRAINER" ||
                                     userRole === "FITNESS_MANAGER" ||
+                                    userRole === "ASS_FITNESS_MANAGER" ||
                                     userRole === "CLUB_MANAGER" ||
+                                    userRole === "ASS_CLUB_MANAGER" ||
+                                    userRole === "PROGRAM_SPECIALIST" ||
                                     userRole === "ADMIN") && (
                                     <Tooltip
                                       id={`tooltip-call-${row.id}`}
@@ -1273,6 +1277,11 @@ const hasPermission = (permission) =>
                                   )}
                                   {(userRole === "FOH" ||
                                     userRole === "CLUB_MANAGER" ||
+                                    userRole === "ASS_CLUB_MANAGER" ||
+                                    userRole === "TRAINER" ||
+                                    userRole === "FITNESS_MANAGER" ||
+                                    userRole === "ASS_FITNESS_MANAGER" ||
+                                    userRole === "PROGRAM_SPECIALIST" ||
                                     userRole === "ADMIN") && (
                                     <Tooltip
                                       id={`tooltip-convert-${row.id}`}
@@ -1294,6 +1303,8 @@ const hasPermission = (permission) =>
                                     <>
                                       {(userRole === "FOH" ||
                                         userRole === "CLUB_MANAGER" ||
+                                        userRole === "ASS_CLUB_MANAGER" ||
+                                        userRole === "PROGRAM_SPECIALIST" ||
                                         userRole === "ADMIN") && (
                                         <Tooltip
                                           id={`tooltip-schedule-${row.id}`}
@@ -1316,7 +1327,10 @@ const hasPermission = (permission) =>
                                   {(userRole === "FOH" ||
                                     userRole === "TRAINER" ||
                                     userRole === "FITNESS_MANAGER" ||
+                                    userRole === "ASS_FITNESS_MANAGER" ||
                                     userRole === "CLUB_MANAGER" ||
+                                    userRole === "ASS_CLUB_MANAGER" ||
+                                    userRole === "PROGRAM_SPECIALIST" ||
                                     userRole === "ADMIN") && (
                                     <Tooltip
                                       id={`tooltip-appointment-${row.id}`}

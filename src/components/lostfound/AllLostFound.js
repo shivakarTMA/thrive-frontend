@@ -356,6 +356,9 @@ const AllLostFound = () => {
           </div>
           {(userRole === "FOH" ||
             userRole === "CLUB_MANAGER" ||
+            userRole === "ASS_CLUB_MANAGER" ||
+            userRole === "PROGRAM_SPECIALIST" ||
+            userRole === "TRAINER" ||
             userRole === "ADMIN") && (
             <div>
               <button
@@ -390,6 +393,9 @@ const AllLostFound = () => {
                   <th className="px-2 py-4">Return Date Time</th>
                   {(userRole === "FOH" ||
                     userRole === "CLUB_MANAGER" ||
+                    userRole === "ASS_CLUB_MANAGER" ||
+                    userRole === "PROGRAM_SPECIALIST" ||
+                    userRole === "TRAINER" ||
                     userRole === "ADMIN") && (
                     <th className="px-2 py-4">Action</th>
                   )}
@@ -450,6 +456,9 @@ const AllLostFound = () => {
                       </td>
                       {(userRole === "FOH" ||
                         userRole === "CLUB_MANAGER" ||
+                        userRole === "ASS_CLUB_MANAGER" ||
+                        userRole === "PROGRAM_SPECIALIST" ||
+                        userRole === "TRAINER" ||
                         userRole === "ADMIN") && (
                         <td className="px-2 py-4">
                           <div className="flex">
@@ -468,25 +477,27 @@ const AllLostFound = () => {
                                 <img src={viewIcon} />
                               </div>
                             </Tooltip>
-                            <Tooltip
-                              id={`tooltip-return-${row.id}`}
-                              content="Return Item"
-                              place="left"
-                            >
-                              <div
-                                className={`bg-[#F1F1F1] border border-[#D4D4D4] rounded-r-[5px] w-[32px] h-[32px] flex items-center justify-center ${
-                                  row.status !== "AVAILABLE"
-                                    ? "cursor-not-allowed pointer-events-none opacity-[0.5]"
-                                    : "cursor-pointer"
-                                } `}
-                                onClick={() => {
-                                  setReturnedModalOpen(true);
-                                  setMarkReturnedData(row?.id);
-                                }}
+                            {userRole !== "TRAINER" && (
+                              <Tooltip
+                                id={`tooltip-return-${row.id}`}
+                                content="Return Item"
+                                place="left"
                               >
-                                <img src={returnIcon} />
-                              </div>
-                            </Tooltip>
+                                <div
+                                  className={`bg-[#F1F1F1] border border-[#D4D4D4] rounded-r-[5px] w-[32px] h-[32px] flex items-center justify-center ${
+                                    row.status !== "AVAILABLE"
+                                      ? "cursor-not-allowed pointer-events-none opacity-[0.5]"
+                                      : "cursor-pointer"
+                                  } `}
+                                  onClick={() => {
+                                    setReturnedModalOpen(true);
+                                    setMarkReturnedData(row?.id);
+                                  }}
+                                >
+                                  <img src={returnIcon} />
+                                </div>
+                              </Tooltip>
+                            )}
                           </div>
                         </td>
                       )}

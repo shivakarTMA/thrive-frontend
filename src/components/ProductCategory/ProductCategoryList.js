@@ -176,7 +176,7 @@ const ProductCategoryList = () => {
           <p className="text-sm">{`Home > Nourish Category`}</p>
           <h1 className="text-3xl font-semibold">Nourish Category</h1>
         </div>
-        {(userRole === "ADMIN" || userRole === "MARKETING_MANAGER") && (
+        {userRole === "ADMIN" && (
         <div className="flex items-end gap-2">
           <button
             type="button"
@@ -243,7 +243,7 @@ const ProductCategoryList = () => {
                 <th className="px-2 py-4">Club Name</th>
                 <th className="px-2 py-4">Position</th>
                 <th className="px-2 py-4">Status</th>
-                {(userRole === "ADMIN" || userRole === "MARKETING_MANAGER") && (
+                {userRole === "ADMIN" && (
                 <th className="px-2 py-4">Action</th>
                 )}
               </tr>
@@ -290,7 +290,7 @@ const ProductCategoryList = () => {
                           : ""}
                       </div>
                     </td>
-                    {(userRole === "ADMIN" || userRole === "MARKETING_MANAGER") && (
+                    {userRole === "ADMIN" && (
                     <td className="px-2 py-4">
                       <div className="w-fit">
                         <Tooltip

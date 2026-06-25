@@ -159,7 +159,10 @@ const CompanyList = () => {
         </div>
         {(userRole === "ADMIN" ||
           userRole === "CLUB_MANAGER" ||
+          userRole === "ASS_CLUB_MANAGER" ||
           userRole === "FOH" ||
+          userRole === "FINANCE_MANAGER_CLUB" ||
+          userRole === "FINANCE_MANAGER_CORPORATE" ||
           userRole === "MARKETING_MANAGER") && (
           <div className="flex items-end gap-2">
             <button
@@ -218,7 +221,15 @@ const CompanyList = () => {
                 <th className="px-2 py-4">State</th>
                 <th className="px-2 py-4">Country</th>
                 <th className="px-2 py-4">Status</th>
-                {(userRole === "ADMIN" || userRole === "MARKETING_MANAGER") && (
+                {(
+                  userRole === "ADMIN" || 
+                  userRole === "MARKETING_MANAGER" || 
+                  userRole === "CLUB_MANAGER" || 
+                  userRole === "ASS_CLUB_MANAGER" || 
+                  userRole === "FOH" || 
+                  userRole === "FINANCE_MANAGER_CLUB" ||
+                  userRole === "FINANCE_MANAGER_CORPORATE"
+                ) && (
                   <th className="px-2 py-4">Action</th>
                 )}
               </tr>
@@ -266,23 +277,33 @@ const CompanyList = () => {
                           : ""}
                       </div>
                     </td>
-                    {(userRole === "ADMIN" || userRole === "MARKETING_MANAGER") && (
+                    {(
+                      userRole === "ADMIN" || 
+                      userRole === "MARKETING_MANAGER" || 
+                      userRole === "CLUB_MANAGER" || 
+                      userRole === "ASS_CLUB_MANAGER" || 
+                      userRole === "FOH" || 
+                      userRole === "FINANCE_MANAGER_CLUB" ||
+                      userRole === "FINANCE_MANAGER_CORPORATE"
+                    ) && (
                       <td className="px-2 py-4">
-                        <Tooltip
-                          id={`tooltip-edit-${company.id || index}`}
-                          content="Edit Company"
-                          place="top"
-                        >
-                          <div
-                            className="p-1 cursor-pointer"
-                            onClick={() => {
-                              setEditingCompany(company?.id);
-                              setShowModal(true);
-                            }}
+                        <div className="flex">
+                          <Tooltip
+                            id={`tooltip-edit-${company.id || index}`}
+                            content="Edit Company"
+                            place="top"
                           >
-                            <LiaEdit className="text-[25px] text-black" />
-                          </div>
-                        </Tooltip>
+                            <div
+                              className="p-1 cursor-pointer"
+                              onClick={() => {
+                                setEditingCompany(company?.id);
+                                setShowModal(true);
+                              }}
+                            >
+                              <LiaEdit className="text-[25px] text-black" />
+                            </div>
+                          </Tooltip>
+                        </div>
                       </td>
                     )}
                   </tr>

@@ -843,7 +843,6 @@ const ConvertMemberForm = ({
                 setLoading(false);
                 toast.success("Payment send successfully!");
               }
-
               if (paymentModeRef.current === "OFFLINE") {
                 if (
                   !offlinePaymentDetails.method ||

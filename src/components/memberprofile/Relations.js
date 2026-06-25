@@ -153,37 +153,37 @@ const Relations = ({ details }) => {
     <div className="p-4 bg-white rounded shadow">
       {(userRole === "FOH" ||
         userRole === "CLUB_MANAGER" ||
+        userRole === "ASS_CLUB_MANAGER" ||
+        userRole === "PROGRAM_SPECIALIST" ||
         userRole === "ADMIN") && (
         <div className="flex justify-end mb-3">
-          {(userRole === "FOH" ||
-            userRole === "CLUB_MANAGER" ||
-            userRole === "ADMIN") && (
-            <div className="flex justify-end mb-3">
-              {kycCheckMember !== true || freezeStatus === "FREEZED" ? (
-                <Tooltip
-                  id={`tooltip-membership-kyc`}
-                  content={freezeStatus === "FREEZED" ? "Your membership is currently frozen." : "Your kyc is not completed yet."}
-                  place="top"
-                >
-                  <button
-                    disabled={true}
-                    className="px-3 py-2 flex rounded items-center gap-2 border text-sm bg-gray-300 border-gray-300 cursor-not-allowed text-gray-500"
-                  >
-                    <FiPlus /> Add Referral
-                  </button>
-                </Tooltip>
-              ) : (
-                <button
-                  onClick={() => {
-                    setIsModalOpen(true);
-                    formik.resetForm();
-                  }}
-                  className="px-4 py-2 bg-black text-white rounded flex items-center gap-2"
-                >
-                  <FiPlus /> Add Referral
-                </button>
-              )}
-            </div>
+          {kycCheckMember !== true || freezeStatus === "FREEZED" ? (
+            <Tooltip
+              id={`tooltip-membership-kyc`}
+              content={
+                freezeStatus === "FREEZED"
+                  ? "Your membership is currently frozen."
+                  : "Your kyc is not completed yet."
+              }
+              place="top"
+            >
+              <button
+                disabled={true}
+                className="px-3 py-2 flex rounded items-center gap-2 border text-sm bg-gray-300 border-gray-300 cursor-not-allowed text-gray-500"
+              >
+                <FiPlus /> Add Referral
+              </button>
+            </Tooltip>
+          ) : (
+            <button
+              onClick={() => {
+                setIsModalOpen(true);
+                formik.resetForm();
+              }}
+              className="px-4 py-2 bg-black text-white rounded flex items-center gap-2"
+            >
+              <FiPlus /> Add Referral
+            </button>
           )}
         </div>
       )}

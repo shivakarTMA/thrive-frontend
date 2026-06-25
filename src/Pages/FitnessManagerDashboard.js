@@ -62,6 +62,7 @@ const FitnessManagerDashboard = () => {
   const [classPerformance, setClassPerformance] = useState([]);
 
   const { user } = useSelector((state) => state.auth);
+  const currentUserRole = user?.role; // Example, dynamically from user info
   const [profileData, setUserClubs] = useState("");
   const [hasProductServices, setHasProductServices] = useState(false);
   // const [hasRecoveryServices, setHasRecoveryServices] = useState(false);
@@ -541,7 +542,7 @@ const FitnessManagerDashboard = () => {
               <SalesSummary
                 icon={totalSalesIcon}
                 title="Total Sales"
-                titleLink={generateUrl(`/reports/all-orders?`)}
+                titleLink={currentUserRole === "FITNESS_MANAGER" ? generateUrl(`/reports/all-orders?`) : "#"}
                 totalSales={`₹${formatIndianNumber(
                   dashboardData?.summary_cards?.total_sales?.amount,
                 )}`}
@@ -552,9 +553,7 @@ const FitnessManagerDashboard = () => {
                       dashboardData?.summary_cards?.total_sales?.breakup
                         ?.memberships,
                     )}`,
-                    link: generateUrl(
-                      `/reports/all-orders?package_type=SUBSCRIPTION`,
-                    ),
+                    link: currentUserRole === "FITNESS_MANAGER" ? generateUrl(`/reports/all-orders?package_type=SUBSCRIPTION`): "#",
                   },
                   {
                     label: "Packages",
@@ -562,9 +561,7 @@ const FitnessManagerDashboard = () => {
                       dashboardData?.summary_cards?.total_sales?.breakup
                         ?.packages,
                     )}`,
-                    link: generateUrl(
-                      `/reports/all-orders?package_type=PACKAGE`,
-                    ),
+                    link: currentUserRole === "FITNESS_MANAGER" ? generateUrl(`/reports/all-orders?package_type=PACKAGE`) : "#",
                   },
                   // {
                   //   label: "Nourish",
@@ -581,9 +578,7 @@ const FitnessManagerDashboard = () => {
                       {
                         label: "Nourish",
                         value: `₹${formatIndianNumber(dashboardData?.summary_cards?.total_sales?.breakup?.products)}`,
-                        link: generateUrl(
-                          `/reports/all-orders?package_type=PRODUCT`,
-                        ),
+                        link: currentUserRole === "FITNESS_MANAGER" ? generateUrl(`/reports/all-orders?package_type=PRODUCT`) : "#",
                       },
                     ]
                   : []),
@@ -593,28 +588,28 @@ const FitnessManagerDashboard = () => {
               <SalesSummary
                 icon={renewalIcon}
                 title="Membership Sold"
-                titleLink={generateUrl(`/reports/all-orders?package_type=SUBSCRIPTION`)}
+                titleLink={currentUserRole === "FITNESS_MANAGER" ? generateUrl(`/reports/all-orders?package_type=SUBSCRIPTION`): "#"}
                 totalSales={dashboardData?.summary_cards?.total_members?.total_count}
                 items={[
                   {
                     label: "New Clients",
                     value: dashboardData?.summary_cards?.total_members?.newMember,
-                    link:generateUrl(`/reports/all-orders?bill_type=NEW&package_type=SUBSCRIPTION`)
+                    link:currentUserRole === "FITNESS_MANAGER" ? generateUrl(`/reports/all-orders?bill_type=NEW&package_type=SUBSCRIPTION`): "#"
                   },
                   {
                     label: "Renewals",
                     value: dashboardData?.summary_cards?.total_members?.renewalMember,
-                    link:generateUrl(`/reports/all-orders?bill_type=RENEWAL&package_type=SUBSCRIPTION`)
+                    link:currentUserRole === "FITNESS_MANAGER" ? generateUrl(`/reports/all-orders?bill_type=RENEWAL&package_type=SUBSCRIPTION`): "#"
                   },
                                     {
                     label: "Advanced renewal",
                     value: dashboardData?.summary_cards?.total_members?.advanceRenewalMember,
-                    link:generateUrl(`/reports/all-orders?bill_type=ADVANCED_RENEWAL&package_type=SUBSCRIPTION`)
+                    link:currentUserRole === "FITNESS_MANAGER" ? generateUrl(`/reports/all-orders?bill_type=ADVANCED_RENEWAL&package_type=SUBSCRIPTION`) : "#"
                   },
                   {
                     label: "Returning User",
                     value: dashboardData?.summary_cards?.total_members?.returningMember,
-                    link:generateUrl(`/reports/all-orders?bill_type=RETURNING&package_type=SUBSCRIPTION`)
+                    link:currentUserRole === "FITNESS_MANAGER" ? generateUrl(`/reports/all-orders?bill_type=RETURNING&package_type=SUBSCRIPTION`) : "#"
                   },
                 ]}
               />

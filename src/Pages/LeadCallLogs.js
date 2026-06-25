@@ -892,7 +892,8 @@ const LeadCallLogs = () => {
                             formik.setFieldValue("trial_tour_datetime", "");
                           }}
                           dateFormat="dd/MM/yyyy"
-                          minDate={new Date(new Date().setDate(new Date().getDate() + 1))} // ✅ disables today + past
+                          // minDate={new Date(new Date().setDate(new Date().getDate() + 1))} // ✅ disables today + past
+                          minDate={new Date()} // ✅ disable past dates
                           placeholderText="Select Date"
                           onKeyDown={(e) => {
                             e.preventDefault();
@@ -1001,7 +1002,8 @@ const LeadCallLogs = () => {
                                 formik.setFieldValue("follow_up_datetime", "");
                               }}
                               dateFormat="dd/MM/yyyy"
-                              minDate={new Date(new Date().setDate(new Date().getDate() + 1))} // ✅ disables today + past
+                              // minDate={new Date(new Date().setDate(new Date().getDate() + 1))} // ✅ disables today + past
+                              minDate={new Date()} // ✅ disable past dates
                               placeholderText="Select Date"
                               onKeyDown={(e) => {
                                 e.preventDefault();
@@ -1165,7 +1167,10 @@ const LeadCallLogs = () => {
             {(userRole === "FOH" ||
               userRole === "TRAINER" ||
               userRole === "FITNESS_MANAGER" ||
+              userRole === "ASS_FITNESS_MANAGER" ||
               userRole === "CLUB_MANAGER" ||
+              userRole === "ASS_CLUB_MANAGER" ||
+              userRole === "PROGRAM_SPECIALIST" ||
               userRole === "ADMIN") && (
               <div className="flex items-center justify-end gap-2 mt-3">
                 {editLog && (

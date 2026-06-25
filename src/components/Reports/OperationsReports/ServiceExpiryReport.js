@@ -20,8 +20,8 @@ import { FaCircle } from "react-icons/fa";
 import CreateNewInvoice from "../../../Pages/CreateNewInvoice";
 import { useLocation, useNavigate } from "react-router-dom";
 import Tooltip from "../../common/Tooltip";
-import IsLoadingHOC from "../../common/IsLoadingHOC";
 import { LuDownload } from "react-icons/lu";
+import IsLoadingHOC from "../../common/IsLoadingHOC";
 
 const dateFilterOptions = [
   { value: "today", label: "Today" },
@@ -421,6 +421,7 @@ const ServiceExpiryReport = (props) => {
                 <th className="px-2 py-4 min-w-[150px]">Renewal Done (Y/N)</th>
                 {(userRole === "FOH" ||
                   userRole === "CLUB_MANAGER" ||
+                  userRole === "ASS_CLUB_MANAGER" ||
                   userRole === "ADMIN") && (
                 <th className="px-2 py-4 min-w-[100px]">Payment Link</th>
                   )}
@@ -502,6 +503,7 @@ const ServiceExpiryReport = (props) => {
                     </td>
                     {(userRole === "FOH" ||
                       userRole === "CLUB_MANAGER" ||
+                      userRole === "ASS_CLUB_MANAGER" ||
                       userRole === "ADMIN") && (
                         <td className="px-2 py-4">
                           {row?.is_subscribed === true ? (

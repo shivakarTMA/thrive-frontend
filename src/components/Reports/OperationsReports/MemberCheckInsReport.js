@@ -10,8 +10,8 @@ import { toast } from "react-toastify";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useSelector } from "react-redux";
 import Pagination from "../../common/Pagination";
-import IsLoadingHOC from "../../common/IsLoadingHOC";
 import { LuDownload } from "react-icons/lu";
+import IsLoadingHOC from "../../common/IsLoadingHOC";
 
 // Date filter dropdown options
 const dateFilterOptions = [
@@ -147,7 +147,6 @@ const MemberCheckInsReport = (props) => {
     }
   }, [clubFilter]);
 
-  
   const fetchCompanyList = async (clubId) => {
     try {
       const res = await authAxios().get("/company/list");
@@ -184,7 +183,7 @@ const MemberCheckInsReport = (props) => {
     value: c.id,
   }));
 
-  console.log(memberPlanOptions, "memberPlanOptions");
+  // console.log(memberPlanOptions, "memberPlanOptions");
 
   /* ------------------ FETCH REPORT ------------------ */
 
@@ -204,6 +203,7 @@ const MemberCheckInsReport = (props) => {
       if (memberPlanFilter){
         params.subscription_plan_id = memberPlanFilter;
       } 
+      // ✅ ADD THIS
       if (filterCompanyName?.value) {
         params.company_name = filterCompanyName.value;
       }

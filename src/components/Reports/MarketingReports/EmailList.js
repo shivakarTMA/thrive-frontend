@@ -251,6 +251,7 @@ const EmailList = () => {
         </div>
         {(userRole === "ADMIN" ||
           userRole === "CLUB_MANAGER" ||
+          userRole === "ASS_CLUB_MANAGER" ||
           userRole === "MARKETING_MANAGER") && (
           <div className="flex items-end gap-2">
             <Link
@@ -355,6 +356,7 @@ const EmailList = () => {
                 <th className="px-2 py-4 min-w-[100px]">Status</th>
                 {(userRole === "ADMIN" ||
                   userRole === "CLUB_MANAGER" ||
+                  userRole === "ASS_CLUB_MANAGER" ||
                   userRole === "MARKETING_MANAGER") && (
                 <th className="px-2 py-4 min-w-[100px]">Action</th>
                 )}
@@ -428,6 +430,7 @@ const EmailList = () => {
                     </td>
                     {(userRole === "ADMIN" ||
                       userRole === "CLUB_MANAGER" ||
+                      userRole === "ASS_CLUB_MANAGER" ||
                       userRole === "MARKETING_MANAGER") && (
                     <td className="px-2 py-4">
                       <div className="flex">

@@ -3016,6 +3016,7 @@ const ConvertMemberForm = ({
                 <div className="flex justify-end gap-3">
                   <button
                     onClick={() => setPaymentModalOpen(false)}
+                    disabled={formik.isSubmitting}
                     className="px-4 py-2 border rounded"
                   >
                     Cancel
@@ -3025,7 +3026,7 @@ const ConvertMemberForm = ({
                     onClick={() => formik.handleSubmit()}
                     className="px-4 py-2 bg-black text-white rounded"
                   >
-                    Submit Payment
+                    {formik.isSubmitting ? "Processing..." : "Submit Payment"}
                   </button>
                 </div>
               </>

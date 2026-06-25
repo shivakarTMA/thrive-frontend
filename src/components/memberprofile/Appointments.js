@@ -217,7 +217,10 @@ const Appointments = ({ details }) => {
         {(userRole === "FOH" ||
           userRole === "TRAINER" ||
           userRole === "FITNESS_MANAGER" ||
+          userRole === "ASS_FITNESS_MANAGER" ||
           userRole === "CLUB_MANAGER" ||
+          userRole === "ASS_CLUB_MANAGER" ||
+          userRole === "PROGRAM_SPECIALIST" ||
           userRole === "ADMIN") && (
           <div>
             {kycCheckMember !== true || freezeStatus === "FREEZED" ? (
@@ -333,7 +336,7 @@ const Appointments = ({ details }) => {
                             ? isInProgress(appt)
                               ? "In Progress"
                               : "Upcoming"
-                            : appt?.booking_status,
+                            : appt?.booking_status
                         )}
                       </td>
                       <td className="border px-3 py-2">

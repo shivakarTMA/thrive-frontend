@@ -30,25 +30,123 @@ export const roleOptionsByUser = {
     { value: "FOH", label: "FOH (Front of House)" },
     { value: "TRAINER", label: "Trainer" },
     { value: "CLUB_MANAGER", label: "Club Manager" },
+    { value: "ASS_CLUB_MANAGER", label: "Ass Club Manager" },
     { value: "FITNESS_MANAGER", label: "Fitness Manager" },
-    { value: "FINANCE_MANAGER", label: "Finance Manager" },
+    { value: "ASS_FITNESS_MANAGER", label: "Ass Fitness Manager" },
+    { value: "FINANCE_MANAGER_CLUB", label: "Finance Manager Club" },
+    { value: "FINANCE_MANAGER_CORPORATE", label: "Finance Manager Corporate" },
+
     { value: "MARKETING_MANAGER", label: "Marketing Manager" },
-    { value: "GENERAL_MANAGER", label: "General Manager" },
+    // { value: "GENERAL_MANAGER", label: "General Manager" },
+    { value: "PROGRAM_SPECIALIST", label: "Program Specialist" },
   ],
-  CLUB_MANAGER: [
-    { value: "FOH", label: "FOH (Front of House)" },
-    { value: "TRAINER", label: "Trainer" },
-    { value: "FITNESS_MANAGER", label: "Fitness Manager" },
-  ],
-  GENERAL_MANAGER: [
+  FOH: [
     { value: "FOH", label: "FOH (Front of House)" },
     { value: "TRAINER", label: "Trainer" },
     { value: "CLUB_MANAGER", label: "Club Manager" },
+    { value: "ASS_CLUB_MANAGER", label: "Ass Club Manager" },
     { value: "FITNESS_MANAGER", label: "Fitness Manager" },
-    { value: "FINANCE_MANAGER", label: "Finance Manager" },
+    { value: "ASS_FITNESS_MANAGER", label: "Ass Fitness Manager" },
+    { value: "FINANCE_MANAGER_CLUB", label: "Finance Manager Club" },
+    { value: "FINANCE_MANAGER_CORPORATE", label: "Finance Manager Corporate" },
     { value: "MARKETING_MANAGER", label: "Marketing Manager" },
-    { value: "GENERAL_MANAGER", label: "General Manager" },
+    { value: "PROGRAM_SPECIALIST", label: "Program Specialist" },
   ],
+  CLUB_MANAGER: [
+    { value: "FOH", label: "FOH (Front of House)" },
+    { value: "ASS_CLUB_MANAGER", label: "Ass Club Manager" },
+    { value: "TRAINER", label: "Trainer" },
+    { value: "FITNESS_MANAGER", label: "Fitness Manager" },
+    { value: "ASS_FITNESS_MANAGER", label: "Ass Fitness Manager" },
+  ],
+  ASS_CLUB_MANAGER: [
+    { value: "FOH", label: "FOH (Front of House)" },
+    { value: "TRAINER", label: "Trainer" },
+    { value: "FITNESS_MANAGER", label: "Fitness Manager" },
+    { value: "ASS_FITNESS_MANAGER", label: "Ass Fitness Manager" },
+  ],
+  FITNESS_MANAGER: [
+    { value: "TRAINER", label: "Trainer" },
+    { value: "FITNESS_MANAGER", label: "Fitness Manager" },
+    { value: "ASS_FITNESS_MANAGER", label: "Ass Fitness Manager" },
+  ],
+  ASS_FITNESS_MANAGER: [
+    { value: "TRAINER", label: "Trainer" },
+    { value: "ASS_FITNESS_MANAGER", label: "Ass Fitness Manager" },
+  ],
+  TRAINER: [
+    { value: "TRAINER", label: "Trainer" },
+    { value: "ASS_FITNESS_MANAGER", label: "Ass Fitness Manager" },
+  ],
+  MARKETING_MANAGER: [
+    // { value: "ADMIN", label: "Admin" },
+    { value: "FOH", label: "FOH (Front of House)" },
+    { value: "TRAINER", label: "Trainer" },
+    { value: "CLUB_MANAGER", label: "Club Manager" },
+    { value: "ASS_CLUB_MANAGER", label: "Ass Club Manager" },
+    { value: "FITNESS_MANAGER", label: "Fitness Manager" },
+    { value: "ASS_FITNESS_MANAGER", label: "Ass Fitness Manager" },
+    { value: "FINANCE_MANAGER_CLUB", label: "Finance Manager Club" },
+    { value: "FINANCE_MANAGER_CORPORATE", label: "Finance Manager Corporate" },
+
+    { value: "MARKETING_MANAGER", label: "Marketing Manager" },
+    // { value: "GENERAL_MANAGER", label: "General Manager" },
+    { value: "PROGRAM_SPECIALIST", label: "Program Specialist" },
+  ],
+  FINANCE_MANAGER_CLUB: [
+    // { value: "ADMIN", label: "Admin" },
+    { value: "FOH", label: "FOH (Front of House)" },
+    { value: "TRAINER", label: "Trainer" },
+    { value: "CLUB_MANAGER", label: "Club Manager" },
+    { value: "ASS_CLUB_MANAGER", label: "Ass Club Manager" },
+    { value: "FITNESS_MANAGER", label: "Fitness Manager" },
+    { value: "ASS_FITNESS_MANAGER", label: "Ass Fitness Manager" },
+    { value: "FINANCE_MANAGER_CLUB", label: "Finance Manager Club" },
+    { value: "FINANCE_MANAGER_CORPORATE", label: "Finance Manager Corporate" },
+
+    { value: "MARKETING_MANAGER", label: "Marketing Manager" },
+    // { value: "GENERAL_MANAGER", label: "General Manager" },
+    { value: "PROGRAM_SPECIALIST", label: "Program Specialist" },
+  ],
+  FINANCE_MANAGER_CORPORATE: [
+    // { value: "ADMIN", label: "Admin" },
+    { value: "FOH", label: "FOH (Front of House)" },
+    { value: "TRAINER", label: "Trainer" },
+    { value: "CLUB_MANAGER", label: "Club Manager" },
+    { value: "ASS_CLUB_MANAGER", label: "Ass Club Manager" },
+    { value: "FITNESS_MANAGER", label: "Fitness Manager" },
+    { value: "ASS_FITNESS_MANAGER", label: "Ass Fitness Manager" },
+    { value: "FINANCE_MANAGER_CLUB", label: "Finance Manager Club" },
+    { value: "FINANCE_MANAGER_CORPORATE", label: "Finance Manager Corporate" },
+
+    { value: "MARKETING_MANAGER", label: "Marketing Manager" },
+    // { value: "GENERAL_MANAGER", label: "General Manager" },
+    { value: "PROGRAM_SPECIALIST", label: "Program Specialist" },
+  ],
+  PROGRAM_SPECIALIST: [
+    // { value: "ADMIN", label: "Admin" },
+    { value: "FOH", label: "FOH (Front of House)" },
+    { value: "TRAINER", label: "Trainer" },
+    { value: "CLUB_MANAGER", label: "Club Manager" },
+    { value: "ASS_CLUB_MANAGER", label: "Ass Club Manager" },
+    { value: "FITNESS_MANAGER", label: "Fitness Manager" },
+    { value: "ASS_FITNESS_MANAGER", label: "Ass Fitness Manager" },
+    { value: "FINANCE_MANAGER_CLUB", label: "Finance Manager Club" },
+    { value: "FINANCE_MANAGER_CORPORATE", label: "Finance Manager Corporate" },
+
+    { value: "MARKETING_MANAGER", label: "Marketing Manager" },
+    // { value: "GENERAL_MANAGER", label: "General Manager" },
+    { value: "PROGRAM_SPECIALIST", label: "Program Specialist" },
+  ],
+  // GENERAL_MANAGER: [
+  //   { value: "FOH", label: "FOH (Front of House)" },
+  //   { value: "TRAINER", label: "Trainer" },
+  //   { value: "CLUB_MANAGER", label: "Club Manager" },
+  //   { value: "FITNESS_MANAGER", label: "Fitness Manager" },
+  //   // { value: "FINANCE_MANAGER", label: "Finance Manager" },
+  //   { value: "MARKETING_MANAGER", label: "Marketing Manager" },
+  //   { value: "GENERAL_MANAGER", label: "General Manager" },
+  // ],
 };
 
 const StaffList = () => {
@@ -374,8 +472,7 @@ const StaffList = () => {
           <p className="text-sm">{`Home > All Staff`}</p>
           <h1 className="text-3xl font-semibold">All Staff</h1>
         </div>
-        {(currentUserRole === "ADMIN" ||
-          currentUserRole === "CLUB_MANAGER") && (
+        {(currentUserRole === "ADMIN" ||  currentUserRole === "CLUB_MANAGER" || currentUserRole === "ASS_CLUB_MANAGER") && (
           <button
             type="button"
             className="px-4 py-2 bg-black text-white rounded flex items-center gap-2"
@@ -430,7 +527,8 @@ const StaffList = () => {
               value={roleFilter}
               options={roleOptions}
               onChange={(option) => setRoleFilter(option)}
-              isClearable={currentUserRole === "ADMIN" ? true : false}
+              // isClearable={currentUserRole === "ADMIN" ? true : false}
+              isClearable
               styles={customStyles}
               className="w-full"
             />
@@ -454,7 +552,7 @@ const StaffList = () => {
                 <th className="px-2 py-4">Status</th>
                 <th className="px-2 py-4">Show on App</th>
                 {(currentUserRole === "ADMIN" ||
-                  currentUserRole === "CLUB_MANAGER") && (
+                  currentUserRole === "CLUB_MANAGER" || currentUserRole === "ASS_CLUB_MANAGER") && (
                 <th className="px-2 py-4">Action</th>
                 )}
               </tr>
@@ -531,7 +629,7 @@ const StaffList = () => {
                       )}
                     </td>
                   {(currentUserRole === "ADMIN" ||
-                    currentUserRole === "CLUB_MANAGER") && (
+                    currentUserRole === "CLUB_MANAGER" || currentUserRole === "ASS_CLUB_MANAGER") && (
                     <td className="px-2 py-4">
                       <div className="flex">
                         <Tooltip

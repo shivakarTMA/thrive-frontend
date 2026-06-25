@@ -217,7 +217,7 @@ const Services = () => {
           <p className="text-sm">{`Home > Club Services`}</p>
           <h1 className="text-3xl font-semibold">Club Services</h1>
         </div>
-        {(userRole === "ADMIN" || userRole === "MARKETING_MANAGER") && (
+        {userRole === "ADMIN" && (
         <div className="flex items-end gap-2">
           <button
             type="button"
@@ -288,7 +288,7 @@ const Services = () => {
                 <th className="px-2 py-4">Type</th>
                 <th className="px-2 py-4">Position</th>
                 <th className="px-2 py-4">Status</th>
-                {(userRole === "ADMIN" || userRole === "MARKETING_MANAGER") && (
+                {userRole === "ADMIN" && (
                 <th className="px-2 py-4">Action</th>
                 )}
               </tr>
@@ -337,7 +337,7 @@ const Services = () => {
                           : ""}
                       </div>
                     </td>
-                    {(userRole === "ADMIN" || userRole === "MARKETING_MANAGER") && (
+                    {userRole === "ADMIN" && (
                       <td className="px-2 py-4">
                         <div className="w-fit">
                           <Tooltip

@@ -8,7 +8,6 @@ import {
   ALLOWED_ROLES,
   customStyles,
   filterActiveItems,
-  formatAutoDate,
   formatDateTimeLead,
   formatIndianNumber,
   formatText,
@@ -341,7 +340,7 @@ const NourishOrders = (props) => {
       {/* Filters */}
       <div className="flex gap-3 mb-4 items-center justify-between">
         <div className="flex gap-2 w-full">
-          <div className="max-w-[150px] w-full">
+          <div className="max-w-[180px] w-full">
             <Select
               placeholder="Date Filter"
               options={dateFilterOptions}
@@ -459,8 +458,7 @@ const NourishOrders = (props) => {
                 <th className="px-2 py-4 min-w-[150px]">Fulfilment Status</th>
                 <th className="px-2 py-4 min-w-[150px]">Delivered By</th>
                 <th className="px-2 py-4 min-w-[170px]">Delivered At</th>
-                <th className="p-2 min-w-[170px]">Scheduled For</th>
-                {(userRole === "CLUB_MANAGER" ||
+                {(userRole === "CLUB_MANAGER" || userRole === "ASS_CLUB_MANAGER" || userRole === "PROGRAM_SPECIALIST" ||
                   userRole === "FOH" ||
                   userRole === "ADMIN") && (
                   <th className="px-2 py-4 min-w-[150px]">Action</th>
@@ -512,16 +510,7 @@ const NourishOrders = (props) => {
                         ? formatDateTimeLead(order?.delivered_at)
                         : "--"}
                     </td>
-                    <td className="p-2">
-                      {order?.delivery_date ? (
-                        <>
-                          <div>{formatAutoDate(order?.delivery_date)} {order?.delivery_start_time}</div>
-                        </>
-                      ) : (
-                        "--"
-                      )}
-                    </td>
-                    {(userRole === "CLUB_MANAGER" ||
+                    {(userRole === "CLUB_MANAGER" || userRole === "ASS_CLUB_MANAGER" || userRole === "PROGRAM_SPECIALIST" || 
                       userRole === "FOH" ||
                       userRole === "ADMIN") && (
                       <td className="px-2 py-4">
