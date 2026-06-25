@@ -1056,7 +1056,7 @@ const ProductsSold = (props) => {
                       {/* Date */}
                       <div>
                         <label className="mb-2 block">
-                          Start Time<span className="text-red-500">*</span>
+                          Start Date<span className="text-red-500">*</span>
                         </label>
                         <div className="custom--date relative">
                           <span className="absolute z-[1] mt-[10px] ml-[15px]">
