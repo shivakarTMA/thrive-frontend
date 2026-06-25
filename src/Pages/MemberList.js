@@ -55,6 +55,7 @@ const MemberList = (props) => {
   const [productInvoiceModal, setProductInvoiceModal] = useState(false);
   const [selectedLeadMember, setSelectedLeadMember] = useState(null);
   const [selectedLeadClub, setSelectedLeadClub] = useState(null);
+  const [hoveredRow, setHoveredRow] = useState(null);
 
   const [memberList, setMemberList] = useState([]);
   const [memberModal, setMemberModal] = useState(false);
@@ -986,6 +987,7 @@ const hasMemberPermission = (permission) =>
                     <tr
                       key={member.id}
                       className="group bg-white border-b relative hover:bg-gray-50"
+                      onMouseEnter={() => setHoveredRow(member.id)}
                     >
                       {(userRole === "CLUB_MANAGER" ||
                         userRole === "ASS_CLUB_MANAGER" ||
@@ -1125,11 +1127,14 @@ const hasMemberPermission = (permission) =>
                           bg-[linear-gradient(269deg,_#ffffff_30%,_transparent)]
                           pr-5 transition duration-700
                           ${
-                            hasMemberPermission("canEditMember") ||
-                            hasMemberPermission("canViewCallLogs") ||
-                            (hasMemberPermission("canBuyServices") &&
-                              member?.is_subscribed === true)
-                              ? "hidden group-hover:flex"
+                            (
+                              hasMemberPermission("canEditMember") ||
+                              hasMemberPermission("canViewCallLogs") ||
+                              (hasMemberPermission("canBuyServices") &&
+                                member?.is_subscribed === true)
+                            ) &&
+                            hoveredRow === member.id
+                              ? "flex"
                               : "hidden"
                           }`}
                         >
