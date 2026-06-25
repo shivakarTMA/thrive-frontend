@@ -87,7 +87,6 @@ const MemberList = (props) => {
   const [selectedUserId, setSelectedUserId] = useState([]);
   const [assignedOwners, setAssignedOwners] = useState({});
   const [bulkOwner, setBulkOwner] = useState(null);
-  const [showConfirm, setShowConfirm] = useState(false);
   const [showOwnerDropdown, setShowOwnerDropdown] = useState(false);
 
   /* ---------------- URL PARAMS ---------------- */
@@ -813,32 +812,6 @@ const hasMemberPermission = (permission) =>
           )}
         </div>
 
-        {showConfirm && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white p-6 rounded-xl shadow-lg w-96 text-center">
-              <h2 className="text-lg font-semibold mb-4">Confirm Assignment</h2>
-              <p className="mb-4">
-                Are you sure you want to assign{" "}
-                <strong>{selectedUserId.length}</strong> lead(s) to{" "}
-                <strong>{bulkOwner?.label}</strong>?
-              </p>
-              <div className="flex justify-center gap-4">
-                <button
-                  onClick={() => setShowConfirm(false)}
-                  className="px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-100"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={confirmAssign}
-                  className="px-4 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700"
-                >
-                  Confirm
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
 
         <div className="w-full p-3 border bg-white shodow--box rounded-[10px]">
           <div className="flex items-start gap-3 justify-between w-full mb-3 border-b border-b-[#D4D4D4] pb-3">
