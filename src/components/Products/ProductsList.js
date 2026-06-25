@@ -157,6 +157,7 @@ const ProductsList = () => {
         return ["image/jpeg", "image/png", "image/webp"].includes(value.type);
       }),
     club_id: Yup.string().required("Club is required"),
+    service_id: Yup.string().required("Service is required"),
     product_category_id: Yup.string().required("Product category is required"),
     name: Yup.string().required("Name is required"),
     caption: Yup.string().required("Caption is required"),
@@ -214,7 +215,7 @@ const ProductsList = () => {
 
   const initialValues = {
     image: "",
-    // service_id: "",
+    service_id: "",
     club_id: "",
     product_category_id: "",
     name: "",

@@ -66,7 +66,7 @@ const CreateProduct = ({ setShowModal, formik, editingOption }) => {
             name: data?.name || "",
             caption: data?.caption || "",
             sku: data?.sku || "",
-            product_type: data?.product_type || "",
+            // product_type: data?.product_type || "",
             food_type: data?.food_type || "",
             calorie: data?.calorie || "",
             protein: data?.protein || "",
