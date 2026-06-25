@@ -227,7 +227,6 @@ export default function MemberFilterPanel({
     label: item.name,
     value: item.id,
   }));
-
   const companyOptions = companyList.map((item) => ({
     label: item.name,
     value: item.name,

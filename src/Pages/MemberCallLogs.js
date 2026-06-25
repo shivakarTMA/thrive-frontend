@@ -709,7 +709,10 @@ const MemberCallLogs = () => {
                   {(userRole === "FOH" ||
                     userRole === "TRAINER" ||
                     userRole === "FITNESS_MANAGER" ||
+                    userRole === "ASS_FITNESS_MANAGER" ||
                     userRole === "CLUB_MANAGER" ||
+                    userRole === "ASS_CLUB_MANAGER" ||
+                    userRole === "PROGRAM_SPECIALIST" ||
                     userRole === "ADMIN") && (
                     <div className="flex items-center justify-end gap-2 mt-3">
                       {editLog && (

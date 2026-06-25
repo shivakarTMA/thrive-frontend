@@ -307,55 +307,59 @@ const MemberList = (props) => {
   };
 
   // 🚀 Fetch staff list from API
-  const fetchStaff = async (clubId) => {
-    try {
-      const requests = [
-        authAxios().get("/staff/list", {
-          params: { role: "FOH", club_id: clubId },
-        }),
-      ];
-
-      if (userRole === "CLUB_MANAGER") {
-        requests.push(
-          authAxios().get("/staff/list", {
-            params: { role: "FOH", club_id: clubId },
-          }),
-        );
-      }
-
-      if (userRole === "ADMIN") {
-        requests.push(
-          authAxios().get("/staff/list", {
-            params: { role: "CLUB_MANAGER", club_id: clubId },
-          }),
-        );
-      }
-
-      const responses = await Promise.all(requests);
-
-      let mergedData = [];
-
-      responses.forEach((res) => {
-        const role = res.config.params.role; // ✅ more reliable than URL.includes
-
-        const users = (res.data?.data || []).map((user) => ({
-          ...user,
-          role,
-        }));
-
-        mergedData.push(...users);
-      });
-
-      const uniqueData = Array.from(
-        new Map(mergedData.map((user) => [user.id, user])).values(),
-      );
-
-      const activeOnly = filterActiveItems(uniqueData);
-      setStaffList(activeOnly);
-    } catch (err) {
-      console.error(err);
-    }
-  };
+ const fetchStaff = async (clubId) => {
+     try {
+       const requests = [
+         authAxios().get("/staff/list", {
+           params: { role: "FOH", club_id: clubId },
+         }),
+       ];
+ 
+       if (
+         userRole === "CLUB_MANAGER"
+       ) {
+         requests.push(
+           authAxios().get("/staff/list", {
+             params: { role: "FOH", club_id: clubId },
+           }),
+         );
+       }
+ 
+       if (
+         userRole === "ADMIN"
+       ) {
+         requests.push(
+           authAxios().get("/staff/list", {
+             params: { role: "CLUB_MANAGER", club_id: clubId },
+           }),
+         );
+       }
+ 
+       const responses = await Promise.all(requests);
+ 
+       let mergedData = [];
+ 
+       responses.forEach((res) => {
+         const role = res.config.params.role; // ✅ more reliable than URL.includes
+ 
+         const users = (res.data?.data || []).map((user) => ({
+           ...user,
+           role,
+         }));
+ 
+         mergedData.push(...users);
+       });
+ 
+       const uniqueData = Array.from(
+         new Map(mergedData.map((user) => [user.id, user])).values(),
+       );
+ 
+       const activeOnly = filterActiveItems(uniqueData);
+       setStaffList(activeOnly);
+     } catch (err) {
+       console.error(err);
+     }
+   };
 
   // Initial load effect
   useEffect(() => {
@@ -683,51 +687,97 @@ const hasMemberPermission = (permission) =>
           </div>
 
           <div className="w-fit bg-white shodow--box rounded-[10px] px-5 py-2">
-            <div className="flex items-center">
+            {/* <div className="flex items-center">
               <div className="w-fit flex items-center gap-2 border-r">
-                <div className="text-sm font-medium text-gray-600 flex gap-2 items-center">
-                  <FaCircle className="text-[10px] text-[#009EB2]" /> Active Members
+                <div className="text-md font-medium text-gray-600 flex gap-2 items-center">
+                  <FaCircle className="text-[10px] text-[#009EB2]" /> Total
+                  Members
                 </div>
                 <div className="pr-2">
-                  <span className="text-sm font-semibold">
-                    {dashboardData?.snapshot?.total_active_members}
+                  <span className="text-md font-semibold">
+                    {stats?.total_members}
                   </span>
                 </div>
               </div>
               <div className="w-fit flex items-center gap-2 border-r pl-2">
-                <div className="text-sm font-medium text-gray-600 flex gap-2 items-center">
+                <div className="text-md font-medium text-gray-600 flex gap-2 items-center">
                   <FaCircle className="text-[10px] text-[#1F9254]" />
-                  Active PT Members
+                  Active Members
                 </div>
                 <div className="pr-2">
-                  <span className="text-sm font-semibold">
-                    {dashboardData?.snapshot?.total_active_pt_members}
+                  <span className="text-md font-semibold">
+                    {stats?.active_members}
                   </span>
                 </div>
               </div>
               <div className="w-fit flex items-center gap-2 border-r pl-2">
-                <div className="text-sm font-medium text-gray-600 flex gap-2 items-center">
+                <div className="text-md font-medium text-gray-600 flex gap-2 items-center">
                   <FaCircle className="text-[10px] text-[#ff9900]" />
-                  Irregular Members
+                  Inactive Members
                 </div>
                 <div className="pr-2">
-                  <span className="text-sm font-semibold">
-                    {dashboardData?.snapshot?.total_irregular_members}
+                  <span className="text-md font-semibold">
+                    {stats?.inactive_members}
                   </span>
                 </div>
               </div>
               <div className="w-fit flex items-center gap-2 pl-2">
-                <div className="text-sm font-medium text-gray-600 flex gap-2 items-center">
+                <div className="text-md font-medium text-gray-600 flex gap-2 items-center">
                   <FaCircle className="text-[10px] text-[#FF0000]" />
-                  Inactive Members
+                  Expired Members
                 </div>
                 <div>
-                  <span className="text-sm font-semibold">
-                    {dashboardData?.snapshot?.total_inactive_members}
+                  <span className="text-md font-semibold">
+                    {stats?.expired_members ? stats?.expired_members : 0}
                   </span>
                 </div>
               </div>
+            </div> */}
+            <div className="flex items-center">
+          <div className="w-fit flex items-center gap-2 border-r">
+            <div className="text-sm font-medium text-gray-600 flex gap-2 items-center">
+              <FaCircle className="text-[10px] text-[#009EB2]" /> Active Members
             </div>
+            <div className="pr-2">
+              <span className="text-sm font-semibold">
+                {dashboardData?.snapshot?.total_active_members}
+              </span>
+            </div>
+          </div>
+          <div className="w-fit flex items-center gap-2 border-r pl-2">
+            <div className="text-sm font-medium text-gray-600 flex gap-2 items-center">
+              <FaCircle className="text-[10px] text-[#1F9254]" />
+              Active PT Members
+            </div>
+            <div className="pr-2">
+              <span className="text-sm font-semibold">
+                {dashboardData?.snapshot?.total_active_pt_members}
+              </span>
+            </div>
+          </div>
+          <div className="w-fit flex items-center gap-2 border-r pl-2">
+            <div className="text-sm font-medium text-gray-600 flex gap-2 items-center">
+              <FaCircle className="text-[10px] text-[#ff9900]" />
+              Irregular Members
+            </div>
+            <div className="pr-2">
+              <span className="text-sm font-semibold">
+                {dashboardData?.snapshot?.total_irregular_members}
+              </span>
+            </div>
+          </div>
+          <div className="w-fit flex items-center gap-2 pl-2">
+            <div className="text-sm font-medium text-gray-600 flex gap-2 items-center">
+              <FaCircle className="text-[10px] text-[#FF0000]" />
+              Inactive Members
+            </div>
+            <div>
+              <span className="text-sm font-semibold">
+                {dashboardData?.snapshot?.total_inactive_members}
+              </span>
+            </div>
+          </div>
+        </div>
           </div>
         </div>
 
@@ -875,8 +925,8 @@ const hasMemberPermission = (permission) =>
                         Confirm Assignment
                       </h2>
                       <p className="mb-4">
-                        Are you sure you want to change{" "}
-                        <strong>{selectedUserId.length}</strong> Trainer to{" "}
+                        Are you sure you want to assign{" "}
+                        <strong>{selectedUserId.length}</strong> member(s) to{" "}
                         <strong>{bulkOwner?.label}</strong>?
                       </p>
                       <div className="flex justify-center gap-4">
@@ -906,6 +956,7 @@ const hasMemberPermission = (permission) =>
                 <thead className="text-xs text-gray-700 uppercase bg-gray-50">
                   <tr>
                     {(userRole === "CLUB_MANAGER" ||
+                      userRole === "ASS_CLUB_MANAGER" ||
                       userRole === "MARKETING_MANAGER" ||
                       userRole === "ADMIN") && (
                       <th className="px-2 py-4 min-w-[50px]">#</th>
@@ -937,6 +988,7 @@ const hasMemberPermission = (permission) =>
                       className="group bg-white border-b relative hover:bg-gray-50"
                     >
                       {(userRole === "CLUB_MANAGER" ||
+                        userRole === "ASS_CLUB_MANAGER" ||
                         userRole === "MARKETING_MANAGER" ||
                         userRole === "ADMIN") && (
                         <td className="px-2 py-4">
@@ -1067,6 +1119,7 @@ const hasMemberPermission = (permission) =>
                         </div>
 
                         {/* Member Action */}
+                        {/* <div className="absolute hidden group-hover:flex gap-2 right-0 h-full top-0 w-[50%] items-center justify-end bg-[linear-gradient(269deg,_#ffffff_30%,_transparent)] pr-5 transition duration-700"> */}
                         <div
                           className={`absolute gap-2 right-0 h-full top-0 w-[50%] items-center justify-end
                           bg-[linear-gradient(269deg,_#ffffff_30%,_transparent)]
@@ -1080,13 +1133,15 @@ const hasMemberPermission = (permission) =>
                               : "hidden"
                           }`}
                         >
-                          <div className="flex gap-1 h-[100%] items-center">
+                          <div className="flex gap-1">
                             {(userRole === "ADMIN" ||
                               userRole === "CLUB_MANAGER" ||
-                              userRole === "FOH" ||
-                              userRole === "FITNESS_MANAGER" ||
-                              userRole === "TRAINER" ||
-                              userRole === "MARKETING_MANAGER" ||
+                              userRole === "ASS_CLUB_MANAGER" ||
+                              userRole === "FOH" || 
+                              userRole === "FITNESS_MANAGER" || 
+                              userRole === "ASS_FITNESS_MANAGER" || 
+                              userRole === "TRAINER" || 
+                              userRole === "PROGRAM_SPECIALIST" || 
                               userRole === "FINANCE_MANAGER") && (
                               <Tooltip
                                 id={`edit-member-${member?.id}`}
@@ -1107,7 +1162,10 @@ const hasMemberPermission = (permission) =>
                             {(userRole === "FOH" ||
                               userRole === "TRAINER" ||
                               userRole === "FITNESS_MANAGER" ||
+                              userRole === "ASS_FITNESS_MANAGER" ||
                               userRole === "CLUB_MANAGER" ||
+                              userRole === "ASS_CLUB_MANAGER" ||
+                              userRole === "PROGRAM_SPECIALIST" ||
                               userRole === "ADMIN") && (
                               <Tooltip
                                 id={`member-call-${member?.id}`}
@@ -1127,176 +1185,30 @@ const hasMemberPermission = (permission) =>
 
                             {(userRole === "FOH" ||
                               userRole === "CLUB_MANAGER" ||
+                              userRole === "ASS_CLUB_MANAGER" ||
+                              userRole === "PROGRAM_SPECIALIST" ||
                               userRole === "ADMIN") && (
-                              <div className="relative">
-                                
-                                {/* {member?.is_subscribed !== true ? null : (
+                                <>
+                                {member?.is_subscribed !== true ? null : (
                                   <Tooltip
                                     id={`send-payment-${member?.id}`}
-                                    content={
-                                      member?.is_kyc === "YES"
-                                        ? "Action"
-                                        : "KYC required to buy services"
-                                    }
+                                    content="Buy services"
                                     place="left"
                                   >
                                     <div
-                                      className={`relative list--service ${
-                                        member?.is_kyc === "YES"
-                                          ? "cursor-pointer"
-                                          : "cursor-not-allowed opacity-50"
-                                      }`}
+                                      className="p-1 cursor-pointer"
+                                      onClick={() => {
+                                        setSelectedLeadMember(member.id);
+                                        setInvoiceModal(true);
+                                        setSelectedLeadClub(member?.club_id);
+                                      }}
                                     >
-                                     
-                                      <div className="p-1 ">
-                                        <IoIosAddCircleOutline className="text-[25px] text-black" />
-                                      </div>
-
-                                      
-                                      {member?.is_kyc === "YES" && (
-                                        <div className="fixed right-0 top-[auto] mr-[60px] bg-white rounded shadow-lg z-10 flex-col min-w-[150px] hidden list--service--dropdown">
-                                          <div
-                                            className="cursor-pointer flex gap-2 items-center text-black p-2 hover:bg-gray-100"
-                                            onClick={() => {
-                                              setSelectedLeadMember(member.id);
-                                              setInvoiceModal(true);
-                                              setSelectedLeadClub(
-                                                member?.club_id,
-                                              );
-                                            }}
-                                          >
-                                            <IoLayersOutline className="text-[25px] text-black" />
-                                            Buy Services
-                                          </div>
-                                      
-                                        {hasProductServices && (
-                                          <div
-                                            className="cursor-pointer flex gap-2 items-center border-t text-black p-2 hover:bg-gray-100"
-                                            onClick={() => {
-                                              setSelectedLeadMember(member.id);
-                                              setProductInvoiceModal(true);
-                                              setSelectedLeadClub(
-                                                member?.club_id,
-                                              );
-                                            }}
-                                          >
-                                            <IoFastFoodOutline className="text-[25px] text-black" />
-                                            Buy Products
-                                          </div>
-                                        )}
-                                        </div>
-                                      )}
-                                    </div>
-                                  </Tooltip>
-                                )} */}
-                                {member?.is_subscribed === true && (
-                                  <Tooltip
-                                    id={`send-payment-${member?.id}`}
-                                    content={
-                                      member?.is_kyc === "YES"
-                                        ? "Buy"
-                                        : "KYC required to buy services"
-                                    }
-                                    place="left"
-                                  >
-                                    <div
-                                      className={`min-w-[50px] ${
-                                        member?.is_kyc === "YES"
-                                          ? ""
-                                          : "pointer-events-none opacity-50"
-                                      }`}
-                                    >
-                                      <Select
-                                        options={getOptions(member)}
-                                        components={{
-                                          Option: customOption,
-                                          IndicatorSeparator: () => null,
-                                        }}
-                                        isSearchable={false}
-                                        controlShouldRenderValue={false}
-                                        placeholder={
-                                          <div className="flex items-center justify-center w-full">
-                                            <IoIosAddCircleOutline className="text-[24px] text-black" />
-                                          </div>
-                                        }
-                                        menuPlacement="auto"
-                                        onChange={(selected) => {
-                                          if (selected.value === "services") {
-                                            setSelectedLeadMember(member.id);
-                                            setInvoiceModal(true);
-                                            setSelectedLeadClub(
-                                              member?.club_id,
-                                            );
-                                          }
-
-                                          if (selected.value === "products") {
-                                            setSelectedLeadMember(member.id);
-                                            setProductInvoiceModal(true);
-                                            setSelectedLeadClub(
-                                              member?.club_id,
-                                            );
-                                          }
-                                        }}
-                                        // menuIsOpen={true}
-                                        styles={{
-                                          control: (base) => ({
-                                            ...base,
-                                            minHeight: "30px",
-                                            width: "30px",
-                                            border: "none",
-                                            boxShadow: "none",
-                                            background: "transparent",
-                                            cursor: "pointer",
-                                          }),
-
-                                          valueContainer: (base) => ({
-                                            ...base,
-                                            padding: 0,
-                                            justifyContent: "center",
-                                          }),
-
-                                          placeholder: (base) => ({
-                                            ...base,
-                                            margin: 0,
-                                            position: "absolute",
-                                            top: "50%",
-                                            transform: "translateY(-50%)",
-                                            left: "-12px",
-                                          }),
-
-                                          dropdownIndicator: (base) => ({
-                                            ...base,
-                                            display: "none",
-                                          }),
-
-                                          indicatorsContainer: (base) => ({
-                                            ...base,
-                                            display: "none",
-                                          }),
-
-                                          menu: (base) => ({
-                                            ...base,
-                                            zIndex: 9999,
-                                            width: "180px",
-                                            right: 0,
-                                            top: "100%",
-                                            backgroundColor: "white",
-                                            color: "black",
-                                            // marginTop: "-5px",
-                                          }),
-                                          menuPortal: (base) => ({
-                                            ...base,
-                                            zIndex: 9999,
-                                          }),
-                                        }}
-                                        menuPortalTarget={document.body}
-                                        menuPosition="fixed"
-                                      />
+                                      <IoIosAddCircleOutline className="text-[25px] text-black" />
                                     </div>
                                   </Tooltip>
                                 )}
-                              </div>
-                            )}
+                                </>
+                              )}
                           </div>
                         </div>
                         {/* Member Action End */}

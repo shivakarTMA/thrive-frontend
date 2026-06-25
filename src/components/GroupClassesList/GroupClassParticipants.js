@@ -212,9 +212,7 @@ const GroupClassParticipants = () => {
 
                         <td className="px-2 py-4">
                           {userRole === "CLUB_MANAGER" ||
-                          userRole === "MARKETING_MANAGER" ||
                           userRole === "FITNESS_MANAGER" ||
-                          userRole === "TRAINER" ||
                           userRole === "ADMIN" ? (
                             <>
                               {(() => {

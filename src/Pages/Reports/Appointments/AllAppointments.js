@@ -23,8 +23,8 @@ import { useFormik } from "formik";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchClubTiming } from "../../../Redux/Reducers/clubTimingSlice";
 import { useClubDatePickerProps } from "../../../hooks/useClubDatePickerProps";
-import { LuDownload } from "react-icons/lu";
 import IsLoadingHOC from "../../../components/common/IsLoadingHOC";
+import { LuDownload } from "react-icons/lu";
 
 // Date filter dropdown options
 const dateFilterOptions = [
@@ -586,7 +586,7 @@ const AllAppointments = (props) => {
     return () => clearInterval(interval);
   }, []);
 
-  const handleExportBookings = async () => {
+   const handleExportBookings = async () => {
     try {
       setLoading(true);
 
@@ -907,7 +907,10 @@ const AllAppointments = (props) => {
                           {userRole === "FOH" ||
                           userRole === "TRAINER" ||
                           userRole === "FITNESS_MANAGER" ||
+                          userRole === "ASS_FITNESS_MANAGER" ||
                           userRole === "CLUB_MANAGER" ||
+                          userRole === "ASS_CLUB_MANAGER" ||
+                          userRole === "PROGRAM_SPECIALIST" ||
                           userRole === "ADMIN" ? (
                             <div className="max-w-[130px] w-full">
                               <Select

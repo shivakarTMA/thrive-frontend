@@ -450,7 +450,7 @@ const ProductsSold = (props) => {
       //   1: "DICCL",
       //   4: "DCCDL",
       // };
-       const selectedClub = clubOptions.find(
+      const selectedClub = clubOptions.find(
         (club) => club.value === clubIdExport
       );
 
@@ -491,7 +491,7 @@ const ProductsSold = (props) => {
     }
   };
 
-const handleExportProductsSold = async () => {
+  const handleExportProductsSold = async () => {
     try {
       setLoading(true);
 
@@ -554,6 +554,8 @@ const handleExportProductsSold = async () => {
       setLoading(false);
     }
   };
+
+  console.log(clubOptions,'clubOptions')
 
   return (
     <>
@@ -640,7 +642,7 @@ const handleExportProductsSold = async () => {
           </div>
           {!ALLOWED_ROLES.includes(userRole) && (
             <>
-           <div className="max-w-[150px] w-full">
+            <div className="max-w-[150px] w-full">
               <button
                 onClick={() => setExportShowModal(true)}
                 className={`ms-auto w-full px-4 py-2 rounded flex items-center gap-2 bg-black text-white hover:bg-gray-800`}
@@ -801,7 +803,7 @@ const handleExportProductsSold = async () => {
                   {productSoldData.length > 0 ? (
                     productSoldData.map((row, idx) => (
                       <tr
-                        key={row.order_id}
+                       key={row.order_id}
                         className="bg-white border-b hover:bg-gray-50 border-gray-200"
                       >
                         {/* <td className="px-2 py-4">{row?.serialNumber}</td> */}

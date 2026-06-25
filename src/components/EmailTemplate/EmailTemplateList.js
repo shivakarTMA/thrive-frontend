@@ -171,8 +171,9 @@ const EmailTemplateList = () => {
                         {formatAutoDate(item?.createdAt)}
                       </td>
                       <td className="px-2 py-4">
-                        {(userRole === "ADMIN" ||
-                        userRole === "MARKETING_MANAGER") ? (
+                        {(
+                          userRole === "ADMIN" || userRole === "MARKETING_MANAGER"
+                        ) ? (
                           <div className="flex">
                             <Tooltip
                               id={`tooltip-edit-${item.id}`}

@@ -1,13 +1,9 @@
 import React, { useCallback, useEffect, useState } from "react";
 import SalesSummary from "../components/common/SalesSummary";
 import totalSalesIcon from "../assets/images/icons/rupee-box.png";
-import newClientIcon from "../assets/images/icons/clients.png";
 import renewalIcon from "../assets/images/icons/renewal.png";
-import enquiriesIcon from "../assets/images/icons/conversion.png";
 import trialIcon from "../assets/images/icons/trial.png";
-import checkInIcon from "../assets/images/icons/checkin.png";
 import eyeIcon from "../assets/images/icons/eye.svg";
-import PendingOrderTable from "../components/PendingOrderTable";
 import { FaCircle } from "react-icons/fa";
 import { FaCalendarDays } from "react-icons/fa6";
 import Select from "react-select";
@@ -20,13 +16,10 @@ import {
 } from "../Helper/helper";
 import { addYears, format, subYears, addDays } from "date-fns";
 import { Link, useNavigate } from "react-router-dom";
-import HighchartsReact from "highcharts-react-official";
-import Highcharts from "highcharts";
 import SummaryDashboard from "../components/common/SummaryDashboard";
 import { LiaAngleLeftSolid, LiaAngleRightSolid } from "react-icons/lia";
 import { authAxios } from "../config/config";
-import { toast } from "react-toastify";
-import SolidGaugeChart from "../components/ClubManagerChild/SolidGaugeChart";
+import CalendarView from "../components/TrainerDashboardChild/CalendarView";
 import { useSelector } from "react-redux";
 
 const routeMap = {
@@ -47,31 +40,7 @@ const dateFilterOptions = [
   { value: "custom", label: "Custom Date" },
 ];
 
-const classPerformance = [
-  {
-    id: 1,
-    classType: "Group Classes",
-    bookings: 4,
-    reservations: 95,
-    cancellations: 3,
-    url: "/group-class",
-  },
-  {
-    id: 2,
-    classType: "Sessions",
-    bookings: 10,
-    reservations: 10,
-    cancellations: 0,
-    url: "/reports/all-bookings",
-  },
-];
-Highcharts.setOptions({
-  accessibility: {
-    enabled: false,
-  },
-});
-
-const FinanceManagerDashboard = () => {
+const ProgramSpecialistDashboard = () => {
   const days = [
     { label: "Yesterday", value: "yesterday" },
     { label: "Today", value: "today" },
@@ -86,24 +55,13 @@ const FinanceManagerDashboard = () => {
   const [clubList, setClubList] = useState([]);
   const [clubFilter, setClubFilter] = useState(null);
 
-  // Product Sold
-  const [productSeries, setProductSeries] = useState([]);
-  const [productCategories, setProductCategories] = useState([]);
-  const [totalProductValue, setTotalProductValue] = useState(0);
-
-  // Enquiry
-  const [leadCategories, setLeadCategories] = useState([]);
-  const [leadSeries, setLeadSeries] = useState([]);
-  const [totalLeads, setTotalLeads] = useState(0);
-
-  // Pending Orders
-  const [orders, setOrders] = useState([]);
-
   // Summary Data
   const [summaryData, setSummaryData] = useState({});
 
+  // Class Performance
+  const [classPerformance, setClassPerformance] = useState([]);
+
   const { user } = useSelector((state) => state.auth);
-  const currentUserRole = user?.role; // Example, dynamically from user info
   const [profileData, setUserClubs] = useState("");
   const [hasProductServices, setHasProductServices] = useState(false);
   // const [hasRecoveryServices, setHasRecoveryServices] = useState(false);
@@ -173,6 +131,61 @@ const FinanceManagerDashboard = () => {
     fetchServices();
   }, [profileData]);
 
+  const fetchClassPerformanceData = async () => {
+    try {
+      const params = {};
+      // Date filter (non-custom)
+      if (dateFilter?.value && dateFilter.value !== "custom") {
+        params.dateFilter = dateFilter.value;
+      }
+
+      // Custom date filter
+      if (dateFilter?.value === "custom" && customFrom && customTo) {
+        params.startDate = format(customFrom, "yyyy-MM-dd");
+        params.endDate = format(customTo, "yyyy-MM-dd");
+      }
+
+      // Club filter
+      if (clubFilter?.value) {
+        params.club_id = clubFilter.value;
+      }
+
+      const res = await authAxios().get(
+        "/dashboard/class/performances/overview",
+        { params },
+      );
+      const overview = res.data?.data?.overview;
+
+      if (!overview) {
+        setClassPerformance([]);
+        return;
+      }
+
+      // 🔥 Transform object → array
+      const formattedData = [
+        {
+          id: 1,
+          classType: "Group Classes",
+          scheduled: overview.group_classes?.scheduled || 0,
+          active: overview.group_classes?.active || 0,
+          canceled: overview.group_classes?.canceled || 0,
+          url: "/group-class",
+        },
+        {
+          id: 2,
+          classType: "Sessions",
+          scheduled: overview.sessions?.scheduled || 0,
+          active: overview.sessions?.active || 0,
+          canceled: overview.sessions?.canceled || 0,
+          url: "/reports/all-bookings",
+        },
+      ];
+
+      setClassPerformance(formattedData);
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   const fetchSummaryReport = useCallback(async () => {
     try {
@@ -202,44 +215,11 @@ const FinanceManagerDashboard = () => {
         ClientAnniversaries: apiSummary.client_anniversaries ?? 0,
       };
 
-      console.log(formattedSummary, "formattedSummary");
-
       setSummaryData(formattedSummary);
     } catch (error) {
       console.error("Failed to fetch summary report:", error);
     }
   }, [clubFilter, currentDayIndex]);
-
-  const fetchPendingOrdersData = async () => {
-    try {
-      const params = {};
-      // Date filter (non-custom)
-      if (dateFilter?.value && dateFilter.value !== "custom") {
-        params.dateFilter = dateFilter.value;
-      }
-
-      // Custom date filter
-      if (dateFilter?.value === "custom" && customFrom && customTo) {
-        params.startDate = format(customFrom, "yyyy-MM-dd");
-        params.endDate = format(customTo, "yyyy-MM-dd");
-      }
-
-      // Club filter
-      if (clubFilter?.value) {
-        params.club_id = clubFilter.value;
-      }
-
-      const res = await authAxios().get(
-        "/dashboard/product/pending/order/list?fulfilment_status=PLACED",
-        { params },
-      );
-      let data = res.data?.data || res.data || [];
-
-      setOrders(data);
-    } catch (err) {
-      console.error(err);
-    }
-  };
 
   const fetchDashboardData = async () => {
     try {
@@ -266,87 +246,6 @@ const FinanceManagerDashboard = () => {
       setDashboardData(data);
     } catch (err) {
       console.error(err);
-    }
-  };
-
-  const fetchProductStatus = async () => {
-    try {
-      const params = {};
-
-      // Date filter
-      if (dateFilter?.value && dateFilter.value !== "custom") {
-        params.dateFilter = dateFilter.value;
-      }
-
-      // Custom date filter
-      if (dateFilter?.value === "custom" && customFrom && customTo) {
-        params.startDate = format(customFrom, "yyyy-MM-dd");
-        params.endDate = format(customTo, "yyyy-MM-dd");
-      }
-
-      // Club filter
-      if (clubFilter?.value) {
-        params.club_id = clubFilter.value;
-      }
-
-      const res = await authAxios().get("/dashboard/service/count", { params });
-
-      const apiData = res.data?.data || {};
-      const services = apiData.service_wise_count || [];
-
-      setTotalProductValue(apiData.total_count || 0);
-
-      // 🟢 Fully dynamic
-      const categories = services.map((item) => item.service_name);
-      const seriesData = services.map((item) => item.count);
-
-      setProductCategories(categories);
-      setProductSeries(seriesData);
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
-  const fetchLeadStatus = async () => {
-    try {
-      const params = {};
-
-      // Date filter
-      if (dateFilter?.value && dateFilter.value !== "custom") {
-        params.dateFilter = dateFilter.value;
-      }
-
-      // Custom date filter
-      if (dateFilter?.value === "custom" && customFrom && customTo) {
-        params.startDate = format(customFrom, "yyyy-MM-dd");
-        params.endDate = format(customTo, "yyyy-MM-dd");
-      }
-
-      // Club filter
-      if (clubFilter?.value) {
-        params.club_id = clubFilter.value;
-      }
-
-      const res = await authAxios().get("/dashboard/enquiry/count", { params });
-
-      const apiData = res.data?.data || {};
-      const statuses = apiData.lead_status_count || [];
-
-      setTotalLeads(apiData.total_count || 0);
-
-      // Optional: Friendly names (capitalize first letter)
-      const categories = statuses.map((item) =>
-        item.lead_status
-          .split(" ")
-          .map((w) => w[0].toUpperCase() + w.slice(1))
-          .join(" "),
-      );
-      const seriesData = statuses.map((item) => item.count);
-
-      setLeadCategories(categories);
-      setLeadSeries(seriesData);
-    } catch (error) {
-      console.error(error);
     }
   };
 
@@ -385,25 +284,13 @@ const FinanceManagerDashboard = () => {
 
   useEffect(() => {
     if (dateFilter?.value !== "custom" || (customFrom && customTo)) {
-      fetchPendingOrdersData();
+      fetchClassPerformanceData();
     }
   }, [dateFilter, customFrom, customTo, clubFilter]);
 
   useEffect(() => {
     if (dateFilter?.value !== "custom" || (customFrom && customTo)) {
       fetchDashboardData();
-    }
-  }, [dateFilter, customFrom, customTo, clubFilter]);
-
-  useEffect(() => {
-    if (dateFilter?.value !== "custom" || (customFrom && customTo)) {
-      fetchProductStatus();
-    }
-  }, [dateFilter, customFrom, customTo, clubFilter]);
-
-  useEffect(() => {
-    if (dateFilter?.value !== "custom" || (customFrom && customTo)) {
-      fetchLeadStatus();
     }
   }, [dateFilter, customFrom, customTo, clubFilter]);
 
@@ -415,196 +302,6 @@ const FinanceManagerDashboard = () => {
   const selectedClub = clubOptions.find(
     (option) => option.value === clubFilter?.value,
   );
-
-  // Enquiry line chart
-  const maxValueLeads = Math.max(...leadSeries, 0);
-
-  const leadsStatus = {
-    accessibility: {
-      enabled: false,
-    },
-    chart: { type: "column", height: 300 },
-    title: {
-      text: "Enquiries",
-      align: "left",
-      style: {
-        fontSize: "1.125rem",
-        fontWeight: "700",
-        fontFamily: "Roboto, sans-serif",
-        color: "#000",
-      },
-    },
-    xAxis: {
-      categories: leadCategories,
-      labels: {
-        style: {
-          fontSize: "12px",
-          fontWeight: "700",
-          fontFamily: "Roboto, sans-serif",
-        },
-      },
-    },
-    yAxis: {
-      min: 0,
-      tickInterval: Math.max(1, Math.ceil(maxValueLeads / 5)),
-      title: { text: null },
-    },
-    legend: { enabled: false },
-    tooltip: {
-      useHTML: true,
-      outside: true,
-      style: {
-        zIndex: 9999,
-      },
-      formatter: function () {
-        const label = this.point.category; // dynamic label
-        const value = this.y; // count
-
-        return `<b>${label}</b><br/>Count: <b>${value}</b>`;
-      },
-    },
-    plotOptions: {
-      column: {
-        pointWidth: 30,
-        borderWidth: 0,
-        pointPadding: 0.1,
-        groupPadding: 0.05,
-        width: 50,
-        color: {
-          linearGradient: { x1: 0, y1: 0, x2: 0, y2: 1 },
-          stops: [
-            [0, "#009EB2"],
-            [1, "#EC71BC"],
-          ],
-        },
-      },
-      series: {
-        cursor: "pointer",
-        point: {
-          events: {
-            click: function () {
-              const category = this.category;
-
-              let target;
-
-              if (category.toLowerCase() === "won") {
-                // 👑 Special case for Won
-                target = generateUrl(
-                  "/reports/sales-reports/membership-sales-report",
-                );
-              } else {
-                // 🔁 Default for all other statuses
-                target = generateUrl(
-                  `/reports/sales-reports/all-enquiries-report?lead_status=${category}`,
-                );
-              }
-              window.location.href = target;
-            },
-          },
-        },
-      },
-    },
-    series: [{ name: "Leads", data: leadSeries }],
-    credits: { enabled: false },
-  };
-
-  // Product Sold Chart
-  const maxValue = Math.max(...productSeries, 0);
-
-  const productStatus = {
-    accessibility: {
-      enabled: false,
-    },
-    chart: {
-      type: "column",
-      height: 300,
-    },
-    title: {
-      text: "Product Sold",
-      align: "left",
-      style: {
-        fontSize: "1.125rem",
-        fontWeight: "700",
-        fontFamily: "Roboto, sans-serif",
-        color: "#000",
-      },
-    },
-    xAxis: {
-      categories: productCategories,
-      labels: {
-        style: {
-          fontSize: "12px",
-          fontWeight: "700",
-          fontFamily: "Roboto, sans-serif",
-        },
-        formatter: function () {
-          if (this.value === "SUBSCRIPTION") return "Membership";
-          if (this.value === "PRODUCT") return "Nourish";
-          return this.value; // everything else stays dynamic
-        },
-      },
-    },
-    yAxis: {
-      min: 0,
-      tickInterval: Math.max(1, Math.ceil(maxValue / 5)),
-      title: { text: null },
-    },
-    legend: { enabled: false },
-    tooltip: {
-      outside: true,
-      formatter: function () {
-        let label = this.point.category;
-
-        console.log(label, "map label");
-
-        if (label === "SUBSCRIPTION") label = "Membership";
-        if (label === "PRODUCT") label = "Nourish";
-
-        return `<b>${label}</b><br/>Count: <b>${this.y}</b>`;
-      },
-    },
-
-    plotOptions: {
-      column: {
-        pointWidth: 30,
-        borderWidth: 0,
-        color: {
-          linearGradient: { x1: 0, y1: 0, x2: 0, y2: 1 },
-          stops: [
-            [0, "#009EB2"],
-            [1, "#EC71BC"],
-          ],
-        },
-      },
-      series: {
-        cursor: "pointer",
-        point: {
-          events: {
-            click: function () {
-              const value = this.category;
-              const isPackageType =
-                value === "SUBSCRIPTION" || value === "PRODUCT";
-
-              const paramKey = isPackageType ? "package_type" : "service_type";
-              const target = generateUrl(
-                `/reports/all-orders?${paramKey}=${value}`,
-              );
-              window.location.href = target;
-            },
-          },
-        },
-      },
-    },
-    series: [
-      {
-        name: "Service",
-        data: productSeries,
-      },
-    ],
-    credits: { enabled: false },
-  };
-
-  // End Product Sold Chart
 
   // Handler to move to previous day
   const handlePrevious = () => {
@@ -855,9 +552,7 @@ const FinanceManagerDashboard = () => {
                       dashboardData?.summary_cards?.total_sales?.breakup
                         ?.memberships,
                     )}`,
-                    link: generateUrl(
-                      `/reports/all-orders?package_type=SUBSCRIPTION`,
-                    ),
+                    link: generateUrl(`/reports/all-orders?package_type=SUBSCRIPTION`),
                   },
                   {
                     label: "Packages",
@@ -873,109 +568,48 @@ const FinanceManagerDashboard = () => {
                     //   dashboardData?.summary_cards?.total_sales?.breakup
                     //     ?.products,
                     // )}`,
-                    // link: generateUrl(`/reports/all-orders?package_type=PRODUCT`),
-                  // },
-                  ...(hasProductServices
-                    ? [
-                        {
-                          label: "Nourish",
-                          value: `₹${formatIndianNumber(dashboardData?.summary_cards?.total_sales?.breakup?.products)}`,
-                          link: generateUrl(`/reports/all-orders?package_type=PRODUCT`),
-                        },
-                      ]
-                    : []),
-                ]}
-              />
-
-              <SalesSummary
-                icon={newClientIcon}
-                title="New Sales"
-                titleLink={generateUrl(`/reports/all-orders?bill_type=NEW`)}
-                totalSales={dashboardData?.summary_cards?.new_clients?.total}
-                items={[
-                  {
-                    label: "Memberships",
-                    value:
-                      dashboardData?.summary_cards?.new_clients?.breakup
-                        ?.memberships,
-                    link: generateUrl(
-                      `/reports/all-orders?bill_type=NEW&package_type=SUBSCRIPTION`,
-                    ),
-                  },
-                  {
-                    label: "Packages",
-                    value:
-                      dashboardData?.summary_cards?.new_clients?.breakup
-                        ?.packages,
-                    link: generateUrl(
-                      `/reports/all-orders?bill_type=NEW&package_type=PACKAGE`,
-                    ),
-                  },
-                  // {
-                  //   label: "Nourish",
-                    // value:
-                    //   dashboardData?.summary_cards?.new_clients?.breakup
-                    //     ?.products,
                     // link: generateUrl(
-                    //   `/reports/all-orders?bill_type=NEW&package_type=PRODUCT`,
+                    //   `/reports/all-orders?package_type=PRODUCT`,
                     // ),
                   // },
                   ...(hasProductServices
-                    ? [
-                        {
-                          label: "Nourish",
-                          value: dashboardData?.summary_cards?.new_clients?.breakup?.products,
-                          link: generateUrl(
-                            `/reports/all-orders?bill_type=NEW&package_type=PRODUCT`,
-                          ),
-                        },
-                      ]
-                    : []),
-
+                  ? [
+                      {
+                        label: "Nourish",
+                        value: `₹${formatIndianNumber(dashboardData?.summary_cards?.total_sales?.breakup?.products)}`,
+                        link: generateUrl(`/reports/all-orders?package_type=PRODUCT`),
+                      },
+                    ]
+                  : []),
                 ]}
               />
+
               <SalesSummary
                 icon={renewalIcon}
-                title="Renewal"
-                titleLink={generateUrl(`/reports/all-orders?bill_type=RENEWAL`)}
-                totalSales={dashboardData?.summary_cards?.renewals?.total}
+                title="Membership Sold"
+                titleLink={generateUrl(`/reports/all-orders?package_type=SUBSCRIPTION`)}
+                totalSales={dashboardData?.summary_cards?.total_members?.total_count}
                 items={[
                   {
-                    label: "Memberships",
-                    value:
-                      dashboardData?.summary_cards?.renewals?.breakup
-                        ?.memberships,
-                    link: generateUrl(
-                      `/reports/all-orders?bill_type=RENEWAL&package_type=SUBSCRIPTION`,
-                    ),
+                    label: "New Clients",
+                    value: dashboardData?.summary_cards?.total_members?.newMember,
+                    link:generateUrl(`/reports/all-orders?bill_type=NEW&package_type=SUBSCRIPTION`)
                   },
                   {
-                    label: "Packages",
-                    value:
-                      dashboardData?.summary_cards?.renewals?.breakup?.packages,
-                    link: generateUrl(
-                      `/reports/all-orders?bill_type=RENEWAL&package_type=PACKAGE`,
-                    ),
+                    label: "Renewals",
+                    value: dashboardData?.summary_cards?.total_members?.renewalMember,
+                    link:generateUrl(`/reports/all-orders?bill_type=RENEWAL&package_type=SUBSCRIPTION`)
                   },
-                  // {
-                  //   label: "Nourish",
-                    // value:
-                    //   dashboardData?.summary_cards?.renewals?.breakup?.products,
-                    // link: generateUrl(
-                    //   `/reports/all-orders?bill_type=RENEWAL&package_type=PRODUCT`,
-                    // ),
-                  // },
-                  ...(hasProductServices
-                    ? [
-                        {
-                          label: "Nourish",
-                          value: dashboardData?.summary_cards?.renewals?.breakup?.products,
-                          link: generateUrl(
-                            `/reports/all-orders?bill_type=RENEWAL&package_type=PRODUCT`,
-                          ),
-                        },
-                      ]
-                    : []),
+                                    {
+                    label: "Advanced renewal",
+                    value: dashboardData?.summary_cards?.total_members?.advanceRenewalMember,
+                    link:generateUrl(`/reports/all-orders?bill_type=ADVANCED_RENEWAL&package_type=SUBSCRIPTION`)
+                  },
+                  {
+                    label: "Returning User",
+                    value: dashboardData?.summary_cards?.total_members?.returningMember,
+                    link:generateUrl(`/reports/all-orders?bill_type=RETURNING&package_type=SUBSCRIPTION`)
+                  },
                 ]}
               />
 
@@ -1010,76 +644,9 @@ const FinanceManagerDashboard = () => {
                   },
                 ]}
               />
-              <SalesSummary
-                icon={enquiriesIcon}
-                title="Conversion"
-                titleLink={generateUrl(
-                  `/reports/sales-reports/membership-sales-report`,
-                )}
-                totalSales={`${dashboardData?.summary_cards?.conversion?.overall_percentage}%`}
-                items={[
-                  {
-                    label: "Lead To Trial",
-                    value: `${dashboardData?.summary_cards?.conversion?.lead_to_trial_percentage}%`,
-                    link: generateUrl(
-                      `/reports/appointments/all-trial-appointments`,
-                    ),
-                  },
-                  {
-                    label: "Trial To Membership",
-                    value: `${dashboardData?.summary_cards?.conversion?.trial_to_membership_percentage}%`,
-                    link: generateUrl(
-                      `/reports/sales-reports/membership-sales-report?trial_type=TRIAL`,
-                    ),
-                  },
-                ]}
-              />
-              <SalesSummary
-                icon={checkInIcon}
-                title="Check-ins"
-                titleLink={generateUrl(
-                  `/reports/operations-reports/member-checkins-report?`,
-                )}
-                totalSales={dashboardData?.summary_cards?.check_ins?.total}
-                items={[
-                  {
-                    label: "Unique Check-ins",
-                    value:
-                      dashboardData?.summary_cards?.check_ins?.unique_check_ins,
-                    link: generateUrl(
-                      `/reports/operations-reports/member-checkins-report?checkin-type=unique-check-in`,
-                    ),
-                  },
-                  {
-                    label: "Unique Members",
-                    value:
-                      dashboardData?.summary_cards?.check_ins?.unique_members,
-                    link: generateUrl(
-                      `/reports/operations-reports/member-checkins-report?checkin-type=unique-members`,
-                    ),
-                  },
-                ]}
-              />
-            </div>
-            <div className="mt-3 w-full grid grid-cols-8 gap-3">
-              <div className="border border-[#D4D4D4] rounded-[5px] bg-white p-1 pb-1 w-full relative col-span-4">
-                <span className="absolute top-[10px] right-[20px] z-[2] text-lg font-bold">
-                  {totalProductValue}
-                </span>
-                <HighchartsReact
-                  highcharts={Highcharts}
-                  options={productStatus}
-                />
-              </div>
-              <div className="border border-[#D4D4D4] rounded-[5px] bg-white p-1 pb-1 w-full relative col-span-4">
-                <span className="absolute top-[10px] right-[20px] z-[2] text-lg font-bold">
-                  {totalLeads}
-                </span>
-                <HighchartsReact highcharts={Highcharts} options={leadsStatus} />
-              </div>
             </div>
 
-            {/* <div className="border border-[#D4D4D4] rounded-[5px] bg-white p-2 pb-1 w-full relative mt-3">
+            <div className="border border-[#D4D4D4] rounded-[5px] bg-white p-3 pb-1 w-full relative mt-3">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="font-semibold">Class Performances Overview</h2>
               </div>
@@ -1095,21 +662,22 @@ const FinanceManagerDashboard = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {classPerformance.map((item, index) => (
+                    {classPerformance.map((item) => (
                       <tr key={item.id} className="border-t">
-                        <td className="p-2">{item.classType}</td>
-                        <td className="p-2">
-                          {String(item.bookings).padStart(2, "0")}
-                        </td>
-                        <td className="p-2">
-                          {String(item.reservations).padStart(2, "0")}
-                        </td>
-                        <td className="p-2">
-                          {String(item.cancellations).padStart(2, "0")}
-                        </td>
+                        <td className="p-2">{item?.classType}</td>
+
+                        {/* Scheduled */}
+                        <td className="p-2">{item?.scheduled}</td>
+
+                        {/* Bookings (Active) */}
+                        <td className="p-2">{item?.active}</td>
+
+                        {/* Cancellations */}
+                        <td className="p-2">{item?.canceled}</td>
+
                         <td className="p-2">
                           <Link
-                            to={generateUrl(item.url)}
+                            to={generateUrl(item?.url)}
                             className="bg-[#F1F1F1] border border-[#D4D4D4] rounded-[5px] w-[32px] h-[32px] flex items-center justify-center cursor-pointer"
                           >
                             <img src={eyeIcon} />
@@ -1120,11 +688,16 @@ const FinanceManagerDashboard = () => {
                   </tbody>
                 </table>
               </div>
-            </div> */}
+            </div>
           </div>
+
+          {/* Calender View */}
+          <CalendarView clubId={clubFilter?.value} />
+          {/* Calender View end */}
         </div>
+
         <div className="w-[25%]">
-          <div className="rounded-[15px] p-4 box--shadow bg-white">
+          <div className="rounded-[15px] p-3 box--shadow bg-white">
             <div>
               <p className="text-lg font-[600] mb-3 text-center">Summary </p>
               <div className="flex justify-between gap-3 items-center rounded-full bg-[#F1F1F1] px-3 py-2">
@@ -1154,34 +727,13 @@ const FinanceManagerDashboard = () => {
                 data={currentData}
                 routeMap={routeMap}
                 generateUrl={buildFilteredUrl}
-                currentUserRole={currentUserRole}
               />
             </div>
           </div>
-          {/* <div className="rounded-[15px] p-4 box--shadow bg-white mt-4">
-            <SolidGaugeChart />
-          </div> */}
         </div>
       </div>
-
-      {/* <div className="rounded-[15px] p-4 w-full mt-2 box--shadow bg-white">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="font-semibold">Pending Orders</h2>
-          <a
-            href={generateUrl(`/nourish-orders?`)}
-            className="text-[#009EB2] underline text-sm"
-          >
-            View All
-          </a>
-        </div>
-        <PendingOrderTable
-          setOrders={setOrders}
-          orders={orders}
-          fetchOrders={fetchPendingOrdersData}
-        />
-      </div> */}
     </div>
   );
 };
 
-export default FinanceManagerDashboard;
+export default ProgramSpecialistDashboard;

@@ -683,7 +683,7 @@ const PackagesList = () => {
         </div>
         {(userRole === "ADMIN" ||
           userRole === "CLUB_MANAGER" ||
-          userRole === "MARKETING_MANAGER" ||
+          userRole === "FINANCE_MANAGER_CORPORATE" ||
           userRole === "FINANCE_MANAGER") && (
         <div className="flex items-end gap-2">
           <button
@@ -756,7 +756,7 @@ const PackagesList = () => {
                 <th className="px-2 py-4">Status</th>
                 {(userRole === "ADMIN" ||
                   userRole === "CLUB_MANAGER" ||
-                  userRole === "MARKETING_MANAGER" ||
+                  userRole === "FINANCE_MANAGER_CORPORATE" ||
                   userRole === "FINANCE_MANAGER") && (
                 <th className="px-2 py-4">Action</th>
                 )}
@@ -828,7 +828,7 @@ const PackagesList = () => {
                     </td>
                     {(userRole === "ADMIN" ||
                       userRole === "CLUB_MANAGER" ||
-                      userRole === "MARKETING_MANAGER" ||
+                      userRole === "FINANCE_MANAGER_CORPORATE" ||
                       userRole === "FINANCE_MANAGER") && (
                     <td className="px-2 py-4">
                       <div className="w-fit">

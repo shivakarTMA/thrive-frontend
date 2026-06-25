@@ -172,7 +172,14 @@ const ExerciesCategoryList = () => {
           <p className="text-sm">{`Home > Exercises Categories`}</p>
           <h1 className="text-3xl font-semibold">Exercises Categories</h1>
         </div>
-        {(userRole === "ADMIN" || userRole === "CLUB_MANAGER" || userRole === "FITNESS_MANAGER") && (
+        {(
+          userRole === "ADMIN" || 
+          userRole === "CLUB_MANAGER" || 
+          userRole === "ASS_CLUB_MANAGER" || 
+          userRole === "FITNESS_MANAGER" || 
+          userRole === "ASS_FITNESS_MANAGER" || 
+          userRole === "TRAINER"
+        ) && (
         <div className="flex items-end gap-2">
           <button
             type="button"
@@ -224,7 +231,14 @@ const ExerciesCategoryList = () => {
                 <th className="px-2 py-4">Position</th>
                 <th className="px-2 py-4">Status</th>
                 <th className="px-2 py-4">Created At</th>
-                {(userRole === "ADMIN" || userRole === "CLUB_MANAGER" || userRole === "FITNESS_MANAGER") && (
+                {(
+                  userRole === "ADMIN" || 
+                  userRole === "CLUB_MANAGER" || 
+                  userRole === "ASS_CLUB_MANAGER" || 
+                  userRole === "FITNESS_MANAGER" || 
+                  userRole === "ASS_FITNESS_MANAGER" || 
+                  userRole === "TRAINER"
+                ) && (
                 <th className="px-2 py-4">Action</th>
                 )}
               </tr>
@@ -260,7 +274,14 @@ const ExerciesCategoryList = () => {
                     <td className="px-2 py-4">
                       {formatAutoDate(item?.createdAt)}
                     </td>
-                    {(userRole === "ADMIN" || userRole === "CLUB_MANAGER" || userRole === "FITNESS_MANAGER") && (
+                    {(
+                      userRole === "ADMIN" || 
+                      userRole === "CLUB_MANAGER" || 
+                      userRole === "ASS_CLUB_MANAGER" || 
+                      userRole === "FITNESS_MANAGER" || 
+                      userRole === "ASS_FITNESS_MANAGER" || 
+                      userRole === "TRAINER"
+                    ) && (
                     <td className="px-2 py-4">
                       <div className="flex items-center">
                         <Tooltip

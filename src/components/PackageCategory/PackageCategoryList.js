@@ -191,7 +191,7 @@ const PackageCategoryList = () => {
           <p className="text-sm">{`Home > Classes Category`}</p>
           <h1 className="text-3xl font-semibold">Classes Category</h1>
         </div>
-        {userRole === "ADMIN" && (
+        {(userRole === "ADMIN" || userRole === "FINANCE_MANAGER_CORPORATE") && (
           <div className="flex items-end gap-2">
             <button
               type="button"
@@ -257,7 +257,7 @@ const PackageCategoryList = () => {
                 <th className="px-2 py-4">Title</th>
                 <th className="px-2 py-4">Position</th>
                 <th className="px-2 py-4">Status</th>
-                {userRole === "ADMIN" && <th className="px-2 py-4">Action</th>}
+                {(userRole === "ADMIN" || userRole === "FINANCE_MANAGER_CORPORATE") && <th className="px-2 py-4">Action</th>}
               </tr>
             </thead>
             <tbody>
@@ -300,7 +300,7 @@ const PackageCategoryList = () => {
                           : ""}
                       </div>
                     </td>
-                    {userRole === "ADMIN" && (
+                    {(userRole === "ADMIN" || userRole === "FINANCE_MANAGER_CORPORATE") && (
                       <td className="px-2 py-4">
                         <div className="w-fit">
                           <Tooltip

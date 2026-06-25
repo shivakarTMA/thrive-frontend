@@ -1608,7 +1608,16 @@ const ProfileDetails = ({ member }) => {
             </div>
           </div>
           {/* Save Button */}
-          {(userRole === "ADMIN" || userRole === "FOH" || userRole === "CLUB_MANAGER") && (
+          {(
+            userRole === "ADMIN" || 
+            userRole === "FOH" || 
+            userRole === "CLUB_MANAGER" || 
+            userRole === "ASS_CLUB_MANAGER" || 
+            userRole === "TRAINER" || 
+            userRole === "FITNESS_MANAGER" || 
+            userRole === "ASS_FITNESS_MANAGER" || 
+            userRole === "PROGRAM_SPECIALIST"
+          ) && (
             <div className="flex justify-end mt-5">
               <button
                 className="px-4 py-2 bg-black text-white rounded flex items-center gap-2"

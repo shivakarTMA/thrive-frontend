@@ -190,7 +190,6 @@ const ChallengeParticipantsList = () => {
                 <th className="px-2 py-4 min-w-[100px]">Current Rank</th>
                 {(userRole === "CLUB_MANAGER" ||
                   userRole === "FITNESS_MANAGER" ||
-                  userRole === "MARKETING_MANAGER" ||
                   userRole === "ADMIN") && (
                   <th className="px-2 py-4 min-w-[130px]">Action</th>
                 )}
@@ -241,7 +240,6 @@ const ChallengeParticipantsList = () => {
 
                     {(userRole === "CLUB_MANAGER" ||
                       userRole === "FITNESS_MANAGER" ||
-                      userRole === "MARKETING_MANAGER" ||
                       userRole === "ADMIN") && (
                       <td className="px-2 py-4">
                         {challengeData?.status === "COMPLETED" ? (

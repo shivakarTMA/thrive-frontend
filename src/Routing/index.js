@@ -112,13 +112,15 @@ import ExerciesCategoryList from "../components/ExerciesCategory/ExerciesCategor
 import NourishOrders from "../Pages/NourishOrders";
 import RevenueRecognitionReport from "../components/Reports/FinanceReports/RevenueRecognitionReport";
 import FitnessManagerDashboard from "../Pages/FitnessManagerDashboard";
-import KycDocumentsList from "../components/KycDocuments/KycDocumentsList";
 import SalesRevenueReport from "../components/Reports/LeaderBoard/SalesRevenueReport";
 import SalesCallLogs from "../components/Reports/LeaderBoard/SalesCallLogs";
 import SalesCallLogsReport from "../components/Reports/LeaderBoard/SalesCallLogsReport";
 import PtRevenueReport from "../components/Reports/LeaderBoard/PtRevenueReport";
 import PtRevenueListReport from "../components/Reports/LeaderBoard/PtRevenueListReport";
 import PtSessionsReport from "../components/Reports/LeaderBoard/PtSessionsReport";
+import ProgramSpecialistDashboard from "../Pages/ProgramSpecialistDashboard";
+import KycDocumentsList from "../components/KycDocuments/KycDocumentsList";
+// import KycDocumentsList from "../components/KycDocuments/KycDocumentsList";
 
 // Role-based route wrapper component
 const RoleProtectedRoute = ({ children, path, skipPrivateRoute = false }) => {
@@ -130,11 +132,25 @@ const RoleProtectedRoute = ({ children, path, skipPrivateRoute = false }) => {
       ADMIN: "/",
       MARKETING_MANAGER: "/",
       FINANCE_MANAGER: "/",
+      FINANCE_MANAGER_CLUB: "/",
+      FINANCE_MANAGER_CORPORATE: "/",
       FOH: "/",
       TRAINER: "/",
       FITNESS_MANAGER: "/",
+      ASS_FITNESS_MANAGER: "/",
       CLUB_MANAGER: "/",
+      ASS_CLUB_MANAGER: "/",
+      PROGRAM_SPECIALIST: "/",
     };
+
+    // const dashboardMap = {
+    //   ADMIN: '/',
+    //   MARKETING_MANAGER: '/marketing-manager',
+    //   FINANCE_MANAGER: '/',
+    //   FOH: '/foh-dashboard',
+    //   TRAINER: '/trainer-dashboard',
+    //   CLUB_MANAGER: '/club-manager',
+    // };
 
     return <Navigate to={dashboardMap[userRole] || "/"} replace />;
   }
@@ -155,8 +171,13 @@ const RoleBasedHome = () => {
   if (userType === "FOH") return <FohDashboard />;
   if (userType === "TRAINER") return <TrainerDashboard />;
   if (userType === "FITNESS_MANAGER") return <FitnessManagerDashboard />;
+  if (userType === "ASS_FITNESS_MANAGER") return <FitnessManagerDashboard />;
   if (userType === "CLUB_MANAGER") return <ClubManagerDashboard />;
+  if (userType === "ASS_CLUB_MANAGER") return <ClubManagerDashboard />;
   if (userType === "FINANCE_MANAGER") return <FinanceManagerDashboard />;
+  if (userType === "FINANCE_MANAGER_CLUB") return <FinanceManagerDashboard />;
+  if (userType === "FINANCE_MANAGER_CORPORATE") return <FinanceManagerDashboard />;
+  if (userType === "PROGRAM_SPECIALIST") return <ProgramSpecialistDashboard />;
 
   return <Navigate to="/login" />;
 };

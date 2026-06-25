@@ -17,8 +17,8 @@ import { toast } from "react-toastify";
 import { useSelector } from "react-redux";
 import Pagination from "../../common/Pagination";
 import { FaCircle } from "react-icons/fa";
-import IsLoadingHOC from "../../common/IsLoadingHOC";
 import { LuDownload } from "react-icons/lu";
+import IsLoadingHOC from "../../common/IsLoadingHOC";
 
 const dateFilterOptions = [
   { value: "today", label: "Today" },
