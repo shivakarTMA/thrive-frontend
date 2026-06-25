@@ -10,6 +10,7 @@ import {
 } from "../../../Helper/helper";
 import { authAxios } from "../../../config/config";
 import { useSelector } from "react-redux";
+import Pagination from "../../common/Pagination";
 
 const dateFilterOptions = [
   { value: "today", label: "Today" },
@@ -31,6 +32,11 @@ const EmailAutomationReport = () => {
   const [dateFilter, setDateFilter] = useState(dateFilterOptions[0]);
   const [customFrom, setCustomFrom] = useState(null);
   const [customTo, setCustomTo] = useState(null);
+
+  const [page, setPage] = useState(1);
+  const [rowsPerPage] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
 
   // Function to fetch club list
   const fetchClub = async (search = "") => {
@@ -61,9 +67,12 @@ const EmailAutomationReport = () => {
     value: item.id,
   }));
 
-  const fetchLeadSourcePerformance = async () => {
+  const fetchLeadSourcePerformance = async (currentPage = page) => {
     try {
-      const params = {};
+      const params = {
+        page: currentPage,
+        limit: rowsPerPage,
+      };
 
       // Club filter
       if (clubFilter) {
@@ -88,21 +97,22 @@ const EmailAutomationReport = () => {
       const data = responseData?.data || [];
 
       setEmailReport(data);
+      setPage(responseData?.currentPage || 1);
+      setTotalPages(responseData?.totalPage || 1);
+      setTotalCount(responseData?.totalCount || data.length);
     } catch (err) {
       console.error(err);
     }
   };
   useEffect(() => {
-    // If custom date is selected, wait for both dates
     if (dateFilter?.value === "custom") {
       if (customFrom && customTo) {
-        fetchLeadSourcePerformance();
+        fetchLeadSourcePerformance(1);
       }
       return;
     }
 
-    // For all non-custom filters
-    fetchLeadSourcePerformance();
+    fetchLeadSourcePerformance(1);
   }, [dateFilter, customFrom, customTo, clubFilter]);
 
   const formatPercentage = (value) => {
@@ -237,6 +247,18 @@ const EmailAutomationReport = () => {
             </tbody>
           </table>
         </div>
+        {/* Pagination Component */}
+        <Pagination
+          page={page}
+          totalPages={totalPages}
+          rowsPerPage={rowsPerPage}
+          totalCount={totalCount}
+          currentDataLength={emailReport.length}
+          onPageChange={(newPage) => {
+            setPage(newPage);
+            fetchLeadSourcePerformance(newPage);
+          }}
+        />
       </div>
     </div>
   );

@@ -71,6 +71,7 @@ const MemberProfile = (props) => {
     // Remove the `view` query parameter when switching tabs
     navigate(`/member/${id}`, { replace: true });
     setActiveTab(tab);
+    fetchMemberById(id)
   };
 
   if (!member) return <p>Member not found</p>;

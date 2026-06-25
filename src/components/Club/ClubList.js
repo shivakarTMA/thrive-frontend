@@ -118,6 +118,9 @@ const ClubList = () => {
       abbr: "",
       company_name: "",
       company_address: "",
+      is_corporate_id: null,
+      gsttyp:"",
+      prefix:"",
     },
     validationSchema: Yup.object({
       technogym_facilit_url: Yup.string().required(
@@ -164,6 +167,12 @@ const ClubList = () => {
       company_name: Yup.string().required("Company name is required"),
       company_address: Yup.string().required("Company address is required"),
 
+      is_corporate_id: Yup.boolean().oneOf([true, false], "Corporate ID is required")
+      .required("Corporate ID is required"),
+
+      gsttyp: Yup.string().required("GST type is required"),
+      prefix: Yup.string().required("Prefix is required"),
+
       // Club services array
       club_available_service: Yup.array()
         .of(Yup.string())
@@ -200,6 +209,9 @@ const ClubList = () => {
         formData.append("gstno", values.gstno);
         formData.append("company_name", values.company_name);
         formData.append("company_address", values.company_address);
+        formData.append("is_corporate_id", values.is_corporate_id);
+        formData.append("gsttyp", values.gsttyp);
+        formData.append("prefix", values.prefix);
         formData.append(
           "club_available_service",
           JSON.stringify(values.club_available_service),

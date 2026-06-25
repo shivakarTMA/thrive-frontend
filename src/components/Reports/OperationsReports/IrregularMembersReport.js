@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import Select from "react-select";
 import {
+  ALLOWED_ROLES,
   customStyles,
   filterActiveItems,
   formatAutoDate,
@@ -9,6 +10,8 @@ import { authAxios } from "../../../config/config";
 import { toast } from "react-toastify";
 import { useSelector } from "react-redux";
 import Pagination from "../../common/Pagination";
+import IsLoadingHOC from "../../common/IsLoadingHOC";
+import { LuDownload } from "react-icons/lu";
 
 const noOfDaysOptions = [
   { value: 7, label: "Last 7 Days" },
@@ -18,7 +21,8 @@ const noOfDaysOptions = [
   { value: 90, label: "Last 90 Days" },
 ];
 
-const IrregularMembersReport = () => {
+const IrregularMembersReport = (props) => {
+  const {setLoading} = props;
   const [irregularMember, setIrregularMember] = useState([]);
   const [clubList, setClubList] = useState([]);
   const [clubFilter, setClubFilter] = useState(null);
@@ -101,6 +105,58 @@ const IrregularMembersReport = () => {
     fetchIrregularMembersReport(1);
   }, [clubFilter, noOfDays]);
 
+  const handleExportIrregularMember = async () => {
+    try {
+      setLoading(true);
+
+      const params = {};
+
+      // Club filter
+      if (clubFilter) {
+        params.club_id = clubFilter;
+      }
+
+      // noOfDays filter
+      if (noOfDays?.value) {
+        params.no_of_days = noOfDays.value;
+      }
+
+      console.log("📥 Download Params:", params);
+
+      const response = await authAxios().get("/report/irregular/download", {
+        params,
+        responseType: "blob",
+      });
+
+      // 📄 Create download
+      const blob = new Blob([response.data]);
+
+      const url = window.URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+
+      link.href = url;
+
+      link.setAttribute("download", "Irregular_Members_Report.xlsx");
+
+      document.body.appendChild(link);
+
+      link.click();
+
+      link.remove();
+
+      window.URL.revokeObjectURL(url);
+
+      toast.success("Irregular members report downloaded successfully!");
+    } catch (error) {
+      console.error(error);
+
+      toast.error("Failed to download irregular members report.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="page--content">
       {/* Header */}
@@ -138,6 +194,22 @@ const IrregularMembersReport = () => {
             />
           </div>
         </div>
+        {!ALLOWED_ROLES.includes(userRole) && (
+            <div className="w-full max-w-[170px]">
+              <button
+                onClick={handleExportIrregularMember}
+                disabled={irregularMember.length === 0}
+                className={`ms-auto px-4 py-2 rounded flex items-center gap-2
+                ${
+                  irregularMember.length === 0
+                    ? "bg-gray-400 cursor-not-allowed text-white"
+                    : "bg-black text-white hover:bg-gray-800"
+                }`}
+              >
+                <LuDownload /> <span>Download Report</span>
+              </button>
+            </div>
+          )}
       </div>
 
       {/* Table */}
@@ -201,4 +273,4 @@ const IrregularMembersReport = () => {
   );
 };
 
-export default IrregularMembersReport;
+export default IsLoadingHOC(IrregularMembersReport);

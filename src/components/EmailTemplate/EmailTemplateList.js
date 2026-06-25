@@ -186,21 +186,23 @@ const EmailTemplateList = () => {
                                 <img src={editIcon} />
                               </Link>
                             </Tooltip>
-                            <Tooltip
-                              id={`tooltip-delete-${item.id}`}
-                              content="Delete Template"
-                              place="left"
-                            >
-                              <div
-                                className={`bg-[#F1F1F1] border border-[#D4D4D4] rounded-r-[5px] w-[32px] h-[32px] flex items-center justify-center cursor-pointer`}
-                                onClick={() => {
-                                  setSelectedDeleteId(item);
-                                  setShowDeleteModal(true);
-                                }}
+                            {userRole === "ADMIN" && (
+                              <Tooltip
+                                id={`tooltip-delete-${item.id}`}
+                                content="Delete Template"
+                                place="left"
                               >
-                                <img src={deleteIcon} />
-                              </div>
-                            </Tooltip>
+                                <div
+                                  className={`bg-[#F1F1F1] border border-[#D4D4D4] rounded-r-[5px] w-[32px] h-[32px] flex items-center justify-center cursor-pointer`}
+                                  onClick={() => {
+                                    setSelectedDeleteId(item);
+                                    setShowDeleteModal(true);
+                                  }}
+                                >
+                                  <img src={deleteIcon} />
+                                </div>
+                              </Tooltip>
+                            )}
                           </div>
                         ) : (
                           <div className="flex">

@@ -244,9 +244,16 @@ export default function ProductSoldPanel({
       return leadSource ? leadSource.label : value;
     }
 
+    // if (key === "lead_owner_id") {
+    //   const allOwners = leadOwnerOptions.flatMap((group) => group.options);
+    //   const owner = allOwners.find((opt) => opt.value === value);
+    //   return owner ? owner.label : value;
+    // }
     if (key === "lead_owner_id") {
       const allOwners = leadOwnerOptions.flatMap((group) => group.options);
-      const owner = allOwners.find((opt) => opt.value === value);
+      const owner = allOwners.find(
+        (opt) => String(opt.value) === String(value)
+      );
       return owner ? owner.label : value;
     }
 

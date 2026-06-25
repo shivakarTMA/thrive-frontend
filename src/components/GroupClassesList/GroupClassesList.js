@@ -4,6 +4,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import { addYears, subYears } from "date-fns";
 import { FaCalendarDays, FaCircle, FaEye, FaPrint } from "react-icons/fa6";
 import {
+  ALLOWED_ROLES,
   customStyles,
   filterActiveItems,
   formatAutoDate,
@@ -26,6 +27,8 @@ import { IoEyeOutline } from "react-icons/io5";
 import CreateGroupClasses from "./CreateGroupClasses";
 import { FiPlus } from "react-icons/fi";
 import { LiaEdit } from "react-icons/lia";
+import { LuDownload } from "react-icons/lu";
+import IsLoadingHOC from "../common/IsLoadingHOC";
 
 const dateFilterOptions = [
   { value: "today", label: "Today" },
@@ -34,7 +37,8 @@ const dateFilterOptions = [
   { value: "custom", label: "Custom Date" },
 ];
 
-const GroupClassesList = () => {
+const GroupClassesList = (props) => {
+  const { setLoading } = props;
   const location = useLocation();
   const navigate = useNavigate();
   const [productSoldData, setProductSoldData] = useState([]);
@@ -297,6 +301,7 @@ const GroupClassesList = () => {
         otherwise: (schema) => schema.nullable(),
       }),
     studio_id: Yup.string().required("Studio is required"),
+    show_on_app: Yup.string().required("Show on App is required"),
   });
 
   const initialValues = {
@@ -324,6 +329,7 @@ const GroupClassesList = () => {
     is_featured: "",
     equipment: "",
     status: "",
+    show_on_app: "",
   };
 
   const CreateFormik = useFormik({
@@ -494,6 +500,70 @@ const GroupClassesList = () => {
     }
   }, [CreateFormik.values.booking_type]);
 
+  const handleDownloadGroupClass = async () => {
+    try {
+      setLoading(true);
+
+      const params = {};
+
+      // 📅 Date filters
+      if (dateFilter?.value && dateFilter.value !== "custom") {
+        params.dateFilter = dateFilter.value;
+      }
+
+      if (dateFilter?.value === "custom" && customFrom && customTo) {
+        params.startDate = format(customFrom, "yyyy-MM-dd");
+        params.endDate = format(customTo, "yyyy-MM-dd");
+      }
+
+      // 🏢 Club filter
+      if (clubFilter?.value) {
+        params.club_id = clubFilter.value;
+      }
+
+      // 🎯 Applied filters
+      Object.entries(appliedFilters).forEach(([key, value]) => {
+        if (value !== null && value !== undefined) {
+          params[key] = value;
+        }
+      });
+
+      console.log("📥 Download Params:", params);
+
+      const response = await authAxios().get("/package/group/class/download", {
+        params,
+        responseType: "blob",
+      });
+
+      // 📄 Create download
+      const blob = new Blob([response.data]);
+
+      const url = window.URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+
+      link.href = url;
+
+      link.setAttribute("download", "group-class-list.xlsx");
+
+      document.body.appendChild(link);
+
+      link.click();
+
+      link.remove();
+
+      window.URL.revokeObjectURL(url);
+
+      toast.success("Group class list downloaded successfully!");
+    } catch (error) {
+      console.error(error);
+
+      toast.error("Failed to download group class list.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <>
       <div className="page--content">
@@ -502,24 +572,7 @@ const GroupClassesList = () => {
             <p className="text-sm">{`Home > Group Classes`}</p>
             <h1 className="text-3xl font-semibold">Group Classes</h1>
           </div>
-          {(userRole === "CLUB_MANAGER" ||
-            userRole === "MARKETING_MANAGER" ||
-            userRole === "FITNESS_MANAGER" ||
-            userRole === "TRAINER" ||
-            userRole === "ADMIN") && (
-            <div className="flex items-end gap-2">
-              <button
-                type="button"
-                className="px-4 py-2 bg-black text-white rounded flex items-center gap-2"
-                onClick={() => {
-                  setEditingOption(null);
-                  setShowModal(true);
-                }}
-              >
-                <FiPlus /> Create Class
-              </button>
-            </div>
-          )}
+          
         </div>
 
         <div className="flex gap-3 mb-4 items-center justify-between">
@@ -595,6 +648,41 @@ const GroupClassesList = () => {
               />
             </div>
           </div>
+          
+          {(userRole === "CLUB_MANAGER" ||
+            userRole === "MARKETING_MANAGER" ||
+            userRole === "FITNESS_MANAGER" ||
+            userRole === "TRAINER" ||
+            userRole === "ADMIN") && (
+            <div className="max-w-[140px] w-full">
+              <button
+                type="button"
+                className="px-4 py-2 bg-black text-white rounded flex items-center justify-center gap-2 w-full"
+                onClick={() => {
+                  setEditingOption(null);
+                  setShowModal(true);
+                }}
+              >
+                <FiPlus /> Create Class
+              </button>
+            </div>
+          )}
+          {!ALLOWED_ROLES.includes(userRole) && (
+            <div className="max-w-[150px] w-full">
+              <button
+                onClick={handleDownloadGroupClass}
+                disabled={productSoldData.length === 0 || (dateFilter?.value === "custom" && (!customFrom || !customTo))}
+                className={`w-full px-4 py-2 rounded flex items-center gap-2
+                      ${
+                        productSoldData.length === 0 || (dateFilter?.value === "custom" && (!customFrom || !customTo))
+                          ? "bg-gray-400 cursor-not-allowed text-white"
+                          : "bg-black text-white hover:bg-gray-800"
+                      }`}
+              >
+                <LuDownload /> <span>Export Classes</span>
+              </button>
+            </div>
+          )}
         </div>
 
         <div className="w-full p-3 border bg-white shodow--box rounded-[10px]">
@@ -755,31 +843,31 @@ const GroupClassesList = () => {
                                 <IoEyeOutline className="text-[25px] text-black" />
                               </Link>
                             </Tooltip>
-                            {row?.status !== "EXPIRED" && (
-                              <>
-                              {(userRole === "CLUB_MANAGER" ||
-                                userRole === "MARKETING_MANAGER" ||
-                                userRole === "FITNESS_MANAGER" ||
-                                userRole === "TRAINER" ||
-                                userRole === "ADMIN") && (
-                                <Tooltip
-                                  id={`tooltip-edit-${row.id}`}
-                                  content="Edit Class"
-                                  place="left"
+                            {/* {row?.status !== "EXPIRED" && (
+                              <> */}
+                            {(userRole === "CLUB_MANAGER" ||
+                              userRole === "MARKETING_MANAGER" ||
+                              userRole === "FITNESS_MANAGER" ||
+                              userRole === "TRAINER" ||
+                              userRole === "ADMIN") && (
+                              <Tooltip
+                                id={`tooltip-edit-${row.id}`}
+                                content="Edit Class"
+                                place="left"
+                              >
+                                <div
+                                  className="p-1 cursor-pointer block"
+                                  onClick={() => {
+                                    setEditingOption(row.id);
+                                    setShowModal(true);
+                                  }}
                                 >
-                                  <div
-                                    className="p-1 cursor-pointer block"
-                                    onClick={() => {
-                                      setEditingOption(row.id);
-                                      setShowModal(true);
-                                    }}
-                                  >
-                                    <LiaEdit className="text-[25px] text-black" />
-                                  </div>
-                                </Tooltip>
-                              )}
-                              </>
-                              )}
+                                  <LiaEdit className="text-[25px] text-black" />
+                                </div>
+                              </Tooltip>
+                            )}
+                            {/* </>
+                              )} */}
                           </div>
                         </td>
                       </tr>
@@ -822,4 +910,4 @@ const GroupClassesList = () => {
   );
 };
 
-export default GroupClassesList;
+export default IsLoadingHOC(GroupClassesList);

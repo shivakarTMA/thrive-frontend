@@ -3,13 +3,15 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { addYears, format, subYears } from "date-fns";
 import { FaCalendarDays } from "react-icons/fa6";
-import { customStyles, filterActiveItems } from "../../../Helper/helper";
+import { ALLOWED_ROLES, customStyles, filterActiveItems } from "../../../Helper/helper";
 import Select from "react-select";
 import { authAxios } from "../../../config/config";
 import { toast } from "react-toastify";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useSelector } from "react-redux";
 import Pagination from "../../common/Pagination";
+import IsLoadingHOC from "../../common/IsLoadingHOC";
+import { LuDownload } from "react-icons/lu";
 
 // Date filter dropdown options
 const dateFilterOptions = [
@@ -21,7 +23,8 @@ const dateFilterOptions = [
 
 const formatDate = (date) => format(date, "yyyy-MM-dd");
 
-const MemberCheckInsReport = () => {
+const MemberCheckInsReport = (props) => {
+  const {setLoading} = props;
   const { id } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
@@ -37,6 +40,8 @@ const MemberCheckInsReport = () => {
 
   const [clubList, setClubList] = useState([]);
   const [clubFilter, setClubFilter] = useState(null);
+  const [companyList, setCompanyList] = useState([]);
+  const [filterCompanyName, setFilterCompanyName] = useState(null);
 
   const [memberPlan, setMemberPlan] = useState([]);
   const [memberPlanFilter, setMemberPlanFilter] = useState(null);
@@ -59,7 +64,7 @@ const MemberCheckInsReport = () => {
 
   const pageTitle = useMemo(() => {
     if (memberFilter || id)
-      return `Member Check-ins (${selectedMemberName || "Selected Member"})`;
+      return `Member Check-ins ${(selectedMemberName ? `(${selectedMemberName})` : "")}`;
     return "Member Check-ins";
   }, [memberFilter, id, selectedMemberName]);
 
@@ -142,6 +147,33 @@ const MemberCheckInsReport = () => {
     }
   }, [clubFilter]);
 
+  
+  const fetchCompanyList = async (clubId) => {
+    try {
+      const res = await authAxios().get("/company/list");
+      // ✅ Extract company data safely
+      const data = res.data?.data || [];
+
+      // ✅ Filter only active companies
+      const activeCompanies = data.filter(
+        (company) => company.status === "ACTIVE",
+      );
+      setCompanyList(activeCompanies);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  useEffect(() => {
+    setPage(1);
+    fetchCompanyList();
+  }, [filterCompanyName]);
+
+  const companyOptions = companyList.map((item) => ({
+    label: item.name,
+    value: item.name,
+  }));
+
   const clubOptions = clubList.map((c) => ({
     label: c.name,
     value: c.id,
@@ -172,6 +204,9 @@ const MemberCheckInsReport = () => {
       if (memberPlanFilter){
         params.subscription_plan_id = memberPlanFilter;
       } 
+      if (filterCompanyName?.value) {
+        params.company_name = filterCompanyName.value;
+      }
       // else if (id) params.member_id = Number(id);
 
       if (dateFilter.value === "custom") {
@@ -278,10 +313,78 @@ const MemberCheckInsReport = () => {
     clubFilter,
     memberFilter,
     memberPlanFilter,
+    filterCompanyName,
     id,
   ]);
 
   /* ------------------ RENDER ------------------ */
+
+  const handleExportCheckInsReport = async () => {
+    try {
+      setLoading(true);
+
+      const params = {};
+
+      // 📅 Date filters
+      if (dateFilter?.value && dateFilter.value !== "custom") {
+        params.dateFilter = dateFilter.value;
+      }
+
+      if (dateFilter?.value === "custom" && customFrom && customTo) {
+        params.startDate = format(customFrom, "yyyy-MM-dd");
+        params.endDate = format(customTo, "yyyy-MM-dd");
+      }
+
+      // Club filter
+      if (clubFilter) {
+        params.club_id = clubFilter;
+      }
+
+      if (memberFilter){
+        params.member_id = memberFilter;
+      }
+      if (memberPlanFilter){
+        params.subscription_plan_id = memberPlanFilter;
+      } 
+      if (filterCompanyName?.value) {
+        params.company_name = filterCompanyName.value;
+      }
+
+      console.log("📥 Download Params:", params);
+
+      const response = await authAxios().get("/report/attendance/download", {
+        params,
+        responseType: "blob",
+      });
+
+      // 📄 Create download
+      const blob = new Blob([response.data]);
+
+      const url = window.URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+
+      link.href = url;
+
+      link.setAttribute("download", "Member_Check-Ins_Report.xlsx");
+
+      document.body.appendChild(link);
+
+      link.click();
+
+      link.remove();
+
+      window.URL.revokeObjectURL(url);
+
+      toast.success("Member check-ins report downloaded successfully!");
+    } catch (error) {
+      console.error(error);
+
+      toast.error("Failed to download member check-ins report.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <>
@@ -292,12 +395,28 @@ const MemberCheckInsReport = () => {
             <p className="text-sm">{`Home >  Reports > Operations Reports > Member Check-ins`}</p>
             <h1 className="text-3xl font-semibold">{pageTitle}</h1>
           </div>
+          {!ALLOWED_ROLES.includes(userRole) && (
+            <div className="w-full max-w-[170px]">
+              <button
+                onClick={handleExportCheckInsReport}
+                disabled={data.length === 0 || (dateFilter?.value === "custom" && (!customFrom || !customTo))}
+                className={`ms-auto px-4 py-2 rounded flex items-center gap-2
+                ${
+                  data.length === 0 || (dateFilter?.value === "custom" && (!customFrom || !customTo))
+                    ? "bg-gray-400 cursor-not-allowed text-white"
+                    : "bg-black text-white hover:bg-gray-800"
+                }`}
+              >
+                <LuDownload /> <span>Download Report</span>
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Filters */}
         <div className="flex gap-3 mb-4 items-center justify-between">
-          <div className="flex gap-2 w-full">
-            <div className="max-w-[180px] w-full">
+          <div className="flex gap-2 w-full flex-wrap">
+            <div className="max-w-[150px] w-full">
               <Select
                 placeholder="Date Filter"
                 options={dateFilterOptions}
@@ -356,18 +475,17 @@ const MemberCheckInsReport = () => {
               </>
             )}
 
-            <div className="w-fit min-w-[200px]">
+            <div className="w-full max-w-[190px]">
               <Select
                 placeholder="Filter by club"
                 options={clubOptions}
                 styles={customStyles}
                 value={clubOptions.find((o) => o.value === clubFilter) || null}
                 onChange={(o) => setClubFilter(o?.value || null)}
-                className="w-full"
                 isClearable={userRole === "ADMIN" ? true : false}
               />
             </div>
-            <div className="w-fit min-w-[200px]">
+            <div className="w-full max-w-[190px]">
               <Select
                 placeholder="Filter by Plan"
                 options={memberPlanOptions}
@@ -377,12 +495,11 @@ const MemberCheckInsReport = () => {
                   null
                 }
                 onChange={(o) => setMemberPlanFilter(o?.value || null)}
-                className="w-full"
-                isClearable={userRole === "ADMIN" ? true : false}
+                isClearable
                 isDisabled={!clubFilter} // ✅ disable if no club selected
               />
             </div>
-            <div className="relative max-w-[250px] w-full">
+            <div className="relative max-w-[190px] w-full">
               <input
                 ref={memberSearchRef}
                 type="text"
@@ -424,7 +541,18 @@ const MemberCheckInsReport = () => {
                 </ul>
               )}
             </div>
+            <div className="relative min-w-[190px] max-w-fit w-full">
+              <Select
+                value={filterCompanyName}
+                onChange={setFilterCompanyName}
+                options={companyOptions}
+                isClearable
+                placeholder="Select Company Name"
+                styles={customStyles}
+              />
+            </div>
           </div>
+          
         </div>
 
         {/* Dynamic Statistics */}
@@ -460,6 +588,7 @@ const MemberCheckInsReport = () => {
                     {/* <th className="px-2 py-4 min-w-[50px]">S.No</th> */}
                     <th className="px-2 py-4 min-w-[150px]">Club Name</th>
                     <th className="px-2 py-4 min-w-[100px]">Member ID</th>
+                    <th className="px-2 py-4 min-w-[120px]">Company Name</th>
                     <th className="px-2 py-4 min-w-[120px]">Member Name</th>
                     <th className="px-2 py-4 min-w-[150px]">
                       Member Current Plan
@@ -481,6 +610,7 @@ const MemberCheckInsReport = () => {
                         {/* <td className="px-2 py-4">{i + 1}</td> */}
                         <td className="px-2 py-4">{r?.club_name}</td>
                         <td className="px-2 py-4">{r?.membership_number}</td>
+                        <td className="px-2 py-4">{r?.company_name || "--"}</td>
                         <td className="px-2 py-4">{r?.member_name}</td>
                         <td className="px-2 py-4">{r?.current_subscription_plan}</td>
                         <td className="px-2 py-4">{r?.date}</td>
@@ -521,4 +651,4 @@ const MemberCheckInsReport = () => {
   );
 };
 
-export default MemberCheckInsReport;
+export default IsLoadingHOC(MemberCheckInsReport);

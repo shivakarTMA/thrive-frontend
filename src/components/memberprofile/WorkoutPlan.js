@@ -32,8 +32,6 @@ const WorkoutPlan = ({
   handleWorkoutUpdate,
   minStartDate,
 }) => {
-  console.log(editingId, "editingId");
-  console.log(minStartDate, "minStartDate");
   const { id } = useParams();
   const { user } = useSelector((state) => state.auth);
   const userRole = user.role;

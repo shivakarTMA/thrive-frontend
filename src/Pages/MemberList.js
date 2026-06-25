@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { FaCircle } from "react-icons/fa";
 import Select from "react-select";
 import {
+  ALLOWED_ROLES,
   customStyles,
   dasboardStyles,
   filterActiveItems,
@@ -25,12 +26,21 @@ import MemberFilterPanel from "../components/FilterPanel/MemberFilterPanel";
 import { useSelector } from "react-redux";
 import DummyProfile from "../assets/images/dummy-profile.png";
 import CreateNewInvoice from "./CreateNewInvoice";
-import { IoEyeOutline } from "react-icons/io5";
+import {
+  IoEyeOutline,
+  IoFastFoodOutline,
+  IoLayersOutline,
+} from "react-icons/io5";
+import { LuDownload } from "react-icons/lu";
+import IsLoadingHOC from "../components/common/IsLoadingHOC";
+import CreateProductsInvoice from "./CreateProductsInvoice";
 
-const MemberList = () => {
+const MemberList = (props) => {
   const { id } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
+
+  const { setLoading } = props;
 
   const { user } = useSelector((state) => state.auth);
   const userRole = user.role;
@@ -40,7 +50,9 @@ const MemberList = () => {
   const [clubList, setClubList] = useState([]);
   const [clubFilter, setClubFilter] = useState(null);
 
+  const [invoiceDropDown, setInvoiceDropDown] = useState(null);
   const [invoiceModal, setInvoiceModal] = useState(false);
+  const [productInvoiceModal, setProductInvoiceModal] = useState(false);
   const [selectedLeadMember, setSelectedLeadMember] = useState(null);
   const [selectedLeadClub, setSelectedLeadClub] = useState(null);
 
@@ -52,6 +64,8 @@ const MemberList = () => {
     inactive_members: 0,
   });
 
+  const [hasProductServices, setHasProductServices] = useState(false);
+
   const [filterStatus, setFilterStatus] = useState(null);
   const [filterService, setFilterService] = useState(null);
   const [filterAgeGroup, setFilterAgeGroup] = useState(null);
@@ -60,6 +74,9 @@ const MemberList = () => {
   const [filterTrainer, setFilterTrainer] = useState(null);
   const [filterFitness, setFilterFitness] = useState(null);
   const [filterGender, setFilterGender] = useState(null);
+  const [filterDownloadApp, setFilterDownloadApp] = useState(null);
+  const [filterKYCDocumentStatus, setFilterKYCDocumentStatus] = useState(null);
+  const [filterCompanyName, setFilterCompanyName] = useState(null);
 
   const [page, setPage] = useState(1);
   const [rowsPerPage] = useState(10);
@@ -141,9 +158,18 @@ const MemberList = () => {
           gender: overrideSelected.hasOwnProperty("gender")
             ? overrideSelected.gender
             : filterGender,
+          app_downloaded: overrideSelected.hasOwnProperty("app_downloaded")
+            ? overrideSelected.app_downloaded
+            : filterDownloadApp,
+          company_name: overrideSelected.hasOwnProperty("company_name")
+            ? overrideSelected.company_name
+            : filterCompanyName,
           club_id: overrideSelected.hasOwnProperty("club_id")
             ? overrideSelected.club_id
             : clubFilter,
+          kyc_status: overrideSelected.hasOwnProperty("kyc_status")
+            ? overrideSelected.kyc_status
+            : filterKYCDocumentStatus,
         };
 
         // Add filters to API params
@@ -281,59 +307,55 @@ const MemberList = () => {
   };
 
   // 🚀 Fetch staff list from API
- const fetchStaff = async (clubId) => {
-     try {
-       const requests = [
-         authAxios().get("/staff/list", {
-           params: { role: "FOH", club_id: clubId },
-         }),
-       ];
- 
-       if (
-         userRole === "CLUB_MANAGER"
-       ) {
-         requests.push(
-           authAxios().get("/staff/list", {
-             params: { role: "FOH", club_id: clubId },
-           }),
-         );
-       }
- 
-       if (
-         userRole === "ADMIN"
-       ) {
-         requests.push(
-           authAxios().get("/staff/list", {
-             params: { role: "CLUB_MANAGER", club_id: clubId },
-           }),
-         );
-       }
- 
-       const responses = await Promise.all(requests);
- 
-       let mergedData = [];
- 
-       responses.forEach((res) => {
-         const role = res.config.params.role; // ✅ more reliable than URL.includes
- 
-         const users = (res.data?.data || []).map((user) => ({
-           ...user,
-           role,
-         }));
- 
-         mergedData.push(...users);
-       });
- 
-       const uniqueData = Array.from(
-         new Map(mergedData.map((user) => [user.id, user])).values(),
-       );
- 
-       const activeOnly = filterActiveItems(uniqueData);
-       setStaffList(activeOnly);
-     } catch (err) {
-       console.error(err);
-     }
-   };
+  const fetchStaff = async (clubId) => {
+    try {
+      const requests = [
+        authAxios().get("/staff/list", {
+          params: { role: "FOH", club_id: clubId },
+        }),
+      ];
+
+      if (userRole === "CLUB_MANAGER") {
+        requests.push(
+          authAxios().get("/staff/list", {
+            params: { role: "FOH", club_id: clubId },
+          }),
+        );
+      }
+
+      if (userRole === "ADMIN") {
+        requests.push(
+          authAxios().get("/staff/list", {
+            params: { role: "CLUB_MANAGER", club_id: clubId },
+          }),
+        );
+      }
+
+      const responses = await Promise.all(requests);
+
+      let mergedData = [];
+
+      responses.forEach((res) => {
+        const role = res.config.params.role; // ✅ more reliable than URL.includes
+
+        const users = (res.data?.data || []).map((user) => ({
+          ...user,
+          role,
+        }));
+
+        mergedData.push(...users);
+      });
+
+      const uniqueData = Array.from(
+        new Map(mergedData.map((user) => [user.id, user])).values(),
+      );
+
+      const activeOnly = filterActiveItems(uniqueData);
+      setStaffList(activeOnly);
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   // Initial load effect
   useEffect(() => {
@@ -455,6 +477,9 @@ const MemberList = () => {
       staff: setFilterTrainer,
       fitness: setFilterFitness,
       gender: setFilterGender,
+      app_downloaded: setFilterDownloadApp,
+      kyc_status: setFilterKYCDocumentStatus,
+      company_name: setFilterCompanyName,
     };
 
     setterMap[filterKey]?.(null);
@@ -468,6 +493,9 @@ const MemberList = () => {
       staff: filterKey === "staff" ? null : filterTrainer,
       fitness: filterKey === "fitness" ? null : filterFitness,
       gender: filterKey === "gender" ? null : filterGender,
+      app_downloaded: filterKey === "app_downloaded" ? null : filterDownloadApp,
+      kyc_status: filterKey === "kyc_status" ? null : filterKYCDocumentStatus,
+      company_name: filterKey === "company_name" ? null : filterCompanyName,
       club_id: clubFilter,
     };
 
@@ -483,6 +511,168 @@ const MemberList = () => {
     fetchMemberList("", 1);
   };
 
+  const handleDownloadMembers = async () => {
+    try {
+      setLoading(true);
+      const params = {};
+
+      // Search mode support
+      if (memberIdFromUrl) {
+        params.id = memberIdFromUrl;
+
+        if (clubIdFromUrl) {
+          params.club_id = clubIdFromUrl;
+        }
+      } else {
+        const filters = {
+          is_subscribed: filterStatus,
+          service_id: filterService,
+          age_range: filterAgeGroup,
+          lead_source: filterLeadSource,
+          lead_owner: filterLeadOwner,
+          staff: filterTrainer,
+          fitness: filterFitness,
+          gender: filterGender,
+          app_downloaded: filterDownloadApp,
+          company_name: filterCompanyName,
+          kyc_status: filterKYCDocumentStatus,
+          club_id: clubFilter,
+        };
+
+        // Convert select objects into values
+        Object.entries(filters).forEach(([key, val]) => {
+          if (val !== null && val !== undefined) {
+            params[key] = val?.value !== undefined ? val.value : val;
+          }
+        });
+      }
+
+      console.log("📥 Download Params:", params);
+
+      const response = await authAxios().get("/member/download/list", {
+        params,
+        responseType: "blob", // Important for file download
+      });
+
+      // Create file download
+      const blob = new Blob([response.data]);
+      const url = window.URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+      link.href = url;
+
+      // File name
+      link.setAttribute("download", "member-list.xlsx");
+
+      document.body.appendChild(link);
+      link.click();
+
+      link.remove();
+      window.URL.revokeObjectURL(url);
+
+      toast.success("Member list downloaded successfully!");
+      setLoading(false);
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to download member list.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getOptions = (member) => {
+    const options = [
+      {
+        value: "services",
+        label: "Buy Services",
+        icon: <IoLayersOutline className="text-[18px]" />,
+      },
+    ];
+
+    // ✅ Add only if PRODUCT exists
+    if (hasProductServices) {
+      options.push({
+        value: "products",
+        label: "Buy Products",
+        icon: <IoFastFoodOutline className="text-[18px]" />,
+      });
+    }
+
+    return options;
+  };
+
+  const customOption = ({ innerRef, innerProps, data }) => (
+    <div
+      ref={innerRef}
+      {...innerProps}
+      className="flex items-center gap-2 p-2 hover:bg-gray-100 cursor-pointer"
+    >
+      {data.icon}
+      {data.label}
+    </div>
+  );
+
+  const fetchServices = async (clubId) => {
+    try {
+      const params = {
+        type: "PRODUCT",
+        club_id: clubId,
+      };
+
+      const response = await authAxios().get("/service/list", { params });
+
+      const productData = response.data?.data || [];
+
+      // ✅ Check if PRODUCT services exist
+      setHasProductServices(productData.length > 0);
+    } catch (err) {
+      console.error(err);
+      setHasProductServices(false);
+    }
+  };
+
+  useEffect(() => {
+    if (clubFilter?.value) {
+      fetchServices(clubFilter?.value);
+    }
+  }, [clubFilter]);
+
+  const memberPermissions = {
+  canEditMember: [
+    "ADMIN",
+    "CLUB_MANAGER",
+    "ASS_CLUB_MANAGER",
+    "FOH",
+    "FITNESS_MANAGER",
+    "ASS_FITNESS_MANAGER",
+    "TRAINER",
+    "PROGRAM_SPECIALIST",
+    "FINANCE_MANAGER",
+  ],
+
+  canViewCallLogs: [
+    "FOH",
+    "TRAINER",
+    "FITNESS_MANAGER",
+    "ASS_FITNESS_MANAGER",
+    "CLUB_MANAGER",
+    "ASS_CLUB_MANAGER",
+    "PROGRAM_SPECIALIST",
+    "ADMIN",
+  ],
+
+  canBuyServices: [
+    "FOH",
+    "CLUB_MANAGER",
+    "ASS_CLUB_MANAGER",
+    "PROGRAM_SPECIALIST",
+    "ADMIN",
+  ],
+};
+
+const hasMemberPermission = (permission) =>
+  memberPermissions[permission]?.includes(userRole);
+
   return (
     <>
       <div className="page--content">
@@ -493,94 +683,47 @@ const MemberList = () => {
           </div>
 
           <div className="w-fit bg-white shodow--box rounded-[10px] px-5 py-2">
-            {/* <div className="flex items-center">
-              <div className="w-fit flex items-center gap-2 border-r">
-                <div className="text-md font-medium text-gray-600 flex gap-2 items-center">
-                  <FaCircle className="text-[10px] text-[#009EB2]" /> Total
-                  Members
-                </div>
-                <div className="pr-2">
-                  <span className="text-md font-semibold">
-                    {stats?.total_members}
-                  </span>
-                </div>
-              </div>
-              <div className="w-fit flex items-center gap-2 border-r pl-2">
-                <div className="text-md font-medium text-gray-600 flex gap-2 items-center">
-                  <FaCircle className="text-[10px] text-[#1F9254]" />
-                  Active Members
-                </div>
-                <div className="pr-2">
-                  <span className="text-md font-semibold">
-                    {stats?.active_members}
-                  </span>
-                </div>
-              </div>
-              <div className="w-fit flex items-center gap-2 border-r pl-2">
-                <div className="text-md font-medium text-gray-600 flex gap-2 items-center">
-                  <FaCircle className="text-[10px] text-[#ff9900]" />
-                  Inactive Members
-                </div>
-                <div className="pr-2">
-                  <span className="text-md font-semibold">
-                    {stats?.inactive_members}
-                  </span>
-                </div>
-              </div>
-              <div className="w-fit flex items-center gap-2 pl-2">
-                <div className="text-md font-medium text-gray-600 flex gap-2 items-center">
-                  <FaCircle className="text-[10px] text-[#FF0000]" />
-                  Expired Members
-                </div>
-                <div>
-                  <span className="text-md font-semibold">
-                    {stats?.expired_members ? stats?.expired_members : 0}
-                  </span>
-                </div>
-              </div>
-            </div> */}
             <div className="flex items-center">
               <div className="w-fit flex items-center gap-2 border-r">
                 <div className="text-sm font-medium text-gray-600 flex gap-2 items-center">
-                  <FaCircle className="text-[10px] text-[#009EB2]" /> Total New
-                  Member
+                  <FaCircle className="text-[10px] text-[#009EB2]" /> Active Members
                 </div>
                 <div className="pr-2">
                   <span className="text-sm font-semibold">
-                    {dashboardData?.snapshot?.total_new_member}
+                    {dashboardData?.snapshot?.total_active_members}
                   </span>
                 </div>
               </div>
               <div className="w-fit flex items-center gap-2 border-r pl-2">
                 <div className="text-sm font-medium text-gray-600 flex gap-2 items-center">
                   <FaCircle className="text-[10px] text-[#1F9254]" />
-                  Total Renewal Member
+                  Active PT Members
                 </div>
                 <div className="pr-2">
                   <span className="text-sm font-semibold">
-                    {dashboardData?.snapshot?.total_renewal_member}
+                    {dashboardData?.snapshot?.total_active_pt_members}
                   </span>
                 </div>
               </div>
               <div className="w-fit flex items-center gap-2 border-r pl-2">
                 <div className="text-sm font-medium text-gray-600 flex gap-2 items-center">
                   <FaCircle className="text-[10px] text-[#ff9900]" />
-                  Total Returning Member
+                  Irregular Members
                 </div>
                 <div className="pr-2">
                   <span className="text-sm font-semibold">
-                    {dashboardData?.snapshot?.total_returning_member}
+                    {dashboardData?.snapshot?.total_irregular_members}
                   </span>
                 </div>
               </div>
               <div className="w-fit flex items-center gap-2 pl-2">
                 <div className="text-sm font-medium text-gray-600 flex gap-2 items-center">
                   <FaCircle className="text-[10px] text-[#FF0000]" />
-                  Total Advanced Renewal Member
+                  Inactive Members
                 </div>
                 <div>
                   <span className="text-sm font-semibold">
-                    {dashboardData?.snapshot?.total_advanced_renewal_member}
+                    {dashboardData?.snapshot?.total_inactive_members}
                   </span>
                 </div>
               </div>
@@ -601,6 +744,22 @@ const MemberList = () => {
               />
             </div>
           </div>
+          {!ALLOWED_ROLES.includes(userRole) && (
+            <div className="w-full">
+              <button
+                onClick={handleDownloadMembers}
+                disabled={memberList.length === 0}
+                className={`ms-auto px-4 py-2 rounded flex items-center gap-2
+                ${
+                  memberList.length === 0
+                    ? "bg-gray-400 cursor-not-allowed text-white"
+                    : "bg-black text-white hover:bg-gray-800"
+                }`}
+              >
+                <LuDownload /> <span>Download Report</span>
+              </button>
+            </div>
+          )}
         </div>
 
         {showConfirm && (
@@ -609,7 +768,7 @@ const MemberList = () => {
               <h2 className="text-lg font-semibold mb-4">Confirm Assignment</h2>
               <p className="mb-4">
                 Are you sure you want to assign{" "}
-                <strong>{selectedUserId.length}</strong> lead(s) to{" "}
+                <strong>{selectedUserId.length}</strong> member(s) to{" "}
                 <strong>{bulkOwner?.label}</strong>?
               </p>
               <div className="flex justify-center gap-4">
@@ -652,6 +811,12 @@ const MemberList = () => {
                 setFilterFitness={setFilterFitness}
                 filterGender={filterGender}
                 setFilterGender={setFilterGender}
+                filterDownloadApp={filterDownloadApp}
+                setFilterDownloadApp={setFilterDownloadApp}
+                filterKYCDocumentStatus={filterKYCDocumentStatus}
+                setFilterKYCDocumentStatus={setFilterKYCDocumentStatus}
+                filterCompanyName={filterCompanyName}
+                setFilterCompanyName={setFilterCompanyName}
                 onApplyFilters={handleApplyFiltersFromChild}
                 onRemoveFilter={handleRemoveFilter}
               />
@@ -747,12 +912,15 @@ const MemberList = () => {
                     )}
                     <th className="px-2 py-4 min-w-[120px]">Profile Image</th>
                     <th className="px-2 py-4 min-w-[130px]">Name</th>
+                    <th className="px-2 py-4 min-w-[130px]">Membership ID</th>
                     <th className="px-2 py-4 min-w-[120px]">Club Name</th>
+                    <th className="px-2 py-4 min-w-[130px]">Company Name</th>
                     <th className="px-2 py-4 min-w-[70px]">Gender</th>
                     <th className="px-2 py-4 min-w-[160px]">
                       MemeberShip Duration
                     </th>
                     <th className="px-2 py-4 min-w-[90px]">Status</th>
+                    <th className="px-2 py-4 min-w-[90px]">KYC Status</th>
                     <th className="px-2 py-4 min-w-[90px]">Start On</th>
                     <th className="px-2 py-4 min-w-[90px]">Expired On</th>
                     <th className="px-2 py-4 min-w-[130px]">Trainer Name</th>
@@ -802,7 +970,13 @@ const MemberList = () => {
                         {member?.full_name ? member?.full_name : "--"}
                       </td>
                       <td className="px-2 py-4">
+                        {member?.membership_number ? member?.membership_number : "--"}
+                      </td>
+                      <td className="px-2 py-4">
                         {member?.club_name ? member?.club_name : "--"}
+                      </td>
+                      <td className="px-2 py-4">
+                        {member?.company_name ? member?.company_name : "--"}
                       </td>
                       <td className="px-2 py-4">
                         {formatText(
@@ -831,6 +1005,25 @@ const MemberList = () => {
                           {member?.is_subscribed !== true
                             ? "Inactive"
                             : "Active"}
+                        </span>
+                      </td>
+                      <td className="px-2 py-4">
+                        <span
+                          className={`
+                              flex items-center justify-between gap-1 rounded-full min-h-[30px] px-3 text-sm w-fit
+                            ${
+                              member?.kyc_status === "APPROVED"
+                                ? "bg-[#E8FFE6] text-[#138808]"
+                                : member?.kyc_status === "REJECTED"
+                                  ? "bg-red-100 text-red-600"
+                                  : member?.kyc_status === "PENDING"
+                                    ? "bg-orange-100 text-orange-600"
+                                    : "bg-gray-100 text-gray-500"
+                            }
+                            `}
+                        >
+                          <FaCircle className="text-[10px]" />{" "}
+                          {formatText(member?.kyc_status)}
                         </span>
                       </td>
                       <td className="px-2 py-4">
@@ -874,14 +1067,26 @@ const MemberList = () => {
                         </div>
 
                         {/* Member Action */}
-                        <div className="absolute hidden group-hover:flex gap-2 right-0 h-full top-0 w-[50%] items-center justify-end bg-[linear-gradient(269deg,_#ffffff_30%,_transparent)] pr-5 transition duration-700">
-                          <div className="flex gap-1">
+                        <div
+                          className={`absolute gap-2 right-0 h-full top-0 w-[50%] items-center justify-end
+                          bg-[linear-gradient(269deg,_#ffffff_30%,_transparent)]
+                          pr-5 transition duration-700
+                          ${
+                            hasMemberPermission("canEditMember") ||
+                            hasMemberPermission("canViewCallLogs") ||
+                            (hasMemberPermission("canBuyServices") &&
+                              member?.is_subscribed === true)
+                              ? "hidden group-hover:flex"
+                              : "hidden"
+                          }`}
+                        >
+                          <div className="flex gap-1 h-[100%] items-center">
                             {(userRole === "ADMIN" ||
                               userRole === "CLUB_MANAGER" ||
-                              userRole === "FOH" || 
-                              userRole === "FITNESS_MANAGER" || 
-                              userRole === "TRAINER" || 
-                              userRole === "MARKETING_MANAGER" || 
+                              userRole === "FOH" ||
+                              userRole === "FITNESS_MANAGER" ||
+                              userRole === "TRAINER" ||
+                              userRole === "MARKETING_MANAGER" ||
                               userRole === "FINANCE_MANAGER") && (
                               <Tooltip
                                 id={`edit-member-${member?.id}`}
@@ -923,27 +1128,175 @@ const MemberList = () => {
                             {(userRole === "FOH" ||
                               userRole === "CLUB_MANAGER" ||
                               userRole === "ADMIN") && (
-                                <>
-                                {member?.is_subscribed !== true ? null : (
+                              <div className="relative">
+                                
+                                {/* {member?.is_subscribed !== true ? null : (
                                   <Tooltip
                                     id={`send-payment-${member?.id}`}
-                                    content="Buy services"
+                                    content={
+                                      member?.is_kyc === "YES"
+                                        ? "Action"
+                                        : "KYC required to buy services"
+                                    }
                                     place="left"
                                   >
                                     <div
-                                      className="p-1 cursor-pointer"
-                                      onClick={() => {
-                                        setSelectedLeadMember(member.id);
-                                        setInvoiceModal(true);
-                                        setSelectedLeadClub(member?.club_id);
-                                      }}
+                                      className={`relative list--service ${
+                                        member?.is_kyc === "YES"
+                                          ? "cursor-pointer"
+                                          : "cursor-not-allowed opacity-50"
+                                      }`}
                                     >
-                                      <IoIosAddCircleOutline className="text-[25px] text-black" />
+                                     
+                                      <div className="p-1 ">
+                                        <IoIosAddCircleOutline className="text-[25px] text-black" />
+                                      </div>
+
+                                      
+                                      {member?.is_kyc === "YES" && (
+                                        <div className="fixed right-0 top-[auto] mr-[60px] bg-white rounded shadow-lg z-10 flex-col min-w-[150px] hidden list--service--dropdown">
+                                          <div
+                                            className="cursor-pointer flex gap-2 items-center text-black p-2 hover:bg-gray-100"
+                                            onClick={() => {
+                                              setSelectedLeadMember(member.id);
+                                              setInvoiceModal(true);
+                                              setSelectedLeadClub(
+                                                member?.club_id,
+                                              );
+                                            }}
+                                          >
+                                            <IoLayersOutline className="text-[25px] text-black" />
+                                            Buy Services
+                                          </div>
+                                      
+                                        {hasProductServices && (
+                                          <div
+                                            className="cursor-pointer flex gap-2 items-center border-t text-black p-2 hover:bg-gray-100"
+                                            onClick={() => {
+                                              setSelectedLeadMember(member.id);
+                                              setProductInvoiceModal(true);
+                                              setSelectedLeadClub(
+                                                member?.club_id,
+                                              );
+                                            }}
+                                          >
+                                            <IoFastFoodOutline className="text-[25px] text-black" />
+                                            Buy Products
+                                          </div>
+                                        )}
+                                        </div>
+                                      )}
+                                    </div>
+                                  </Tooltip>
+                                )} */}
+                                {member?.is_subscribed === true && (
+                                  <Tooltip
+                                    id={`send-payment-${member?.id}`}
+                                    content={
+                                      member?.is_kyc === "YES"
+                                        ? "Buy"
+                                        : "KYC required to buy services"
+                                    }
+                                    place="left"
+                                  >
+                                    <div
+                                      className={`min-w-[50px] ${
+                                        member?.is_kyc === "YES"
+                                          ? ""
+                                          : "pointer-events-none opacity-50"
+                                      }`}
+                                    >
+                                      <Select
+                                        options={getOptions(member)}
+                                        components={{
+                                          Option: customOption,
+                                          IndicatorSeparator: () => null,
+                                        }}
+                                        isSearchable={false}
+                                        controlShouldRenderValue={false}
+                                        placeholder={
+                                          <div className="flex items-center justify-center w-full">
+                                            <IoIosAddCircleOutline className="text-[24px] text-black" />
+                                          </div>
+                                        }
+                                        menuPlacement="auto"
+                                        onChange={(selected) => {
+                                          if (selected.value === "services") {
+                                            setSelectedLeadMember(member.id);
+                                            setInvoiceModal(true);
+                                            setSelectedLeadClub(
+                                              member?.club_id,
+                                            );
+                                          }
+
+                                          if (selected.value === "products") {
+                                            setSelectedLeadMember(member.id);
+                                            setProductInvoiceModal(true);
+                                            setSelectedLeadClub(
+                                              member?.club_id,
+                                            );
+                                          }
+                                        }}
+                                        // menuIsOpen={true}
+                                        styles={{
+                                          control: (base) => ({
+                                            ...base,
+                                            minHeight: "30px",
+                                            width: "30px",
+                                            border: "none",
+                                            boxShadow: "none",
+                                            background: "transparent",
+                                            cursor: "pointer",
+                                          }),
+
+                                          valueContainer: (base) => ({
+                                            ...base,
+                                            padding: 0,
+                                            justifyContent: "center",
+                                          }),
+
+                                          placeholder: (base) => ({
+                                            ...base,
+                                            margin: 0,
+                                            position: "absolute",
+                                            top: "50%",
+                                            transform: "translateY(-50%)",
+                                            left: "-12px",
+                                          }),
+
+                                          dropdownIndicator: (base) => ({
+                                            ...base,
+                                            display: "none",
+                                          }),
+
+                                          indicatorsContainer: (base) => ({
+                                            ...base,
+                                            display: "none",
+                                          }),
+
+                                          menu: (base) => ({
+                                            ...base,
+                                            zIndex: 9999,
+                                            width: "180px",
+                                            right: 0,
+                                            top: "100%",
+                                            backgroundColor: "white",
+                                            color: "black",
+                                            // marginTop: "-5px",
+                                          }),
+                                          menuPortal: (base) => ({
+                                            ...base,
+                                            zIndex: 9999,
+                                          }),
+                                        }}
+                                        menuPortalTarget={document.body}
+                                        menuPosition="fixed"
+                                      />
                                     </div>
                                   </Tooltip>
                                 )}
-                                </>
-                              )}
+                              </div>
+                            )}
                           </div>
                         </div>
                         {/* Member Action End */}
@@ -988,8 +1341,16 @@ const MemberList = () => {
           onMemberUpdate={handleMemberUpdate}
         />
       )}
+      {productInvoiceModal && (
+        <CreateProductsInvoice
+          setProductInvoiceModal={setProductInvoiceModal}
+          selectedLeadMember={selectedLeadMember}
+          clubId={selectedLeadClub}
+          onMemberUpdate={handleMemberUpdate}
+        />
+      )}
     </>
   );
 };
 
-export default MemberList;
+export default IsLoadingHOC(MemberList);

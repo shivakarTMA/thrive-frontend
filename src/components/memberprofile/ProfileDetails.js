@@ -122,50 +122,50 @@ const ProfileDetails = ({ member }) => {
     new: {},
   });
 
-  const fetchStaff = async () => {
-    try {
-      // Fetch all staff needed for 'training_by' select (both roles)
-      const res = await authAxios().get("/staff/list?role=TRAINER&role=FOH");
-      const staff = res.data?.data || [];
+  // const fetchStaff = async () => {
+  //   try {
+  //     // Fetch all staff needed for 'training_by' select (both roles)
+  //     const res = await authAxios().get("/staff/list?role=TRAINER&role=FOH");
+  //     const staff = res.data?.data || [];
 
-      // --- GROUPING STAFF BY ROLE ---
-      const foh = staff
-        .filter((item) => item.role === "FOH")
-        .map((item) => ({
-          value: item.id,
-          label: item.name,
-        }));
+  //     // --- GROUPING STAFF BY ROLE ---
+  //     const foh = staff
+  //       .filter((item) => item.role === "FOH")
+  //       .map((item) => ({
+  //         value: item.id,
+  //         label: item.name,
+  //       }));
 
-      const trainer = staff
-        .filter((item) => item.role === "TRAINER")
-        .map((item) => ({
-          value: item.id,
-          label: item.name,
-        }));
+  //     const trainer = staff
+  //       .filter((item) => item.role === "TRAINER")
+  //       .map((item) => ({
+  //         value: item.id,
+  //         label: item.name,
+  //       }));
 
-      // Final grouped structure for 'training_by' select
-      const groupedOptions = [
-        {
-          label: "FOH",
-          options: foh,
-        },
-        {
-          label: "TRAINER",
-          options: trainer,
-        },
-      ];
+  //     // Final grouped structure for 'training_by' select
+  //     const groupedOptions = [
+  //       {
+  //         label: "FOH",
+  //         options: foh,
+  //       },
+  //       {
+  //         label: "TRAINER",
+  //         options: trainer,
+  //       },
+  //     ];
 
-      // Separate arrays for each select
-      setTrainerList(trainer); // For 'schedule_for'
-      setStaffList(groupedOptions); // For 'training_by'
-    } catch (err) {
-      console.error(err);
-    }
-  };
+  //     // Separate arrays for each select
+  //     setTrainerList(trainer); // For 'schedule_for'
+  //     setStaffList(groupedOptions); // For 'training_by'
+  //   } catch (err) {
+  //     console.error(err);
+  //   }
+  // };
 
-  useEffect(() => {
-    fetchStaff();
-  }, []);
+  // useEffect(() => {
+  //   fetchStaff();
+  // }, []);
 
   // Fetch emergency contact list by member ID
   const fetchEmergencyContacts = async () => {
@@ -784,14 +784,14 @@ const ProfileDetails = ({ member }) => {
                   alt="Profile"
                   className="w-full h-[240px] object-cover"
                 />
-                <div
+                {/* <div
                   className="bg-black bg-opacity-25 flex items-center justify-center absolute w-full h-full top-0 left-0 opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity duration-300"
                   onClick={() => setShowModal(true)}
                 >
                   <div className="bg-white bg-opacity-25 w-[60px] h-[60px] flex items-center justify-center rounded-full">
                     <CiCamera className="text-white text-4xl" />
                   </div>
-                </div>
+                </div> */}
               </div>
 
               {/* Webcam Modal */}
@@ -1629,6 +1629,7 @@ const ProfileDetails = ({ member }) => {
           onCancel={cancelDob}
         />
       )}
+      
     </div>
   );
 };

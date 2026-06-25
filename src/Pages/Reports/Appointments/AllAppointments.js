@@ -5,6 +5,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import { addYears, subYears, format } from "date-fns";
 import { FaCalendarDays } from "react-icons/fa6";
 import {
+  ALLOWED_ROLES,
   customStyles,
   filterActiveItems,
   formatAutoDate,
@@ -22,6 +23,8 @@ import { useFormik } from "formik";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchClubTiming } from "../../../Redux/Reducers/clubTimingSlice";
 import { useClubDatePickerProps } from "../../../hooks/useClubDatePickerProps";
+import { LuDownload } from "react-icons/lu";
+import IsLoadingHOC from "../../../components/common/IsLoadingHOC";
 
 // Date filter dropdown options
 const dateFilterOptions = [
@@ -44,7 +47,8 @@ const filterStatusOptions = [
   { value: "NO_SHOW", label: "No Show" },
 ];
 
-const AllAppointments = () => {
+const AllAppointments = (props) => {
+  const { setLoading } = props;
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [pendingStatus, setPendingStatus] = useState(null);
   const [pendingId, setPendingId] = useState(null);
@@ -80,6 +84,7 @@ const AllAppointments = () => {
   // Applied filters state
   const [appliedFilters, setAppliedFilters] = useState({
     assigned_staff_id: null,
+    appointment_category: null,
     booking_status: null,
     appointment_date: null,
     service_id: null,
@@ -102,6 +107,7 @@ const AllAppointments = () => {
     initialValues: {
       filterTrainer: null,
       filterBookingStatus: null,
+      filterBookingCategory: null,
       filterAppointmentDate: null,
       filterServiceType: null,
       filterServiceName: null,
@@ -162,9 +168,13 @@ const AllAppointments = () => {
     if (filters.booking_status) {
       params.set("booking_status", filters.booking_status);
     }
-    // if (filters.assigned_staff_id) {
-    //   params.set("assigned_staff_id", filters.assigned_staff_id);
-    // }
+    if (filters.assigned_staff_id) {
+      params.set("assigned_staff_id", filters.assigned_staff_id);
+    }
+
+    if (filters.appointment_category) {
+      params.set("appointment_category", filters.appointment_category);
+    }
     // if (filters.service_id) {
     //   params.set("service_id", filters.service_id);
     // }
@@ -203,6 +213,9 @@ const AllAppointments = () => {
       // Applied Filters
       if (appliedFilters.assigned_staff_id) {
         params.assigned_staff_id = appliedFilters.assigned_staff_id;
+      }
+      if (appliedFilters.appointment_category) {
+        params.appointment_category = appliedFilters.appointment_category;
       }
       if (appliedFilters.booking_status) {
         params.booking_status = appliedFilters.booking_status;
@@ -307,9 +320,10 @@ const AllAppointments = () => {
     // Applied filters from URL
     const urlFilters = {
       booking_status: params.get("booking_status") || null,
-      // assigned_staff_id: params.get("assigned_staff_id")
-      //   ? Number(params.get("assigned_staff_id"))
-      //   : null,
+      appointment_category: params.get("appointment_category") || null,
+      assigned_staff_id: params.get("assigned_staff_id")
+        ? Number(params.get("assigned_staff_id"))
+        : null,
       // service_id: params.get("service_id") || null,
       // service_name: params.get("service_name") || null,
     };
@@ -320,6 +334,7 @@ const AllAppointments = () => {
     formik.setValues({
       filterTrainer: urlFilters.assigned_staff_id,
       filterBookingStatus: urlFilters.booking_status,
+      filterBookingCategory: urlFilters.appointment_category,
       filterServiceType: urlFilters.service_id,
       filterServiceName: urlFilters.package_id,
     });
@@ -349,6 +364,7 @@ const AllAppointments = () => {
     clubFilter?.value,
     appliedFilters.assigned_staff_id,
     appliedFilters.booking_status,
+    appliedFilters.appointment_category,
     appliedFilters.appointment_date,
     appliedFilters.service_id,
     appliedFilters.package_id,
@@ -570,6 +586,70 @@ const AllAppointments = () => {
     return () => clearInterval(interval);
   }, []);
 
+  const handleExportBookings = async () => {
+    try {
+      setLoading(true);
+
+      const params = {};
+
+      // 📅 Date filters
+      if (dateFilter?.value && dateFilter.value !== "custom") {
+        params.dateFilter = dateFilter.value;
+      }
+
+      if (dateFilter?.value === "custom" && customFrom && customTo) {
+        params.startDate = format(customFrom, "yyyy-MM-dd");
+        params.endDate = format(customTo, "yyyy-MM-dd");
+      }
+
+      // 🏢 Club filter
+      if (clubFilter?.value) {
+        params.club_id = clubFilter.value;
+      }
+
+      // 🎯 Applied filters
+      Object.entries(appliedFilters).forEach(([key, value]) => {
+        if (value !== null && value !== undefined) {
+          params[key] = value;
+        }
+      });
+
+      console.log("📥 Download Params:", params);
+
+      const response = await authAxios().get("/appointment/fetch/list/download?appointment_type=SESSION", {
+        params,
+        responseType: "blob",
+      });
+
+      // 📄 Create download
+      const blob = new Blob([response.data]);
+
+      const url = window.URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+
+      link.href = url;
+
+      link.setAttribute("download", "all-bookings.xlsx");
+
+      document.body.appendChild(link);
+
+      link.click();
+
+      link.remove();
+
+      window.URL.revokeObjectURL(url);
+
+      toast.success("All bookings list downloaded successfully!");
+    } catch (error) {
+      console.error(error);
+
+      toast.error("Failed to download all bookings list.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <>
       <div className="page--content">
@@ -650,12 +730,40 @@ const AllAppointments = () => {
                 placeholder="Filter by club"
                 value={selectedClub}
                 options={clubOptions}
-                onChange={(option) => setClubFilter(option)}
+                // onChange={(option) => setClubFilter(option)}
+                onChange={(option) => {
+                  setClubFilter(option);
+                  formik.resetForm();
+                  setAppliedFilters({
+                    assigned_staff_id: null,
+                    appointment_category: null,
+                    booking_status: null,
+                    appointment_date: null,
+                    service_id: null,
+                    package_id: null,
+                  });
+                }}
                 isClearable={userRole === "ADMIN" ? true : false}
                 styles={customStyles}
               />
             </div>
           </div>
+          {!ALLOWED_ROLES.includes(userRole) && (
+              <div className="max-w-[160px] w-full">
+                <button
+                  onClick={handleExportBookings}
+                  disabled={appointmentList.length === 0 || (dateFilter?.value === "custom" && (!customFrom || !customTo))}
+                  className={`w-full px-4 py-2 rounded flex items-center gap-2
+                        ${
+                          appointmentList.length === 0 || (dateFilter?.value === "custom" && (!customFrom || !customTo))
+                            ? "bg-gray-400 cursor-not-allowed text-white"
+                            : "bg-black text-white hover:bg-gray-800"
+                        }`}
+                >
+                  <LuDownload /> <span>Export Bookings</span>
+                </button>
+              </div>
+          )}
         </div>
 
         {/* Dynamic Statistics */}
@@ -701,6 +809,7 @@ const AllAppointments = () => {
               formik={formik}
               filterTrainer={formik.values.filterTrainer}
               filterBookingStatus={formik.values.filterBookingStatus}
+              filterBookingCategory={formik.values.filterBookingCategory}
               filterServiceType={formik.values.filterServiceType}
               filterServiceName={formik.values.filterServiceName}
               filterAppointmentDate={formik.values.filterAppointmentDate}
@@ -986,4 +1095,4 @@ const AllAppointments = () => {
   );
 };
 
-export default AllAppointments;
+export default IsLoadingHOC(AllAppointments);

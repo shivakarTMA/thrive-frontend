@@ -1,9 +1,12 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Select from "react-select";
 import {
   blockInvalidNumberKeys,
+  blockInvalidNumberKeysProduct,
   blockNonLettersAndNumbers,
   customStyles,
+  filterActiveItems,
+  sanitizePositiveDecimalProduct,
   sanitizePositiveInteger,
   sanitizeTextWithNumbers,
 } from "../../Helper/helper";
@@ -25,7 +28,7 @@ const productTypeOptions = [
 const foodTypeOptions = [
   { value: "VEG", label: "Veg" },
   { value: "NONVEG", label: "Non-Veg" },
-  { value: "NONE", label: "None" },
+  // { value: "NONE", label: "None" },
 ];
 
 // status type options for dropdown
@@ -34,15 +37,19 @@ const statusType = [
   { label: "Inactive", value: "INACTIVE" },
 ];
 
-const CreateProduct = ({
-  setShowModal,
-  formik,
-  editingOption,
-  serviceOptions,
-  clubOptions,
-  productCategoryOptions,
-}) => {
+const showOnAppOptions = [
+  { label: "Yes", value: true },
+  { label: "No", value: false },
+];
+
+const CreateProduct = ({ setShowModal, formik, editingOption }) => {
   const leadBoxRef = useRef(null);
+
+  const [service, setService] = useState([]);
+  const [productCategory, setProductCategory] = useState([]);
+  const [productFilter, setProductFilter] = useState(null);
+  const [club, setClub] = useState([]);
+  const [clubFilter, setClubFilter] = useState(null);
 
   useEffect(() => {
     const fetchProductById = async (id) => {
@@ -89,6 +96,12 @@ const CreateProduct = ({
                 ? String(data.position)
                 : "",
             status: data?.status || "",
+            show_on_app:
+              data?.show_on_app === true
+                ? true
+                : data?.show_on_app === false
+                  ? false
+                  : null,
           });
         }
       } catch (err) {
@@ -102,6 +115,95 @@ const CreateProduct = ({
   }, [editingOption]);
 
   // Handle image file change and set preview
+
+  const fetchClub = async (search = "") => {
+    try {
+      const res = await authAxios().get("/club/list", {
+        params: search ? { search } : {},
+      });
+      let data = res.data?.data || res.data || [];
+      const activeOnly = filterActiveItems(data);
+      setClub(activeOnly);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const fetchProductCategory = async (clubId) => {
+    try {
+      const params = {
+        club_id: clubId,
+      };
+
+      const res = await authAxios().get("/product/category/list", {
+        params,
+      });
+
+      let data = res.data?.data || [];
+
+      const activeCategory = data.filter((item) => item.status === "ACTIVE");
+
+      setProductCategory(activeCategory);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const fetchService = async (clubId) => {
+    try {
+      const res = await authAxios().get("/service/list", {
+        params: {
+          type: "PRODUCT",
+          club_id: clubId,
+        },
+      });
+
+      let data = res.data?.data || [];
+
+      const activeService = data.filter((item) => item.status === "ACTIVE");
+
+      setService(activeService);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const clubOptions =
+    club?.map((item) => ({
+      label: item.name,
+      value: item.id,
+    })) || [];
+
+  const productServices = service?.filter((item) => item.type === "PRODUCT");
+
+  const serviceOptions =
+    productServices?.map((item) => ({
+      label: item.name,
+      value: item.id,
+    })) || [];
+
+  const productCategoryOptions =
+    productCategory
+      ?.sort((a, b) => a.position - b.position)
+      .map((item) => ({
+        label: item.title,
+        value: item.id,
+        position: item.position,
+      })) || [];
+
+  useEffect(() => {
+    fetchClub();
+  }, []);
+
+  useEffect(() => {
+    if (formik.values.club_id) {
+      fetchService(formik.values.club_id);
+      fetchProductCategory(formik.values.club_id);
+    } else {
+      setService([]);
+      setProductCategory([]);
+    }
+  }, [formik.values.club_id]);
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
@@ -123,11 +225,6 @@ const CreateProduct = ({
     setShowModal(false);
   };
 
-  useEffect(() => {
-    if (serviceOptions.length === 1) {
-      formik.setFieldValue("service_id", serviceOptions[0].value);
-    }
-  }, []);
 
   return (
     <div
@@ -158,10 +255,10 @@ const CreateProduct = ({
                       {formik.values?.image ? (
                         <img
                           src={
-                              typeof formik.values.image === "string"
-                                ? formik.values.image
-                                : URL.createObjectURL(formik.values.image)
-                            }
+                            typeof formik.values.image === "string"
+                              ? formik.values.image
+                              : URL.createObjectURL(formik.values.image)
+                          }
                           className="w-full h-full object-cover"
                         />
                       ) : (
@@ -212,9 +309,18 @@ const CreateProduct = ({
                           ) || null
                         }
                         options={clubOptions}
-                        onChange={(option) =>
-                          formik.setFieldValue("club_id", option.value)
-                        }
+                        onChange={(option) => {
+                          // clear dropdown data first
+                          setService([]);
+                          setProductCategory([]);
+
+                          // clear selected values
+                          formik.setFieldValue("service_id", null);
+                          formik.setFieldValue("product_category_id", null);
+
+                          // update club
+                          formik.setFieldValue("club_id", option.value);
+                        }}
                         onBlur={() => formik.setFieldTouched("club_id", true)}
                         styles={customStyles}
                         className="!capitalize"
@@ -241,7 +347,9 @@ const CreateProduct = ({
                         // onChange={formik.handleChange}
                         onKeyDown={blockNonLettersAndNumbers}
                         onChange={(e) => {
-                          const cleaned = sanitizeTextWithNumbers(e.target.value);
+                          const cleaned = sanitizeTextWithNumbers(
+                            e.target.value,
+                          );
                           formik.setFieldValue("name", cleaned);
                         }}
                         onBlur={formik.handleBlur}
@@ -268,7 +376,9 @@ const CreateProduct = ({
                         // onChange={formik.handleChange}
                         onKeyDown={blockNonLettersAndNumbers}
                         onChange={(e) => {
-                          const cleaned = sanitizeTextWithNumbers(e.target.value);
+                          const cleaned = sanitizeTextWithNumbers(
+                            e.target.value,
+                          );
                           formik.setFieldValue("caption", cleaned);
                         }}
                         onBlur={formik.handleBlur}
@@ -289,9 +399,14 @@ const CreateProduct = ({
                     <div className="relative">
                       <Select
                         options={serviceOptions}
-                        value={serviceOptions.find(
-                          (option) => option.value === formik.values.service_id,
-                        )}
+                        // value={serviceOptions.find(
+                        //   (option) => option.value === formik.values.service_id,
+                        // )}
+                        value={
+                          serviceOptions.find(
+                            (option) => option.value === formik.values.service_id
+                          ) || null
+                        }
                         onChange={(option) =>
                           formik.setFieldValue("service_id", option?.value)
                         }
@@ -315,10 +430,16 @@ const CreateProduct = ({
                     <div className="relative">
                       <Select
                         options={productCategoryOptions}
-                        value={productCategoryOptions.find(
-                          (option) =>
-                            option.value === formik.values.product_category_id,
-                        )}
+                        // value={productCategoryOptions.find(
+                        //   (option) =>
+                        //     option.value === formik.values.product_category_id,
+                        // )}
+                        value={
+                          productCategoryOptions.find(
+                            (option) =>
+                              option.value === formik.values.product_category_id
+                          ) || null
+                        }
                         onChange={(option) =>
                           formik.setFieldValue(
                             "product_category_id",
@@ -340,7 +461,7 @@ const CreateProduct = ({
                   </div>
 
                   {/*  Nourish Type */}
-                  <div>
+                  {/* <div>
                     <label className="mb-2 block">
                       Product Type<span className="text-red-500">*</span>
                     </label>
@@ -366,7 +487,7 @@ const CreateProduct = ({
                           {formik.errors.product_type}
                         </p>
                       )}
-                  </div>
+                  </div> */}
                   {/*  Food Type */}
                   <div>
                     <label className="mb-2 block">
@@ -406,7 +527,9 @@ const CreateProduct = ({
                         // onChange={formik.handleChange}
                         onKeyDown={blockNonLettersAndNumbers}
                         onChange={(e) => {
-                          const cleaned = sanitizeTextWithNumbers(e.target.value);
+                          const cleaned = sanitizeTextWithNumbers(
+                            e.target.value,
+                          );
                           formik.setFieldValue("sku", cleaned);
                         }}
                         onBlur={formik.handleBlur}
@@ -432,7 +555,9 @@ const CreateProduct = ({
                         // onChange={formik.handleChange}
                         onKeyDown={blockNonLettersAndNumbers}
                         onChange={(e) => {
-                          const cleaned = sanitizeTextWithNumbers(e.target.value);
+                          const cleaned = sanitizeTextWithNumbers(
+                            e.target.value,
+                          );
                           formik.setFieldValue("allergens", cleaned);
                         }}
                         onBlur={formik.handleBlur}
@@ -456,7 +581,9 @@ const CreateProduct = ({
                         // onChange={formik.handleChange}
                         onKeyDown={blockNonLettersAndNumbers}
                         onChange={(e) => {
-                          const cleaned = sanitizeTextWithNumbers(e.target.value);
+                          const cleaned = sanitizeTextWithNumbers(
+                            e.target.value,
+                          );
                           formik.setFieldValue("hsn_sac_code", cleaned);
                         }}
                         onBlur={formik.handleBlur}
@@ -531,9 +658,7 @@ const CreateProduct = ({
 
                   {/* GST (%) */}
                   <div>
-                    <label className="mb-2 block">
-                      GST (%)
-                    </label>
+                    <label className="mb-2 block">GST (%)</label>
                     <div className="relative">
                       <input
                         type="number"
@@ -600,9 +725,9 @@ const CreateProduct = ({
                         name="calorie"
                         value={formik.values.calorie}
                         // onChange={formik.handleChange}
-                        onKeyDown={blockInvalidNumberKeys} // ⛔ blocks typing -, e, etc.
+                        onKeyDown={blockInvalidNumberKeysProduct} // ⛔ blocks typing -, e, etc.
                         onChange={(e) => {
-                          const cleanValue = sanitizePositiveInteger(
+                          const cleanValue = sanitizePositiveDecimalProduct(
                             e.target.value,
                           );
                           formik.setFieldValue("calorie", cleanValue);
@@ -628,9 +753,9 @@ const CreateProduct = ({
                         name="protein"
                         value={formik.values.protein}
                         // onChange={formik.handleChange}
-                        onKeyDown={blockInvalidNumberKeys} // ⛔ blocks typing -, e, etc.
+                        onKeyDown={blockInvalidNumberKeysProduct} // ⛔ blocks typing -, e, etc.
                         onChange={(e) => {
-                          const cleanValue = sanitizePositiveInteger(
+                          const cleanValue = sanitizePositiveDecimalProduct(
                             e.target.value,
                           );
                           formik.setFieldValue("protein", cleanValue);
@@ -656,9 +781,9 @@ const CreateProduct = ({
                         name="carbohydrate"
                         value={formik.values.carbohydrate}
                         // onChange={formik.handleChange}
-                        onKeyDown={blockInvalidNumberKeys} // ⛔ blocks typing -, e, etc.
+                        onKeyDown={blockInvalidNumberKeysProduct} // ⛔ blocks typing -, e, etc.
                         onChange={(e) => {
-                          const cleanValue = sanitizePositiveInteger(
+                          const cleanValue = sanitizePositiveDecimalProduct(
                             e.target.value,
                           );
                           formik.setFieldValue("carbohydrate", cleanValue);
@@ -685,9 +810,9 @@ const CreateProduct = ({
                         name="fat"
                         value={formik.values.fat}
                         // onChange={formik.handleChange}
-                        onKeyDown={blockInvalidNumberKeys} // ⛔ blocks typing -, e, etc.
+                        onKeyDown={blockInvalidNumberKeysProduct} // ⛔ blocks typing -, e, etc.
                         onChange={(e) => {
-                          const cleanValue = sanitizePositiveInteger(
+                          const cleanValue = sanitizePositiveDecimalProduct(
                             e.target.value,
                           );
                           formik.setFieldValue("fat", cleanValue);
@@ -781,6 +906,36 @@ const CreateProduct = ({
                         <p className="text-red-500 text-sm mt-1">
                           {formik.errors.short_description}
                         </p>
+                      )}
+                  </div>
+                  <div>
+                    <label className="mb-2 block">
+                      Show on App<span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <Select
+                        name="show_on_app"
+                        value={showOnAppOptions.find(
+                          (opt) => opt.value === formik.values.show_on_app,
+                        )}
+                        options={showOnAppOptions}
+                        onChange={(option) =>
+                          formik.setFieldValue(
+                            "show_on_app",
+                            option?.value ?? null,
+                          )
+                        }
+                        onBlur={() =>
+                          formik.setFieldTouched("show_on_app", true)
+                        }
+                        styles={customStyles}
+                      />
+                    </div>
+                    {formik.touched.show_on_app &&
+                      formik.errors.show_on_app && (
+                        <div className="text-red-500 text-sm">
+                          {formik.errors.show_on_app}
+                        </div>
                       )}
                   </div>
                   {/* Status */}

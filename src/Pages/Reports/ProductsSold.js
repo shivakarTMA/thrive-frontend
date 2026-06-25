@@ -4,6 +4,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import { addYears, subYears } from "date-fns";
 import { FaCalendarDays, FaEye, FaPrint } from "react-icons/fa6";
 import {
+  ALLOWED_ROLES,
   customStyles,
   filterActiveItems,
   formatAutoDate,
@@ -13,7 +14,7 @@ import {
 } from "../../Helper/helper";
 import Select from "react-select";
 import ProductSoldPanel from "../../components/FilterPanel/ProductSoldPanel";
-import { useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useFormik } from "formik";
 import { authAxios } from "../../config/config";
 import { toast } from "react-toastify";
@@ -113,6 +114,7 @@ const ProductsSold = (props) => {
   const clubOptions = clubList.map((item) => ({
     label: item.name,
     value: item.id,
+    prefix: item.prefix,
   }));
 
   const selectedClub =
@@ -145,6 +147,9 @@ const ProductsSold = (props) => {
     }
     if (filters.package_type) {
       params.set("package_type", filters.package_type);
+    }
+    if (filters.lead_owner_id) {
+      params.set("lead_owner_id", filters.lead_owner_id);
     }
     if (filters.bill_type) {
       params.set("bill_type", filters.bill_type);
@@ -286,6 +291,9 @@ const ProductsSold = (props) => {
       bill_type: params.get("bill_type") || null,
       service_type: params.get("service_type") || null,
       package_type: params.get("package_type") || null,
+      lead_owner_id: params.get("lead_owner_id")
+      ? Number(params.get("lead_owner_id"))
+      : null,
     };
 
     setAppliedFilters(urlFilters);
@@ -431,16 +439,42 @@ const ProductsSold = (props) => {
     try {
       const response = await authAxios().get(
         `/report/prologic/export?date=${dateExport}&club_id=${clubIdExport}&format=${formatExport}`,
-        { responseType: "blob" },
+        { responseType: "blob" }
       );
 
       const blob = new Blob([response.data]);
       const link = document.createElement("a");
 
-      const fileName = formatExport === "excel" ? "report.xlsx" : "report.xml";
+      // Club code mapping
+      // const clubCodeMap = {
+      //   1: "DICCL",
+      //   4: "DCCDL",
+      // };
+       const selectedClub = clubOptions.find(
+        (club) => club.value === clubIdExport
+      );
+
+      const clubCode = selectedClub?.prefix;
+
+      let fileName;
+
+      if (clubCode) {
+        const date = new Date(dateExport);
+
+        const formattedDate = date.toLocaleDateString("en-GB", {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+        }).replace(/ /g, "");
+
+        fileName = `GL${formattedDate}_000_${clubCode}.${formatExport === "excel" ? "xlsx" : "xml"}`;
+      } else {
+        fileName = `report.${formatExport === "excel" ? "xlsx" : "xml"}`;
+      }
 
       link.href = window.URL.createObjectURL(blob);
       link.download = fileName;
+
       document.body.appendChild(link);
       link.click();
       link.remove();
@@ -449,9 +483,75 @@ const ProductsSold = (props) => {
       setClubIdExport("");
       setDateExport(null);
       setFormatExport("excel");
+
       toast.success("File downloaded successfully");
     } catch (error) {
       console.error(error);
+      toast.error("No orders found.");
+    }
+  };
+
+const handleExportProductsSold = async () => {
+    try {
+      setLoading(true);
+
+      const params = {};
+
+      // 📅 Date filters
+      if (dateFilter?.value && dateFilter.value !== "custom") {
+        params.dateFilter = dateFilter.value;
+      }
+
+      if (dateFilter?.value === "custom" && customFrom && customTo) {
+        params.startDate = format(customFrom, "yyyy-MM-dd");
+        params.endDate = format(customTo, "yyyy-MM-dd");
+      }
+
+      // 🏢 Club filter
+      if (clubFilter?.value) {
+        params.club_id = clubFilter.value;
+      }
+
+      // 🎯 Applied filters
+      Object.entries(appliedFilters).forEach(([key, value]) => {
+        if (value !== null && value !== undefined) {
+          params[key] = value;
+        }
+      });
+
+      console.log("📥 Download Params:", params);
+
+      const response = await authAxios().get("/report/product/sold/download", {
+        params,
+        responseType: "blob",
+      });
+
+      // 📄 Create download
+      const blob = new Blob([response.data]);
+
+      const url = window.URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+
+      link.href = url;
+
+      link.setAttribute("download", "all-orders.xlsx");
+
+      document.body.appendChild(link);
+
+      link.click();
+
+      link.remove();
+
+      window.URL.revokeObjectURL(url);
+
+      toast.success("All orders list downloaded successfully!");
+    } catch (error) {
+      console.error(error);
+
+      toast.error("Failed to download all orders list.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -538,13 +638,31 @@ const ProductsSold = (props) => {
               />
             </div>
           </div>
-          {(userRole === "FINANCE_MANAGER" || userRole === "ADMIN") && (
-            <button
-              onClick={() => setExportShowModal(true)}
-              className="px-4 py-2 bg-black text-white rounded flex items-center gap-2"
-            >
-              <LuDownload /> <span>Export</span>
-            </button>
+          {!ALLOWED_ROLES.includes(userRole) && (
+            <>
+           <div className="max-w-[150px] w-full">
+              <button
+                onClick={() => setExportShowModal(true)}
+                className={`ms-auto w-full px-4 py-2 rounded flex items-center gap-2 bg-black text-white hover:bg-gray-800`}
+                >
+                <LuDownload /> <span>Prologic Export</span>
+              </button>
+            </div>
+            <div className="max-w-[140px] w-full">
+              <button
+                onClick={handleExportProductsSold}
+                disabled={productSoldData.length === 0 || (dateFilter?.value === "custom" && (!customFrom || !customTo))}
+                className={`w-full px-4 py-2 rounded flex items-center gap-2
+                      ${
+                        productSoldData.length === 0 || (dateFilter?.value === "custom" && (!customFrom || !customTo))
+                          ? "bg-gray-400 cursor-not-allowed text-white"
+                          : "bg-black text-white hover:bg-gray-800"
+                      }`}
+              >
+                <LuDownload /> <span>Export Orders</span>
+              </button>
+            </div>
+            </>
           )}
         </div>
 
@@ -683,7 +801,7 @@ const ProductsSold = (props) => {
                   {productSoldData.length > 0 ? (
                     productSoldData.map((row, idx) => (
                       <tr
-                        key={row.serialNumber}
+                        key={row.order_id}
                         className="bg-white border-b hover:bg-gray-50 border-gray-200"
                       >
                         {/* <td className="px-2 py-4">{row?.serialNumber}</td> */}
@@ -702,7 +820,19 @@ const ProductsSold = (props) => {
                             : "--"}
                         </td>
                         <td className="px-2 py-4">
-                          {row?.member_name ? row?.member_name : "--"}
+                          {!(
+                            userRole === "MARKETING_MANAGER" ||
+                            userRole === "FINANCE_MANAGER_CLUB" ||
+                            userRole === "FINANCE_MANAGER_CORPORATE"
+                          ) ? (
+                            <Link to={`/member/${row.member_id}`}>
+                              <span className="text-[#009EB2] font-medium">
+                                {row.member_name || "--"}
+                              </span>
+                            </Link>
+                          ) : (
+                            row?.member_name || "--"
+                          )}
                         </td>
                         <td className="px-2 py-4">
                           {row?.invoice_no ? row?.invoice_no : "--"}
@@ -779,9 +909,10 @@ const ProductsSold = (props) => {
                             : 0}
                         </td>
                         <td className="px-2 py-4">
-                          {row?.payment_method
+                          {/* {row?.payment_method
                             ? formatText(row?.payment_method)
-                            : "--"}
+                            : "--"} */}
+                          {row?.payment_method === "UPI_ICICI" ? "UPI" : formatText(row?.payment_method)}
                         </td>
                         <td className="px-2 py-4">
                           <div className="flex">
@@ -923,7 +1054,7 @@ const ProductsSold = (props) => {
                       {/* Date */}
                       <div>
                         <label className="mb-2 block">
-                          Start Time<span className="text-red-500">*</span>
+                          Start Date<span className="text-red-500">*</span>
                         </label>
                         <div className="custom--date relative">
                           <span className="absolute z-[1] mt-[10px] ml-[15px]">

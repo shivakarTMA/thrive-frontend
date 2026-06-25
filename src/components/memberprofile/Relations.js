@@ -8,7 +8,12 @@ import { useFormik } from "formik";
 import * as Yup from "yup";
 import "react-phone-number-input/style.css";
 import { IoCloseCircle } from "react-icons/io5";
-import { allowOnlyLetters, blockNonLetters, formatAutoDate, selectIcon } from "../../Helper/helper";
+import {
+  allowOnlyLetters,
+  blockNonLetters,
+  formatAutoDate,
+  selectIcon,
+} from "../../Helper/helper";
 import { FaEnvelope, FaUser } from "react-icons/fa";
 import { MdOutlineFamilyRestroom } from "react-icons/md";
 import { FiPlus } from "react-icons/fi";
@@ -20,6 +25,7 @@ import {
   parsePhoneNumberFromString,
   isPossiblePhoneNumber,
 } from "libphonenumber-js";
+import Tooltip from "../common/Tooltip";
 
 /* ---------------- VALIDATION ---------------- */
 
@@ -67,6 +73,8 @@ const validationSchema = Yup.object({
 const Relations = ({ details }) => {
   const [referredBy, setReferredBy] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const kycCheckMember = details?.is_kyc;
+  const freezeStatus = details?.freeze_status;
 
   const { user } = useSelector((state) => state.auth);
   const userRole = user.role;
@@ -132,7 +140,7 @@ const Relations = ({ details }) => {
           toast.error(res?.data?.message || "Something went wrong");
         }
       } catch (error) {
-        console.log(error)
+        console.log(error);
       }
     },
   });
@@ -144,20 +152,41 @@ const Relations = ({ details }) => {
   return (
     <div className="p-4 bg-white rounded shadow">
       {(userRole === "FOH" ||
-          userRole === "CLUB_MANAGER" ||
-          userRole === "ADMIN") && (
-      <div className="flex justify-end mb-3">
-        <button
-          onClick={() => {
-            setIsModalOpen(true);
-            formik.resetForm();
-          }}
-          className="px-4 py-2 bg-black text-white rounded flex items-center gap-2"
-        >
-          <FiPlus /> Add Referral
-        </button>
-      </div>
+        userRole === "CLUB_MANAGER" ||
+        userRole === "ADMIN") && (
+        <div className="flex justify-end mb-3">
+          {(userRole === "FOH" ||
+            userRole === "CLUB_MANAGER" ||
+            userRole === "ADMIN") && (
+            <div className="flex justify-end mb-3">
+              {kycCheckMember !== true || freezeStatus === "FREEZED" ? (
+                <Tooltip
+                  id={`tooltip-membership-kyc`}
+                  content={freezeStatus === "FREEZED" ? "Your membership is currently frozen." : "Your kyc is not completed yet."}
+                  place="top"
+                >
+                  <button
+                    disabled={true}
+                    className="px-3 py-2 flex rounded items-center gap-2 border text-sm bg-gray-300 border-gray-300 cursor-not-allowed text-gray-500"
+                  >
+                    <FiPlus /> Add Referral
+                  </button>
+                </Tooltip>
+              ) : (
+                <button
+                  onClick={() => {
+                    setIsModalOpen(true);
+                    formik.resetForm();
+                  }}
+                  className="px-4 py-2 bg-black text-white rounded flex items-center gap-2"
+                >
+                  <FiPlus /> Add Referral
+                </button>
+              )}
+            </div>
           )}
+        </div>
+      )}
 
       <div className="overflow-auto">
         <table className="min-w-full border border-gray-300 text-sm">

@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import Switch from "react-switch";
 import ConfirmPopup from "./common/ConfirmPopup";
 import {
+  formatAutoDate,
+  formatDate,
   formatDateTimeLead,
   formatIndianNumber,
   formatText,
@@ -60,6 +62,7 @@ const PendingOrderTable = ({ orders, fetchOrders }) => {
             <th className="p-2 min-w-[150px]">Fulfilment Status</th>
             <th className="p-2 min-w-[150px]">Delivered By</th>
             <th className="p-2 min-w-[170px]">Delivered At</th>
+            <th className="p-2 min-w-[170px]">Scheduled For</th>
             {(userRole === "CLUB_MANAGER" ||
               userRole === "FOH" ||
               userRole === "ADMIN") && (
@@ -109,6 +112,12 @@ const PendingOrderTable = ({ orders, fetchOrders }) => {
                   {order?.delivered_at
                     ? formatDateTimeLead(order?.delivered_at)
                     : "--"}
+                </td>
+                <td className="p-2">
+                  {order?.delivery_date ? <>
+                    <div>{formatAutoDate(order?.delivery_date)} {order?.delivery_start_time}</div>
+                  </> : "--"
+                  }
                 </td>
                 {(userRole === "CLUB_MANAGER" ||
                   userRole === "FOH" ||

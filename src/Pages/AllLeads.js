@@ -4,6 +4,7 @@ import { LiaEdit } from "react-icons/lia";
 import { MdCall } from "react-icons/md";
 import Select from "react-select";
 import {
+  ALLOWED_ROLES,
   customStyles,
   dasboardStyles,
   filterActiveItems,
@@ -28,7 +29,7 @@ import LeadSendPaymentLink from "./LeadSendPaymentLink";
 import { toast } from "react-toastify";
 import { authAxios } from "../config/config";
 import Pagination from "../components/common/Pagination";
-import { LuCalendarPlus } from "react-icons/lu";
+import { LuCalendarPlus, LuDownload } from "react-icons/lu";
 import CreateLeadAppointment from "../components/Appointment/CreateLeadAppointment";
 import { FaCalendarDays } from "react-icons/fa6";
 import LeadFilterPanel from "../components/FilterPanel/LeadFilterPanel";
@@ -84,6 +85,8 @@ const AllLeads = (props) => {
 
   const [searchParams] = useSearchParams();
   const leadIdFromSearch = searchParams.get("id");
+  const clubIdFromUrl = searchParams.get("club_id");
+  const [searchedLeadId, setSearchedLeadId] = useState(null);
 
   const [isSearchMode, setIsSearchMode] = useState(false);
 
@@ -205,6 +208,8 @@ const AllLeads = (props) => {
 
       if (isSearchMode && leadIdFromSearch) {
         params.id = leadIdFromSearch;
+        // ✅ Store searched lead id
+        setSearchedLeadId(leadIdFromSearch);
       } else {
         if (dateFilter?.value && dateFilter.value !== "custom") {
           params.dateFilter = dateFilter.value;
@@ -222,6 +227,7 @@ const AllLeads = (props) => {
         Object.entries(appliedFilters).forEach(([key, value]) => {
           if (value) params[key] = value;
         });
+        setSearchedLeadId(null); // Clear searched lead id when not in search mode
       }
 
       console.log("🔍 API Request Params:", params);
@@ -656,31 +662,31 @@ const AllLeads = (props) => {
   /* =========================
        4️⃣ STORAGE TAMPER DETECTION
     ========================== */
-  useEffect(() => {
-    const handleStorageChange = () => {
-      const token = localStorage.getItem("accessToken");
+  // useEffect(() => {
+  //   const handleStorageChange = () => {
+  //     const token = localStorage.getItem("accessToken");
 
-      if (!token) {
-        logoutAndRedirect();
-        return;
-      }
+  //     if (!token) {
+  //       logoutAndRedirect();
+  //       return;
+  //     }
 
-      try {
-        const parsed = JSON.parse(atob(token.split(".")[1]));
+  //     try {
+  //       const parsed = JSON.parse(atob(token.split(".")[1]));
 
-        // ❌ invalid structure
-        if (!parsed?.id || !parsed?.role) {
-          logoutAndRedirect();
-        }
-      } catch (e) {
-        // ❌ corrupted token
-        logoutAndRedirect();
-      }
-    };
+  //       // ❌ invalid structure
+  //       if (!parsed?.id || !parsed?.role) {
+  //         logoutAndRedirect();
+  //       }
+  //     } catch (e) {
+  //       // ❌ corrupted token
+  //       logoutAndRedirect();
+  //     }
+  //   };
 
-    window.addEventListener("storage", handleStorageChange);
-    return () => window.removeEventListener("storage", handleStorageChange);
-  }, []);
+  //   window.addEventListener("storage", handleStorageChange);
+  //   return () => window.removeEventListener("storage", handleStorageChange);
+  // }, []);
 
   /* =========================
        5️⃣ TAB FOCUS VALIDATION
@@ -727,6 +733,140 @@ const AllLeads = (props) => {
       logoutAndRedirect();
     }
   }, [accessToken, tokenExpiry, authFromToken, location.pathname]);
+
+  const handleDownloadLead = async () => {
+    try {
+      setLoading(true);
+
+      const params = {};
+
+      // 🔍 Search mode support
+      if (searchedLeadId) {
+        params.id = searchedLeadId;
+
+        if (clubIdFromUrl) {
+          params.club_id = clubIdFromUrl;
+        }
+      } else {
+        // 📅 Date filters
+        if (dateFilter?.value && dateFilter.value !== "custom") {
+          params.dateFilter = dateFilter.value;
+        }
+
+        if (
+          dateFilter?.value === "custom" &&
+          customFrom &&
+          customTo
+        ) {
+          params.startDate = format(customFrom, "yyyy-MM-dd");
+          params.endDate = format(customTo, "yyyy-MM-dd");
+        }
+
+        // 🏢 Club filter
+        if (clubFilter?.value) {
+          params.club_id = clubFilter.value;
+        }
+
+        // 🎯 Applied filters
+        Object.entries(appliedFilters).forEach(([key, value]) => {
+          if (value !== null && value !== undefined) {
+            params[key] = value;
+          }
+        });
+      }
+
+      console.log("📥 Download Params:", params);
+
+      const response = await authAxios().get(
+        "/lead/download/list",
+        {
+          params,
+          responseType: "blob",
+        }
+      );
+
+      // 📄 Create download
+      const blob = new Blob([response.data]);
+
+      const url = window.URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+
+      link.href = url;
+
+      link.setAttribute("download", "lead-list.xlsx");
+
+      document.body.appendChild(link);
+
+      link.click();
+
+      link.remove();
+
+      window.URL.revokeObjectURL(url);
+
+      toast.success("Lead list downloaded successfully!");
+    } catch (error) {
+      console.error(error);
+
+      toast.error("Failed to download lead list.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const permissions = {
+  canEdit: [
+    "CLUB_MANAGER",
+    "ASS_CLUB_MANAGER",
+    "ADMIN",
+    "PROGRAM_SPECIALIST",
+    "FOH",
+  ],
+
+  canCallLog: [
+    "FOH",
+    "TRAINER",
+    "FITNESS_MANAGER",
+    "ASS_FITNESS_MANAGER",
+    "CLUB_MANAGER",
+    "ASS_CLUB_MANAGER",
+    "PROGRAM_SPECIALIST",
+    "ADMIN",
+  ],
+
+  canConvert: [
+    "FOH",
+    "TRAINER",
+    "FITNESS_MANAGER",
+    "ASS_FITNESS_MANAGER",
+    "CLUB_MANAGER",
+    "ASS_CLUB_MANAGER",
+    "PROGRAM_SPECIALIST",
+    "ADMIN",
+  ],
+
+  canScheduleTrial: [
+    "FOH",
+    "CLUB_MANAGER",
+    "ASS_CLUB_MANAGER",
+    "PROGRAM_SPECIALIST",
+    "ADMIN",
+  ],
+
+  canAppointment: [
+    "FOH",
+    "TRAINER",
+    "FITNESS_MANAGER",
+    "ASS_FITNESS_MANAGER",
+    "CLUB_MANAGER",
+    "ASS_CLUB_MANAGER",
+    "PROGRAM_SPECIALIST",
+    "ADMIN",
+  ],
+};
+
+const hasPermission = (permission) =>
+  permissions[permission]?.includes(userRole);
 
   return (
     <>
@@ -834,6 +974,22 @@ const AllLeads = (props) => {
                     />
                   </div>
                 </div>
+                {!ALLOWED_ROLES.includes(userRole) && (
+                  <div className="w-full max-w-[180px]">
+                    <button
+                      onClick={handleDownloadLead}
+                      disabled={allLeads.length === 0 || (dateFilter?.value === "custom" && (!customFrom || !customTo))}
+                      className={`ms-auto px-4 py-2 rounded flex items-center gap-2
+                      ${
+                        allLeads.length === 0 || (dateFilter?.value === "custom" && (!customFrom || !customTo))
+                          ? "bg-gray-400 cursor-not-allowed text-white"
+                          : "bg-black text-white hover:bg-gray-800"
+                      }`}
+                    >
+                      <LuDownload /> <span>Download Report</span>
+                    </button>
+                  </div>
+                )}
               </div>
 
               <div className="w-full p-3 border bg-white shodow--box rounded-[10px]">
@@ -1061,7 +1217,20 @@ const AllLeads = (props) => {
 
                                 {/* Lead Actions */}
                                 {/* {(userRole === "CLUB_MANAGER" || userRole === "ADMIN" || userRole === "FOH") && ( */}
-                                <div className="absolute hidden group-hover:flex gap-2 right-0 h-full top-0 w-[50%] items-center justify-end bg-[linear-gradient(269deg,_#ffffff_30%,_transparent)] pr-5 transition duration-700">
+                                <div
+                                  className={`absolute right-0 top-0 h-full w-[50%] items-center justify-end gap-2 pr-5
+                                  bg-[linear-gradient(269deg,_#ffffff_30%,_transparent)]
+                                  transition duration-700
+                                  ${
+                                    hasPermission("canEdit") ||
+                                    hasPermission("canCallLog") ||
+                                    hasPermission("canConvert") ||
+                                    hasPermission("canScheduleTrial") ||
+                                    hasPermission("canAppointment")
+                                      ? "hidden group-hover:flex"
+                                      : "hidden"
+                                  }`}
+                                >
                                   {(userRole === "CLUB_MANAGER" ||
                                     userRole === "ADMIN" ||
                                     userRole === "FOH") && (

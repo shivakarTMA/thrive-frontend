@@ -16,6 +16,7 @@ import { addYears, format, subYears } from "date-fns";
 import { FaCalendarDays } from "react-icons/fa6";
 import Pagination from "../common/Pagination";
 import { useSelector } from "react-redux";
+import Tooltip from "../common/Tooltip";
 
 const Appointments = ({ details }) => {
   const [services, setServices] = useState([]);
@@ -25,6 +26,8 @@ const Appointments = ({ details }) => {
   const [appointmentModal, setAppointmentModal] = useState(false);
   const [appointmentList, setAppointmentList] = useState([]);
   const clubId = details?.club_id;
+  const kycCheckMember = details?.is_kyc;
+  const freezeStatus = details?.freeze_status;
 
   const { user } = useSelector((state) => state.auth);
   const userRole = user.role;
@@ -217,12 +220,26 @@ const Appointments = ({ details }) => {
           userRole === "CLUB_MANAGER" ||
           userRole === "ADMIN") && (
           <div>
-            <div
-              className="px-4 py-2 bg-black text-white rounded flex items-center gap-2 cursor-pointer"
-              onClick={() => setAppointmentModal(true)}
-            >
-              <FiPlus /> Add Appointment
-            </div>
+            {kycCheckMember !== true || freezeStatus === "FREEZED" ? (
+              <Tooltip
+                id={`tooltip-membership-kyc`}
+                content={freezeStatus === "FREEZED" ? "Your membership is currently frozen." : "Your kyc is not completed yet."}
+                place="top"
+              >
+                <div
+                  className="px-4 py-2 bg-gray-300 border-gray-300 cursor-not-allowed text-gray-500 rounded flex items-center gap-2"
+                >
+                  <FiPlus /> Add Appointment
+                </div>
+              </Tooltip>
+            ) : (
+              <div
+                className="px-4 py-2 bg-black text-white rounded flex items-center gap-2 cursor-pointer"
+                onClick={() => setAppointmentModal(true)}
+              >
+                <FiPlus /> Add Appointment
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -316,7 +333,7 @@ const Appointments = ({ details }) => {
                             ? isInProgress(appt)
                               ? "In Progress"
                               : "Upcoming"
-                            : appt?.booking_status
+                            : appt?.booking_status,
                         )}
                       </td>
                       <td className="border px-3 py-2">

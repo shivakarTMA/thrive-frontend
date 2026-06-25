@@ -6,10 +6,13 @@ import "react-phone-number-input/style.css";
 import PhoneInput, { isValidPhoneNumber } from "react-phone-number-input";
 import { parsePhoneNumberFromString } from "libphonenumber-js";
 import {
+  allowLettersAndNumbers,
   allowOnlyLetters,
+  allowOnlyNumbers,
   blockInvalidNumberKeys,
   blockNonLetters,
   blockNonLettersAndNumbers,
+  blockNonNumbers,
   customStyles,
   formatIndianNumber,
   formatText,
@@ -19,7 +22,7 @@ import {
   sanitizeTextWithNumbers,
   selectIcon,
 } from "../Helper/helper";
-import { IoBan, IoCloseCircle } from "react-icons/io5";
+import { IoBan, IoCloseCircle, IoEyeOutline } from "react-icons/io5";
 import { PiGenderIntersex, PiGenderIntersexBold } from "react-icons/pi";
 import { useFormik } from "formik";
 import * as Yup from "yup";
@@ -56,6 +59,8 @@ import { IoCheckmark, IoClose } from "react-icons/io5";
 import MultiSelect from "react-multi-select-component";
 import { CgFormatLineHeight } from "react-icons/cg";
 import CreatableSelect from "react-select/creatable";
+import { FiUpload } from "react-icons/fi";
+import { MdModeEditOutline } from "react-icons/md";
 
 const planTypeOption = [
   { value: "DLF", label: "DLF" },
@@ -68,11 +73,16 @@ const genderOptions = [
 ];
 
 const paymentMethodOptions = [
-  { value: "UPI", label: "UPI" },
-  { value: "CREDIT_CARD", label: "Credit Card" },
+  { value: "NET_BANKING", label: "Net Banking" },
   { value: "DEBIT_CARD", label: "Debit Card" },
-  { value: "CHEQUE", label: "cheque" },
+  { value: "CREDIT_CARD", label: "Credit Card" },
+  { value: "UPI_ICICI", label: "UPI" },
+  // { value: "CHEQUE", label: "cheque" },
 ];
+
+//  'CREDIT_CARD','DEBIT_CARD','UPI_ICICI','NET_BANKING'
+
+const FILE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
 
 const stepValidationSchemas = [
   // ✅ Step 0: Full set of required fields
@@ -83,16 +93,6 @@ const stepValidationSchemas = [
       .required("Email is required"),
     height: Yup.string().required("Height is required"),
     gender: Yup.string().required("Gender is required"),
-    // mobile: Yup.string()
-    //   .required("Contact number is required")
-    //   .test("is-valid-phone", "Invalid phone number", function (value) {
-    //     const { country_code } = this.parent;
-    //     if (!value || !country_code) return false;
-    //     const phoneNumber = parsePhoneNumberFromString(
-    //       "+" + country_code + value
-    //     );
-    //     return phoneNumber?.isValid() || false;
-    //   }),
 
     mobile: Yup.string()
       .required("Contact number is required")
@@ -180,6 +180,71 @@ const stepValidationSchemas = [
         }),
       )
       .min(1, "At least one emergency contact is required"),
+    id_proof_card_front: Yup.mixed()
+      .required("Aadhar front is required")
+      .test("fileType", "Only JPG, JPEG, PNG, WEBP allowed", (value) => {
+        if (!value) return false;
+
+        // ✅ allow existing image URL (edit mode)
+        if (typeof value === "string") return true;
+
+        return FILE_TYPES.includes(value.type);
+      }),
+
+    id_proof_card_back: Yup.mixed()
+      .required("Aadhar back is required")
+      .test("fileType", "Only JPG, JPEG, PNG, WEBP allowed", (value) => {
+        if (!value) return false;
+        if (typeof value === "string") return true;
+
+        return FILE_TYPES.includes(value.type);
+      }),
+
+    passport_photo: Yup.mixed()
+      .required("Passport photo is required")
+      .test("fileType", "Only JPG, JPEG, PNG, WEBP allowed", (value) => {
+        if (!value) return false;
+        if (typeof value === "string") return true;
+
+        return FILE_TYPES.includes(value.type);
+      }),
+
+    corporate_id: Yup.mixed().when("club_data", {
+      is: (club_data) => club_data?.is_corporate_id === true,
+
+      then: () =>
+        Yup.mixed()
+          .required("Corporate ID is required")
+          .test(
+            "fileType",
+            "Only JPG, JPEG, PNG, WEBP allowed",
+            (value) => {
+              if (!value) return false;
+
+              // existing image URL
+              if (typeof value === "string") return true;
+
+              return FILE_TYPES.includes(value.type);
+            }
+          ),
+
+      otherwise: () =>
+        Yup.mixed()
+          .nullable()
+          .test(
+            "fileType",
+            "Only JPG, JPEG, PNG, WEBP allowed",
+            (value) => {
+              // optional field
+              if (!value) return true;
+
+              // existing image URL
+              if (typeof value === "string") return true;
+
+              return FILE_TYPES.includes(value.type);
+            }
+          ),
+    }),
   }),
   Yup.object({
     plan_type: Yup.string().required("Plan Type is required"),
@@ -207,10 +272,32 @@ const ConvertMemberForm = ({
   const [companyOptions, setCompanyOptions] = useState([]);
   const [duplicateEmailError, setDuplicateEmailError] = useState("");
   const [showDuplicateEmailModal, setShowDuplicateEmailModal] = useState(false);
+  const [clubGstType, setClubGstType] = useState("");
+
+  const [isEditingDocs, setIsEditingDocs] = useState(false);
+  const [previewImage, setPreviewImage] = useState(null);
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
 
   const [offlinePaymentDetails, setOfflinePaymentDetails] = useState({
     method: null,
     transactionId: "",
+  });
+  const [offlineErrors, setOfflineErrors] = useState({
+    method: "",
+    transactionId: "",
+  });
+  const [showGstDetails, setShowGstDetails] = useState(false);
+  const initialGstState = {
+    gst_registration_number: "",
+    gst_registered_company_name: "",
+    gst_registered_company_address: "",
+  };
+  const [customerGstData, setCustomerGstData] = useState(initialGstState);
+
+  const [gstErrors, setGstErrors] = useState({
+    gst_registration_number: "",
+    gst_registered_company_name: "",
+    gst_registered_company_address: "",
   });
   const paymentModeRef = useRef("ONLINE");
 
@@ -255,6 +342,69 @@ const ConvertMemberForm = ({
   const relationList = lists["RELATIONSHIP"] || [];
   const socialList = lists["SOCIAL_MEDIA"] || [];
 
+  // Customer GST
+  const handleGstCheckbox = (e) => {
+    const checked = e.target.checked;
+
+    setShowGstDetails(checked);
+
+    // Reset fields + errors when unchecked
+    if (!checked) {
+      setCustomerGstData(initialGstState);
+
+      setGstErrors({
+        gst_registration_number: "",
+        gst_registered_company_name: "",
+        gst_registered_company_address: "",
+      });
+    }
+  };
+
+  const validateGstFields = () => {
+    let errors = {};
+
+    if (showGstDetails) {
+      if (!customerGstData.gst_registration_number.trim()) {
+        errors.gst_registration_number = "GST Number is required";
+      }
+
+      if (!customerGstData.gst_registered_company_name.trim()) {
+        errors.gst_registered_company_name = "Company Name is required";
+      }
+
+      if (!customerGstData.gst_registered_company_address.trim()) {
+        errors.gst_registered_company_address = "Company Address is required";
+      }
+    }
+
+    setGstErrors(errors);
+
+    return Object.keys(errors).length === 0;
+  };
+  // Customer GST end
+
+  const validateOfflinePayment = () => {
+    let errors = {
+      method: "",
+      transactionId: "",
+    };
+
+    if (paymentModeRef.current === "OFFLINE") {
+      if (!offlinePaymentDetails.method?.value) {
+        errors.method = "Payment method is required";
+      }
+
+      if (!offlinePaymentDetails.transactionId) {
+        errors.transactionId = "Transaction ID is required";
+      }
+    }
+
+    setOfflineErrors(errors);
+
+    // return true if no errors
+    return !errors.method && !errors.transactionId;
+  };
+
   const initialValues = {
     id: "",
     club_id: null,
@@ -289,6 +439,13 @@ const ConvertMemberForm = ({
         relationship: "",
       },
     ],
+    aadhar_doc_id: null,
+    passport_doc_id: null,
+    corporate_doc_id: null,
+    id_proof_card_front: null,
+    id_proof_card_back: null,
+    passport_photo: null,
+    corporate_id: null,
     lead_owner: "",
     club_data: {
       name: "",
@@ -317,6 +474,172 @@ const ConvertMemberForm = ({
     amount_pay: 0,
   };
 
+  const uploadDocuments = async ({ memberId, documents, values }) => {
+    try {
+     
+      // ===============================
+      // 1️⃣ AADHAR (FRONT + BACK)
+      // ===============================
+      if (documents.aadharFront || documents.aadharBack) {
+        const formData = new FormData();
+
+        formData.append("member_id", memberId);
+        formData.append("document_type", "ID_PROOF");
+
+        if (documents.aadharFront?.file) {
+          formData.append(
+            "document_front_file",
+            documents.aadharFront.file
+          );
+        }
+
+        if (documents.aadharBack?.file) {
+          formData.append(
+            "document_back_file",
+            documents.aadharBack.file
+          );
+        }
+
+        // UPDATE
+        if (values.aadhar_doc_id) {
+          await authAxios().put(
+            `/kyc/document/${values.aadhar_doc_id}`,
+            formData,
+            {
+              headers: {
+                "Content-Type": "multipart/form-data",
+              },
+            }
+          );
+        }
+
+        // CREATE
+        else {
+          await authAxios().post(
+            `/kyc/document/create`,
+            formData,
+            {
+              headers: {
+                "Content-Type": "multipart/form-data",
+              },
+            }
+          );
+        }
+      }
+
+      // ===============================
+      // 2️⃣ PASSPORT PHOTO
+      // ===============================
+      if (documents.passportPhoto?.file) {
+        const formData = new FormData();
+
+        formData.append("member_id", memberId);
+        formData.append("document_type", "PHOTO");
+
+        formData.append(
+          "document_front_file",
+          documents.passportPhoto.file
+        );
+
+        // UPDATE
+        if (values.passport_doc_id) {
+          await authAxios().put(
+            `/kyc/document/${values.passport_doc_id}`,
+            formData,
+            {
+              headers: {
+                "Content-Type": "multipart/form-data",
+              },
+            }
+          );
+        }
+
+        // CREATE
+        else {
+          await authAxios().post(
+            `/kyc/document/create`,
+            formData,
+            {
+              headers: {
+                "Content-Type": "multipart/form-data",
+              },
+            }
+          );
+        }
+      }
+
+    // ===============================
+    // 3️⃣ CORPORATE ID
+    // ===============================
+
+    const hasCorporateFile =
+      documents.corporateId?.file;
+
+    const hasCorporateDocId =
+      values.corporate_doc_id;
+
+    // ✅ ONLY RUN API IF:
+    // 1. new file uploaded
+    // OR
+    // 2. existing document id exists
+    if (hasCorporateFile || hasCorporateDocId) {
+      // ❌ If no new file and only existing id
+      // don't hit API
+      if (!hasCorporateFile) {
+        return;
+      }
+
+      const formData = new FormData();
+
+      formData.append("member_id", memberId);
+
+      formData.append(
+        "document_type",
+        "CORPORATE_ID"
+      );
+
+      formData.append(
+        "document_front_file",
+        documents.corporateId.file
+      );
+
+      // ✅ UPDATE EXISTING
+      if (hasCorporateDocId) {
+        await authAxios().put(
+          `/kyc/document/${hasCorporateDocId}`,
+          formData,
+          {
+            headers: {
+              "Content-Type":
+                "multipart/form-data",
+            },
+          }
+        );
+      }
+
+      // ✅ CREATE NEW
+      else {
+        await authAxios().post(
+          `/kyc/document/create`,
+          formData,
+          {
+            headers: {
+              "Content-Type":
+                "multipart/form-data",
+            },
+          }
+        );
+      }
+    }
+
+
+      return true; // ✅ success
+    } catch (err) {
+      console.log("Document upload error", err);
+      throw err; // ❗ let caller handle error
+    }
+  };
+
   const formik = useFormik({
     initialValues,
     validationSchema: stepValidationSchemas[step],
@@ -325,6 +648,16 @@ const ConvertMemberForm = ({
       setLoading(true);
       if (step === stepValidationSchemas.length - 1) {
         try {
+          // ✅ OFFLINE FLOW
+          if (paymentModeRef.current === "OFFLINE") {
+            const isValid = validateOfflinePayment();
+
+            if (!isValid) {
+              setLoading(false);
+              return;
+            }
+          }
+
           // ===============================
           // ✅ COMPANY HANDLING (SOURCE OF TRUTH)
           // ===============================
@@ -388,8 +721,6 @@ const ConvertMemberForm = ({
             formData.set("company_name", companyName);
           }
 
-          // If selectedLeadMember exists, update using PUT request
-
           // // ✅ Update existing member
           const memberResponse = await authAxios().put(
             `/member/convert/lead/${selectedLeadMember}`,
@@ -428,7 +759,48 @@ const ConvertMemberForm = ({
             }
           }
 
-          // 3️⃣ Proceed to payment (IMPORTANT PART)
+          // Document KYC
+          const documents = {
+            aadharFront:
+              values.id_proof_card_front instanceof File
+                ? { file: values.id_proof_card_front }
+                : null,
+
+            aadharBack:
+              values.id_proof_card_back instanceof File
+                ? { file: values.id_proof_card_back }
+                : null,
+
+            passportPhoto:
+              values.passport_photo instanceof File
+                ? { file: values.passport_photo }
+                : null,
+
+            corporateId:
+              values.corporate_id instanceof File
+                ? { file: values.corporate_id }
+                : null,
+          };
+
+          const hasAnyNewFile =
+            documents.aadharFront ||
+            documents.aadharBack ||
+            documents.passportPhoto ||
+            documents.corporateId;
+
+          // ✅ Call upload function
+          if (hasAnyNewFile) {
+            try {
+              await uploadDocuments({ memberId, documents, values });
+              toast.success("Documents uploaded successfully!");
+            } catch (err) {
+              toast.error("Document upload failed");
+              setLoading(false);
+              return;
+            }
+          }
+
+          // Proceed to payment (IMPORTANT PART)
           if (values.productDetails?.id) {
             const paymentPayload = {
               subscription_plan_id: values.productDetails.id,
@@ -443,10 +815,18 @@ const ConvertMemberForm = ({
               paymentMode: paymentModeRef.current,
               mode_of_payment: offlinePaymentDetails.method?.value,
               transaction_id: offlinePaymentDetails.transactionId,
-            };
+              // ✅ Add GST fields directly in payload
+              ...(showGstDetails && {
+                gst_registration_number:
+                  customerGstData.gst_registration_number,
 
-            // console.log("paymentPayload", paymentPayload);
-            // console.log("FINAL MODE:", paymentModeRef.current);
+                gst_registered_company_name:
+                  customerGstData.gst_registered_company_name,
+
+                gst_registered_company_address:
+                  customerGstData.gst_registered_company_address,
+              }),
+            };
 
             const res = await authAxios().post(
               "/payment/proceed",
@@ -464,7 +844,6 @@ const ConvertMemberForm = ({
                 toast.success("Payment send successfully!");
               }
 
-              // ✅ OFFLINE FLOW
               if (paymentModeRef.current === "OFFLINE") {
                 if (
                   !offlinePaymentDetails.method ||
@@ -482,6 +861,7 @@ const ConvertMemberForm = ({
               }
             }
           }
+          
         } catch (error) {
           console.log(error, "error");
           toast.error(
@@ -496,10 +876,48 @@ const ConvertMemberForm = ({
     },
   });
 
+  const handleFileUpload = (event, fieldName) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    formik.setFieldValue(fieldName, file);
+  };
+
+  const getPreview = (value) => {
+    if (!value) return null;
+
+    // ✅ If it's already a URL (API response)
+    if (typeof value === "string") {
+      return value;
+    }
+
+    // ✅ If it's a File (new upload)
+    if (value instanceof File) {
+      return URL.createObjectURL(value);
+    }
+
+    return null;
+  };
+
+  const hasExistingDocs =
+    typeof formik.values.id_proof_card_front === "string" ||
+    typeof formik.values.id_proof_card_back === "string" ||
+    typeof formik.values.passport_photo === "string" ||
+    typeof formik.values.corporate_id === "string";
+
   const handleFinalSubmit = async (mode) => {
     paymentModeRef.current = mode;
 
     const errors = await formik.validateForm();
+
+    if (showGstDetails) {
+      const isGstValid = validateGstFields();
+
+      if (!isGstValid) {
+        setLoading(false);
+        return;
+      }
+    }
 
     if (Object.keys(errors).length > 0) {
       // mark all fields touched
@@ -554,6 +972,20 @@ const ConvertMemberForm = ({
                   },
                 ];
 
+          const kycDocuments = data?.kyc_document || [];
+
+          const aadharDoc = kycDocuments.find(
+            (doc) => doc.document_type === "ID_PROOF"
+          );
+
+          const passportDoc = kycDocuments.find(
+            (doc) => doc.document_type === "PHOTO"
+          );
+
+          const corporateDoc = kycDocuments.find(
+            (doc) => doc.document_type === "CORPORATE_ID"
+          );
+
           formik.setValues({
             id: data.id || "",
             club_id: data.club_id || null,
@@ -589,8 +1021,35 @@ const ConvertMemberForm = ({
             staff_name: data.staff_name || "",
 
             member_emergency_contact: emergencyContacts,
+            // id_proof_card_front: data?.id_proof_card_front || null,
+            // id_proof_card_back: data?.id_proof_card_back || null,
+            // passport_photo: data?.passport_photo || null,
+            // corporate_id: data?.corporate_id || null,
+
+            // DOCUMENT IDS
+            aadhar_doc_id: aadharDoc?.id || null,
+            passport_doc_id: passportDoc?.id || null,
+            corporate_doc_id: corporateDoc?.id || null,
+
+            // DOCUMENT FILES
+            id_proof_card_front:
+              aadharDoc?.id_proof_card_front || null,
+
+            id_proof_card_back:
+              aadharDoc?.id_proof_card_back || null,
+
+            passport_photo:
+              passportDoc?.passport_photo || null,
+
+            corporate_id:
+              corporateDoc?.corporate_id || null,
             lead_owner: data.lead_owner || "",
-            club_data: data.club_data || { name: "", state: "", country: "" },
+            club_data: data.club_data || {
+              name: "",
+              state: "",
+              country: "",
+              is_corporate_id: false,
+            },
             productType: "MEMBERSHIP_PLAN",
           });
           setSelected(interestedList);
@@ -798,6 +1257,19 @@ const ConvertMemberForm = ({
     formik.values.productType,
   ]);
 
+  useEffect(() => {
+    if (!formik.values.club_id) return;
+
+    authAxios()
+      .get(`/club/${formik.values.club_id}`)
+      .then((res) => {
+        const data = res.data?.data?.gsttyp;
+        console.log("Club data:", data);
+        setClubGstType(data);
+      })
+      .catch(() => toast.error("Failed to fetch club"));
+  }, [formik.values.club_id]);
+
   const handleProductSubmit = (product) => {
     // Convert to numbers safely
     const amount = Number(product.amount) || 0;
@@ -806,7 +1278,20 @@ const ConvertMemberForm = ({
 
     // Base calculation
     const totalAmount = Number(product.total_amount) || 0;
-    const gstAmount = Number(product.gst_amount) || 0;
+    // const gstAmount = Number(product.gst_amount) || 0;
+    let igstAmount = 0;
+    let cgstAmount = 0;
+    let sgstAmount = 0;
+    let gstAmount = 0;
+
+    if (clubGstType === "IGST") {
+      igstAmount = (totalAmount * gstPercent) / 100;
+      gstAmount = igstAmount;
+    } else {
+      cgstAmount = (totalAmount * (gstPercent / 2)) / 100;
+      sgstAmount = (totalAmount * (gstPercent / 2)) / 100;
+      gstAmount =  Number(formatIndianNumber(cgstAmount).replace(/,/g, "")) + Number(formatIndianNumber(sgstAmount).replace(/,/g, ""));
+    }
     const finalAmount = Number(product.final_amount) || 0;
 
     // 🔥 Reset coupon when product changes
@@ -871,7 +1356,23 @@ const ConvertMemberForm = ({
       const gstPercent = Number(formik.values.productDetails?.gst) || 0;
 
       const discountedTotal = totalAmount - couponDiscount;
-      const gstAmount = (discountedTotal * gstPercent) / 100 ;
+      // const gstAmount = (discountedTotal * gstPercent) / 100;
+      let igstAmount = 0;
+      let cgstAmount = 0;
+      let sgstAmount = 0;
+      let gstAmount = 0;
+
+      if (clubGstType === "IGST") {
+        igstAmount = (discountedTotal * gstPercent) / 100;
+        gstAmount = igstAmount;
+      } else {
+        cgstAmount = (discountedTotal * (gstPercent / 2)) / 100;
+        sgstAmount = (discountedTotal * (gstPercent / 2)) / 100;
+
+        gstAmount =
+          Number(cgstAmount.toFixed(2)) +
+          Number(sgstAmount.toFixed(2));
+      }
       const finalAmount = discountedTotal + gstAmount;
 
       setVoucherStatus("success");
@@ -894,15 +1395,56 @@ const ConvertMemberForm = ({
       setVoucherStatus("error");
       setVoucherMessage(err?.message || "Invalid or expired coupon");
 
-      const originalFinal =
-        Number(formik.values.productDetails?.final_amount) || 0;
+      // const originalFinal =
+      //   Number(formik.values.productDetails?.final_amount) || 0;
+
+      // formik.setValues({
+      //   ...formik.values,
+      //   coupon: "",
+      //   discountAmount: 0,
+      //   final_amount: originalFinal,
+      //   amount_pay: originalFinal,
+      // });
+      const totalAmount =
+        Number(formik.values.productDetails?.total_amount) || 0;
+
+      const gstPercent =
+        Number(formik.values.productDetails?.gst) || 0;
+
+      const discountedTotal = totalAmount; // ❌ no discount applied
+
+      let igstAmount = 0;
+      let cgstAmount = 0;
+      let sgstAmount = 0;
+      let gstAmount = 0;
+
+      if (clubGstType === "IGST") {
+        igstAmount = (discountedTotal * gstPercent) / 100;
+        gstAmount = igstAmount;
+      } else {
+        cgstAmount = (discountedTotal * (gstPercent / 2)) / 100;
+        sgstAmount = (discountedTotal * (gstPercent / 2)) / 100;
+
+        gstAmount =
+          Number(cgstAmount.toFixed(2)) +
+          Number(sgstAmount.toFixed(2));
+      }
+
+      const finalAmount = discountedTotal + gstAmount;
 
       formik.setValues({
         ...formik.values,
         coupon: "",
         discountAmount: 0,
-        final_amount: originalFinal,
-        amount_pay: originalFinal,
+        productDetails: {
+          ...formik.values.productDetails,
+          gst_amount: gstAmount,
+          cgst_amount: cgstAmount,
+          sgst_amount: sgstAmount,
+          igst_amount: igstAmount,
+        },
+        final_amount: finalAmount,
+        amount_pay: finalAmount,
       });
     }
   };
@@ -919,11 +1461,8 @@ const ConvertMemberForm = ({
     ]);
   };
 
-  const handleRemoveContact = async (contactId) => {
-    // Find the contact
-    const contact = formik.values.member_emergency_contact.find(
-      (c) => c.id === contactId,
-    );
+  const handleRemoveContact = async (index) => {
+    const contact = formik.values.member_emergency_contact[index];
 
     // Delete from DB if exists
     if (contact?.id) {
@@ -936,9 +1475,9 @@ const ConvertMemberForm = ({
       }
     }
 
-    // Remove from Formik state (FILTER by id)
+    // Remove by index
     const updatedContacts = formik.values.member_emergency_contact.filter(
-      (c) => c.id !== contactId,
+      (_, i) => i !== index,
     );
 
     formik.setFieldValue(
@@ -1638,6 +2177,79 @@ const ConvertMemberForm = ({
                           </div>
                         )}
                       </div>
+
+                      <hr className="my-5" />
+                      <h3 className="text-2xl font-semibold mb-2">
+                        Membership Details
+                      </h3>
+                      <div className="grid grid-cols-3 gap-4">
+                        <div>
+                          <label className="mb-2 block">Lead Owner</label>
+                          <div className="custom--date dob-format relative">
+                            <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
+                              <FaUserTie />
+                            </span>
+                            <input
+                              type="text"
+                              name="lead_owner"
+                              value={formik.values?.lead_owner}
+                              readOnly={true}
+                              disabled={true}
+                              className="custom--input w-full input--icon !bg-gray-100 pointer-events-none"
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <label className="mb-2 block">Club</label>
+
+                          <div className="relative">
+                            <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
+                              <FaBuilding />
+                            </span>
+                            <input
+                              type="text"
+                              name="club_data.name"
+                              value={formik.values?.club_data?.name}
+                              readOnly={true}
+                              disabled={true}
+                              className="custom--input w-full input--icon !bg-gray-100 pointer-events-none"
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <label className="mb-2 block">State</label>
+                          <div className="relative">
+                            <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
+                              <FaLocationDot />
+                            </span>
+                            <input
+                              type="text"
+                              name="club_data.state"
+                              value={formik.values?.club_data?.state}
+                              readOnly={true}
+                              disabled={true}
+                              className="custom--input w-full input--icon !bg-gray-100 pointer-events-none"
+                            />
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="mb-2 block">Country</label>
+                          <div className="relative">
+                            <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
+                              <FaLocationDot />
+                            </span>
+                            <input
+                              type="text"
+                              name="club_data.country"
+                              value={formik.values?.club_data?.country}
+                              readOnly={true}
+                              disabled={true}
+                              className="custom--input w-full input--icon !bg-gray-100 pointer-events-none"
+                            />
+                          </div>
+                        </div>
+                      </div>
                     </>
                   )}
 
@@ -1945,7 +2557,7 @@ const ConvertMemberForm = ({
                                 1 && (
                                 <button
                                   type="button"
-                                  onClick={() => handleRemoveContact(phone.id)}
+                                  onClick={() => handleRemoveContact(index)}
                                   className="text-black font-bold"
                                 >
                                   <IoIosCloseCircle className="text-2xl mt-2" />
@@ -1965,75 +2577,341 @@ const ConvertMemberForm = ({
                       </button>
 
                       <hr className="my-5" />
-                      <h3 className="text-2xl font-semibold mb-2">
-                        Membership Details
-                      </h3>
-                      <div className="grid grid-cols-3 gap-4">
-                        <div>
-                          <label className="mb-2 block">Lead Owner</label>
-                          <div className="custom--date dob-format relative">
-                            <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
-                              <FaUserTie />
-                            </span>
-                            <input
-                              type="text"
-                              name="lead_owner"
-                              value={formik.values?.lead_owner}
-                              readOnly={true}
-                              disabled={true}
-                              className="custom--input w-full input--icon !bg-gray-100 pointer-events-none"
-                            />
-                          </div>
-                        </div>
-                        <div>
-                          <label className="mb-2 block">Club</label>
+                      <div className="flex items-center justify-between gap-4 mb-3">
+                        <h3 className="text-2xl font-semibold mb-2">
+                          KYC Documents
+                        </h3>
+                        {/* {hasExistingDocs && !isEditingDocs && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setIsEditingDocs(true);
 
-                          <div className="relative">
-                            <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
-                              <FaBuilding />
-                            </span>
-                            <input
-                              type="text"
-                              name="club_data.name"
-                              value={formik.values?.club_data?.name}
-                              readOnly={true}
-                              disabled={true}
-                              className="custom--input w-full input--icon !bg-gray-100 pointer-events-none"
-                            />
-                          </div>
-                        </div>
+                              // ✅ Clear ALL document fields
+                              formik.setFieldValue("id_proof_card_front", null);
+                              formik.setFieldValue("id_proof_card_back", null);
+                              formik.setFieldValue("passport_photo", null);
+                              formik.setFieldValue("corporate_id", null);
+
+                              // ✅ Reset touched (prevents instant errors)
+                              formik.setFieldTouched(
+                                "id_proof_card_front",
+                                false,
+                              );
+                              formik.setFieldTouched(
+                                "id_proof_card_back",
+                                false,
+                              );
+                              formik.setFieldTouched("passport_photo", false);
+                              formik.setFieldTouched("corporate_id", false);
+                            }}
+                            className="px-3 py-2 bg-black text-white rounded text-sm flex items-center gap-1"
+                          >
+                            <span>Edit Documents</span>
+                            <MdModeEditOutline />
+                          </button>
+                        )} */}
+                      </div>
+                      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                         <div>
-                          <label className="mb-2 block">State</label>
-                          <div className="relative">
-                            <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
-                              <FaLocationDot />
-                            </span>
-                            <input
-                              type="text"
-                              name="club_data.state"
-                              value={formik.values?.club_data?.state}
-                              readOnly={true}
-                              disabled={true}
-                              className="custom--input w-full input--icon !bg-gray-100 pointer-events-none"
-                            />
+                          <label className="mb-2 block">
+                            Aadhar Card (Front)
+                            <span className="text-red-500">*</span>
+                          </label>
+
+                          <div className="border rounded-lg p-2 bg-white">
+                            <div className="flex items-center space-x-4">
+                              {/* Preview box */}
+                              <div className="relative w-[80px] h-[80px] bg-gray-100">
+                                {formik.values.id_proof_card_front ? (
+                                  <img
+                                    src={getPreview(
+                                      formik.values.id_proof_card_front,
+                                    )}
+                                    alt="Aadhar Front"
+                                    className="w-full h-full object-cover rounded border"
+                                  />
+                                ) : (
+                                  <div className="flex items-center justify-center w-full h-full text-xs text-gray-400">
+                                    No Image
+                                  </div>
+                                )}
+                              </div>
+
+                              <div>
+                                <h4 className="font-medium text-[12px] text-gray-900">
+                                  Upload Document
+                                </h4>
+
+                                <div className="flex space-x-2 mt-2">
+                                  {/* 👁 VIEW BUTTON */}
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      if (!formik.values.id_proof_card_front)
+                                        return;
+                                      setPreviewImage(
+                                        getPreview(
+                                          formik.values.id_proof_card_front,
+                                        ),
+                                      );
+                                      setShowPreviewModal(true);
+                                    }}
+                                    className="inline-flex items-center px-3 py-2 text-sm text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-md"
+                                  >
+                                    <IoEyeOutline />
+                                  </button>
+
+                                  {/* ✅ UPLOAD BUTTON (ONLY WHEN EDITING OR EMPTY) */}
+                                    <label className="inline-flex items-center px-3 py-2 text-sm text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md cursor-pointer">
+                                      <FiUpload />
+                                      <input
+                                        type="file"
+                                        hidden
+                                        accept="image/*"
+                                        onChange={(e) =>
+                                          handleFileUpload(
+                                            e,
+                                            "id_proof_card_front",
+                                          )
+                                        }
+                                      />
+                                    </label>
+                                </div>
+                              </div>
+                            </div>
                           </div>
+
+                          {/* Error */}
+                          {formik.touched.id_proof_card_front &&
+                            formik.errors.id_proof_card_front && (
+                              <p className="text-red-500 text-sm">
+                                {formik.errors.id_proof_card_front}
+                              </p>
+                            )}
                         </div>
 
                         <div>
-                          <label className="mb-2 block">Country</label>
-                          <div className="relative">
-                            <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
-                              <FaLocationDot />
-                            </span>
-                            <input
-                              type="text"
-                              name="club_data.country"
-                              value={formik.values?.club_data?.country}
-                              readOnly={true}
-                              disabled={true}
-                              className="custom--input w-full input--icon !bg-gray-100 pointer-events-none"
-                            />
+                          <label className="mb-2 block">
+                            Aadhar Card (Back)
+                            <span className="text-red-500">*</span>
+                          </label>
+
+                          <div className="border rounded-lg p-2 bg-white">
+                            <div className="flex items-center space-x-4">
+                              {/* Preview box */}
+                              <div className="relative w-[80px] h-[80px] bg-gray-100">
+                                {formik.values.id_proof_card_back ? (
+                                  <img
+                                    src={getPreview(
+                                      formik.values.id_proof_card_back,
+                                    )}
+                                    alt="Aadhar Back"
+                                    className="w-full h-full object-cover rounded border"
+                                  />
+                                ) : (
+                                  <div className="flex items-center justify-center w-full h-full text-xs text-gray-400">
+                                    No Image
+                                  </div>
+                                )}
+                              </div>
+
+                              <div>
+                                <h4 className="font-medium text-[12px] text-gray-900">
+                                  Upload Document
+                                </h4>
+
+                                <div className="flex space-x-2 mt-2">
+                                  {/* 👁 VIEW BUTTON */}
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      if (!formik.values.id_proof_card_back)
+                                        return;
+                                      setPreviewImage(
+                                        getPreview(
+                                          formik.values.id_proof_card_back,
+                                        ),
+                                      );
+                                      setShowPreviewModal(true);
+                                    }}
+                                    className="inline-flex items-center px-3 py-2 text-sm text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-md"
+                                  >
+                                    <IoEyeOutline />
+                                  </button>
+
+                                  {/* ✅ UPLOAD BUTTON (ONLY WHEN EDITING OR EMPTY) */}
+                                    <label className="inline-flex items-center px-3 py-2 text-sm text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md cursor-pointer">
+                                      <FiUpload />
+                                      <input
+                                        type="file"
+                                        hidden
+                                        accept="image/*"
+                                        onChange={(e) =>
+                                          handleFileUpload(
+                                            e,
+                                            "id_proof_card_back",
+                                          )
+                                        }
+                                      />
+                                    </label>
+                                </div>
+                              </div>
+                            </div>
                           </div>
+
+                          {/* Error */}
+                          {formik.touched.id_proof_card_back &&
+                            formik.errors.id_proof_card_back && (
+                              <p className="text-red-500 text-sm">
+                                {formik.errors.id_proof_card_back}
+                              </p>
+                            )}
+                        </div>
+                        <div>
+                          <label className="mb-2 block">
+                            Passport Photo
+                            <span className="text-red-500">*</span>
+                          </label>
+
+                          <div className="border rounded-lg p-2 bg-white">
+                            <div className="flex items-center space-x-4">
+                              {/* Preview box */}
+                              <div className="relative w-[80px] h-[80px] bg-gray-100">
+                                {formik.values.passport_photo ? (
+                                  <img
+                                    src={getPreview(
+                                      formik.values.passport_photo,
+                                    )}
+                                    alt="Passport Photo"
+                                    className="w-full h-full object-cover rounded border"
+                                  />
+                                ) : (
+                                  <div className="flex items-center justify-center w-full h-full text-xs text-gray-400">
+                                    No Image
+                                  </div>
+                                )}
+                              </div>
+
+                              <div>
+                                <h4 className="font-medium text-[12px] text-gray-900">
+                                  Upload Document
+                                </h4>
+
+                                <div className="flex space-x-2 mt-2">
+                                  {/* 👁 VIEW BUTTON */}
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      if (!formik.values.passport_photo) return;
+                                      setPreviewImage(
+                                        getPreview(
+                                          formik.values.passport_photo,
+                                        ),
+                                      );
+                                      setShowPreviewModal(true);
+                                    }}
+                                    className="inline-flex items-center px-3 py-2 text-sm text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-md"
+                                  >
+                                    <IoEyeOutline />
+                                  </button>
+
+                                  {/* ⬆ UPLOAD BUTTON */}
+                                    <label className="inline-flex items-center px-3 py-2 text-sm text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md cursor-pointer">
+                                      <FiUpload />
+                                      <input
+                                        type="file"
+                                        hidden
+                                        accept="image/*"
+                                        onChange={(e) =>
+                                          handleFileUpload(e, "passport_photo")
+                                        }
+                                      />
+                                    </label>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Error */}
+                          {formik.touched.passport_photo &&
+                            formik.errors.passport_photo && (
+                              <p className="text-red-500 text-sm">
+                                {formik.errors.passport_photo}
+                              </p>
+                            )}
+                        </div>
+
+                        <div>
+                          <label className="mb-2 block">
+                            Corporate ID
+                            {formik.values.club_data?.is_corporate_id && (
+                              <span className="text-red-500">*</span>
+                            )}
+                          </label>
+
+                          <div className="border rounded-lg p-2 bg-white">
+                            <div className="flex items-center space-x-4">
+                              {/* Preview box */}
+                              <div className="relative w-[80px] h-[80px] bg-gray-100">
+                                {formik.values.corporate_id ? (
+                                  <img
+                                    src={getPreview(formik.values.corporate_id)}
+                                    alt="Corporate ID"
+                                    className="w-full h-full object-cover rounded border"
+                                  />
+                                ) : (
+                                  <div className="flex items-center justify-center w-full h-full text-xs text-gray-400">
+                                    No Image
+                                  </div>
+                                )}
+                              </div>
+
+                              <div>
+                                <h4 className="font-medium text-[12px] text-gray-900">
+                                  Upload Document
+                                </h4>
+
+                                <div className="flex space-x-2 mt-2">
+                                  {/* 👁 VIEW BUTTON */}
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      if (!formik.values.corporate_id) return;
+                                      setPreviewImage(
+                                        getPreview(formik.values.corporate_id),
+                                      );
+                                      setShowPreviewModal(true);
+                                    }}
+                                    className="inline-flex items-center px-3 py-2 text-sm text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-md"
+                                  >
+                                    <IoEyeOutline />
+                                  </button>
+
+                                  {/* ⬆ UPLOAD BUTTON */}
+                                    <label className="inline-flex items-center px-3 py-2 text-sm text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md cursor-pointer">
+                                      <FiUpload />
+                                      <input
+                                        type="file"
+                                        hidden
+                                        accept="image/*"
+                                        onChange={(e) =>
+                                          handleFileUpload(e, "corporate_id")
+                                        }
+                                      />
+                                    </label>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Error */}
+                          {formik.touched.corporate_id &&
+                            formik.errors.corporate_id && (
+                              <p className="text-red-500 text-sm">
+                                {formik.errors.corporate_id}
+                              </p>
+                            )}
                         </div>
                       </div>
                     </>
@@ -2187,12 +3065,157 @@ const ConvertMemberForm = ({
                         </div>
                       </div>
 
+                      <div className="mt-3 flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={showGstDetails}
+                          onChange={handleGstCheckbox}
+                        />
+
+                        <label>Add GST Details</label>
+                      </div>
+
+                      {showGstDetails && (
+                        <>
+                          <h3 className="text-2xl font-semibold mb-2 mt-4">
+                            Add GST Details
+                          </h3>
+
+                          <div className="grid grid-cols-3 gap-4">
+                            {/* GST Number */}
+                            <div>
+                              <label className="mb-2 block">
+                                GST Number
+                                <span className="text-red-500">*</span>
+                              </label>
+
+                              <input
+                                type="text"
+                                placeholder="GST Number"
+                                className="custom--input w-full"
+                                maxLength={15}
+                                value={customerGstData.gst_registration_number}
+                                onKeyDown={(e) => {
+                                  const allowedKeys = [
+                                    "Backspace",
+                                    "Delete",
+                                    "ArrowLeft",
+                                    "ArrowRight",
+                                    "Tab",
+                                  ];
+
+                                  // allow letters + numbers only
+                                  if (
+                                    !/^[a-zA-Z0-9]$/.test(e.key) &&
+                                    !allowedKeys.includes(e.key)
+                                  ) {
+                                    e.preventDefault();
+                                  }
+                                }}
+                                onChange={(e) => {
+                                  const cleaned = sanitizeAlphaNumeric(
+                                    e.target.value.toUpperCase(),
+                                  );
+
+                                  // limit 15 chars manually
+                                  if (cleaned.length <= 15) {
+                                    setCustomerGstData({
+                                      ...customerGstData,
+                                      gst_registration_number: cleaned,
+                                    });
+
+                                    setGstErrors({
+                                      ...gstErrors,
+                                      gst_registration_number: "",
+                                    });
+                                  }
+                                }}
+                              />
+
+                              {gstErrors.gst_registration_number && (
+                                <p className="text-red-500 text-sm mt-1">
+                                  {gstErrors.gst_registration_number}
+                                </p>
+                              )}
+                            </div>
+
+                            {/* Company Name */}
+                            <div>
+                              <label className="mb-2 block">
+                                Company Name
+                                <span className="text-red-500">*</span>
+                              </label>
+
+                              <input
+                                type="text"
+                                placeholder="Company Name"
+                                className="custom--input w-full"
+                                value={
+                                  customerGstData.gst_registered_company_name
+                                }
+                                onKeyDown={blockNonLettersAndNumbers}
+                                onChange={(e) => {
+                                  const cleaned = allowLettersAndNumbers(
+                                    e.target.value,
+                                  );
+
+                                  setCustomerGstData({
+                                    ...customerGstData,
+                                    gst_registered_company_name: cleaned,
+                                  });
+                                }}
+                              />
+
+                              {gstErrors.gst_registered_company_name && (
+                                <p className="text-red-500 text-sm mt-1">
+                                  {gstErrors.gst_registered_company_name}
+                                </p>
+                              )}
+                            </div>
+
+                            {/* Company Address */}
+                            <div>
+                              <label className="mb-2 block">
+                                Company Address
+                                <span className="text-red-500">*</span>
+                              </label>
+
+                              <input
+                                type="text"
+                                placeholder="Company Address"
+                                className="custom--input w-full"
+                                value={
+                                  customerGstData.gst_registered_company_address
+                                }
+                                onKeyDown={blockNonLettersAndNumbers}
+                                onChange={(e) => {
+                                  const cleaned = allowLettersAndNumbers(
+                                    e.target.value,
+                                  );
+
+                                  setCustomerGstData({
+                                    ...customerGstData,
+                                    gst_registered_company_address: cleaned,
+                                  });
+                                }}
+                              />
+
+                              {gstErrors.gst_registered_company_address && (
+                                <p className="text-red-500 text-sm mt-1">
+                                  {gstErrors.gst_registered_company_address}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        </>
+                      )}
+
                       <div className="mt-5 bg-[#f7f7f7] p-[20px] rounded-[10px]">
                         <h3 className="text-2xl font-semibold">
                           Price Calculation
                         </h3>
                         <div className="price--calculation2 my-5">
-                          <div className="price--item">
+                          {/* <div className="price--item">
                             <p className="flex items-center gap-2 justify-between mb-2 border-b pb-2">
                               Duration:{" "}
                               <span className="font-bold">
@@ -2201,7 +3224,7 @@ const ConvertMemberForm = ({
                                 {formik.values.productDetails?.duration_type}
                               </span>
                             </p>
-                          </div>
+                          </div> */}
                           <div className="price--item">
                             <p className="flex items-center gap-2 justify-between mb-2 border-b pb-2">
                               Total:{" "}
@@ -2361,7 +3384,6 @@ const ConvertMemberForm = ({
       {paymentModalOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[8]">
           <div className="bg-white rounded-lg w-[500px] p-6">
-
             {/* ✅ ONLINE UI */}
             {paymentModeRef.current === "ONLINE" && (
               <>
@@ -2414,12 +3436,14 @@ const ConvertMemberForm = ({
                 <Select
                   options={paymentMethodOptions}
                   value={offlinePaymentDetails.method}
-                  onChange={(option) =>
+                  onChange={(option) => {
                     setOfflinePaymentDetails({
                       ...offlinePaymentDetails,
                       method: option,
-                    })
-                  }
+                    });
+
+                    setOfflineErrors((prev) => ({ ...prev, method: "" }));
+                  }}
                   placeholder="Select Payment Method"
                   className="mb-3"
                   styles={{
@@ -2432,6 +3456,10 @@ const ConvertMemberForm = ({
                   menuPortalTarget={document.body}
                   menuPosition="fixed"
                 />
+
+                {offlineErrors.method && (
+                  <p className="text-red-500 text-sm">{offlineErrors.method}</p>
+                )}
 
                 {/* Transaction ID */}
                 <input
@@ -2446,8 +3474,19 @@ const ConvertMemberForm = ({
                       ...offlinePaymentDetails,
                       transactionId: cleaned,
                     });
+
+                    setOfflineErrors((prev) => ({
+                      ...prev,
+                      transactionId: "",
+                    }));
                   }}
                 />
+
+                {offlineErrors.transactionId && (
+                  <p className="text-red-500 text-sm">
+                    {offlineErrors.transactionId}
+                  </p>
+                )}
 
                 <div className="flex justify-end gap-3">
                   <button
@@ -2466,6 +3505,27 @@ const ConvertMemberForm = ({
                 </div>
               </>
             )}
+          </div>
+        </div>
+      )}
+
+      {showPreviewModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
+          <div className="bg-white p-4 rounded-lg relative max-w-lg w-full">
+            {/* Close button */}
+            <button
+              className="absolute top-2 right-2 text-xl"
+              onClick={() => setShowPreviewModal(false)}
+            >
+              <IoCloseCircle className="text-3xl" />
+            </button>
+
+            {/* Image */}
+            <img
+              src={previewImage}
+              alt="Preview"
+              className="w-full h-auto rounded"
+            />
           </div>
         </div>
       )}

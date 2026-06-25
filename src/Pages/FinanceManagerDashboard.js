@@ -729,45 +729,44 @@ const FinanceManagerDashboard = () => {
         <div className="flex items-center">
           <div className="w-fit flex items-center gap-2 border-r">
             <div className="text-sm font-medium text-gray-600 flex gap-2 items-center">
-              <FaCircle className="text-[10px] text-[#009EB2]" /> Total New
-              Member
+              <FaCircle className="text-[10px] text-[#009EB2]" /> Active Members
             </div>
             <div className="pr-2">
               <span className="text-sm font-semibold">
-                {dashboardData?.snapshot?.total_new_member}
+                {dashboardData?.snapshot?.total_active_members}
               </span>
             </div>
           </div>
           <div className="w-fit flex items-center gap-2 border-r pl-2">
             <div className="text-sm font-medium text-gray-600 flex gap-2 items-center">
               <FaCircle className="text-[10px] text-[#1F9254]" />
-              Total Renewal Member
+              Active PT Members
             </div>
             <div className="pr-2">
               <span className="text-sm font-semibold">
-                {dashboardData?.snapshot?.total_renewal_member}
+                {dashboardData?.snapshot?.total_active_pt_members}
               </span>
             </div>
           </div>
           <div className="w-fit flex items-center gap-2 border-r pl-2">
             <div className="text-sm font-medium text-gray-600 flex gap-2 items-center">
               <FaCircle className="text-[10px] text-[#ff9900]" />
-              Total Returning Member
+              Irregular Members
             </div>
             <div className="pr-2">
               <span className="text-sm font-semibold">
-                {dashboardData?.snapshot?.total_returning_member}
+                {dashboardData?.snapshot?.total_irregular_members}
               </span>
             </div>
           </div>
           <div className="w-fit flex items-center gap-2 pl-2">
             <div className="text-sm font-medium text-gray-600 flex gap-2 items-center">
               <FaCircle className="text-[10px] text-[#FF0000]" />
-              Total Advanced Renewal Member
+              Inactive Members
             </div>
             <div>
               <span className="text-sm font-semibold">
-                {dashboardData?.snapshot?.total_advanced_renewal_member}
+                {dashboardData?.snapshot?.total_inactive_members}
               </span>
             </div>
           </div>

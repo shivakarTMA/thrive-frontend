@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { addYears, subYears, format } from "date-fns";
@@ -33,6 +33,8 @@ const MyFollowUps = () => {
   const [myFollowUps, setMyFollowUps] = useState([]);
   const [clubList, setClubList] = useState([]);
   const [clubFilter, setClubFilter] = useState(null);
+  const [staffList, setStaffList] = useState([]);
+  const [leadOwner, setLeadOwner] = useState(null);
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -66,6 +68,49 @@ const MyFollowUps = () => {
   };
   // Function to fetch role list
 
+  // ── Fetch staff when club changes ─────────────────────
+  useEffect(() => {
+    if (!clubFilter?.value) return;
+    setLeadOwner(null);
+
+    const fetchStaff = async () => {
+      try {
+        let roles = [
+          "ADMIN",
+          "FOH",
+          "TRAINER",
+          "CLUB_MANAGER",
+          "ASS_CLUB_MANAGER",
+          "FITNESS_MANAGER",
+          "ASS_FITNESS_MANAGER",
+        ];
+        // Remove ADMIN if current user is not ADMIN
+        if (userRole !== "ADMIN") {
+          roles = roles.filter((role) => role !== "ADMIN");
+        }
+        const res = await authAxios().get("/staff/list", {
+          params: {
+            role: roles.join(","),
+            club_id: clubFilter.value,
+          },
+        });
+        const data = res.data?.data || [];
+        const activeStaff = data.filter(
+          (item) =>
+            item.status === "ACTIVE" &&
+            ["ADMIN", "FOH", "TRAINER", "CLUB_MANAGER", "ASS_CLUB_MANAGER", "FITNESS_MANAGER", "ASS_FITNESS_MANAGER"].includes(
+              item.role,
+            ),
+        );
+        setStaffList(activeStaff);
+        setLeadOwner(null);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    fetchStaff();
+  }, [clubFilter?.value]);
+
   useEffect(() => {
     fetchClub();
   }, []);
@@ -75,8 +120,32 @@ const MyFollowUps = () => {
     value: item.id,
   }));
 
-  const selectedClub =
-    clubOptions.find((opt) => opt.value === clubFilter?.value) || null;
+  const selectedClub = clubOptions.find((opt) => opt.value === clubFilter?.value) || null;
+
+  const leadOwnerOptions = useMemo(() => {
+    const grouped = {};
+
+    staffList.forEach((item) => {
+      const role = formatText(item.role);
+
+      if (!grouped[role]) {
+        grouped[role] = [];
+      }
+
+      grouped[role].push({
+        label: item.name,
+        value: item.id,
+        role: role,
+      });
+    });
+
+    return Object.keys(grouped)
+      .sort() // optional: alphabetic group order
+      .map((role) => ({
+        label: role,
+        options: grouped[role],
+      }));
+  }, [staffList]);
 
   // ---------------------------
   // UPDATE URL WITH PARAMS
@@ -112,6 +181,11 @@ const MyFollowUps = () => {
       // Club filter
       if (clubFilter?.value) {
         params.club_id = clubFilter.value;
+      }
+
+      // Lead Owner filter
+      if (leadOwner?.value) {
+        params.created_by = leadOwner.value;
       }
 
       // Date filter
@@ -222,6 +296,7 @@ const MyFollowUps = () => {
     customFrom,
     customTo,
     clubFilter?.value,
+    leadOwner?.value,
   ]);
 
   return (
@@ -305,6 +380,16 @@ const MyFollowUps = () => {
               styles={customStyles}
               isClearable={userRole === "ADMIN" ? true : false}
               className="w-full"
+            />
+          </div>
+          <div className="w-fit min-w-[200px]">
+            <Select
+              placeholder="Select Lead Owner"
+              value={leadOwner}
+              options={leadOwnerOptions}
+              onChange={(opt) => setLeadOwner(opt)}
+              isClearable
+              styles={customStyles}
             />
           </div>
         </div>
