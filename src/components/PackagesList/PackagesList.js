@@ -178,6 +178,7 @@ const PackagesList = () => {
             : Yup.string().required("Trainer Name is required"),
         position: Yup.string().required("Position is required"),
         status: Yup.string().required("Status is required"),
+        show_on_app: Yup.string().required("Show on App is required"),
         description: Yup.string().required("Description is required"),
       };
 
@@ -386,6 +387,7 @@ const PackagesList = () => {
     is_featured: "",
     equipment: "",
     status: "",
+    show_on_app:"",
     variation: [
       {
         name: "",

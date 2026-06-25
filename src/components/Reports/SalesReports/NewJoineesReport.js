@@ -5,6 +5,7 @@ import { addYears, format, subYears } from "date-fns";
 import { FaCalendarDays } from "react-icons/fa6";
 import Select from "react-select";
 import {
+  ALLOWED_ROLES,
   customStyles,
   filterActiveItems,
   formatAutoDate,
@@ -19,6 +20,8 @@ import { useFormik } from "formik";
 import { useSelector } from "react-redux";
 import Pagination from "../../common/Pagination";
 import MembershipSalesPanel from "../../FilterPanel/MembershipSalesPanel";
+import IsLoadingHOC from "../../common/IsLoadingHOC";
+import { LuDownload } from "react-icons/lu";
 
 const dateFilterOptions = [
   { value: "today", label: "Today" },
@@ -27,7 +30,8 @@ const dateFilterOptions = [
   { value: "custom", label: "Custom Date" },
 ];
 
-const NewJoineesReport = () => {
+const NewJoineesReport = (props) => {
+  const { setLoading } = props;
   const location = useLocation();
   const navigate = useNavigate();
   const [newJoineesList, setNewJoineesList] = useState([]);
@@ -187,7 +191,7 @@ const NewJoineesReport = () => {
       const responseData = res.data;
       const data = responseData?.data || [];
 
-      console.log("SHIVAKAR", responseData);
+      // console.log("SHIVAKAR", responseData);
 
       setNewJoineesList(data);
       setPage(responseData?.currentPage || 1);
@@ -311,6 +315,70 @@ const NewJoineesReport = () => {
     appliedFilters.payment_method,
   ]);
 
+  const handleExportNewJoinees = async () => {
+    try {
+      setLoading(true);
+
+      const params = {};
+
+      // 📅 Date filters
+      if (dateFilter?.value && dateFilter.value !== "custom") {
+        params.dateFilter = dateFilter.value;
+      }
+
+      if (dateFilter?.value === "custom" && customFrom && customTo) {
+        params.startDate = format(customFrom, "yyyy-MM-dd");
+        params.endDate = format(customTo, "yyyy-MM-dd");
+      }
+
+      // 🏢 Club filter
+      if (clubFilter?.value) {
+        params.club_id = clubFilter.value;
+      }
+
+      // 🎯 Applied filters
+      Object.entries(appliedFilters).forEach(([key, value]) => {
+        if (value !== null && value !== undefined) {
+          params[key] = value;
+        }
+      });
+
+      console.log("📥 Download Params:", params);
+
+      const response = await authAxios().get("/marketing/report/newjoinee/download", {
+        params,
+        responseType: "blob",
+      });
+
+      // 📄 Create download
+      const blob = new Blob([response.data]);
+
+      const url = window.URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+
+      link.href = url;
+
+      link.setAttribute("download", "membership-sales-report.xlsx");
+
+      document.body.appendChild(link);
+
+      link.click();
+
+      link.remove();
+
+      window.URL.revokeObjectURL(url);
+
+      toast.success("Membership sales report downloaded successfully!");
+    } catch (error) {
+      console.error(error);
+
+      toast.error("Failed to download membership sales report.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="page--content">
       {/* Header */}
@@ -394,6 +462,24 @@ const NewJoineesReport = () => {
             />
           </div>
         </div>
+
+          {!ALLOWED_ROLES.includes(userRole) && (
+            <div className="w-full max-w-[170px]">
+              <button
+                onClick={handleExportNewJoinees}
+                disabled={newJoineesList.length === 0 || (dateFilter?.value === "custom" && (!customFrom || !customTo))}
+                className={`ms-auto px-4 py-2 rounded flex items-center gap-2
+                ${
+                  newJoineesList.length === 0 || (dateFilter?.value === "custom" && (!customFrom || !customTo))
+                    ? "bg-gray-400 cursor-not-allowed text-white"
+                    : "bg-black text-white hover:bg-gray-800"
+                }`}
+              >
+                <LuDownload /> <span>Download Report</span>
+              </button>
+            </div>
+          )}
+
       </div>
 
       {/* Table */}
@@ -476,11 +562,19 @@ const NewJoineesReport = () => {
                       {row.membership_number || "--"}
                     </td>
                     <td className="px-2 py-4">
-                      <Link to={`/member/${row.member_id}`}>
-                        <span className="text-[#009EB2] font-medium">
-                          {row.member_name || "--"}
-                        </span>
-                      </Link>
+                      {!(
+                        userRole === "MARKETING_MANAGER" ||
+                        userRole === "FINANCE_MANAGER_CLUB" ||
+                        userRole === "FINANCE_MANAGER_CORPORATE"
+                      ) ? (
+                        <Link to={`/member/${row.member_id}`}>
+                          <span className="text-[#009EB2] font-medium">
+                            {row.member_name || "--"}
+                          </span>
+                        </Link>
+                      ) : (
+                        row?.member_name || "--"
+                      )}
                     </td>
                     <td className="px-2 py-4">
                       {formatText(row.service_type) || "--"}
@@ -570,4 +664,4 @@ const NewJoineesReport = () => {
   );
 };
 
-export default NewJoineesReport;
+export default IsLoadingHOC(NewJoineesReport);

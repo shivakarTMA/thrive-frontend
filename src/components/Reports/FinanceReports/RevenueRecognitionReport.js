@@ -53,8 +53,8 @@ const RevenueRecognitionReport = () => {
         {
           params: {
             club_id: clubFilter,
-            start_date: startMonth,
-            end_date: endMonth,
+            start_date: format(startMonth, "yyyy-MM-dd"),
+            end_date: format(endMonth, "yyyy-MM-dd"),
           },
           responseType: "blob",
         },

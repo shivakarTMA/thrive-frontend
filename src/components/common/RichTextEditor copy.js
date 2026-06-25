@@ -1,224 +1,328 @@
-import React, { useState, useRef, useEffect, useMemo } from "react";
+import React, {
+  useState,
+  useRef,
+  useEffect,
+  useMemo,
+  forwardRef,
+  useImperativeHandle,
+} from "react";
 import JoditEditor from "jodit-react";
 import { toast } from "react-toastify";
+import DOMPurify from "dompurify";
 
-const RichTextEditor = ({
-  label,
-  value = "",
-  onChange = () => {},
-  placeholder = "Start typing...",
-  showHtmlToggle = true,
-  className = "",
-  disabled = false,
-  emitOnChange = false,
-  height = 400,
-}) => {
-  const editorRef = useRef(null);
-  const [internalValue, setInternalValue] = useState(value);
-  const [showHtml, setShowHtml] = useState(false);
-  const [isFocused, setIsFocused] = useState(false);
+// ✅ GLOBAL SECURITY CONFIG
+DOMPurify.setConfig({
+  ALLOWED_URI_REGEXP: /^(https?|mailto|tel|data:image\/)/i,
+  FORCE_BODY: true,
+  SANITIZE_DOM: true,
+});
 
-  const config = useMemo(
-    () => ({
-      readonly: !!disabled,
-      height,
-      placeholder,
+// ✅ REMOVE EVENT HANDLERS (onclick, onerror, etc.)
+DOMPurify.addHook("uponSanitizeAttribute", (node, data) => {
+  if (data.attrName.startsWith("on")) {
+    data.keepAttr = false;
+  }
+});
 
-      toolbar: [
-        "undo redo | bold italic underline | align",
-        "ul ol | outdent indent | table",
-        "link image | source",
-      ],
+// ✅ SAFE STYLE FILTER
+DOMPurify.addHook("uponSanitizeAttribute", (node, data) => {
+  if (data.attrName === "style") {
+    const allowedStyles = [
+      "color",
+      "background",
+      "background-color",
+      "text-align",
+      "font-size",
+      "font-weight",
+      "text-decoration",
+      "padding",
+      "margin",
+      "border",
+      "border-bottom",   // ✅ ADD THIS
+      "border-top",      // ✅ ADD THIS
+      "border-left",     // ✅ ADD THIS
+      "border-right",    // ✅ ADD THIS
+      "border-collapse",
+      "width",
+      "height",
+      "list-style",
+      "list-style-type",
+      "list-style-position",
+    ];
 
-      removeButtons:
-        "ai-assistant,ai-command,about,print,insertvideo,video,speech,paintformat,formatPainter,file",
+    const cleanStyle = [];
 
-      disablePlugins: [
-        "ai-assistant",
-        "ai-command",
-        "speech",
-        "video",
-        "print",
-        "about",
-        "paintformat",
-        "filebrowser",
-        "file",
-      ],
+    const styles = data.attrValue.split(";").filter(Boolean);
 
-      // MANUALLY handle image uploads
-      uploader: {
-        insertImageAsBase64URI: true,
-        imagesExtensions: ["jpg", "png", "jpeg", "svg", "webp"],
+    styles.forEach((style) => {
+      const [prop, val] = style.split(":").map((s) => s && s.trim());
 
-        // This prevents the AJAX request
-        url: "data:application/json;base64,eyJzdWNjZXNzIjp0cnVlfQ==",
+      if (!prop || !val) return;
 
-        // Handle file upload
-        process: (resp) => {
-          // Return false to prevent default processing
-          return {
+      const isAllowed = allowedStyles.includes(prop.toLowerCase());
+
+      const isSafe =
+        !val.includes("javascript:") &&
+        !val.includes("expression(");
+        // !val.includes("url(");
+
+      if (isAllowed && isSafe) {
+        cleanStyle.push(`${prop}: ${val}`);
+      }
+    });
+
+    data.attrValue = cleanStyle.join("; ");
+  }
+});
+
+const RichTextEditor = forwardRef(
+  (
+    {
+      label,
+      value = "",
+      onChange = () => {},
+      placeholder = "Start typing...",
+      className = "",
+      disabled = false,
+      emitOnChange = false,
+      height = 400,
+      editMode = false,
+    },
+    ref
+  ) => {
+    const editorRef = useRef(null);
+    const [internalValue, setInternalValue] = useState(value);
+    const [isFocused, setIsFocused] = useState(false);
+
+    useImperativeHandle(ref, () => ({
+      insertText: (text) => {
+        if (editorRef.current) {
+          editorRef.current.selection.insertHTML(text);
+        }
+      },
+    }));
+
+    const config = useMemo(
+      () => ({
+        disabled: editMode,
+        readonly: !!disabled,
+        height,
+        placeholder,
+
+        toolbar: [
+          "undo redo | bold italic underline | align",
+          "ul ol | outdent indent | table",
+          "link image | source",
+        ],
+
+        removeButtons:
+          "classSpan,ai-assistant,ai-command,about,print,insertvideo,video,speech,paintformat,formatPainter,file,spellcheck",
+
+        disablePlugins: [
+          "classSpan",
+          "ai-assistant",
+          "ai-command",
+          "speech",
+          "video",
+          "print",
+          "about",
+          "paintformat",
+          "filebrowser",
+          "file",
+        ],
+
+        uploader: {
+          insertImageAsBase64URI: true,
+          imagesExtensions: ["jpg", "png", "jpeg", "svg", "webp"],
+
+          url: "data:application/json;base64,eyJzdWNjZXNzIjp0cnVlfQ==",
+
+          process: () => ({
             files: [],
             error: 0,
             msg: "",
-          };
+          }),
+
+          isSuccess: () => true,
+
+          defaultHandlerSuccess: function (data) {
+            const files = data.files || [];
+            if (files.length) {
+              this.selection.insertImage(files[0]);
+            }
+          },
         },
 
-        // Validate before upload
-        isSuccess: function (resp) {
-          return true;
+        events: {
+          beforePaste: function (html) {
+            return html;
+          },
+
+          beforeImageUpload: function (files) {
+            const file = files?.[0];
+            if (!file) return false;
+
+            const allowed = [
+              "image/png",
+              "image/jpeg",
+              "image/jpg",
+              "image/svg+xml",
+              "image/webp",
+            ];
+
+            if (!allowed.includes(file.type)) {
+              toast.error("Only PNG, JPG, JPEG, SVG, or WebP allowed");
+              return false;
+            }
+
+            if (file.size > 2 * 1024 * 1024) {
+              toast.error("Image must be under 2MB");
+              return false;
+            }
+
+            const reader = new FileReader();
+            const editor = this;
+
+            reader.onload = function () {
+              editor.selection.insertImage(reader.result, null, 250);
+            };
+
+            reader.readAsDataURL(file);
+
+            return false;
+          },
         },
 
-        // Handle the actual file selection
-        defaultHandlerSuccess: function (data, resp) {
-          const files = data.files || [];
-          if (files && files.length) {
-            this.selection.insertImage(files[0]);
-          }
+        defaultActionOnPaste: "insert_as_html",
+        askBeforePasteHTML: false,
+        askBeforePasteFromWord: false, // 🔥 ADD THIS
+        processPasteFromWord: false,   // 🔥 ADD THIS (optional but recommended)
+        cleanHTML: {
+          removeJavascript: true,
         },
 
-        // Error handler
-        error: function (e) {
-          this.events.fire("errorMessage", e.message, "error", 4000);
-        },
-      },
+        showXPathInStatusbar: false,
+        showCharsCounter: false,
+        showWordsCounter: false,
+        hidePoweredByJodit: true,
+        statusbar: false,
+      }),
+      [disabled, height, placeholder]
+    );
 
-      // Better approach: use events to handle image insertion
-      events: {
-        beforeImageUpload: function (files) {
-          const file = files?.[0];
-          if (!file) return false;
+    useEffect(() => {
+      setInternalValue(value);
+      if (!isFocused && editorRef.current) {
+        try {
+          editorRef.current?.setEditorValue?.(value);
+        } catch {}
+      }
+    }, [value, isFocused]);
 
-          const allowed = [
-            "image/png",
-            "image/jpeg",
-            "image/jpg",
-            "image/svg+xml",
-            "image/webp",
-          ];
-
-          // ❌ INVALID FILE TYPE
-          if (!allowed.includes(file.type)) {
-            // Use setTimeout to ensure toast shows outside Jodit's event cycle
-            setTimeout(() => {
-              toast.error(
-                "Only PNG, JPG, JPEG, SVG, or WebP images are allowed.",
-                {
-                  position: "top-right",
-                  autoClose: 3000,
-                  hideProgressBar: false,
-                  closeOnClick: true,
-                  pauseOnHover: true,
-                  draggable: true,
-                }
-              );
-            }, 0);
-            return false; // Prevent upload
-          }
-
-          // ✅ VALID — Convert to Base64 manually
-          const reader = new FileReader();
-          const editor = this;
-
-          reader.onload = function () {
-            editor.selection.insertImage(reader.result, null, 250);
-          };
-
-          reader.onerror = function () {
-            setTimeout(() => {
-              toast.error("Failed to read image file.", {
-                position: "top-right",
-                autoClose: 3000,
-              });
-            }, 0);
-          };
-
-          reader.readAsDataURL(file);
-
-          return false; // Prevent default upload behavior
-        },
-      },
-
-      defaultActionOnPaste: "insert_as_html",
-      askBeforePasteHTML: false,
-      cleanHTML: false,
-      showXPathInStatusbar: false,
-      showCharsCounter: false,
-      showWordsCounter: false,
-      showPlaceholder: true,
-      hidePoweredByJodit: true,
-      statusbar: false,
-    }),
-    [disabled, height, placeholder]
-  );
-
-  useEffect(() => {
-    setInternalValue(value);
-    if (!isFocused && editorRef.current) {
+    const extractContent = () => {
       try {
-        if (editorRef.current.setEditorValue) {
-          editorRef.current.setEditorValue(value);
-        } else if (editorRef.current.getEditor) {
-          const ed = editorRef.current.getEditor();
-          if (ed) ed.innerHTML = value;
+        return (
+          editorRef.current?.value ||
+          editorRef.current?.getEditor?.().innerHTML ||
+          internalValue
+        );
+      } catch {
+        return internalValue;
+      }
+    };
+
+    // ✅ LINK VALIDATION
+    const validateLinks = (html) => {
+      const doc = new DOMParser().parseFromString(html, "text/html");
+
+      doc.querySelectorAll("a").forEach((a) => {
+        const href = a.getAttribute("href");
+
+        if (!href || !href.match(/^(https?:|mailto:|tel:)/i)) {
+          a.removeAttribute("href");
         }
-      } catch {}
-    }
-  }, [value, isFocused]);
 
-  const extractContent = () => {
-    try {
-      if (editorRef.current?.value) return editorRef.current.value;
-      if (editorRef.current?.getEditor)
-        return editorRef.current.getEditor().innerHTML;
-      if (editorRef.current?.editor) return editorRef.current.editor.innerHTML;
-    } catch {}
-    return internalValue;
-  };
+        if (a.getAttribute("target") === "_blank") {
+          a.setAttribute("rel", "noopener noreferrer");
+        }
+      });
 
-  const handleEditorChange = () => {
-    const content = extractContent();
-    setInternalValue(content);
-    if (emitOnChange) onChange(content);
-  };
+      return doc.body.innerHTML;
+    };
 
-  const handleEditorBlur = () => {
-    const content = extractContent();
-    setInternalValue(content);
-    setIsFocused(false);
-    onChange(content);
-  };
+    const sanitizeContent = (content) => {
+      let clean = DOMPurify.sanitize(content, {
+        ALLOWED_TAGS: [
+          "p","strong","span","em","u","ul","ol","li","br",
+          "h1","h2","h3","h4","h5","h6",
+          "table","thead","tbody","tfoot","tr","td","th",
+          "div","blockquote","pre","code",
+          "img","a"
+        ],
 
-  return (
-    <div className={`rich-text-editor-wrapper ${className}`}>
-      <div className="flex justify-between gap-2 items-center mb-2">
-        <label className="block">
-          {label}
-          <span className="text-red-500">*</span>
+        ALLOWED_ATTR: [
+          "border-bottom","border-top","border-left","border-right","style",
+          "colspan",
+          "rowspan",
+          "align",
+          "width",
+          "height",
+          "border",
+          "border-bottom",
+          "border-top",
+          "border-left",
+          "border-right",
+          "cellpadding",
+          "cellspacing",
+          "role", // ✅ keep this
+          "alt",
+          "src",
+          "href",
+          "target",
+          "rel",
+        ],
+
+        FORBID_TAGS: [
+          "script","iframe","object","embed","svg","math",
+          "form","input","button","textarea","select",
+          "link","meta"
+        ],
+
+        KEEP_CONTENT: false,
+      });
+
+      clean = validateLinks(clean);
+      return clean;
+    };
+
+    // const handleEditorChange = () => {
+    //   const clean = sanitizeContent(extractContent());
+    //   setInternalValue(clean);
+    //   if (emitOnChange) onChange(clean);
+    // };
+    const handleEditorChange = () => {
+      const content = extractContent();
+      setInternalValue(content);
+      if (emitOnChange) onChange(content);
+    };
+
+    // const handleEditorBlur = () => {
+    //   const clean = sanitizeContent(extractContent());
+    //   setInternalValue(clean);
+    //   setIsFocused(false);
+    //   onChange(clean);
+    // };
+    const handleEditorBlur = () => {
+      const clean = sanitizeContent(extractContent());
+      onChange(clean);
+    };
+
+    return (
+      <div className={`rich-text-editor-wrapper ${className}`}>
+        <label>
+          {label} <span style={{ color: "red" }}>*</span>
         </label>
-        {showHtmlToggle && (
-          <div className="flex justify-end ">
-            <button
-              type="button"
-              className="px-3 py-1 border rounded text-sm hover:bg-gray-100"
-              onClick={() => setShowHtml((s) => !s)}
-            >
-              {showHtml ? "Back to Editor" : "Edit HTML"}
-            </button>
-          </div>
-        )}
-      </div>
 
-      {showHtml ? (
-        <textarea
-          className="w-full p-2 border rounded h-60 font-mono text-sm"
-          value={internalValue}
-          disabled={disabled}
-          onChange={(e) => {
-            setInternalValue(e.target.value);
-            onChange(e.target.value);
-          }}
-        />
-      ) : (
         <JoditEditor
           ref={editorRef}
           value={internalValue}
@@ -227,9 +331,10 @@ const RichTextEditor = ({
           onFocus={() => setIsFocused(true)}
           onChange={handleEditorChange}
         />
-      )}
-    </div>
-  );
-};
+      </div>
+    );
+  }
+);
 
+RichTextEditor.displayName = "RichTextEditor";
 export default RichTextEditor;

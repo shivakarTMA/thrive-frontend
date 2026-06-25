@@ -5,6 +5,7 @@ import { addYears, format, subYears } from "date-fns";
 import { FaCalendarDays } from "react-icons/fa6";
 import Select from "react-select";
 import {
+  ALLOWED_ROLES,
   customStyles,
   filterActiveItems,
   formatAutoDate,
@@ -18,6 +19,8 @@ import Pagination from "../../common/Pagination";
 import { FaCircle } from "react-icons/fa";
 import MemberSendPaymentLink from "../../../Pages/MemberSendPaymentLink";
 import { useLocation, useNavigate } from "react-router-dom";
+import IsLoadingHOC from "../../common/IsLoadingHOC";
+import { LuDownload } from "react-icons/lu";
 
 const dateFilterOptions = [
   { value: "today", label: "Today" },
@@ -28,13 +31,16 @@ const dateFilterOptions = [
 
 const formatDate = (date) => format(date, "yyyy-MM-dd");
 
-const MembershipExpiryReport = () => {
+const MembershipExpiryReport = (props) => {
+  const {setLoading} = props;
   const [activeMember, setActiveMember] = useState([]);
   const [clubList, setClubList] = useState([]);
   const [clubFilter, setClubFilter] = useState(null);
   const [sendPaymentModal, setSendPaymentModal] = useState(false);
   const [selectedLeadMember, setSelectedLeadMember] = useState(null);
   const [selectedLeadClub, setSelectedLeadClub] = useState(null);
+  const [companyList, setCompanyList] = useState([]);
+  const [filterCompanyName, setFilterCompanyName] = useState(null);
 
   const { user } = useSelector((state) => state.auth);
   const userRole = user.role;
@@ -51,6 +57,32 @@ const MembershipExpiryReport = () => {
   const [rowsPerPage] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
+
+  const fetchCompanyList = async (clubId) => {
+    try {
+      const res = await authAxios().get("/company/list");
+      // ✅ Extract company data safely
+      const data = res.data?.data || [];
+
+      // ✅ Filter only active companies
+      const activeCompanies = data.filter(
+        (company) => company.status === "ACTIVE",
+      );
+      setCompanyList(activeCompanies);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  useEffect(() => {
+    setPage(1);
+    fetchCompanyList();
+  }, [filterCompanyName]);
+
+  const companyOptions = companyList.map((item) => ({
+    label: item.name,
+    value: item.name,
+  }));
 
   // Function to fetch club list
   const fetchClub = async (search = "") => {
@@ -113,6 +145,11 @@ const MembershipExpiryReport = () => {
       // Club filter
       if (clubFilter?.value) {
         params.club_id = clubFilter.value;
+      }
+
+      // Company Name filter
+      if (filterCompanyName?.value) {
+        params.company_name = filterCompanyName.value;
       }
 
       // Date filter
@@ -225,7 +262,69 @@ const MembershipExpiryReport = () => {
     customFrom,
     customTo,
     clubFilter?.value,
+    filterCompanyName,
   ]);
+
+  const handleExportMembershipExpiry = async () => {
+    try {
+      setLoading(true);
+
+      const params = {};
+
+      // 📅 Date filters
+      if (dateFilter?.value && dateFilter.value !== "custom") {
+        params.dateFilter = dateFilter.value;
+      }
+
+      if (dateFilter?.value === "custom" && customFrom && customTo) {
+        params.startDate = format(customFrom, "yyyy-MM-dd");
+        params.endDate = format(customTo, "yyyy-MM-dd");
+      }
+
+      // Club filter
+      if (clubFilter) {
+        params.club_id = clubFilter.value;
+      }
+
+      if (filterCompanyName?.value) {
+        params.company_name = filterCompanyName.value;
+      }
+
+      console.log("📥 Download Params:", params);
+
+      const response = await authAxios().get("/report/membership/expiry/download", {
+        params,
+        responseType: "blob",
+      });
+
+      // 📄 Create download
+      const blob = new Blob([response.data]);
+
+      const url = window.URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+
+      link.href = url;
+
+      link.setAttribute("download", "Membership-Expiry_Report.xlsx");
+
+      document.body.appendChild(link);
+
+      link.click();
+
+      link.remove();
+
+      window.URL.revokeObjectURL(url);
+
+      toast.success("Member expiry report downloaded successfully!");
+    } catch (error) {
+      console.error(error);
+
+      toast.error("Failed to download member expiry report.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="page--content">
@@ -242,7 +341,7 @@ const MembershipExpiryReport = () => {
       {/* Filters */}
       <div className="flex gap-3 mb-4 items-center justify-between">
         <div className="flex gap-2 w-full">
-          <div className="max-w-[180px] w-full">
+          <div className="max-w-[150px] w-full">
             <Select
               placeholder="Date Filter"
               options={dateFilterOptions}
@@ -312,7 +411,33 @@ const MembershipExpiryReport = () => {
               className="w-full"
             />
           </div>
+          <div className="relative min-w-[190px] max-w-fit w-full">
+              <Select
+                value={filterCompanyName}
+                onChange={setFilterCompanyName}
+                options={companyOptions}
+                isClearable
+                placeholder="Select Company Name"
+                styles={customStyles}
+              />
+            </div>
         </div>
+        {!ALLOWED_ROLES.includes(userRole) && (
+            <div className="w-full max-w-[170px]">
+              <button
+                onClick={handleExportMembershipExpiry}
+                disabled={activeMember.length === 0 || (dateFilter?.value === "custom" && (!customFrom || !customTo))}
+                className={`ms-auto px-4 py-2 rounded flex items-center gap-2
+                ${
+                  activeMember.length === 0 || (dateFilter?.value === "custom" && (!customFrom || !customTo))
+                    ? "bg-gray-400 cursor-not-allowed text-white"
+                    : "bg-black text-white hover:bg-gray-800"
+                }`}
+              >
+                <LuDownload /> <span>Download Report</span>
+              </button>
+            </div>
+          )}
       </div>
 
       {/* Table */}
@@ -453,4 +578,4 @@ const MembershipExpiryReport = () => {
   );
 };
 
-export default MembershipExpiryReport;
+export default IsLoadingHOC(MembershipExpiryReport);

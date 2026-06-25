@@ -417,18 +417,23 @@ const LeadCallLogs = () => {
     try {
       if (!clubId) return;
 
+      const roles = [
+        "TRAINER",
+        "FITNESS_MANAGER",
+        "ASS_FITNESS_MANAGER",
+        "FOH",
+      ];
+
       // Fetch all staff needed for 'training_by' select (both roles)
       const res = await authAxios().get("/staff/list", {
         params: {
-          role: ["TRAINER", "FOH"],
+          role: roles.join(","),
           club_id: clubId,
         },
       });
       const staff = res.data?.data || [];
 
       const activeOnly = filterActiveItems(staff);
-
-      // console.log(activeOnly, "activeOnly");
 
       // --- GROUPING STAFF BY ROLE ---
       const foh = activeOnly
@@ -439,18 +444,35 @@ const LeadCallLogs = () => {
         }));
 
       const trainer = activeOnly
-        .filter((item) => item.role === "TRAINER")
-        .map((item) => ({
-          value: item.id,
-          label: item.name,
-        }));
+      .filter((item) =>
+        ["TRAINER", "FITNESS_MANAGER", "ASS_FITNESS_MANAGER"].includes(item.role),
+      )
+      .map((item) => ({
+        value: item.id,
+        label: item.name,
+      }))
 
-      // Separate arrays for each select
-      setTrainerList(trainer); // For 'schedule_for'
-      setStaffList([
-        { label: "FOH", options: foh },
-        { label: "TRAINER", options: trainer },
-      ]);
+      // For schedule_for dropdown
+      setTrainerList(trainer);
+
+      // For training_by dropdown
+      const groupedStaff = [];
+
+      if (foh.length) {
+        groupedStaff.push({
+          label: "FOH",
+          options: foh,
+        });
+      }
+
+      if (trainer.length) {
+        groupedStaff.push({
+          label: "TRAINER",
+          options: trainer,
+        });
+      }
+
+      setStaffList(groupedStaff);
     } catch (err) {
       console.error(err);
     }
@@ -546,14 +568,14 @@ const LeadCallLogs = () => {
       if (isToday && timeDate <= now) isDisabled = true;
 
       // ── Tomorrow: disable slots ≤ current time-of-day ──────────────────
-      const tom = new Date();
-      tom.setDate(tom.getDate() + 1);
-      const isTomorrow = selectedDate.toDateString() === tom.toDateString();
-      if (isTomorrow) {
-        const slotTimeOnly = new Date();
-        slotTimeOnly.setHours(h, m, 0, 0);
-        if (slotTimeOnly <= now) isDisabled = true;
-      }
+      // const tom = new Date();
+      // tom.setDate(tom.getDate() + 1);
+      // const isTomorrow = selectedDate.toDateString() === tom.toDateString();
+      // if (isTomorrow) {
+      //   const slotTimeOnly = new Date();
+      //   slotTimeOnly.setHours(h, m, 0, 0);
+      //   if (slotTimeOnly <= now) isDisabled = true;
+      // }
       // ───────────────────────────────────────────────────────────────────
 
       const booked = getBookedSlotsForDate(selectedDate);
@@ -577,14 +599,14 @@ const LeadCallLogs = () => {
       if (isToday && timeDate <= now) isDisabled = true;
 
       // ── Tomorrow: disable slots ≤ current time-of-day ──────────────────
-      const tom = new Date();
-      tom.setDate(tom.getDate() + 1);
-      const isTomorrow = selectedDate.toDateString() === tom.toDateString();
-      if (isTomorrow) {
-        const slotTimeOnly = new Date();
-        slotTimeOnly.setHours(h, m, 0, 0);
-        if (slotTimeOnly <= now) isDisabled = true;
-      }
+      // const tom = new Date();
+      // tom.setDate(tom.getDate() + 1);
+      // const isTomorrow = selectedDate.toDateString() === tom.toDateString();
+      // if (isTomorrow) {
+      //   const slotTimeOnly = new Date();
+      //   slotTimeOnly.setHours(h, m, 0, 0);
+      //   if (slotTimeOnly <= now) isDisabled = true;
+      // }
       // ───────────────────────────────────────────────────────────────────
 
       const booked = getScheduleBookedSlotsForDate(selectedDate);

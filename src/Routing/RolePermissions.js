@@ -18,6 +18,7 @@ export const ROUTE_PERMISSIONS = {
   // Lead Management
   '/all-leads': ['ADMIN', 'FOH', 'CLUB_MANAGER', 'FINANCE_MANAGER', 'MARKETING_MANAGER'],
   '/all-leads/:id': ['ADMIN', 'FOH', 'CLUB_MANAGER', 'FINANCE_MANAGER', 'MARKETING_MANAGER'],
+  '/kyc-documents': ['ADMIN', 'FOH', 'CLUB_MANAGER'],
   '/edit-lead-details/:id': ['ADMIN', 'FOH', 'FINANCE_MANAGER', 'MARKETING_MANAGER'],
   '/lead-follow-up/:id': ['FOH', 'TRAINER', 'FITNESS_MANAGER', 'CLUB_MANAGER', 'ADMIN'],
   '/my-follow-ups': ['FOH', 'TRAINER', 'FITNESS_MANAGER', 'CLUB_MANAGER', 'ADMIN', 'FINANCE_MANAGER', 'MARKETING_MANAGER'],
@@ -136,6 +137,14 @@ export const ROUTE_PERMISSIONS = {
   '/reports/marketing-reports/email-automation-report': ['ADMIN', 'CLUB_MANAGER', 'FINANCE_MANAGER', 'MARKETING_MANAGER'],
   '/reports/marketing-reports/sms-delivery-report': ['ADMIN', 'MARKETING_MANAGER'],
   '/reports/marketing-reports/event-community-engagement': ['ADMIN', 'MARKETING_MANAGER'],
+
+  // Leaderboard Reports
+  '/leaderboard/sales/revenue-report' : ['ADMIN','CLUB_MANAGER', 'ASS_CLUB_MANAGER', 'FINANCE_MANAGER', 'FINANCE_MANAGER_CLUB', 'FINANCE_MANAGER_CORPORATE'],
+  '/leaderboard/sales/call-logs' : ['ADMIN','CLUB_MANAGER', 'ASS_CLUB_MANAGER', 'FINANCE_MANAGER', 'FINANCE_MANAGER_CLUB', 'FINANCE_MANAGER_CORPORATE'],
+  '/leaderboard/sales/call-logs/call-log-report' : ['ADMIN','CLUB_MANAGER', 'ASS_CLUB_MANAGER', 'FINANCE_MANAGER', 'FINANCE_MANAGER_CLUB', 'FINANCE_MANAGER_CORPORATE'],
+  '/leaderboard/pt-report/pt-revenue' : ['ADMIN','CLUB_MANAGER', 'ASS_CLUB_MANAGER', 'FINANCE_MANAGER', 'FINANCE_MANAGER_CLUB', 'FINANCE_MANAGER_CORPORATE'],
+  '/leaderboard/pt-report/pt-revenue/:id' : ['ADMIN','CLUB_MANAGER', 'ASS_CLUB_MANAGER', 'FINANCE_MANAGER', 'FINANCE_MANAGER_CLUB', 'FINANCE_MANAGER_CORPORATE'],
+  '/leaderboard/pt-report/pt-sessions' : ['ADMIN','CLUB_MANAGER', 'ASS_CLUB_MANAGER', 'FINANCE_MANAGER', 'FINANCE_MANAGER_CLUB', 'FINANCE_MANAGER_CORPORATE'],
 };
 
 // Helper function to check if a user has access to a route

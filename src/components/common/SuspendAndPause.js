@@ -16,14 +16,14 @@ const SuspendAndPause = ({ setSuspendPause, actionType }) => {
     switch (actionType) {
       case "suspend":
         return "Cancel Membership";
-      case "pause":
-        return "Pause Membership";
+      case "freeze":
+        return "Freeze Membership";
       default:
         return "Membership Action";
     }
   };
 
-  const showDatePicker = actionType === "pause";
+  const showDatePicker = actionType === "freeze";
 
   // Formik setup
   const formik = useFormik({

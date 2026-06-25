@@ -5,6 +5,7 @@ import { addYears, format, subYears } from "date-fns";
 import { FaCalendarDays } from "react-icons/fa6";
 import Select from "react-select";
 import {
+  ALLOWED_ROLES,
   customStyles,
   filterActiveItems,
   formatAutoDate,
@@ -16,6 +17,8 @@ import { toast } from "react-toastify";
 import { useSelector } from "react-redux";
 import Pagination from "../../common/Pagination";
 import { FaCircle } from "react-icons/fa";
+import IsLoadingHOC from "../../common/IsLoadingHOC";
+import { LuDownload } from "react-icons/lu";
 
 const dateFilterOptions = [
   { value: "today", label: "Today" },
@@ -26,7 +29,8 @@ const dateFilterOptions = [
 
 const formatDate = (date) => format(date, "yyyy-MM-dd");
 
-const ReferralReport = () => {
+const ReferralReport = (props) => {
+  const {setLoading} = props;
   const [activeMember, setActiveMember] = useState([]);
   const [clubList, setClubList] = useState([]);
   const [clubFilter, setClubFilter] = useState(null);
@@ -122,6 +126,63 @@ const ReferralReport = () => {
     fetchReferralReport(1);
   }, [dateFilter, customFrom, customTo, clubFilter]);
 
+  const handleExportReferralReport = async () => {
+    try {
+      setLoading(true);
+
+      const params = {};
+
+      // Club filter
+      if (clubFilter) {
+        params.club_id = clubFilter;
+      }
+
+      // Date filter
+      if (dateFilter?.value === "custom") {
+        if (customFrom && customTo) {
+          params.startDate = formatDate(customFrom);
+          params.endDate = formatDate(customTo);
+        }
+      } else if (dateFilter?.value) {
+        params.dateFilter = dateFilter.value;
+      }
+
+      console.log("📥 Download Params:", params);
+
+      const response = await authAxios().get("/report/referral/download", {
+        params,
+        responseType: "blob",
+      });
+
+      // 📄 Create download
+      const blob = new Blob([response.data]);
+
+      const url = window.URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+
+      link.href = url;
+
+      link.setAttribute("download", "Referral_Report.xlsx");
+
+      document.body.appendChild(link);
+
+      link.click();
+
+      link.remove();
+
+      window.URL.revokeObjectURL(url);
+
+      toast.success("Referral report downloaded successfully!");
+    } catch (error) {
+      console.error(error);
+
+      toast.error("Failed to download referral report.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="page--content">
       {/* Header */}
@@ -208,6 +269,22 @@ const ReferralReport = () => {
             />
           </div>
         </div>
+        {!ALLOWED_ROLES.includes(userRole) && (
+            <div className="w-full max-w-[170px]">
+              <button
+                onClick={handleExportReferralReport}
+                disabled={activeMember.length === 0 || (dateFilter?.value === "custom" && (!customFrom || !customTo))}
+                className={`ms-auto px-4 py-2 rounded flex items-center gap-2
+                ${
+                  activeMember.length === 0 || (dateFilter?.value === "custom" && (!customFrom || !customTo))
+                    ? "bg-gray-400 cursor-not-allowed text-white"
+                    : "bg-black text-white hover:bg-gray-800"
+                }`}
+              >
+                <LuDownload /> <span>Download Report</span>
+              </button>
+            </div>
+          )}
       </div>
 
       {/* Table */}
@@ -286,4 +363,4 @@ const ReferralReport = () => {
   );
 };
 
-export default ReferralReport;
+export default IsLoadingHOC(ReferralReport);

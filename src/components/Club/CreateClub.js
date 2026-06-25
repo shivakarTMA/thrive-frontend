@@ -19,6 +19,7 @@ import {
   blockNonLetters,
   blockNonLettersAndNumbers,
   multiRowStyles,
+  sanitizeAlphaNumeric,
   sanitizePositiveInteger,
   sanitizeTextWithNumbers,
   selectIcon,
@@ -42,6 +43,16 @@ const facilityOptions = [
   { label: "DLF Limited", value: "ac2050652" },
   { label: "DLF THARAMANI, Chennai", value: "dlftharamanichennai" },
   { label: "DLF, ATRIUM", value: "dlfthriveatrium" },
+];
+
+const corporateOptions = [
+  { label: "Yes", value: true },
+  { label: "No", value: false },
+];
+
+const gstTypeOptions = [
+  { label: "C-SGST", value: "C-SGST" },
+  { label: "IGST", value: "IGST" },
 ];
 
 const CreateClub = ({
@@ -213,6 +224,9 @@ const CreateClub = ({
             terms_and_conditions: data.terms_and_conditions || "",
             company_name: data.company_name || "",
             company_address: data.company_address || "",
+            is_corporate_id: data.is_corporate_id === true || data.is_corporate_id === false ? data.is_corporate_id : null,
+            gsttyp: data.gsttyp || "",
+            prefix: data.prefix || "",
           });
         }
       } catch (err) {
@@ -1014,6 +1028,107 @@ const CreateClub = ({
                     {formik.touched.company_name && formik.errors.company_name && (
                       <p className="text-red-500 text-sm mt-1">
                         {formik.errors.company_name}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Corporate ID */}
+                  <div>
+                    <label className="mb-2 block">
+                      Corporate ID<span className="text-red-500">*</span>
+                    </label>
+
+                    <div className="relative">
+                      <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[10]">
+                        <FaListUl />
+                      </span>
+
+                      <Select
+                        name="is_corporate_id"
+                        options={corporateOptions}
+                        value={
+                          corporateOptions.find(
+                            (opt) => String(opt.value) === String(formik.values.is_corporate_id)
+                          ) || null
+                        }
+                        onChange={(option) =>
+                          formik.setFieldValue("is_corporate_id", option.value)
+                        }
+                        onBlur={() => formik.setFieldTouched("is_corporate_id", true)}
+                        styles={selectIcon}
+                      />
+                    </div>
+
+                    {formik.touched.is_corporate_id && formik.errors.is_corporate_id && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {formik.errors.is_corporate_id}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* GST Type */}
+                  <div>
+                    <label className="mb-2 block">
+                      GST Type<span className="text-red-500">*</span>
+                    </label>
+
+                    <div className="relative">
+                      <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[10]">
+                        <FaListUl />
+                      </span>
+
+                      <Select
+                        name="gsttyp"
+                        options={gstTypeOptions}
+                        value={
+                          gstTypeOptions.find(
+                            (opt) => String(opt.value) === String(formik.values.gsttyp)
+                          ) || null
+                        }
+                        onChange={(option) =>
+                          formik.setFieldValue("gsttyp", option.value)
+                        }
+                        onBlur={() => formik.setFieldTouched("gsttyp", true)}
+                        styles={selectIcon}
+                        isDisabled={editingClub ? true : false}
+                      />
+                    </div>
+
+                    {formik.touched.gsttyp && formik.errors.gsttyp && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {formik.errors.gsttyp}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Prefix */}
+                  <div>
+                    <label className="mb-2 block">
+                      Prefix<span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <span className="absolute top-[50%] translate-y-[-50%] left-[15px]">
+                        <FaListUl />
+                      </span>
+                      <input
+                        type="text"
+                        name="prefix"
+                        value={formik.values.prefix}
+                        onKeyDown={blockNonLettersAndNumbers}
+                        onChange={(e) => {
+                          const cleaned = sanitizeAlphaNumeric(
+                            e.target.value.toUpperCase(),
+                          );
+                          formik.setFieldValue("prefix", cleaned);
+                        }}
+                        onBlur={formik.handleBlur}
+                        className={`custom--input w-full input--icon ${editingClub ? "!bg-gray-100 cursor-not-allowed" : ""}`}
+                        disabled={editingClub ? true : false}
+                      />
+                    </div>
+                    {formik.touched.prefix && formik.errors.prefix && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {formik.errors.prefix}
                       </p>
                     )}
                   </div>

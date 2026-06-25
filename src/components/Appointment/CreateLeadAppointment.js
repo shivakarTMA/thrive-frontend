@@ -230,12 +230,12 @@ const CreateLeadAppointment = ({
           if (slotTime <= now) isPastTime = true;
         }
 
-        if (selectedIsTomorrow) {
-          // compare slot HH:mm against current time-of-day only
-          const slotTimeOnly = new Date();
-          slotTimeOnly.setHours(h, m, 0, 0);
-          if (slotTimeOnly <= now) isPastTime = true;
-        }
+        // if (selectedIsTomorrow) {
+        //   // compare slot HH:mm against current time-of-day only
+        //   const slotTimeOnly = new Date();
+        //   slotTimeOnly.setHours(h, m, 0, 0);
+        //   if (slotTimeOnly <= now) isPastTime = true;
+        // }
 
         // 25th and beyond → isPastTime stays false, all slots open
       }
@@ -254,10 +254,18 @@ const CreateLeadAppointment = ({
   // ===============================
 
   const fetchStaff = async () => {
-    const res = await authAxios().get(
-      `/staff/list?club_id=${clubId}&role=TRAINER`,
-    );
-    setStaffList(res.data?.data || []);
+    try {
+      const res = await authAxios().get("/staff/list", {
+        params: {
+          club_id: clubId,
+          role: "TRAINER,FITNESS_MANAGER,ASS_FITNESS_MANAGER",
+        },
+      });
+
+      setStaffList(res.data?.data || []);
+    } catch (err) {
+      console.error("fetchStaff error:", err);
+    }
   };
 
   const fetchService = async () => {
@@ -437,7 +445,8 @@ const CreateLeadAppointment = ({
                       formik.setFieldValue("appointment_date", null);
                     }}
                     dateFormat="dd/MM/yyyy" 
-                    minDate={new Date(new Date().setDate(new Date().getDate() + 1))} // ✅ disables today + past
+                    // minDate={new Date(new Date().setDate(new Date().getDate() + 1))} // ✅ disables today + past
+                    minDate={new Date()}
                     onKeyDown={(e) => {
                       e.preventDefault();
                     }}

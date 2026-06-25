@@ -171,9 +171,7 @@ const PaymentHistory = ({ details, setLoading }) => {
                         : "--"}
                     </td>
                     <td className="border px-3 py-2">
-                      {order?.payment_mode
-                        ? formatText(order.payment_mode)
-                        : "--"}
+                        {order.payment_mode === "UPI_ICICI" ? "UPI" : formatText(order.payment_mode)}
                     </td>
                     <td className="border px-3 py-2">
                       {order?.transaction_id

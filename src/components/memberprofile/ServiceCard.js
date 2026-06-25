@@ -1,8 +1,16 @@
 import React, { useEffect, useMemo, useState } from "react";
 import Coins from "../../assets/images/coins.svg";
-import { FaCirclePlus } from "react-icons/fa6";
+import { FaCirclePlus, FaListUl } from "react-icons/fa6";
+import { TbCalendarPlus } from "react-icons/tb";
 import DummyProfile from "../../assets/images/dummy-profile.png";
-import { customStyles, formatText } from "../../Helper/helper";
+import {
+  allowOnlyLetters,
+  blockInvalidNumberKeys,
+  blockNonLetters,
+  customStyles,
+  formatText,
+  sanitizePositiveInteger,
+} from "../../Helper/helper";
 import Select from "react-select";
 import AddCoins from "../CoinsList/AddCoins";
 import SuspendAndPause from "../common/SuspendAndPause";
@@ -13,6 +21,11 @@ import MemberSendPaymentLink from "../../Pages/MemberSendPaymentLink";
 import { FiPlusCircle } from "react-icons/fi";
 import Tooltip from "../common/Tooltip";
 import { useSelector } from "react-redux";
+import ExtendMembershipModal from "./ExtendMembershipModal";
+import FreezeMembershipModal from "./FreezeMembershipModal";
+import UnfreezeMembershipModal from "./UnfreezeMembershipModal";
+import ExtendServiceModal from "./ExtendServiceModal";
+import ReviveMembershipModal from "./ReviveMembershipModal";
 
 const statusOptions = [
   { value: "ACTIVE", label: "Active" },
@@ -28,6 +41,7 @@ const tabs = ["Purchased Services", "Purchased Memberships"];
 
 const ServiceCard = ({ details }) => {
   const clubId = details?.club_id;
+  const kycCheckMember = details?.is_kyc;
   const [membershipData, setMembershipData] = useState([]);
   const [purchasedServicesCount, setPurchasedServicesCount] = useState(null);
   const [purchasedServices, setPurchasedServices] = useState([]);
@@ -58,19 +72,44 @@ const ServiceCard = ({ details }) => {
   const [membershipActionType, setMembershipActionType] = useState(null);
   const [trainerSelections, setTrainerSelections] = useState({});
 
+  const [extendMembershipModal, setExtendMembershipModal] = useState(false);
+  const [extendServiceModal, setExtendServiceModal] = useState(false);
+  const [extendServiceId, setExtendServiceId] = useState(null);
+  const [freezeStatus, setFreezeStatus] = useState("");
+  const [freezeMembership, setFreezeMembership] = useState(false);
+  const [unfreezeMembership, setUnfreezeMembership] = useState(false);
+  const [reviveMembership, setReviveMembership] = useState(false);
+
   const { user } = useSelector((state) => state.auth);
   const userRole = user.role;
 
   const fetchStaff = async (clubIdParam = null) => {
     try {
-      const params = {};
-      if (clubIdParam) params.club_id = clubIdParam;
+      const roles = [
+        "TRAINER",
+        "FITNESS_MANAGER",
+        "ASS_FITNESS_MANAGER",
+      ];
+      const params = {
+        role: roles.join(","), // TRAINER,FITNESS_MANAGER,ASS_FITNESS_MANAGER
+      };
 
-      const res = await authAxios().get("/staff/list?role=TRAINER", { params });
+      if (clubIdParam) {
+        params.club_id = clubIdParam;
+      }
+
+      const res = await authAxios().get("/staff/list", { params });
+
       const data = res.data?.data || res?.data || [];
-      setStaffList(data.filter((item) => item?.status === "ACTIVE"));
-    } catch(error) {
-      console.log(error)
+      setStaffList(
+        data.filter(
+          (item) =>
+            item?.status === "ACTIVE" &&
+            roles.includes(item?.role)
+        )
+      );
+    } catch (error) {
+      console.log(error);
     }
   };
 
@@ -177,9 +216,20 @@ const ServiceCard = ({ details }) => {
     }
   };
 
+  const fetchMemberById = async (memberId) => {
+    try {
+      const res = await authAxios().get(`/member/${memberId}`);
+      const data = res.data?.data || res.data || null;
+      setFreezeStatus(data?.freeze_status);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   useEffect(() => {
     if (details?.id) {
       fetchMemberServiceCard();
+      fetchMemberById(details?.id);
     }
   }, [details?.id]);
 
@@ -304,7 +354,11 @@ const ServiceCard = ({ details }) => {
     setActiveTab(tab);
   };
 
-  console.log(purchasedServices, "asdfasdf");
+
+  const handleExtendService = (serviceId) =>{
+    setExtendServiceId(serviceId);
+    setExtendServiceModal(true)
+  }
 
   return (
     <>
@@ -321,51 +375,88 @@ const ServiceCard = ({ details }) => {
                 {formatDate(membershipData?.relationship_since)}
               </p>
             </div>
-            {(userRole === "FOH" ||
-              userRole === "CLUB_MANAGER" ||
-              userRole === "ADMIN") && (
-              <div className="flex gap-2 items-center">
-                {hasUpcomingMembership ? (
-                  <Tooltip
-                  id={`tooltip-membership-buy`}
-                  content="You already have an upcoming membership."
-                  place="top"
-                >
-                  <button
-                    className={`px-3 py-2 rounded-full flex items-center gap-2 border text-sm bg-gray-300 border-gray-300 cursor-not-allowed text-gray-500`}
-                    disabled={hasUpcomingMembership}
-                    onClick={() => {
-                      if (hasUpcomingMembership) return;
-                      setSendPaymentModal(true);
-                    }}
-                  >
-                    <FiPlusCircle className="text-lg" />
-                    <span>Buy Membership</span>
-                  </button>
-                </Tooltip>
-                ) : (
-                  <button
-                    className={`px-3 py-2 rounded-full flex items-center gap-2 border text-sm bg-black border-black text-white`}
-                    onClick={() => {
-                      setSendPaymentModal(true);
-                    }}
-                  >
-                    <FiPlusCircle className="text-lg" />
-                    <span>Buy Membership</span>
-                  </button>
-                )}
-                {/* <div
-                  className="flex items-center bg-white rounded-full px-2 py-1 border-[#D4D4D4] border-[2px]"
-                  onClick={() => setCoinsModal(true)}
-                >
-                  <img src={Coins} className="mr-1" />
-                  <span className="text-lg font-medium text-black mr-3">
-                    {membershipData?.earn_coins}
-                  </span>
-                  <FaCirclePlus className="text-black text-2xl cursor-pointer" />
-                </div> */}
-              </div>
+            <div className="flex gap-2 items-center">
+              {userRole === "ADMIN" && (
+                <>
+                  {membershipData?.booking_status === "ACTIVE" && (
+                    <button
+                      onClick={() => setExtendMembershipModal(true)}
+                      className="px-3 py-2 rounded-full flex items-center gap-2 border text-sm bg-black border-black text-white"
+                    >
+                      <TbCalendarPlus className="text-xl" />
+                      <span>Extend Membership</span>
+                    </button>
+                  )}
+                </>
               )}
+              {(userRole === "FOH" ||
+                userRole === "CLUB_MANAGER" ||
+                userRole === "ADMIN") && (
+                <div className="flex gap-2 items-center">
+                  {hasUpcomingMembership ? (
+                    <Tooltip
+                      id={`tooltip-membership-buy`}
+                      content="You already have an upcoming membership."
+                      place="top"
+                    >
+                      <button
+                        className={`px-3 py-2 rounded-full flex items-center gap-2 border text-sm bg-gray-300 border-gray-300 cursor-not-allowed text-gray-500`}
+                        disabled={hasUpcomingMembership}
+                        onClick={() => {
+                          if (hasUpcomingMembership) return;
+                          setSendPaymentModal(true);
+                        }}
+                      >
+                        <FiPlusCircle className="text-lg" />
+                        <span>Buy Membership</span>
+                      </button>
+                    </Tooltip>
+                  ) : (
+                    <>
+                      {kycCheckMember !== true || freezeStatus === "FREEZED" ? (
+                        <Tooltip
+                          id={`tooltip-membership-kyc`}
+                          content={
+                            freezeStatus === "FREEZED"
+                              ? "Your membership is currently frozen."
+                              : "Your kyc is not completed yet."
+                          }
+                          place="top"
+                        >
+                          <button
+                            className={`px-3 py-2 rounded-full flex items-center gap-2 border text-sm bg-gray-300 border-gray-300 cursor-not-allowed text-gray-500`}
+                            disabled={hasUpcomingMembership}
+                          >
+                            <FiPlusCircle className="text-lg" />
+                            <span>Buy Membership</span>
+                          </button>
+                        </Tooltip>
+                      ) : (
+                        <button
+                          className={`px-3 py-2 rounded-full flex items-center gap-2 border text-sm bg-black border-black text-white`}
+                          onClick={() => {
+                            setSendPaymentModal(true);
+                          }}
+                        >
+                          <FiPlusCircle className="text-lg" />
+                          <span>Buy Membership</span>
+                        </button>
+                      )}
+                    </>
+                  )}
+                  {/* <div
+                    className="flex items-center bg-white rounded-full px-2 py-1 border-[#D4D4D4] border-[2px]"
+                    onClick={() => setCoinsModal(true)}
+                  >
+                    <img src={Coins} className="mr-1" />
+                    <span className="text-lg font-medium text-black mr-3">
+                      {membershipData?.earn_coins}
+                    </span>
+                    <FaCirclePlus className="text-black text-2xl cursor-pointer" />
+                  </div> */}
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
@@ -393,10 +484,34 @@ const ServiceCard = ({ details }) => {
                   <span className="rounded-full text-white border border-white px-3 py-1 text-sm">
                     {membershipData?.membership_duration}
                   </span>
-                  <div className="bg-[#E3F2E8] rounded-full text-white border border-[#E3F2E8] px-3 py-1 text-sm flex gap-1 items-center">
-                    <div className="w-3 h-3 bg-[#498366] rounded-full mr-1"></div>
-                    <span className="text-[#498366]">
-                      {membershipData?.booking_status}
+                  <div
+                    className={`
+                    rounded-full text-white border px-3 py-1 text-sm flex gap-1 items-center
+                    ${freezeStatus === "FREEZED" ? "bg-[#ffe9c6] border-[#ffe9c6]" : ""}
+                    ${membershipData?.booking_status === "EXPIRED" ? "bg-[#ffd4d4] border-[#ffd4d4]" : ""}
+                    ${membershipData?.booking_status === "ACTIVE" ? "bg-[#e3f2e8] border-[#e3f2e8]" : ""}
+                    `}
+                  >
+                    <div
+                      className={`w-3 h-3  rounded-full mr-1
+
+                    ${freezeStatus === "FREEZED" ? "bg-[#ffac28]" : ""}
+                    ${membershipData?.booking_status === "EXPIRED" ? "bg-[#ff3f3f]" : ""}
+                    ${membershipData?.booking_status === "ACTIVE" ? "bg-[#498366]" : ""}
+                      
+                      `}
+                    ></div>
+                    <span
+                      className={`
+
+                    ${freezeStatus === "FREEZED" ? "text-[#ffac28]" : ""}
+                    ${membershipData?.booking_status === "EXPIRED" ? "text-[#ff3f3f]" : ""}
+                    ${membershipData?.booking_status === "ACTIVE" ? "text-[#498366]" : ""}
+                      `}
+                    >
+                      {freezeStatus === "FREEZED"
+                        ? freezeStatus
+                        : membershipData?.booking_status}
                     </span>
                   </div>
                 </div>
@@ -411,41 +526,41 @@ const ServiceCard = ({ details }) => {
                   <h3 className="text-lg font-bold text-gray-900 mb-0">
                     {formatDate(membershipData?.start_date)}
                   </h3>
-                  <p className="text-md text-gray-500">Relationship since</p>
+                  <p className="text-md text-gray-500">Starts From</p>
                 </div>
-                {/* <div className="flex space-x-2">
-                  {(userRole === "CLUB_MANAGER" ||
-                    userRole === "ADMIN") && (
-                    <button
-                      className="px-3 py-2 bg-black text-white rounded flex items-center gap-2 border border-black text-sm"
-                      onClick={() => {
-                        setMembershipActionType("suspend");
-                        setSuspendPauseModal(true);
-                      }}
-                    >
-                      Cancel Membership
-                    </button>
+                <div className="flex space-x-2">
+                  {userRole === "ADMIN" && (
+                    <>
+                      {membershipData?.booking_status === "ACTIVE" && (
+                        <div className="flex gap-2">
+                          {freezeStatus === "FREEZED" ? (
+                            <button
+                              onClick={() => setUnfreezeMembership(true)}
+                              className="px-3 py-2 bg-black text-white rounded flex items-center gap-2 text-sm"
+                            >
+                              Unfreeze Membership
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => setFreezeMembership(true)}
+                              className="px-3 py-2 bg-black text-white rounded flex items-center gap-2 text-sm"
+                            >
+                              Freeze Membership
+                            </button>
+                          )}
+                        </div>
+                      )}
+                      {membershipData?.booking_status === "EXPIRED" && (
+                        <button
+                          onClick={() => setReviveMembership(true)}
+                          className="px-3 py-2 bg-black text-white rounded flex items-center gap-2 text-sm"
+                        >
+                          Revive Membership
+                        </button>
+                      )}
+                    </>
                   )}
-                  <button
-                    onClick={() => {
-                      setMembershipActionType("pause");
-                      setSuspendPauseModal(true);
-                    }}
-                    className="px-3 py-2 bg-white text-black rounded flex items-center gap-2 border border-black text-sm"
-                  >
-                    Pause Membership
-                  </button>
-
-                  <button
-                    className="px-4 py-2 bg-black text-white rounded flex items-center gap-2 border border-black text-sm"
-                    onClick={() => {
-                      setUpgradePlan(membershipData.membershipId);
-                      setInvoiceModal(true);
-                    }}
-                  >
-                    UPGRADE PLAN
-                  </button>
-                </div> */}
+                </div>
               </div>
             </div>
           </div>
@@ -469,7 +584,7 @@ const ServiceCard = ({ details }) => {
           <div className=" rounded-lg bg--color p-[2px]">
             <div className="bg-white rounded-lg h-full flex flex-col justify-between gap-2 p-4">
               <p className="text-lg text-black font-[500]">Expiry On</p>
-              <div>
+              <div className="flex gap-2 justify-between items-end">
                 <p className="text-lg font-bold text-gray-900">
                   {formatDate(membershipData?.end_date)}
                 </p>
@@ -568,11 +683,10 @@ const ServiceCard = ({ details }) => {
                               </span>
                             </div>
 
-                              {(userRole === "CLUB_MANAGER" ||
-                                userRole === "ADMIN" ||
-                                userRole === "FITNESS_MANAGER"
-                              ) && (
-                              <div className="w-fit min-w-[150px]">
+                            {(userRole === "CLUB_MANAGER" ||
+                              userRole === "ADMIN" ||
+                              userRole === "FITNESS_MANAGER") && (
+                              <div className="w-fit min-w-[180px]">
                                 <Select
                                   options={filteredStaffOptions}
                                   value={trainerSelections[service?.id] || null} // <-- controlled value
@@ -610,13 +724,12 @@ const ServiceCard = ({ details }) => {
                                   }
                                 />
                               </div>
-                              )}
+                            )}
 
-                              {(userRole === "CLUB_MANAGER" ||
-                                userRole === "ADMIN" ||
-                                userRole === "FOH"
-                              ) && (
-                                <>
+                            {(userRole === "CLUB_MANAGER" ||
+                              userRole === "ADMIN" ||
+                              userRole === "FOH") && (
+                              <>
                                 {service?.package_status !== "ACTIVE" && (
                                   <div>
                                     <button
@@ -630,8 +743,23 @@ const ServiceCard = ({ details }) => {
                                     </button>
                                   </div>
                                 )}
-                                </>
-                              )}
+                              </>
+                            )}
+                            {userRole === "ADMIN" && (
+                              <>
+                                {service?.package_status === "ACTIVE" &&
+                                  membershipData?.booking_status === "ACTIVE" && (
+                                  <div>
+                                    <button
+                                      className="px-3 py-2 bg-black text-white rounded flex items-center gap-2 border border-black text-sm"
+                                      onClick={() => handleExtendService(service?.id)}
+                                    >
+                                      Extend Service
+                                    </button>
+                                  </div>
+                                )}
+                              </>
+                            )}
                           </div>
 
                           <div className="rounded-lg bg--color p-[2px] w-full">
@@ -770,25 +898,24 @@ const ServiceCard = ({ details }) => {
                             </div>
 
                             {(userRole === "CLUB_MANAGER" ||
-                                userRole === "ADMIN" ||
-                                userRole === "FOH"
-                              ) && (
-                            <>
-                              {membership?.booking_status !== "UPCOMING" && (
-                                <div>
-                                  <button
-                                    className="px-3 py-2 bg-black text-white rounded flex items-center gap-2 border border-black text-sm"
-                                    onClick={() => {
-                                      // setRenewMembership(membership);
-                                      // setModalKey((prev) => prev + 1); // ✅ always unique key
-                                      // setSendPaymentModal(true);
-                                      setSendPaymentModal(true);
-                                    }}
-                                  >
-                                    RENEW
-                                  </button>
-                                </div>
-                              )}
+                              userRole === "ADMIN" ||
+                              userRole === "FOH") && (
+                              <>
+                                {membership?.booking_status !== "UPCOMING" && (
+                                  <div>
+                                    <button
+                                      className="px-3 py-2 bg-black text-white rounded flex items-center gap-2 border border-black text-sm"
+                                      onClick={() => {
+                                        // setRenewMembership(membership);
+                                        // setModalKey((prev) => prev + 1); // ✅ always unique key
+                                        // setSendPaymentModal(true);
+                                        setSendPaymentModal(true);
+                                      }}
+                                    >
+                                      RENEW
+                                    </button>
+                                  </div>
+                                )}
                               </>
                             )}
                           </div>
@@ -942,6 +1069,59 @@ const ServiceCard = ({ details }) => {
             </div>
           </div>
         </div>
+      )}
+
+      {extendMembershipModal && (
+        <ExtendMembershipModal
+          setExtendMembershipModal={setExtendMembershipModal}
+          membershipData={membershipData}
+          fetchMemberServiceCard={fetchMemberServiceCard}
+          fetchPurchasedMemberships={fetchPurchasedMemberships}
+          fetchMemberById={fetchMemberById}
+          details={details}
+        />
+      )}
+      {extendServiceModal && (
+        <ExtendServiceModal
+          setExtendServiceModal={setExtendServiceModal}
+          membershipData={membershipData}
+          extendServiceId={extendServiceId}
+          fetchMemberServiceCard={fetchMemberServiceCard}
+          fetchPurchaseServices={fetchPurchaseServices}
+          fetchMemberById={fetchMemberById}
+          details={details}
+        />
+      )}
+      {freezeMembership && (
+        <FreezeMembershipModal
+          setFreezeMembership={setFreezeMembership}
+          membershipData={membershipData}
+          fetchMemberServiceCard={fetchMemberServiceCard}
+          fetchMemberById={fetchMemberById}
+          fetchPurchasedMemberships={fetchPurchasedMemberships}
+          details={details}
+        />
+      )}
+
+      {unfreezeMembership && (
+        <UnfreezeMembershipModal
+          setUnfreezeMembership={setUnfreezeMembership}
+          membershipData={membershipData}
+          fetchMemberServiceCard={fetchMemberServiceCard}
+          fetchMemberById={fetchMemberById}
+          fetchPurchasedMemberships={fetchPurchasedMemberships}
+          details={details}
+        />
+      )}
+      {reviveMembership && (
+        <ReviveMembershipModal
+          setReviveMembership={setReviveMembership}
+          membershipData={membershipData}
+          fetchMemberServiceCard={fetchMemberServiceCard}
+          fetchPurchasedMemberships={fetchPurchasedMemberships}
+          fetchMemberById={fetchMemberById}
+          details={details}
+        />
       )}
     </>
   );

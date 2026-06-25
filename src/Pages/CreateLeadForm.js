@@ -442,16 +442,24 @@ const CreateLeadForm = ({
     try {
       const schedule = formik.values?.schedule;
       const selectedClubId = formik.values?.club_id;
+      const roles = [
+        "TRAINER",
+        "FITNESS_MANAGER",
+        "ASS_FITNESS_MANAGER",
+      ];
 
-      let url = `/staff/list?club_id=${selectedClubId}&role=TRAINER`;
+      // console.log(schedule,'schedule')
 
       if (schedule === "TOUR") {
-        url = `/staff/list?club_id=${selectedClubId}&role=TRAINER&role=FOH`;
-      } else if (schedule === "TRIAL") {
-        url = `/staff/list?club_id=${selectedClubId}&role=TRAINER`;
+        roles.push("FOH");
       }
 
-      const res = await authAxios().get(url);
+      const res = await authAxios().get("/staff/list", {
+        params: {
+          club_id: selectedClubId,
+          role: roles.join(","), // <-- Important
+        },
+      });
 
       // ✅ FILTER ACTIVE + CLUB MATCH
       const staff = (res.data?.data || []).filter((item) => {
@@ -474,11 +482,14 @@ const CreateLeadForm = ({
         }));
 
       const trainer = staff
-        .filter((item) => item.role === "TRAINER")
-        .map((item) => ({
-          value: item.id,
-          label: item.name,
-        }));
+      .filter((item) =>
+        ["TRAINER", "FITNESS_MANAGER", "ASS_FITNESS_MANAGER"].includes(item.role),
+      )
+      .map((item) => ({
+        value: item.id,
+        label: item.name,
+        // label: `${item.name} (${item.role})`,
+      }));
 
       const groupedOptions = [];
 
@@ -613,12 +624,12 @@ const timeOptionsWithDisabled = clubTiming.map((time) => {
       if (slotTime <= now) isPastTime = true;
     }
 
-    if (selectedIsTomorrow) {
-      // compare slot HH:mm against current time-of-day only
-      const slotTimeOnly = new Date();
-      slotTimeOnly.setHours(h, m, 0, 0);
-      if (slotTimeOnly <= now) isPastTime = true;
-    }
+    // if (selectedIsTomorrow) {
+    //   // compare slot HH:mm against current time-of-day only
+    //   const slotTimeOnly = new Date();
+    //   slotTimeOnly.setHours(h, m, 0, 0);
+    //   if (slotTimeOnly <= now) isPastTime = true;
+    // }
 
     // 25th and beyond → isPastTime stays false
   }
@@ -1078,7 +1089,7 @@ const timeOptionsWithDisabled = clubTiming.map((time) => {
                                 : null
                             }
                             onChange={(option) =>
-                              formik.setFieldValue("company_name", option.value)
+                              formik.setFieldValue("company_name", option?.label || "")
                             }
                             options={companyOptions}
                             isLoading={loading}
@@ -1498,7 +1509,8 @@ const timeOptionsWithDisabled = clubTiming.map((time) => {
                                     }}
                                     dateFormat="dd MMM yyyy"
                                     placeholderText="Select date"
-                                    minDate={new Date(new Date().setDate(new Date().getDate() + 1))} // ✅ disables today + past
+                                    // minDate={new Date(new Date().setDate(new Date().getDate() + 1))} // ✅ disables today + past
+                                    minDate={new Date()}
                                     disabled={
                                       !formik.values.schedule ||
                                       formik.values.schedule === "NOTRIAL" ||

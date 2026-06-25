@@ -126,31 +126,31 @@ export default function PrivateRoute({ children }) {
   /* =========================
      4️⃣ STORAGE TAMPER DETECTION
   ========================== */
-useEffect(() => {
-  const handleStorageChange = () => {
-    const token = localStorage.getItem("accessToken");
+// useEffect(() => {
+//   const handleStorageChange = () => {
+//     const token = localStorage.getItem("accessToken");
 
-    if (!token) {
-      logoutAndRedirect();
-      return;
-    }
+//     if (!token) {
+//       logoutAndRedirect();
+//       return;
+//     }
 
-    try {
-      const parsed = JSON.parse(atob(token.split(".")[1]));
+//     try {
+//       const parsed = JSON.parse(atob(token.split(".")[1]));
 
-      // ❌ invalid structure
-      if (!parsed?.id || !parsed?.role) {
-        logoutAndRedirect();
-      }
-    } catch (e) {
-      // ❌ corrupted token
-      logoutAndRedirect();
-    }
-  };
+//       // ❌ invalid structure
+//       if (!parsed?.id || !parsed?.role) {
+//         logoutAndRedirect();
+//       }
+//     } catch (e) {
+//       // ❌ corrupted token
+//       logoutAndRedirect();
+//     }
+//   };
 
-  window.addEventListener("storage", handleStorageChange);
-  return () => window.removeEventListener("storage", handleStorageChange);
-}, []);
+//   window.addEventListener("storage", handleStorageChange);
+//   return () => window.removeEventListener("storage", handleStorageChange);
+// }, []);
 
   /* =========================
      5️⃣ TAB FOCUS VALIDATION

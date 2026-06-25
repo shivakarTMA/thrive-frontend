@@ -161,7 +161,7 @@ const ProductsList = () => {
     name: Yup.string().required("Name is required"),
     caption: Yup.string().required("Caption is required"),
     sku: Yup.string().required("sku is required"),
-    product_type: Yup.string().required("Product type is required"),
+    // product_type: Yup.string().required("Product type is required"),
     food_type: Yup.string().required("Food type is required"),
     calorie: Yup.string().required("Calorie is required"),
     protein: Yup.string().required("Protein is required"),
@@ -208,6 +208,7 @@ const ProductsList = () => {
       then: (schema) => schema.notRequired(), // not required
       otherwise: (schema) => schema.required("Status is required"), // required otherwise
     }),
+    show_on_app: Yup.string().required("Show on App is required"),
     editingOption: Yup.mixed().nullable(),
   });
 
@@ -219,7 +220,7 @@ const ProductsList = () => {
     name: "",
     caption: "",
     sku: "",
-    product_type: "",
+    // product_type: "",
     food_type: "",
     short_description: "",
     calorie: "",
@@ -236,6 +237,7 @@ const ProductsList = () => {
     earn_coin: "",
     position: "",
     status: "",
+    show_on_app:"",
     editingOption: null,
   };
 
@@ -471,9 +473,6 @@ const ProductsList = () => {
         <CreateProduct
           setShowModal={setShowModal}
           editingOption={editingOption}
-          serviceOptions={serviceOptions}
-          clubOptions={clubOptions}
-          productCategoryOptions={productCategoryOptions}
           formik={formik}
         />
       )}

@@ -9,10 +9,16 @@ import { toast } from "react-toastify";
 import DatePicker from "react-datepicker";
 import { FaCalendarDays } from "react-icons/fa6";
 
+const filterBookingCategoryOption = [
+  { value: "service", label: "Service" }, 
+  { value: "complementary", label: "Complementary" }, 
+]
+
 export default function AllAppointmentPanel({
   formik,
   filterTrainer,
   filterBookingStatus,
+  filterBookingCategory,
   filterServiceType,
   filterServiceName,
   filterAppointmentDate,
@@ -38,7 +44,14 @@ export default function AllAppointmentPanel({
   // ✅ Fetch trainers based on club_id (if provided) or all trainers
   const fetchTrainer = async (club_id = null) => {
     try {
-      const params = { role: "TRAINER" };
+      const roles = [
+        "TRAINER",
+        "FITNESS_MANAGER",
+        "ASS_FITNESS_MANAGER",
+      ];
+      const params = {
+        role: roles.join(","), // IMPORTANT FIX
+      };
 
       // ✅ If club_id is provided, filter by club, otherwise show all
       if (club_id) {
@@ -47,7 +60,9 @@ export default function AllAppointmentPanel({
 
       const response = await authAxios().get("/staff/list", { params });
       const data = response.data?.data || [];
-      const activeOnly = filterActiveItems(data);
+      const activeOnly = filterActiveItems(data).filter((item) =>
+        roles.includes(item.role)
+      );
       setTrainerList(activeOnly);
     } catch (error) {
       console.error("Failed to fetch trainers:", error);
@@ -103,9 +118,9 @@ export default function AllAppointmentPanel({
     fetchTrainer(clubId);
     fetchService(clubId);
 
-    setFilterValue("filterTrainer", null);
-    setFilterValue("filterServiceType", null);
-    setFilterValue("filterServiceName", null);
+    // setFilterValue("filterTrainer", null);
+    // setFilterValue("filterServiceType", null);
+    // setFilterValue("filterServiceName", null);
   }, [clubId]);
 
   useEffect(() => {
@@ -167,6 +182,7 @@ export default function AllAppointmentPanel({
       service_id: formik.values.filterServiceType,
       package_id: formik.values.filterServiceName,
       booking_status: formik.values.filterBookingStatus,
+      appointment_category: formik.values.filterBookingCategory,
       appointment_date: formatDateForApi(formik.values.filterAppointmentDate),
     });
 
@@ -180,6 +196,7 @@ export default function AllAppointmentPanel({
       service_id: "filterServiceType",
       package_id: "filterServiceName",
       booking_status: "filterBookingStatus",
+      appointment_category: "filterBookingCategory",
       appointment_date: "filterAppointmentDate",
     };
 
@@ -214,6 +231,11 @@ export default function AllAppointmentPanel({
     if (key === "booking_status") {
       const status = filteredStatusOptions.find((opt) => opt.value === value);
       return status ? status.label : value;
+    }
+
+    if (key === "appointment_category") {
+      const bookingCategory = filterBookingCategoryOption.find((opt) => opt.value === value);
+      return bookingCategory ? bookingCategory.label : value;
     }
 
     if (key === "appointment_date") {
@@ -331,6 +353,26 @@ export default function AllAppointmentPanel({
                   }
                   options={filteredStatusOptions}
                   placeholder="Select Status"
+                  styles={customStyles}
+                  // isClearable
+                />
+              </div>
+              <div>
+                <label className="block mb-1 text-sm font-medium">Booking Type</label>
+                <Select
+                  value={
+                    filterBookingCategoryOption.find(
+                      (opt) => opt.value === filterBookingCategory
+                    ) || null
+                  }
+                  onChange={(option) =>
+                    setFilterValue(
+                      "filterBookingCategory",
+                      option ? option.value : null
+                    )
+                  }
+                  options={filterBookingCategoryOption}
+                  placeholder="Select Type"
                   styles={customStyles}
                   // isClearable
                 />

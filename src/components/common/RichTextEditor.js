@@ -9,6 +9,7 @@ import React, {
 import JoditEditor from "jodit-react";
 import { toast } from "react-toastify";
 import DOMPurify from "dompurify";
+import { store } from "../../Redux/store";
 
 // ✅ GLOBAL SECURITY CONFIG
 DOMPurify.setConfig({
@@ -64,7 +65,7 @@ DOMPurify.addHook("uponSanitizeAttribute", (node, data) => {
       const isSafe =
         !val.includes("javascript:") &&
         !val.includes("expression(");
-        // !val.includes("url(");
+      // !val.includes("url(");
 
       if (isAllowed && isSafe) {
         cleanStyle.push(`${prop}: ${val}`);
@@ -80,7 +81,7 @@ const RichTextEditor = forwardRef(
     {
       label,
       value = "",
-      onChange = () => {},
+      onChange = () => { },
       placeholder = "Start typing...",
       className = "",
       disabled = false,
@@ -132,34 +133,16 @@ const RichTextEditor = forwardRef(
         ],
 
         uploader: {
-          insertImageAsBase64URI: true,
+          insertImageAsBase64URI: false,
           imagesExtensions: ["jpg", "png", "jpeg", "svg", "webp"],
+          url: process.env.REACT_APP_BASEURL + "/emailtemplate/upload",
+          headers: {...(store.getState().auth.accessToken && { Authorization: `Bearer ${store.getState().auth.accessToken}` })},
+          method: "POST",
+          format: "json",
+          prepareData: function (formData) {
 
-          url: "data:application/json;base64,eyJzdWNjZXNzIjp0cnVlfQ==",
+            const file = formData.getAll("files[0]")[0];
 
-          process: () => ({
-            files: [],
-            error: 0,
-            msg: "",
-          }),
-
-          isSuccess: () => true,
-
-          defaultHandlerSuccess: function (data) {
-            const files = data.files || [];
-            if (files.length) {
-              this.selection.insertImage(files[0]);
-            }
-          },
-        },
-
-        events: {
-          beforePaste: function (html) {
-            return html;
-          },
-
-          beforeImageUpload: function (files) {
-            const file = files?.[0];
             if (!file) return false;
 
             const allowed = [
@@ -180,16 +163,37 @@ const RichTextEditor = forwardRef(
               return false;
             }
 
-            const reader = new FileReader();
-            const editor = this;
+            const newFormData = new FormData();
+            newFormData.append("image", file);
 
-            reader.onload = function () {
-              editor.selection.insertImage(reader.result, null, 250);
+            return newFormData;
+          },
+
+          process: function (resp) {
+            return {
+              files: [resp.url],
+              path: "",
+              baseurl: "",
+              error: resp.status ? 0 : 1,
             };
+          },
 
-            reader.readAsDataURL(file);
+          isSuccess: function (resp) {
+            return resp?.status === true;
+          },
 
-            return false;
+          defaultHandlerSuccess: function (data) {
+            const files = data.files || [];
+            if (files.length) {
+
+              this.selection.insertImage(files[0]);
+            }
+          },
+        },
+
+        events: {
+          beforePaste: function (html) {
+            return html;
           },
         },
 
@@ -215,7 +219,7 @@ const RichTextEditor = forwardRef(
       if (!isFocused && editorRef.current) {
         try {
           editorRef.current?.setEditorValue?.(value);
-        } catch {}
+        } catch { }
       }
     }, [value, isFocused]);
 
@@ -253,15 +257,15 @@ const RichTextEditor = forwardRef(
     const sanitizeContent = (content) => {
       let clean = DOMPurify.sanitize(content, {
         ALLOWED_TAGS: [
-          "p","strong","span","em","u","ul","ol","li","br",
-          "h1","h2","h3","h4","h5","h6",
-          "table","thead","tbody","tfoot","tr","td","th",
-          "div","blockquote","pre","code",
-          "img","a"
+          "p", "strong", "span", "em", "u", "ul", "ol", "li", "br",
+          "h1", "h2", "h3", "h4", "h5", "h6",
+          "table", "thead", "tbody", "tfoot", "tr", "td", "th",
+          "div", "blockquote", "pre", "code",
+          "img", "a"
         ],
 
         ALLOWED_ATTR: [
-          "border-bottom","border-top","border-left","border-right","style",
+          "border-bottom", "border-top", "border-left", "border-right", "style",
           "colspan",
           "rowspan",
           "align",
@@ -283,9 +287,9 @@ const RichTextEditor = forwardRef(
         ],
 
         FORBID_TAGS: [
-          "script","iframe","object","embed","svg","math",
-          "form","input","button","textarea","select",
-          "link","meta"
+          "script", "iframe", "object", "embed", "svg", "math",
+          "form", "input", "button", "textarea", "select",
+          "link", "meta"
         ],
 
         KEEP_CONTENT: false,

@@ -5,8 +5,10 @@ import { addYears, subYears, format } from "date-fns";
 import { FaCalendarDays } from "react-icons/fa6";
 import Select from "react-select";
 import {
+  ALLOWED_ROLES,
   customStyles,
   filterActiveItems,
+  formatAutoDate,
   formatDateTimeLead,
   formatIndianNumber,
   formatText,
@@ -16,6 +18,8 @@ import { toast } from "react-toastify";
 import { useLocation, useNavigate } from "react-router-dom";
 import Pagination from "../components/common/Pagination";
 import { useSelector } from "react-redux";
+import IsLoadingHOC from "../components/common/IsLoadingHOC";
+import { LuDownload } from "react-icons/lu";
 
 const dateFilterOptions = [
   { value: "today", label: "Today" },
@@ -26,7 +30,8 @@ const dateFilterOptions = [
 
 const formatDate = (date) => format(date, "yyyy-MM-dd");
 
-const NourishOrders = () => {
+const NourishOrders = (props) => {
+  const {setLoading} = props;
   const [nourishOrders, setNourishOrders] = useState([]);
   const [clubList, setClubList] = useState([]);
   const [clubFilter, setClubFilter] = useState(null);
@@ -262,6 +267,67 @@ const NourishOrders = () => {
     }
   };
 
+  const handleExportOrders = async () => {
+    try {
+      setLoading(true);
+
+      const params = {};
+
+      // 📅 Date filters
+      if (dateFilter?.value && dateFilter.value !== "custom") {
+        params.dateFilter = dateFilter.value;
+      }
+
+      if (dateFilter?.value === "custom" && customFrom && customTo) {
+        params.startDate = format(customFrom, "yyyy-MM-dd");
+        params.endDate = format(customTo, "yyyy-MM-dd");
+      }
+
+      // 🏢 Club filter
+      if (clubFilter?.value) {
+        params.club_id = clubFilter.value;
+      }
+
+      // Status
+      if (placeOrderFilter?.value) {
+        params.fulfilment_status = placeOrderFilter.value;
+      }
+  
+
+      const response = await authAxios().get("/dashboard/product/pending/order/download", {
+        params,
+        responseType: "blob",
+      });
+
+      // 📄 Create download
+      const blob = new Blob([response.data]);
+
+      const url = window.URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+
+      link.href = url;
+
+      link.setAttribute("download", "all-orders.xlsx");
+
+      document.body.appendChild(link);
+
+      link.click();
+
+      link.remove();
+
+      window.URL.revokeObjectURL(url);
+
+      toast.success("All orders list downloaded successfully!");
+    } catch (error) {
+      console.error(error);
+
+      toast.error("Failed to download all orders list.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="page--content">
       {/* Header */}
@@ -275,7 +341,7 @@ const NourishOrders = () => {
       {/* Filters */}
       <div className="flex gap-3 mb-4 items-center justify-between">
         <div className="flex gap-2 w-full">
-          <div className="max-w-[180px] w-full">
+          <div className="max-w-[150px] w-full">
             <Select
               placeholder="Date Filter"
               options={dateFilterOptions}
@@ -334,7 +400,7 @@ const NourishOrders = () => {
             </>
           )}
 
-          <div className="w-fit min-w-[200px]">
+          <div className="w-fit min-w-[180px]">
             <Select
               placeholder="Filter by club"
               value={selectedClub}
@@ -345,7 +411,7 @@ const NourishOrders = () => {
               className="w-full"
             />
           </div>
-          <div className="w-fit min-w-[200px]">
+          <div className="w-fit min-w-[150px]">
             <Select
               placeholder="Filter by Status"
               options={[
@@ -359,6 +425,22 @@ const NourishOrders = () => {
             />
           </div>
         </div>
+        {!ALLOWED_ROLES.includes(userRole) && (
+          <div className="max-w-[140px] w-full">
+            <button
+              onClick={handleExportOrders}
+              disabled={nourishOrders.length === 0 || (dateFilter?.value === "custom" && (!customFrom || !customTo))}
+              className={`w-full px-4 py-2 rounded flex items-center gap-2
+                    ${
+                      nourishOrders.length === 0 || (dateFilter?.value === "custom" && (!customFrom || !customTo))
+                        ? "bg-gray-400 cursor-not-allowed text-white"
+                        : "bg-black text-white hover:bg-gray-800"
+                    }`}
+            >
+              <LuDownload /> <span>Export Orders</span>
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Table */}
@@ -377,6 +459,7 @@ const NourishOrders = () => {
                 <th className="px-2 py-4 min-w-[150px]">Fulfilment Status</th>
                 <th className="px-2 py-4 min-w-[150px]">Delivered By</th>
                 <th className="px-2 py-4 min-w-[170px]">Delivered At</th>
+                <th className="p-2 min-w-[170px]">Scheduled For</th>
                 {(userRole === "CLUB_MANAGER" ||
                   userRole === "FOH" ||
                   userRole === "ADMIN") && (
@@ -428,6 +511,15 @@ const NourishOrders = () => {
                       {order?.delivered_at
                         ? formatDateTimeLead(order?.delivered_at)
                         : "--"}
+                    </td>
+                    <td className="p-2">
+                      {order?.delivery_date ? (
+                        <>
+                          <div>{formatAutoDate(order?.delivery_date)} {order?.delivery_start_time}</div>
+                        </>
+                      ) : (
+                        "--"
+                      )}
                     </td>
                     {(userRole === "CLUB_MANAGER" ||
                       userRole === "FOH" ||
@@ -503,4 +595,4 @@ const NourishOrders = () => {
   );
 };
 
-export default NourishOrders;
+export default IsLoadingHOC(NourishOrders);

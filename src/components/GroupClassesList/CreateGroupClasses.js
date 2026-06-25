@@ -92,12 +92,18 @@ const CreateGroupClasses = ({ setShowModal, editingOption, formik }) => {
 
   const fetchStaff = async (clubId = null) => {
     try {
-      const params = {};
-      if (clubId) params.club_id = clubId;
-      const res = await authAxios().get("/staff/list?role=TRAINER", { params });
+      const params = {
+        role: "TRAINER,FITNESS_MANAGER,ASS_FITNESS_MANAGER",
+      };
+      if (clubId) {
+        params.club_id = clubId;
+      }
+      const res = await authAxios().get("/staff/list", {
+        params,
+      });
+      
       let data = res.data?.data || res.data || [];
       const activeService = data.filter((item) => item.status === "ACTIVE");
-      console.log(activeService, "activeService");
       setStaffList(activeService);
     } catch (err) {
       console.error(err);
@@ -293,6 +299,12 @@ const CreateGroupClasses = ({ setShowModal, editingOption, formik }) => {
                   : null,
             equipment: data?.equipment || "",
             status: data?.status || "",
+            show_on_app:
+              data?.show_on_app === true
+                ? true
+                : data?.show_on_app === false
+                  ? false
+                  : null,
           });
         }
       } catch (err) {
@@ -1052,6 +1064,37 @@ const CreateGroupClasses = ({ setShowModal, editingOption, formik }) => {
                         </div>
                       )}
                     </div> */}
+
+                    <div>
+                      <label className="mb-2 block">
+                        Show on App<span className="text-red-500">*</span>
+                      </label>
+                      <div className="relative">
+                        <Select
+                          name="show_on_app"
+                          value={featureType.find(
+                            (opt) => opt.value === formik.values.show_on_app,
+                          )}
+                          options={featureType}
+                          onChange={(option) =>
+                            formik.setFieldValue(
+                              "show_on_app",
+                              option?.value ?? null,
+                            )
+                          }
+                          onBlur={() =>
+                            formik.setFieldTouched("show_on_app", true)
+                          }
+                          styles={customStyles}
+                        />
+                      </div>
+                      {formik.touched.show_on_app &&
+                        formik.errors.show_on_app && (
+                          <div className="text-red-500 text-sm">
+                            {formik.errors.show_on_app}
+                          </div>
+                        )}
+                    </div>
 
                     {/* Status */}
                     {editingOption && editingOption && (

@@ -128,6 +128,7 @@ const SubscriptionPlan = () => {
       earn_coin: "",
       is_spouse_plan: "",
       status: "",
+      show_on_app: "",
       position: "",
     },
     validationSchema: Yup.object({
@@ -183,6 +184,7 @@ const SubscriptionPlan = () => {
       is_spouse_plan: Yup.string().required("Is Spouse Plan is required"),
       status: Yup.string().required("Status is required"),
       position: Yup.number().required("Position is required"),
+      show_on_app: Yup.string().required("Show on App is required"),
     }),
     enableReinitialize: true,
     onSubmit: async (values, { resetForm }) => {

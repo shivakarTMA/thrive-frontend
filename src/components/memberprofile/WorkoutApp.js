@@ -12,6 +12,8 @@ import { useSelector } from "react-redux";
 
 const WorkoutApp = ({ member }) => {
   const memberId = member?.id;
+  const kycCheckMember = member?.is_kyc;
+  const freezeStatus = member?.freeze_status;
   const [workouts, setWorkouts] = useState([]);
   const [editingId, setEditingId] = useState(null);
   const [workoutTable, setWorkoutTable] = useState(true);
@@ -166,13 +168,28 @@ const WorkoutApp = ({ member }) => {
         <>
           {!workoutModal && (
             <div className="flex justify-end items-end gap-2 mb-3 w-full">
-              <button
-                type="button"
-                onClick={handleAddWorkout}
-                className="px-4 py-2 bg-black text-white rounded flex items-center gap-2"
-              >
-                <FiPlus /> Add Workout
-              </button>
+              {kycCheckMember !== true || freezeStatus === "FREEZED" ? (
+                <Tooltip
+                  id={`tooltip-membership-kyc`}
+                  content={freezeStatus === "FREEZED" ? "Your membership is currently frozen." : "Your kyc is not completed yet."}
+                  place="top"
+                >
+                  <button
+                    disabled={true}
+                    className="px-3 py-2 flex rounded items-center gap-2 border text-sm bg-gray-300 border-gray-300 cursor-not-allowed text-gray-500"
+                  >
+                    <FiPlus /> Add Workout
+                  </button>
+                </Tooltip>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleAddWorkout}
+                  className="px-4 py-2 bg-black text-white rounded flex items-center gap-2"
+                >
+                  <FiPlus /> Add Workout
+                </button>
+              )}
             </div>
           )}
         </>
