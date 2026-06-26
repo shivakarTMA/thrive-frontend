@@ -22,8 +22,10 @@ import { IoEyeOutline } from "react-icons/io5";
 import Tooltip from "../../common/Tooltip";
 import { Link } from "react-router-dom";
 import { LuCalendar, LuDownload } from "react-icons/lu";
+import IsLoadingHOC from "../../common/IsLoadingHOC";
 
-const SalesCallLogs = () => {
+const SalesCallLogs = (props) => {
+  const { setLoading } = props;
   const [leaderboardCallLogs, setLeaderboardCallLogs] = useState([]);
   const [stats, setStats] = useState({});
   const [clubList, setClubList] = useState([]);
@@ -134,6 +136,58 @@ const SalesCallLogs = () => {
   };
   const { startDate, endDate } = getDateRange(selectedMonth);
 
+  const handleDownloadSalesCallLog = async () => {
+    try {
+      setLoading(true);
+
+      const params = {};
+
+      // Club filter
+      if (clubFilter) {
+        params.club_id = clubFilter;
+      }
+
+      // month filter (YYYY-MM)
+      if (selectedMonth) {
+        params.month = formatMonth(selectedMonth);
+      }
+
+      console.log("📥 Download Params:", params);
+
+      const response = await authAxios().get("/leaderboard/sales/calllog/download", {
+        params,
+        responseType: "blob",
+      });
+
+      // 📄 Create download
+      const blob = new Blob([response.data]);
+
+      const url = window.URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+
+      link.href = url;
+
+      link.setAttribute("download", "Sales_Call_log_Report.xlsx");
+
+      document.body.appendChild(link);
+
+      link.click();
+
+      link.remove();
+
+      window.URL.revokeObjectURL(url);
+
+      toast.success("Sales call log report downloaded successfully!");
+    } catch (error) {
+      console.error(error);
+
+      toast.error("Failed to download Sales call log report.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="page--content">
       {/* Header */}
@@ -179,7 +233,7 @@ const SalesCallLogs = () => {
         {!ALLOWED_ROLES.includes(userRole) && (
             <div className="w-full">
               <button
-                // onClick={handleDownloadMembers}
+                onClick={handleDownloadSalesCallLog}
                 disabled={leaderboardCallLogs.length === 0}
                 className={`ms-auto px-4 py-2 rounded flex items-center gap-2
                 ${
@@ -350,4 +404,4 @@ const SalesCallLogs = () => {
   );
 };
 
-export default SalesCallLogs;
+export default IsLoadingHOC(SalesCallLogs);

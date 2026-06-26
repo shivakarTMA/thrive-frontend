@@ -601,16 +601,16 @@ const FitnessManagerDashboard = () => {
                     value: dashboardData?.summary_cards?.total_members?.renewalMember,
                     link:currentUserRole === "FITNESS_MANAGER" ? generateUrl(`/reports/all-orders?bill_type=RENEWAL&package_type=SUBSCRIPTION`): "#"
                   },
-                                    {
-                    label: "Advanced renewal",
-                    value: dashboardData?.summary_cards?.total_members?.advanceRenewalMember,
-                    link:currentUserRole === "FITNESS_MANAGER" ? generateUrl(`/reports/all-orders?bill_type=ADVANCED_RENEWAL&package_type=SUBSCRIPTION`) : "#"
-                  },
-                  {
-                    label: "Returning User",
-                    value: dashboardData?.summary_cards?.total_members?.returningMember,
-                    link:currentUserRole === "FITNESS_MANAGER" ? generateUrl(`/reports/all-orders?bill_type=RETURNING&package_type=SUBSCRIPTION`) : "#"
-                  },
+                  // {
+                  //   label: "Advanced renewal",
+                  //   value: dashboardData?.summary_cards?.total_members?.advanceRenewalMember,
+                  //   link:currentUserRole === "FITNESS_MANAGER" ? generateUrl(`/reports/all-orders?bill_type=ADVANCED_RENEWAL&package_type=SUBSCRIPTION`) : "#"
+                  // },
+                  // {
+                  //   label: "Returning User",
+                  //   value: dashboardData?.summary_cards?.total_members?.returningMember,
+                  //   link:currentUserRole === "FITNESS_MANAGER" ? generateUrl(`/reports/all-orders?bill_type=RETURNING&package_type=SUBSCRIPTION`) : "#"
+                  // },
                 ]}
               />
 

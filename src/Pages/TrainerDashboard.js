@@ -606,16 +606,16 @@ const TrainerDashboard = () => {
                     value: dashboardData?.summary_cards?.total_members?.renewalMember,
                     link:generateUrl(`/reports/all-orders?bill_type=RENEWAL&package_type=SUBSCRIPTION`)
                   },
-                  {
-                    label: "Advanced renewal",
-                    value: dashboardData?.summary_cards?.total_members?.advanceRenewalMember,
-                    link:generateUrl(`/reports/all-orders?bill_type=ADVANCED_RENEWAL&package_type=SUBSCRIPTION`)
-                  },
-                  {
-                    label: "Returning User",
-                    value: dashboardData?.summary_cards?.total_members?.returningMember,
-                    link:generateUrl(`/reports/all-orders?bill_type=RETURNING&package_type=SUBSCRIPTION`)
-                  },
+                  // {
+                  //   label: "Advanced renewal",
+                  //   value: dashboardData?.summary_cards?.total_members?.advanceRenewalMember,
+                  //   link:generateUrl(`/reports/all-orders?bill_type=ADVANCED_RENEWAL&package_type=SUBSCRIPTION`)
+                  // },
+                  // {
+                  //   label: "Returning User",
+                  //   value: dashboardData?.summary_cards?.total_members?.returningMember,
+                  //   link:generateUrl(`/reports/all-orders?bill_type=RETURNING&package_type=SUBSCRIPTION`)
+                  // },
                 ]}
               />
 

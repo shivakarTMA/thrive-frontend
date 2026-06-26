@@ -22,8 +22,10 @@ import { IoEyeOutline } from "react-icons/io5";
 import Tooltip from "../../common/Tooltip";
 import { Link } from "react-router-dom";
 import { LuCalendar, LuDownload } from "react-icons/lu";
+import IsLoadingHOC from "../../common/IsLoadingHOC";
 
-const SalesRevenueReport = () => {
+const SalesRevenueReport = (props) => {
+  const { setLoading } = props;
   const [revenueReportData, setRevenueReportData] = useState([]);
   const [clubList, setClubList] = useState([]);
   const [clubFilter, setClubFilter] = useState(null);
@@ -120,6 +122,58 @@ const SalesRevenueReport = () => {
   };
   const { startDate, endDate } = getDateRange(selectedMonth);
 
+  const handleDownloadSalesRevenue = async () => {
+    try {
+      setLoading(true);
+
+      const params = {};
+
+      // Club filter
+      if (clubFilter) {
+        params.club_id = clubFilter;
+      }
+
+      // month filter (YYYY-MM)
+      if (selectedMonth) {
+        params.month = formatMonth(selectedMonth);
+      }
+
+      console.log("📥 Download Params:", params);
+
+      const response = await authAxios().get("/leaderboard/sales/revenue/download", {
+        params,
+        responseType: "blob",
+      });
+
+      // 📄 Create download
+      const blob = new Blob([response.data]);
+
+      const url = window.URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+
+      link.href = url;
+
+      link.setAttribute("download", "Sales_Revenue_Report.xlsx");
+
+      document.body.appendChild(link);
+
+      link.click();
+
+      link.remove();
+
+      window.URL.revokeObjectURL(url);
+
+      toast.success("Sales revenue report downloaded successfully!");
+    } catch (error) {
+      console.error(error);
+
+      toast.error("Failed to download Sales revenue report.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="page--content">
       {/* Header */}
@@ -165,7 +219,7 @@ const SalesRevenueReport = () => {
         {!ALLOWED_ROLES.includes(userRole) && (
           <div className="w-full">
             <button
-              // onClick={handleDownloadMembers}
+              onClick={handleDownloadSalesRevenue}
               disabled={revenueReportData.length === 0}
               className={`ms-auto px-4 py-2 rounded flex items-center gap-2
                 ${
@@ -298,4 +352,4 @@ const SalesRevenueReport = () => {
   );
 };
 
-export default SalesRevenueReport;
+export default IsLoadingHOC(SalesRevenueReport);
