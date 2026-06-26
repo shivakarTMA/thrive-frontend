@@ -453,7 +453,7 @@ const MyFollowUps = () => {
                           className={`
                           flex items-center justify-between gap-1 rounded-full min-h-[25px] px-2 text-xs w-fit
                           ${
-                            row?.status === "PENDING"
+                            row?.status === "SCHEDULED"
                               ? "bg-yellow-100 text-yellow-700"
                               : row?.status === "MISSED"
                                 ? "bg-red-100 text-red-700"

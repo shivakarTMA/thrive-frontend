@@ -326,50 +326,50 @@ const LeadCallLogs = () => {
 
   useEffect(() => {
     if (editLog) {
-      let trialDate = null;
-      let trialTime = null;
+      // let trialDate = null;
+      // let trialTime = null;
 
-      if (editLog?.trial_tour_datetime) {
-        const d = new Date(editLog.trial_tour_datetime);
+      // if (editLog?.trial_tour_datetime) {
+      //   const d = new Date(editLog.trial_tour_datetime);
 
-        trialDate = d;
+      //   trialDate = d;
 
-        const h = d.getHours().toString().padStart(2, "0");
-        const m = d.getMinutes().toString().padStart(2, "0");
+      //   const h = d.getHours().toString().padStart(2, "0");
+      //   const m = d.getMinutes().toString().padStart(2, "0");
 
-        trialTime = `${h}:${m}`;
-      }
+      //   trialTime = `${h}:${m}`;
+      // }
 
-      let followDate = null;
-      let followTime = null;
+      // let followDate = null;
+      // let followTime = null;
 
-      if (editLog?.follow_up_datetime) {
-        const d = new Date(editLog.follow_up_datetime);
+      // if (editLog?.follow_up_datetime) {
+      //   const d = new Date(editLog.follow_up_datetime);
 
-        followDate = d;
+      //   followDate = d;
 
-        const h = d.getHours().toString().padStart(2, "0");
-        const m = d.getMinutes().toString().padStart(2, "0");
+      //   const h = d.getHours().toString().padStart(2, "0");
+      //   const m = d.getMinutes().toString().padStart(2, "0");
 
-        followTime = `${h}:${m}`;
-      }
+      //   followTime = `${h}:${m}`;
+      // }
       formik.setValues({
         member_id: leadId,
-        call_status: editLog.call_status,
-        follow_up_date: followDate,
-        follow_up_time: followTime,
-        follow_up_datetime: editLog.follow_up_datetime || "",
-        schedule_for: editLog.schedule_for || "",
-        trial_tour_date: trialDate,
-        trial_tour_time: trialTime,
-        trial_tour_datetime: editLog.trial_tour_datetime || "",
-        training_by: editLog.training_by || "",
-        not_interested_reason: editLog.not_interested_reason || "",
-        closure_date: editLog.closure_date
-          ? new Date(editLog.closure_date)
-          : "",
-        amount: editLog.amount || "",
-        remark: editLog.remark || "",
+        // call_status: editLog.call_status,
+        // follow_up_date: followDate,
+        // follow_up_time: followTime,
+        // follow_up_datetime: editLog.follow_up_datetime || "",
+        // schedule_for: editLog.schedule_for || "",
+        // trial_tour_date: trialDate,
+        // trial_tour_time: trialTime,
+        // trial_tour_datetime: editLog.trial_tour_datetime || "",
+        // training_by: editLog.training_by || "",
+        // not_interested_reason: editLog.not_interested_reason || "",
+        // closure_date: editLog.closure_date
+        //   ? new Date(editLog.closure_date)
+        //   : "",
+        // amount: editLog.amount || "",
+        // remark: editLog.remark || "",
         id: editLog.id, // <-- VERY IMPORTANT for update mode
       });
     }
@@ -749,7 +749,7 @@ const LeadCallLogs = () => {
                   onChange={handleCallStatusChange}
                   styles={customStyles}
                   placeholder="Call Status"
-                  isDisabled={editLog ? true : false}
+                  // isDisabled={editLog ? true : false}
                 />
 
                 {formik.errors?.call_status && formik.touched?.call_status && (
@@ -789,7 +789,7 @@ const LeadCallLogs = () => {
                           minDate={new Date()} // ✅ disable past dates
                           placeholderText="Select date"
                           className="border px-3 py-2 w-full input--icon"
-                          disabled={!!editLog}
+                          // disabled={!!editLog}
                         />
                       </div>
 
@@ -818,7 +818,7 @@ const LeadCallLogs = () => {
                           options={timeFollowUpOptions}
                           placeholder="Select time"
                           isDisabled={
-                            !formik.values.follow_up_date || !!editLog
+                            !formik.values.follow_up_date
                           }
                           styles={customStyles}
                         />
@@ -863,7 +863,7 @@ const LeadCallLogs = () => {
                       }}
                       placeholder="Select Trainer"
                       styles={customStyles}
-                      isDisabled={editLog ? true : false}
+                      // isDisabled={editLog ? true : false}
                     />
                     {formik.touched.training_by &&
                       formik.errors.training_by && (
@@ -898,7 +898,7 @@ const LeadCallLogs = () => {
                           onKeyDown={(e) => {
                             e.preventDefault();
                           }}
-                          disabled={!formik.values.training_by || !!editLog}
+                          disabled={!formik.values.training_by}
                           className="border px-3 py-2 w-full input--icon"
                         />
                       </div>
@@ -927,7 +927,7 @@ const LeadCallLogs = () => {
                           }}
                           options={timeOptions}
                           placeholder="Select Time"
-                          isDisabled={!formik.values.trial_tour_date || !!editLog}
+                          isDisabled={!formik.values.trial_tour_date}
                           styles={customStyles}
                         />
                       </div>
@@ -975,7 +975,7 @@ const LeadCallLogs = () => {
                           }}
                           placeholder="Schedule For"
                           styles={customStyles}
-                          isDisabled={editLog ? true : false}
+                          // isDisabled={editLog ? true : false}
                         />
                         {formik.errors?.schedule_for &&
                           formik.touched?.schedule_for && (
@@ -1008,7 +1008,7 @@ const LeadCallLogs = () => {
                               onKeyDown={(e) => {
                                 e.preventDefault();
                               }}
-                              disabled={!formik.values.schedule_for || !!editLog}
+                              disabled={!formik.values.schedule_for}
                               className="border px-3 py-2 w-full input--icon"
                             />
                           </div>
@@ -1037,7 +1037,7 @@ const LeadCallLogs = () => {
                               }}
                               options={scheduleTimeOptions}
                               placeholder="Select Time"
-                              isDisabled={!formik.values.follow_up_date || !!editLog}
+                              isDisabled={!formik.values.follow_up_date}
                               styles={customStyles}
                             />
                           </div>
@@ -1078,7 +1078,7 @@ const LeadCallLogs = () => {
                       }}
                       styles={customStyles}
                       placeholder="Select Reason"
-                      isDisabled={editLog ? true : false}
+                      // isDisabled={editLog ? true : false}
                     />
                     {formik.errors?.not_interested_reason &&
                       formik.touched?.not_interested_reason && (
@@ -1109,7 +1109,7 @@ const LeadCallLogs = () => {
                         placeholderText="Select Date"
                         className="border px-3 py-2 w-full input--icon"
                         minDate={now}
-                        disabled={!!editLog}
+                        // disabled={!!editLog}
                         onKeyDown={(e) => {
                           e.preventDefault();
                         }}
@@ -1130,7 +1130,7 @@ const LeadCallLogs = () => {
                         className={`custom--input w-full input--icon ${
                           editLog ? "!bg-gray-100 pointer-events-none" : ""
                         }`}
-                        disabled={editLog ? true : false}
+                        // disabled={editLog ? true : false}
                       />
                     </div>
                   </div>
@@ -1268,6 +1268,7 @@ const LeadCallLogs = () => {
                 filteredData={filteredLogs}
                 handleEditLog={setEditLog}
                 userRole={userRole}
+                editLog={editLog}
               />
             ))
           ) : (

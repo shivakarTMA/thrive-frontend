@@ -131,6 +131,7 @@ const MemberCallLogs = () => {
 
   const callTypeOption = lists["MEMBER_CALL_TYPE"] || [];
   const callStatusOption = lists["MEMBER_CALL_STATUS"] || [];
+  const leadCallStatusOption = lists["LEAD_CALL_STATUS"] || [];
   const notInterestedOption = lists["NOT_INTERESTED_REASON"] || [];
 
   const fetchMemberCallLogs = async (memberId, filters = {}) => {
@@ -177,21 +178,29 @@ const MemberCallLogs = () => {
 
     fetchMemberById(memberId);
 
-    const filters = {
-      call_type: filterStatus?.value || "",
-      startDate,
-      endDate,
-    };
+    if (activeTab === "Member Logs") {
+      fetchMemberCallLogs(memberId, {
+        call_type: filterStatus?.value || "",
+        startDate,
+        endDate,
+      });
+    }
 
-    const filtersLead = {
-      call_status: enquiryfilterStatus?.value || "",
-      startDate,
-      endDate,
-    };
-
-    fetchMemberCallLogs(memberId, filters);
-    fetchMemberEnquiery(memberId, filtersLead);
-  }, [memberId, filterStatus, startDate, endDate, enquiryfilterStatus]);
+    if (activeTab === "Enquiry Logs") {
+      fetchMemberEnquiery(memberId, {
+        call_status: enquiryfilterStatus?.value || "",
+        startDate,
+        endDate,
+      });
+    }
+  }, [
+    memberId,
+    activeTab,
+    filterStatus,
+    enquiryfilterStatus,
+    startDate,
+    endDate,
+  ]);
 
   const initialValues = {
     member_id: memberId,
@@ -351,30 +360,29 @@ const MemberCallLogs = () => {
 
   useEffect(() => {
     if (editLog) {
-      let date = null;
-      let time = null;
+      // let date = null;
+      // let time = null;
 
-      if (editLog?.follow_up_datetime) {
-        const d = new Date(editLog.follow_up_datetime);
+      // if (editLog?.follow_up_datetime) {
+      //   const d = new Date(editLog.follow_up_datetime);
 
-        date = d;
+      //   date = d;
 
-        const hours = d.getHours().toString().padStart(2, "0");
-        const minutes = d.getMinutes().toString().padStart(2, "0");
+      //   const hours = d.getHours().toString().padStart(2, "0");
+      //   const minutes = d.getMinutes().toString().padStart(2, "0");
 
-        time = `${hours}:${minutes}`;
-      }
+      //   time = `${hours}:${minutes}`;
+      // }
 
       formik.setValues({
-        call_status: editLog.call_status,
         member_id: memberDetails?.id,
         call_type: editLog.call_type || "",
-        call_status: editLog.call_status || "",
-        not_interested_reason: editLog.not_interested_reason || "",
-        follow_up_date: date,
-        follow_up_time: time,
-        follow_up_datetime: editLog.follow_up_datetime || "",
-        remark: editLog.remark || "",
+        // call_status: editLog.call_status || "",
+        // not_interested_reason: editLog.not_interested_reason || "",
+        // follow_up_date: date,
+        // follow_up_time: time,
+        // follow_up_datetime: editLog.follow_up_datetime || "",
+        // remark: editLog.remark || "",
         id: editLog.id, // <-- VERY IMPORTANT for update mode
       });
     }
@@ -477,7 +485,15 @@ const MemberCallLogs = () => {
                   className={`px-4 py-2 rounded ${
                     activeTab === "Enquiry Logs" ? "bg--color text-white" : ""
                   }`}
-                  onClick={() => setActiveTab("Enquiry Logs")}
+                  onClick={() => {
+                    setActiveTab("Enquiry Logs");
+                    
+                    fetchMemberEnquiery(memberId, {
+                      call_status: enquiryfilterStatus?.value || "",
+                      startDate,
+                      endDate,
+                    });
+                  }}
                 >
                   Enquiry Logs
                 </button>
@@ -486,7 +502,15 @@ const MemberCallLogs = () => {
                   className={`px-4 py-2 rounded ${
                     activeTab === "Member Logs" ? "bg--color text-white" : ""
                   }`}
-                  onClick={() => setActiveTab("Member Logs")}
+                  onClick={() => {
+                    setActiveTab("Member Logs");
+
+                    fetchMemberCallLogs(memberId, {
+                      call_type: filterStatus?.value || "",
+                      startDate,
+                      endDate,
+                    });
+                  }}
                 >
                   Member Logs
                 </button>
@@ -561,7 +585,7 @@ const MemberCallLogs = () => {
                           name: opt.name,
                         }))}
                         styles={customStyles}
-                        isDisabled={editLog ? true : false}
+                        // isDisabled={editLog ? true : false}
                       />
                       {formik.errors?.call_status &&
                         formik.touched?.call_status && (
@@ -595,7 +619,7 @@ const MemberCallLogs = () => {
                             name: opt.name,
                           }))}
                           styles={customStyles}
-                          isDisabled={editLog ? true : false}
+                          // isDisabled={editLog ? true : false}
                         />
                         {formik.errors?.not_interested_reason &&
                           formik.touched?.not_interested_reason && (
@@ -633,7 +657,7 @@ const MemberCallLogs = () => {
                               minDate={new Date()} // ✅ disable past dates
                               placeholderText="Select date"
                               className="border px-3 py-2 w-full input--icon"
-                              disabled={!!editLog}
+                              // disabled={!!editLog}
                             />
                           </div>
 
@@ -662,7 +686,7 @@ const MemberCallLogs = () => {
                               }}
                               options={timeOptions}
                               placeholder="Select time"
-                              isDisabled={!formik.values.follow_up_date || !!editLog}
+                              isDisabled={!formik.values.follow_up_date}
                               styles={customStyles}
                             />
                           </div>
@@ -825,6 +849,7 @@ const MemberCallLogs = () => {
                     filteredData={filteredLogs}
                     handleEditLog={setEditLog}
                     userRole={userRole}
+                    editLog={editLog}
                   />
                 ))
               ) : (
@@ -838,7 +863,7 @@ const MemberCallLogs = () => {
               <div className="flex gap-2 mb-3">
                 <div className="grid grid-cols-3 gap-2">
                   <Select
-                    options={[{ value: "", label: "All" }, ...callStatusOption]}
+                    options={[{ value: "", label: "All" }, ...leadCallStatusOption]}
                     value={enquiryfilterStatus}
                     onChange={setEnquiryFilterStatus}
                     placeholder="Call Status"
@@ -890,7 +915,13 @@ const MemberCallLogs = () => {
 
               {memberEnquiry.length > 0 ? (
                 memberEnquiry.map((filteredLogs, index) => (
-                  <LeadContactHistory key={index} filteredData={filteredLogs} />
+                  <LeadContactHistory
+                    key={index}
+                    filteredData={filteredLogs}
+                    handleEditLog={setEditLog}
+                    userRole={userRole}
+                    editLog={editLog}
+                  />
                 ))
               ) : (
                 <p className="text-center text-gray-500 pt-5">

@@ -8,6 +8,7 @@ export default function MemberContactHistory({
   filteredData,
   handleEditLog,
   userRole,
+  editLog
 }) {
   const navigate = useNavigate();
   const [isExpanded, setIsExpanded] = useState(false); // State to manage remarks expand/collapse
@@ -19,12 +20,21 @@ export default function MemberContactHistory({
 
   // Get the first child_log remark if it exists
   const childRemark = filteredData?.child_log?.[0]?.remark;
+  const isEditing = editLog?.id === filteredData?.id;
 
   return (
     <div className="bg-white shadow-md rounded-2xl w-full border border-[#D4D4D4] overflow-hidden mb-4">
       {/* Header with call type and created date */}
       <div className="flex justify-between items-center border-b pb-2 p-4 bg-[#F1F1F1]">
-        <h2 className="text-lg font-semibold">{filteredData?.call_type}</h2>
+        <h2 className="text-lg font-semibold">
+          {/* {filteredData?.call_type} */}
+          {filteredData?.status === "SCHEDULED" && filteredData?.scheduled_by === "AUTO" ? filteredData?.call_type : filteredData?.status !== "SCHEDULED" && filteredData?.scheduled_by !== "AUTO" ? filteredData?.call_type : 'Scheduled'} 
+          {isEditing && (
+            <span className="ml-2 text-sm text-gray-600 italic">
+              (Updating Call...)
+            </span>
+          )}
+        </h2>
         <span className="text-gray-500 text-sm">
           Created on: {formatDateTimeLead(filteredData?.createdAt)}
         </span>
@@ -38,7 +48,19 @@ export default function MemberContactHistory({
           {/* Left side details */}
           <div className="space-y-2">
             <p className="text-sm flex gap-2">
-              <span>Scheduled By:</span> {filteredData?.scheduled_by}
+              <span>Scheduled By:</span> 
+              <span
+                className={`
+                  flex items-center justify-between gap-1 rounded-full min-h-[25px] px-2 text-xs w-fit
+                  ${
+                    filteredData?.scheduled_by === "MANUAL"
+                      ? "bg-blue-100 text-blue-700"
+                      : "bg-orange-100 text-orange-700"
+                  }
+                `}
+              >
+                {filteredData?.scheduled_by}
+              </span>
             </p>
             {/* <p className="text-sm flex gap-2">
               <span>Scheduled For:</span> {filteredData?.schedule_for}
@@ -53,12 +75,14 @@ export default function MemberContactHistory({
 
           {/* Right side details */}
           <div className="space-y-2">
-            <p className="text-sm flex gap-2">
-              <span>Call Status:</span>
-              <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs">
-                {filteredData?.call_status}
-              </span>
-            </p>
+            {filteredData?.call_status && (
+              <p className="text-sm flex gap-2">
+                <span>Call Status:</span>
+                <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs">
+                  {filteredData?.call_status}
+                </span>
+              </p>
+            )}
             {/* <p className="text-sm flex gap-2">
               <span>Updated By:</span> {filteredData?.updatedBy}
             </p> */}
@@ -77,7 +101,7 @@ export default function MemberContactHistory({
               className={`
                 flex items-center gap-1 rounded-full min-h-[25px] px-2 text-xs w-fit
                 ${
-                  filteredData?.status === "PENDING"
+                  filteredData?.status === "SCHEDULED"
                     ? "bg-yellow-100 text-yellow-700"
                     : filteredData?.status === "MISSED"
                       ? "bg-red-100 text-red-700"
@@ -94,6 +118,7 @@ export default function MemberContactHistory({
         )}
 
         {/* Remarks section */}
+        {filteredData?.status !== "SCHEDULED" && (
         <div className="mt-3 border-t p-2 border border-[#D4D4D4] rounded-[5px] bg-[#F7F7F7]">
           <div className="flex gap-3 justify-between pb-2 border-b border-b-[#D4D4D4] mb-2">
             <strong className="block ">Remarks:</strong>
@@ -124,6 +149,7 @@ export default function MemberContactHistory({
             </div>
           )}
         </div>
+        )}
 
         <div className="flex gap-2 items-center justify-between mt-2">
           {(userRole === "FOH" ||
@@ -132,7 +158,7 @@ export default function MemberContactHistory({
             userRole === "CLUB_MANAGER" ||
             userRole === "ADMIN") && (
             <>
-              {filteredData?.status === "PENDING" && (
+              {filteredData?.status === "SCHEDULED" && (
                 <button
                   className="mt-3 bg-black text-white py-1 px-4 rounded-[5px] hover:bg-gray-800"
                   onClick={() => {
