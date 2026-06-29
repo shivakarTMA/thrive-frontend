@@ -219,6 +219,7 @@ const IrregularMembersReport = (props) => {
             <thead className="text-xs text-gray-700 uppercase bg-gray-50">
               <tr>
                 <th className="px-2 py-4 min-w-[150px]">Club Name</th>
+                <th className="px-2 py-4 min-w-[120px]">Member ID</th>
                 <th className="px-2 py-4 min-w-[120px]">Member Name</th>
                 <th className="px-2 py-4 min-w-[150px]">Plan Name</th>
                 <th className="px-2 py-4 min-w-[150px]">Last visited on</th>
@@ -233,7 +234,8 @@ const IrregularMembersReport = (props) => {
                     key={index}
                     className="bg-white border-b hover:bg-gray-50"
                   >
-                    <td className="px-2 py-4">{row.club_name || "-"}</td>
+                    <td className="px-2 py-4">{row.club_name || "--"}</td>
+                    <td className="px-2 py-4">{row?.membership_number || "--"}</td>
                     <td className="px-2 py-4">{row.full_name}</td>
                     <td className="px-2 py-4">{row.plan_name}</td>
                     <td className="px-2 py-4">
