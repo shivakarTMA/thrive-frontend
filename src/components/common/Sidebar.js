@@ -632,6 +632,18 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                     >
                       Referral Report
                     </Link>
+                    <Link
+                      to="/reports/operations-reports/sales-incentive-report"
+                      className="submenu-link text-white text-sm"
+                    >
+                      Sales Incentive Report
+                    </Link>
+                    <Link
+                      to="/reports/operations-reports/pt-incentive-report"
+                      className="submenu-link text-white text-sm"
+                    >
+                      PT Incentive Report
+                    </Link>
                   </div>
                 )}
 
@@ -1338,6 +1350,18 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                     >
                       Referral Report
                     </Link>
+                    <Link
+                      to="/reports/operations-reports/sales-incentive-report"
+                      className="submenu-link text-white text-sm"
+                    >
+                      Sales Incentive Report
+                    </Link>
+                    <Link
+                      to="/reports/operations-reports/pt-incentive-report"
+                      className="submenu-link text-white text-sm"
+                    >
+                      PT Incentive Report
+                    </Link>
                   </div>
                 )}
 
@@ -1973,6 +1997,18 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                       className="submenu-link text-white text-sm"
                     >
                       Referral Report
+                    </Link>
+                    <Link
+                      to="/reports/operations-reports/sales-incentive-report"
+                      className="submenu-link text-white text-sm"
+                    >
+                      Sales Incentive Report
+                    </Link>
+                    <Link
+                      to="/reports/operations-reports/pt-incentive-report"
+                      className="submenu-link text-white text-sm"
+                    >
+                      PT Incentive Report
                     </Link>
                   </div>
                 )}
@@ -5444,6 +5480,18 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                     >
                       Referral Report
                     </Link>
+                    <Link
+                      to="/reports/operations-reports/sales-incentive-report"
+                      className="submenu-link text-white text-sm"
+                    >
+                      Sales Incentive Report
+                    </Link>
+                    <Link
+                      to="/reports/operations-reports/pt-incentive-report"
+                      className="submenu-link text-white text-sm"
+                    >
+                      PT Incentive Report
+                    </Link>
                   </div>
                 )}
 
@@ -6042,6 +6090,18 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                       className="submenu-link text-white text-sm"
                     >
                       Referral Report
+                    </Link>
+                    <Link
+                      to="/reports/operations-reports/sales-incentive-report"
+                      className="submenu-link text-white text-sm"
+                    >
+                      Sales Incentive Report
+                    </Link>
+                    <Link
+                      to="/reports/operations-reports/pt-incentive-report"
+                      className="submenu-link text-white text-sm"
+                    >
+                      PT Incentive Report
                     </Link>
                   </div>
                 )}

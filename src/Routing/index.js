@@ -120,6 +120,8 @@ import PtRevenueListReport from "../components/Reports/LeaderBoard/PtRevenueList
 import PtSessionsReport from "../components/Reports/LeaderBoard/PtSessionsReport";
 import ProgramSpecialistDashboard from "../Pages/ProgramSpecialistDashboard";
 import KycDocumentsList from "../components/KycDocuments/KycDocumentsList";
+import SalesIncentiveReport from "../components/Reports/OperationsReports/SalesIncentiveReport";
+import PtIncentiveReport from "../components/Reports/OperationsReports/PtIncentiveReport";
 
 // Role-based route wrapper component
 const RoleProtectedRoute = ({ children, path, skipPrivateRoute = false }) => {
@@ -1075,6 +1077,22 @@ export default function Routing() {
           element={
             <RoleProtectedRoute path="/leaderboard/pt-report/pt-sessions">
               <PtSessionsReport />
+            </RoleProtectedRoute>
+          }
+        />
+        <Route
+          path="/reports/operations-reports/sales-incentive-report"
+          element={
+            <RoleProtectedRoute path="/reports/operations-reports/sales-incentive-report">
+              <SalesIncentiveReport />
+            </RoleProtectedRoute>
+          }
+        />
+        <Route
+          path="/reports/operations-reports/pt-incentive-report"
+          element={
+            <RoleProtectedRoute path="/reports/operations-reports/pt-incentive-report">
+              <PtIncentiveReport />
             </RoleProtectedRoute>
           }
         />

@@ -386,6 +386,14 @@ export const ROUTE_PERMISSIONS = {
     'ADMIN', 'FINANCE_MANAGER', 'FINANCE_MANAGER_CLUB', 'FINANCE_MANAGER_CORPORATE',
     'CLUB_MANAGER', 'ASS_CLUB_MANAGER',
   ],
+  '/reports/operations-reports/sales-incentive-report': [
+    'ADMIN', 'FINANCE_MANAGER', 'FINANCE_MANAGER_CLUB', 'FINANCE_MANAGER_CORPORATE',
+    'CLUB_MANAGER', 'ASS_CLUB_MANAGER',
+  ],
+  '/reports/operations-reports/pt-incentive-report': [
+    'ADMIN', 'FINANCE_MANAGER', 'FINANCE_MANAGER_CLUB', 'FINANCE_MANAGER_CORPORATE',
+    'CLUB_MANAGER', 'ASS_CLUB_MANAGER',
+  ],
 
   // ─── Marketing Reports ──────────────────────────────────────────────────────
   '/reports/marketing-reports/lead-source-performance': [
