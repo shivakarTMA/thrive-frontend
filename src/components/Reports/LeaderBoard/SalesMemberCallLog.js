@@ -4,7 +4,7 @@ import { authAxios } from "../../../config/config";
 import { formatAutoDate, formatText } from "../../../Helper/helper";
 import Pagination from "../../../components/common/Pagination";
 
-const SalesMemberCallLog = ({ filters }) => {
+const SalesMemberCallLog = ({ filters, onDataLengthChange }) => {
   const { customFrom, customTo, clubFilter, leadOwner, callStatus, callType } = filters;
 
   const [data, setData] = useState([]);
@@ -28,6 +28,8 @@ const SalesMemberCallLog = ({ filters }) => {
       // ✅ Different endpoint from enquiry
       const res = await authAxios().get("/leaderboard/sales/calllog/leadmember?entity_type=MEMBER", { params });
       const resData = res.data;
+      const rows = resData?.data || [];
+      onDataLengthChange?.(rows.length);
       setData(resData?.data || []);
       setPage(resData?.currentPage || 1);
       setTotalPages(resData?.totalPage || 1);

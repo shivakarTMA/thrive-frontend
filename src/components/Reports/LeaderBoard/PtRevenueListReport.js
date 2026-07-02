@@ -22,8 +22,10 @@ import { IoEyeOutline } from "react-icons/io5";
 import Tooltip from "../../common/Tooltip";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { LuCalendar, LuDownload } from "react-icons/lu";
+import IsLoadingHOC from "../../common/IsLoadingHOC";
 
-const PtRevenueListReport = () => {
+const PtRevenueListReport = (props) => {
+  const { setLoading } = props;
   const location = useLocation();
   const navigate = useNavigate();
   const [ptRevenueListStaff, setPtRevenueListStaff] = useState([]);
@@ -107,6 +109,55 @@ const PtRevenueListReport = () => {
     fetchPtRevenueListReportLeaderboard(1);
   }, [id, customFrom, customTo, filtersInitialized]);
 
+  const handleDownloadPtRevenueList = async () => {
+    try {
+      setLoading(true);
+
+      const params = {
+        staff_id: Number(id),
+      };
+
+      if (customFrom && customTo) {
+        params.start_date = format(customFrom, "yyyy-MM-dd");
+        params.end_date = format(customTo, "yyyy-MM-dd");
+      }
+
+      console.log("📥 Download Params:", params);
+
+      const response = await authAxios().get("/leaderboard/sales/pt/revenue/details/download", {
+        params,
+        responseType: "blob",
+      });
+
+      // 📄 Create download
+      const blob = new Blob([response.data]);
+
+      const url = window.URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+
+      link.href = url;
+
+      link.setAttribute("download", `${staffDetails}_Revenue_Report.xlsx`);
+
+      document.body.appendChild(link);
+
+      link.click();
+
+      link.remove();
+
+      window.URL.revokeObjectURL(url);
+
+      toast.success(`${staffDetails} revenue report downloaded successfully!`);
+    } catch (error) {
+      console.error(error);
+
+      toast.error("Failed to download PT revenue report.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="page--content">
       {/* Header */}
@@ -163,7 +214,7 @@ const PtRevenueListReport = () => {
         {!ALLOWED_ROLES.includes(userRole) && (
           <div className="w-full">
             <button
-              // onClick={handleDownloadMembers}
+              onClick={handleDownloadPtRevenueList}
               disabled={ptRevenueListStaff.length === 0}
               className={`ms-auto px-4 py-2 rounded flex items-center gap-2
                 ${
@@ -261,4 +312,4 @@ const PtRevenueListReport = () => {
   );
 };
 
-export default PtRevenueListReport;
+export default IsLoadingHOC(PtRevenueListReport);

@@ -3,7 +3,12 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { addYears, subYears, format } from "date-fns";
 import { FaCalendarDays } from "react-icons/fa6";
-import { ALLOWED_ROLES, customStyles, filterActiveItems, formatText } from "../../../Helper/helper";
+import {
+  ALLOWED_ROLES,
+  customStyles,
+  filterActiveItems,
+  formatText,
+} from "../../../Helper/helper";
 import Select from "react-select";
 import { useLocation, useNavigate } from "react-router-dom";
 import { authAxios } from "../../../config/config";
@@ -14,7 +19,8 @@ import SalesEnquiryCallLog from "./SalesEnquiryCallLog";
 import SalesMemberCallLog from "./SalesMemberCallLog";
 import { LuDownload } from "react-icons/lu";
 
-const SalesCallLogsReport = () => {
+const SalesCallLogsReport = (props) => {
+  const { setLoading } = props;
   const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -24,6 +30,8 @@ const SalesCallLogsReport = () => {
 
   // ── Tab ──────────────────────────────────────────────
   const [activeTab, setActiveTab] = useState("enquiry");
+  const [enquiryDataLength, setEnquiryDataLength] = useState(0);
+  const [memberDataLength, setMemberDataLength] = useState(0);
 
   // ── Common filter state ───────────────────────────────
   const [customFrom, setCustomFrom] = useState(null);
@@ -46,9 +54,9 @@ const SalesCallLogsReport = () => {
 
   // ── Option lists from Redux ───────────────────────────
   const enquiryCallStatusOptions = lists["LEAD_CALL_STATUS"] || [];
-  const memberCallTypeOptions     = lists["MEMBER_CALL_TYPE"] || [];
-  const memberCallStatusOptions   = lists["MEMBER_CALL_STATUS"] || [];
-  const notInterestedOptions      = lists["NOT_INTERESTED_REASON"] || [];
+  const memberCallTypeOptions = lists["MEMBER_CALL_TYPE"] || [];
+  const memberCallStatusOptions = lists["MEMBER_CALL_STATUS"] || [];
+  const notInterestedOptions = lists["NOT_INTERESTED_REASON"] || [];
 
   useEffect(() => {
     dispatch(fetchOptionList("LEAD_CALL_STATUS"));
@@ -92,9 +100,15 @@ const SalesCallLogsReport = () => {
         const activeStaff = data.filter(
           (item) =>
             item.status === "ACTIVE" &&
-            ["ADMIN", "FOH", "TRAINER", "CLUB_MANAGER", "ASS_CLUB_MANAGER", "FITNESS_MANAGER", "ASS_FITNESS_MANAGER"].includes(
-              item.role,
-            ),
+            [
+              "ADMIN",
+              "FOH",
+              "TRAINER",
+              "CLUB_MANAGER",
+              "ASS_CLUB_MANAGER",
+              "FITNESS_MANAGER",
+              "ASS_FITNESS_MANAGER",
+            ].includes(item.role),
         );
         setStaffList(activeStaff);
         setLeadOwner(null);
@@ -104,7 +118,6 @@ const SalesCallLogsReport = () => {
     };
     fetchStaff();
   }, [clubFilter?.value]);
-  
 
   // ── Initialize filters from URL ───────────────────────
   useEffect(() => {
@@ -118,7 +131,7 @@ const SalesCallLogsReport = () => {
     }
 
     const startDate = params.get("startDate");
-    const endDate   = params.get("endDate");
+    const endDate = params.get("endDate");
     if (startDate && endDate) {
       setCustomFrom(new Date(startDate));
       setCustomTo(new Date(endDate));
@@ -144,10 +157,10 @@ const SalesCallLogsReport = () => {
     const params = new URLSearchParams();
     if (customFrom && customTo) {
       params.set("startDate", format(customFrom, "yyyy-MM-dd"));
-      params.set("endDate",   format(customTo,   "yyyy-MM-dd"));
+      params.set("endDate", format(customTo, "yyyy-MM-dd"));
     }
-    if (clubFilter?.value)  params.set("club_id",    clubFilter.value);
-    if (leadOwner?.value)   params.set("lead_owner", leadOwner.value);
+    if (clubFilter?.value) params.set("club_id", clubFilter.value);
+    if (leadOwner?.value) params.set("lead_owner", leadOwner.value);
     if (activeTab !== "enquiry") params.set("tab", activeTab);
     navigate(`?${params.toString()}`, { replace: true });
   }, [
@@ -201,13 +214,13 @@ const SalesCallLogsReport = () => {
         (s) =>
           s.name !== "Not Interested" &&
           s.name !== "Future Prospect" &&
-          s.name !== "Cross-sales trial scheduled"
+          s.name !== "Cross-sales trial scheduled",
       );
     }
 
     // All other call types (Renewal Call etc.) → hide Cross-sales trial scheduled
     return memberCallStatusOptions.filter(
-      (s) => s.name !== "Cross-sales trial scheduled"
+      (s) => s.name !== "Cross-sales trial scheduled",
     );
   }, [memberCallType?.value, memberCallStatusOptions]);
 
@@ -217,7 +230,7 @@ const SalesCallLogsReport = () => {
     if (
       memberCallStatus &&
       !filteredMemberCallStatusOptions.some(
-        (o) => o.value === memberCallStatus.value
+        (o) => o.value === memberCallStatus.value,
       )
     ) {
       setMemberCallStatus(null);
@@ -225,8 +238,9 @@ const SalesCallLogsReport = () => {
   }, [filteredMemberCallStatusOptions]);
 
   // ── Derived select options ────────────────────────────
-  const clubOptions  = clubList.map((c) => ({ label: c.name, value: c.id }));
-  const selectedClub = clubOptions.find((o) => o.value === clubFilter?.value) || null;
+  const clubOptions = clubList.map((c) => ({ label: c.name, value: c.id }));
+  const selectedClub =
+    clubOptions.find((o) => o.value === clubFilter?.value) || null;
 
   // const leadOwnerOptions = staffList.map((item) => ({
   //   label: `${item.name} (${formatText(item.role)})`,
@@ -260,12 +274,10 @@ const SalesCallLogsReport = () => {
   useEffect(() => {
     if (!pendingLeadOwnerId || staffList.length === 0) return;
 
-    const flatOptions = leadOwnerOptions.flatMap(
-      (group) => group.options
-    );
+    const flatOptions = leadOwnerOptions.flatMap((group) => group.options);
 
     const matched = flatOptions.find(
-      (opt) => String(opt.value) === String(pendingLeadOwnerId)
+      (opt) => String(opt.value) === String(pendingLeadOwnerId),
     );
 
     if (matched) {
@@ -287,9 +299,85 @@ const SalesCallLogsReport = () => {
     customTo,
     clubFilter,
     leadOwner,
-    callType:   memberCallType,
+    callType: memberCallType,
     callStatus: memberCallStatus,
   };
+
+  const handleDownloadReport = async () => {
+    try {
+      setLoading(true);
+      const params = {};
+
+      // Entity Type
+      params.entity_type = activeTab === "enquiry" ? "LEAD" : "MEMBER";
+
+      // Common Filters
+      if (customFrom && customTo) {
+        params.start_date = format(customFrom, "yyyy-MM-dd");
+        params.end_date = format(customTo, "yyyy-MM-dd");
+      }
+
+      if (clubFilter?.value) {
+        params.club_id = clubFilter.value;
+      }
+
+      if (leadOwner?.value) {
+        params.created_by = leadOwner.value;
+      }
+
+      // Tab Specific Filters
+      if (activeTab === "enquiry") {
+        if (enquiryCallStatus?.value) {
+          params.call_status = enquiryCallStatus.value;
+        }
+      } else {
+        if (memberCallType?.value) {
+          params.call_type = memberCallType.value;
+        }
+
+        if (memberCallStatus?.value) {
+          params.call_status = memberCallStatus.value;
+        }
+      }
+
+      const response = await authAxios().get(
+        "/leaderboard/sales/calllog/leadmember/download",
+        {
+          params,
+          responseType: "blob",
+        },
+      );
+
+      const blob = new Blob([response.data]);
+
+      const url = window.URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+
+      link.href = url;
+
+      link.download =
+        activeTab === "enquiry"
+          ? "Sales_Enquiry_Call_Log.xlsx"
+          : "Sales_Member_Call_Log.xlsx";
+
+      document.body.appendChild(link);
+
+      link.click();
+
+      link.remove();
+
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+  const isDownloadDisabled =
+  activeTab === "enquiry"
+    ? enquiryDataLength === 0
+    : memberDataLength === 0;
 
   return (
     <div className="page--content">
@@ -298,16 +386,21 @@ const SalesCallLogsReport = () => {
           <h1 className="text-3xl font-semibold">Call Log Report</h1>
         </div>
         {!ALLOWED_ROLES.includes(userRole) && (
-            <div className="w-full">
-              <button
-                // onClick={handleDownloadMembers}
-                // disabled={leaderboardCallLogs.length === 0}
-                className={`ms-auto px-4 py-2 rounded flex items-center gap-2 bg-black text-white hover:bg-gray-800`}
-              >
-                <LuDownload /> <span>Download Report</span>
-              </button>
-            </div>
-          )}
+          <div className="w-full">
+            <button
+              onClick={handleDownloadReport}
+              disabled={isDownloadDisabled}
+              className={`ms-auto px-4 py-2 rounded flex items-center gap-2 ${
+                isDownloadDisabled
+                  ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                  : "bg-black text-white hover:bg-gray-800"
+              }`}
+            >
+              <LuDownload />
+              <span>Download Report</span>
+            </button>
+          </div>
+        )}
       </div>
 
       {/* ── Tab buttons ── */}
@@ -338,7 +431,6 @@ const SalesCallLogsReport = () => {
 
       {/* ── Filters ── */}
       <div className="flex gap-3 mb-4 items-center flex-wrap">
-
         {/* Common: Date range */}
         <div className="custom--date dob-format flex-1 min-w-[120px] max-w-fit">
           <span className="absolute z-[1] mt-[10px] ml-[15px]">
@@ -346,7 +438,10 @@ const SalesCallLogsReport = () => {
           </span>
           <DatePicker
             selected={customFrom}
-            onChange={(date) => { setCustomFrom(date); setCustomTo(null); }}
+            onChange={(date) => {
+              setCustomFrom(date);
+              setCustomTo(null);
+            }}
             placeholderText="From Date"
             className="custom--input w-full input--icon"
             minDate={subYears(new Date(), 20)}
@@ -454,10 +549,16 @@ const SalesCallLogsReport = () => {
 
       {/* ── Child tables ── */}
       {activeTab === "enquiry" && (
-        <SalesEnquiryCallLog filters={enquiryFilters} />
+        <SalesEnquiryCallLog
+          filters={enquiryFilters}
+          onDataLengthChange={setEnquiryDataLength}
+        />
       )}
       {activeTab === "member" && (
-        <SalesMemberCallLog filters={memberFilters} />
+        <SalesMemberCallLog
+          filters={memberFilters}
+          onDataLengthChange={setMemberDataLength}
+        />
       )}
     </div>
   );
