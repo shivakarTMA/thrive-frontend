@@ -26,6 +26,9 @@ import { fetchClubTiming } from "../../../Redux/Reducers/clubTimingSlice";
 import { useClubDatePickerProps } from "../../../hooks/useClubDatePickerProps";
 import IsLoadingHOC from "../../../components/common/IsLoadingHOC";
 import { LuDownload } from "react-icons/lu";
+import { GoPencil } from "react-icons/go";
+import { CgGym } from "react-icons/cg";
+import Tooltip from "../../../components/common/Tooltip";
 
 // Date filter dropdown options
 const dateFilterOptions = [
@@ -52,6 +55,8 @@ const filterStatusOptions = [
 const TrialAppointments = (props) => {
   const { setLoading } = props;
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [changeTrainerModal, setChangeTrainerModal] = useState(false);
+  const [updateTrainerId, setUpdateTrainerId] = useState(null);
   const [pendingStatus, setPendingStatus] = useState(null);
   const [pendingId, setPendingId] = useState(null);
   const [remarks, setRemarks] = useState("");
@@ -82,6 +87,9 @@ const TrialAppointments = (props) => {
   const [rowsPerPage] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
+
+  const [selectedAppointment, setSelectedAppointment] = useState(null);
+  const [changeTrainerList, setChangeTrainerList] = useState([]);
 
   // Applied filters state
   const [appliedFilters, setAppliedFilters] = useState({
@@ -139,6 +147,11 @@ const TrialAppointments = (props) => {
   const selectedClub =
     clubOptions.find((opt) => opt.value === clubFilter?.value) || null;
 
+  const trainerChangeOptions =
+    changeTrainerList?.map((item) => ({
+      label: item.name,
+      value: item.id,
+    })) || [];
   // ---------------------------
   // UPDATE URL WITH PARAMS
   // ---------------------------
@@ -205,7 +218,7 @@ const TrialAppointments = (props) => {
         params.booking_status = appliedFilters.booking_status;
       }
 
-      console.log("🔍 API Request Params:", params);
+      // console.log("🔍 API Request Params:", params);
 
       const res = await authAxios().get("/appointment/fetch/list", { params });
 
@@ -362,6 +375,61 @@ const TrialAppointments = (props) => {
 
     setShowConfirmModal(false); // close any previous
     setTimeout(() => setShowConfirmModal(true), 0); // reopen fresh
+  };
+
+  const handleActionClick = (row) => {
+    setSelectedAppointment(row);
+    setPendingId(row.id);
+    setSelectedLeadClub(row.club_id);
+    setShowConfirmModal(true);
+
+    // Reset previous values
+    setPendingStatus(null);
+    setRemarks("");
+    setRescheduleDateTime(null);
+  };
+
+  const handleChangeTrainer = (row) => {
+    setSelectedAppointment(row);
+    setUpdateTrainerId(null);
+    setRemarks("");
+    setChangeTrainerModal(true);
+  };
+
+  const confirmChangeTrainer = async () => {
+    if (!updateTrainerId) {
+      toast.error("Please select a trainer");
+      return;
+    }
+
+    if (!remarks.trim()) {
+      toast.error("Remarks are required");
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      const payload = {
+        assigned_staff_id: updateTrainerId,
+        remarks,
+      };
+
+      await authAxios().put(`/appointment/${selectedAppointment.id}`, payload);
+
+      toast.success("Trainer changed successfully");
+
+      setChangeTrainerModal(false);
+      setRemarks("");
+      setUpdateTrainerId(null);
+
+      // Refresh appointment list
+      fetchAppointments(1);
+    } catch (error) {
+      toast.error(error?.response?.data?.message || "Something went wrong");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const fetchTrainerBookedSlots = async () => {
@@ -548,12 +616,15 @@ const TrialAppointments = (props) => {
         }
       });
 
-      console.log("📥 Download Params:", params);
+      // console.log("📥 Download Params:", params);
 
-      const response = await authAxios().get("/appointment/fetch/list/download?appointment_type=CLUB", {
-        params,
-        responseType: "blob",
-      });
+      const response = await authAxios().get(
+        "/appointment/fetch/list/download?appointment_type=CLUB",
+        {
+          params,
+          responseType: "blob",
+        },
+      );
 
       // 📄 Create download
       const blob = new Blob([response.data]);
@@ -674,10 +745,15 @@ const TrialAppointments = (props) => {
             <div className="max-w-[190px] w-full">
               <button
                 onClick={handleDownloadTrialAppointments}
-                disabled={appointmentList.length === 0 || (dateFilter?.value === "custom" && (!customFrom || !customTo))}
+                disabled={
+                  appointmentList.length === 0 ||
+                  (dateFilter?.value === "custom" && (!customFrom || !customTo))
+                }
                 className={`w-full px-4 py-2 rounded flex items-center gap-2
                       ${
-                        appointmentList.length === 0 || (dateFilter?.value === "custom" && (!customFrom || !customTo))
+                        appointmentList.length === 0 ||
+                        (dateFilter?.value === "custom" &&
+                          (!customFrom || !customTo))
                           ? "bg-gray-400 cursor-not-allowed text-white"
                           : "bg-black text-white hover:bg-gray-800"
                       }`}
@@ -739,6 +815,7 @@ const TrialAppointments = (props) => {
               setAppliedFilters={setAppliedFilters}
               filteredStatusOptions={filterStatusOptions}
               clubId={clubFilter?.value}
+              setChangeTrainerList={setChangeTrainerList}
             />
           </div>
 
@@ -758,17 +835,25 @@ const TrialAppointments = (props) => {
                     <th className="px-2 py-4 min-w-[120px]">Trainer Name</th>
                     <th className="px-2 py-4 min-w-[130px]">Scheduled By</th>
                     <th className="px-2 py-4 min-w-[130px]">Last Status</th>
-                    <th className="px-2 py-4 min-w-[180px]">
-                      Current Status/Action
-                    </th>
-                    <th className="px-2 py-4 min-w-[200px]">Remarks</th>
+                    <th className="px-2 py-4 min-w-[180px]">Current Status</th>
+                    <th className="px-2 py-4 min-w-[150px]">Remarks</th>
+                    {(userRole === "FOH" ||
+                      userRole === "TRAINER" ||
+                      userRole === "FITNESS_MANAGER" ||
+                      userRole === "ASS_FITNESS_MANAGER" ||
+                      userRole === "CLUB_MANAGER" ||
+                      userRole === "ASS_CLUB_MANAGER" ||
+                      userRole === "PROGRAM_SPECIALIST" ||
+                      userRole === "ADMIN") && (
+                      <th className="px-2 py-4 min-w-[100px]">Action</th>
+                    )}
                   </tr>
                 </thead>
 
                 <tbody>
                   {appointmentList.length === 0 ? (
                     <tr>
-                      <td colSpan="10" className="text-center py-4">
+                      <td colSpan="12" className="text-center py-4">
                         No data found.
                       </td>
                     </tr>
@@ -806,52 +891,89 @@ const TrialAppointments = (props) => {
                           {formatText(row?.last_status) || "--"}
                         </td>
                         <td className="px-2 py-4">
-                          {userRole === "FOH" ||
+                          {formatText(
+                            row?.booking_status === "ACTIVE"
+                              ? "UPCOMING"
+                              : row?.booking_status,
+                          ) || "--"}
+                        </td>
+                        <td className="px-2 py-4">
+                          {row?.remarks ? row?.remarks : "--"}
+                        </td>
+
+                        {(userRole === "FOH" ||
                           userRole === "TRAINER" ||
                           userRole === "FITNESS_MANAGER" ||
                           userRole === "ASS_FITNESS_MANAGER" ||
                           userRole === "CLUB_MANAGER" ||
                           userRole === "ASS_CLUB_MANAGER" ||
                           userRole === "PROGRAM_SPECIALIST" ||
-                          userRole === "ADMIN" ? (
+                          userRole === "ADMIN") && (
+                          <td className="px-2 py-4">
                             <div className="max-w-[130px] w-full">
-                              <Select
-                                placeholder="Select"
-                                options={getAllowedStatusOptions(
-                                  row?.booking_status,
-                                )}
-                                value={getSelectedStatusOption(
-                                  row?.booking_status,
-                                )}
-                                isDisabled={
-                                  !canUpdateStatus(row?.booking_status) ||
-                                  getAllowedStatusOptions(row?.booking_status)
-                                    .length === 0
-                                }
-                                onChange={(selected) => {
-                                  if (!selected) return;
-                                  updateAppointmentStatus(row, selected.value);
-                                }}
-                                styles={{
-                                  ...customStyles,
-                                  menuPortal: (base) => ({
-                                    ...base,
-                                    zIndex: 9999,
-                                  }),
-                                }}
-                                menuPortalTarget={document.body}
-                                menuPosition="fixed"
-                              />
+                              {/* <Select
+                                  placeholder="Select"
+                                  options={getAllowedStatusOptions(
+                                    row?.booking_status,
+                                  )}
+                                  value={getSelectedStatusOption(
+                                    row?.booking_status,
+                                  )}
+                                  isDisabled={
+                                    !canUpdateStatus(row?.booking_status) ||
+                                    getAllowedStatusOptions(row?.booking_status)
+                                      .length === 0
+                                  }
+                                  onChange={(selected) => {
+                                    if (!selected) return;
+                                    updateAppointmentStatus(row, selected.value);
+                                  }}
+                                  styles={{
+                                    ...customStyles,
+                                    menuPortal: (base) => ({
+                                      ...base,
+                                      zIndex: 9999,
+                                    }),
+                                  }}
+                                  menuPortalTarget={document.body}
+                                  menuPosition="fixed"
+                                /> */}
+                              <div className="flex gap-0">
+                                <Tooltip
+                                  id={`edit-status-${row?.id}`}
+                                  content="Update Status"
+                                  place="left"
+                                >
+                                  <button
+                                    className="bg-gray-100 w-8 h-8 rounded-l-md flex border border-gray-300 items-center justify-center disabled:bg-gray-400"
+                                    disabled={
+                                      !canUpdateStatus(row?.booking_status) ||
+                                      getAllowedStatusOptions(
+                                        row?.booking_status,
+                                      ).length === 0
+                                    }
+                                    onClick={() => handleActionClick(row)}
+                                  >
+                                    <GoPencil className="text-lg text-gray-800" />
+                                  </button>
+                                </Tooltip>
+                                <Tooltip
+                                  id={`change-trainer-${row?.id}`}
+                                  content="Change Trainer"
+                                  place="left"
+                                >
+                                  <button
+                                    className="bg-gray-100 w-8 h-8 rounded-r-md border border-gray-300 flex items-center justify-center disabled:bg-gray-300"
+                                    disabled={row?.booking_status !== "ACTIVE"}
+                                    onClick={() => handleChangeTrainer(row)}
+                                  >
+                                    <CgGym className="text-lg text-gray-800" />
+                                  </button>
+                                </Tooltip>
+                              </div>
                             </div>
-                          ) : (
-                            <span>
-                              {formatText(row?.booking_status) || "--"}
-                            </span>
-                          )}
-                        </td>
-                        <td className="px-2 py-4">
-                          {row?.remarks ? row?.remarks : "--"}
-                        </td>
+                          </td>
+                        )}
                       </tr>
                     ))
                   )}
@@ -881,13 +1003,67 @@ const TrialAppointments = (props) => {
               Confirm Status Update
             </h3>
 
-            <p className="text-center mb-4">
+            {/* <p className="text-center mb-4">
               Are you sure you want to mark this appointment as
               <span className="font-bold ml-1">
                 {formatText(pendingStatus)}
               </span>
               ?
-            </p>
+            </p> */}
+            {pendingStatus && (
+              <p className="text-center mb-4">
+                Are you sure you want to mark this appointment as
+                <span className="font-bold ml-1">
+                  {formatText(pendingStatus)}
+                </span>
+                ?
+              </p>
+            )}
+
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-2">
+                Status <span className="text-red-500">*</span>
+              </label>
+
+              <Select
+                placeholder="Select Status"
+                value={
+                  pendingStatus
+                    ? { value: pendingStatus, label: formatText(pendingStatus) }
+                    : null
+                }
+                options={getAllowedStatusOptions(
+                  selectedAppointment?.booking_status,
+                )}
+                onChange={(selected) => {
+                  if (!selected) return;
+
+                  setPendingStatus(selected.value);
+
+                  if (selected.value === "RESCHEDULED") {
+                    setSelectedTrainerId(selectedAppointment.assigned_staff_id);
+                    setSelectedClubId(selectedAppointment.club_id);
+
+                    if (
+                      selectedAppointment.start_date &&
+                      selectedAppointment.start_time
+                    ) {
+                      const combined = new Date(selectedAppointment.start_date);
+
+                      const [hours, minutes] =
+                        selectedAppointment.start_time.split(":");
+
+                      combined.setHours(Number(hours), Number(minutes), 0, 0);
+
+                      setRescheduleDateTime(combined);
+                    }
+                  } else {
+                    setRescheduleDateTime(null);
+                  }
+                }}
+                styles={customStyles}
+              />
+            </div>
 
             {pendingStatus === "CANCELLED" && (
               <div className="mb-4">
@@ -980,6 +1156,73 @@ const TrialAppointments = (props) => {
 
               <button
                 onClick={confirmStatusUpdate}
+                className="w-1/2 bg-black text-white rounded py-2 hover:bg-gray-800"
+              >
+                Confirm
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {changeTrainerModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-[10px] w-[400px] shadow-lg">
+            <h3 className="text-lg font-semibold mb-1 text-center">
+              Confirm Trainer Change
+            </h3>
+
+            <p className="text-center mb-4">
+              Are you sure you want to assign a new trainer to this trial appointment?
+            </p>
+
+            <div className="mb-4">
+              <label className="block mb-1 text-sm font-medium">
+                Change Trainer Name <span className="text-red-500">*</span>
+              </label>
+              <Select
+                value={
+                  trainerChangeOptions.find(
+                    (opt) => opt.value === updateTrainerId,
+                  ) || null
+                }
+                onChange={(option) => setUpdateTrainerId(option?.value || null)}
+                options={trainerChangeOptions}
+                placeholder="Select trainer"
+                styles={customStyles}
+              />
+            </div>
+
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-2">
+                Remarks <span className="text-red-500">*</span>
+              </label>
+              <textarea
+                value={remarks}
+                // onChange={(e) => setRemarks(e.target.value)}
+                onChange={(e) => {
+                  const cleaned = sanitizeTextWithNumbers(e.target.value);
+                  setRemarks(cleaned);
+                }}
+                placeholder="Enter cancellation reason"
+                rows="4"
+                className="w-full border border-gray-300 rounded-[5px] p-2 text-sm focus:outline-none focus:ring-2 focus:ring-black resize-none"
+              />
+            </div>
+
+            <div className="flex justify-between gap-3">
+              <button
+                onClick={() => {
+                  setChangeTrainerModal(false);
+                  setRemarks("");
+                }}
+                className="w-1/2 border border-gray-400 rounded py-2 hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+
+              <button
+                onClick={confirmChangeTrainer}
                 className="w-1/2 bg-black text-white rounded py-2 hover:bg-gray-800"
               >
                 Confirm

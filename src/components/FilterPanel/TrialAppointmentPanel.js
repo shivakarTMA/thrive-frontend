@@ -19,6 +19,7 @@ export default function TrialAppointmentPanel({
   setAppliedFilters,
   filteredStatusOptions,
   clubId, // ✅ Receive clubId from parent
+  setChangeTrainerList, // ✅ Receive setChangeTrainerList from parent
 }) {
   const [showFilters, setShowFilters] = useState(false);
   const panelRef = useRef(null);
@@ -53,6 +54,7 @@ export default function TrialAppointmentPanel({
         roles.includes(item.role)
       );
       setTrainerList(activeOnly);
+      setChangeTrainerList(activeOnly);
     } catch (error) {
       console.error("Failed to fetch trainers:", error);
     }
