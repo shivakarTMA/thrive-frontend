@@ -26,6 +26,7 @@ import FreezeMembershipModal from "./FreezeMembershipModal";
 import UnfreezeMembershipModal from "./UnfreezeMembershipModal";
 import ExtendServiceModal from "./ExtendServiceModal";
 import ReviveMembershipModal from "./ReviveMembershipModal";
+import ReviveServiceModal from "./ReviveServiceModal";
 
 const statusOptions = [
   { value: "ACTIVE", label: "Active" },
@@ -79,6 +80,7 @@ const ServiceCard = ({ details }) => {
   const [freezeMembership, setFreezeMembership] = useState(false);
   const [unfreezeMembership, setUnfreezeMembership] = useState(false);
   const [reviveMembership, setReviveMembership] = useState(false);
+  const [reviveService, setReviveService] = useState(false);
 
   const { user } = useSelector((state) => state.auth);
   const userRole = user.role;
@@ -358,6 +360,11 @@ const ServiceCard = ({ details }) => {
   const handleExtendService = (serviceId) =>{
     setExtendServiceId(serviceId);
     setExtendServiceModal(true)
+  }
+
+  const handleReviveService = (serviceId) =>{
+    setExtendServiceId(serviceId);
+    setReviveService(true)
   }
 
   return (
@@ -726,6 +733,8 @@ const ServiceCard = ({ details }) => {
                               </div>
                             )}
 
+                            <div className="flex gap-2">
+
                             {(userRole === "CLUB_MANAGER" ||
                               userRole === "ADMIN" ||
                               userRole === "FOH") && (
@@ -739,12 +748,29 @@ const ServiceCard = ({ details }) => {
                                         setInvoiceModal(true);
                                       }}
                                     >
-                                      RENEW
+                                      Renew
                                     </button>
                                   </div>
                                 )}
                               </>
                             )}
+                            {userRole === "ADMIN" && (
+                              <>
+                                {service?.package_status !== "ACTIVE" && (
+                                  <div>
+                                    <button
+                                      className="px-3 py-2 bg-black text-white rounded flex items-center gap-2 border border-black text-sm"
+                                      onClick={() => handleReviveService(service?.id)}
+                                    >
+                                      Revive Service
+                                    </button>
+                                  </div>
+                                )}
+                              </>
+                            )}
+
+                            </div>
+
                             {userRole === "ADMIN" && (
                               <>
                                 {service?.package_status === "ACTIVE" &&
@@ -897,6 +923,7 @@ const ServiceCard = ({ details }) => {
                               </span>
                             </div>
 
+                            <div className="flex gap-2">
                             {(userRole === "CLUB_MANAGER" ||
                               userRole === "ADMIN" ||
                               userRole === "FOH") && (
@@ -912,12 +939,15 @@ const ServiceCard = ({ details }) => {
                                         setSendPaymentModal(true);
                                       }}
                                     >
-                                      RENEW
+                                      Renew
                                     </button>
                                   </div>
                                 )}
                               </>
                             )}
+
+                            </div>
+
                           </div>
                           <div className="rounded-lg bg--color p-[2px] w-full">
                             <div className="grid grid-cols-3 h-full rounded-lg bg-white overflow-hidden">
@@ -1119,6 +1149,17 @@ const ServiceCard = ({ details }) => {
           membershipData={membershipData}
           fetchMemberServiceCard={fetchMemberServiceCard}
           fetchPurchasedMemberships={fetchPurchasedMemberships}
+          fetchMemberById={fetchMemberById}
+          details={details}
+        />
+      )}
+      {reviveService && (
+        <ReviveServiceModal
+          setReviveService={setReviveService}
+          membershipData={membershipData}
+          extendServiceId={extendServiceId}
+          fetchMemberServiceCard={fetchMemberServiceCard}
+          fetchPurchaseServices={fetchPurchaseServices}
           fetchMemberById={fetchMemberById}
           details={details}
         />
