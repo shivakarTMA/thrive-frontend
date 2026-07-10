@@ -348,7 +348,7 @@ useEffect(() => {
               </div>
 
               {/* Lead Owner */}
-              {userRole === "FOH" ? null : (
+              {/* {userRole === "FOH" ? null : ( */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Lead Owner
@@ -371,7 +371,7 @@ useEffect(() => {
                     // isClearable
                   />
                 </div>
-              )}
+              {/* // )} */}
 
               {/* Service Name */}
               <div>

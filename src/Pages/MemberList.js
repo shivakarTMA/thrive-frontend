@@ -652,6 +652,8 @@ const MemberList = (props) => {
     "TRAINER",
     "PROGRAM_SPECIALIST",
     "FINANCE_MANAGER",
+    "FINANCE_MANAGER_CLUB",
+    "FINANCE_MANAGER_CORPORATE",
   ],
 
   canViewCallLogs: [
@@ -1120,6 +1122,8 @@ const hasMemberPermission = (permission) =>
                               userRole === "ASS_FITNESS_MANAGER" || 
                               userRole === "TRAINER" || 
                               userRole === "PROGRAM_SPECIALIST" || 
+                              userRole === "FINANCE_MANAGER_CLUB" || 
+                              userRole === "FINANCE_MANAGER_CORPORATE" || 
                               userRole === "FINANCE_MANAGER") && (
                               <Tooltip
                                 id={`edit-member-${member?.id}`}
