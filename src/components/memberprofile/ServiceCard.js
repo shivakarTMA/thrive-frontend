@@ -145,7 +145,7 @@ const ServiceCard = ({ details }) => {
       if (!response) {
         setPurchasedMemberships([]);
         setPurchasedMembershipsCount(0);
-        setHasUpcomingMembership(false); // ✅ reset
+        // setHasUpcomingMembership(false); // ✅ reset
         return;
       }
 
@@ -155,18 +155,39 @@ const ServiceCard = ({ details }) => {
       setPurchasedMembershipsCount(response?.totalCount || 0);
 
       // ✅ CHECK IF ANY UPCOMING EXISTS
-      const upcomingExists = memberships.some(
-        (item) => item.booking_status === "UPCOMING",
-      );
+      // const upcomingExists = memberships.some(
+      //   (item) => item.booking_status === "UPCOMING",
+      // );
 
-      setHasUpcomingMembership(upcomingExists);
+      // setHasUpcomingMembership(upcomingExists);
     } catch (err) {
       console.error("Membership Fetch Error:", err);
       setPurchasedMemberships([]);
       setPurchasedMembershipsCount(0);
-      setHasUpcomingMembership(false);
+      // setHasUpcomingMembership(false);
     }
   };
+
+  const checkUpcomingMembership = async () => {
+    const res = await authAxios().get(
+      `/member/subscription/booking/list/${details.id}`,
+      {
+        params: {
+          booking_status: "UPCOMING",
+        },
+      }
+    );
+
+    const memberships = res.data?.data || [];
+
+    setHasUpcomingMembership(memberships.length > 0);
+  };
+
+  useEffect(() => {
+      if(details?.id){
+          checkUpcomingMembership();
+      }
+  }, [details?.id]);
 
   // Fetch coins with filters applied
   const fetchPurchaseServices = async () => {
