@@ -12,6 +12,7 @@ import {
 import { IoCloseCircle } from "react-icons/io5";
 import { toast } from "react-toastify";
 import { authAxios } from "../../config/config";
+import { useSelector } from "react-redux";
 
 function toCapitalizedCase(inputString) {
   return inputString
@@ -37,6 +38,19 @@ const CreateMemberAppointment = ({
   const [bookedSlots, setBookedSlots] = useState([]);
   const [checkTrial, setCheckTrial] = useState(false);
   const [memberPurchasedServices, setMemberPurchasedServices] = useState([]);
+
+  const { user } = useSelector((state) => state.auth);
+  const userRole = user.role;
+
+  const ALLOWED_COMPLEMENTARY_ROLES = [
+    "ADMIN",
+    "CLUB_MANAGER",
+    "ASS_CLUB_MANAGER",
+    "FITNESS_MANAGER",
+    "ASS_FITNESS_MANAGER",
+  ];
+
+  const canCreateComplimentary = ALLOWED_COMPLEMENTARY_ROLES.includes(userRole);
 
   // ===============================
   // FETCH CLUB TIMING
@@ -154,7 +168,10 @@ const CreateMemberAppointment = ({
 
   const appointmentCategories = [
     { value: "service", label: "Service Appointment" },
-    { value: "complementary", label: "Complimentary Appointment" },
+
+    ...(canCreateComplimentary
+      ? [{ value: "complementary", label: "Complimentary Appointment" }]
+      : []),
   ];
 
   // ===============================
@@ -216,9 +233,12 @@ const CreateMemberAppointment = ({
   // ===============================
   // FORMIK
   // ===============================
+  const initialAppointmentCategory = defaultCategory === "complementary" && !canCreateComplimentary
+    ? "service"
+    : defaultCategory || "service";
   const formik = useFormik({
     initialValues: {
-      appointment_category: defaultCategory || "complementary", // ✅ FIX
+      appointment_category: initialAppointmentCategory, // ✅ FIX
       service_id: null,
       package_booking_id: null,
       trainer_id: null,
@@ -470,16 +490,33 @@ const CreateMemberAppointment = ({
                         checked={
                           formik.values.appointment_category === cat.value
                         }
+                        // onChange={() => {
+                        //   if (!isServiceDisabled) {
+                        //     formik.setFieldValue(
+                        //       "appointment_category",
+                        //       cat.value,
+                        //     );
+                        //     handleReset(cat.value);
+                        //   }
+                        // }}
+                        // disabled={isServiceDisabled}
                         onChange={() => {
+                          if (
+                            cat.value === "complementary" &&
+                            !canCreateComplimentary
+                          ) {
+                            return;
+                          }
+
                           if (!isServiceDisabled) {
-                            formik.setFieldValue(
-                              "appointment_category",
-                              cat.value,
-                            );
+                            formik.setFieldValue("appointment_category", cat.value);
                             handleReset(cat.value);
                           }
                         }}
-                        disabled={isServiceDisabled}
+                        disabled={
+                          isServiceDisabled ||
+                          (cat.value === "complementary" && !canCreateComplimentary)
+                        }
                         className="w-auto custom--input"
                       />
                       {cat.label}
