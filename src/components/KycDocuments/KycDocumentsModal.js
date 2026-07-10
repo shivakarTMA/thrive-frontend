@@ -26,6 +26,10 @@ const KycDocumentsModal = ({
     status: "",
     remarks: "",
   });
+  const [previewFile, setPreviewFile] = useState({
+    url: "",
+    type: "",
+  });
 
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState("");
@@ -62,14 +66,22 @@ const KycDocumentsModal = ({
   const getPreview = (value) => {
     if (!value) return null;
 
-    // ✅ If it's already a URL (API response)
+    // Existing file from API
     if (typeof value === "string") {
-      return value;
+      const extension = value.split(".").pop().toLowerCase();
+
+      return {
+        url: value,
+        type: extension === "pdf" ? "pdf" : "image",
+      };
     }
 
-    // ✅ If it's a File (new upload)
+    // Newly uploaded file
     if (value instanceof File) {
-      return URL.createObjectURL(value);
+      return {
+        url: URL.createObjectURL(value),
+        type: value.type === "application/pdf" ? "pdf" : "image",
+      };
     }
 
     return null;
@@ -143,8 +155,33 @@ const KycDocumentsModal = ({
     }
   };
 
-  console.log(memberKycDocuments, "memberKycDocuments");
-  console.log(kycDocumentData, "kycDocumentData");
+  const isPdf = (file) => {
+    if (!file) return false;
+
+    // File object (new upload)
+    if (file instanceof File) {
+      return file.type === "application/pdf";
+    }
+
+    // URL from API
+    return file.toLowerCase().includes(".pdf");
+  };
+  const DocumentPreview = ({ file, alt }) => {
+    if (!file) return null;
+
+    return isPdf(file) ? (
+      <div className="w-full h-[170px] flex flex-col items-center justify-center bg-gray-100 border rounded">
+        <div className="text-5xl">📄</div>
+        <p className="text-sm font-medium mt-2">PDF Document</p>
+      </div>
+    ) : (
+      <img
+        src={file}
+        alt={alt}
+        className="w-full h-[170px] object-cover"
+      />
+    );
+  };
 
   return (
     <>
@@ -207,10 +244,9 @@ const KycDocumentsModal = ({
                 {idProof?.document_front_file && (
                   <div className="rounded-2xl bg-white shadow-lg overflow-hidden border border-gray-200">
                     <div className="relative">
-                      <img
-                        src={idProof.document_front_file}
+                      <DocumentPreview
+                        file={idProof.document_front_file}
                         alt="Aadhaar Front"
-                        className="w-full h-[170px] object-cover"
                       />
 
                       <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent" />
@@ -230,9 +266,10 @@ const KycDocumentsModal = ({
                       <button
                         onClick={() => {
                           if (!idProof.document_front_file) return;
-                          setPreviewImage(
-                            getPreview(idProof.document_front_file),
-                          );
+                          // setPreviewImage(
+                          //   getPreview(idProof.document_front_file),
+                          // );
+                          setPreviewFile(getPreview(idProof.document_front_file));
                           setShowPreviewModal(true);
                         }}
                         className="w-9 h-9 rounded-lg border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition"
@@ -245,10 +282,9 @@ const KycDocumentsModal = ({
                 {idProof?.document_back_file && (
                   <div className="rounded-2xl bg-white shadow-lg overflow-hidden border border-gray-200">
                     <div className="relative">
-                      <img
-                        src={idProof.document_back_file}
+                      <DocumentPreview
+                        file={idProof.document_back_file}
                         alt="Aadhaar Back"
-                        className="w-full h-[170px] object-cover"
                       />
 
                       <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent" />
@@ -268,9 +304,10 @@ const KycDocumentsModal = ({
                       <button
                         onClick={() => {
                           if (!idProof.document_back_file) return;
-                          setPreviewImage(
-                            getPreview(idProof.document_back_file),
-                          );
+                          // setPreviewImage(
+                          //   getPreview(idProof.document_back_file),
+                          // );
+                          setPreviewFile(getPreview(idProof.document_back_file));
                           setShowPreviewModal(true);
                         }}
                         className="w-9 h-9 rounded-lg border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition"
@@ -284,10 +321,9 @@ const KycDocumentsModal = ({
                 {photoProof?.document_front_file && (
                   <div className="rounded-2xl bg-white shadow-lg overflow-hidden border border-gray-200">
                     <div className="relative">
-                      <img
-                        src={photoProof.document_front_file}
+                      <DocumentPreview
+                        file={photoProof.document_front_file}
                         alt="Passport Photograph"
-                        className="w-full h-[170px] object-cover"
                       />
 
                       <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent" />
@@ -307,9 +343,10 @@ const KycDocumentsModal = ({
                       <button
                         onClick={() => {
                           if (!photoProof.document_front_file) return;
-                          setPreviewImage(
-                            getPreview(photoProof.document_front_file),
-                          );
+                          // setPreviewImage(
+                          //   getPreview(photoProof.document_front_file),
+                          // );
+                          setPreviewFile(getPreview(photoProof.document_front_file));
                           setShowPreviewModal(true);
                         }}
                         className="w-9 h-9 rounded-lg border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition"
@@ -322,10 +359,9 @@ const KycDocumentsModal = ({
                 {corporateProof?.document_front_file && (
                   <div className="rounded-2xl bg-white shadow-lg overflow-hidden border border-gray-200">
                     <div className="relative">
-                      <img
-                        src={corporateProof.document_front_file}
+                      <DocumentPreview
+                        file={corporateProof.document_front_file}
                         alt="Corporate ID"
-                        className="w-full h-[170px] object-cover"
                       />
 
                       <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent" />
@@ -345,9 +381,10 @@ const KycDocumentsModal = ({
                       <button
                         onClick={() => {
                           if (!corporateProof.document_front_file) return;
-                          setPreviewImage(
-                            getPreview(corporateProof.document_front_file),
-                          );
+                          // setPreviewImage(
+                          //   getPreview(corporateProof.document_front_file),
+                          // );
+                          setPreviewFile(getPreview(corporateProof.document_front_file));
                           setShowPreviewModal(true);
                         }}
                         className="w-9 h-9 rounded-lg border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition"
@@ -427,11 +464,24 @@ const KycDocumentsModal = ({
             </button>
 
             {/* Image */}
-            <img
+            {/* <img
               src={previewImage}
               alt="Preview"
               className="w-full h-auto rounded"
-            />
+            /> */}
+            {previewFile.type === "pdf" ? (
+              <iframe
+                src={previewFile.url}
+                title="PDF Preview"
+                className="w-full h-[80vh] rounded"
+              />
+            ) : (
+              <img
+                src={previewFile.url}
+                alt="Preview"
+                className="w-full max-h-[80vh] object-contain rounded"
+              />
+            )}
           </div>
         </div>
       )}

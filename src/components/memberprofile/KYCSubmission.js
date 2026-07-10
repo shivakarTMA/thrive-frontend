@@ -8,15 +8,22 @@ import { MdModeEdit, MdOutlineFileDownload } from "react-icons/md";
 import IsLoadingHOC from "../common/IsLoadingHOC";
 import { useSelector } from "react-redux";
 import { FaCheck } from "react-icons/fa6";
+import Webcam from "react-webcam";
 
 const KYCSubmission = ({ details, setLoading }) => {
   const memberId = details?.id;
   const corporateId = details?.is_corporate_id;
   const [errors, setErrors] = useState({});
-  const [memberKycStatus, setMemberKycStatus] = useState('')
+  const [memberKycStatus, setMemberKycStatus] = useState("");
 
   const { user } = useSelector((state) => state.auth);
   const userRole = user.role;
+
+  // KYC State
+  const [showUploadOptions, setShowUploadOptions] = useState(false);
+  const [selectedDocumentType, setSelectedDocumentType] = useState("");
+  const [showCamera, setShowCamera] = useState(false);
+  const webcamReference = useRef(null);
 
   const [documents, setDocuments] = useState({
     aadharFront: null,
@@ -36,10 +43,22 @@ const KYCSubmission = ({ details, setLoading }) => {
   };
 
   const documentTypes = {
-    aadharFront: { label: "Aadhar Card (Front)", accept: "image/*" },
-    aadharBack: { label: "Aadhar Card (Back)", accept: "image/*" },
-    passportPhoto: { label: "Passport Photo", accept: "image/*" },
-    corporateId: { label: "Corporate ID", accept: "image/*" },
+    aadharFront: {
+      label: "Aadhar Card (Front)",
+      accept: "image/*,.pdf",
+    },
+    aadharBack: {
+      label: "Aadhar Card (Back)",
+      accept: "image/*,.pdf",
+    },
+    passportPhoto: {
+      label: "Passport Photo",
+      accept: "image/*,.pdf",
+    },
+    corporateId: {
+      label: "Corporate ID",
+      accept: "image/*,.pdf",
+    },
   };
 
   // Format file size
@@ -52,132 +71,161 @@ const KYCSubmission = ({ details, setLoading }) => {
   };
 
   const fetchMemberById = async () => {
-  try {
-    const res = await authAxios().get(`/member/${memberId}`);
+    try {
+      const res = await authAxios().get(`/member/${memberId}`);
 
-    const data = res.data?.data || res.data || null;
+      const data = res.data?.data || res.data || null;
 
-    const latestStatus = data?.kyc_status || "";
+      const latestStatus = data?.kyc_status || "";
 
-    setMemberKycStatus(latestStatus);
+      setMemberKycStatus(latestStatus);
 
-    return latestStatus;
-  } catch (err) {
-    console.error(err);
-    return "";
-  }
-};
-
-const fetchKycDocuments = async (status) => {
-  try {
-    const response = await authAxios().get(
-      `/kyc/document/list/${memberId}`,
-      {
-        params: {
-          status,
-        },
-      }
-    );
-
-    if (response.data.status && response.data.data) {
-      const data = response.data.data;
-
-      const aadhar = data.find(
-        (d) => d.document_type === "ID_PROOF"
-      );
-
-      const passport = data.find(
-        (d) => d.document_type === "PHOTO"
-      );
-
-      const corporateId = data.find(
-        (d) => d.document_type === "CORPORATE_ID"
-      );
-
-      setDocuments({
-        aadharFront: aadhar
-          ? {
-              preview: aadhar.document_front_file,
-              name: "Aadhar Front (Uploaded)",
-              id: aadhar.id,
-              uploaded: true,
-              status: aadhar.status,
-              type: "ID_PROOF",
-            }
-          : null,
-
-        aadharBack: aadhar
-          ? {
-              preview: aadhar.document_back_file,
-              name: "Aadhar Back (Uploaded)",
-              id: aadhar.id,
-              uploaded: true,
-              status: aadhar.status,
-              type: "ID_PROOF",
-            }
-          : null,
-
-        passportPhoto: passport
-          ? {
-              preview: passport.document_front_file,
-              name: "Passport Photo (Uploaded)",
-              id: passport.id,
-              uploaded: true,
-              status: passport.status,
-              type: "PHOTO",
-            }
-          : null,
-
-        corporateId: corporateId
-          ? {
-              preview: corporateId.document_front_file,
-              name: "Corporate ID (Uploaded)",
-              id: corporateId.id,
-              uploaded: true,
-              status: corporateId.status,
-              type: "CORPORATE_ID",
-            }
-          : null,
-      });
-    }
-  } catch (error) {
-    console.error("Error fetching KYC documents:", error);
-  }
-};
-
-useEffect(() => {
-  const initializeData = async () => {
-    const latestStatus = await fetchMemberById();
-
-    if (latestStatus) {
-      await fetchKycDocuments(latestStatus);
+      return latestStatus;
+    } catch (err) {
+      console.error(err);
+      return "";
     }
   };
 
-  if (memberId) {
-    initializeData();
-  }
-}, [memberId]);
+  const fetchKycDocuments = async (status) => {
+    try {
+      const response = await authAxios().get(`/kyc/document/list/${memberId}`, {
+        params: {
+          status,
+        },
+      });
+
+      if (response.data.status && response.data.data) {
+        const data = response.data.data;
+
+        const aadhar = data.find((d) => d.document_type === "ID_PROOF");
+
+        const passport = data.find((d) => d.document_type === "PHOTO");
+
+        const corporateId = data.find(
+          (d) => d.document_type === "CORPORATE_ID",
+        );
+
+        setDocuments({
+          aadharFront: aadhar
+            ? {
+                preview: aadhar.document_front_file,
+                name: "Aadhar Front (Uploaded)",
+                id: aadhar.id,
+                uploaded: true,
+                status: aadhar.status,
+                type: "ID_PROOF",
+              }
+            : null,
+
+          aadharBack: aadhar
+            ? {
+                preview: aadhar.document_back_file,
+                name: "Aadhar Back (Uploaded)",
+                id: aadhar.id,
+                uploaded: true,
+                status: aadhar.status,
+                type: "ID_PROOF",
+              }
+            : null,
+
+          passportPhoto: passport
+            ? {
+                preview: passport.document_front_file,
+                name: "Passport Photo (Uploaded)",
+                id: passport.id,
+                uploaded: true,
+                status: passport.status,
+                type: "PHOTO",
+              }
+            : null,
+
+          corporateId: corporateId
+            ? {
+                preview: corporateId.document_front_file,
+                name: "Corporate ID (Uploaded)",
+                id: corporateId.id,
+                uploaded: true,
+                status: corporateId.status,
+                type: "CORPORATE_ID",
+              }
+            : null,
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching KYC documents:", error);
+    }
+  };
+
+  useEffect(() => {
+    const initializeData = async () => {
+      const latestStatus = await fetchMemberById();
+
+      if (latestStatus) {
+        await fetchKycDocuments(latestStatus);
+      }
+    };
+
+    if (memberId) {
+      initializeData();
+    }
+  }, [memberId]);
+
+  const IMAGE_FILE_TYPES = [
+    "image/jpeg",
+    "image/jpg",
+    "image/png",
+    "image/webp",
+  ];
+
+  const DOCUMENT_FILE_TYPES = [
+    ...IMAGE_FILE_TYPES,
+    "application/pdf",
+  ];
 
   // Handle file selection (just preview change)
   const handleFileSelect = (documentType, file) => {
-    if (file && file.type.startsWith("image/")) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setDocuments((previous) => ({
-          ...previous,
-          [documentType]: {
-            ...previous[documentType],
-            file,
-            preview: e.target.result,
-            name: file.name,
-            size: file.size,
-            uploaded: false, // mark as modified
-          },
-        }));
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
+
+    const imageOnlyDocuments = ["passportPhoto"];
+
+    const allowedTypes = imageOnlyDocuments.includes(documentType)
+      ? IMAGE_FILE_TYPES
+      : DOCUMENT_FILE_TYPES;
+
+    if (!allowedTypes.includes(file.type)) {
+      toast.error(
+        imageOnlyDocuments.includes(documentType)
+          ? "Passport Photo accepts only JPG, JPEG, PNG and WEBP files."
+          : "Only JPG, JPEG, PNG, WEBP and PDF files are allowed."
+      );
+      return;
     }
+
+    const maximumFileSize = 5 * 1024 * 1024;
+
+    if (file.size > maximumFileSize) {
+      toast.error("Maximum file size is 5 MB.");
+      return;
+    }
+
+    const fileReader = new FileReader();
+
+    fileReader.onload = (event) => {
+      setDocuments((previous) => ({
+        ...previous,
+        [documentType]: {
+          ...previous[documentType],
+          file,
+          preview: event.target.result,
+          name: file.name,
+          size: file.size,
+          uploaded: false,
+        },
+      }));
+    };
+
+    fileReader.readAsDataURL(file);
   };
 
   const handleEditDocuments = () => {
@@ -260,7 +308,7 @@ useEffect(() => {
 
         // Use existing id if available (prefer aadharFront id first)
         const id = documents.aadharFront?.id || documents.aadharBack?.id;
-        
+
         if (memberKycStatus === "APPROVED") {
           await authAxios().put(`/kyc/document/${id}`, formData, {
             headers: { "Content-Type": "multipart/form-data" },
@@ -280,16 +328,10 @@ useEffect(() => {
         formData.append("document_type", "PHOTO");
 
         if (documents.passportPhoto?.file) {
-          formData.append(
-            "document_front_file",
-            documents.passportPhoto.file
-          );
+          formData.append("document_front_file", documents.passportPhoto.file);
         }
 
-        if (
-          memberKycStatus === "APPROVED" &&
-          documents.passportPhoto?.id
-        ) {
+        if (memberKycStatus === "APPROVED" && documents.passportPhoto?.id) {
           await authAxios().put(
             `/kyc/document/${documents.passportPhoto.id}`,
             formData,
@@ -297,18 +339,14 @@ useEffect(() => {
               headers: {
                 "Content-Type": "multipart/form-data",
               },
-            }
+            },
           );
         } else {
-          await authAxios().post(
-            `/kyc/document/create`,
-            formData,
-            {
-              headers: {
-                "Content-Type": "multipart/form-data",
-              },
-            }
-          );
+          await authAxios().post(`/kyc/document/create`, formData, {
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+          });
         }
       }
       if (documents.corporateId) {
@@ -318,16 +356,10 @@ useEffect(() => {
         formData.append("document_type", "CORPORATE_ID");
 
         if (documents.corporateId?.file) {
-          formData.append(
-            "document_front_file",
-            documents.corporateId.file
-          );
+          formData.append("document_front_file", documents.corporateId.file);
         }
 
-        if (
-          memberKycStatus === "APPROVED" &&
-          documents.corporateId?.id
-        ) {
+        if (memberKycStatus === "APPROVED" && documents.corporateId?.id) {
           await authAxios().put(
             `/kyc/document/${documents.corporateId.id}`,
             formData,
@@ -335,18 +367,14 @@ useEffect(() => {
               headers: {
                 "Content-Type": "multipart/form-data",
               },
-            }
+            },
           );
         } else {
-          await authAxios().post(
-            `/kyc/document/create`,
-            formData,
-            {
-              headers: {
-                "Content-Type": "multipart/form-data",
-              },
-            }
-          );
+          await authAxios().post(`/kyc/document/create`, formData, {
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+          });
         }
       }
 
@@ -409,7 +437,7 @@ useEffect(() => {
       toast.success("PAR-Q file downloaded successfully");
     } catch (error) {
       console.error("Failed to download and open PAR-Q form:", error);
-      toast.error('Parq does not exist.')
+      toast.error("Parq does not exist.");
     } finally {
       setLoading(false);
     }
@@ -447,16 +475,46 @@ useEffect(() => {
       toast.success("T&C file downloaded successfully");
     } catch (error) {
       console.error("Failed to download T&C form:", error.response);
-      toast.error("Term And Condition does not exist.")
+      toast.error("Term And Condition does not exist.");
     } finally {
       setLoading(false);
     }
   };
 
+  // KYC Functions
+  const openDeviceUpload = () => {
+    setShowUploadOptions(false);
+
+    if (selectedDocumentType) {
+      fileInputRefs[selectedDocumentType]?.current?.click();
+    }
+  };
+  const openCamera = () => {
+    setShowUploadOptions(false);
+    setShowCamera(true);
+  };
+
+  const captureImage = () => {
+    const imageSource = webcamReference.current.getScreenshot();
+    if (!imageSource) return;
+    fetch(imageSource)
+      .then((response) => response.blob())
+      .then((blob) => {
+        const imageFile = new File(
+          [blob],
+          `${selectedDocumentType}-${Date.now()}.jpg`,
+          {
+            type: "image/jpeg",
+          },
+        );
+        handleFileSelect(selectedDocumentType, imageFile);
+        setShowCamera(false);
+      });
+  };
+
   return (
     <div className="bg-white p-4 rounded-[10px] w-full box--shadow">
       <div className="flex gap-2 justify-between">
-      
         {memberKycStatus === "REJECTED" && !isEditMode && (
           <div className="w-full">
             <button
@@ -518,7 +576,11 @@ useEffect(() => {
                       <button
                         type="button"
                         className="text-blue-600 hover:text-blue-700 font-medium"
-                        onClick={() => openFileDialog(fileInputRefs[type])}
+                        // onClick={() => openFileDialog(fileInputRefs[type])}
+                        onClick={() => {
+                          setSelectedDocumentType(type);
+                          setShowUploadOptions(true);
+                        }}
                       >
                         browse files
                       </button>
@@ -531,26 +593,42 @@ useEffect(() => {
                       type="file"
                       accept={config.accept}
                       className="hidden"
-                      onChange={(e) =>
-                        handleFileSelect(type, e.target.files[0])
-                      }
+                      onChange={(event) => {
+                        const file = event.target.files?.[0];
+
+                        if (file) {
+                          handleFileSelect(type, file);
+                        }
+
+                        event.target.value = "";
+                      }}
                     />
                   </div>
                 ) : (
                   <div className="border rounded-lg p-4 bg-white">
                     <div className="flex items-start space-x-4">
                       <div className="relative w-[100px] h-[80px]">
-                        {/* <img
-                          src={document.preview}
-                          alt={config.label}
-                          className="w-full h-full object-cover rounded border"
-                        /> */}
                         {document.preview ? (
-                          <img
-                            src={document.preview}
-                            alt={config.label}
-                            className="w-full h-full object-cover rounded border"
-                          />
+                          // <img
+                          //   src={document.preview}
+                          //   alt={config.label}
+                          //   className="w-full h-full object-cover rounded border"
+                          // />
+                          <>
+                            {document.file?.type === "application/pdf" ||
+                            document.preview?.includes(".pdf") ? (
+                              <div className="flex items-center justify-center w-full h-full border rounded">
+                                <MdOutlineFileDownload size={35} />
+                                <span className="text-xs ml-2">PDF</span>
+                              </div>
+                            ) : (
+                              <img
+                                src={document.preview}
+                                alt={config.label}
+                                className="w-full h-full object-cover rounded border"
+                              />
+                            )}
+                          </>
                         ) : (
                           <div className="w-full h-full flex items-center justify-center border rounded text-xs text-gray-400">
                             No File Uploaded
@@ -568,7 +646,11 @@ useEffect(() => {
                           <span className="text-white text-xs">
                             {document.status === "REJECTED" ? (
                               <RxCross2 />
-                            ) : document.status === "APPROVED" ?  <FaCheck /> : <IoTimeOutline />}
+                            ) : document.status === "APPROVED" ? (
+                              <FaCheck />
+                            ) : (
+                              <IoTimeOutline />
+                            )}
                           </span>
                         </div>
                       </div>
@@ -583,17 +665,6 @@ useEffect(() => {
                             {formatFileSize(document.size)}
                           </p>
                         )}
-                        {/* {document.status && (
-                          <p
-                            className={`text-sm font-medium mt-1 ${
-                              document.status === "APPROVED"
-                                ? "text-green-600"
-                                : "text-yellow-600"
-                            }`}
-                          >
-                            Status: {document.status}
-                          </p>
-                        )} */}
 
                         {/* Action Buttons */}
                         <div className="flex space-x-2 mt-2">
@@ -607,22 +678,17 @@ useEffect(() => {
                           {(userRole === "FOH" ||
                             userRole === "CLUB_MANAGER" ||
                             userRole === "ADMIN") && (
-                            // <button
-                            //   type="button"
-                            //   onClick={() => fileInputRefs[type].current.click()}
-                            //   className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
-                            // >
-                            //   <FiUpload />
-                            // </button>
                             <>
-                              {(memberKycStatus === "APPROVED" || memberKycStatus === "NONE" ||
+                              {(memberKycStatus === "APPROVED" ||
+                                memberKycStatus === "NONE" ||
                                 (memberKycStatus === "REJECTED" &&
                                   isEditMode)) && (
                                 <button
                                   type="button"
-                                  onClick={() =>
-                                    fileInputRefs[type].current.click()
-                                  }
+                                  onClick={() => {
+                                    setSelectedDocumentType(type);
+                                    setShowUploadOptions(true);
+                                  }}
                                   className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
                                 >
                                   <FiUpload />
@@ -658,13 +724,6 @@ useEffect(() => {
           userRole === "ADMIN") &&
           memberKycStatus !== "PENDING" && (
             <div className="flex justify-start pt-4">
-              {/* <button
-                onClick={handleSubmit}
-                className="px-4 py-2 text-white bg-black hover:bg-gray-800 rounded flex items-center gap-2"
-              >
-                Upload / Update Documents
-              </button> */}
-              {/* APPROVED */}
               {memberKycStatus === "APPROVED" && (
                 <button
                   onClick={handleSubmit}
@@ -710,11 +769,78 @@ useEffect(() => {
               </button>
             </div>
             <div className="p-4">
-              <img
-                src={previewing.preview}
-                alt="Document preview"
-                className="max-w-full max-h-[70vh] object-contain mx-auto"
-              />
+              {previewing.file?.type === "application/pdf" ||
+                previewing.preview?.includes(".pdf") ? (
+                  <iframe
+                    src={previewing.preview}
+                    title="PDF Preview"
+                    className="w-[800px] h-[700px]"
+                  />
+                ) : (
+                  <img
+                    src={previewing.preview}
+                    alt="Preview"
+                    className="max-w-full max-h-[70vh] object-contain"
+                  />
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+      {showUploadOptions && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-lg w-[380px] p-6">
+            <h2 className="text-lg font-semibold text-center mb-5">
+              Choose Upload Method
+            </h2>
+
+            <div className="space-y-3">
+              <button
+                onClick={openDeviceUpload}
+                className="w-full flex items-center justify-center gap-3 border rounded-lg px-4 py-3 hover:bg-gray-100 transition"
+              >
+                <FiUpload size={20} />
+                Upload From Device
+              </button>
+
+              <button
+                onClick={openCamera}
+                className="w-full flex items-center justify-center gap-3 border rounded-lg px-4 py-3 hover:bg-gray-100 transition"
+              >
+                📷 Capture Using Camera
+              </button>
+            </div>
+
+            <button
+              onClick={() => setShowUploadOptions(false)}
+              className="w-full mt-5 bg-red-500 text-white rounded-lg py-2 hover:bg-red-600"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+      {showCamera && (
+        <div className="fixed inset-0 bg-black/70 flex justify-center items-center z-50">
+          <div className="bg-white rounded-lg p-5">
+            <Webcam
+              ref={webcamReference}
+              screenshotFormat="image/jpeg"
+              className="rounded-lg"
+            />
+            <div className="flex gap-3 mt-4">
+              <button
+                className="bg-black text-white px-4 py-2 rounded"
+                onClick={captureImage}
+              >
+                Capture
+              </button>
+              <button
+                className="border px-4 py-2 rounded"
+                onClick={() => setShowCamera(false)}
+              >
+                Cancel
+              </button>
             </div>
           </div>
         </div>

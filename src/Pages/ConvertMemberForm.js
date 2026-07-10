@@ -60,7 +60,7 @@ import MultiSelect from "react-multi-select-component";
 import { CgFormatLineHeight } from "react-icons/cg";
 import CreatableSelect from "react-select/creatable";
 import { FiUpload } from "react-icons/fi";
-import { MdModeEditOutline } from "react-icons/md";
+import { MdModeEditOutline, MdOutlineFileDownload } from "react-icons/md";
 
 const planTypeOption = [
   { value: "DLF", label: "DLF" },
@@ -82,7 +82,17 @@ const paymentMethodOptions = [
 
 //  'CREDIT_CARD','DEBIT_CARD','UPI_ICICI','NET_BANKING'
 
-const FILE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+const IMAGE_FILE_TYPES = [
+  "image/jpeg",
+  "image/jpg",
+  "image/png",
+  "image/webp",
+];
+
+const DOCUMENT_FILE_TYPES = [
+  ...IMAGE_FILE_TYPES,
+  "application/pdf",
+];
 
 const stepValidationSchemas = [
   // ✅ Step 0: Full set of required fields
@@ -182,22 +192,22 @@ const stepValidationSchemas = [
       .min(1, "At least one emergency contact is required"),
     id_proof_card_front: Yup.mixed()
       .required("Aadhar front is required")
-      .test("fileType", "Only JPG, JPEG, PNG, WEBP allowed", (value) => {
+      .test("fileType", "Only JPG, JPEG, PNG, WEBP and PDF files are allowed", (value) => {
         if (!value) return false;
 
         // ✅ allow existing image URL (edit mode)
         if (typeof value === "string") return true;
 
-        return FILE_TYPES.includes(value.type);
+        return DOCUMENT_FILE_TYPES.includes(value.type);
       }),
 
     id_proof_card_back: Yup.mixed()
       .required("Aadhar back is required")
-      .test("fileType", "Only JPG, JPEG, PNG, WEBP allowed", (value) => {
+      .test("fileType", "Only JPG, JPEG, PNG, WEBP and PDF files are allowed", (value) => {
         if (!value) return false;
         if (typeof value === "string") return true;
 
-        return FILE_TYPES.includes(value.type);
+        return DOCUMENT_FILE_TYPES.includes(value.type);
       }),
 
     passport_photo: Yup.mixed()
@@ -206,7 +216,7 @@ const stepValidationSchemas = [
         if (!value) return false;
         if (typeof value === "string") return true;
 
-        return FILE_TYPES.includes(value.type);
+        return IMAGE_FILE_TYPES.includes(value.type);
       }),
 
     corporate_id: Yup.mixed().when("club_data", {
@@ -217,14 +227,14 @@ const stepValidationSchemas = [
           .required("Corporate ID is required")
           .test(
             "fileType",
-            "Only JPG, JPEG, PNG, WEBP allowed",
+            "Only JPG, JPEG, PNG, WEBP and PDF files are allowed",
             (value) => {
               if (!value) return false;
 
               // existing image URL
               if (typeof value === "string") return true;
 
-              return FILE_TYPES.includes(value.type);
+              return DOCUMENT_FILE_TYPES.includes(value.type);
             }
           ),
 
@@ -233,7 +243,7 @@ const stepValidationSchemas = [
           .nullable()
           .test(
             "fileType",
-            "Only JPG, JPEG, PNG, WEBP allowed",
+            "Only JPG, JPEG, PNG, WEBP and PDF files are allowed",
             (value) => {
               // optional field
               if (!value) return true;
@@ -241,7 +251,7 @@ const stepValidationSchemas = [
               // existing image URL
               if (typeof value === "string") return true;
 
-              return FILE_TYPES.includes(value.type);
+              return DOCUMENT_FILE_TYPES.includes(value.type);
             }
           ),
     }),
@@ -277,6 +287,11 @@ const ConvertMemberForm = ({
   const [isEditingDocs, setIsEditingDocs] = useState(false);
   const [previewImage, setPreviewImage] = useState(null);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
+
+  const [showUploadOptions, setShowUploadOptions] = useState(false);
+  const [showDocumentCamera, setShowDocumentCamera] = useState(false);
+  const [selectedDocumentField, setSelectedDocumentField] = useState("");
+  const documentWebcamRef = useRef(null);
 
   const [offlinePaymentDetails, setOfflinePaymentDetails] = useState({
     method: null,
@@ -876,10 +891,30 @@ const ConvertMemberForm = ({
   });
 
   const handleFileUpload = (event, fieldName) => {
-    const file = event.target.files[0];
+    const file = event.target.files?.[0];
+
     if (!file) return;
 
+    const imageOnlyFields = ["passport_photo"];
+
+    const allowedTypes = imageOnlyFields.includes(fieldName)
+      ? IMAGE_FILE_TYPES
+      : DOCUMENT_FILE_TYPES;
+
+    if (!allowedTypes.includes(file.type)) {
+      toast.error(
+        imageOnlyFields.includes(fieldName)
+          ? "Passport Photo accepts only JPG, JPEG, PNG and WEBP."
+          : "Only JPG, JPEG, PNG, WEBP and PDF files are allowed."
+      );
+
+      event.target.value = "";
+      return;
+    }
+
     formik.setFieldValue(fieldName, file);
+
+    event.target.value = "";
   };
 
   const getPreview = (value) => {
@@ -1668,6 +1703,67 @@ const ConvertMemberForm = ({
     setVoucherInput("");
     setVoucherStatus(null);
   }, [formik.values.plan_type]);
+
+  // KYC Document WEB Cam
+  const openDocumentOptions = (fieldName) => {
+    setSelectedDocumentField(fieldName);
+    setShowUploadOptions(true);
+  };
+
+  const documentInputRefs = {
+    id_proof_card_front: useRef(null),
+    id_proof_card_back: useRef(null),
+    passport_photo: useRef(null),
+    corporate_id: useRef(null),
+  };
+
+  const openDeviceUpload = () => {
+    setShowUploadOptions(false);
+    documentInputRefs[selectedDocumentField]?.current?.click();
+  };
+
+  const openDocumentCamera = () => {
+    setShowUploadOptions(false);
+    setShowDocumentCamera(true);
+  };
+
+  const captureDocument = () => {
+    const imageSource = documentWebcamRef.current.getScreenshot();
+
+    if (!imageSource) return;
+
+    fetch(imageSource)
+      .then((response) => response.blob())
+      .then((blob) => {
+        const file = new File(
+          [blob],
+          `${selectedDocumentField}-${Date.now()}.jpg`,
+          {
+            type: "image/jpeg",
+          }
+        );
+
+        formik.setFieldValue(selectedDocumentField, file);
+
+        setShowDocumentCamera(false);
+      });
+  };
+
+  const isPdfFile = (file) => {
+    if (!file) return false;
+
+    // Newly selected file
+    if (file instanceof File) {
+      return file.type === "application/pdf";
+    }
+
+    // Existing URL from API
+    if (typeof file === "string") {
+      return file.toLowerCase().includes(".pdf");
+    }
+
+    return false;
+  };
 
   return (
     <>
@@ -2623,13 +2719,20 @@ const ConvertMemberForm = ({
                               {/* Preview box */}
                               <div className="relative w-[80px] h-[80px] bg-gray-100">
                                 {formik.values.id_proof_card_front ? (
-                                  <img
-                                    src={getPreview(
-                                      formik.values.id_proof_card_front,
-                                    )}
-                                    alt="Aadhar Front"
-                                    className="w-full h-full object-cover rounded border"
-                                  />
+                                  <>
+                                  {isPdfFile(formik.values.id_proof_card_front) ? (
+                                    <div className="w-full h-full border rounded flex flex-col items-center justify-center bg-gray-50">
+                                      <MdOutlineFileDownload size={40} />
+                                      <span className="text-xs mt-2">PDF</span>
+                                    </div>
+                                  ) : (
+                                    <img
+                                      src={getPreview(formik.values.id_proof_card_front)}
+                                      alt="Aadhar Front"
+                                      className="w-full h-full object-cover rounded border"
+                                    />
+                                  )}
+                                  </>
                                 ) : (
                                   <div className="flex items-center justify-center w-full h-full text-xs text-gray-400">
                                     No Image
@@ -2647,13 +2750,8 @@ const ConvertMemberForm = ({
                                   <button
                                     type="button"
                                     onClick={() => {
-                                      if (!formik.values.id_proof_card_front)
-                                        return;
-                                      setPreviewImage(
-                                        getPreview(
-                                          formik.values.id_proof_card_front,
-                                        ),
-                                      );
+                                      if (!formik.values.id_proof_card_front) return;
+                                      setPreviewImage(formik.values.id_proof_card_front);
                                       setShowPreviewModal(true);
                                     }}
                                     className="inline-flex items-center px-3 py-2 text-sm text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-md"
@@ -2662,20 +2760,26 @@ const ConvertMemberForm = ({
                                   </button>
 
                                   {/* ✅ UPLOAD BUTTON (ONLY WHEN EDITING OR EMPTY) */}
-                                    <label className="inline-flex items-center px-3 py-2 text-sm text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md cursor-pointer">
-                                      <FiUpload />
-                                      <input
-                                        type="file"
-                                        hidden
-                                        accept="image/*"
-                                        onChange={(e) =>
-                                          handleFileUpload(
-                                            e,
-                                            "id_proof_card_front",
-                                          )
-                                        }
-                                      />
-                                    </label>
+                                  <input
+                                      ref={documentInputRefs.id_proof_card_front}
+                                      type="file"
+                                      accept="image/*,.pdf"
+                                      className="hidden"
+                                      onChange={(event) => {
+                                          const file = event.target.files?.[0];
+                                          if (file) {
+                                              handleFileUpload(event, "id_proof_card_front");
+                                          }
+                                          event.target.value = "";
+                                      }}
+                                    />
+                                    <button
+                                        type="button"
+                                        className="inline-flex items-center px-3 py-2 text-sm text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md cursor-pointer"
+                                        onClick={() => openDocumentOptions("id_proof_card_front")}
+                                    >
+                                        <FiUpload />
+                                    </button>
                                 </div>
                               </div>
                             </div>
@@ -2701,13 +2805,20 @@ const ConvertMemberForm = ({
                               {/* Preview box */}
                               <div className="relative w-[80px] h-[80px] bg-gray-100">
                                 {formik.values.id_proof_card_back ? (
-                                  <img
-                                    src={getPreview(
-                                      formik.values.id_proof_card_back,
-                                    )}
-                                    alt="Aadhar Back"
-                                    className="w-full h-full object-cover rounded border"
-                                  />
+                                  <>
+                                  {isPdfFile(formik.values.id_proof_card_back) ? (
+                                    <div className="w-full h-full border rounded flex flex-col items-center justify-center bg-gray-50">
+                                      <MdOutlineFileDownload size={40} />
+                                      <span className="text-xs mt-2">PDF</span>
+                                    </div>
+                                  ) : (
+                                    <img
+                                      src={getPreview(formik.values.id_proof_card_back)}
+                                      alt="Aadhar Back"
+                                      className="w-full h-full object-cover rounded border"
+                                    />
+                                  )}
+                                  </>
                                 ) : (
                                   <div className="flex items-center justify-center w-full h-full text-xs text-gray-400">
                                     No Image
@@ -2725,13 +2836,8 @@ const ConvertMemberForm = ({
                                   <button
                                     type="button"
                                     onClick={() => {
-                                      if (!formik.values.id_proof_card_back)
-                                        return;
-                                      setPreviewImage(
-                                        getPreview(
-                                          formik.values.id_proof_card_back,
-                                        ),
-                                      );
+                                      if (!formik.values.id_proof_card_back) return;
+                                      setPreviewImage(formik.values.id_proof_card_back);
                                       setShowPreviewModal(true);
                                     }}
                                     className="inline-flex items-center px-3 py-2 text-sm text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-md"
@@ -2740,20 +2846,26 @@ const ConvertMemberForm = ({
                                   </button>
 
                                   {/* ✅ UPLOAD BUTTON (ONLY WHEN EDITING OR EMPTY) */}
-                                    <label className="inline-flex items-center px-3 py-2 text-sm text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md cursor-pointer">
-                                      <FiUpload />
-                                      <input
-                                        type="file"
-                                        hidden
-                                        accept="image/*"
-                                        onChange={(e) =>
-                                          handleFileUpload(
-                                            e,
-                                            "id_proof_card_back",
-                                          )
-                                        }
-                                      />
-                                    </label>
+                                    <input
+                                      ref={documentInputRefs.id_proof_card_back}
+                                      type="file"
+                                      accept="image/*,.pdf"
+                                      className="hidden"
+                                      onChange={(event) => {
+                                          const file = event.target.files?.[0];
+                                          if (file) {
+                                              handleFileUpload(event, "id_proof_card_back");
+                                          }
+                                          event.target.value = "";
+                                      }}
+                                    />
+                                    <button
+                                        type="button"
+                                        className="inline-flex items-center px-3 py-2 text-sm text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md cursor-pointer"
+                                        onClick={() => openDocumentOptions("id_proof_card_back")}
+                                    >
+                                        <FiUpload />
+                                    </button>
                                 </div>
                               </div>
                             </div>
@@ -2767,6 +2879,7 @@ const ConvertMemberForm = ({
                               </p>
                             )}
                         </div>
+
                         <div>
                           <label className="mb-2 block">
                             Passport Photo
@@ -2778,13 +2891,20 @@ const ConvertMemberForm = ({
                               {/* Preview box */}
                               <div className="relative w-[80px] h-[80px] bg-gray-100">
                                 {formik.values.passport_photo ? (
-                                  <img
-                                    src={getPreview(
-                                      formik.values.passport_photo,
-                                    )}
-                                    alt="Passport Photo"
-                                    className="w-full h-full object-cover rounded border"
-                                  />
+                                  <>
+                                  {isPdfFile(formik.values.passport_photo) ? (
+                                    <div className="w-full h-full border rounded flex flex-col items-center justify-center bg-gray-50">
+                                      <MdOutlineFileDownload size={40} />
+                                      <span className="text-xs mt-2">PDF</span>
+                                    </div>
+                                  ) : (
+                                    <img
+                                      src={getPreview(formik.values.passport_photo)}
+                                      alt="Passport Photo"
+                                      className="w-full h-full object-cover rounded border"
+                                    />
+                                  )}
+                                  </>
                                 ) : (
                                   <div className="flex items-center justify-center w-full h-full text-xs text-gray-400">
                                     No Image
@@ -2803,11 +2923,7 @@ const ConvertMemberForm = ({
                                     type="button"
                                     onClick={() => {
                                       if (!formik.values.passport_photo) return;
-                                      setPreviewImage(
-                                        getPreview(
-                                          formik.values.passport_photo,
-                                        ),
-                                      );
+                                      setPreviewImage(formik.values.passport_photo);
                                       setShowPreviewModal(true);
                                     }}
                                     className="inline-flex items-center px-3 py-2 text-sm text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-md"
@@ -2816,17 +2932,26 @@ const ConvertMemberForm = ({
                                   </button>
 
                                   {/* ⬆ UPLOAD BUTTON */}
-                                    <label className="inline-flex items-center px-3 py-2 text-sm text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md cursor-pointer">
-                                      <FiUpload />
-                                      <input
-                                        type="file"
-                                        hidden
-                                        accept="image/*"
-                                        onChange={(e) =>
-                                          handleFileUpload(e, "passport_photo")
-                                        }
-                                      />
-                                    </label>
+                                    <input
+                                      ref={documentInputRefs.passport_photo}
+                                      type="file"
+                                      accept="image/*"
+                                      className="hidden"
+                                      onChange={(event) => {
+                                          const file = event.target.files?.[0];
+                                          if (file) {
+                                              handleFileUpload(event, "passport_photo");
+                                          }
+                                          event.target.value = "";
+                                      }}
+                                    />
+                                    <button
+                                        type="button"
+                                        className="inline-flex items-center px-3 py-2 text-sm text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md cursor-pointer"
+                                        onClick={() => openDocumentOptions("passport_photo")}
+                                    >
+                                        <FiUpload />
+                                    </button>
                                 </div>
                               </div>
                             </div>
@@ -2854,11 +2979,20 @@ const ConvertMemberForm = ({
                               {/* Preview box */}
                               <div className="relative w-[80px] h-[80px] bg-gray-100">
                                 {formik.values.corporate_id ? (
-                                  <img
-                                    src={getPreview(formik.values.corporate_id)}
-                                    alt="Corporate ID"
-                                    className="w-full h-full object-cover rounded border"
-                                  />
+                                  <>
+                                  {isPdfFile(formik.values.corporate_id) ? (
+                                    <div className="w-full h-full border rounded flex flex-col items-center justify-center bg-gray-50">
+                                      <MdOutlineFileDownload size={40} />
+                                      <span className="text-xs mt-2">PDF</span>
+                                    </div>
+                                  ) : (
+                                    <img
+                                      src={getPreview(formik.values.corporate_id)}
+                                      alt="Corporate ID"
+                                      className="w-full h-full object-cover rounded border"
+                                    />
+                                  )}
+                                  </>
                                 ) : (
                                   <div className="flex items-center justify-center w-full h-full text-xs text-gray-400">
                                     No Image
@@ -2877,9 +3011,7 @@ const ConvertMemberForm = ({
                                     type="button"
                                     onClick={() => {
                                       if (!formik.values.corporate_id) return;
-                                      setPreviewImage(
-                                        getPreview(formik.values.corporate_id),
-                                      );
+                                      setPreviewImage(formik.values.corporate_id);
                                       setShowPreviewModal(true);
                                     }}
                                     className="inline-flex items-center px-3 py-2 text-sm text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-md"
@@ -2888,17 +3020,26 @@ const ConvertMemberForm = ({
                                   </button>
 
                                   {/* ⬆ UPLOAD BUTTON */}
-                                    <label className="inline-flex items-center px-3 py-2 text-sm text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md cursor-pointer">
-                                      <FiUpload />
-                                      <input
-                                        type="file"
-                                        hidden
-                                        accept="image/*"
-                                        onChange={(e) =>
-                                          handleFileUpload(e, "corporate_id")
-                                        }
-                                      />
-                                    </label>
+                                    <input
+                                      ref={documentInputRefs.corporate_id}
+                                      type="file"
+                                      accept="image/*,.pdf"
+                                      className="hidden"
+                                      onChange={(event) => {
+                                          const file = event.target.files?.[0];
+                                          if (file) {
+                                              handleFileUpload(event, "corporate_id");
+                                          }
+                                          event.target.value = "";
+                                      }}
+                                    />
+                                    <button
+                                        type="button"
+                                        className="inline-flex items-center px-3 py-2 text-sm text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md cursor-pointer"
+                                        onClick={() => openDocumentOptions("corporate_id")}
+                                    >
+                                        <FiUpload />
+                                    </button>
                                 </div>
                               </div>
                             </div>
@@ -3508,6 +3649,8 @@ const ConvertMemberForm = ({
         </div>
       )}
 
+      {/* KYC Modal */}
+
       {showPreviewModal && (
         <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
           <div className="bg-white p-4 rounded-lg relative max-w-lg w-full">
@@ -3519,13 +3662,81 @@ const ConvertMemberForm = ({
               <IoCloseCircle className="text-3xl" />
             </button>
 
-            {/* Image */}
-            <img
-              src={previewImage}
-              alt="Preview"
-              className="w-full h-auto rounded"
-            />
+            {isPdfFile(previewImage) ? (
+                <iframe
+                    src={getPreview(previewImage)}
+                    title="PDF Preview"
+                    className="w-full h-[600px]"
+                />
+            ) : (
+                <img
+                    src={getPreview(previewImage)}
+                    alt="Preview"
+                    className="max-w-full max-h-[80vh] object-contain"
+                />
+            )}
           </div>
+        </div>
+      )}
+      {showUploadOptions && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg w-[380px] p-6">
+
+                <h2 className="text-lg font-semibold mb-5 text-center">
+                    Choose Upload Method
+                </h2>
+
+                <div className="space-y-3">
+                    <button
+                        onClick={openDeviceUpload}
+                        className="w-full border rounded-lg py-3 flex items-center justify-center gap-2"
+                    >
+                        <FiUpload />
+                        Upload From Device
+                    </button>
+                    <button
+                        onClick={openDocumentCamera}
+                        className="w-full border rounded-lg py-3 flex items-center justify-center gap-2"
+                    >
+                        <FaCamera />
+                        Capture Using Camera
+                    </button>
+                </div>
+
+                <button
+                    onClick={() => setShowUploadOptions(false)}
+                    className="mt-5 w-full bg-red-500 text-white rounded-lg py-2"
+                >
+                    Cancel
+                </button>
+
+            </div>
+        </div>
+      )}
+      {showDocumentCamera && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-5">
+                <Webcam
+                    ref={documentWebcamRef}
+                    screenshotFormat="image/jpeg"
+                    className="rounded-lg"
+                />
+                <div className="flex gap-3 mt-4">
+                    <button
+                        onClick={captureDocument}
+                        className="bg-black text-white px-4 py-2 rounded"
+                    >
+                        Capture
+                    </button>
+                    <button
+                        onClick={() => setShowDocumentCamera(false)}
+                        className="border px-4 py-2 rounded"
+                    >
+                        Cancel
+                    </button>
+                </div>
+
+            </div>
         </div>
       )}
     </>
