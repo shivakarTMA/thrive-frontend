@@ -5,6 +5,7 @@ import { blockNonLettersAndNumbers, customStyles, sanitizeTextWithNumbers } from
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { authAxios } from "../../config/config";
+import { useSelector } from "react-redux";
 
 const workoutTypeOptions = [
   { value: "MULTIDAY", label: "Workout Plan (Multiple Days)" },
@@ -14,6 +15,9 @@ const workoutTypeOptions = [
 const CreateWorkoutplan = () => {
   const { id } = useParams();
   const editingId = id;
+
+  const { user } = useSelector((state) => state.auth);
+  const userRole = user.role;
 
   const navigate = useNavigate();
 
@@ -516,8 +520,8 @@ const CreateWorkoutplan = () => {
             <strong>Exercise</strong>: {exercise.name}
           </h3>
         </div>
+        {userRole !== "MARKETING_MANAGER" && (
         <div className="flex gap-2">
-          {/* FIX 2: Pass exercise object instead of position */}
           <button
             onClick={() => handleDeleteExercise(activeDayIndex, exercise)}
             className="text-red-600 text-sm"
@@ -525,6 +529,7 @@ const CreateWorkoutplan = () => {
             Remove
           </button>
         </div>
+        )}
       </div>
       <div className="flex items-center gap-3">
         <div className="flex-1">
@@ -980,6 +985,7 @@ const CreateWorkoutplan = () => {
                 </div>
 
                 <div className="rounded p-0 mb-6">
+                  {userRole !== "MARKETING_MANAGER" && (
                   <div
                     className={`flex items-center ${
                       data.days?.length === 1
@@ -1035,6 +1041,7 @@ const CreateWorkoutplan = () => {
                       </div>
                     )}
                   </div>
+                  )}
 
                   {(() => {
                     const currentDay = data.days[activeDayIndex];
@@ -1104,6 +1111,7 @@ const CreateWorkoutplan = () => {
                 </div>
               </>
             )}
+            {userRole !== "MARKETING_MANAGER" && (
             <div className="flex gap-3 mt-6">
               <button
                 type="button"
@@ -1132,6 +1140,7 @@ const CreateWorkoutplan = () => {
                     : "Save Workout"}
               </button>
             </div>
+            )}
           </div>
         )}
       </div>

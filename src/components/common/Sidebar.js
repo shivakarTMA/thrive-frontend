@@ -2599,12 +2599,12 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                       >
                         Attendance Heatmap Report
                       </Link> */}
-                      {/* <Link
-                        to="/reports/operations-reports/referral-report"
-                        className="submenu-link text-white text-sm"
-                      >
-                        Referral Report
-                      </Link> */}
+                      <Link
+                      to="/reports/operations-reports/referral-report"
+                      className="submenu-link text-white text-sm"
+                    >
+                      Referral Report
+                    </Link>
                     </div>
                   )}
               </div>
@@ -5193,6 +5193,18 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
               <span className="nav-text">All Members</span>
             </Link>
             <Link
+              to="/reports/appointments/all-trial-appointments"
+              className={`nav-link mb-2 ${
+                location.pathname ===
+                "/reports/appointments/all-trial-appointments"
+                  ? "active"
+                  : ""
+              }`}
+            >
+              <SlCalender className="menu--icon" />
+              <span className="nav-text">Trial Appointments</span>
+            </Link>
+            <Link
               to="/reports/all-bookings"
               className={`nav-link mb-2 ${
                 location.pathname === "/reports/all-bookings" ? "active" : ""
@@ -6429,7 +6441,7 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
               <MdFollowTheSigns className="menu--icon" />
               <span className="nav-text">My Followups</span>
             </Link>
-            <Link
+            {/* <Link
               to="/all-members"
               className={`nav-link mb-2 ${
                 location.pathname === "/all-members" ? "active" : ""
@@ -6437,7 +6449,7 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
             >
               <FiUsers className="menu--icon" />
               <span className="nav-text">All Members</span>
-            </Link>
+            </Link> */}
             <Link
               to="/workout-plans"
               className={`nav-link mb-2 ${
@@ -6865,13 +6877,13 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                   <FaCircle className="menu--icon !text-[10px]" />
                   <span className="nav-text">Club</span>
                 </Link>
-                <Link
+                {/* <Link
                   to="/studio"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
                 >
                   <FaCircle className="menu--icon !text-[10px]" />
                   <span className="nav-text">Studio</span>
-                </Link>
+                </Link> */}
                 <Link
                   to="/club-gallery"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
@@ -6879,14 +6891,14 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                   <FaCircle className="menu--icon !text-[10px]" />
                   <span className="nav-text">Club Gallery</span>
                 </Link>
-                <Link
+                {/* <Link
                   to="/services"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
                 >
                   <FaCircle className="menu--icon !text-[10px]" />
                   <span className="nav-text">Club Services</span>
-                </Link>
-                {hasRecoveryServices && (
+                </Link> */}
+                {/* {hasRecoveryServices && (
                   <Link
                     to="/recovery-services"
                     className="text-white flex items-center gap-[5px] mb-2 text-sm"
@@ -6894,8 +6906,8 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                     <FaCircle className="menu--icon !text-[10px]" />
                     <span className="nav-text">Recovery Services</span>
                   </Link>
-                )}
-                {hasProductServices && (
+                )} */}
+                {/* {hasProductServices && (
                   <Link
                     to="/product-category"
                     className="text-white flex items-center gap-[5px] mb-2 text-sm"
@@ -6903,15 +6915,15 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                     <FaCircle className="menu--icon !text-[10px]" />
                     <span className="nav-text">Nourish Category</span>
                   </Link>
-                )}
-                <Link
+                )} */}
+                {/* <Link
                   to="/subscription-plan"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
                 >
                   <FaCircle className="menu--icon !text-[10px]" />
                   <span className="nav-text">Membership Plans</span>
-                </Link>
-                {hasProductServices && (
+                </Link> */}
+                {/* {hasProductServices && (
                   <Link
                     to="/products"
                     className="text-white flex items-center gap-[5px] mb-2 text-sm"
@@ -6919,14 +6931,14 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                     <FaCircle className="menu--icon !text-[10px]" />
                     <span className="nav-text">Nourish Products</span>
                   </Link>
-                )}
-                <Link
+                )} */}
+                {/* <Link
                   to="/packages"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
                 >
                   <FaCircle className="menu--icon !text-[10px]" />
                   <span className="nav-text">Packages</span>
-                </Link>
+                </Link> */}
                 <Link
                   to="/option-list"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"

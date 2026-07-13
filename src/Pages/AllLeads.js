@@ -821,6 +821,7 @@ const AllLeads = (props) => {
     "ADMIN",
     "PROGRAM_SPECIALIST",
     "FOH",
+    "FINANCE_MANAGER_CORPORATE",
   ],
 
   canCallLog: [
@@ -832,6 +833,7 @@ const AllLeads = (props) => {
     "ASS_CLUB_MANAGER",
     "PROGRAM_SPECIALIST",
     "ADMIN",
+    "FINANCE_MANAGER_CORPORATE",
   ],
 
   canConvert: [
@@ -1234,6 +1236,7 @@ const hasPermission = (permission) =>
                                     userRole === "ASS_CLUB_MANAGER" ||
                                     userRole === "ADMIN" ||
                                     userRole === "PROGRAM_SPECIALIST" ||
+                                    userRole === "FINANCE_MANAGER_CORPORATE" ||
                                     userRole === "FOH") && (
                                     <Tooltip
                                       id={`tooltip-edit-${row.id}`}
@@ -1259,6 +1262,7 @@ const hasPermission = (permission) =>
                                     userRole === "CLUB_MANAGER" ||
                                     userRole === "ASS_CLUB_MANAGER" ||
                                     userRole === "PROGRAM_SPECIALIST" ||
+                                    userRole === "FINANCE_MANAGER_CORPORATE" ||
                                     userRole === "ADMIN") && (
                                     <Tooltip
                                       id={`tooltip-call-${row.id}`}

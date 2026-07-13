@@ -2386,7 +2386,7 @@ const ConvertMemberForm = ({
                             </span>
                             {userRole === "ADMIN" ||
                             userRole === "CLUB_MANAGER" ||
-                            userRole === "FOH" ||
+                            // userRole === "FOH" ||
                             userRole === "MARKETING_MANAGER" ? (
                               <CreatableSelect
                                 name="company_name"

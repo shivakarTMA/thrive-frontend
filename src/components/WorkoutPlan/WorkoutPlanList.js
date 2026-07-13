@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import Tooltip from "../common/Tooltip";
 import { LiaEdit } from "react-icons/lia";
-import { FiPlus } from "react-icons/fi";
+import { FiEye, FiPlus } from "react-icons/fi";
 import { toast } from "react-toastify";
 import { authAxios } from "../../config/config";
 import { formatAutoDate, formatText } from "../../Helper/helper";
@@ -138,6 +138,9 @@ const WorkoutPlanList = () => {
                     userRole === "ADMIN") && (
                     <th className="px-2 py-4">Action</th>
                   )}
+                  {userRole === "MARKETING_MANAGER" && (
+                    <th className="px-2 py-4">Action</th>
+                  )}
                 </tr>
               </thead>
               <tbody>
@@ -208,6 +211,26 @@ const WorkoutPlanList = () => {
                                 </div>
                               </Tooltip>
                             )}
+                          </div>
+                        </td>
+                      )}
+                      {userRole === "MARKETING_MANAGER" && (
+                        <td className="px-2 py-4">
+                          <div className="flex gap-2 items-center">
+                            <Tooltip
+                              content="View Workout"
+                              id={`view-workout-${row.id}`}
+                              place="left"
+                            >
+                              <div className="p-1 cursor-pointer">
+                                <Link
+                                  to={`/create-workout-plan/${row.id}`}
+                                  className="p-0"
+                                >
+                                  <FiEye className="text-[25px] text-black" />
+                                </Link>
+                              </div>
+                            </Tooltip>
                           </div>
                         </td>
                       )}

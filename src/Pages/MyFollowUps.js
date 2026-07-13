@@ -418,6 +418,7 @@ const MyFollowUps = () => {
                   userRole === "CLUB_MANAGER" ||
                   userRole === "ASS_CLUB_MANAGER" ||
                   userRole === "PROGRAM_SPECIALIST" ||
+                  userRole === "FINANCE_MANAGER_CORPORATE" ||
                   userRole === "ADMIN") && (
                   <th className="px-2 py-4">Action</th>
                 )}
@@ -480,6 +481,7 @@ const MyFollowUps = () => {
                       userRole === "CLUB_MANAGER" ||
                       userRole === "ASS_CLUB_MANAGER" ||
                       userRole === "PROGRAM_SPECIALIST" ||
+                      userRole === "FINANCE_MANAGER_CORPORATE" ||
                       userRole === "ADMIN") && (
                       <td className="px-2 py-4">
                         {row.status !== "COMPLETE" ? (

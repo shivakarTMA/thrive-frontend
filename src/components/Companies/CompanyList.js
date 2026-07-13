@@ -158,9 +158,9 @@ const CompanyList = () => {
           <h1 className="text-3xl font-semibold">All Company</h1>
         </div>
         {(userRole === "ADMIN" ||
-          userRole === "CLUB_MANAGER" ||
+          // userRole === "CLUB_MANAGER" ||
           userRole === "ASS_CLUB_MANAGER" ||
-          userRole === "FOH" ||
+          // userRole === "FOH" ||
           userRole === "FINANCE_MANAGER_CLUB" ||
           userRole === "FINANCE_MANAGER_CORPORATE" ||
           userRole === "MARKETING_MANAGER") && (
@@ -291,7 +291,7 @@ const CompanyList = () => {
                           <Tooltip
                             id={`tooltip-edit-${company.id || index}`}
                             content="Edit Company"
-                            place="top"
+                            place="left"
                           >
                             <div
                               className="p-1 cursor-pointer"
