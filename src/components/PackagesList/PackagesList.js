@@ -182,10 +182,19 @@ const PackagesList = () => {
         description: Yup.string().required("Description is required"),
       };
 
-      if (service_type !== "RECOVERY") {
+      // if (service_type !== "RECOVERY") {
+      //   schema = {
+      //     ...schema,
+
+      //   };
+      // }
+
+      if (
+        service_type === "RECREATION" ||
+        service_type === "PERSONAL_TRAINER"
+      ) {
         schema = {
           ...schema,
-
           booking_type: Yup.string()
             .oneOf(["PAID", "FREE"])
             .required("Booking Type is required"),
@@ -216,7 +225,7 @@ const PackagesList = () => {
                       const { amount } = this.parent;
                       if (!amount || !value) return true;
                       return value !== amount; // ❌ prevent equal
-                    }
+                    },
                   )
                   .test(
                     "discount-not-greater-than-amount",
@@ -231,25 +240,6 @@ const PackagesList = () => {
                   ),
               otherwise: (schema) => schema.nullable(),
             }),
-
-          // gst: Yup.number()
-          //   .typeError("GST must be a number")
-          //   .min(2, "GST cannot be less than 2%")
-          //   .max(40, "GST cannot be greater than 40%")
-          //   .when("booking_type", {
-          //     is: "PAID",
-          //     then: (schema) => schema.required("GST is required"),
-          //     otherwise: (schema) => schema.nullable().notRequired(),
-          //   }),
-        };
-      }
-
-      if (
-        service_type === "RECREATION" ||
-        service_type === "PERSONAL_TRAINER"
-      ) {
-        schema = {
-          ...schema,
           session_duration: Yup.number()
             .required("Session duration is required")
             .min(1, "duration must be greater than 0"),
@@ -266,10 +256,52 @@ const PackagesList = () => {
       if (service_type === "PERSONAL_TRAINER") {
         schema = {
           ...schema,
+          booking_type: Yup.string()
+            .oneOf(["PAID", "FREE"])
+            .required("Booking Type is required"),
+
+          amount: Yup.number()
+            .typeError("Amount must be a number")
+            .when("booking_type", {
+              is: "PAID",
+              then: (schema) =>
+                schema
+                  .required("Amount is required shiv")
+                  .min(1, "Amount must be greater than 0"),
+              otherwise: (schema) => schema.nullable(),
+            }),
+
+          discount: Yup.number()
+            .typeError("Discount must be a number")
+            .when(["booking_type", "amount"], {
+              is: (booking_type) => booking_type === "PAID",
+              then: (schema) =>
+                schema
+                  .required("Discount is required shiv")
+                  .min(0, "Discount cannot be negative")
+                  .test(
+                    "not-equal-amount",
+                    "Discount cannot be equal to Amount",
+                    function (value) {
+                      const { amount } = this.parent;
+                      if (!amount || !value) return true;
+                      return value !== amount; // ❌ prevent equal
+                    },
+                  )
+                  .test(
+                    "discount-not-greater-than-amount",
+                    "Discount cannot be greater than Amount",
+                    function (value) {
+                      const { amount } = this.parent;
+                      if (!amount || amount === 0) {
+                        return value === 0 || !value;
+                      }
+                      return value <= amount;
+                    },
+                  ),
+              otherwise: (schema) => schema.nullable(),
+            }),
           buddy_pt: Yup.string().required("PT Type is required"),
-          // earn_coin: Yup.number()
-          //   .typeError("Earn Coins must be a number")
-          //   .required("Earn Coins is required"),
         };
       }
 
@@ -323,7 +355,7 @@ const PackagesList = () => {
                     return schema.test(
                       "no-discount-when-zero",
                       "Discount must be 0 or empty when amount is 0",
-                      (value) => !value || value === 0
+                      (value) => !value || value === 0,
                     );
                   }
 
@@ -334,7 +366,7 @@ const PackagesList = () => {
                     .test(
                       "not-equal-amount",
                       "Discount cannot be equal to amount",
-                      (value) => value !== amount
+                      (value) => value !== amount,
                     );
                 }),
               // gst: Yup.number()
@@ -387,7 +419,7 @@ const PackagesList = () => {
     is_featured: "",
     equipment: "",
     status: "",
-    show_on_app:"",
+    show_on_app: "",
     variation: [
       {
         name: "",
@@ -478,7 +510,7 @@ const PackagesList = () => {
         setShowModal(false);
       } catch (err) {
         console.log(err.response?.data?.message);
-        toast.error(err.response?.data?.errors || err.response?.data?.message)
+        toast.error(err.response?.data?.errors || err.response?.data?.message);
       }
     },
   });
@@ -685,18 +717,18 @@ const PackagesList = () => {
           userRole === "CLUB_MANAGER" ||
           userRole === "FINANCE_MANAGER_CORPORATE" ||
           userRole === "FINANCE_MANAGER") && (
-        <div className="flex items-end gap-2">
-          <button
-            type="button"
-            className="px-4 py-2 bg-black text-white rounded flex items-center gap-2"
-            onClick={() => {
-              setEditingOption(null);
-              setShowModal(true);
-            }}
-          >
-            <FiPlus /> Create Package
-          </button>
-        </div>
+          <div className="flex items-end gap-2">
+            <button
+              type="button"
+              className="px-4 py-2 bg-black text-white rounded flex items-center gap-2"
+              onClick={() => {
+                setEditingOption(null);
+                setShowModal(true);
+              }}
+            >
+              <FiPlus /> Create Package
+            </button>
+          </div>
         )}
       </div>
 
@@ -758,7 +790,7 @@ const PackagesList = () => {
                   userRole === "CLUB_MANAGER" ||
                   userRole === "FINANCE_MANAGER_CORPORATE" ||
                   userRole === "FINANCE_MANAGER") && (
-                <th className="px-2 py-4">Action</th>
+                  <th className="px-2 py-4">Action</th>
                 )}
               </tr>
             </thead>
@@ -793,7 +825,9 @@ const PackagesList = () => {
                       {formatText(item?.service_name)}
                     </td>
                     <td className="px-2 py-4">
-                      {item?.service_type === "RECOVERY" ? "--" : `₹${formatIndianNumber(item?.amount)}`}
+                      {item?.service_type === "RECOVERY"
+                        ? "--"
+                        : `₹${formatIndianNumber(item?.amount)}`}
                     </td>
                     <td className="px-2 py-4">
                       {item?.service_type === "RECOVERY"
@@ -830,25 +864,25 @@ const PackagesList = () => {
                       userRole === "CLUB_MANAGER" ||
                       userRole === "FINANCE_MANAGER_CORPORATE" ||
                       userRole === "FINANCE_MANAGER") && (
-                    <td className="px-2 py-4">
-                      <div className="w-fit">
-                        <Tooltip
-                          id={`tooltip-edit-${item.id}`}
-                          content="Edit Package"
-                          place="left"
-                        >
-                          <div
-                            className="p-1 cursor-pointer"
-                            onClick={() => {
-                              setEditingOption(item.id);
-                              setShowModal(true);
-                            }}
+                      <td className="px-2 py-4">
+                        <div className="w-fit">
+                          <Tooltip
+                            id={`tooltip-edit-${item.id}`}
+                            content="Edit Package"
+                            place="left"
                           >
-                            <LiaEdit className="text-[25px] text-black" />
-                          </div>
-                        </Tooltip>
-                      </div>
-                    </td>
+                            <div
+                              className="p-1 cursor-pointer"
+                              onClick={() => {
+                                setEditingOption(item.id);
+                                setShowModal(true);
+                              }}
+                            >
+                              <LiaEdit className="text-[25px] text-black" />
+                            </div>
+                          </Tooltip>
+                        </div>
+                      </td>
                     )}
                   </tr>
                 ))

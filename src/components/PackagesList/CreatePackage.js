@@ -179,7 +179,7 @@ const CreatePackage = ({
                 session_validity: "",
                 amount: "",
                 discount: "",
-                gst: "",
+                gst: 5,
                 earn_coin: "",
                 position: "",
               },
@@ -234,7 +234,8 @@ const CreatePackage = ({
             amount: data?.amount !== undefined ? data.amount : "",
             discount: data?.discount !== undefined ? data.discount : "",
             booking_type: data?.booking_type || "",
-            gst: data?.gst !== undefined ? data.gst : "",
+            // gst: data?.gst !== undefined ? data.gst : "",
+            gst:5,
             position: data?.position !== undefined ? data.position : "",
             hsn_sac_code: data?.hsn_sac_code || "",
             is_featured:
@@ -348,7 +349,7 @@ const CreatePackage = ({
           session_validity: "",
           amount: "",
           discount: "",
-          gst: "",
+          gst: 5,
           earn_coin: "",
           position: "",
         },
@@ -414,6 +415,7 @@ const CreatePackage = ({
   useEffect(() => {
     if (clubDuration) {
       formik.setFieldValue("session_duration", clubDuration);
+      
 
       // also update variations
       if (formik.values.variation?.length) {
@@ -771,28 +773,6 @@ const CreatePackage = ({
                             <span className="text-red-500">*</span>
                           </label>
                           <div className="relative">
-                            {/* <input
-                              type="number"
-                              name="session_duration"
-                              value={
-                                formik.values.session_duration !== null
-                                  ? formik.values.session_duration
-                                  : ""
-                              }
-                              // onChange={formik.handleChange}
-                              onKeyDown={blockInvalidNumberKeys} // ⛔ blocks typing -, e, etc.
-                              onChange={(e) => {
-                                const cleanValue = sanitizePositiveInteger(
-                                  e.target.value,
-                                );
-                                formik.setFieldValue(
-                                  "session_duration",
-                                  cleanValue,
-                                );
-                              }}
-                              onBlur={formik.handleBlur}
-                              className="custom--input w-full number--appearance-none"
-                            /> */}
                             <input
                               type="number"
                               name="session_duration"
@@ -1000,11 +980,12 @@ const CreatePackage = ({
                             <input
                               type="number"
                               name="gst"
-                              value={
-                                formik.values.gst !== null
-                                  ? formik.values.gst
-                                  : ""
-                              }
+                              // value={
+                              //   formik.values.gst !== null
+                              //     ? formik.values.gst
+                              //     : ""
+                              // }
+                              value={5}
                               // onChange={formik.handleChange}
                               onKeyDown={blockInvalidNumberKeys} // ⛔ blocks typing -, e, etc.
                               onChange={(e) => {
@@ -1383,27 +1364,7 @@ const CreatePackage = ({
                                 Session Duration (Mins){" "}
                                 <span className="text-red-500">*</span>
                               </label>
-                              {/* <input
-                                type="number"
-                                name={`variation[${index}].session_duration`}
-                                value={
-                                  formik.values.variation[index]
-                                    ?.session_duration ?? ""
-                                }
-                                // onChange={formik.handleChange}
-                                onKeyDown={blockInvalidNumberKeys}
-                                onChange={(e) => {
-                                  const cleanValue = sanitizePositiveInteger(
-                                    e.target.value,
-                                  );
-                                  formik.setFieldValue(
-                                    `variation[${index}].session_duration`,
-                                    cleanValue,
-                                  );
-                                }}
-                                onBlur={formik.handleBlur}
-                                className="custom--input w-full number--appearance-none"
-                              /> */}
+                              
                               <input
                                 type="number"
                                 name={`variation[${index}].session_duration`}
@@ -1537,9 +1498,10 @@ const CreatePackage = ({
                               <input
                                 type="number"
                                 name={`variation[${index}].gst`}
-                                value={
-                                  formik.values.variation[index]?.gst ?? ""
-                                }
+                                // value={
+                                //   formik.values.variation[index]?.gst ?? ""
+                                // }
+                                value={5}
                                 // onChange={formik.handleChange}
                                 onKeyDown={blockInvalidNumberKeys}
                                 onChange={(e) => {

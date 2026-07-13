@@ -21,6 +21,7 @@ import {
 import { toast } from "react-toastify";
 import { authAxios } from "../config/config";
 import { GoClock } from "react-icons/go";
+import { format } from "date-fns";
 
 // Service types that require date/time fields
 const SERVICES_WITH_DATETIME = ["PERSONAL TRAINING", "PILATES", "RECOVERY"];
@@ -207,12 +208,15 @@ const CreateNewInvoice = ({
     if (values.coins > 0) payload.coins = values.coins;
 
     // ✅ ADD start_date for ALL datetime-based services
-    if (SERVICES_WITH_DATETIME.includes(values.service_name?.toUpperCase())) {
-      const date = new Date(values.start_date);
-      const [h, m] = values.start_time.split(":");
-      date.setHours(+h, +m, 0, 0);
+    // if (SERVICES_WITH_DATETIME.includes(values.service_name?.toUpperCase())) {
+    //   const date = new Date(values.start_date);
+    //   const [h, m] = values.start_time.split(":");
+    //   date.setHours(+h, +m, 0, 0);
 
-      payload.start_date = formatDateTimeWithMicroseconds(date);
+    //   payload.start_date = formatDateTimeWithMicroseconds(date);
+    // }
+    if (SERVICES_WITH_DATETIME.includes(values.service_name?.toUpperCase())) {
+      payload.start_date = format(values.start_date, "yyyy-MM-dd");
     }
 
     // ✅ Recovery-only fields
@@ -243,7 +247,7 @@ const CreateNewInvoice = ({
     product_type: "",
     service_name: "",
     start_date: null,
-    start_time: "",
+    // start_time: "",
     productDetails: {
       id: null,
       title: "",
@@ -282,14 +286,14 @@ const CreateNewInvoice = ({
       otherwise: (schema) => schema.nullable(),
     }),
 
-    start_time: Yup.string().when("service_name", {
-      is: (name) =>
-        ["PILATES", "RECOVERY", "PERSONAL TRAINING"].includes(
-          name?.toUpperCase(),
-        ),
-      then: (schema) => schema.required("Start time is required"),
-      otherwise: (schema) => schema.notRequired(),
-    }),
+    // start_time: Yup.string().when("service_name", {
+    //   is: (name) =>
+    //     ["PILATES", "RECOVERY", "PERSONAL TRAINING"].includes(
+    //       name?.toUpperCase(),
+    //     ),
+    //   then: (schema) => schema.required("Start time is required"),
+    //   otherwise: (schema) => schema.notRequired(),
+    // }),
 
     variation: Yup.mixed().when("service_name", {
       is: (name) => name?.toUpperCase() === "RECOVERY",
@@ -379,7 +383,7 @@ const CreateNewInvoice = ({
             product_type: true,
             productDetails: { title: true },
             start_date: true,
-            start_time: true,
+            // start_time: true,
             variation: true,
           },
           true,
@@ -1073,7 +1077,7 @@ const CreateNewInvoice = ({
                             );
                             formik.setFieldValue("variation", null);
                             formik.setFieldValue("start_date", null);
-                            formik.setFieldValue("start_time", "");
+                            // formik.setFieldValue("start_time", "");
                             resetVoucher();
                           }}
                           styles={selectIcon}
@@ -1194,7 +1198,7 @@ const CreateNewInvoice = ({
                               selected={formik.values.start_date}
                               onChange={(date) => {
                                 formik.setFieldValue("start_date", date);
-                                formik.setFieldValue("start_time", "");
+                                // formik.setFieldValue("start_time", "");
                               }}
                               onBlur={() =>
                                 formik.setFieldTouched("start_date", true, true)
@@ -1227,7 +1231,7 @@ const CreateNewInvoice = ({
                         </div>
 
                         {/* Start Time */}
-                        <div>
+                        {/* <div>
                           <label className="mb-2 block">
                             Start Time<span className="text-red-500">*</span>
                           </label>
@@ -1269,7 +1273,7 @@ const CreateNewInvoice = ({
                                 {formik.errors.start_time}
                               </div>
                             )}
-                        </div>
+                        </div> */}
                       </>
                     )}
 
