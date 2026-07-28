@@ -1023,17 +1023,21 @@ const hasMemberPermission = (permission) =>
                         <span
                           className={`
                             flex items-center justify-between gap-1 rounded-full min-h-[30px] px-3 text-sm w-fit
-                          ${
-                            member?.is_subscribed !== true
-                              ? "bg-[#EEEEEE]"
-                              : "bg-[#E8FFE6] text-[#138808]"
-                          }
+                            ${
+                              member?.freeze_status === "FREEZED"
+                                ? "bg-[#ffe9c6] text-[#ffac28]"
+                                : member?.is_subscribed === true
+                                ? "bg-[#E8FFE6] text-[#138808]"
+                                : "bg-[#EEEEEE] text-[#666666]"
+                            }
                           `}
                         >
-                          <FaCircle className="text-[10px]" />{" "}
-                          {member?.is_subscribed !== true
-                            ? "Inactive"
-                            : "Active"}
+                          <FaCircle className="text-[10px]" />
+                          {member?.freeze_status === "FREEZED"
+                            ? formatText(member?.freeze_status)
+                            : member?.is_subscribed === true
+                            ? "Active"
+                            : "Inactive"}
                         </span>
                       </td>
                       <td className="px-2 py-4">
@@ -1175,7 +1179,9 @@ const hasMemberPermission = (permission) =>
                                   <Tooltip
                                     id={`send-payment-${member?.id}`}
                                     content={
-                                      member?.is_kyc === "YES"
+                                      member?.freeze_status === "FREEZED"
+                                        ? "Your membership is currently frozen."
+                                        : member?.is_kyc === "YES"
                                         ? "Buy"
                                         : "KYC required to buy services"
                                     }
@@ -1183,7 +1189,8 @@ const hasMemberPermission = (permission) =>
                                   >
                                     <div
                                       className={`min-w-[50px] ${
-                                        member?.is_kyc === "YES"
+                                        member?.is_kyc === "YES" &&
+                                        member?.freeze_status !== "FREEZED"
                                           ? ""
                                           : "pointer-events-none opacity-50"
                                       }`}
@@ -1206,20 +1213,15 @@ const hasMemberPermission = (permission) =>
                                           if (selected.value === "services") {
                                             setSelectedLeadMember(member.id);
                                             setInvoiceModal(true);
-                                            setSelectedLeadClub(
-                                              member?.club_id,
-                                            );
+                                            setSelectedLeadClub(member?.club_id);
                                           }
 
                                           if (selected.value === "products") {
                                             setSelectedLeadMember(member.id);
                                             setProductInvoiceModal(true);
-                                            setSelectedLeadClub(
-                                              member?.club_id,
-                                            );
+                                            setSelectedLeadClub(member?.club_id);
                                           }
                                         }}
-                                        // menuIsOpen={true}
                                         styles={{
                                           control: (base) => ({
                                             ...base,
@@ -1264,8 +1266,8 @@ const hasMemberPermission = (permission) =>
                                             top: "100%",
                                             backgroundColor: "white",
                                             color: "black",
-                                            // marginTop: "-5px",
                                           }),
+
                                           menuPortal: (base) => ({
                                             ...base,
                                             zIndex: 9999,

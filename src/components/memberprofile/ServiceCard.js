@@ -406,14 +406,26 @@ const ServiceCard = ({ details }) => {
             <div className="flex gap-2 items-center">
               {userRole === "ADMIN" && (
                 <>
-                  {membershipData?.booking_status === "ACTIVE" && (
-                    <button
-                      onClick={() => setExtendMembershipModal(true)}
-                      className="px-3 py-2 rounded-full flex items-center gap-2 border text-sm bg-black border-black text-white"
+                  {(membershipData?.booking_status === "ACTIVE" ||
+                    freezeStatus !== "FREEZED") && (
+                    <Tooltip
+                      id={`tooltip-membership-extend`}
+                      content={
+                        freezeStatus === "FREEZED"
+                          ? "Your membership is currently frozen."
+                          : "Extend Membership"
+                      }
+                      place="top"
                     >
-                      <TbCalendarPlus className="text-xl" />
-                      <span>Extend Membership</span>
-                    </button>
+                      <button
+                        onClick={() => setExtendMembershipModal(true)}
+                        className={`px-3 py-2 rounded-full flex items-center gap-2 border text-sm  ${freezeStatus === "FREEZED" ? "bg-gray-300 border-gray-300 cursor-not-allowed text-gray-500" : "bg-black border-black text-white"}`}
+                        disabled={freezeStatus === "FREEZED"}
+                      >
+                        <TbCalendarPlus className="text-xl" />
+                        <span>Extend Membership</span>
+                      </button>
+                    </Tooltip>
                   )}
                 </>
               )}
@@ -424,12 +436,16 @@ const ServiceCard = ({ details }) => {
                   {hasUpcomingMembership ? (
                     <Tooltip
                       id={`tooltip-membership-buy`}
-                      content="You already have an upcoming membership."
+                      content={
+                        freezeStatus === "FREEZED"
+                          ? "Your membership is currently frozen."
+                          : "You already have an upcoming membership."
+                      }
                       place="top"
                     >
                       <button
                         className={`px-3 py-2 rounded-full flex items-center gap-2 border text-sm bg-gray-300 border-gray-300 cursor-not-allowed text-gray-500`}
-                        disabled={hasUpcomingMembership}
+                        disabled={hasUpcomingMembership || freezeStatus === "FREEZED"}
                         onClick={() => {
                           if (hasUpcomingMembership) return;
                           setSendPaymentModal(true);
@@ -460,15 +476,26 @@ const ServiceCard = ({ details }) => {
                           </button>
                         </Tooltip>
                       ) : (
+                        <Tooltip
+                          id={`tooltip-membership-1`}
+                          content={
+                            freezeStatus === "FREEZED"
+                              ? "Your membership is currently frozen."
+                              : "Buy Membership"
+                          }
+                          place="top"
+                        >
                         <button
                           className={`px-3 py-2 rounded-full flex items-center gap-2 border text-sm bg-black border-black text-white`}
                           onClick={() => {
                             setSendPaymentModal(true);
                           }}
+                          disabled={freezeStatus === "FREEZED"}
                         >
                           <FiPlusCircle className="text-lg" />
                           <span>Buy Membership</span>
                         </button>
+                        </Tooltip>
                       )}
                     </>
                   )}
@@ -538,7 +565,7 @@ const ServiceCard = ({ details }) => {
                       `}
                     >
                       {freezeStatus === "FREEZED"
-                        ? freezeStatus
+                        ? formatText(freezeStatus)
                         : membershipData?.booking_status}
                     </span>
                   </div>
@@ -579,12 +606,23 @@ const ServiceCard = ({ details }) => {
                         </div>
                       )}
                       {membershipData?.booking_status === "EXPIRED" && (
-                        <button
-                          onClick={() => setReviveMembership(true)}
-                          className="px-3 py-2 bg-black text-white rounded flex items-center gap-2 text-sm"
+                        <Tooltip
+                          id={`tooltip-membership-revive`}
+                          content={
+                            freezeStatus === "FREEZED"
+                              ? "Your membership is currently frozen."
+                              : "Revive Membership"
+                          }
+                          place="top"
                         >
-                          Revive Membership
-                        </button>
+                          <button
+                            onClick={() => setReviveMembership(true)}
+                            className={`px-3 py-2 rounded-full flex items-center gap-2 border text-sm  ${freezeStatus === "FREEZED" ? "bg-gray-300 border-gray-300 cursor-not-allowed text-gray-500" : "bg-black border-black text-white"}`}
+                            disabled={freezeStatus === "FREEZED"}
+                          >
+                            Revive Membership
+                          </button>
+                        </Tooltip>
                       )}
                     </>
                   )}
@@ -713,6 +751,7 @@ const ServiceCard = ({ details }) => {
 
                             {(userRole === "CLUB_MANAGER" ||
                               userRole === "ADMIN" ||
+                              userRole === "FOH" ||
                               userRole === "FITNESS_MANAGER") && (
                               <div className="w-fit min-w-[180px]">
                                 <Select
@@ -748,63 +787,99 @@ const ServiceCard = ({ details }) => {
                                   isDisabled={
                                     service?.package_status !== "ACTIVE"
                                       ? true
-                                      : false
+                                      : false || freezeStatus === "FREEZED"
                                   }
                                 />
                               </div>
                             )}
 
                             <div className="flex gap-2">
-
-                            {(userRole === "CLUB_MANAGER" ||
-                              userRole === "ADMIN" ||
-                              userRole === "FOH") && (
-                              <>
-                                {service?.package_status !== "ACTIVE" && (
-                                  <div>
-                                    <button
-                                      className="px-3 py-2 bg-black text-white rounded flex items-center gap-2 border border-black text-sm"
-                                      onClick={() => {
-                                        setRenewService(service);
-                                        setInvoiceModal(true);
-                                      }}
-                                    >
-                                      Renew
-                                    </button>
-                                  </div>
-                                )}
-                              </>
-                            )}
-                            {userRole === "ADMIN" && (
-                              <>
-                                {service?.package_status !== "ACTIVE" && (
-                                  <div>
-                                    <button
-                                      className="px-3 py-2 bg-black text-white rounded flex items-center gap-2 border border-black text-sm"
-                                      onClick={() => handleReviveService(service?.id)}
-                                    >
-                                      Revive Service
-                                    </button>
-                                  </div>
-                                )}
-                              </>
-                            )}
-
+                              {(userRole === "CLUB_MANAGER" ||
+                                userRole === "ADMIN" ||
+                                userRole === "FOH") && (
+                                <>
+                                  {service?.package_status !== "ACTIVE" && (
+                                    <div>
+                                      <Tooltip
+                                        id={`tooltip-renew-service`}
+                                        content={
+                                          freezeStatus === "FREEZED"
+                                            ? "Your membership is currently frozen."
+                                            : "Renew Service"
+                                        }
+                                        place="top"
+                                      >
+                                      <button
+                                        className={`px-3 py-2  rounded flex items-center gap-2 border border-black text-sm ${freezeStatus === "FREEZED" ? 'bg-gray-300 border-gray-300 cursor-not-allowed text-gray-500' : 'bg-black text-white'}`}
+                                        onClick={() => {
+                                          setRenewService(service);
+                                          setInvoiceModal(true);
+                                        }}
+                                        disabled={freezeStatus === "FREEZED"}
+                                      >
+                                        Renew
+                                      </button>
+                                      </Tooltip>
+                                    </div>
+                                  )}
+                                </>
+                              )}
+                              {userRole === "ADMIN" && (
+                                <>
+                                  {service?.package_status !== "ACTIVE" && (
+                                    <div>
+                                      <Tooltip
+                                        id={`tooltip-revive-service`}
+                                        content={
+                                          freezeStatus === "FREEZED"
+                                            ? "Your membership is currently frozen."
+                                            : "Revive Service"
+                                        }
+                                        place="top"
+                                      >
+                                      <button
+                                        className={`px-3 py-2  rounded flex items-center gap-2 border border-black text-sm ${freezeStatus === "FREEZED" ? 'bg-gray-300 border-gray-300 cursor-not-allowed text-gray-500' : 'bg-black text-white'}`}
+                                        onClick={() =>
+                                          handleReviveService(service?.id)
+                                        }
+                                        disabled={freezeStatus === "FREEZED"}
+                                      >
+                                        Revive Service
+                                      </button>
+                                      </Tooltip>
+                                    </div>
+                                  )}
+                                </>
+                              )}
                             </div>
 
                             {userRole === "ADMIN" && (
                               <>
                                 {service?.package_status === "ACTIVE" &&
-                                  membershipData?.booking_status === "ACTIVE" && (
-                                  <div>
-                                    <button
-                                      className="px-3 py-2 bg-black text-white rounded flex items-center gap-2 border border-black text-sm"
-                                      onClick={() => handleExtendService(service?.id)}
-                                    >
-                                      Extend Service
-                                    </button>
-                                  </div>
-                                )}
+                                  membershipData?.booking_status ===
+                                    "ACTIVE" && (
+                                    <div className="w-fit">
+                                      <Tooltip
+                                        id={`tooltip-extend-service`}
+                                        content={
+                                          freezeStatus === "FREEZED"
+                                            ? "Your membership is currently frozen."
+                                            : "Extend Service"
+                                        }
+                                        place="top"
+                                      >
+                                      <button
+                                        className={`px-3 py-2  rounded flex items-center gap-2 border border-black text-sm ${freezeStatus === "FREEZED" ? 'bg-gray-300 border-gray-300 cursor-not-allowed text-gray-500' : 'bg-black text-white'}`}
+                                        onClick={() =>
+                                          handleExtendService(service?.id)
+                                        }
+                                        disabled={freezeStatus === "FREEZED"}
+                                      >
+                                        Extend Service
+                                      </button>
+                                      </Tooltip>
+                                    </div>
+                                  )}
                               </>
                             )}
                           </div>
@@ -945,30 +1020,37 @@ const ServiceCard = ({ details }) => {
                             </div>
 
                             <div className="flex gap-2">
-                            {(userRole === "CLUB_MANAGER" ||
-                              userRole === "ADMIN" ||
-                              userRole === "FOH") && (
-                              <>
-                                {membership?.booking_status !== "UPCOMING" && (
-                                  <div>
-                                    <button
-                                      className="px-3 py-2 bg-black text-white rounded flex items-center gap-2 border border-black text-sm"
-                                      onClick={() => {
-                                        // setRenewMembership(membership);
-                                        // setModalKey((prev) => prev + 1); // ✅ always unique key
-                                        // setSendPaymentModal(true);
-                                        setSendPaymentModal(true);
-                                      }}
-                                    >
-                                      Renew
-                                    </button>
-                                  </div>
-                                )}
-                              </>
-                            )}
-
+                              {(userRole === "CLUB_MANAGER" ||
+                                userRole === "ADMIN" ||
+                                userRole === "FOH") && (
+                                <>
+                                  {membership?.booking_status !==
+                                    "UPCOMING" && (
+                                    <div>
+                                      <Tooltip
+                                        id={`tooltip-renew-membership`}
+                                        content={
+                                          freezeStatus === "FREEZED"
+                                            ? "Your membership is currently frozen."
+                                            : "Renew Membership"
+                                        }
+                                        place="top"
+                                      >
+                                      <button
+                                        className={`px-3 py-2  rounded flex items-center gap-2 border border-black text-sm ${freezeStatus === "FREEZED" ? 'bg-gray-300 border-gray-300 cursor-not-allowed text-gray-500' : 'bg-black text-white'}`}
+                                        onClick={() => {
+                                          setSendPaymentModal(true);
+                                        }}
+                                        disabled={freezeStatus === "FREEZED"}
+                                      >
+                                        Renew
+                                      </button>
+                                      </Tooltip>
+                                    </div>
+                                  )}
+                                </>
+                              )}
                             </div>
-
                           </div>
                           <div className="rounded-lg bg--color p-[2px] w-full">
                             <div className="grid grid-cols-3 h-full rounded-lg bg-white overflow-hidden">
