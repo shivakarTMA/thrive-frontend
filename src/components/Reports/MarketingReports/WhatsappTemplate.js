@@ -31,12 +31,24 @@ const dateFilterOptions = [
   { value: "custom", label: "Custom Date" },
 ];
 
+const whatsappCategoryOption = [
+  { label: "Marketing", value: "MARKETING" },
+  { label: "Utility", value: "UTILITY" },
+];
+
+const statusOption = [
+  { label: "Scheduled", value: "SCHEDULED" },
+  { label: "Send", value: "SENT" },
+];
+
 const formatDate = (date) => format(date, "yyyy-MM-dd");
 
 const WhatsappTemplate = () => {
   const [emailCampaignList, setEmailCampaignList] = useState([]);
   const [clubList, setClubList] = useState([]);
   const [clubFilter, setClubFilter] = useState(null);
+  const [statusFilter, setStatusFilter] = useState(null);
+  const [categoryFilter, setCategoryFilter] = useState(null);
   const [expandedRows, setExpandedRows] = useState({});
   const [serviceList, setServiceList] = useState([]);
   const [serviceMap, setServiceMap] = useState({});
@@ -160,6 +172,14 @@ const WhatsappTemplate = () => {
         params.club_id = clubFilter;
       }
 
+      if (statusFilter?.value) {
+        params.status = statusFilter.value;
+      }
+
+      if (categoryFilter?.value) {
+        params.category = categoryFilter.value;
+      }
+
       // Date filter
       if (dateFilter?.value === "custom") {
         if (customFrom && customTo) {
@@ -192,7 +212,7 @@ const WhatsappTemplate = () => {
 
     setPage(1);
     fetchEmailAutomationReport(1);
-  }, [dateFilter, customFrom, customTo, clubFilter]);
+  }, [dateFilter, customFrom, customTo, clubFilter, statusFilter, categoryFilter]);
 
   const getCriteriaText = (item) => {
     const elements = [];
@@ -345,6 +365,26 @@ const WhatsappTemplate = () => {
               isClearable={userRole === "ADMIN" ? true : false}
             />
           </div>
+          <div className="w-full max-w-[170px]">
+            <Select
+              placeholder="Filter by Category"
+              options={whatsappCategoryOption}
+              value={categoryFilter}
+              onChange={(option) => setCategoryFilter(option)}
+              isClearable
+              styles={customStyles}
+            />
+          </div>
+          <div className="w-full max-w-[150px]">
+            <Select
+              placeholder="Filter by Status"
+              options={statusOption}
+              value={statusFilter}
+              onChange={(option) => setStatusFilter(option)}
+              isClearable
+              styles={customStyles}
+            />
+          </div>
         </div>
       </div>
 
@@ -356,6 +396,8 @@ const WhatsappTemplate = () => {
               <tr>
                 <th className="px-2 py-4 min-w-[150px]">Club Name</th>
                 <th className="px-2 py-4 min-w-[150px]">Campaign Name</th>
+                <th className="px-2 py-4 min-w-[100px]">Category</th>
+                <th className="px-2 py-4 min-w-[150px]">Template Name</th>
                 <th className="px-2 py-4 min-w-[200px]">
                   Sent To (Member / Enquiries)
                 </th>
@@ -385,6 +427,12 @@ const WhatsappTemplate = () => {
                     </td>
                     <td className="px-2 py-4">
                       {item?.campaign_name ? item?.campaign_name : "--"}
+                    </td>
+                    <td className="px-2 py-4">
+                      {item?.category ? formatText(item?.category) : "--"}
+                    </td>
+                    <td className="px-2 py-4">
+                      {item?.template_name ? formatText(item?.template_name) : "--"}
                     </td>
                     <td className="px-2 py-4">
                       <div className="max-w-[350px] w-full">
