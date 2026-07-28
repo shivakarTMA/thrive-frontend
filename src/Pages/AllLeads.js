@@ -15,6 +15,7 @@ import CreateLeadForm from "./CreateLeadForm";
 import { Link, Navigate, useSearchParams } from "react-router-dom";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import WhatsappIcon from "../assets/images/icons/whatsapp.png";
 import MailIcon from "../assets/images/icons/mail.png";
 import SmsIcon from "../assets/images/icons/sms.png";
 import AssignIcon from "../assets/images/icons/assign.png";
@@ -140,6 +141,8 @@ const AllLeads = (props) => {
       url = `/send-sms?${queryParams}`;
     } else if (type === "email") {
       url = `/send-mail?${queryParams}`;
+    } else if (type === "whatsapp") {
+      url = `/send-whatsapp?${queryParams}`;
     }
 
     if (url) {
@@ -1043,17 +1046,6 @@ const hasPermission = (permission) =>
                           </Tooltip>
                         </>
                       )}
-                      {/* <Tooltip
-                            id={`tooltip-send-sms`}
-                            content="Bulk Send SMS"
-                            place="top"
-                          >
-                            <img
-                              src={SmsIcon}
-                              className="w-8 cursor-pointer"
-                              onClick={() => handleCommunicate("sms")}
-                            />
-                          </Tooltip> */}
                       {(userRole === "CLUB_MANAGER" ||
                         userRole === "ADMIN" ||
                         userRole === "MARKETING_MANAGER") && (
@@ -1066,6 +1058,21 @@ const hasPermission = (permission) =>
                             src={MailIcon}
                             className="w-8 cursor-pointer"
                             onClick={() => handleCommunicate("email")}
+                          />
+                        </Tooltip>
+                      )}
+                      {(userRole === "CLUB_MANAGER" ||
+                        userRole === "ADMIN" ||
+                        userRole === "MARKETING_MANAGER") && (
+                        <Tooltip
+                          id={`tooltip-send-whatsapp`}
+                          content="Bulk Send Whatsapp"
+                          place="top"
+                        >
+                          <img
+                            src={WhatsappIcon}
+                            className="w-8 cursor-pointer"
+                            onClick={() => handleCommunicate("whatsapp")}
                           />
                         </Tooltip>
                       )}

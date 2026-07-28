@@ -332,6 +332,13 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                   <span className="nav-text">Email</span>
                 </Link>
                 <Link
+                  to="/whatsapp-template-list"
+                  className="text-white flex items-center gap-[5px] mb-2 text-sm"
+                >
+                  <FaCircle className="menu--icon !text-[10px]" />
+                  <span className="nav-text">Whatsapp</span>
+                </Link>
+                <Link
                   to="/reports/marketing-reports/notification-list"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
                 >
@@ -345,6 +352,7 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                   <FaCircle className="menu--icon !text-[10px]" />
                   <span className="nav-text">Email Templates</span>
                 </Link>
+                
                 <Link
                   to="/marketing-banner"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
@@ -1135,6 +1143,13 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                   <span className="nav-text">Email</span>
                 </Link>
                 <Link
+                  to="/whatsapp-template-list"
+                  className="text-white flex items-center gap-[5px] mb-2 text-sm"
+                >
+                  <FaCircle className="menu--icon !text-[10px]" />
+                  <span className="nav-text">Whatsapp</span>
+                </Link>
+                <Link
                   to="/reports/marketing-reports/notification-list"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
                 >
@@ -1781,6 +1796,13 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                 >
                   <FaCircle className="menu--icon !text-[10px]" />
                   <span className="nav-text">Email</span>
+                </Link>
+                <Link
+                  to="/whatsapp-template-list"
+                  className="text-white flex items-center gap-[5px] mb-2 text-sm"
+                >
+                  <FaCircle className="menu--icon !text-[10px]" />
+                  <span className="nav-text">Whatsapp</span>
                 </Link>
                 <Link
                   to="/reports/marketing-reports/notification-list"
@@ -2839,6 +2861,13 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                 >
                   <FaCircle className="menu--icon !text-[10px]" />
                   <span className="nav-text">Email</span>
+                </Link>
+                <Link
+                  to="/whatsapp-template-list"
+                  className="text-white flex items-center gap-[5px] mb-2 text-sm"
+                >
+                  <FaCircle className="menu--icon !text-[10px]" />
+                  <span className="nav-text">Whatsapp</span>
                 </Link>
                 <Link
                   to="/reports/marketing-reports/notification-list"
@@ -6562,6 +6591,13 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                 >
                   <FaCircle className="menu--icon !text-[10px]" />
                   <span className="nav-text">Email</span>
+                </Link>
+                <Link
+                  to="/whatsapp-template-list"
+                  className="text-white flex items-center gap-[5px] mb-2 text-sm"
+                >
+                  <FaCircle className="menu--icon !text-[10px]" />
+                  <span className="nav-text">Whatsapp</span>
                 </Link>
                 <Link
                   to="/reports/marketing-reports/notification-list"

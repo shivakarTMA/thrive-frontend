@@ -19,6 +19,7 @@ import { authAxios } from "../config/config";
 import { toast } from "react-toastify";
 import Pagination from "../components/common/Pagination";
 import CreateMemberForm from "./CreateMemberForm";
+import WhatsappIcon from "../assets/images/icons/whatsapp.png";
 import MailIcon from "../assets/images/icons/mail.png";
 import SmsIcon from "../assets/images/icons/sms.png";
 import AssignIcon from "../assets/images/icons/assign.png";
@@ -459,6 +460,8 @@ const MemberList = (props) => {
       url = `/send-sms?${queryParams}`;
     } else if (type === "email") {
       url = `/send-mail?${queryParams}`;
+    } else if (type === "whatsapp") {
+      url = `/send-whatsapp?${queryParams}`;
     }
 
     if (url) {
@@ -888,6 +891,22 @@ const hasMemberPermission = (permission) =>
                       src={MailIcon}
                       className="w-8 cursor-pointer"
                       onClick={() => handleCommunicate("email")}
+                    />
+                  </Tooltip>
+                )}
+
+                {(userRole === "CLUB_MANAGER" ||
+                  userRole === "ADMIN" ||
+                  userRole === "MARKETING_MANAGER") && (
+                  <Tooltip
+                    id={`tooltip-send-whatsapp`}
+                    content="Bulk Send Whatsapp"
+                    place="top"
+                  >
+                    <img
+                      src={WhatsappIcon}
+                      className="w-8 cursor-pointer"
+                      onClick={() => handleCommunicate("whatsapp")}
                     />
                   </Tooltip>
                 )}

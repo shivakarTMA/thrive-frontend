@@ -122,6 +122,8 @@ import ProgramSpecialistDashboard from "../Pages/ProgramSpecialistDashboard";
 import KycDocumentsList from "../components/KycDocuments/KycDocumentsList";
 import SalesIncentiveReport from "../components/Reports/OperationsReports/SalesIncentiveReport";
 import PtIncentiveReport from "../components/Reports/OperationsReports/PtIncentiveReport";
+import WhatsappTemplate from "../components/Reports/MarketingReports/WhatsappTemplate";
+import BulkWhatsappCriteriaForm from "../components/Marketing/BulkWhatsappCriteriaForm";
 
 // Role-based route wrapper component
 const RoleProtectedRoute = ({ children, path, skipPrivateRoute = false }) => {
@@ -457,6 +459,38 @@ export default function Routing() {
           }
         />
         <Route
+          path="/whatsapp-template-list"
+          element={
+            <RoleProtectedRoute path="/whatsapp-template-list">
+              <WhatsappTemplate />
+            </RoleProtectedRoute>
+          }
+        />
+        <Route
+          path="/send-whatsapp-list"
+          element={
+            <RoleProtectedRoute path="/send-whatsapp-list">
+              <WhatsappModule />
+            </RoleProtectedRoute>
+          }
+        />
+        <Route
+          path="/send-whatsapp-list/:id"
+          element={
+            <RoleProtectedRoute path="/send-whatsapp-list/:id">
+              <WhatsappModule />
+            </RoleProtectedRoute>
+          }
+        />
+        <Route
+          path="/send-whatsapp"
+          element={
+            <RoleProtectedRoute path="/send-whatsapp">
+              <BulkWhatsappCriteriaForm />
+            </RoleProtectedRoute>
+          }
+        />
+        <Route
           path="/email-template"
           element={
             <RoleProtectedRoute path="/email-template">
@@ -525,14 +559,6 @@ export default function Routing() {
           element={
             <RoleProtectedRoute path="/marketing-banner">
               <MarketingBanner />
-            </RoleProtectedRoute>
-          }
-        />
-        <Route
-          path="/send-whatsapp-list"
-          element={
-            <RoleProtectedRoute path="/send-whatsapp-list">
-              <WhatsappModule />
             </RoleProtectedRoute>
           }
         />
