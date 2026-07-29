@@ -217,7 +217,7 @@ const WhatsappTemplate = () => {
   const getCriteriaText = (item) => {
     const elements = [];
 
-    const isLead = item?.email_for === "LEAD";
+    const isLead = item?.whatsapp_for === "LEAD";
     const validityText = item?.validity
       ? `${capitalizeText(item.validity)} ${isLead ? "" : "Members"}`
       : `All ${isLead ? "" : "Members"}`;
@@ -248,9 +248,9 @@ const WhatsappTemplate = () => {
       elements.push(
         <span key="lead_source">{formatText(item.lead_source)}</span>,
       );
-    // if (item?.email_for)
+    // if (item?.whatsapp_for)
     //   elements.push(
-    //     <span key="email_for">{item.email_for === "LEAD" ? "Enquiries" : formatText(item.email_for)}</span>
+    //     <span key="whatsapp_for">{item.whatsapp_for === "LEAD" ? "Enquiries" : formatText(item.whatsapp_for)}</span>
     //   );
 
     if (!elements.length) return "--";
