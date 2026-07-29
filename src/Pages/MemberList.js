@@ -970,6 +970,7 @@ const hasMemberPermission = (permission) =>
                     <th className="px-2 py-4 min-w-[90px]">Start On</th>
                     <th className="px-2 py-4 min-w-[90px]">Expired On</th>
                     <th className="px-2 py-4 min-w-[130px]">Trainer Name</th>
+                    <th className="px-2 py-4 min-w-[150px]">Last Updated by</th>
                     <th className="px-2 py-4 min-w-[130px]">App Downloaded</th>
                     <th className="px-2 py-4 min-w-[150px]">
                       Profile Completion
@@ -1090,6 +1091,9 @@ const hasMemberPermission = (permission) =>
                       </td>
                       <td className="px-2 py-4">
                         {member?.trainer ? member?.trainer : "--"}
+                      </td>
+                      <td className="px-2 py-4">
+                        {member?.updated_by_name ? member?.updated_by_name : "--"}
                       </td>
                       <td className="px-2 py-4">
                         <span
