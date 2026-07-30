@@ -36,6 +36,7 @@ const EmailCriteriaForm = () => {
   const navigate = useNavigate();
   const [memberIds, setMemberIds] = useState([]);
   const [filterApplied, setFilterApplied] = useState(false);
+  const [criteria, setCriteria] = useState([]);
   const [isFetchingCampaign, setIsFetchingCampaign] = useState(false);
   const [templateOptions, setTemplateOptions] = useState([]);
 
@@ -55,14 +56,6 @@ const EmailCriteriaForm = () => {
           then: (schema) => schema.required("Validity is required"),
           otherwise: (schema) => schema.nullable(),
         }),
-
-    // filterLeadValidity: id
-    //   ? Yup.mixed().nullable()
-    //   : Yup.mixed().when("module", {
-    //       is: "Enquiries",
-    //       then: (schema) => schema.required("Validity is required"),
-    //       otherwise: (schema) => schema.nullable(),
-    //     }),
 
     sendType: Yup.string().oneOf(["NOW", "SCHEDULED"]),
     scheduledAt: Yup.date()
@@ -148,6 +141,7 @@ const EmailCriteriaForm = () => {
         status: "SCHEDULED",
         member_ids: memberIds,
         email_for: values.module === "Member" ? "MEMBER" : "LEAD", // ✅ module → email_for
+        criteria, // ✅ human-readable filter labels for the campaign
 
         // Filter fields
         ...(values.filterClub && { club_id: values.filterClub }),
@@ -249,19 +243,9 @@ const EmailCriteriaForm = () => {
         // ✅ Filter fields — map API response → formik filter fields
         if (data.club_id) formik.setFieldValue("filterClub", data.club_id);
 
-        // validity maps to member or lead validity based on email_for
-        // if (data.validity) {
-        //   if (data.email_for === "MEMBER") {
-        //     formik.setFieldValue("filterMemberValidity", data.validity ? data.validity : "All Members");
-        //   } else {
-        //     formik.setFieldValue("filterLeadValidity", data.validity ? data.validity : "");
-        //   }
-        // }
 
         if (data.email_for === "MEMBER") {
-          formik.setFieldValue(
-            "filterMemberValidity",
-            data.validity || "All Members",
+          formik.setFieldValue("filterMemberValidity", data.validity || "",
           );
         } else {
           formik.setFieldValue("filterLeadValidity", data.validity || "");
@@ -334,6 +318,7 @@ const EmailCriteriaForm = () => {
 
   useEffect(() => {
     resetFilters();
+    setCriteria([]);
     formik.setFieldValue("module", activeTab);
   }, [activeTab]);
 
@@ -410,6 +395,7 @@ const EmailCriteriaForm = () => {
                   setMemberIds(ids);
                   setFilterApplied(true);
                 }}
+                onCriteriaChange={setCriteria}
                 editMode={editMode}
               />
             </div>

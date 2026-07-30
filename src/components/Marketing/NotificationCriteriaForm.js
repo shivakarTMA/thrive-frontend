@@ -29,6 +29,7 @@ const NotificationCriteriaForm = () => {
   const navigate = useNavigate();
   const [memberIds, setMemberIds] = useState([]);
   const [filterApplied, setFilterApplied] = useState(false);
+  const [criteria, setCriteria] = useState([]);
   const [isFetchingCampaign, setIsFetchingCampaign] = useState(false);
 
   const validationSchema = Yup.object({
@@ -135,6 +136,7 @@ const NotificationCriteriaForm = () => {
         status: "SCHEDULED",
         member_ids: memberIds,
         email_for: values.module === "Member" ? "MEMBER" : "LEAD", // ✅ module → email_for
+        criteria, // ✅ human-readable filter labels for the campaign
 
         // Filter fields
         ...(values.filterClub && { club_id: values.filterClub }),
@@ -240,7 +242,7 @@ const NotificationCriteriaForm = () => {
         if (data.email_for === "MEMBER") {
           formik.setFieldValue(
             "filterMemberValidity",
-            data.validity || "All Members",
+            data.validity || "",
           );
         } else {
           formik.setFieldValue("filterLeadValidity", data.validity || "");
@@ -283,6 +285,7 @@ const NotificationCriteriaForm = () => {
 
   useEffect(() => {
     resetFilters();
+    setCriteria([]);
     formik.setFieldValue("module", activeTab);
   }, [activeTab]);
 
@@ -353,6 +356,7 @@ const NotificationCriteriaForm = () => {
                   setMemberIds(ids);
                   setFilterApplied(true);
                 }}
+                onCriteriaChange={setCriteria}
                 editMode={editMode}
               />
             </div>

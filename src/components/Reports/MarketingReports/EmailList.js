@@ -186,52 +186,6 @@ const EmailList = () => {
     fetchEmailAutomationReport(1);
   }, [dateFilter, customFrom, customTo, clubFilter]);
 
-  const getCriteriaText = (item) => {
-    const elements = [];
-
-    const isLead = item?.email_for === "LEAD";
-    const validityText = item?.validity
-      ? `${capitalizeText(item.validity)} ${isLead ? "" : "Members"}`
-      : `All ${isLead ? "" : "Members"}`;
-
-    elements.push(<span key="validity">{validityText}</span>);
-    if (item?.age_group)
-      elements.push(<span key="age_group">{formatText(item.age_group)}</span>);
-    if (item?.gender)
-      elements.push(<span key="gender">{formatText(item.gender)}</span>);
-    if (item?.service_type) {
-      const label =
-        serviceMap[String(item.service_type)] || formatText(item.service_type);
-      elements.push(<span key="service_type">{label}</span>);
-    }
-    if (item?.service_name) {
-      const label =
-        packageMap[String(item.service_name)] || formatText(item.service_name);
-      elements.push(<span key="service_name">{label}</span>);
-    }
-    if (item?.membership_expiry_from && item?.membership_expiry_to)
-      elements.push(
-        <span key="membership_expiry" className="block">
-          {formatAutoDate(item.membership_expiry_from)} to {formatAutoDate(item.membership_expiry_to)}
-        </span>
-      );
-    if (item?.lead_source)
-      elements.push(<span key="lead_source">{formatText(item.lead_source)}</span>);
-    // if (item?.email_for)
-    //   elements.push(
-    //     <span key="email_for">{item.email_for === "LEAD" ? "Enquiries" : formatText(item.email_for)}</span>
-    //   );
-
-    if (!elements.length) return "--";
-
-    return elements.map((element, idx) => (
-      <React.Fragment key={idx}>
-        {element}
-        {idx < elements.length - 1 && ", "}
-      </React.Fragment>
-    ));
-  };
-
   const toggleMembers = (id) => {
     setExpandedRows((prev) => ({
       ...prev,
@@ -350,7 +304,7 @@ const EmailList = () => {
                 <th className="px-2 py-4 min-w-[150px]">Campaign Name</th>
                 <th className="px-2 py-4 min-w-[200px]">Sent To (Member / Enquiries)</th>
                 <th className="px-2 py-4 min-w-[170px]">Criteria</th>
-                <th className="px-2 py-4 min-w-[150px]">Recipient Count</th>
+                <th className="px-2 py-4 min-w-[150px] text-center">Recipient Count</th>
                 <th className="px-2 py-4 min-w-[150px]">Created At</th>
                 <th className="px-2 py-4 min-w-[150px]">Scheduled on</th>
                 <th className="px-2 py-4 min-w-[100px]">Status</th>
@@ -400,8 +354,12 @@ const EmailList = () => {
                         )}
                       </div>
                     </td>
-                    <td className="px-2 py-4">{getCriteriaText(item)}</td>
                     <td className="px-2 py-4">
+                      {Array.isArray(item?.criteria) && item.criteria.length > 0
+                            ? item.criteria.join(", ")
+                            : "--"}
+                    </td>
+                    <td className="px-2 py-4 text-center">
                      {item?.members?.length ? item.members.length : "--"}
                     </td>
                     <td className="px-2 py-4">

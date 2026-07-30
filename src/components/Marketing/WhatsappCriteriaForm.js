@@ -52,6 +52,7 @@ const WhatsappCriteriaForm = () => {
   const navigate = useNavigate();
   const [memberIds, setMemberIds] = useState([]);
   const [filterApplied, setFilterApplied] = useState(false);
+  const [criteria, setCriteria] = useState([]);
   const [isFetchingCampaign, setIsFetchingCampaign] = useState(false);
   const [templateOptions, setTemplateOptions] = useState([]);
   // ✅ NEW: is_editable flag per variable key, from the GET-by-ID template detail response
@@ -206,6 +207,7 @@ const WhatsappCriteriaForm = () => {
       status: values.sendType === "SCHEDULED" ? "SCHEDULED" : "SENT",
       member_ids: memberIds,
       whatsapp_for: values.module === "Member" ? "MEMBER" : "LEAD",
+      criteria, // ✅ human-readable filter labels for the campaign
 
       // ✅ CHANGE: template identifiers now use the whatsapp_* keys instead of email_template_id
       ...(selectedTemplate?.value && {
@@ -401,7 +403,7 @@ const WhatsappCriteriaForm = () => {
         if (data.whatsapp_for === "MEMBER") {
           formik.setFieldValue(
             "filterMemberValidity",
-            data.validity || "All Members",
+            data.validity || "",
           );
         } else {
           formik.setFieldValue("filterLeadValidity", data.validity || "");
@@ -492,6 +494,7 @@ const WhatsappCriteriaForm = () => {
 
   useEffect(() => {
     resetFilters();
+    setCriteria([]);
     formik.setFieldValue("module", activeTab);
   }, [activeTab]);
 
@@ -652,6 +655,7 @@ const WhatsappCriteriaForm = () => {
                   setMemberIds(ids);
                   setFilterApplied(true);
                 }}
+                onCriteriaChange={setCriteria}
                 editMode={editMode}
               />
             </div>

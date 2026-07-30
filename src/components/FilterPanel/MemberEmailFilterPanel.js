@@ -27,16 +27,15 @@ const genderOptions = [
 ];
 
 const validityMemberOptions = [
-  { value: "All Members", label: "All Members" },
-  { value: "ACTIVE", label: "Active Members" },
-  { value: "INACTIVE", label: "Inactive Members" },
-  { value: "EXMEMBERS", label: "Ex-members" },
+  { value: "ALL_MEMBER", label: "All Members" },
+  { value: "ACTIVE_MEMBER", label: "Active Members" },
+  { value: "INACTIVE_MEMBER", label: "Inactive Members" },
 ];
 
 const validityEnquireOptions = [
-  { value: "All Enquiries", label: "All Enquiries" },
-  { value: "Open Enquiries", label: "Open Enquiries" },
-  { value: "Lost Enquiries", label: "Lost Enquiries" },
+  { value: "ALL_ENQUIRY", label: "All Enquiries" },
+  { value: "OPEN_ENQUIRY", label: "Open Enquiries" },
+  { value: "LOST_ENQUIRY", label: "Lost Enquiries" },
 ];
 
 const formatDate = (date) => format(date, "yyyy-MM-dd");
@@ -55,6 +54,7 @@ const MemberEmailFilterPanel = ({
   filterExpiryTo,
   setFilterValue,
   onMemberIdsFetched,
+  onCriteriaChange,
   editMode
 }) => {
   const [showFilters, setShowFilters] = useState(false);
@@ -181,7 +181,22 @@ const MemberEmailFilterPanel = ({
         );
       }
 
-      setAppliedFilters({
+      // setAppliedFilters({
+      //   club_id: filterClub || null,
+      //   member_validity: filterMemberValidity || null,
+      //   lead_validity: filterLeadValidity || null,
+      //   ageGroup: filterAgeGroup || null,
+      //   gender: filterGender || null,
+      //   service_type: filterServiceType || null,
+      //   service_name: filterServiceName || null,
+      //   leadSource: filterLeadSource || null,
+      //   expiry_from: filterExpiryFrom || null,
+      //   expiry_to: filterExpiryTo || null,
+      //   // ✅ Stash resolved lists so getChipLabel can use them immediately
+      //   _serviceOptions: resolvedServiceOptions,
+      //   _packageOptions: resolvedPackageOptions,
+      // });
+      const nextApplied = {
         club_id: filterClub || null,
         member_validity: filterMemberValidity || null,
         lead_validity: filterLeadValidity || null,
@@ -195,7 +210,9 @@ const MemberEmailFilterPanel = ({
         // ✅ Stash resolved lists so getChipLabel can use them immediately
         _serviceOptions: resolvedServiceOptions,
         _packageOptions: resolvedPackageOptions,
-      });
+      };
+      setAppliedFilters(nextApplied);
+      onCriteriaChange?.(buildCriteriaLabels(nextApplied));
     };
 
     syncChips();
@@ -360,7 +377,22 @@ const handleApply = async () => {
   });
 
   // ✅ 3. Set chips from draft
-  setAppliedFilters({
+  // setAppliedFilters({
+  //   club_id:         draft.filterClub          || null,
+  //   member_validity: draft.filterMemberValidity || null,
+  //   lead_validity:   draft.filterLeadValidity   || null,
+  //   ageGroup:        draft.filterAgeGroup       || null,
+  //   gender:          draft.filterGender         || null,
+  //   service_type:    draft.filterServiceType    || null,
+  //   service_name:    draft.filterServiceName    || null,
+  //   leadSource:      draft.filterLeadSource     || null,
+  //   expiry_from:     draft.filterExpiryFrom     || null,
+  //   expiry_to:       draft.filterExpiryTo       || null,
+  //   _serviceOptions: serviceOptions,
+  //   _packageOptions: servicesType,
+  // });
+  // ✅ 3. Set chips from draft
+  const nextApplied = {
     club_id:         draft.filterClub          || null,
     member_validity: draft.filterMemberValidity || null,
     lead_validity:   draft.filterLeadValidity   || null,
@@ -373,7 +405,9 @@ const handleApply = async () => {
     expiry_to:       draft.filterExpiryTo       || null,
     _serviceOptions: serviceOptions,
     _packageOptions: servicesType,
-  });
+  };
+  setAppliedFilters(nextApplied);
+  onCriteriaChange?.(buildCriteriaLabels(nextApplied));
 
   // ✅ 4. Close the panel
   setShowFilters(false);
@@ -420,8 +454,18 @@ const handleApply = async () => {
         keyMap["expiry_to"] === keyMap[key] ? null : filterExpiryTo,
     };
 
+    // // ✅ Update chips UI
+    // setAppliedFilters((prev) => ({ ...prev, [key]: null }));
+
+    // // ✅ Sync to formik
+    // if (keyMap[key]) {
+    //   setFilterValue(keyMap[key], null);
+    //   formik.setFieldTouched(keyMap[key], false);
+    // }
     // ✅ Update chips UI
-    setAppliedFilters((prev) => ({ ...prev, [key]: null }));
+    const nextApplied = { ...appliedFilters, [key]: null };
+    setAppliedFilters(nextApplied);
+    onCriteriaChange?.(buildCriteriaLabels(nextApplied));
 
     // ✅ Sync to formik
     if (keyMap[key]) {
@@ -439,10 +483,39 @@ const handleApply = async () => {
   // time chips were built — so labels are always correct even if state differs.
   // Also coerces string IDs to numbers before matching (API quirk).
   //
-  const getChipLabel = (key, value) => {
+  // const getChipLabel = (key, value) => {
+  //   if (value instanceof Date) return format(value, "dd/MM/yyyy");
+
+  //   // ✅ Coerce string "13" → 13 for ID-based lookups
+  //   const numericValue = isNaN(Number(value)) ? value : Number(value);
+
+  //   const optionsMap = {
+  //     club_id: clubOptions,
+  //     member_validity: validityMemberOptions,
+  //     lead_validity: validityEnquireOptions,
+  //     ageGroup: ageGroupOptions,
+  //     gender: genderOptions,
+  //     service_type: appliedFilters._serviceOptions || serviceOptions,
+  //     service_name: appliedFilters._packageOptions || servicesType,
+  //     leadSource: leadSourceOptions,
+  //   };
+
+  //   const options = optionsMap[key];
+  //   if (!options) return String(value);
+
+  //   // Try string match first, then numeric match
+  //   const matched =
+  //     options.find((o) => o.value === value) ||
+  //     options.find((o) => o.value === numericValue);
+
+  //   return matched ? matched.label : String(value);
+  // };
+
+  // ─── Label resolution (shared by chips + criteria payload) ─────────────────
+
+  const resolveLabel = (key, value, opts = {}) => {
     if (value instanceof Date) return format(value, "dd/MM/yyyy");
 
-    // ✅ Coerce string "13" → 13 for ID-based lookups
     const numericValue = isNaN(Number(value)) ? value : Number(value);
 
     const optionsMap = {
@@ -451,20 +524,59 @@ const handleApply = async () => {
       lead_validity: validityEnquireOptions,
       ageGroup: ageGroupOptions,
       gender: genderOptions,
-      service_type: appliedFilters._serviceOptions || serviceOptions,
-      service_name: appliedFilters._packageOptions || servicesType,
+      service_type: opts.serviceOptions || serviceOptions,
+      service_name: opts.packageOptions || servicesType,
       leadSource: leadSourceOptions,
     };
 
     const options = optionsMap[key];
     if (!options) return String(value);
 
-    // Try string match first, then numeric match
     const matched =
       options.find((o) => o.value === value) ||
       options.find((o) => o.value === numericValue);
 
     return matched ? matched.label : String(value);
+  };
+
+  const getChipLabel = (key, value) => resolveLabel(key, value);
+
+  // ✅ Builds the "criteria" array for the payload.
+  // Skips club_id. Merges expiry_from/expiry_to into one "dd/MM/yyyy to dd/MM/yyyy" entry.
+  const buildCriteriaLabels = (filtersObj) => {
+    const opts = {
+      serviceOptions: filtersObj._serviceOptions || serviceOptions,
+      packageOptions: filtersObj._packageOptions || servicesType,
+    };
+
+    const order = [
+      "member_validity",
+      "lead_validity",
+      "ageGroup",
+      "gender",
+      "service_type",
+      "service_name",
+      "leadSource",
+    ];
+
+    const labels = order
+      .filter((key) => filtersObj[key])
+      .map((key) => resolveLabel(key, filtersObj[key], opts));
+
+    if (filtersObj.expiry_from && filtersObj.expiry_to) {
+      labels.push(
+        `${format(filtersObj.expiry_from, "dd/MM/yyyy")} to ${format(
+          filtersObj.expiry_to,
+          "dd/MM/yyyy",
+        )}`,
+      );
+    } else if (filtersObj.expiry_from) {
+      labels.push(format(filtersObj.expiry_from, "dd/MM/yyyy"));
+    } else if (filtersObj.expiry_to) {
+      labels.push(format(filtersObj.expiry_to, "dd/MM/yyyy"));
+    }
+
+    return labels;
   };
 
   // ─── Render ─────────────────────────────────────────────────────────────────
