@@ -124,6 +124,10 @@ import SalesIncentiveReport from "../components/Reports/OperationsReports/SalesI
 import PtIncentiveReport from "../components/Reports/OperationsReports/PtIncentiveReport";
 import WhatsappTemplate from "../components/Reports/MarketingReports/WhatsappTemplate";
 import BulkWhatsappCriteriaForm from "../components/Marketing/BulkWhatsappCriteriaForm";
+import ClubHolidayList from "../components/Club/ClubHolidayList";
+import ClubOperatingHoursList from "../components/Club/ClubOperatingHoursList";
+import StaffHolidayList from "../components/Staff/StaffHolidayList";
+import StaffOperatingHoursList from "../components/Staff/StaffOperatingHoursList";
 
 // Role-based route wrapper component
 const RoleProtectedRoute = ({ children, path, skipPrivateRoute = false }) => {
@@ -381,6 +385,22 @@ export default function Routing() {
           element={
             <RoleProtectedRoute path="/club">
               <ClubList />
+            </RoleProtectedRoute>
+          }
+        />
+        <Route
+          path="/club-holiday"
+          element={
+            <RoleProtectedRoute path="/club-holiday">
+              <ClubHolidayList />
+            </RoleProtectedRoute>
+          }
+        />
+        <Route
+          path="/club-operating-hours"
+          element={
+            <RoleProtectedRoute path="/club-operating-hours">
+              <ClubOperatingHoursList />
             </RoleProtectedRoute>
           }
         />
@@ -681,6 +701,22 @@ export default function Routing() {
           element={
             <RoleProtectedRoute path="/staff">
               <StaffList />
+            </RoleProtectedRoute>
+          }
+        />
+        <Route
+          path="/staff-holiday"
+          element={
+            <RoleProtectedRoute path="/staff-holiday">
+              <StaffHolidayList />
+            </RoleProtectedRoute>
+          }
+        />
+        <Route
+          path="/staff-operating-hours"
+          element={
+            <RoleProtectedRoute path="/staff-operating-hours">
+              <StaffOperatingHoursList />
             </RoleProtectedRoute>
           }
         />

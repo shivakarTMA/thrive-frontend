@@ -267,6 +267,14 @@ export const formatTime = (date) => {
 
   return `${hours}:${minutes}:${seconds}`;
 };
+export function formatClubTime(time) {
+  if (!time) return "--";
+
+  const [hours, minutes] = time.split(":").map(Number);
+  const period = hours >= 12 ? "PM" : "AM";
+  const formattedHours = hours % 12 || 12;
+  return `${String(formattedHours).padStart(2, "0")}:${String(minutes).padStart(2, "0")} ${period}`;
+}
 
 export const formatTimeAppointment = (timeString) => {
   // timeString format: "HH:MM:SS"
