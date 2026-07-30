@@ -57,6 +57,7 @@ const MemberList = (props) => {
   const [selectedLeadMember, setSelectedLeadMember] = useState(null);
   const [selectedLeadClub, setSelectedLeadClub] = useState(null);
   const [hoveredRow, setHoveredRow] = useState(null);
+  const [upCommingDateMember, setUpCommingDateMember] = useState(null);
 
   const [memberList, setMemberList] = useState([]);
   const [memberModal, setMemberModal] = useState(false);
@@ -597,7 +598,17 @@ const MemberList = (props) => {
     ];
 
     // ✅ Add only if PRODUCT exists
-    if (hasProductServices) {
+    // if (hasProductServices) {
+    //   options.push({
+    //     value: "products",
+    //     label: "Buy Products",
+    //     icon: <IoFastFoodOutline className="text-[18px]" />,
+    //   });
+    // }
+    if (
+      hasProductServices &&
+      member?.upcoming_subscription_start_date === null
+    ) {
       options.push({
         value: "products",
         label: "Buy Products",
@@ -1198,7 +1209,7 @@ const hasMemberPermission = (permission) =>
                               userRole === "PROGRAM_SPECIALIST" ||
                               userRole === "ADMIN") && (
                                 <>
-                                {member?.is_subscribed === true && (
+                                {(member?.is_subscribed === true || member?.upcoming_subscription_start_date !== null) && (
                                   <Tooltip
                                     id={`send-payment-${member?.id}`}
                                     content={
@@ -1237,6 +1248,7 @@ const hasMemberPermission = (permission) =>
                                             setSelectedLeadMember(member.id);
                                             setInvoiceModal(true);
                                             setSelectedLeadClub(member?.club_id);
+                                            setUpCommingDateMember(member?.upcoming_subscription_start_date)
                                           }
 
                                           if (selected.value === "products") {
@@ -1343,6 +1355,7 @@ const hasMemberPermission = (permission) =>
         <CreateNewInvoice
           setInvoiceModal={setInvoiceModal}
           selectedLeadMember={selectedLeadMember}
+          upCommingDateMember={upCommingDateMember}
           clubId={selectedLeadClub}
           memberProfile={true}
           onMemberUpdate={handleMemberUpdate}

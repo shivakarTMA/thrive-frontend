@@ -104,8 +104,11 @@ const CreateNewInvoice = ({
   renewPlanService,
   memberProfile,
   onMemberUpdate,
+  upCommingDateMember,
 }) => {
   const { user } = useSelector((state) => state.auth);
+
+  console.log(upCommingDateMember,'upCommingDateMember')
 
   const [service, setService] = useState([]);
   const [showProductModal, setShowProductModal] = useState(false);
@@ -1198,17 +1201,15 @@ const CreateNewInvoice = ({
                               selected={formik.values.start_date}
                               onChange={(date) => {
                                 formik.setFieldValue("start_date", date);
-                                // formik.setFieldValue("start_time", "");
                               }}
                               onBlur={() =>
                                 formik.setFieldTouched("start_date", true, true)
                               }
-                              // minDate={
-                              //   new Date(
-                              //     new Date().setDate(new Date().getDate() + 1),
-                              //   )
-                              // } // ✅ disables today + past
-                              minDate={new Date()}
+                              minDate={
+                                upCommingDateMember
+                                  ? new Date(upCommingDateMember)
+                                  : new Date()
+                              }
                               onKeyDown={(e) => {
                                 e.preventDefault();
                               }}
