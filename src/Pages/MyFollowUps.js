@@ -10,6 +10,7 @@ import {
   formatAutoDate,
   formatTimeAppointment,
   formatText,
+  ALLOWED_ROLES,
 } from "../Helper/helper";
 import { authAxios } from "../config/config";
 import { toast } from "react-toastify";
@@ -19,6 +20,8 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import Pagination from "../components/common/Pagination";
 import { useSelector } from "react-redux";
 import { FaCircle } from "react-icons/fa";
+import IsLoadingHOC from "../components/common/IsLoadingHOC";
+import { LuDownload } from "react-icons/lu";
 
 const dateFilterOptions = [
   { value: "today", label: "Today" },
@@ -29,7 +32,8 @@ const dateFilterOptions = [
 
 const formatDate = (date) => format(date, "yyyy-MM-dd");
 
-const MyFollowUps = () => {
+const MyFollowUps = (props) => {
+  const { setLoading } = props;
   const [myFollowUps, setMyFollowUps] = useState([]);
   const [clubList, setClubList] = useState([]);
   const [clubFilter, setClubFilter] = useState(null);
@@ -246,19 +250,6 @@ const MyFollowUps = () => {
     // ---- Club filter ----
     const clubId = params.get("club_id");
 
-    // if (clubId) {
-    //   const club = clubList.find((c) => c.id === Number(clubId));
-    //   if (club) {
-    //     setClubFilter({ label: club.name, value: club.id });
-    //   }
-    // } else {
-    //   // ✅ default only when URL does NOT have club_id
-    //   setClubFilter({
-    //     label: clubList[0].name,
-    //     value: clubList[0].id,
-    //   });
-    // }
-
     if (!clubFilter) {
       if (clubId) {
         const club = clubList.find((c) => c.id === Number(clubId));
@@ -299,6 +290,67 @@ const MyFollowUps = () => {
     leadOwner?.value,
   ]);
 
+  const handleExportData = async () => {
+    try {
+      setLoading(true);
+
+      const params = {};
+
+      // 📅 Date filters
+      if (dateFilter?.value && dateFilter.value !== "custom") {
+        params.dateFilter = dateFilter.value;
+      }
+
+      if (dateFilter?.value === "custom" && customFrom && customTo) {
+        params.startDate = format(customFrom, "yyyy-MM-dd");
+        params.endDate = format(customTo, "yyyy-MM-dd");
+      }
+
+      // 🏢 Club filter
+      if (clubFilter?.value) {
+        params.club_id = clubFilter.value;
+      }
+
+      // Lead Owner filter
+      if (leadOwner?.value) {
+        params.created_by = leadOwner.value;
+      }
+
+
+      const response = await authAxios().get("/report/myfollowup/download", {
+        params,
+        responseType: "blob",
+      });
+
+      // 📄 Create download
+      const blob = new Blob([response.data]);
+
+      const url = window.URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+
+      link.href = url;
+
+      link.setAttribute("download", "My_follow_up_report.xlsx");
+
+      document.body.appendChild(link);
+
+      link.click();
+
+      link.remove();
+
+      window.URL.revokeObjectURL(url);
+
+      toast.success("My Follow Up downloaded successfully!");
+    } catch (error) {
+      console.error(error);
+
+      toast.error("Failed to download My Follow Up.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="page--content">
       {/* Header */}
@@ -312,7 +364,7 @@ const MyFollowUps = () => {
       {/* Filters */}
       <div className="flex gap-3 mb-4 items-center justify-between">
         <div className="flex gap-2 w-full">
-          <div className="max-w-[180px] w-full">
+          <div className="max-w-[150px] w-full">
             <Select
               placeholder="Date Filter"
               options={dateFilterOptions}
@@ -371,7 +423,7 @@ const MyFollowUps = () => {
             </>
           )}
 
-          <div className="w-fit min-w-[200px]">
+          <div className="w-fit min-w-[170px]">
             <Select
               placeholder="Filter by club"
               value={selectedClub}
@@ -382,7 +434,7 @@ const MyFollowUps = () => {
               className="w-full"
             />
           </div>
-          <div className="w-fit min-w-[200px]">
+          <div className="w-fit min-w-[160px]">
             <Select
               placeholder="Select Lead Owner"
               value={leadOwner}
@@ -393,6 +445,22 @@ const MyFollowUps = () => {
             />
           </div>
         </div>
+        {!ALLOWED_ROLES.includes(userRole) && (
+          <div className="w-full max-w-[170px]">
+            <button
+              onClick={handleExportData}
+              disabled={myFollowUps.length === 0 || (dateFilter?.value === "custom" && (!customFrom || !customTo))}
+              className={`ms-auto px-4 py-2 rounded flex items-center gap-2
+              ${
+                myFollowUps.length === 0 || (dateFilter?.value === "custom" && (!customFrom || !customTo))
+                  ? "bg-gray-400 cursor-not-allowed text-white"
+                  : "bg-black text-white hover:bg-gray-800"
+              }`}
+            >
+              <LuDownload /> <span>Download Report</span>
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Table */}
@@ -401,7 +469,7 @@ const MyFollowUps = () => {
           <table className="w-full text-sm text-left text-gray-500">
             <thead className="text-xs text-gray-700 uppercase bg-gray-50">
               <tr>
-                <th className="px-2 py-4 min-w-[50px]">S.no</th>
+                {/* <th className="px-2 py-4 min-w-[50px]">S.no</th> */}
                 <th className="px-2 py-4 min-w-[130px]">Club Name</th>
                 <th className="px-2 py-4 min-w-[130px]">Scheduled Date</th>
                 <th className="px-2 py-4 min-w-[130px]">Scheduled Time</th>
@@ -432,7 +500,7 @@ const MyFollowUps = () => {
                     key={index}
                     className="bg-white border-b hover:bg-gray-50"
                   >
-                    <td className="px-2 py-4">{index + 1}</td>
+                    {/* <td className="px-2 py-4">{index + 1}</td> */}
                     <td className="px-2 py-4">{row.club_name}</td>
                     <td className="px-2 py-4">
                       {formatAutoDate(row.schedule_date)}
@@ -447,7 +515,7 @@ const MyFollowUps = () => {
                     <td className="px-2 py-4">
                       {row.member_name ? row.member_name : "--"}
                     </td>
-                    <td className="px-2 py-4">{row.call_status}</td>
+                    <td className="px-2 py-4">{row.call_status ? row.call_status : '--'}</td>
                     <td className="px-2 py-4">
                       {row?.status ? (
                         <span
@@ -552,4 +620,4 @@ const MyFollowUps = () => {
   );
 };
 
-export default MyFollowUps;
+export default IsLoadingHOC(MyFollowUps);

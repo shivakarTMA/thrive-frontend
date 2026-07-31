@@ -5,12 +5,16 @@ import { addYears, format, subYears } from "date-fns";
 import { FaCalendarDays } from "react-icons/fa6";
 import Select from "react-select";
 import {
+  ALLOWED_ROLES,
   customStyles,
   filterActiveItems,
 } from "../../../Helper/helper";
 import { authAxios } from "../../../config/config";
 import { useSelector } from "react-redux";
 import Pagination from "../../common/Pagination";
+import IsLoadingHOC from "../../common/IsLoadingHOC";
+import { toast } from "react-toastify";
+import { LuDownload } from "react-icons/lu";
 
 const dateFilterOptions = [
   { value: "today", label: "Today" },
@@ -21,7 +25,8 @@ const dateFilterOptions = [
 
 const formatDate = (date) => format(date, "yyyy-MM-dd");
 
-const EmailAutomationReport = () => {
+const EmailAutomationReport = (props) => {
+  const { setLoading } = props;
   const [emailReport, setEmailReport] = useState([]);
   const [clubList, setClubList] = useState([]);
   const [clubFilter, setClubFilter] = useState(null);
@@ -119,6 +124,60 @@ const EmailAutomationReport = () => {
     return `${parseFloat(value)}%`;
   };
 
+  const handleExportData = async () => {
+    try {
+      setLoading(true);
+
+      const params = {};
+
+      // 📅 Date filters
+      if (dateFilter?.value && dateFilter.value !== "custom") {
+        params.dateFilter = dateFilter.value;
+      }
+
+      if (dateFilter?.value === "custom" && customFrom && customTo) {
+        params.startDate = format(customFrom, "yyyy-MM-dd");
+        params.endDate = format(customTo, "yyyy-MM-dd");
+      }
+
+      // 🏢 Club filter
+      if (clubFilter) {
+        params.club_id = clubFilter;
+      }
+
+      const response = await authAxios().get("/report/email/delivery/download", {
+        params,
+        responseType: "blob",
+      });
+
+      // 📄 Create download
+      const blob = new Blob([response.data]);
+
+      const url = window.URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+
+      link.href = url;
+
+      link.setAttribute("download", "Email_Delivery_report.xlsx");
+
+      document.body.appendChild(link);
+
+      link.click();
+
+      link.remove();
+
+      window.URL.revokeObjectURL(url);
+
+      toast.success("Email Delivery Report downloaded successfully!");
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to download Email Delivery Report.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="page--content">
       {/* Header */}
@@ -205,6 +264,22 @@ const EmailAutomationReport = () => {
             />
           </div>
         </div>
+        {!ALLOWED_ROLES.includes(userRole) && (
+          <div className="w-full max-w-[170px]">
+            <button
+              onClick={handleExportData}
+              disabled={emailReport.length === 0 || (dateFilter?.value === "custom" && (!customFrom || !customTo))}
+              className={`ms-auto px-4 py-2 rounded flex items-center gap-2
+              ${
+                emailReport.length === 0 || (dateFilter?.value === "custom" && (!customFrom || !customTo))
+                  ? "bg-gray-400 cursor-not-allowed text-white"
+                  : "bg-black text-white hover:bg-gray-800"
+              }`}
+            >
+              <LuDownload/> <span>Download Report</span>
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Table */}
@@ -213,6 +288,7 @@ const EmailAutomationReport = () => {
           <table className="w-full text-sm text-left text-gray-500">
             <thead className="text-xs text-gray-700 uppercase bg-gray-50">
               <tr>
+                <th className="px-2 py-4">Club Name</th>
                 <th className="px-2 py-4">Campaign Name</th>
                 <th className="px-2 py-4">Emails Sent</th>
                 <th className="px-2 py-4">Delivery Rate</th>
@@ -229,6 +305,7 @@ const EmailAutomationReport = () => {
                     key={index}
                     className="bg-white border-b hover:bg-gray-50"
                   >
+                    <td className="px-2 py-3">{item?.club_name}</td>
                     <td className="px-2 py-3">{item?.campaign_name}</td>
                     <td className="px-2 py-3">{item?.email_sent}</td>
                     <td className="px-2 py-3">{formatPercentage(item?.delivery_rate)}</td>
@@ -264,4 +341,4 @@ const EmailAutomationReport = () => {
   );
 };
 
-export default EmailAutomationReport;
+export default IsLoadingHOC(EmailAutomationReport);

@@ -5,6 +5,7 @@ import { addYears, format, subYears } from "date-fns";
 import { FaCalendarDays } from "react-icons/fa6";
 import Select from "react-select";
 import {
+  ALLOWED_ROLES,
   customStyles,
   filterActiveItems,
   formatIndianNumber,
@@ -12,6 +13,8 @@ import {
 import { authAxios } from "../../../config/config";
 import { toast } from "react-toastify";
 import { useSelector } from "react-redux";
+import IsLoadingHOC from "../../common/IsLoadingHOC";
+import { LuDownload } from "react-icons/lu";
 
 const dateFilterOptions = [
   { value: "today", label: "Today" },
@@ -22,7 +25,8 @@ const dateFilterOptions = [
 
 const formatDate = (date) => format(date, "yyyy-MM-dd");
 
-const LeadSourcePerformance = () => {
+const LeadSourcePerformance = (props) => {
+  const { setLoading } = props;
   const [leadSource, setLeadSource] = useState([]);
   const [clubList, setClubList] = useState([]);
   const [clubFilter, setClubFilter] = useState(null);
@@ -106,6 +110,60 @@ const LeadSourcePerformance = () => {
     // For all non-custom filters
     fetchLeadSourcePerformance();
   }, [dateFilter, customFrom, customTo, clubFilter]);
+
+  const handleExportData = async () => {
+    try {
+      setLoading(true);
+
+      const params = {};
+
+      // 📅 Date filters
+      if (dateFilter?.value && dateFilter.value !== "custom") {
+        params.dateFilter = dateFilter.value;
+      }
+
+      if (dateFilter?.value === "custom" && customFrom && customTo) {
+        params.startDate = format(customFrom, "yyyy-MM-dd");
+        params.endDate = format(customTo, "yyyy-MM-dd");
+      }
+
+      // 🏢 Club filter
+      if (clubFilter) {
+        params.club_id = clubFilter;
+      }
+
+      const response = await authAxios().get("/marketing/report/lead/source/performance/download", {
+        params,
+        responseType: "blob",
+      });
+
+      // 📄 Create download
+      const blob = new Blob([response.data]);
+
+      const url = window.URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+
+      link.href = url;
+
+      link.setAttribute("download", "Lead_Source_Performance.xlsx");
+
+      document.body.appendChild(link);
+
+      link.click();
+
+      link.remove();
+
+      window.URL.revokeObjectURL(url);
+
+      toast.success("Lead Source Performance downloaded successfully!");
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to download Lead Source Performance.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="page--content">
@@ -193,6 +251,22 @@ const LeadSourcePerformance = () => {
             />
           </div>
         </div>
+        {!ALLOWED_ROLES.includes(userRole) && (
+          <div className="w-full max-w-[170px]">
+            <button
+              onClick={handleExportData}
+              disabled={leadSource.length === 0 || (dateFilter?.value === "custom" && (!customFrom || !customTo))}
+              className={`ms-auto px-4 py-2 rounded flex items-center gap-2
+              ${
+                leadSource.length === 0 || (dateFilter?.value === "custom" && (!customFrom || !customTo))
+                  ? "bg-gray-400 cursor-not-allowed text-white"
+                  : "bg-black text-white hover:bg-gray-800"
+              }`}
+            >
+              <LuDownload/> <span>Download Report</span>
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Table */}
@@ -248,4 +322,4 @@ const LeadSourcePerformance = () => {
   );
 };
 
-export default LeadSourcePerformance;
+export default IsLoadingHOC(LeadSourcePerformance);

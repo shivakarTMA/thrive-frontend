@@ -9,6 +9,7 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { addYears, format, subYears } from "date-fns";
 import {
+  ALLOWED_ROLES,
   customStyles,
   filterActiveItems,
   formatAutoDate,
@@ -26,6 +27,8 @@ import Tooltip from "../common/Tooltip";
 import { useSelector } from "react-redux";
 import { useFormik } from "formik";
 import { useLocation } from "react-router-dom";
+import IsLoadingHOC from "../common/IsLoadingHOC";
+import { LuDownload } from "react-icons/lu";
 
 const dateFilterOptions = [
   { value: "today", label: "Today" },
@@ -34,7 +37,8 @@ const dateFilterOptions = [
   { value: "custom", label: "Custom Date" },
 ];
 
-const AllLostFound = () => {
+const AllLostFound = (props) => {
+  const { setLoading } = props;
   const location = useLocation();
   const [data, setData] = useState([]);
   const [modalOpen, setModalOpen] = useState(false);
@@ -253,6 +257,69 @@ const AllLostFound = () => {
     appliedFilters.status,
   ]);
 
+  const handleExportData = async () => {
+    try {
+      setLoading(true);
+
+      const params = {};
+
+      // 📅 Date filters
+      if (dateFilter?.value && dateFilter.value !== "custom") {
+        params.dateFilter = dateFilter.value;
+      }
+
+      if (dateFilter?.value === "custom" && customFrom && customTo) {
+        params.startDate = format(customFrom, "yyyy-MM-dd");
+        params.endDate = format(customTo, "yyyy-MM-dd");
+      }
+
+      // 🏢 Club filter
+      if (clubFilter?.value) {
+        params.club_id = clubFilter.value;
+      }
+
+      // 🎯 Applied filters
+      Object.entries(appliedFilters).forEach(([key, value]) => {
+        if (value !== null && value !== undefined) {
+          params[key] = value;
+        }
+      });
+
+
+      const response = await authAxios().get("/lost/found/list/download", {
+        params,
+        responseType: "blob",
+      });
+
+      // 📄 Create download
+      const blob = new Blob([response.data]);
+
+      const url = window.URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+
+      link.href = url;
+
+      link.setAttribute("download", "Lost_Found_report.xlsx");
+
+      document.body.appendChild(link);
+
+      link.click();
+
+      link.remove();
+
+      window.URL.revokeObjectURL(url);
+
+      toast.success("Lost & Found downloaded successfully!");
+    } catch (error) {
+      console.error(error);
+
+      toast.error("Failed to download Lost & Found.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="page--content">
       <div className="flex items-end justify-between gap-2 mb-5">
@@ -262,81 +329,99 @@ const AllLostFound = () => {
         </div>
       </div>
 
-      {/* Date Filter Dropdown */}
-      <div className="flex gap-2 w-full mb-4">
-        <div className="max-w-[180px] w-full">
-          <Select
-            placeholder="Date Filter"
-            options={dateFilterOptions}
-            value={dateFilter}
-            onChange={(selected) => {
-              setDateFilter(selected);
-              if (selected?.value !== "custom") {
-                setCustomFrom(null);
-                setCustomTo(null);
-              }
-              setPage(1); // Reset to first page
-            }}
-            styles={customStyles}
-            className="w-full"
-          />
-        </div>
+      <div className="flex gap-3 mb-4 items-center justify-between">
+        {/* Date Filter Dropdown */}
+        <div className="flex gap-2 w-full">
+          <div className="max-w-[180px] w-full">
+            <Select
+              placeholder="Date Filter"
+              options={dateFilterOptions}
+              value={dateFilter}
+              onChange={(selected) => {
+                setDateFilter(selected);
+                if (selected?.value !== "custom") {
+                  setCustomFrom(null);
+                  setCustomTo(null);
+                }
+                setPage(1); // Reset to first page
+              }}
+              styles={customStyles}
+              className="w-full"
+            />
+          </div>
 
-        {dateFilter?.value === "custom" && (
-          <>
-            <div className="custom--date dob-format flex-1 max-w-[180px] w-full">
-              <span className="absolute z-[1] mt-[10px] ml-[15px]">
-                <FaCalendarDays />
-              </span>
-              <DatePicker
-                selected={customFrom}
-                onChange={(date) => {
-                  setCustomFrom(date);
-                  setPage(1);
-                }}
-                placeholderText="From Date"
-                className="custom--input w-full input--icon"
-                minDate={subYears(new Date(), 20)}
-                maxDate={addYears(new Date(), 0)}
-                dateFormat="dd-MM-yyyy"
-                showMonthDropdown
-                showYearDropdown
-                dropdownMode="select"
-              />
-            </div>
-            <div className="custom--date dob-format flex-1 max-w-[180px] w-full">
-              <span className="absolute z-[1] mt-[10px] ml-[15px]">
-                <FaCalendarDays />
-              </span>
-              <DatePicker
-                selected={customTo}
-                onChange={(date) => {
-                  setCustomTo(date);
-                  setPage(1);
-                }}
-                placeholderText="To Date"
-                className="custom--input w-full input--icon"
-                minDate={customFrom || subYears(new Date(), 20)}
-                maxDate={addYears(new Date(), 0)}
-                showMonthDropdown
-                showYearDropdown
-                dropdownMode="select"
-                dateFormat="dd-MM-yyyy"
-              />
-            </div>
-          </>
+          {dateFilter?.value === "custom" && (
+            <>
+              <div className="custom--date dob-format flex-1 max-w-[180px] w-full">
+                <span className="absolute z-[1] mt-[10px] ml-[15px]">
+                  <FaCalendarDays />
+                </span>
+                <DatePicker
+                  selected={customFrom}
+                  onChange={(date) => {
+                    setCustomFrom(date);
+                    setPage(1);
+                  }}
+                  placeholderText="From Date"
+                  className="custom--input w-full input--icon"
+                  minDate={subYears(new Date(), 20)}
+                  maxDate={addYears(new Date(), 0)}
+                  dateFormat="dd-MM-yyyy"
+                  showMonthDropdown
+                  showYearDropdown
+                  dropdownMode="select"
+                />
+              </div>
+              <div className="custom--date dob-format flex-1 max-w-[180px] w-full">
+                <span className="absolute z-[1] mt-[10px] ml-[15px]">
+                  <FaCalendarDays />
+                </span>
+                <DatePicker
+                  selected={customTo}
+                  onChange={(date) => {
+                    setCustomTo(date);
+                    setPage(1);
+                  }}
+                  placeholderText="To Date"
+                  className="custom--input w-full input--icon"
+                  minDate={customFrom || subYears(new Date(), 20)}
+                  maxDate={addYears(new Date(), 0)}
+                  showMonthDropdown
+                  showYearDropdown
+                  dropdownMode="select"
+                  dateFormat="dd-MM-yyyy"
+                />
+              </div>
+            </>
+          )}
+
+          <div className="w-fit min-w-[180px]">
+            <Select
+              placeholder="Filter by club"
+              options={clubOptions}
+              value={selectedClub}
+              onChange={setClubFilter}
+              isClearable={userRole === "ADMIN" ? true : false}
+              styles={customStyles}
+            />
+          </div>
+        </div>
+        {!ALLOWED_ROLES.includes(userRole) && (
+          <div className="w-full max-w-[170px]">
+            <button
+              onClick={handleExportData}
+              disabled={data.length === 0 || (dateFilter?.value === "custom" && (!customFrom || !customTo))}
+              className={`ms-auto px-4 py-2 rounded flex items-center gap-2
+              ${
+                data.length === 0 || (dateFilter?.value === "custom" && (!customFrom || !customTo))
+                  ? "bg-gray-400 cursor-not-allowed text-white"
+                  : "bg-black text-white hover:bg-gray-800"
+              }`}
+            >
+              <LuDownload /> <span>Download Report</span>
+            </button>
+          </div>
         )}
-
-        <div className="w-fit min-w-[180px]">
-          <Select
-            placeholder="Filter by club"
-            options={clubOptions}
-            value={selectedClub}
-            onChange={setClubFilter}
-            isClearable={userRole === "ADMIN" ? true : false}
-            styles={customStyles}
-          />
-        </div>
       </div>
 
       <div className="w-full p-3 border bg-white shodow--box rounded-[10px]">
@@ -380,17 +465,17 @@ const AllLostFound = () => {
             <table className="w-full text-sm text-left text-gray-500">
               <thead className="text-xs text-gray-700 uppercase bg-gray-50">
                 <tr>
-                  <th className="px-2 py-4">Image</th>
-                  <th className="px-2 py-4">Club Name</th>
-                  <th className="px-2 py-4">Item Name</th>
-                  <th className="px-2 py-4">Category</th>
-                  <th className="px-2 py-4">Found At</th>
-                  <th className="px-2 py-4">Date & Time</th>
-                  <th className="px-2 py-4">Status</th>
-                  <th className="px-2 py-4">Logged By</th>
-                  <th className="px-2 py-4">Claimant Name</th>
-                  <th className="px-2 py-4">Return By</th>
-                  <th className="px-2 py-4">Return Date Time</th>
+                  <th className="px-2 py-4 min-w-[100px]">Image</th>
+                  <th className="px-2 py-4 min-w-[120px]">Club Name</th>
+                  <th className="px-2 py-4 min-w-[120px]">Item Name</th>
+                  <th className="px-2 py-4 min-w-[100px]">Category</th>
+                  <th className="px-2 py-4 min-w-[100px]">Found At</th>
+                  <th className="px-2 py-4 min-w-[110px]">Date & Time</th>
+                  <th className="px-2 py-4 min-w-[120px] text-center">Status</th>
+                  <th className="px-2 py-4 min-w-[100px]">Logged By</th>
+                  <th className="px-2 py-4 min-w-[140px]">Claimant Name</th>
+                  <th className="px-2 py-4 min-w-[140px]">Return By</th>
+                  <th className="px-2 py-4 min-w-[150px]">Return Date Time</th>
                   {(userRole === "FOH" ||
                     userRole === "CLUB_MANAGER" ||
                     userRole === "ASS_CLUB_MANAGER" ||
@@ -428,7 +513,7 @@ const AllLostFound = () => {
                       <td className="px-2 py-4">
                         <span
                           className={`
-                            flex items-center justify-between gap-1 rounded-full min-h-[30px] px-3 text-sm w-fit
+                            mx-auto flex items-center justify-between gap-1 rounded-full min-h-[30px] px-3 text-sm w-fit
                           ${
                             row?.status === "AVAILABLE"
                               ? "bg-[#E8FFE6] text-[#138808]"
@@ -551,4 +636,4 @@ const AllLostFound = () => {
   );
 };
 
-export default AllLostFound;
+export default IsLoadingHOC(AllLostFound);
