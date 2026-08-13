@@ -117,7 +117,7 @@ const CreateNewInvoice = ({
   const [voucherInput, setVoucherInput] = useState("");
   const [voucherStatus, setVoucherStatus] = useState(null);
   const [voucherMessage, setVoucherMessage] = useState("");
-  const [clubTiming, setClubTiming] = useState([]);
+  // const [clubTiming, setClubTiming] = useState([]);
 
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
   const [paymentUrl, setPaymentUrl] = useState("");
@@ -460,26 +460,26 @@ const CreateNewInvoice = ({
     },
   });
 
-  const fetchClubTimingAPI = async () => {
-    try {
-      if (!formik.values.club_id) return;
+  // const fetchClubTimingAPI = async () => {
+  //   try {
+  //     if (!formik.values.club_id) return;
 
-      const res = await authAxios().get(
-        `/club/fetch/timing/${formik.values.club_id}`,
-      );
+  //     const res = await authAxios().get(
+  //       `/club/fetch/timing/${formik.values.club_id}`,
+  //     );
 
-      setClubTiming(res.data?.data?.time || []);
-    } catch (err) {
-      console.error("Club timing error:", err);
-      setClubTiming([]);
-    }
-  };
+  //     setClubTiming(res.data?.data?.time || []);
+  //   } catch (err) {
+  //     console.error("Club timing error:", err);
+  //     setClubTiming([]);
+  //   }
+  // };
 
-  useEffect(() => {
-    if (formik.values.club_id) {
-      fetchClubTimingAPI();
-    }
-  }, [formik.values.club_id]);
+  // useEffect(() => {
+  //   if (formik.values.club_id) {
+  //     fetchClubTimingAPI();
+  //   }
+  // }, [formik.values.club_id]);
 
   const formatTo12Hour = (time24) => {
     const [h, m] = time24.split(":").map(Number);
@@ -489,46 +489,46 @@ const CreateNewInvoice = ({
     return `${hour}:${m.toString().padStart(2, "0")} ${ampm}`;
   };
 
-  const startTimeOptions = clubTiming.map((time) => {
-    const now = new Date();
-    const selectedDate = formik.values.start_date;
-    let isDisabled = false;
+  // const startTimeOptions = clubTiming.map((time) => {
+  //   const now = new Date();
+  //   const selectedDate = formik.values.start_date;
+  //   let isDisabled = false;
 
-    if (selectedDate) {
-      const [h, m] = time.split(":").map(Number);
-      const timeDate = new Date(selectedDate);
-      timeDate.setHours(h, m, 0, 0);
+  //   if (selectedDate) {
+  //     const [h, m] = time.split(":").map(Number);
+  //     const timeDate = new Date(selectedDate);
+  //     timeDate.setHours(h, m, 0, 0);
 
-      const selectedIsToday =
-        new Date(selectedDate).toDateString() === now.toDateString();
+  //     const selectedIsToday =
+  //       new Date(selectedDate).toDateString() === now.toDateString();
 
-      // ── NEW: detect if selected date is tomorrow ──────────────────────────
-      const tom = new Date();
-      tom.setDate(tom.getDate() + 1);
-      const selectedIsTomorrow =
-        new Date(selectedDate).toDateString() === tom.toDateString();
-      // ─────────────────────────────────────────────────────────────────────
+  //     // ── NEW: detect if selected date is tomorrow ──────────────────────────
+  //     const tom = new Date();
+  //     tom.setDate(tom.getDate() + 1);
+  //     const selectedIsTomorrow =
+  //       new Date(selectedDate).toDateString() === tom.toDateString();
+  //     // ─────────────────────────────────────────────────────────────────────
 
-      // Today edge-case (minDate guard)
-      if (selectedIsToday && timeDate <= now) {
-        isDisabled = true;
-      }
+  //     // Today edge-case (minDate guard)
+  //     if (selectedIsToday && timeDate <= now) {
+  //       isDisabled = true;
+  //     }
 
-      // ── NEW: tomorrow → disable slots at/before current time-of-day ──────
-      // e.g. if now is 2:30 PM on the 23rd, disable 6:30 AM–2:30 PM on the 24th
-      // if (selectedIsTomorrow) {
-      //   const slotTimeOnly = new Date(); // same calendar day as now
-      //   slotTimeOnly.setHours(h, m, 0, 0); // but set to the slot's HH:mm
-      //   if (slotTimeOnly <= now) {
-      //     isDisabled = true;
-      //   }
-      // }
-      // For 25th and beyond → isDisabled stays false, all slots enabled
-      // ─────────────────────────────────────────────────────────────────────
-    }
+  //     // ── NEW: tomorrow → disable slots at/before current time-of-day ──────
+  //     // e.g. if now is 2:30 PM on the 23rd, disable 6:30 AM–2:30 PM on the 24th
+  //     // if (selectedIsTomorrow) {
+  //     //   const slotTimeOnly = new Date(); // same calendar day as now
+  //     //   slotTimeOnly.setHours(h, m, 0, 0); // but set to the slot's HH:mm
+  //     //   if (slotTimeOnly <= now) {
+  //     //     isDisabled = true;
+  //     //   }
+  //     // }
+  //     // For 25th and beyond → isDisabled stays false, all slots enabled
+  //     // ─────────────────────────────────────────────────────────────────────
+  //   }
 
-    return { label: formatTo12Hour(time), value: time, isDisabled };
-  });
+  //   return { label: formatTo12Hour(time), value: time, isDisabled };
+  // });
 
   const handleFinalSubmit = async (mode) => {
     paymentModeRef.current = mode;

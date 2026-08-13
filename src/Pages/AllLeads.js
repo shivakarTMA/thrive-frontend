@@ -334,10 +334,20 @@ const AllLeads = (props) => {
     }
   };
 
-  const clubOptions = clubList.map((item) => ({
+const clubOptions = [
+  ...clubList.map((item) => ({
     label: item.name,
     value: item.id,
-  }));
+  })),
+  ...(userRole === "ADMIN"
+    ? [
+        {
+          label: "NULL",
+          value: "NULL",
+        },
+      ]
+    : []),
+];
 
   const selectedClub =
     clubOptions.find((opt) => opt.value === clubFilter?.value) || null;

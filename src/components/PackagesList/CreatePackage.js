@@ -1520,10 +1520,10 @@ const CreatePackage = ({
                               <input
                                 type="number"
                                 name={`variation[${index}].gst`}
-                                // value={
-                                //   formik.values.variation[index]?.gst ?? ""
-                                // }
-                                value={5}
+                                value={
+                                  formik.values.variation[index]?.gst ?? 5
+                                }
+                                // value={5}
                                 // onChange={formik.handleChange}
                                 onKeyDown={blockInvalidNumberKeys}
                                 onChange={(e) => {

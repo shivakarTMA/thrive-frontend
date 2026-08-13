@@ -125,13 +125,13 @@ const LeadCallLogs = () => {
   const [staffList, setStaffList] = useState([]);
   const [editLog, setEditLog] = useState(null);
   const [clubData, setClubData] = useState(null);
-  const [clubEndTime, setClubEndTime] = useState("");
 
   const clubId = clubIdFromParams || clubData; // ✅ fallback to API club
   const [trainerBookedSlots, setTrainerBookedSlots] = useState([]);
   const [scheduleBookedSlots, setScheduleBookedSlots] = useState([]);
 
-  const [clubTiming, setClubTiming] = useState([]);
+  // Schedule Follow UP trainer working slots
+  const [scheduleTrainerSlotsData, setScheduleTrainerSlotsData] = useState([]);
 
   // ===============================
   // TRIAL/TOUR trainer slots (new API) — scoped only to the
@@ -390,6 +390,61 @@ const LeadCallLogs = () => {
   }, [formik.values.training_by, clubId]);
 
   // Schedule Follow Up (schedule_for) — unchanged, still uses old API
+  // const fetchScheduleBookedSlots = async (staffId) => {
+  //   if (!staffId || !clubId) {
+  //     setScheduleBookedSlots([]);
+  //     return;
+  //   }
+
+  //   try {
+  //     const res = await authAxios().post("/appointment/trainer/booked/slot", {
+  //       club_id: clubId,
+  //       trainer_id: staffId, // same API used for FOH too
+  //       booking_type: "COMPLIMENTARY", // always COMPLIMENTARY for schedule follow-up
+  //     });
+
+  //     const slots = res.data?.availability || [];
+  //     // console.log("Schedule Follow Up booked slots:", slots);
+  //     setScheduleBookedSlots(slots);
+  //   } catch (err) {
+  //     console.error(err);
+  //     setScheduleBookedSlots([]);
+  //   }
+  // };
+  // ===============================
+  // SCHEDULE FOLLOW UP:
+  // Fetch trainer working/available slots
+  // ===============================
+  const fetchScheduleTrainerSlots = async (trainerId, targetClubId) => {
+    if (!trainerId || !targetClubId) {
+      setScheduleTrainerSlotsData([]);
+      return;
+    }
+
+    try {
+      const res = await authAxios().post(
+        "/staff/operating/hours/trainer/slots",
+        {
+          trainer_id: trainerId,
+          club_id: targetClubId,
+          booking_type: "COMPLIMENTARY",
+        },
+      );
+
+      console.log("Schedule Follow UP trainer slots:", res.data);
+
+      setScheduleTrainerSlotsData(res.data?.data || []);
+    } catch (err) {
+      console.error("Schedule Follow UP trainer slots error:", err);
+
+      setScheduleTrainerSlotsData([]);
+    }
+  };
+
+  // ===============================
+  // SCHEDULE FOLLOW UP:
+  // Fetch already booked slots
+  // ===============================
   const fetchScheduleBookedSlots = async (staffId) => {
     if (!staffId || !clubId) {
       setScheduleBookedSlots([]);
@@ -399,12 +454,16 @@ const LeadCallLogs = () => {
     try {
       const res = await authAxios().post("/appointment/trainer/booked/slot", {
         club_id: clubId,
-        trainer_id: staffId, // same API used for FOH too
+        trainer_id: staffId,
+        booking_type: "COMPLIMENTARY",
       });
+
+      console.log("Schedule Follow UP booked slots:", res.data);
 
       setScheduleBookedSlots(res.data?.availability || []);
     } catch (err) {
-      console.error(err);
+      console.error("Schedule Follow UP booked slots error:", err);
+
       setScheduleBookedSlots([]);
     }
   };
@@ -492,38 +551,6 @@ const LeadCallLogs = () => {
     }
   }, [logId, callLogs]);
 
-  const fetchClubTimingAPI = async () => {
-    try {
-      if (!clubId) return;
-
-      const res = await authAxios().get(`/club/fetch/timing/${clubId}`);
-
-      setClubTiming(res.data?.data?.time || []);
-    } catch (err) {
-      console.error("Club timing error:", err);
-      setClubTiming([]);
-    }
-  };
-
-  const fetchClubID = async () => {
-    try {
-      if (!clubId) return;
-
-      const res = await authAxios().get(`/club/${clubId}`);
-      const data = res.data?.data?.close_time;
-      setClubEndTime(data);
-    } catch (err) {
-      console.error("Club timing error:", err);
-    }
-  };
-
-  useEffect(() => {
-    if (clubId) {
-      fetchClubTimingAPI();
-      fetchClubID();
-    }
-  }, [clubId]);
-
   const getScheduleBookedSlotsForDate = (date) => {
     if (!date || !scheduleBookedSlots.length) return [];
 
@@ -532,6 +559,18 @@ const LeadCallLogs = () => {
     const matched = scheduleBookedSlots.find((item) => item.date === dateStr);
 
     return matched?.slots || [];
+  };
+  // Get trainer working schedule for selected date
+  const getScheduleTrainerDataForDate = (date) => {
+    if (!date || !scheduleTrainerSlotsData.length) {
+      return null;
+    }
+
+    const dateStr = formatDateForApi(date);
+
+    return (
+      scheduleTrainerSlotsData.find((item) => item.date === dateStr) || null
+    );
   };
 
   const formatTo12Hour = (time24) => {
@@ -606,83 +645,72 @@ const LeadCallLogs = () => {
     }
   }, [selectedTrialDayData]);
 
-  const scheduleTimeOptions = clubTiming.map((time) => {
-    const now = new Date();
+  const scheduleTimeOptions = useMemo(() => {
     const selectedDate = formik.values.follow_up_date;
-    let isDisabled = false;
 
-    if (selectedDate) {
-      const [h, m] = time.split(":").map(Number);
+    if (!selectedDate) {
+      return [];
+    }
+
+    // Get trainer's working schedule for selected date
+    const trainerDay = getScheduleTrainerDataForDate(selectedDate);
+
+    // No trainer schedule found
+    if (!trainerDay) {
+      return [];
+    }
+
+    // Full day holiday
+    if (trainerDay.is_full_day_holiday) {
+      return [];
+    }
+
+    // Staff holiday
+    if (trainerDay.is_staff_holiday) {
+      return [];
+    }
+
+    // No slots
+    if (!trainerDay.slots?.length) {
+      return [];
+    }
+
+    const now = new Date();
+
+    // Already booked slots
+    const bookedSlots = getScheduleBookedSlotsForDate(selectedDate);
+
+    return trainerDay.slots.map((slot) => {
+      const time = slot.time;
+
+      const [hours, minutes] = time.split(":").map(Number);
+
       const timeDate = new Date(selectedDate);
-      timeDate.setHours(h, m, 0, 0);
+
+      timeDate.setHours(hours, minutes, 0, 0);
 
       const isToday = selectedDate.toDateString() === now.toDateString();
-      if (isToday && timeDate <= now) isDisabled = true;
 
-      const booked = getScheduleBookedSlotsForDate(selectedDate);
-      if (booked.includes(time)) isDisabled = true;
-    }
+      const isPast = isToday && timeDate <= now;
 
-    return { label: formatTo12Hour(time), value: time, isDisabled };
-  });
+      const isBooked = bookedSlots.includes(time);
 
-  const firstTime = clubTiming[0]; // "06:30"
-  const lastTime = clubTiming[clubTiming.length - 1]; // "20:30"
+      return {
+        label: formatTo12Hour(time),
+        value: time,
 
-  const generateTimeSlots = (start, end, interval = 10) => {
-    if (!start || !end) return [];
-
-    const slots = [];
-
-    const [startH, startM] = start.split(":").map(Number);
-    const [endH, endM] = end.split(":").map(Number);
-
-    const current = new Date();
-    current.setHours(startH, startM, 0, 0);
-
-    const endDate = new Date();
-    endDate.setHours(endH, endM, 0, 0);
-
-    // 👇 changed here
-    while (current < endDate) {
-      const h = String(current.getHours()).padStart(2, "0");
-      const m = String(current.getMinutes()).padStart(2, "0");
-
-      slots.push(`${h}:${m}`);
-      current.setMinutes(current.getMinutes() + interval);
-    }
-
-    return slots;
-  };
-
-  const newClubTiming = generateTimeSlots(firstTime, lastTime, 10);
-
-  const cleanTime = clubEndTime?.slice(0, 5);
-
-  const updatedTiming =
-    clubTiming && clubTiming.length > 0
-      ? generateTimeSlots(clubTiming[0], cleanTime, 10)
-      : [];
-
-  const timeFollowUpOptions = updatedTiming.map((time) => {
-    const now = new Date();
-    const selectedDate = formik.values.follow_up_date;
-    let isDisabled = false;
-
-    if (selectedDate) {
-      const [h, m] = time.split(":").map(Number);
-      const timeDate = new Date(selectedDate);
-      timeDate.setHours(h, m, 0, 0);
-
-      const isToday = selectedDate.toDateString() === new Date().toDateString();
-
-      if (isToday && timeDate <= new Date()) {
-        isDisabled = true;
-      }
-    }
-
-    return { label: formatTo12Hour(time), value: time, isDisabled };
-  });
+        // Disable if:
+        // 1. API says enable=false
+        // 2. Time is already booked
+        // 3. Time has already passed today
+        isDisabled: slot.enable !== true || isBooked || isPast,
+      };
+    });
+  }, [
+    formik.values.follow_up_date,
+    scheduleTrainerSlotsData,
+    scheduleBookedSlots,
+  ]);
 
   const combineDateTime = (date, time) => {
     if (!date || !time) return;
@@ -792,16 +820,18 @@ const LeadCallLogs = () => {
 
                       <div>
                         <Select
-                          key={formik.values.follow_up_date}
+                          key={`${formik.values.schedule_for}-${formik.values.follow_up_date}`}
                           value={
                             formik.values.follow_up_time
-                              ? timeFollowUpOptions.find(
+                              ? scheduleTimeOptions.find(
                                   (opt) =>
                                     opt.value === formik.values.follow_up_time,
                                 )
                               : null
                           }
                           onChange={(option) => {
+                            if (!option || option.isDisabled) return;
+
                             formik.setFieldValue(
                               "follow_up_time",
                               option.value,
@@ -812,8 +842,8 @@ const LeadCallLogs = () => {
                               option.value,
                             );
                           }}
-                          options={timeFollowUpOptions}
-                          placeholder="Select time"
+                          options={scheduleTimeOptions}
+                          placeholder="Select Time"
                           isDisabled={!formik.values.follow_up_date}
                           styles={customStyles}
                         />
@@ -964,11 +994,23 @@ const LeadCallLogs = () => {
 
                             formik.setFieldValue("schedule_for", staffId);
 
-                            // 🔥 RESET EVERYTHING
+                            // Reset selected date/time
                             formik.setFieldValue("follow_up_date", null);
                             formik.setFieldValue("follow_up_time", null);
                             formik.setFieldValue("follow_up_datetime", "");
 
+                            // Reset old API data
+                            setScheduleTrainerSlotsData([]);
+                            setScheduleBookedSlots([]);
+
+                            if (!staffId) {
+                              return;
+                            }
+
+                            // Fetch BOTH:
+                            // 1. Trainer working slots
+                            // 2. Already booked slots
+                            fetchScheduleTrainerSlots(staffId, clubId);
                             fetchScheduleBookedSlots(staffId);
                           }}
                           placeholder="Schedule For"
@@ -995,12 +1037,12 @@ const LeadCallLogs = () => {
                               onChange={(date) => {
                                 formik.setFieldValue("follow_up_date", date);
 
-                                // reset time
                                 formik.setFieldValue("follow_up_time", null);
+
                                 formik.setFieldValue("follow_up_datetime", "");
                               }}
                               dateFormat="dd/MM/yyyy"
-                              minDate={new Date()} // ✅ disable past dates
+                              minDate={new Date()}
                               placeholderText="Select Date"
                               onKeyDown={(e) => {
                                 e.preventDefault();

@@ -775,22 +775,22 @@ const PackagesList = () => {
             <thead className="text-xs text-gray-700 uppercase bg-gray-50">
               <tr>
                 {/* <th className="px-2 py-4">Module ID</th> */}
-                <th className="px-2 py-4">Image</th>
-                <th className="px-2 py-4">Title</th>
-                <th className="px-2 py-4">Club Name</th>
-                <th className="px-2 py-4">Booking Type</th>
-                <th className="px-2 py-4">Service</th>
-                <th className="px-2 py-4">Amount</th>
-                <th className="px-2 py-4">Discount</th>
-                <th className="px-2 py-4">gst</th>
-                <th className="px-2 py-4">Total Amount</th>
-                <th className="px-2 py-4 text-center">Position</th>
-                <th className="px-2 py-4">Status</th>
+                <th className="px-2 py-4 min-w-[80px]">Image</th>
+                <th className="px-2 py-4 min-w-[150px]">Title</th>
+                <th className="px-2 py-4 min-w-[150px]">Club Name</th>
+                <th className="px-2 py-4 min-w-[150px]">Booking Type</th>
+                <th className="px-2 py-4 min-w-[150px]">Service</th>
+                <th className="px-2 py-4 min-w-[100px]">Amount</th>
+                <th className="px-2 py-4 min-w-[100px]">Discount</th>
+                <th className="px-2 py-4 min-w-[100px]">gst</th>
+                <th className="px-2 py-4 min-w-[120px]">Total Amount</th>
+                <th className="px-2 py-4 text-center min-w-[100px]">Position</th>
+                <th className="px-2 py-4 min-w-[100px]">Status</th>
                 {(userRole === "ADMIN" ||
                   userRole === "CLUB_MANAGER" ||
                   userRole === "FINANCE_MANAGER_CORPORATE" ||
                   userRole === "FINANCE_MANAGER") && (
-                  <th className="px-2 py-4">Action</th>
+                  <th className="px-2 py-4 min-w-[100px]">Action</th>
                 )}
               </tr>
             </thead>
