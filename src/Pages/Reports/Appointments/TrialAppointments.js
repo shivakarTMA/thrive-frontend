@@ -139,6 +139,8 @@ const TrialAppointments = (props) => {
     fetchClub();
   }, []);
 
+  
+
   const clubOptions = clubList.map((item) => ({
     label: item.name,
     value: item.id,
@@ -147,11 +149,69 @@ const TrialAppointments = (props) => {
   const selectedClub =
     clubOptions.find((opt) => opt.value === clubFilter?.value) || null;
 
-  const trainerChangeOptions =
-    changeTrainerList?.map((item) => ({
-      label: item.name,
-      value: item.id,
-    })) || [];
+    // ✅ Fetch trainers based on club_id (if provided) or all trainers
+  // Fetch trainers based on appointment club_id and appointment_id
+const fetchTrainer = async (appointmentClubId = null, appointmentId = null) => {
+  try {
+    const roles = [
+      "TRAINER",
+      "FITNESS_MANAGER",
+      "ASS_FITNESS_MANAGER",
+    ];
+
+    const params = {
+      role: roles.join(","),
+    };
+
+    // Send appointment club_id
+    if (appointmentClubId) {
+      params.club_id = appointmentClubId;
+    }
+
+    // Send appointment id
+    if (appointmentId) {
+      params.appointment_id = appointmentId;
+    }
+
+    console.log("Fetch Trainer Params:", params);
+
+    const response = await authAxios().get("/staff/list", {
+      params,
+    });
+
+    const data = response.data?.data || [];
+
+    // Only allowed roles + enable === true
+    const activeTrainers = data.filter(
+      (item) =>
+        roles.includes(item.role) &&
+        item.enable === true
+    );
+
+    console.log("All Trainers:", data);
+    console.log("Enabled Trainers:", activeTrainers);
+    const trainerList = data.filter((item) =>
+      roles.includes(item.role)
+    );
+
+    setChangeTrainerList(trainerList);
+
+    // setChangeTrainerList(activeTrainers);
+  } catch (error) {
+    console.error("Failed to fetch trainers:", error);
+    setChangeTrainerList([]);
+  }
+};
+
+
+const trainerChangeOptions =
+  changeTrainerList?.map((item) => ({
+    label: item.name,
+    value: item.id,
+    isDisabled: item.enable !== true,
+  })) || [];
+
+    console.log(changeTrainerList,'changeTrainerList')
   // ---------------------------
   // UPDATE URL WITH PARAMS
   // ---------------------------
@@ -389,12 +449,16 @@ const TrialAppointments = (props) => {
     setRescheduleDateTime(null);
   };
 
-  const handleChangeTrainer = (row) => {
-    setSelectedAppointment(row);
-    setUpdateTrainerId(null);
-    setRemarks("");
-    setChangeTrainerModal(true);
-  };
+ const handleChangeTrainer = async (row) => {
+  setSelectedAppointment(row);
+  setUpdateTrainerId(null);
+  setRemarks("");
+
+  // Fetch trainers using appointment club_id + appointment id
+  await fetchTrainer(row?.club_id, row?.id);
+
+  setChangeTrainerModal(true);
+};
 
   const confirmChangeTrainer = async () => {
     if (!updateTrainerId) {
@@ -815,7 +879,6 @@ const TrialAppointments = (props) => {
               setAppliedFilters={setAppliedFilters}
               filteredStatusOptions={filterStatusOptions}
               clubId={clubFilter?.value}
-              setChangeTrainerList={setChangeTrainerList}
             />
           </div>
 
@@ -911,33 +974,6 @@ const TrialAppointments = (props) => {
                           userRole === "ADMIN") && (
                           <td className="px-2 py-4">
                             <div className="max-w-[130px] w-full">
-                              {/* <Select
-                                  placeholder="Select"
-                                  options={getAllowedStatusOptions(
-                                    row?.booking_status,
-                                  )}
-                                  value={getSelectedStatusOption(
-                                    row?.booking_status,
-                                  )}
-                                  isDisabled={
-                                    !canUpdateStatus(row?.booking_status) ||
-                                    getAllowedStatusOptions(row?.booking_status)
-                                      .length === 0
-                                  }
-                                  onChange={(selected) => {
-                                    if (!selected) return;
-                                    updateAppointmentStatus(row, selected.value);
-                                  }}
-                                  styles={{
-                                    ...customStyles,
-                                    menuPortal: (base) => ({
-                                      ...base,
-                                      zIndex: 9999,
-                                    }),
-                                  }}
-                                  menuPortalTarget={document.body}
-                                  menuPosition="fixed"
-                                /> */}
                               <div className="flex gap-0">
                                 <Tooltip
                                   id={`edit-status-${row?.id}`}
@@ -1003,13 +1039,6 @@ const TrialAppointments = (props) => {
               Confirm Status Update
             </h3>
 
-            {/* <p className="text-center mb-4">
-              Are you sure you want to mark this appointment as
-              <span className="font-bold ml-1">
-                {formatText(pendingStatus)}
-              </span>
-              ?
-            </p> */}
             {pendingStatus && (
               <p className="text-center mb-4">
                 Are you sure you want to mark this appointment as
@@ -1183,10 +1212,14 @@ const TrialAppointments = (props) => {
               <Select
                 value={
                   trainerChangeOptions.find(
-                    (opt) => opt.value === updateTrainerId,
+                    (opt) => opt.value === updateTrainerId
                   ) || null
                 }
-                onChange={(option) => setUpdateTrainerId(option?.value || null)}
+                onChange={(option) => {
+                  if (!option || option.isDisabled) return;
+
+                  setUpdateTrainerId(option.value);
+                }}
                 options={trainerChangeOptions}
                 placeholder="Select trainer"
                 styles={customStyles}
