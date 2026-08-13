@@ -253,27 +253,35 @@ const AllLeads = (props) => {
   const fetchStaff = async (clubId) => {
     try {
       const requests = [
+        // FOH is always available
         authAxios().get("/staff/list", {
-          params: { role: "FOH", club_id: clubId },
+          params: {
+            role: "FOH",
+            club_id: clubId,
+          },
         }),
       ];
 
-      if (
-        userRole === "CLUB_MANAGER"
-      ) {
+      // CLUB_MANAGER can see CLUB_MANAGER + ASS_CLUB_MANAGER
+      if (userRole === "CLUB_MANAGER") {
         requests.push(
           authAxios().get("/staff/list", {
-            params: { role: "FOH", club_id: clubId },
+            params: {
+              role: "CLUB_MANAGER,ASS_CLUB_MANAGER",
+              club_id: clubId,
+            },
           }),
         );
       }
 
-      if (
-        userRole === "ADMIN"
-      ) {
+      // ADMIN can see CLUB_MANAGER + ASS_CLUB_MANAGER
+      if (userRole === "ADMIN") {
         requests.push(
           authAxios().get("/staff/list", {
-            params: { role: "CLUB_MANAGER", club_id: clubId },
+            params: {
+              role: "CLUB_MANAGER,ASS_CLUB_MANAGER",
+              club_id: clubId,
+            },
           }),
         );
       }
@@ -283,24 +291,32 @@ const AllLeads = (props) => {
       let mergedData = [];
 
       responses.forEach((res) => {
-        const role = res.config.params.role; // ✅ more reliable than URL.includes
+        const requestedRole = res.config.params.role;
 
         const users = (res.data?.data || []).map((user) => ({
           ...user,
-          role,
+
+          // IMPORTANT:
+          // FOH request gets FOH role.
+          // For manager request, preserve the actual API role.
+          role: requestedRole === "FOH" ? "FOH" : user.role,
         }));
 
         mergedData.push(...users);
       });
 
+      // Remove duplicate users
       const uniqueData = Array.from(
         new Map(mergedData.map((user) => [user.id, user])).values(),
       );
 
       const activeOnly = filterActiveItems(uniqueData);
+
+      console.log("Staff List:", activeOnly);
+
       setStaffList(activeOnly);
     } catch (err) {
-      console.error(err);
+      console.error("Error fetching staff:", err);
     }
   };
 
@@ -353,6 +369,15 @@ const AllLeads = (props) => {
       label: "CLUB MANAGER",
       options: staffList
         .filter((user) => user.role === "CLUB_MANAGER")
+        .map((user) => ({
+          value: user.id,
+          label: user.name,
+        })),
+    },
+    {
+      label: "ASS CLUB MANAGER",
+      options: staffList
+        .filter((user) => user.role === "ASS_CLUB_MANAGER")
         .map((user) => ({
           value: user.id,
           label: user.name,
@@ -756,11 +781,7 @@ const AllLeads = (props) => {
           params.dateFilter = dateFilter.value;
         }
 
-        if (
-          dateFilter?.value === "custom" &&
-          customFrom &&
-          customTo
-        ) {
+        if (dateFilter?.value === "custom" && customFrom && customTo) {
           params.startDate = format(customFrom, "yyyy-MM-dd");
           params.endDate = format(customTo, "yyyy-MM-dd");
         }
@@ -780,13 +801,10 @@ const AllLeads = (props) => {
 
       console.log("📥 Download Params:", params);
 
-      const response = await authAxios().get(
-        "/lead/download/list",
-        {
-          params,
-          responseType: "blob",
-        }
-      );
+      const response = await authAxios().get("/lead/download/list", {
+        params,
+        responseType: "blob",
+      });
 
       // 📄 Create download
       const blob = new Blob([response.data]);
@@ -818,60 +836,60 @@ const AllLeads = (props) => {
   };
 
   const permissions = {
-  canEdit: [
-    "CLUB_MANAGER",
-    "ASS_CLUB_MANAGER",
-    "ADMIN",
-    "PROGRAM_SPECIALIST",
-    "FOH",
-    "FINANCE_MANAGER_CORPORATE",
-  ],
+    canEdit: [
+      "CLUB_MANAGER",
+      "ASS_CLUB_MANAGER",
+      "ADMIN",
+      "PROGRAM_SPECIALIST",
+      "FOH",
+      "FINANCE_MANAGER_CORPORATE",
+    ],
 
-  canCallLog: [
-    "FOH",
-    "TRAINER",
-    "FITNESS_MANAGER",
-    "ASS_FITNESS_MANAGER",
-    "CLUB_MANAGER",
-    "ASS_CLUB_MANAGER",
-    "PROGRAM_SPECIALIST",
-    "ADMIN",
-    "FINANCE_MANAGER_CORPORATE",
-  ],
+    canCallLog: [
+      "FOH",
+      "TRAINER",
+      "FITNESS_MANAGER",
+      "ASS_FITNESS_MANAGER",
+      "CLUB_MANAGER",
+      "ASS_CLUB_MANAGER",
+      "PROGRAM_SPECIALIST",
+      "ADMIN",
+      "FINANCE_MANAGER_CORPORATE",
+    ],
 
-  canConvert: [
-    "FOH",
-    "TRAINER",
-    "FITNESS_MANAGER",
-    "ASS_FITNESS_MANAGER",
-    "CLUB_MANAGER",
-    "ASS_CLUB_MANAGER",
-    "PROGRAM_SPECIALIST",
-    "ADMIN",
-  ],
+    canConvert: [
+      "FOH",
+      "TRAINER",
+      "FITNESS_MANAGER",
+      "ASS_FITNESS_MANAGER",
+      "CLUB_MANAGER",
+      "ASS_CLUB_MANAGER",
+      "PROGRAM_SPECIALIST",
+      "ADMIN",
+    ],
 
-  canScheduleTrial: [
-    "FOH",
-    "CLUB_MANAGER",
-    "ASS_CLUB_MANAGER",
-    "PROGRAM_SPECIALIST",
-    "ADMIN",
-  ],
+    canScheduleTrial: [
+      "FOH",
+      "CLUB_MANAGER",
+      "ASS_CLUB_MANAGER",
+      "PROGRAM_SPECIALIST",
+      "ADMIN",
+    ],
 
-  canAppointment: [
-    "FOH",
-    "TRAINER",
-    "FITNESS_MANAGER",
-    "ASS_FITNESS_MANAGER",
-    "CLUB_MANAGER",
-    "ASS_CLUB_MANAGER",
-    "PROGRAM_SPECIALIST",
-    "ADMIN",
-  ],
-};
+    canAppointment: [
+      "FOH",
+      "TRAINER",
+      "FITNESS_MANAGER",
+      "ASS_FITNESS_MANAGER",
+      "CLUB_MANAGER",
+      "ASS_CLUB_MANAGER",
+      "PROGRAM_SPECIALIST",
+      "ADMIN",
+    ],
+  };
 
-const hasPermission = (permission) =>
-  permissions[permission]?.includes(userRole);
+  const hasPermission = (permission) =>
+    permissions[permission]?.includes(userRole);
 
   return (
     <>
@@ -983,10 +1001,16 @@ const hasPermission = (permission) =>
                   <div className="w-full max-w-[180px]">
                     <button
                       onClick={handleDownloadLead}
-                      disabled={allLeads.length === 0 || (dateFilter?.value === "custom" && (!customFrom || !customTo))}
+                      disabled={
+                        allLeads.length === 0 ||
+                        (dateFilter?.value === "custom" &&
+                          (!customFrom || !customTo))
+                      }
                       className={`ms-auto px-4 py-2 rounded flex items-center gap-2
                       ${
-                        allLeads.length === 0 || (dateFilter?.value === "custom" && (!customFrom || !customTo))
+                        allLeads.length === 0 ||
+                        (dateFilter?.value === "custom" &&
+                          (!customFrom || !customTo))
                           ? "bg-gray-400 cursor-not-allowed text-white"
                           : "bg-black text-white hover:bg-gray-800"
                       }`}
@@ -1333,7 +1357,7 @@ const hasPermission = (permission) =>
                                         </Tooltip>
                                       )}
                                     </>
-                                  ): null}
+                                  ) : null}
 
                                   {(userRole === "FOH" ||
                                     userRole === "TRAINER" ||

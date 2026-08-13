@@ -310,58 +310,79 @@ const MemberList = (props) => {
 
   // 🚀 Fetch staff list from API
  const fetchStaff = async (clubId) => {
-     try {
-       const requests = [
-         authAxios().get("/staff/list", {
-           params: { role: "FOH", club_id: clubId },
-         }),
-       ];
- 
-       if (
-         userRole === "CLUB_MANAGER"
-       ) {
-         requests.push(
-           authAxios().get("/staff/list", {
-             params: { role: "FOH", club_id: clubId },
-           }),
-         );
-       }
- 
-       if (
-         userRole === "ADMIN"
-       ) {
-         requests.push(
-           authAxios().get("/staff/list", {
-             params: { role: "CLUB_MANAGER", club_id: clubId },
-           }),
-         );
-       }
- 
-       const responses = await Promise.all(requests);
- 
-       let mergedData = [];
- 
-       responses.forEach((res) => {
-         const role = res.config.params.role; // ✅ more reliable than URL.includes
- 
-         const users = (res.data?.data || []).map((user) => ({
-           ...user,
-           role,
-         }));
- 
-         mergedData.push(...users);
-       });
- 
-       const uniqueData = Array.from(
-         new Map(mergedData.map((user) => [user.id, user])).values(),
-       );
- 
-       const activeOnly = filterActiveItems(uniqueData);
-       setStaffList(activeOnly);
-     } catch (err) {
-       console.error(err);
-     }
-   };
+  try {
+    const requests = [
+      // FOH is always available
+      authAxios().get("/staff/list", {
+        params: {
+          role: "FOH",
+          club_id: clubId,
+        },
+      }),
+    ];
+
+    // CLUB_MANAGER can see CLUB_MANAGER + ASS_CLUB_MANAGER
+    if (userRole === "CLUB_MANAGER") {
+      requests.push(
+        authAxios().get("/staff/list", {
+          params: {
+            role: "CLUB_MANAGER,ASS_CLUB_MANAGER",
+            club_id: clubId,
+          },
+        }),
+      );
+    }
+
+    // ADMIN can see CLUB_MANAGER + ASS_CLUB_MANAGER
+    if (userRole === "ADMIN") {
+      requests.push(
+        authAxios().get("/staff/list", {
+          params: {
+            role: "CLUB_MANAGER,ASS_CLUB_MANAGER",
+            club_id: clubId,
+          },
+        }),
+      );
+    }
+
+    const responses = await Promise.all(requests);
+
+    let mergedData = [];
+
+    responses.forEach((res) => {
+      const requestedRole = res.config.params.role;
+
+      const users = (res.data?.data || []).map((user) => ({
+        ...user,
+
+        // IMPORTANT:
+        // FOH request gets FOH role.
+        // For manager request, preserve the actual API role.
+        role:
+          requestedRole === "FOH"
+            ? "FOH"
+            : user.role,
+      }));
+
+      mergedData.push(...users);
+    });
+
+    // Remove duplicate users
+    const uniqueData = Array.from(
+      new Map(
+        mergedData.map((user) => [user.id, user])
+      ).values(),
+    );
+
+    const activeOnly = filterActiveItems(uniqueData);
+
+    console.log("Staff List:", activeOnly);
+
+    setStaffList(activeOnly);
+  } catch (err) {
+    console.error("Error fetching staff:", err);
+  }
+};
 
   // Initial load effect
   useEffect(() => {
@@ -373,25 +394,34 @@ const MemberList = (props) => {
   }, [clubFilter?.value]);
 
   const staffOptions = [
-    {
-      label: "FOH",
-      options: staffList
-        .filter((user) => user.role === "FOH")
-        .map((user) => ({
-          value: user.id,
-          label: user.name,
-        })),
-    },
-    {
-      label: "CLUB MANAGER",
-      options: staffList
-        .filter((user) => user.role === "CLUB_MANAGER")
-        .map((user) => ({
-          value: user.id,
-          label: user.name,
-        })),
-    },
-  ].filter((group) => group.options.length > 0);
+  {
+    label: "FOH",
+    options: staffList
+      .filter((user) => user.role === "FOH")
+      .map((user) => ({
+        value: user.id,
+        label: user.name,
+      })),
+  },
+  {
+    label: "CLUB MANAGER",
+    options: staffList
+      .filter((user) => user.role === "CLUB_MANAGER")
+      .map((user) => ({
+        value: user.id,
+        label: user.name,
+      })),
+  },
+  {
+    label: "ASS CLUB MANAGER",
+    options: staffList
+      .filter((user) => user.role === "ASS_CLUB_MANAGER")
+      .map((user) => ({
+        value: user.id,
+        label: user.name,
+      })),
+  },
+].filter((group) => group.options.length > 0);
 
   // Handle bulk assigning owner to selected leads only
   const handleBulkAssign = (selectedOption) => {

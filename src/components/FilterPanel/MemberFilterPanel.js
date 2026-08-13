@@ -122,52 +122,55 @@ export default function MemberFilterPanel({
 
   const fetchStaffList = async (clubId) => {
     try {
-      const requests = [
-        authAxios().get("/staff/list", {
-          params: { role: "FOH", club_id: clubId },
-        }),
-      ];
-
-      if (userRole === "ADMIN") {
-        requests.push(
-          authAxios().get("/staff/list", {
-            params: { role: "CLUB_MANAGER", club_id: clubId },
-          })
+        const roles = ["CLUB_MANAGER", "ASS_CLUB_MANAGER"];
+    
+        const requests = [
+          authAxios().get(`/staff/list?role=FOH&club_id=${clubId}`),
+        ];
+    
+        if (userRole === "ADMIN" || userRole === "CLUB_MANAGER") {
+          requests.push(
+            authAxios().get(
+              `/staff/list?role=${roles.join(",")}&club_id=${clubId}`
+            )
+          );
+        }
+    
+        const responses = await Promise.all(requests);
+    
+        let mergedData = [];
+    
+        responses.forEach((res) => {
+          const isFOH = res.config.url.includes("role=FOH");
+    
+          const users = (res.data?.data || []).map((user) => ({
+            ...user,
+            role: isFOH ? "FOH" : user.role,
+          }));
+    
+          mergedData.push(...users);
+        });
+    
+        const uniqueData = Array.from(
+          new Map(mergedData.map((user) => [user.id, user])).values()
         );
-      }
-
-      if (userRole === "CLUB_MANAGER") {
-        requests.push(
-          authAxios().get("/staff/list", {
-            params: { role: "FOH", club_id: clubId },
-          })
+    
+        const activeOnly = filterActiveItems(uniqueData);
+    
+        console.log("All staff:", activeOnly);
+        console.log(
+          "Club Managers:",
+          activeOnly.filter((user) => user.role === "CLUB_MANAGER")
         );
+        console.log(
+          "Assistant Club Managers:",
+          activeOnly.filter((user) => user.role === "ASS_CLUB_MANAGER")
+        );
+    
+        setStaffList(activeOnly);
+      } catch (err) {
+        console.error("fetchStaff error:", err);
       }
-
-      const responses = await Promise.all(requests);
-
-      let mergedData = [];
-
-      responses.forEach((res) => {
-        const role = res.config.params.role;
-
-        const users = (res.data?.data || []).map((user) => ({
-          ...user,
-          role,
-        }));
-
-        mergedData.push(...users);
-      });
-
-      const uniqueData = Array.from(
-        new Map(mergedData.map((user) => [user.id, user])).values()
-      );
-
-      const activeOnly = filterActiveItems(uniqueData);
-      setStaffList(activeOnly);
-    } catch (err) {
-      console.error(err);
-    }
   };
 
   useEffect(() => {
@@ -221,7 +224,16 @@ export default function MemberFilterPanel({
           label: user.name,
         })),
     },
-  ];
+    {
+      label: "ASS CLUB MANAGER",
+      options: staffList
+        .filter((user) => user.role === "ASS_CLUB_MANAGER")
+        .map((user) => ({
+          value: user.id,
+          label: user.name,
+        })),
+    },
+  ].filter((group) => group.options.length > 0);
 
   const trainerOptions = trainerList.map((item) => ({
     label: item.name,

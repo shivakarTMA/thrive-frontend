@@ -41,19 +41,17 @@ export default function LeadFilterPanel({
   // Fetch staff list from API
 const fetchStaff = async (clubId) => {
   try {
+    const roles = ["CLUB_MANAGER", "ASS_CLUB_MANAGER"];
+
     const requests = [
-      authAxios().get(`/staff/list?role=FOH&club_id=${clubId}`)
+      authAxios().get(`/staff/list?role=FOH&club_id=${clubId}`),
     ];
 
-    if (userRole === "ADMIN") {
+    if (userRole === "ADMIN" || userRole === "CLUB_MANAGER") {
       requests.push(
-        authAxios().get(`/staff/list?role=CLUB_MANAGER&club_id=${clubId}`)
-      );
-    }
-
-    if (userRole === "CLUB_MANAGER") {
-      requests.push(
-        authAxios().get(`/staff/list?role=FOH&club_id=${clubId}`)
+        authAxios().get(
+          `/staff/list?role=${roles.join(",")}&club_id=${clubId}`
+        )
       );
     }
 
@@ -62,11 +60,11 @@ const fetchStaff = async (clubId) => {
     let mergedData = [];
 
     responses.forEach((res) => {
-      const role = res.config.url.includes("FOH") ? "FOH" : "CLUB_MANAGER";
+      const isFOH = res.config.url.includes("role=FOH");
 
       const users = (res.data?.data || []).map((user) => ({
         ...user,
-        role,
+        role: isFOH ? "FOH" : user.role,
       }));
 
       mergedData.push(...users);
@@ -77,9 +75,20 @@ const fetchStaff = async (clubId) => {
     );
 
     const activeOnly = filterActiveItems(uniqueData);
+
+    console.log("All staff:", activeOnly);
+    console.log(
+      "Club Managers:",
+      activeOnly.filter((user) => user.role === "CLUB_MANAGER")
+    );
+    console.log(
+      "Assistant Club Managers:",
+      activeOnly.filter((user) => user.role === "ASS_CLUB_MANAGER")
+    );
+
     setStaffList(activeOnly);
   } catch (err) {
-    console.error(err);
+    console.error("fetchStaff error:", err);
   }
 };
 
@@ -110,6 +119,15 @@ useEffect(() => {
       label: "CLUB MANAGER",
       options: staffList
         .filter((user) => user.role === "CLUB_MANAGER")
+        .map((user) => ({
+          value: user.id,
+          label: user.name,
+        })),
+    },
+    {
+      label: "ASS CLUB MANAGER",
+      options: staffList
+        .filter((user) => user.role === "ASS_CLUB_MANAGER")
         .map((user) => ({
           value: user.id,
           label: user.name,
