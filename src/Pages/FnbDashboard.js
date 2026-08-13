@@ -375,7 +375,7 @@ const FnbDashboard = () => {
               title="Total Sales"
               titleLink={generateUrl(`/reports/all-orders?`)}
               totalSales={`₹${formatIndianNumber(
-                dashboardData?.summary_cards?.total_sales?.amount,
+                dashboardData?.summary_cards?.total_sales?.breakup?.products
               )}`}
               items={[
 
@@ -397,7 +397,7 @@ const FnbDashboard = () => {
               icon={newClientIcon}
               title="New Sales"
               titleLink={generateUrl(`/reports/all-orders?bill_type=NEW`)}
-              totalSales={dashboardData?.summary_cards?.new_clients?.total}
+              totalSales={dashboardData?.summary_cards?.new_clients?.breakup?.products}
               items={[
                 ...(hasProductServices
                   ? [
@@ -416,7 +416,7 @@ const FnbDashboard = () => {
               icon={renewalIcon}
               title="Renewal"
               titleLink={generateUrl(`/reports/all-orders?bill_type=RENEWAL`)}
-              totalSales={dashboardData?.summary_cards?.renewals?.total}
+              totalSales={dashboardData?.summary_cards?.renewals?.breakup?.products}
               items={[
                 ...(hasProductServices
                   ? [

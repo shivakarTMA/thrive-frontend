@@ -64,6 +64,7 @@ const PendingOrderTable = ({ orders, fetchOrders }) => {
             <th className="p-2 min-w-[170px]">Delivered At</th>
             {(userRole === "CLUB_MANAGER" ||
               userRole === "FOH" ||
+              userRole === "F_AND_B" ||
               userRole === "ADMIN") && (
               <th className="p-2 min-w-[150px]">Action</th>
             )}
@@ -117,6 +118,7 @@ const PendingOrderTable = ({ orders, fetchOrders }) => {
                 </td>
                 {(userRole === "CLUB_MANAGER" ||
                   userRole === "FOH" ||
+                  userRole === "F_AND_B" ||
                   userRole === "ADMIN") && (
                   <td className="p-2">
                     <button

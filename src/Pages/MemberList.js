@@ -619,35 +619,43 @@ const MemberList = (props) => {
   };
 
   const getOptions = (member) => {
-    const options = [
-      {
-        value: "services",
-        label: "Buy Services",
-        icon: <IoLayersOutline className="text-[18px]" />,
-      },
-    ];
-
-    // ✅ Add only if PRODUCT exists
-    // if (hasProductServices) {
-    //   options.push({
-    //     value: "products",
-    //     label: "Buy Products",
-    //     icon: <IoFastFoodOutline className="text-[18px]" />,
-    //   });
-    // }
-    if (
-      hasProductServices &&
-      member?.upcoming_subscription_start_date === null
-    ) {
-      options.push({
-        value: "products",
-        label: "Buy Products",
-        icon: <IoFastFoodOutline className="text-[18px]" />,
-      });
+  // F_AND_B can only buy products
+  if (userRole === "F_AND_B") {
+    if (hasProductServices) {
+      return [
+        {
+          value: "products",
+          label: "Buy Products",
+          icon: <IoFastFoodOutline className="text-[18px]" />,
+        },
+      ];
     }
 
-    return options;
-  };
+    return [];
+  }
+
+  // Existing behavior for other roles
+  const options = [
+    {
+      value: "services",
+      label: "Buy Services",
+      icon: <IoLayersOutline className="text-[18px]" />,
+    },
+  ];
+
+  if (
+    hasProductServices &&
+    member?.upcoming_subscription_start_date === null
+  ) {
+    options.push({
+      value: "products",
+      label: "Buy Products",
+      icon: <IoFastFoodOutline className="text-[18px]" />,
+    });
+  }
+
+  return options;
+};
 
   const customOption = ({ innerRef, innerProps, data }) => (
     <div
@@ -1239,7 +1247,7 @@ const hasMemberPermission = (permission) =>
                               userRole === "CLUB_MANAGER" ||
                               userRole === "ASS_CLUB_MANAGER" ||
                               userRole === "PROGRAM_SPECIALIST" ||
-                              userRole === "ADMIN") && (
+                              userRole === "ADMIN" || userRole === "F_AND_B") && (
                                 <>
                                 {(member?.is_subscribed === true || member?.upcoming_subscription_start_date !== null) && (
                                   <Tooltip

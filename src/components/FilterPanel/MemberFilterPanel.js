@@ -128,7 +128,7 @@ export default function MemberFilterPanel({
           authAxios().get(`/staff/list?role=FOH&club_id=${clubId}`),
         ];
     
-        if (userRole === "ADMIN" || userRole === "CLUB_MANAGER") {
+        if (userRole === "ADMIN" || userRole === "CLUB_MANAGER" || userRole === "ASS_CLUB_MANAGER") {
           requests.push(
             authAxios().get(
               `/staff/list?role=${roles.join(",")}&club_id=${clubId}`

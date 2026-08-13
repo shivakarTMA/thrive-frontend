@@ -462,6 +462,7 @@ const NourishOrders = (props) => {
                 <th className="px-2 py-4 min-w-[170px]">Delivered At</th>
                 {(userRole === "CLUB_MANAGER" || userRole === "ASS_CLUB_MANAGER" || userRole === "PROGRAM_SPECIALIST" ||
                   userRole === "FOH" ||
+                  userRole === "F_AND_B" ||
                   userRole === "ADMIN") && (
                   <th className="px-2 py-4 min-w-[150px]">Action</th>
                 )}
@@ -517,6 +518,7 @@ const NourishOrders = (props) => {
                     </td>
                     {(userRole === "CLUB_MANAGER" || userRole === "ASS_CLUB_MANAGER" || userRole === "PROGRAM_SPECIALIST" || 
                       userRole === "FOH" ||
+                      userRole === "F_AND_B" ||
                       userRole === "ADMIN") && (
                       <td className="px-2 py-4">
                         <button
