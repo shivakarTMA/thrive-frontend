@@ -661,6 +661,7 @@ const MemberList = (props) => {
     "CLUB_MANAGER",
     "ASS_CLUB_MANAGER",
     "FOH",
+    "F_AND_B",
     "FITNESS_MANAGER",
     "ASS_FITNESS_MANAGER",
     "TRAINER",
@@ -1156,6 +1157,7 @@ const hasMemberPermission = (permission) =>
                               userRole === "CLUB_MANAGER" ||
                               userRole === "ASS_CLUB_MANAGER" ||
                               userRole === "FOH" || 
+                              userRole === "F_AND_B" || 
                               userRole === "FITNESS_MANAGER" || 
                               userRole === "ASS_FITNESS_MANAGER" || 
                               userRole === "TRAINER" || 

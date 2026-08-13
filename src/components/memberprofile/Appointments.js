@@ -268,8 +268,17 @@ const Appointments = ({ details }) => {
                 </th>
                 <th className="border px-3 py-2 min-w-[100px]">VAS Rating</th>
                 <th className="border px-3 py-2 min-w-[100px]">Rating</th>
-                <th className="border px-3 py-2 min-w-[100px]">Action</th>
-                <th className="border px-3 py-2 min-w-[100px]">remarks</th>
+                {(userRole === "FOH" ||
+                  userRole === "TRAINER" ||
+                  userRole === "FITNESS_MANAGER" ||
+                  userRole === "ASS_FITNESS_MANAGER" ||
+                  userRole === "CLUB_MANAGER" ||
+                  userRole === "ASS_CLUB_MANAGER" ||
+                  userRole === "PROGRAM_SPECIALIST" ||
+                  userRole === "ADMIN") && (
+                  <th className="border px-3 py-2 min-w-[100px]">Action</th>
+                )}
+                <th className="border px-3 py-2 min-w-[150px]">remarks</th>
               </tr>
             </thead>
             <tbody>
@@ -345,7 +354,14 @@ const Appointments = ({ details }) => {
                       <td className="border px-3 py-2">
                         {appt?.rating ? appt?.rating : "--"}
                       </td>
-
+                  {(userRole === "FOH" ||
+                    userRole === "TRAINER" ||
+                    userRole === "FITNESS_MANAGER" ||
+                    userRole === "ASS_FITNESS_MANAGER" ||
+                    userRole === "CLUB_MANAGER" ||
+                    userRole === "ASS_CLUB_MANAGER" ||
+                    userRole === "PROGRAM_SPECIALIST" ||
+                    userRole === "ADMIN") && (
                       <td className="border px-3 py-2">
                         <button
                           onClick={() => {
@@ -362,6 +378,7 @@ const Appointments = ({ details }) => {
                           Cancel
                         </button>
                       </td>
+                    )}
                       <td className="border px-3 py-2">
                         {appt?.remarks ? appt?.remarks : "--"}
                       </td>

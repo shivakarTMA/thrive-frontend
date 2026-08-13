@@ -15,11 +15,6 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { GoClock } from "react-icons/go";
 
-const closedOption = [
-  { value: true, label: "Yes" },
-  { value: false, label: "No" },
-];
-
 const statusOptions = [
   { label: "Active", value: "ACTIVE" },
   { label: "Inactive", value: "INACTIVE" },
@@ -55,6 +50,13 @@ const formatTimeForApi = (date) => {
   return `${hh}:${mm}:00`;
 };
 
+// "06:00:00" -> "06:00 AM" (for slot dropdown labels)
+const formatTimeLabel = (timeString) => {
+  const d = parseTime(timeString);
+  if (!d) return "";
+  return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+};
+
 const CreateStaffOperatingHours = ({
   setShowModal,
   editingOperatingHours,
@@ -64,6 +66,7 @@ const CreateStaffOperatingHours = ({
 }) => {
   const [club, setClub] = useState([]);
   const [staff, setStaff] = useState([]);
+  const [clubOperatingHours, setClubOperatingHours] = useState([]);
 
   const fetchClub = async (search = "") => {
     try {
@@ -72,7 +75,6 @@ const CreateStaffOperatingHours = ({
       });
       let data = res.data?.data || res.data || [];
       const activeOnly = filterActiveItems(data);
-      console.log(activeOnly, "activeOnly");
       setClub(activeOnly);
     } catch (err) {
       console.error(err);
@@ -89,7 +91,7 @@ const CreateStaffOperatingHours = ({
         return;
       }
 
-      const roles = ["TRAINER", "FITNESS_MANAGER", "ASS_FITNESS_MANAGER"];
+      const roles = ["FOH", "TRAINER", "FITNESS_MANAGER", "ASS_FITNESS_MANAGER"];
 
       const res = await authAxios().get("/staff/list", {
         params: {
@@ -108,6 +110,41 @@ const CreateStaffOperatingHours = ({
     }
   };
 
+  // Fetches the club's operating-hour rows for the selected club + weekday.
+  // A weekday can have more than one row (e.g. a morning slot and an evening
+  // slot), which is why "Available Slots" is its own dropdown rather than
+  // being derived directly from the weekday.
+  const fetchClubOperatingHours = async () => {
+    try {
+      const selectedClubId = formik.values?.club_id;
+      const selectedWeekday = formik.values?.weekday;
+
+      if (!selectedClubId || !selectedWeekday) {
+        setClubOperatingHours([]);
+        return;
+      }
+
+      const res = await authAxios().get("/club/operating/hours/list", {
+        params: {
+          club_id: selectedClubId,
+          weekday: selectedWeekday,
+          status: "ACTIVE",
+        },
+      });
+
+      const data = res.data?.data || res.data || [];
+
+      // Closed days don't have a usable open/close window, so they can't be
+      // offered as a selectable slot.
+      const openSlotsOnly = data.filter((item) => !item.is_closed);
+
+      setClubOperatingHours(openSlotsOnly);
+    } catch (err) {
+      console.error(err);
+      setClubOperatingHours([]);
+    }
+  };
+
   useEffect(() => {
     fetchClub();
   }, []);
@@ -116,6 +153,10 @@ const CreateStaffOperatingHours = ({
     fetchStaff();
   }, [formik.values.club_id]);
 
+  useEffect(() => {
+    fetchClubOperatingHours();
+  }, [formik.values.club_id, formik.values.weekday]);
+
   const clubOptions =
     club?.map((item) => ({
       label: item.name,
@@ -123,6 +164,7 @@ const CreateStaffOperatingHours = ({
     })) || [];
 
   const roleLabels = {
+    FOH: "FOH",
     TRAINER: "Trainer",
     FITNESS_MANAGER: "Fitness Manager",
     ASS_FITNESS_MANAGER: "Assistant Fitness Manager",
@@ -146,6 +188,19 @@ const CreateStaffOperatingHours = ({
     }, {}),
   );
 
+  // Each option carries the raw open_time/close_time so the time pickers can
+  // bound themselves to whichever slot is chosen.
+  const slotOptions = clubOperatingHours.map((item) => ({
+    label: `${formatTimeLabel(item.open_time)} - ${formatTimeLabel(item.close_time)}`,
+    value: item.id,
+    open_time: item.open_time,
+    close_time: item.close_time,
+  }));
+
+  const selectedSlot =
+    slotOptions.find((option) => option.value === formik.values.slot_id) ||
+    null;
+
   useEffect(() => {
     if (!editingOperatingHours) return;
 
@@ -159,6 +214,11 @@ const CreateStaffOperatingHours = ({
             club_id: data?.club_id ?? "",
             staff_id: data?.staff_id ?? "",
             weekday: data?.weekday || "",
+            // NOTE: assumes the staff-operating-hours record stores which
+            // club-operating-hours row it belongs to as `slot_id`. Update
+            // this key if your API uses a different field name (e.g.
+            // `club_operating_hour_id`).
+            slot_id: data?.slot_id ?? "",
             available_from: data?.available_from || "",
             available_to: data?.available_to || "",
             status: data?.status || "",
@@ -221,9 +281,12 @@ const CreateStaffOperatingHours = ({
                         }
                         onChange={(option) => {
                           formik.setFieldValue("club_id", option.value);
-                          // staff list depends on the club, so clear any
-                          // previously selected staff member
+                          // staff and slots depend on the club, so clear any
+                          // previously selected staff/slot/time range
                           formik.setFieldValue("staff_id", "");
+                          formik.setFieldValue("slot_id", "");
+                          formik.setFieldValue("available_from", "");
+                          formik.setFieldValue("available_to", "");
                         }}
                         onBlur={() => formik.setFieldTouched("club_id", true)}
                         styles={customStyles}
@@ -233,6 +296,83 @@ const CreateStaffOperatingHours = ({
                     {formik.touched.club_id && formik.errors.club_id && (
                       <p className="text-red-500 text-sm mt-1">
                         {formik.errors.club_id}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Weekday */}
+                  <div>
+                    <label className="mb-2 block">
+                      Weekday<span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <Select
+                        name="weekday"
+                        value={
+                          weekdayOptions.find(
+                            (option) => option.value === formik.values.weekday,
+                          ) || null
+                        }
+                        options={weekdayOptions}
+                        onChange={(option) => {
+                          formik.setFieldValue("weekday", option.value);
+                          // slots depend on the weekday, so clear any
+                          // previously selected slot/time range
+                          formik.setFieldValue("slot_id", "");
+                          formik.setFieldValue("available_from", "");
+                          formik.setFieldValue("available_to", "");
+                        }}
+                        onBlur={() => formik.setFieldTouched("weekday", true)}
+                        styles={customStyles}
+                        className="!capitalize"
+                        isDisabled={!formik.values.club_id}
+                        noOptionsMessage={() =>
+                          formik.values.club_id
+                            ? "No weekdays found"
+                            : "Select a club first"
+                        }
+                      />
+                    </div>
+                    {formik.touched.weekday && formik.errors.weekday && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {formik.errors.weekday}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Available Slots */}
+                  <div>
+                    <label className="mb-2 block">
+                      Available Slots<span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <Select
+                        name="slot_id"
+                        value={selectedSlot}
+                        options={slotOptions}
+                        onChange={(option) => {
+                          formik.setFieldValue("slot_id", option.value);
+                          // Available from/to must fall inside the newly
+                          // chosen slot, so clear the previous selection
+                          formik.setFieldValue("available_from", "");
+                          formik.setFieldValue("available_to", "");
+                        }}
+                        onBlur={() => formik.setFieldTouched("slot_id", true)}
+                        styles={customStyles}
+                        className="!capitalize"
+                        isDisabled={!formik.values.club_id || !formik.values.weekday}
+                        noOptionsMessage={() =>
+                          !formik.values.club_id
+                            ? "Select a club first"
+                            : !formik.values.weekday
+                              ? "Select a weekday first"
+                              : "No slots found"
+                        }
+                      />
+                    </div>
+                    {formik.touched.slot_id && formik.errors.slot_id && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {formik.errors.slot_id}
                       </p>
                     )}
                   </div>
@@ -275,35 +415,6 @@ const CreateStaffOperatingHours = ({
                     )}
                   </div>
 
-                  {/* Weekday */}
-                  <div>
-                    <label className="mb-2 block">
-                      Weekday<span className="text-red-500">*</span>
-                    </label>
-                    <div className="relative">
-                      <Select
-                        name="weekday"
-                        value={
-                          weekdayOptions.find(
-                            (option) => option.value === formik.values.weekday,
-                          ) || null
-                        }
-                        options={weekdayOptions}
-                        onChange={(option) =>
-                          formik.setFieldValue("weekday", option.value)
-                        }
-                        onBlur={() => formik.setFieldTouched("weekday", true)}
-                        styles={customStyles}
-                        className="!capitalize"
-                      />
-                    </div>
-                    {formik.touched.weekday && formik.errors.weekday && (
-                      <p className="text-red-500 text-sm mt-1">
-                        {formik.errors.weekday}
-                      </p>
-                    )}
-                  </div>
-
                   {/* Available form */}
                   <div>
                     <label className="mb-2 block">
@@ -334,6 +445,17 @@ const CreateStaffOperatingHours = ({
                         dateFormat="hh:mm aa"
                         className="custom--input w-full input--icon"
                         placeholderText="Select Time"
+                        disabled={!selectedSlot}
+                        minTime={
+                          selectedSlot
+                            ? parseTime(selectedSlot.open_time)
+                            : new Date(0, 0, 0, 0, 0)
+                        }
+                        maxTime={
+                          selectedSlot
+                            ? parseTime(selectedSlot.close_time)
+                            : new Date(0, 0, 0, 23, 59)
+                        }
                         onKeyDown={(e) => {
                           e.preventDefault();
                         }}
@@ -377,12 +499,19 @@ const CreateStaffOperatingHours = ({
                         dateFormat="hh:mm aa"
                         className="custom--input w-full input--icon"
                         placeholderText="Select Time"
+                        disabled={!selectedSlot}
                         minTime={
                           formik.values.available_from
                             ? parseTime(formik.values.available_from)
-                            : new Date(0, 0, 0, 0, 0)
+                            : selectedSlot
+                              ? parseTime(selectedSlot.open_time)
+                              : new Date(0, 0, 0, 0, 0)
                         }
-                        maxTime={new Date(0, 0, 0, 23, 59)}
+                        maxTime={
+                          selectedSlot
+                            ? parseTime(selectedSlot.close_time)
+                            : new Date(0, 0, 0, 23, 59)
+                        }
                         onKeyDown={(e) => {
                           e.preventDefault();
                         }}

@@ -28,6 +28,7 @@ export const roleOptionsByUser = {
   ADMIN: [
     { value: "ADMIN", label: "Admin" },
     { value: "FOH", label: "FOH (Front of House)" },
+    { value: "F_AND_B", label: "F&B" },
     { value: "TRAINER", label: "Trainer" },
     { value: "CLUB_MANAGER", label: "Club Manager" },
     { value: "ASS_CLUB_MANAGER", label: "Ass Club Manager" },
@@ -42,6 +43,7 @@ export const roleOptionsByUser = {
   ],
   FOH: [
     { value: "FOH", label: "FOH (Front of House)" },
+    { value: "F_AND_B", label: "F&B" },
     { value: "TRAINER", label: "Trainer" },
     { value: "CLUB_MANAGER", label: "Club Manager" },
     { value: "ASS_CLUB_MANAGER", label: "Ass Club Manager" },
@@ -54,6 +56,7 @@ export const roleOptionsByUser = {
   ],
   CLUB_MANAGER: [
     { value: "FOH", label: "FOH (Front of House)" },
+    { value: "F_AND_B", label: "F&B" },
     { value: "ASS_CLUB_MANAGER", label: "Ass Club Manager" },
     { value: "TRAINER", label: "Trainer" },
     { value: "FITNESS_MANAGER", label: "Fitness Manager" },
@@ -61,6 +64,7 @@ export const roleOptionsByUser = {
   ],
   ASS_CLUB_MANAGER: [
     { value: "FOH", label: "FOH (Front of House)" },
+    { value: "F_AND_B", label: "F&B" },
     { value: "TRAINER", label: "Trainer" },
     { value: "FITNESS_MANAGER", label: "Fitness Manager" },
     { value: "ASS_FITNESS_MANAGER", label: "Ass Fitness Manager" },
@@ -81,6 +85,7 @@ export const roleOptionsByUser = {
   MARKETING_MANAGER: [
     // { value: "ADMIN", label: "Admin" },
     { value: "FOH", label: "FOH (Front of House)" },
+    { value: "F_AND_B", label: "F&B" },
     { value: "TRAINER", label: "Trainer" },
     { value: "CLUB_MANAGER", label: "Club Manager" },
     { value: "ASS_CLUB_MANAGER", label: "Ass Club Manager" },
@@ -96,6 +101,7 @@ export const roleOptionsByUser = {
   FINANCE_MANAGER_CLUB: [
     // { value: "ADMIN", label: "Admin" },
     { value: "FOH", label: "FOH (Front of House)" },
+    { value: "F_AND_B", label: "F&B" },
     { value: "TRAINER", label: "Trainer" },
     { value: "CLUB_MANAGER", label: "Club Manager" },
     { value: "ASS_CLUB_MANAGER", label: "Ass Club Manager" },
@@ -111,6 +117,7 @@ export const roleOptionsByUser = {
   FINANCE_MANAGER_CORPORATE: [
     // { value: "ADMIN", label: "Admin" },
     { value: "FOH", label: "FOH (Front of House)" },
+    { value: "F_AND_B", label: "F&B" },
     { value: "TRAINER", label: "Trainer" },
     { value: "CLUB_MANAGER", label: "Club Manager" },
     { value: "ASS_CLUB_MANAGER", label: "Ass Club Manager" },
@@ -126,6 +133,7 @@ export const roleOptionsByUser = {
   PROGRAM_SPECIALIST: [
     // { value: "ADMIN", label: "Admin" },
     { value: "FOH", label: "FOH (Front of House)" },
+    { value: "F_AND_B", label: "F&B" },
     { value: "TRAINER", label: "Trainer" },
     { value: "CLUB_MANAGER", label: "Club Manager" },
     { value: "ASS_CLUB_MANAGER", label: "Ass Club Manager" },

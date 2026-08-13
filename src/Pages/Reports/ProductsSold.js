@@ -154,9 +154,6 @@ const ProductsSold = (props) => {
     if (filters.bill_type) {
       params.set("bill_type", filters.bill_type);
     }
-    // if (filters.service_name) {
-    //   params.set("service_name", filters.service_name);
-    // }
 
     navigate(`?${params.toString()}`, { replace: true });
   };
@@ -197,6 +194,11 @@ const ProductsSold = (props) => {
         params.lead_owner_id = appliedFilters.lead_owner_id;
       if (appliedFilters.payment_method)
         params.payment_method = appliedFilters.payment_method;
+
+      // Only override package_type when API is hit
+      if (userRole === "F_AND_B") {
+        params.package_type = "PRODUCT";
+      }
 
       console.log("🔍 API Request Params:", params);
 
@@ -260,18 +262,6 @@ const ProductsSold = (props) => {
 
     // Club filter - only set from URL if present, otherwise default to first club
     const clubId = params.get("club_id");
-    // if (clubId) {
-    //   const club = clubList.find((c) => c.id === Number(clubId));
-    //   if (club) {
-    //     setClubFilter({ label: club.name, value: club.id });
-    //   }
-    // } else {
-    //   // Set default club only on initial load
-    //   setClubFilter({
-    //     label: clubList[0].name,
-    //     value: clubList[0].id,
-    //   });
-    // }
     if (!clubFilter) {
       if (clubId) {
         const club = clubList.find((c) => c.id === Number(clubId));

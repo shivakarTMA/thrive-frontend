@@ -11,9 +11,7 @@ import { fetchOptionList } from "../../Redux/Reducers/optionListSlice";
 
 const BillTypeOptions = [
   { value: "NEW", label: "New" },
-  { value: "RENEWAL", label: "Renewal" },
-  // { value: "ADVANCED_RENEWAL", label: "Advanced Renewal" },
-  // { value: "RETURNING", label: "Returning" },
+  { value: "RENEWAL", label: "Renewal" }
 ];
 
 const packageTypeOptions = [
@@ -161,6 +159,11 @@ export default function ProductSoldPanel({
     label: item.name,
     value: item.name,
   }));
+
+  const filteredPackageTypeOptions =
+  userRole === "F_AND_B"
+    ? packageTypeOptions.filter((option) => option.value === "PRODUCT")
+    : packageTypeOptions;
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -314,7 +317,7 @@ export default function ProductSoldPanel({
                     // Set service type
                     setFilterValue("filterPackageType", serviceType);
                   }}
-                  options={packageTypeOptions}
+                  options={filteredPackageTypeOptions}
                   placeholder="Select Package"
                   styles={customStyles}
                   // isClearable

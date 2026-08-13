@@ -934,7 +934,15 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                   <FaCircle className="menu--icon !text-[10px]" />
                   <span className="nav-text">Companies</span>
                 </Link>
-                
+
+                {/* <Link
+                  to="/club"
+                  className="text-white flex items-center gap-[5px] mb-2 text-sm"
+                >
+                  <FaCircle className="menu--icon !text-[10px]" />
+                  <span className="nav-text">Club</span>
+                </Link>
+                 */}
                 <div
                   className="text-white flex justify-between items-center cursor-pointer text-sm mb-2"
                   onClick={toggleClubMenu}
@@ -1617,13 +1625,51 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
             {dropdownToggles["configure"] && (
               <div className="mt-2 pl-5 relative">
                 <div className="absolute h-[calc(100%-15px)] w-[2px] bg-white left-[23px] top-[8px]"></div>
-                <Link
+                {/* <Link
                   to="/staff"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
                 >
                   <FaCircle className="menu--icon !text-[10px]" />
                   <span className="nav-text">All Staff</span>
-                </Link>
+                </Link> */}
+                <div
+                  className="text-white flex justify-between items-center cursor-pointer text-sm mb-2"
+                  onClick={toggleClubStaff}
+                >
+                  <div className="flex gap-[5px] items-center cursor-pointer">
+                    <FaCircle className="menu--icon !text-[10px]" />
+                    <span className="nav-text">Staff Settings</span>
+                  </div>
+                  <FaAngleDown
+                    className={`downmenu transition ${
+                      staffMenuOpen ? "rotate-[180deg]" : ""
+                    }`}
+                  />
+                </div>
+
+                {staffMenuOpen && (
+                  <div className="pl-[5px] flex flex-col gap-1 mb-3">
+                    <Link
+                      to="/staff"
+                      className="submenu-link text-white text-sm"
+                    >
+                      All Staff
+                    </Link>
+                    <Link
+                      to="/staff-holiday"
+                      className="submenu-link text-white text-sm"
+                    >
+                      Staff Holiday
+                    </Link>
+                    <Link
+                      to="/staff-operating-hours"
+                      className="submenu-link text-white text-sm"
+                    >
+                      Staff Operating Hours
+                    </Link>
+                    
+                  </div>
+                )}
                 <Link
                   to="/exercises"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
@@ -1652,13 +1698,51 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                   <FaCircle className="menu--icon !text-[10px]" />
                   <span className="nav-text">Companies</span>
                 </Link>
-                <Link
+                {/* <Link
                   to="/club"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
                 >
                   <FaCircle className="menu--icon !text-[10px]" />
                   <span className="nav-text">Club</span>
-                </Link>
+                </Link> */}
+                <div
+                  className="text-white flex justify-between items-center cursor-pointer text-sm mb-2"
+                  onClick={toggleClubMenu}
+                >
+                  <div className="flex gap-[5px] items-center cursor-pointer">
+                    <FaCircle className="menu--icon !text-[10px]" />
+                    <span className="nav-text">Club Settings</span>
+                  </div>
+                  <FaAngleDown
+                    className={`downmenu transition ${
+                      clubMenuOpen ? "rotate-[180deg]" : ""
+                    }`}
+                  />
+                </div>
+
+                {clubMenuOpen && (
+                  <div className="pl-[5px] flex flex-col gap-1 mb-3">
+                    <Link
+                      to="/club"
+                      className="submenu-link text-white text-sm"
+                    >
+                      All Club
+                    </Link>
+                    <Link
+                      to="/club-holiday"
+                      className="submenu-link text-white text-sm"
+                    >
+                      Club Holiday
+                    </Link>
+                    <Link
+                      to="/club-operating-hours"
+                      className="submenu-link text-white text-sm"
+                    >
+                      Club Operating Hours
+                    </Link>
+                    
+                  </div>
+                )}
                 <Link
                   to="/studio"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
@@ -2272,13 +2356,51 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
             {dropdownToggles["configure"] && (
               <div className="mt-2 pl-5 relative">
                 <div className="absolute h-[calc(100%-15px)] w-[2px] bg-white left-[23px] top-[8px]"></div>
-                <Link
+                {/* <Link
                   to="/staff"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
                 >
                   <FaCircle className="menu--icon !text-[10px]" />
                   <span className="nav-text">All Staff</span>
-                </Link>
+                </Link> */}
+                <div
+                  className="text-white flex justify-between items-center cursor-pointer text-sm mb-2"
+                  onClick={toggleClubStaff}
+                >
+                  <div className="flex gap-[5px] items-center cursor-pointer">
+                    <FaCircle className="menu--icon !text-[10px]" />
+                    <span className="nav-text">Staff Settings</span>
+                  </div>
+                  <FaAngleDown
+                    className={`downmenu transition ${
+                      staffMenuOpen ? "rotate-[180deg]" : ""
+                    }`}
+                  />
+                </div>
+
+                {staffMenuOpen && (
+                  <div className="pl-[5px] flex flex-col gap-1 mb-3">
+                    <Link
+                      to="/staff"
+                      className="submenu-link text-white text-sm"
+                    >
+                      All Staff
+                    </Link>
+                    <Link
+                      to="/staff-holiday"
+                      className="submenu-link text-white text-sm"
+                    >
+                      Staff Holiday
+                    </Link>
+                    <Link
+                      to="/staff-operating-hours"
+                      className="submenu-link text-white text-sm"
+                    >
+                      Staff Operating Hours
+                    </Link>
+                    
+                  </div>
+                )}
                 <Link
                   to="/exercises"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
@@ -2307,13 +2429,51 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                   <FaCircle className="menu--icon !text-[10px]" />
                   <span className="nav-text">Companies</span>
                 </Link>
-                <Link
+                {/* <Link
                   to="/club"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
                 >
                   <FaCircle className="menu--icon !text-[10px]" />
                   <span className="nav-text">Club</span>
-                </Link>
+                </Link> */}
+                <div
+                  className="text-white flex justify-between items-center cursor-pointer text-sm mb-2"
+                  onClick={toggleClubMenu}
+                >
+                  <div className="flex gap-[5px] items-center cursor-pointer">
+                    <FaCircle className="menu--icon !text-[10px]" />
+                    <span className="nav-text">Club Settings</span>
+                  </div>
+                  <FaAngleDown
+                    className={`downmenu transition ${
+                      clubMenuOpen ? "rotate-[180deg]" : ""
+                    }`}
+                  />
+                </div>
+
+                {clubMenuOpen && (
+                  <div className="pl-[5px] flex flex-col gap-1 mb-3">
+                    <Link
+                      to="/club"
+                      className="submenu-link text-white text-sm"
+                    >
+                      All Club
+                    </Link>
+                    <Link
+                      to="/club-holiday"
+                      className="submenu-link text-white text-sm"
+                    >
+                      Club Holiday
+                    </Link>
+                    <Link
+                      to="/club-operating-hours"
+                      className="submenu-link text-white text-sm"
+                    >
+                      Club Operating Hours
+                    </Link>
+                    
+                  </div>
+                )}
                 <Link
                   to="/studio"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
@@ -2724,13 +2884,51 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
             {dropdownToggles["configure"] && (
               <div className="mt-2 pl-5 relative">
                 <div className="absolute h-[calc(100%-15px)] w-[2px] bg-white left-[23px] top-[8px]"></div>
-                <Link
+                {/* <Link
                   to="/staff"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
                 >
                   <FaCircle className="menu--icon !text-[10px]" />
                   <span className="nav-text">All Staff</span>
-                </Link>
+                </Link> */}
+                <div
+                  className="text-white flex justify-between items-center cursor-pointer text-sm mb-2"
+                  onClick={toggleClubStaff}
+                >
+                  <div className="flex gap-[5px] items-center cursor-pointer">
+                    <FaCircle className="menu--icon !text-[10px]" />
+                    <span className="nav-text">Staff Settings</span>
+                  </div>
+                  <FaAngleDown
+                    className={`downmenu transition ${
+                      staffMenuOpen ? "rotate-[180deg]" : ""
+                    }`}
+                  />
+                </div>
+
+                {staffMenuOpen && (
+                  <div className="pl-[5px] flex flex-col gap-1 mb-3">
+                    <Link
+                      to="/staff"
+                      className="submenu-link text-white text-sm"
+                    >
+                      All Staff
+                    </Link>
+                    <Link
+                      to="/staff-holiday"
+                      className="submenu-link text-white text-sm"
+                    >
+                      Staff Holiday
+                    </Link>
+                    <Link
+                      to="/staff-operating-hours"
+                      className="submenu-link text-white text-sm"
+                    >
+                      Staff Operating Hours
+                    </Link>
+                    
+                  </div>
+                )}
                 
                 <Link
                   to="/package-category"
@@ -2746,13 +2944,51 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                   <FaCircle className="menu--icon !text-[10px]" />
                   <span className="nav-text">Companies</span>
                 </Link>
-                <Link
+                {/* <Link
                   to="/club"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
                 >
                   <FaCircle className="menu--icon !text-[10px]" />
                   <span className="nav-text">Club</span>
-                </Link>
+                </Link> */}
+                <div
+                  className="text-white flex justify-between items-center cursor-pointer text-sm mb-2"
+                  onClick={toggleClubMenu}
+                >
+                  <div className="flex gap-[5px] items-center cursor-pointer">
+                    <FaCircle className="menu--icon !text-[10px]" />
+                    <span className="nav-text">Club Settings</span>
+                  </div>
+                  <FaAngleDown
+                    className={`downmenu transition ${
+                      clubMenuOpen ? "rotate-[180deg]" : ""
+                    }`}
+                  />
+                </div>
+
+                {clubMenuOpen && (
+                  <div className="pl-[5px] flex flex-col gap-1 mb-3">
+                    <Link
+                      to="/club"
+                      className="submenu-link text-white text-sm"
+                    >
+                      All Club
+                    </Link>
+                    <Link
+                      to="/club-holiday"
+                      className="submenu-link text-white text-sm"
+                    >
+                      Club Holiday
+                    </Link>
+                    <Link
+                      to="/club-operating-hours"
+                      className="submenu-link text-white text-sm"
+                    >
+                      Club Operating Hours
+                    </Link>
+                    
+                  </div>
+                )}
                 <Link
                   to="/studio"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
@@ -2817,6 +3053,40 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                 </Link>
               </div>
             )}
+          </>
+        )}
+        {accessToken && userType === "F_AND_B" && (
+          <>
+            <Link
+              to="/all-members"
+              className={`nav-link mb-2 ${
+                location.pathname === "/all-members" ? "active" : ""
+              }`}
+            >
+              <FiUsers className="menu--icon" />
+              <span className="nav-text">All Members</span>
+            </Link>
+            <Link
+              to="/reports/all-orders"
+              className={`nav-link mb-2 ${
+                location.pathname === "/reports/all-orders" ? "active" : ""
+              }`}
+            >
+              <AiOutlineProduct className="menu--icon" />
+              <span className="nav-text">All Orders</span>
+            </Link>
+            {hasProductServices && (
+              <Link
+                to="/nourish-orders"
+                className={`nav-link mb-2 ${
+                  location.pathname === "/nourish-orders" ? "active" : ""
+                }`}
+              >
+                <IoFastFoodOutline className="menu--icon" />
+                <span className="nav-text">Nourish Orders</span>
+              </Link>
+            )}
+           
           </>
         )}
 
@@ -3282,13 +3552,51 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
             {dropdownToggles["configure"] && (
               <div className="mt-2 pl-5 relative">
                 <div className="absolute h-[calc(100%-15px)] w-[2px] bg-white left-[23px] top-[8px]"></div>
-                <Link
+                {/* <Link
                   to="/staff"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
                 >
                   <FaCircle className="menu--icon !text-[10px]" />
                   <span className="nav-text">All Staff</span>
-                </Link>
+                </Link> */}
+                <div
+                  className="text-white flex justify-between items-center cursor-pointer text-sm mb-2"
+                  onClick={toggleClubStaff}
+                >
+                  <div className="flex gap-[5px] items-center cursor-pointer">
+                    <FaCircle className="menu--icon !text-[10px]" />
+                    <span className="nav-text">Staff Settings</span>
+                  </div>
+                  <FaAngleDown
+                    className={`downmenu transition ${
+                      staffMenuOpen ? "rotate-[180deg]" : ""
+                    }`}
+                  />
+                </div>
+
+                {staffMenuOpen && (
+                  <div className="pl-[5px] flex flex-col gap-1 mb-3">
+                    <Link
+                      to="/staff"
+                      className="submenu-link text-white text-sm"
+                    >
+                      All Staff
+                    </Link>
+                    <Link
+                      to="/staff-holiday"
+                      className="submenu-link text-white text-sm"
+                    >
+                      Staff Holiday
+                    </Link>
+                    <Link
+                      to="/staff-operating-hours"
+                      className="submenu-link text-white text-sm"
+                    >
+                      Staff Operating Hours
+                    </Link>
+                    
+                  </div>
+                )}
                 <Link
                   to="/exercises"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
@@ -3331,13 +3639,51 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                   <FaCircle className="menu--icon !text-[10px]" />
                   <span className="nav-text">Companies</span>
                 </Link>
-                <Link
+                {/* <Link
                   to="/club"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
                 >
                   <FaCircle className="menu--icon !text-[10px]" />
                   <span className="nav-text">Club</span>
-                </Link>
+                </Link> */}
+                <div
+                  className="text-white flex justify-between items-center cursor-pointer text-sm mb-2"
+                  onClick={toggleClubMenu}
+                >
+                  <div className="flex gap-[5px] items-center cursor-pointer">
+                    <FaCircle className="menu--icon !text-[10px]" />
+                    <span className="nav-text">Club Settings</span>
+                  </div>
+                  <FaAngleDown
+                    className={`downmenu transition ${
+                      clubMenuOpen ? "rotate-[180deg]" : ""
+                    }`}
+                  />
+                </div>
+
+                {clubMenuOpen && (
+                  <div className="pl-[5px] flex flex-col gap-1 mb-3">
+                    <Link
+                      to="/club"
+                      className="submenu-link text-white text-sm"
+                    >
+                      All Club
+                    </Link>
+                    <Link
+                      to="/club-holiday"
+                      className="submenu-link text-white text-sm"
+                    >
+                      Club Holiday
+                    </Link>
+                    <Link
+                      to="/club-operating-hours"
+                      className="submenu-link text-white text-sm"
+                    >
+                      Club Operating Hours
+                    </Link>
+                    
+                  </div>
+                )}
                 <Link
                   to="/studio"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
@@ -3763,13 +4109,51 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
             {dropdownToggles["configure"] && (
               <div className="mt-2 pl-5 relative">
                 <div className="absolute h-[calc(100%-15px)] w-[2px] bg-white left-[23px] top-[8px]"></div>
-                <Link
+                {/* <Link
                   to="/staff"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
                 >
                   <FaCircle className="menu--icon !text-[10px]" />
                   <span className="nav-text">All Staff</span>
-                </Link>
+                </Link> */}
+                <div
+                  className="text-white flex justify-between items-center cursor-pointer text-sm mb-2"
+                  onClick={toggleClubStaff}
+                >
+                  <div className="flex gap-[5px] items-center cursor-pointer">
+                    <FaCircle className="menu--icon !text-[10px]" />
+                    <span className="nav-text">Staff Settings</span>
+                  </div>
+                  <FaAngleDown
+                    className={`downmenu transition ${
+                      staffMenuOpen ? "rotate-[180deg]" : ""
+                    }`}
+                  />
+                </div>
+
+                {staffMenuOpen && (
+                  <div className="pl-[5px] flex flex-col gap-1 mb-3">
+                    <Link
+                      to="/staff"
+                      className="submenu-link text-white text-sm"
+                    >
+                      All Staff
+                    </Link>
+                    <Link
+                      to="/staff-holiday"
+                      className="submenu-link text-white text-sm"
+                    >
+                      Staff Holiday
+                    </Link>
+                    <Link
+                      to="/staff-operating-hours"
+                      className="submenu-link text-white text-sm"
+                    >
+                      Staff Operating Hours
+                    </Link>
+                    
+                  </div>
+                )}
                 <Link
                   to="/exercises"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
@@ -3805,13 +4189,51 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                   <FaCircle className="menu--icon !text-[10px]" />
                   <span className="nav-text">Companies</span>
                 </Link>
-                <Link
+                {/* <Link
                   to="/club"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
                 >
                   <FaCircle className="menu--icon !text-[10px]" />
                   <span className="nav-text">Club</span>
-                </Link>
+                </Link> */}
+                <div
+                  className="text-white flex justify-between items-center cursor-pointer text-sm mb-2"
+                  onClick={toggleClubMenu}
+                >
+                  <div className="flex gap-[5px] items-center cursor-pointer">
+                    <FaCircle className="menu--icon !text-[10px]" />
+                    <span className="nav-text">Club Settings</span>
+                  </div>
+                  <FaAngleDown
+                    className={`downmenu transition ${
+                      clubMenuOpen ? "rotate-[180deg]" : ""
+                    }`}
+                  />
+                </div>
+
+                {clubMenuOpen && (
+                  <div className="pl-[5px] flex flex-col gap-1 mb-3">
+                    <Link
+                      to="/club"
+                      className="submenu-link text-white text-sm"
+                    >
+                      All Club
+                    </Link>
+                    <Link
+                      to="/club-holiday"
+                      className="submenu-link text-white text-sm"
+                    >
+                      Club Holiday
+                    </Link>
+                    <Link
+                      to="/club-operating-hours"
+                      className="submenu-link text-white text-sm"
+                    >
+                      Club Operating Hours
+                    </Link>
+                    
+                  </div>
+                )}
                 <Link
                   to="/studio"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
@@ -4223,13 +4645,51 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
             {dropdownToggles["configure"] && (
               <div className="mt-2 pl-5 relative">
                 <div className="absolute h-[calc(100%-15px)] w-[2px] bg-white left-[23px] top-[8px]"></div>
-                <Link
+                {/* <Link
                   to="/staff"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
                 >
                   <FaCircle className="menu--icon !text-[10px]" />
                   <span className="nav-text">All Staff</span>
-                </Link>
+                </Link> */}
+                <div
+                  className="text-white flex justify-between items-center cursor-pointer text-sm mb-2"
+                  onClick={toggleClubStaff}
+                >
+                  <div className="flex gap-[5px] items-center cursor-pointer">
+                    <FaCircle className="menu--icon !text-[10px]" />
+                    <span className="nav-text">Staff Settings</span>
+                  </div>
+                  <FaAngleDown
+                    className={`downmenu transition ${
+                      staffMenuOpen ? "rotate-[180deg]" : ""
+                    }`}
+                  />
+                </div>
+
+                {staffMenuOpen && (
+                  <div className="pl-[5px] flex flex-col gap-1 mb-3">
+                    <Link
+                      to="/staff"
+                      className="submenu-link text-white text-sm"
+                    >
+                      All Staff
+                    </Link>
+                    <Link
+                      to="/staff-holiday"
+                      className="submenu-link text-white text-sm"
+                    >
+                      Staff Holiday
+                    </Link>
+                    <Link
+                      to="/staff-operating-hours"
+                      className="submenu-link text-white text-sm"
+                    >
+                      Staff Operating Hours
+                    </Link>
+                    
+                  </div>
+                )}
                 <Link
                   to="/exercises"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
@@ -4265,13 +4725,51 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                   <FaCircle className="menu--icon !text-[10px]" />
                   <span className="nav-text">Companies</span>
                 </Link>
-                <Link
+                {/* <Link
                   to="/club"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
                 >
                   <FaCircle className="menu--icon !text-[10px]" />
                   <span className="nav-text">Club</span>
-                </Link>
+                </Link> */}
+                <div
+                  className="text-white flex justify-between items-center cursor-pointer text-sm mb-2"
+                  onClick={toggleClubMenu}
+                >
+                  <div className="flex gap-[5px] items-center cursor-pointer">
+                    <FaCircle className="menu--icon !text-[10px]" />
+                    <span className="nav-text">Club Settings</span>
+                  </div>
+                  <FaAngleDown
+                    className={`downmenu transition ${
+                      clubMenuOpen ? "rotate-[180deg]" : ""
+                    }`}
+                  />
+                </div>
+
+                {clubMenuOpen && (
+                  <div className="pl-[5px] flex flex-col gap-1 mb-3">
+                    <Link
+                      to="/club"
+                      className="submenu-link text-white text-sm"
+                    >
+                      All Club
+                    </Link>
+                    <Link
+                      to="/club-holiday"
+                      className="submenu-link text-white text-sm"
+                    >
+                      Club Holiday
+                    </Link>
+                    <Link
+                      to="/club-operating-hours"
+                      className="submenu-link text-white text-sm"
+                    >
+                      Club Operating Hours
+                    </Link>
+                    
+                  </div>
+                )}
                 <Link
                   to="/studio"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
@@ -4648,13 +5146,51 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
             {dropdownToggles["configure"] && (
               <div className="mt-2 pl-5 relative">
                 <div className="absolute h-[calc(100%-15px)] w-[2px] bg-white left-[23px] top-[8px]"></div>
-                <Link
+                {/* <Link
                   to="/staff"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
                 >
                   <FaCircle className="menu--icon !text-[10px]" />
                   <span className="nav-text">All Staff</span>
-                </Link>
+                </Link> */}
+                <div
+                  className="text-white flex justify-between items-center cursor-pointer text-sm mb-2"
+                  onClick={toggleClubStaff}
+                >
+                  <div className="flex gap-[5px] items-center cursor-pointer">
+                    <FaCircle className="menu--icon !text-[10px]" />
+                    <span className="nav-text">Staff Settings</span>
+                  </div>
+                  <FaAngleDown
+                    className={`downmenu transition ${
+                      staffMenuOpen ? "rotate-[180deg]" : ""
+                    }`}
+                  />
+                </div>
+
+                {staffMenuOpen && (
+                  <div className="pl-[5px] flex flex-col gap-1 mb-3">
+                    <Link
+                      to="/staff"
+                      className="submenu-link text-white text-sm"
+                    >
+                      All Staff
+                    </Link>
+                    <Link
+                      to="/staff-holiday"
+                      className="submenu-link text-white text-sm"
+                    >
+                      Staff Holiday
+                    </Link>
+                    <Link
+                      to="/staff-operating-hours"
+                      className="submenu-link text-white text-sm"
+                    >
+                      Staff Operating Hours
+                    </Link>
+                    
+                  </div>
+                )}
                 <Link
                   to="/exercises"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
@@ -4683,13 +5219,51 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                   <FaCircle className="menu--icon !text-[10px]" />
                   <span className="nav-text">Companies</span>
                 </Link>
-                <Link
+                {/* <Link
                   to="/club"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
                 >
                   <FaCircle className="menu--icon !text-[10px]" />
                   <span className="nav-text">Club</span>
-                </Link>
+                </Link> */}
+                <div
+                  className="text-white flex justify-between items-center cursor-pointer text-sm mb-2"
+                  onClick={toggleClubMenu}
+                >
+                  <div className="flex gap-[5px] items-center cursor-pointer">
+                    <FaCircle className="menu--icon !text-[10px]" />
+                    <span className="nav-text">Club Settings</span>
+                  </div>
+                  <FaAngleDown
+                    className={`downmenu transition ${
+                      clubMenuOpen ? "rotate-[180deg]" : ""
+                    }`}
+                  />
+                </div>
+
+                {clubMenuOpen && (
+                  <div className="pl-[5px] flex flex-col gap-1 mb-3">
+                    <Link
+                      to="/club"
+                      className="submenu-link text-white text-sm"
+                    >
+                      All Club
+                    </Link>
+                    <Link
+                      to="/club-holiday"
+                      className="submenu-link text-white text-sm"
+                    >
+                      Club Holiday
+                    </Link>
+                    <Link
+                      to="/club-operating-hours"
+                      className="submenu-link text-white text-sm"
+                    >
+                      Club Operating Hours
+                    </Link>
+                    
+                  </div>
+                )}
                 <Link
                   to="/studio"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
@@ -5773,13 +6347,51 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
             {dropdownToggles["configure"] && (
               <div className="mt-2 pl-5 relative">
                 <div className="absolute h-[calc(100%-15px)] w-[2px] bg-white left-[23px] top-[8px]"></div>
-                <Link
+                {/* <Link
                   to="/staff"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
                 >
                   <FaCircle className="menu--icon !text-[10px]" />
                   <span className="nav-text">All Staff</span>
-                </Link>
+                </Link> */}
+                <div
+                  className="text-white flex justify-between items-center cursor-pointer text-sm mb-2"
+                  onClick={toggleClubStaff}
+                >
+                  <div className="flex gap-[5px] items-center cursor-pointer">
+                    <FaCircle className="menu--icon !text-[10px]" />
+                    <span className="nav-text">Staff Settings</span>
+                  </div>
+                  <FaAngleDown
+                    className={`downmenu transition ${
+                      staffMenuOpen ? "rotate-[180deg]" : ""
+                    }`}
+                  />
+                </div>
+
+                {staffMenuOpen && (
+                  <div className="pl-[5px] flex flex-col gap-1 mb-3">
+                    <Link
+                      to="/staff"
+                      className="submenu-link text-white text-sm"
+                    >
+                      All Staff
+                    </Link>
+                    <Link
+                      to="/staff-holiday"
+                      className="submenu-link text-white text-sm"
+                    >
+                      Staff Holiday
+                    </Link>
+                    <Link
+                      to="/staff-operating-hours"
+                      className="submenu-link text-white text-sm"
+                    >
+                      Staff Operating Hours
+                    </Link>
+                    
+                  </div>
+                )}
                 <Link
                   to="/package-category"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
@@ -5795,13 +6407,51 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                   <FaCircle className="menu--icon !text-[10px]" />
                   <span className="nav-text">Companies</span>
                 </Link>
-                <Link
+                {/* <Link
                   to="/club"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
                 >
                   <FaCircle className="menu--icon !text-[10px]" />
                   <span className="nav-text">Club</span>
-                </Link>
+                </Link> */}
+                <div
+                  className="text-white flex justify-between items-center cursor-pointer text-sm mb-2"
+                  onClick={toggleClubMenu}
+                >
+                  <div className="flex gap-[5px] items-center cursor-pointer">
+                    <FaCircle className="menu--icon !text-[10px]" />
+                    <span className="nav-text">Club Settings</span>
+                  </div>
+                  <FaAngleDown
+                    className={`downmenu transition ${
+                      clubMenuOpen ? "rotate-[180deg]" : ""
+                    }`}
+                  />
+                </div>
+
+                {clubMenuOpen && (
+                  <div className="pl-[5px] flex flex-col gap-1 mb-3">
+                    <Link
+                      to="/club"
+                      className="submenu-link text-white text-sm"
+                    >
+                      All Club
+                    </Link>
+                    <Link
+                      to="/club-holiday"
+                      className="submenu-link text-white text-sm"
+                    >
+                      Club Holiday
+                    </Link>
+                    <Link
+                      to="/club-operating-hours"
+                      className="submenu-link text-white text-sm"
+                    >
+                      Club Operating Hours
+                    </Link>
+                    
+                  </div>
+                )}
                 <Link
                   to="/studio"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
@@ -6384,13 +7034,51 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
             {dropdownToggles["configure"] && (
               <div className="mt-2 pl-5 relative">
                 <div className="absolute h-[calc(100%-15px)] w-[2px] bg-white left-[23px] top-[8px]"></div>
-                <Link
+                {/* <Link
                   to="/staff"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
                 >
                   <FaCircle className="menu--icon !text-[10px]" />
                   <span className="nav-text">All Staff</span>
-                </Link>
+                </Link> */}
+                <div
+                  className="text-white flex justify-between items-center cursor-pointer text-sm mb-2"
+                  onClick={toggleClubStaff}
+                >
+                  <div className="flex gap-[5px] items-center cursor-pointer">
+                    <FaCircle className="menu--icon !text-[10px]" />
+                    <span className="nav-text">Staff Settings</span>
+                  </div>
+                  <FaAngleDown
+                    className={`downmenu transition ${
+                      staffMenuOpen ? "rotate-[180deg]" : ""
+                    }`}
+                  />
+                </div>
+
+                {staffMenuOpen && (
+                  <div className="pl-[5px] flex flex-col gap-1 mb-3">
+                    <Link
+                      to="/staff"
+                      className="submenu-link text-white text-sm"
+                    >
+                      All Staff
+                    </Link>
+                    <Link
+                      to="/staff-holiday"
+                      className="submenu-link text-white text-sm"
+                    >
+                      Staff Holiday
+                    </Link>
+                    <Link
+                      to="/staff-operating-hours"
+                      className="submenu-link text-white text-sm"
+                    >
+                      Staff Operating Hours
+                    </Link>
+                    
+                  </div>
+                )}
                 <Link
                   to="/exercises"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
@@ -6427,13 +7115,51 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                   <FaCircle className="menu--icon !text-[10px]" />
                   <span className="nav-text">Companies</span>
                 </Link>
-                <Link
+                {/* <Link
                   to="/club"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
                 >
                   <FaCircle className="menu--icon !text-[10px]" />
                   <span className="nav-text">Club</span>
-                </Link>
+                </Link> */}
+                <div
+                  className="text-white flex justify-between items-center cursor-pointer text-sm mb-2"
+                  onClick={toggleClubMenu}
+                >
+                  <div className="flex gap-[5px] items-center cursor-pointer">
+                    <FaCircle className="menu--icon !text-[10px]" />
+                    <span className="nav-text">Club Settings</span>
+                  </div>
+                  <FaAngleDown
+                    className={`downmenu transition ${
+                      clubMenuOpen ? "rotate-[180deg]" : ""
+                    }`}
+                  />
+                </div>
+
+                {clubMenuOpen && (
+                  <div className="pl-[5px] flex flex-col gap-1 mb-3">
+                    <Link
+                      to="/club"
+                      className="submenu-link text-white text-sm"
+                    >
+                      All Club
+                    </Link>
+                    <Link
+                      to="/club-holiday"
+                      className="submenu-link text-white text-sm"
+                    >
+                      Club Holiday
+                    </Link>
+                    <Link
+                      to="/club-operating-hours"
+                      className="submenu-link text-white text-sm"
+                    >
+                      Club Operating Hours
+                    </Link>
+                    
+                  </div>
+                )}
                 <Link
                   to="/studio"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
@@ -6952,13 +7678,51 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
             {dropdownToggles["configure"] && (
               <div className="mt-2 pl-5 relative">
                 <div className="absolute h-[calc(100%-15px)] w-[2px] bg-white left-[23px] top-[8px]"></div>
-                <Link
+                {/* <Link
                   to="/staff"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
                 >
                   <FaCircle className="menu--icon !text-[10px]" />
                   <span className="nav-text">All Staff</span>
-                </Link>
+                </Link> */}
+                <div
+                  className="text-white flex justify-between items-center cursor-pointer text-sm mb-2"
+                  onClick={toggleClubStaff}
+                >
+                  <div className="flex gap-[5px] items-center cursor-pointer">
+                    <FaCircle className="menu--icon !text-[10px]" />
+                    <span className="nav-text">Staff Settings</span>
+                  </div>
+                  <FaAngleDown
+                    className={`downmenu transition ${
+                      staffMenuOpen ? "rotate-[180deg]" : ""
+                    }`}
+                  />
+                </div>
+
+                {staffMenuOpen && (
+                  <div className="pl-[5px] flex flex-col gap-1 mb-3">
+                    <Link
+                      to="/staff"
+                      className="submenu-link text-white text-sm"
+                    >
+                      All Staff
+                    </Link>
+                    <Link
+                      to="/staff-holiday"
+                      className="submenu-link text-white text-sm"
+                    >
+                      Staff Holiday
+                    </Link>
+                    <Link
+                      to="/staff-operating-hours"
+                      className="submenu-link text-white text-sm"
+                    >
+                      Staff Operating Hours
+                    </Link>
+                    
+                  </div>
+                )}
                 <Link
                   to="/package-category"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
@@ -6980,13 +7744,51 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                   <FaCircle className="menu--icon !text-[10px]" />
                   <span className="nav-text">Companies</span>
                 </Link>
-                <Link
+                {/* <Link
                   to="/club"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
                 >
                   <FaCircle className="menu--icon !text-[10px]" />
                   <span className="nav-text">Club</span>
-                </Link>
+                </Link> */}
+                <div
+                  className="text-white flex justify-between items-center cursor-pointer text-sm mb-2"
+                  onClick={toggleClubMenu}
+                >
+                  <div className="flex gap-[5px] items-center cursor-pointer">
+                    <FaCircle className="menu--icon !text-[10px]" />
+                    <span className="nav-text">Club Settings</span>
+                  </div>
+                  <FaAngleDown
+                    className={`downmenu transition ${
+                      clubMenuOpen ? "rotate-[180deg]" : ""
+                    }`}
+                  />
+                </div>
+
+                {clubMenuOpen && (
+                  <div className="pl-[5px] flex flex-col gap-1 mb-3">
+                    <Link
+                      to="/club"
+                      className="submenu-link text-white text-sm"
+                    >
+                      All Club
+                    </Link>
+                    <Link
+                      to="/club-holiday"
+                      className="submenu-link text-white text-sm"
+                    >
+                      Club Holiday
+                    </Link>
+                    <Link
+                      to="/club-operating-hours"
+                      className="submenu-link text-white text-sm"
+                    >
+                      Club Operating Hours
+                    </Link>
+                    
+                  </div>
+                )}
                 {/* <Link
                   to="/studio"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"

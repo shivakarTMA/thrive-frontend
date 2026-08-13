@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useMemo } from "react";
 import { FiClock, FiPlus, FiTrash2 } from "react-icons/fi";
 import { IoCloseCircle } from "react-icons/io5";
 import Select from "react-select";
@@ -43,7 +43,9 @@ const CreateGroupClasses = ({ setShowModal, editingOption, formik }) => {
   const [service, setService] = useState([]);
   const [staffList, setStaffList] = useState([]);
   const [packageCategory, setPackageCategory] = useState([]);
-  const [clubTiming, setClubTiming] = useState([]);
+  // const [clubTiming, setClubTiming] = useState([]);
+  const [trainerSlotsData, setTrainerSlotsData] = useState([]);
+  const slotsRequestIdRef = useRef(0);
   const dispatch = useDispatch();
 
   const fetchClub = async (search = "") => {
@@ -59,18 +61,40 @@ const CreateGroupClasses = ({ setShowModal, editingOption, formik }) => {
     }
   };
 
-  const fetchClubTimingAPI = async (clubId) => {
-    try {
-      if (!clubId) return;
+// ===============================
+// FETCH TRAINER AVAILABILITY (new API)
+// Group class scheduling isn't a package/complimentary session, so this
+// uses booking_type "TRIAL" — response gives open_time/close_time per
+// date (no discrete slots), gated by the holiday flags.
+// ===============================
+const fetchTrainerAvailability = async (trainerId, clubId) => {
+  if (!trainerId || !clubId) {
+    setTrainerSlotsData([]);
+    return;
+  }
 
-      const res = await authAxios().get(`/club/fetch/timing/${clubId}`);
+  const requestId = ++slotsRequestIdRef.current;
 
-      setClubTiming(res.data?.data?.time || []);
-    } catch (err) {
-      console.error("Club timing error:", err);
-      setClubTiming([]);
-    }
-  };
+  try {
+    const res = await authAxios().post(
+      "/staff/operating/hours/trainer/slots",
+      {
+        trainer_id: trainerId,
+        club_id: clubId,
+        booking_type: "TRIAL",
+      },
+    );
+
+    if (requestId !== slotsRequestIdRef.current) return;
+
+    setTrainerSlotsData(res.data?.data || []);
+  } catch (err) {
+    if (requestId !== slotsRequestIdRef.current) return;
+
+    console.error("Trainer availability fetch error:", err);
+    setTrainerSlotsData([]);
+  }
+};
 
   const fetchService = async (clubId = null) => {
     try {
@@ -147,7 +171,6 @@ const CreateGroupClasses = ({ setShowModal, editingOption, formik }) => {
       fetchStudio(formik.values.club_id);
       fetchStaff(formik.values.club_id);
       fetchPackageCategory(formik.values.club_id);
-      fetchClubTimingAPI(formik.values.club_id);
 
       // ❌ reset ONLY when NOT editing
       if (!editingOption) {
@@ -166,6 +189,28 @@ const CreateGroupClasses = ({ setShowModal, editingOption, formik }) => {
     }
   }, [formik.values.club_id]);
 
+  // Availability window depends on BOTH club and trainer, so refetch
+// whenever either changes.
+useEffect(() => {
+  if (!formik.values.trainer_id || !formik.values.club_id) {
+    slotsRequestIdRef.current += 1; // invalidate any in-flight request
+    setTrainerSlotsData([]);
+    return;
+  }
+
+  fetchTrainerAvailability(formik.values.trainer_id, formik.values.club_id);
+}, [formik.values.trainer_id, formik.values.club_id]);
+
+// Reset date/time whenever trainer changes — the availability window
+// that produced the old options no longer applies.
+useEffect(() => {
+  if (!editingOption) {
+    formik.setFieldValue("start_date", "");
+    formik.setFieldValue("start_time", "");
+    formik.setFieldValue("end_time", "");
+  }
+}, [formik.values.trainer_id]);
+
   const formatTo12Hour = (time24) => {
     const [h, m] = time24.split(":").map(Number);
     const ampm = h >= 12 ? "PM" : "AM";
@@ -174,55 +219,121 @@ const CreateGroupClasses = ({ setShowModal, editingOption, formik }) => {
     return `${hour}:${m.toString().padStart(2, "0")} ${ampm}`;
   };
 
-  const startTimeOptions = clubTiming.map((time) => {
-    const now = new Date();
-    const selectedDate = formik.values.start_date;
+const NO_SLOTS_OPTION = { label: "No time Slots", value: "", isDisabled: true };
 
-    let isDisabled = false;
+// API returns dates as dd-mm-yyyy
+const formatDateForApi = (date) => {
+  if (!date) return null;
+  const d = String(date.getDate()).padStart(2, "0");
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const y = date.getFullYear();
+  return `${d}-${m}-${y}`;
+};
 
-    if (selectedDate) {
-      const [h, m] = time.split(":").map(Number);
+// Only dates present in the API response are selectable in the calendar
+const availableDatesSet = useMemo(() => {
+  return new Set(trainerSlotsData.map((d) => d.date));
+}, [trainerSlotsData]);
 
-      const timeDate = new Date(selectedDate);
-      timeDate.setHours(h, m, 0, 0);
+const filterAvailableDate = (date) => {
+  const dateStr = formatDateForApi(date);
+  return availableDatesSet.has(dateStr);
+};
 
-      const isToday =
-        new Date(selectedDate).toDateString() === now.toDateString();
+// The matched day's entry for the selected start_date
+const selectedDayData = useMemo(() => {
+  if (!formik.values.start_date || !trainerSlotsData.length) return null;
 
-      // ❌ disable past time
-      if (isToday && timeDate <= now) {
-        isDisabled = true;
-      }
+  const dateStr = formatDateForApi(new Date(formik.values.start_date));
+
+  return trainerSlotsData.find((d) => d.date === dateStr) || null;
+}, [formik.values.start_date, trainerSlotsData]);
+
+const daySlots = selectedDayData?.slots || [];
+
+// Generates "HH:mm" slots between start and end at a fixed interval.
+const SLOT_INTERVAL_MINUTES = 15; // ⚠️ confirm real interval, see note below
+
+const generateTimeSlots = (start, end, interval = SLOT_INTERVAL_MINUTES) => {
+  if (!start || !end) return [];
+
+  const slots = [];
+  const [startH, startM] = start.split(":").map(Number);
+  const [endH, endM] = end.split(":").map(Number);
+
+  const current = new Date();
+  current.setHours(startH, startM, 0, 0);
+
+  const endDate = new Date();
+  endDate.setHours(endH, endM, 0, 0);
+
+  while (current <= endDate) {
+    const h = String(current.getHours()).padStart(2, "0");
+    const m = String(current.getMinutes()).padStart(2, "0");
+    slots.push(`${h}:${m}`);
+    current.setMinutes(current.getMinutes() + interval);
+  }
+
+  return slots;
+};
+
+// Club timing for the selected date, generated from open_time/close_time
+const clubTiming = useMemo(() => {
+  if (!selectedDayData) return [];
+  if (selectedDayData.is_full_day_holiday || selectedDayData.is_staff_holiday) {
+    return [];
+  }
+  return generateTimeSlots(selectedDayData.open_time, selectedDayData.close_time);
+}, [selectedDayData]);
+
+const startTimeOptions = useMemo(() => {
+  if (!formik.values.start_date) return [];
+  if (!daySlots.length) return [NO_SLOTS_OPTION];
+
+  const now = new Date();
+  const selectedDate = new Date(formik.values.start_date);
+  const isToday = selectedDate.toDateString() === now.toDateString();
+
+  return daySlots.map((slot) => {
+    let isDisabled = !slot.enable;
+
+    // extra safety guard — minDate should already prevent past dates,
+    // but block past times on today specifically
+    if (isToday) {
+      const [h, m] = slot.time.split(":").map(Number);
+      const slotDate = new Date(selectedDate);
+      slotDate.setHours(h, m, 0, 0);
+      if (slotDate <= now) isDisabled = true;
     }
 
     return {
-      label: formatTo12Hour(time),
-      value: time,
+      label: formatTo12Hour(slot.time),
+      value: slot.time,
       isDisabled,
     };
   });
+}, [daySlots, formik.values.start_date]);
 
-  const endTimeOptions = clubTiming.map((time) => {
-    let isDisabled = false;
+const endTimeOptions = useMemo(() => {
+  if (!formik.values.start_time) return [];
+  if (!daySlots.length) return [NO_SLOTS_OPTION];
 
-    if (formik.values.start_time) {
-      const [sh, sm] = formik.values.start_time.split(":").map(Number);
-      const [eh, em] = time.split(":").map(Number);
+  const [sh, sm] = formik.values.start_time.split(":").map(Number);
+  const startMinutes = sh * 60 + sm;
 
-      const startMinutes = sh * 60 + sm;
-      const endMinutes = eh * 60 + em;
+  return daySlots.map((slot) => {
+    const [eh, em] = slot.time.split(":").map(Number);
+    const endMinutes = eh * 60 + em;
 
-      if (endMinutes <= startMinutes) {
-        isDisabled = true;
-      }
-    }
+    const isDisabled = !slot.enable || endMinutes <= startMinutes;
 
     return {
-      label: formatTo12Hour(time),
-      value: time,
+      label: formatTo12Hour(slot.time),
+      value: slot.time,
       isDisabled,
     };
   });
+}, [daySlots, formik.values.start_time]);
 
   const trainerOptions =
     staffList?.map((item) => ({
@@ -648,6 +759,8 @@ const CreateGroupClasses = ({ setShowModal, editingOption, formik }) => {
                           }
                           dateFormat="dd-MM-yyyy"
                           minDate={new Date()} // ✅ Prevent selecting past dates
+                          filterDate={filterAvailableDate}
+                          disabled={!formik.values.trainer_id}
                           className="custom--input w-full input--icon"
                           onKeyDown={(e) => {
                             e.preventDefault();
@@ -681,8 +794,6 @@ const CreateGroupClasses = ({ setShowModal, editingOption, formik }) => {
                           }
                           onChange={(option) => {
                             formik.setFieldValue("start_time", option.value);
-
-                            // reset end time
                             formik.setFieldValue("end_time", "");
                           }}
                           options={startTimeOptions}

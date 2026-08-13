@@ -128,6 +128,7 @@ import ClubHolidayList from "../components/Club/ClubHolidayList";
 import ClubOperatingHoursList from "../components/Club/ClubOperatingHoursList";
 import StaffHolidayList from "../components/Staff/StaffHolidayList";
 import StaffOperatingHoursList from "../components/Staff/StaffOperatingHoursList";
+import FnbDashboard from "../Pages/FnbDashboard";
 
 // Role-based route wrapper component
 const RoleProtectedRoute = ({ children, path, skipPrivateRoute = false }) => {
@@ -142,6 +143,7 @@ const RoleProtectedRoute = ({ children, path, skipPrivateRoute = false }) => {
       FINANCE_MANAGER_CLUB: "/",
       FINANCE_MANAGER_CORPORATE: "/",
       FOH: "/",
+      F_AND_B: "/",
       TRAINER: "/",
       FITNESS_MANAGER: "/",
       ASS_FITNESS_MANAGER: "/",
@@ -176,6 +178,7 @@ const RoleBasedHome = () => {
   if (userType === "ADMIN") return <Home />;
   if (userType === "MARKETING_MANAGER") return <MarketingManagerDashboard />;
   if (userType === "FOH") return <FohDashboard />;
+  if (userType === "F_AND_B") return <FnbDashboard />;
   if (userType === "TRAINER") return <TrainerDashboard />;
   if (userType === "FITNESS_MANAGER") return <FitnessManagerDashboard />;
   if (userType === "ASS_FITNESS_MANAGER") return <FitnessManagerDashboard />;

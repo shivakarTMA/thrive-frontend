@@ -361,7 +361,8 @@ export const getCompanyIdByName = (companies, companyName) => {
 export function formatText(status) {
   if (!status) return "";
 
-  // Replace underscores with spaces, split into words
+  if (status === "F_AND_B") return "F&B";
+
   return status
     .split("_")
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())

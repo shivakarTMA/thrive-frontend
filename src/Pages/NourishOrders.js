@@ -8,6 +8,7 @@ import {
   ALLOWED_ROLES,
   customStyles,
   filterActiveItems,
+  formatAutoDate,
   formatDateTimeLead,
   formatIndianNumber,
   formatText,
@@ -453,6 +454,7 @@ const NourishOrders = (props) => {
                 <th className="px-2 py-4 min-w-[150px]">Club</th>
                 <th className="px-2 py-4 min-w-[150px]">Member</th>
                 <th className="px-2 py-4 min-w-[150px]">Items Ordered</th>
+                <th className="px-2 py-4 min-w-[150px]">scheduled for</th>
                 <th className="px-2 py-4 min-w-[150px]">Final Amount</th>
                 <th className="px-2 py-4 min-w-[150px]">Payment Status</th>
                 <th className="px-2 py-4 min-w-[150px]">Fulfilment Status</th>
@@ -486,6 +488,9 @@ const NourishOrders = (props) => {
                     </td>
                     <td className="px-2 py-4">
                       {order?.items_ordered ? order?.items_ordered : "--"}
+                    </td>
+                    <td className="px-2 py-4">
+                      {order?.delivery_date ? formatAutoDate(order?.delivery_date) : "--"}{" "}{order?.delivery_end_time ? order?.delivery_end_time : "--"}
                     </td>
                     <td className="px-2 py-4">
                       ₹{formatIndianNumber(order?.total_amount) ?? 0}

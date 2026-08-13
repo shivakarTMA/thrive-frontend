@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState, useRef } from "react";
 import Select from "react-select";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -28,6 +28,8 @@ import { LuIndianRupee } from "react-icons/lu";
 import { format } from "date-fns";
 import { addYears, subYears } from "date-fns";
 import { MdOutlineKeyboardBackspace } from "react-icons/md";
+
+const NO_SLOTS_OPTION = { label: "No time Slots", value: "", isDisabled: true };
 
 const validationSchema = Yup.object().shape({
   call_status: Yup.string().required("Call status is required"),
@@ -123,13 +125,20 @@ const LeadCallLogs = () => {
   const [staffList, setStaffList] = useState([]);
   const [editLog, setEditLog] = useState(null);
   const [clubData, setClubData] = useState(null);
-  const [clubEndTime, setClubEndTime] = useState('');
+  const [clubEndTime, setClubEndTime] = useState("");
 
   const clubId = clubIdFromParams || clubData; // ✅ fallback to API club
   const [trainerBookedSlots, setTrainerBookedSlots] = useState([]);
   const [scheduleBookedSlots, setScheduleBookedSlots] = useState([]);
 
   const [clubTiming, setClubTiming] = useState([]);
+
+  // ===============================
+  // TRIAL/TOUR trainer slots (new API) — scoped only to the
+  // "Trial/Tour Scheduled" trainer + date/time fields below.
+  // ===============================
+  const [trialTrainerSlotsData, setTrialTrainerSlotsData] = useState([]);
+  const trialSlotsRequestIdRef = useRef(0);
 
   // Redux state
   const dispatch = useDispatch();
@@ -326,74 +335,61 @@ const LeadCallLogs = () => {
 
   useEffect(() => {
     if (editLog) {
-      // let trialDate = null;
-      // let trialTime = null;
-
-      // if (editLog?.trial_tour_datetime) {
-      //   const d = new Date(editLog.trial_tour_datetime);
-
-      //   trialDate = d;
-
-      //   const h = d.getHours().toString().padStart(2, "0");
-      //   const m = d.getMinutes().toString().padStart(2, "0");
-
-      //   trialTime = `${h}:${m}`;
-      // }
-
-      // let followDate = null;
-      // let followTime = null;
-
-      // if (editLog?.follow_up_datetime) {
-      //   const d = new Date(editLog.follow_up_datetime);
-
-      //   followDate = d;
-
-      //   const h = d.getHours().toString().padStart(2, "0");
-      //   const m = d.getMinutes().toString().padStart(2, "0");
-
-      //   followTime = `${h}:${m}`;
-      // }
       formik.setValues({
         member_id: leadId,
-        // call_status: editLog.call_status,
-        // follow_up_date: followDate,
-        // follow_up_time: followTime,
-        // follow_up_datetime: editLog.follow_up_datetime || "",
-        // schedule_for: editLog.schedule_for || "",
-        // trial_tour_date: trialDate,
-        // trial_tour_time: trialTime,
-        // trial_tour_datetime: editLog.trial_tour_datetime || "",
-        // training_by: editLog.training_by || "",
-        // not_interested_reason: editLog.not_interested_reason || "",
-        // closure_date: editLog.closure_date
-        //   ? new Date(editLog.closure_date)
-        //   : "",
-        // amount: editLog.amount || "",
-        // remark: editLog.remark || "",
         id: editLog.id, // <-- VERY IMPORTANT for update mode
       });
     }
   }, [editLog]);
 
-  const fetchTrainerBookedSlots = async (trainerId) => {
-    if (!trainerId || !clubId) {
-      setTrainerBookedSlots([]);
+  // ===============================
+  // TRIAL/TOUR: new trainer-slots API
+  // Trial/Tour is not a package session, so this is always a
+  // COMPLIMENTARY booking_type (no duration needed).
+  // ===============================
+  const fetchTrialTrainerSlots = async (trainerId, targetClubId) => {
+    if (!trainerId || !targetClubId) {
+      setTrialTrainerSlotsData([]);
       return;
     }
 
-    try {
-      const res = await authAxios().post("/appointment/trainer/booked/slot", {
-        club_id: clubId,
-        trainer_id: trainerId,
-      });
+    // Mark this call as the latest in-flight request
+    const requestId = ++trialSlotsRequestIdRef.current;
 
-      setTrainerBookedSlots(res.data?.availability || []);
+    try {
+      const res = await authAxios().post(
+        "/staff/operating/hours/trainer/slots",
+        {
+          trainer_id: trainerId,
+          club_id: targetClubId,
+          booking_type: "COMPLIMENTARY",
+        },
+      );
+
+      // Ignore this response if a newer request has been issued since
+      if (requestId !== trialSlotsRequestIdRef.current) return;
+
+      setTrialTrainerSlotsData(res.data?.data || []);
     } catch (err) {
-      console.error(err);
-      setTrainerBookedSlots([]);
+      if (requestId !== trialSlotsRequestIdRef.current) return;
+
+      console.error("Trial/Tour trainer slot fetch error:", err);
+      setTrialTrainerSlotsData([]);
     }
   };
 
+  // Refetch trial/tour slots whenever trainer or club changes
+  useEffect(() => {
+    if (!formik.values.training_by || !clubId) {
+      trialSlotsRequestIdRef.current += 1; // invalidate any in-flight request
+      setTrialTrainerSlotsData([]);
+      return;
+    }
+
+    fetchTrialTrainerSlots(formik.values.training_by, clubId);
+  }, [formik.values.training_by, clubId]);
+
+  // Schedule Follow Up (schedule_for) — unchanged, still uses old API
   const fetchScheduleBookedSlots = async (staffId) => {
     if (!staffId || !clubId) {
       setScheduleBookedSlots([]);
@@ -444,13 +440,15 @@ const LeadCallLogs = () => {
         }));
 
       const trainer = activeOnly
-      .filter((item) =>
-        ["TRAINER", "FITNESS_MANAGER", "ASS_FITNESS_MANAGER"].includes(item.role),
-      )
-      .map((item) => ({
-        value: item.id,
-        label: item.name,
-      }))
+        .filter((item) =>
+          ["TRAINER", "FITNESS_MANAGER", "ASS_FITNESS_MANAGER"].includes(
+            item.role,
+          ),
+        )
+        .map((item) => ({
+          value: item.id,
+          label: item.name,
+        }));
 
       // For schedule_for dropdown
       setTrainerList(trainer);
@@ -514,7 +512,6 @@ const LeadCallLogs = () => {
       const res = await authAxios().get(`/club/${clubId}`);
       const data = res.data?.data?.close_time;
       setClubEndTime(data);
-      
     } catch (err) {
       console.error("Club timing error:", err);
     }
@@ -526,16 +523,6 @@ const LeadCallLogs = () => {
       fetchClubID();
     }
   }, [clubId]);
-
-  const getBookedSlotsForDate = (date) => {
-    if (!date || !trainerBookedSlots.length) return [];
-
-    const dateStr = date.toLocaleDateString("en-CA");
-
-    const matched = trainerBookedSlots.find((item) => item.date === dateStr);
-
-    return matched?.slots || [];
-  };
 
   const getScheduleBookedSlotsForDate = (date) => {
     if (!date || !scheduleBookedSlots.length) return [];
@@ -554,36 +541,70 @@ const LeadCallLogs = () => {
     return `${hour}:${m.toString().padStart(2, "0")} ${ampm}`;
   };
 
-  const timeOptions = clubTiming.map((time) => {
-    const now = new Date();
-    const selectedDate = formik.values.trial_tour_date;
-    let isDisabled = false;
+  // API returns/expects dates as dd-mm-yyyy — used for Trial/Tour only
+  const formatDateForApi = (date) => {
+    if (!date) return null;
+    const d = String(date.getDate()).padStart(2, "0");
+    const m = String(date.getMonth() + 1).padStart(2, "0");
+    const y = date.getFullYear();
+    return `${d}-${m}-${y}`;
+  };
 
-    if (selectedDate) {
-      const [h, m] = time.split(":").map(Number);
-      const timeDate = new Date(selectedDate);
-      timeDate.setHours(h, m, 0, 0);
+  // ===============================
+  // TRIAL/TOUR: dates allowed in the calendar (must be present in API response)
+  // ===============================
+  const trialAvailableDatesSet = useMemo(() => {
+    return new Set(trialTrainerSlotsData.map((d) => d.date));
+  }, [trialTrainerSlotsData]);
 
-      const isToday = selectedDate.toDateString() === now.toDateString();
-      if (isToday && timeDate <= now) isDisabled = true;
+  // react-datepicker calls this per rendered day; only dates present in
+  // the API response (regardless of their slots) are selectable.
+  const filterAvailableTrialDate = (date) => {
+    const dateStr = formatDateForApi(date);
+    return trialAvailableDatesSet.has(dateStr);
+  };
 
-      // ── Tomorrow: disable slots ≤ current time-of-day ──────────────────
-      // const tom = new Date();
-      // tom.setDate(tom.getDate() + 1);
-      // const isTomorrow = selectedDate.toDateString() === tom.toDateString();
-      // if (isTomorrow) {
-      //   const slotTimeOnly = new Date();
-      //   slotTimeOnly.setHours(h, m, 0, 0);
-      //   if (slotTimeOnly <= now) isDisabled = true;
-      // }
-      // ───────────────────────────────────────────────────────────────────
-
-      const booked = getBookedSlotsForDate(selectedDate);
-      if (booked.includes(time)) isDisabled = true;
+  // Selected trial/tour day's slot data (from new API response)
+  const selectedTrialDayData = useMemo(() => {
+    if (!formik.values.trial_tour_date || !trialTrainerSlotsData.length) {
+      return null;
     }
 
-    return { label: formatTo12Hour(time), value: time, isDisabled };
-  });
+    const dateStr = formatDateForApi(formik.values.trial_tour_date);
+
+    return trialTrainerSlotsData.find((d) => d.date === dateStr) || null;
+  }, [formik.values.trial_tour_date, trialTrainerSlotsData]);
+
+  // ===============================
+  // TRIAL/TOUR time options - only looks at `slots` for the matched date;
+  // empty slots -> "No time Slots", otherwise each slot's own
+  // `enable` flag decides if it's selectable.
+  // ===============================
+  const timeOptions = useMemo(() => {
+    if (!formik.values.trial_tour_date) return [];
+
+    if (!selectedTrialDayData) return [NO_SLOTS_OPTION];
+
+    const { slots } = selectedTrialDayData;
+
+    if (!slots || slots.length === 0) {
+      return [NO_SLOTS_OPTION];
+    }
+
+    return slots.map((slot) => ({
+      label: formatTo12Hour(slot.time),
+      value: slot.time,
+      isDisabled: !slot.enable,
+    }));
+  }, [selectedTrialDayData, formik.values.trial_tour_date]);
+
+  useEffect(() => {
+    if (!formik.values.trial_tour_date) return;
+
+    if (timeOptions.length === 1 && timeOptions[0].value === "") {
+      toast.error("No slots available for selected date");
+    }
+  }, [selectedTrialDayData]);
 
   const scheduleTimeOptions = clubTiming.map((time) => {
     const now = new Date();
@@ -597,17 +618,6 @@ const LeadCallLogs = () => {
 
       const isToday = selectedDate.toDateString() === now.toDateString();
       if (isToday && timeDate <= now) isDisabled = true;
-
-      // ── Tomorrow: disable slots ≤ current time-of-day ──────────────────
-      // const tom = new Date();
-      // tom.setDate(tom.getDate() + 1);
-      // const isTomorrow = selectedDate.toDateString() === tom.toDateString();
-      // if (isTomorrow) {
-      //   const slotTimeOnly = new Date();
-      //   slotTimeOnly.setHours(h, m, 0, 0);
-      //   if (slotTimeOnly <= now) isDisabled = true;
-      // }
-      // ───────────────────────────────────────────────────────────────────
 
       const booked = getScheduleBookedSlotsForDate(selectedDate);
       if (booked.includes(time)) isDisabled = true;
@@ -650,13 +660,9 @@ const LeadCallLogs = () => {
   const cleanTime = clubEndTime?.slice(0, 5);
 
   const updatedTiming =
-  clubTiming && clubTiming.length > 0
-    ? generateTimeSlots(
-        clubTiming[0],
-        cleanTime,
-        10
-      )
-    : [];
+    clubTiming && clubTiming.length > 0
+      ? generateTimeSlots(clubTiming[0], cleanTime, 10)
+      : [];
 
   const timeFollowUpOptions = updatedTiming.map((time) => {
     const now = new Date();
@@ -664,19 +670,16 @@ const LeadCallLogs = () => {
     let isDisabled = false;
 
     if (selectedDate) {
-        const [h, m] = time.split(":").map(Number);
-        const timeDate = new Date(selectedDate);
-        timeDate.setHours(h, m, 0, 0);
+      const [h, m] = time.split(":").map(Number);
+      const timeDate = new Date(selectedDate);
+      timeDate.setHours(h, m, 0, 0);
 
-        const isToday = selectedDate.toDateString() === new Date().toDateString();
+      const isToday = selectedDate.toDateString() === new Date().toDateString();
 
-        if (isToday && timeDate <= new Date()) {
-          isDisabled = true;
-        }
-
-        const booked = getBookedSlotsForDate(selectedDate);
-        if (booked.includes(time)) isDisabled = true;
+      if (isToday && timeDate <= new Date()) {
+        isDisabled = true;
       }
+    }
 
     return { label: formatTo12Hour(time), value: time, isDisabled };
   });
@@ -702,12 +705,6 @@ const LeadCallLogs = () => {
 
     formik.setFieldValue("follow_up_datetime", combined.toISOString());
   };
-
-  // useEffect(() => {
-  //   console.log("Formik Errors:", formik.errors);
-  //   console.log("Formik Touched:", formik.touched);
-  //   console.log("Formik Values:", formik.values);
-  // }, [formik.errors, formik.touched, formik.values]);
 
   return (
     <div className="page--content">
@@ -817,9 +814,7 @@ const LeadCallLogs = () => {
                           }}
                           options={timeFollowUpOptions}
                           placeholder="Select time"
-                          isDisabled={
-                            !formik.values.follow_up_date
-                          }
+                          isDisabled={!formik.values.follow_up_date}
                           styles={customStyles}
                         />
                       </div>
@@ -859,7 +854,8 @@ const LeadCallLogs = () => {
                         formik.setFieldValue("trial_tour_time", null);
                         formik.setFieldValue("trial_tour_datetime", "");
 
-                        fetchTrainerBookedSlots(trainerId);
+                        // slots refetch happens via the useEffect
+                        // watching formik.values.training_by
                       }}
                       placeholder="Select Trainer"
                       styles={customStyles}
@@ -892,8 +888,8 @@ const LeadCallLogs = () => {
                             formik.setFieldValue("trial_tour_datetime", "");
                           }}
                           dateFormat="dd/MM/yyyy"
-                          // minDate={new Date(new Date().setDate(new Date().getDate() + 1))} // ✅ disables today + past
                           minDate={new Date()} // ✅ disable past dates
+                          filterDate={filterAvailableTrialDate}
                           placeholderText="Select Date"
                           onKeyDown={(e) => {
                             e.preventDefault();
@@ -915,6 +911,8 @@ const LeadCallLogs = () => {
                               : null
                           }
                           onChange={(option) => {
+                            if (!option || option.value === "") return;
+
                             formik.setFieldValue(
                               "trial_tour_time",
                               option.value,
@@ -1002,7 +1000,6 @@ const LeadCallLogs = () => {
                                 formik.setFieldValue("follow_up_datetime", "");
                               }}
                               dateFormat="dd/MM/yyyy"
-                              // minDate={new Date(new Date().setDate(new Date().getDate() + 1))} // ✅ disables today + past
                               minDate={new Date()} // ✅ disable past dates
                               placeholderText="Select Date"
                               onKeyDown={(e) => {

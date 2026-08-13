@@ -222,7 +222,7 @@ const CreateCompany = ({
                   {/* Phone */}
                   <div>
                     <label className="mb-2 block">
-                      Contact Number<span className="text-red-500">*</span>
+                      Contact Number
                     </label>
                     <PhoneInput
                       name="phone"

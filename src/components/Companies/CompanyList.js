@@ -93,13 +93,13 @@ const CompanyList = () => {
     },
     validationSchema: Yup.object({
       name: Yup.string().required("Company name is required"),
-      phone: Yup.string()
-        .required("Contact number is required")
-        .test(
-          "is-valid-phone",
-          "Please enter a valid phone number",
-          (value) => value && isValidPhoneNumber(value),
-        ),
+      // phone: Yup.string()
+      //   .required("Contact number is required")
+      //   .test(
+      //     "is-valid-phone",
+      //     "Please enter a valid phone number",
+      //     (value) => value && isValidPhoneNumber(value),
+      //   ),
     }),
     onSubmit: async (values, { resetForm }) => {
       try {

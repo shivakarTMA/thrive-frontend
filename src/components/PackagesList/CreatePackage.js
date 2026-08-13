@@ -122,7 +122,7 @@ const CreatePackage = ({
       fetchClubId(formik.values.club_id);
 
       // reset dependent fields
-      formik.setFieldValue("session_duration", clubDuration || "");
+      formik.setFieldValue("session_duration", "");
       formik.setFieldValue("service_id", "");
       formik.setFieldValue("studio_id", "");
       formik.setFieldValue("trainer_id", "");
@@ -175,7 +175,7 @@ const CreatePackage = ({
                 caption: "",
                 description: "",
                 no_of_sessions: "",
-                session_duration: clubDuration,
+                session_duration: "",
                 session_validity: "",
                 amount: "",
                 discount: "",
@@ -216,9 +216,9 @@ const CreatePackage = ({
                 : data?.session_level || "",
             no_of_sessions:
               data?.no_of_sessions !== undefined ? data.no_of_sessions : "",
-            // session_duration:
-            //   data?.session_duration !== undefined ? data.session_duration : "",
-            session_duration:clubDuration,
+            session_duration:
+              data?.session_duration !== undefined ? data.session_duration : "",
+            // session_duration:clubDuration,
             session_validity:
               data?.session_validity !== undefined ? data.session_validity : "",
             start_date: data?.start_date || "",
@@ -324,7 +324,7 @@ const CreatePackage = ({
         caption: "",
         description: "",
         no_of_sessions: "",
-        session_duration: clubDuration,
+        session_duration: "",
         session_validity: "",
         amount: "",
         discount: "",
@@ -345,7 +345,7 @@ const CreatePackage = ({
           caption: "",
           description: "",
           no_of_sessions: "",
-          session_duration: clubDuration,
+          session_duration: "",
           session_validity: "",
           amount: "",
           discount: "",
@@ -412,21 +412,21 @@ const CreatePackage = ({
     }
   }, [formik.values.start_time]);
 
-  useEffect(() => {
-    if (clubDuration) {
-      formik.setFieldValue("session_duration", clubDuration);
+  // useEffect(() => {
+  //   if (clubDuration) {
+  //     formik.setFieldValue("session_duration", clubDuration);
       
 
-      // also update variations
-      if (formik.values.variation?.length) {
-        const updated = formik.values.variation.map((item) => ({
-          ...item,
-          session_duration: clubDuration,
-        }));
-        formik.setFieldValue("variation", updated);
-      }
-    }
-  }, [clubDuration]);
+  //     // also update variations
+  //     if (formik.values.variation?.length) {
+  //       const updated = formik.values.variation.map((item) => ({
+  //         ...item,
+  //         session_duration: clubDuration,
+  //       }));
+  //       formik.setFieldValue("variation", updated);
+  //     }
+  //   }
+  // }, [clubDuration]);
 
   return (
     <>
@@ -777,8 +777,19 @@ const CreatePackage = ({
                               type="number"
                               name="session_duration"
                               value={formik.values.session_duration || ""}
-                              disabled={true}
-                              className="custom--input w-full number--appearance-none cursor-not-allowed pointer-events-none !bg-gray-100 !text-gray-500"
+                              // disabled={true}
+                              onKeyDown={blockInvalidNumberKeys} // ⛔ blocks typing -, e, etc.
+                              onChange={(e) => {
+                                const cleanValue = sanitizePositiveInteger(
+                                  e.target.value,
+                                );
+                                formik.setFieldValue(
+                                  "session_duration",
+                                  cleanValue,
+                                );
+                              }}
+                              onBlur={formik.handleBlur}
+                              className="custom--input w-full number--appearance-none"
                             />
                           </div>
                           {formik.touched.session_duration &&
@@ -1369,8 +1380,19 @@ const CreatePackage = ({
                                 type="number"
                                 name={`variation[${index}].session_duration`}
                                 value={formik.values.variation[index]?.session_duration ?? ""}
-                                disabled={true}
-                                className="custom--input w-full number--appearance-none cursor-not-allowed pointer-events-none !bg-gray-100 !text-gray-500"
+                                // disabled={true}
+                                onKeyDown={blockInvalidNumberKeys}
+                                onChange={(e) => {
+                                  const cleanValue = sanitizePositiveInteger(
+                                    e.target.value,
+                                  );
+                                  formik.setFieldValue(
+                                    `variation[${index}].session_duration`,
+                                    cleanValue,
+                                  );
+                                }}
+                                onBlur={formik.handleBlur}
+                                className="custom--input w-full number--appearance-none"
                               />
                               {formik.touched.variation?.[index]
                                 ?.session_duration &&

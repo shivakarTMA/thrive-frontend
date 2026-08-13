@@ -22,6 +22,8 @@ function toCapitalizedCase(inputString) {
     .join(" "); // Join words back into a single string with spaces
 }
 
+const NO_SLOTS_OPTION = { label: "No time Slots", value: "", isDisabled: true };
+
 const CreateMemberAppointment = ({
   setAppointmentModal,
   defaultCategory,
@@ -34,10 +36,18 @@ const CreateMemberAppointment = ({
 
   const [staffList, setStaffList] = useState([]);
   const [serviceList, setServiceList] = useState([]);
-  const [clubTiming, setClubTiming] = useState([]);
-  const [bookedSlots, setBookedSlots] = useState([]);
   const [checkTrial, setCheckTrial] = useState(false);
+
+  // Raw package data (needed for session_duration) + react-select formatted options
+  const [packageList, setPackageList] = useState([]);
   const [memberPurchasedServices, setMemberPurchasedServices] = useState([]);
+
+  // Response from /staff/operating/hours/trainer/slots
+  const [trainerSlotsData, setTrainerSlotsData] = useState([]);
+
+  // Guards against out-of-order responses: only the response matching the
+  // most recently *issued* request is allowed to update state.
+  const slotsRequestIdRef = useRef(0);
 
   const { user } = useSelector((state) => state.auth);
   const userRole = user.role;
@@ -53,36 +63,44 @@ const CreateMemberAppointment = ({
   const canCreateComplimentary = ALLOWED_COMPLEMENTARY_ROLES.includes(userRole);
 
   // ===============================
-  // FETCH CLUB TIMING
+  // FETCH TRAINER SLOTS (new API)
   // ===============================
-  const fetchClubTiming = async () => {
-    try {
-      const res = await authAxios().get(`/club/fetch/timing/${clubId}`);
-      setClubTiming(res.data?.data?.time || []);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  // ===============================
-  // FETCH TRAINER SLOTS
-  // ===============================
-  const fetchTrainerBookedSlots = async (trainerId) => {
+  const fetchTrainerSlots = async (trainerId, category, duration) => {
     if (!trainerId || !clubId) {
-      setBookedSlots([]);
+      setTrainerSlotsData([]);
       return;
     }
 
-    try {
-      const res = await authAxios().post("/appointment/trainer/booked/slot", {
-        club_id: clubId,
-        trainer_id: trainerId,
-      });
+    // Mark this call as the latest in-flight request
+    const requestId = ++slotsRequestIdRef.current;
 
-      setBookedSlots(res.data?.availability || []);
+    try {
+      const bookingType = category === "complementary" ? "COMPLIMENTARY" : "PACKAGE";
+
+      const body = {
+        trainer_id: trainerId,
+        club_id: clubId,
+        booking_type: bookingType,
+      };
+
+      if (bookingType === "PACKAGE") {
+        body.duration = duration;
+      }
+
+      const res = await authAxios().post(
+        "/staff/operating/hours/trainer/slots",
+        body,
+      );
+
+      // Ignore this response if a newer request has been issued since
+      if (requestId !== slotsRequestIdRef.current) return;
+
+      setTrainerSlotsData(res.data?.data || []);
     } catch (err) {
+      if (requestId !== slotsRequestIdRef.current) return;
+
       console.error(err);
-      setBookedSlots([]);
+      setTrainerSlotsData([]);
     }
   };
 
@@ -93,6 +111,10 @@ const CreateMemberAppointment = ({
         `/package/available/session/${memberID}`,
       );
       const data = res.data?.data || [];
+
+      // keep raw data around so we can read session_duration later
+      setPackageList(data);
+
       // Convert to react-select format
       const formattedOptions = data.map((item) => ({
         value: item.id, // what you want to store in Formik
@@ -107,16 +129,15 @@ const CreateMemberAppointment = ({
   };
 
   // ===============================
-  // MATCH DATE → SLOTS
+  // DATE HELPERS
   // ===============================
-  const getBookedSlotsForSelectedDate = (date) => {
-    if (!date || !bookedSlots.length) return [];
-
-    const dateStr = date.toLocaleDateString("en-CA");
-
-    const matched = bookedSlots.find((d) => d.date === dateStr);
-
-    return matched?.slots || [];
+  // API returns/expects dates as dd-mm-yyyy
+  const formatDateForApi = (date) => {
+    if (!date) return null;
+    const d = String(date.getDate()).padStart(2, "0");
+    const m = String(date.getMonth() + 1).padStart(2, "0");
+    const y = date.getFullYear();
+    return `${d}-${m}-${y}`;
   };
 
   // ===============================
@@ -285,7 +306,7 @@ const CreateMemberAppointment = ({
 
   // Reset logic based on appointment_category
   const handleReset = (category) => {
-    setBookedSlots([]);
+    setTrainerSlotsData([]);
 
     formik.setValues({
       ...formik.values,
@@ -315,57 +336,53 @@ const CreateMemberAppointment = ({
   };
 
   // ===============================
-  // TIME OPTIONS
+  // DATES ALLOWED IN THE CALENDAR (must be present in API response)
+  // ===============================
+  const availableDatesSet = useMemo(() => {
+    return new Set(trainerSlotsData.map((d) => d.date));
+  }, [trainerSlotsData]);
+
+  // react-datepicker calls this per rendered day; only dates present in
+  // the API response (regardless of their slots) are selectable.
+  const filterAvailableDate = (date) => {
+    const dateStr = formatDateForApi(date);
+    return availableDatesSet.has(dateStr);
+  };
+
+  // Selected day's slot data (from new API response)
+  const selectedDayData = useMemo(() => {
+    if (!formik.values.appointment_date_only || !trainerSlotsData.length) {
+      return null;
+    }
+
+    const dateStr = formatDateForApi(formik.values.appointment_date_only);
+
+    return trainerSlotsData.find((d) => d.date === dateStr) || null;
+  }, [formik.values.appointment_date_only, trainerSlotsData]);
+
+  // ===============================
+  // TIME OPTIONS (driven entirely by server `enable` + holiday flags)
   // ===============================
   const timeOptions = useMemo(() => {
-    const booked = getBookedSlotsForSelectedDate(
-      formik.values.appointment_date_only,
-    );
+    if (!formik.values.appointment_date_only) return [];
 
-    return clubTiming.map((time) => {
-      const isBooked = booked.includes(time);
+    // No matching day found in the response for the picked date
+    if (!selectedDayData) return [NO_SLOTS_OPTION];
 
-      // ── Past-time-of-day check ──────────────────────────────────────────
-      let isPastTime = false;
-      const selectedDate = formik.values.appointment_date_only;
+    const { slots } = selectedDayData;
 
-      if (selectedDate) {
-        const now = new Date();
-        const [h, m] = time.split(":").map(Number);
+    // No slots for this date -> No time Slots
+    if (!slots || slots.length === 0) {
+      return [NO_SLOTS_OPTION];
+    }
 
-        const tom = new Date();
-        tom.setDate(tom.getDate() + 1);
-
-        const selectedIsToday =
-          new Date(selectedDate).toDateString() === now.toDateString();
-        const selectedIsTomorrow =
-          new Date(selectedDate).toDateString() === tom.toDateString();
-
-        if (selectedIsToday) {
-          // safety guard (minDate should prevent today from being picked)
-          const slotTime = new Date(selectedDate);
-          slotTime.setHours(h, m, 0, 0);
-          if (slotTime <= now) isPastTime = true;
-        }
-
-        // if (selectedIsTomorrow) {
-        //   // compare slot HH:mm against current time-of-day only
-        //   const slotTimeOnly = new Date();
-        //   slotTimeOnly.setHours(h, m, 0, 0);
-        //   if (slotTimeOnly <= now) isPastTime = true;
-        // }
-
-        // 25th and beyond → isPastTime stays false, all slots open
-      }
-      // ───────────────────────────────────────────────────────────────────
-
-      return {
-        label: formatTo12Hour(time),
-        value: time,
-        isDisabled: isBooked || isPastTime, // ✅ both combined
-      };
-    });
-  }, [clubTiming, bookedSlots, formik.values.appointment_date_only]);
+    // Normal case: trust server's `enable` flag for each slot
+    return slots.map((slot) => ({
+      label: formatTo12Hour(slot.time),
+      value: slot.time,
+      isDisabled: !slot.enable,
+    }));
+  }, [selectedDayData, formik.values.appointment_date_only]);
 
   // ===============================
   // FETCH INITIAL DATA
@@ -404,7 +421,6 @@ const CreateMemberAppointment = ({
 
     fetchStaff();
     fetchService();
-    fetchClubTiming();
   }, [clubId]);
 
   useEffect(() => {
@@ -413,7 +429,7 @@ const CreateMemberAppointment = ({
     formik.setFieldValue("appointment_time", null);
     formik.setFieldValue("appointment_date", null);
 
-    setBookedSlots([]);
+    setTrainerSlotsData([]);
   }, [clubId]);
 
   useEffect(() => {
@@ -422,17 +438,51 @@ const CreateMemberAppointment = ({
     }
   }, [defaultCategory]);
 
+  // Refetch trainer slots whenever trainer, category, or the selected
+  // package (which determines duration for PACKAGE bookings) changes.
   useEffect(() => {
-  if (formik.values.appointment_date_only) {
-    const booked = getBookedSlotsForSelectedDate(
-      formik.values.appointment_date_only
+    const trainerId = formik.values.trainer_id;
+    const category = formik.values.appointment_category;
+
+    if (!trainerId) {
+      slotsRequestIdRef.current += 1; // invalidate any in-flight request
+      setTrainerSlotsData([]);
+      return;
+    }
+
+    if (category === "complementary") {
+      fetchTrainerSlots(trainerId, "complementary");
+      return;
+    }
+
+    // category === "service" -> PACKAGE booking, needs duration
+    const selectedPackage = packageList.find(
+      (p) => p.id === formik.values.package_booking_id,
     );
 
-    if (booked.length >= clubTiming.length) {
+    if (!selectedPackage) {
+      slotsRequestIdRef.current += 1; // invalidate any in-flight request
+      setTrainerSlotsData([]);
+      return;
+    }
+
+    fetchTrainerSlots(trainerId, "service", selectedPackage.session_duration);
+  }, [
+    formik.values.trainer_id,
+    formik.values.package_booking_id,
+    formik.values.appointment_category,
+    packageList,
+    clubId,
+  ]);
+
+  // Warn when the picked date has no bookable slots at all
+  useEffect(() => {
+    if (!formik.values.appointment_date_only) return;
+
+    if (timeOptions.length === 1 && timeOptions[0].value === "") {
       toast.error("No slots available for selected date");
     }
-  }
-}, [formik.values.appointment_date_only, bookedSlots]);
+  }, [selectedDayData]);
 
   const handleOverlayClick = (e) => {
     if (leadBoxRef.current && !leadBoxRef.current.contains(e.target)) {
@@ -490,16 +540,6 @@ const CreateMemberAppointment = ({
                         checked={
                           formik.values.appointment_category === cat.value
                         }
-                        // onChange={() => {
-                        //   if (!isServiceDisabled) {
-                        //     formik.setFieldValue(
-                        //       "appointment_category",
-                        //       cat.value,
-                        //     );
-                        //     handleReset(cat.value);
-                        //   }
-                        // }}
-                        // disabled={isServiceDisabled}
                         onChange={() => {
                           if (
                             cat.value === "complementary" &&
@@ -538,12 +578,16 @@ const CreateMemberAppointment = ({
                       (option) =>
                         option.value === formik.values.package_booking_id,
                     )}
-                    onChange={(selectedOption) =>
+                    onChange={(selectedOption) => {
                       formik.setFieldValue(
                         "package_booking_id",
                         selectedOption?.value,
-                      )
-                    }
+                      );
+                      // duration changes with package -> slots must be recomputed
+                      formik.setFieldValue("appointment_date_only", null);
+                      formik.setFieldValue("appointment_time", null);
+                      formik.setFieldValue("appointment_date", null);
+                    }}
                     options={memberPurchasedServices}
                     styles={customStyles}
                     placeholder="Select purchased service..."
@@ -604,9 +648,7 @@ const CreateMemberAppointment = ({
                     formik.setFieldValue("appointment_time", null);
                     formik.setFieldValue("appointment_date", null);
 
-                    setBookedSlots([]);
-
-                    if (trainerId) fetchTrainerBookedSlots(trainerId);
+                    // slots refetch happens via the useEffect watching trainer_id
                   }}
                   options={staffOptions}
                   styles={customStyles}
@@ -637,8 +679,8 @@ const CreateMemberAppointment = ({
                       formik.setFieldValue("appointment_date", null);
                     }}
                     dateFormat="dd/MM/yyyy"
-                    // minDate={new Date(new Date().setDate(new Date().getDate() + 1))} // ✅ disables today + past
                     minDate={new Date()}
+                    filterDate={filterAvailableDate}
                     onKeyDown={(e) => {
                       e.preventDefault();
                     }}
@@ -659,6 +701,8 @@ const CreateMemberAppointment = ({
                         : null
                     }
                     onChange={(opt) => {
+                      if (!opt || opt.value === "") return;
+
                       formik.setFieldValue("appointment_time", opt.value);
 
                       combineDateTime(

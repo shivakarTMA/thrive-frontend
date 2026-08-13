@@ -206,7 +206,6 @@ const ServiceCard = ({ details }) => {
       const dataCount = res.data?.totalCount || null;
       const data = res.data?.data || [];
 
-      console.log(data, "shivakar");
 
       setPurchasedServices(data);
       setPurchasedServicesCount(dataCount);
@@ -236,6 +235,7 @@ const ServiceCard = ({ details }) => {
       fetchPurchaseServices();
     } catch (error) {
       console.error(error);
+      toast.error(error.response?.data?.message);
     }
   };
 
