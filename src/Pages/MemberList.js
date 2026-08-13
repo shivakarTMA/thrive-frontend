@@ -621,7 +621,7 @@ const MemberList = (props) => {
   const getOptions = (member) => {
   // F_AND_B can only buy products
   if (userRole === "F_AND_B") {
-    if (hasProductServices) {
+    if (hasProductServices && member?.is_subscribed === true) {
       return [
         {
           value: "products",
@@ -645,7 +645,8 @@ const MemberList = (props) => {
 
   if (
     hasProductServices &&
-    member?.upcoming_subscription_start_date === null
+    member?.upcoming_subscription_start_date === null &&
+    member?.is_subscribed === true
   ) {
     options.push({
       value: "products",
@@ -1250,6 +1251,8 @@ const hasMemberPermission = (permission) =>
                               userRole === "ADMIN" || userRole === "F_AND_B") && (
                                 <>
                                 {(member?.is_subscribed === true || member?.upcoming_subscription_start_date !== null) && (
+                                  <>
+                                  {getOptions(member).length > 0 && (
                                   <Tooltip
                                     id={`send-payment-${member?.id}`}
                                     content={
@@ -1261,98 +1264,103 @@ const hasMemberPermission = (permission) =>
                                     }
                                     place="left"
                                   >
+                                    
                                     <div
-                                      className={`min-w-[50px] ${
+                                      className={`min-w-[30px] ${
                                         member?.is_kyc === "YES" &&
                                         member?.freeze_status !== "FREEZED"
                                           ? ""
                                           : "pointer-events-none opacity-50"
                                       }`}
                                     >
-                                      <Select
-                                        options={getOptions(member)}
-                                        components={{
-                                          Option: customOption,
-                                          IndicatorSeparator: () => null,
-                                        }}
-                                        isSearchable={false}
-                                        controlShouldRenderValue={false}
-                                        placeholder={
-                                          <div className="flex items-center justify-center w-full">
-                                            <IoIosAddCircleOutline className="text-[24px] text-black" />
-                                          </div>
-                                        }
-                                        menuPlacement="auto"
-                                        onChange={(selected) => {
-                                          if (selected.value === "services") {
-                                            setSelectedLeadMember(member.id);
-                                            setInvoiceModal(true);
-                                            setSelectedLeadClub(member?.club_id);
-                                            setUpCommingDateMember(member?.upcoming_subscription_start_date)
+                                        <Select
+                                          options={getOptions(member)}
+                                          components={{
+                                            Option: customOption,
+                                            IndicatorSeparator: () => null,
+                                          }}
+                                          isSearchable={false}
+                                          controlShouldRenderValue={false}
+                                          placeholder={
+                                            <div className="flex items-center justify-center w-full">
+                                              <IoIosAddCircleOutline className="text-[24px] text-black" />
+                                            </div>
                                           }
+                                          menuPlacement="auto"
+                                          onChange={(selected) => {
+                                            if (selected.value === "services") {
+                                              setSelectedLeadMember(member.id);
+                                              setInvoiceModal(true);
+                                              setSelectedLeadClub(member?.club_id);
+                                              setUpCommingDateMember(
+                                                member?.upcoming_subscription_start_date
+                                              );
+                                            }
 
-                                          if (selected.value === "products") {
-                                            setSelectedLeadMember(member.id);
-                                            setProductInvoiceModal(true);
-                                            setSelectedLeadClub(member?.club_id);
-                                          }
-                                        }}
-                                        styles={{
-                                          control: (base) => ({
-                                            ...base,
-                                            minHeight: "30px",
-                                            width: "30px",
-                                            border: "none",
-                                            boxShadow: "none",
-                                            background: "transparent",
-                                            cursor: "pointer",
-                                          }),
+                                            if (selected.value === "products") {
+                                              setSelectedLeadMember(member.id);
+                                              setProductInvoiceModal(true);
+                                              setSelectedLeadClub(member?.club_id);
+                                            }
+                                          }}
+                                          styles={{
+                                            control: (base) => ({
+                                              ...base,
+                                              minHeight: "30px",
+                                              width: "30px",
+                                              border: "none",
+                                              boxShadow: "none",
+                                              background: "transparent",
+                                              cursor: "pointer",
+                                            }),
 
-                                          valueContainer: (base) => ({
-                                            ...base,
-                                            padding: 0,
-                                            justifyContent: "center",
-                                          }),
+                                            valueContainer: (base) => ({
+                                              ...base,
+                                              padding: 0,
+                                              justifyContent: "center",
+                                            }),
 
-                                          placeholder: (base) => ({
-                                            ...base,
-                                            margin: 0,
-                                            position: "absolute",
-                                            top: "50%",
-                                            transform: "translateY(-50%)",
-                                            left: "-12px",
-                                          }),
+                                            placeholder: (base) => ({
+                                              ...base,
+                                              margin: 0,
+                                              position: "absolute",
+                                              top: "50%",
+                                              transform: "translateY(-50%)",
+                                              left: "-12px",
+                                            }),
 
-                                          dropdownIndicator: (base) => ({
-                                            ...base,
-                                            display: "none",
-                                          }),
+                                            dropdownIndicator: (base) => ({
+                                              ...base,
+                                              display: "none",
+                                            }),
 
-                                          indicatorsContainer: (base) => ({
-                                            ...base,
-                                            display: "none",
-                                          }),
+                                            indicatorsContainer: (base) => ({
+                                              ...base,
+                                              display: "none",
+                                            }),
 
-                                          menu: (base) => ({
-                                            ...base,
-                                            zIndex: 9999,
-                                            width: "180px",
-                                            right: 0,
-                                            top: "100%",
-                                            backgroundColor: "white",
-                                            color: "black",
-                                          }),
+                                            menu: (base) => ({
+                                              ...base,
+                                              zIndex: 9999,
+                                              width: "180px",
+                                              right: 0,
+                                              top: "100%",
+                                              backgroundColor: "white",
+                                              color: "black",
+                                            }),
 
-                                          menuPortal: (base) => ({
-                                            ...base,
-                                            zIndex: 9999,
-                                          }),
-                                        }}
-                                        menuPortalTarget={document.body}
-                                        menuPosition="fixed"
-                                      />
+                                            menuPortal: (base) => ({
+                                              ...base,
+                                              zIndex: 9999,
+                                            }),
+                                          }}
+                                          menuPortalTarget={document.body}
+                                          menuPosition="fixed"
+                                        />
                                     </div>
                                   </Tooltip>
+                                    )}
+                                    </>
                                 )}
                                 </>
                               )}
