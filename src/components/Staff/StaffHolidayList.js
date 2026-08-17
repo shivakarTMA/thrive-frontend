@@ -112,7 +112,7 @@ const StaffHolidayList = () => {
       return;
     }
 
-    const roles = ["TRAINER", "FITNESS_MANAGER", "ASS_FITNESS_MANAGER"];
+    const roles = ["FOH", "TRAINER", "FITNESS_MANAGER", "ASS_FITNESS_MANAGER"];
 
     const res = await authAxios().get("/staff/list", {
       params: {
@@ -135,6 +135,7 @@ useEffect(() => {
 }, [clubFilter?.value]);
 
 const roleLabels = {
+  FOH: "FOH",
   TRAINER: "Trainer",
   FITNESS_MANAGER: "Fitness Manager",
   ASS_FITNESS_MANAGER: "Assistant Fitness Manager",

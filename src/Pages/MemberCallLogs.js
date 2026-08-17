@@ -89,7 +89,9 @@ const MemberCallLogs = () => {
   const [memberEnquiry, setMemberEnquiry] = useState([]);
   const [editLog, setEditLog] = useState(null);
   const [clubData, setClubData] = useState(null);
-  const [clubTiming, setClubTiming] = useState([]);
+
+  const [clubSlotsData, setClubSlotsData] = useState([]);
+  const [clubSlotsLoading, setClubSlotsLoading] = useState(false);
 
   const now = new Date();
   const minTime = new Date();
@@ -360,29 +362,10 @@ const MemberCallLogs = () => {
 
   useEffect(() => {
     if (editLog) {
-      // let date = null;
-      // let time = null;
-
-      // if (editLog?.follow_up_datetime) {
-      //   const d = new Date(editLog.follow_up_datetime);
-
-      //   date = d;
-
-      //   const hours = d.getHours().toString().padStart(2, "0");
-      //   const minutes = d.getMinutes().toString().padStart(2, "0");
-
-      //   time = `${hours}:${minutes}`;
-      // }
 
       formik.setValues({
         member_id: memberDetails?.id,
         call_type: editLog.call_type || "",
-        // call_status: editLog.call_status || "",
-        // not_interested_reason: editLog.not_interested_reason || "",
-        // follow_up_date: date,
-        // follow_up_time: time,
-        // follow_up_datetime: editLog.follow_up_datetime || "",
-        // remark: editLog.remark || "",
         id: editLog.id, // <-- VERY IMPORTANT for update mode
       });
     }
@@ -409,21 +392,35 @@ const MemberCallLogs = () => {
     }
   }, [logId, callDataList]);
 
-  const fetchClubTimingAPI = async () => {
-    try {
-      const res = await authAxios().get(`/club/fetch/timing/${clubData}`);
+  const fetchClubSlots = async (targetClubId) => {
+    if (!targetClubId) {
+      setClubSlotsData([]);
+      return;
+    }
 
-      setClubTiming(res.data?.data?.time || []);
+    try {
+      setClubSlotsLoading(true);
+
+      const res = await authAxios().post("/club/details/slots", {
+        club_id: targetClubId,
+      });
+
+      setClubSlotsData(res.data?.data || []);
     } catch (err) {
-      console.error(err);
-      setClubTiming([]);
+      console.error("Club slots fetch error:", err);
+      setClubSlotsData([]);
+    } finally {
+      setClubSlotsLoading(false);
     }
   };
 
   useEffect(() => {
-    if (clubData) {
-      fetchClubTimingAPI();
+    if (!clubData) {
+      setClubSlotsData([]);
+      return;
     }
+
+    fetchClubSlots(clubData);
   }, [clubData]);
 
   const formatTo12Hour = (time24) => {
@@ -433,31 +430,83 @@ const MemberCallLogs = () => {
     return `${hour}:${m.toString().padStart(2, "0")} ${ampm}`;
   };
 
-  const timeOptions = clubTiming.map((time) => {
-    const now = new Date();
+  const formatClubSlotDate = (date) => {
+    if (!date) return null;
 
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const year = date.getFullYear();
+
+    return `${day}-${month}-${year}`;
+  };
+
+  const getClubSlotDataForDate = (date) => {
+    if (!date || !clubSlotsData.length) return null;
+
+    const dateStr = formatClubSlotDate(date);
+
+    return (
+      clubSlotsData.find((item) => item.date === dateStr) || null
+    );
+  };
+
+  const filterClubSlotDates = (date) => {
+    const dateStr = formatClubSlotDate(date);
+
+    return clubSlotsData.some(
+      (item) => item.date === dateStr,
+    );
+  };
+
+  const clubSlotTimeOptions = (() => {
     const selectedDate = formik.values.follow_up_date;
 
-    let isPast = false;
-
-    if (selectedDate) {
-      const [h, m] = time.split(":").map(Number);
-      const timeDate = new Date(selectedDate);
-      timeDate.setHours(h, m, 0, 0);
-
-      const isToday = selectedDate.toDateString() === now.toDateString();
-
-      if (isToday && timeDate <= now) {
-        isPast = true; // ❌ disable past time
-      }
+    if (!selectedDate) {
+      return [];
     }
 
-    return {
-      label: formatTo12Hour(time),
-      value: time,
-      isDisabled: isPast,
-    };
-  });
+    const selectedDay = getClubSlotDataForDate(selectedDate);
+
+    if (!selectedDay) {
+      return [];
+    }
+
+    if (!selectedDay.slots?.length) {
+      return [
+        {
+          label: "No time slots",
+          value: "",
+          isDisabled: true,
+        },
+      ];
+    }
+
+    const now = new Date();
+
+    return selectedDay.slots.map((slot) => {
+      const [hours, minutes] = slot.time.split(":").map(Number);
+
+      const timeDate = new Date(selectedDate);
+      timeDate.setHours(hours, minutes, 0, 0);
+
+      const isToday =
+        selectedDate.toDateString() === now.toDateString();
+
+      const isPast =
+        isToday && timeDate <= now;
+
+      return {
+        label: formatTo12Hour(slot.time),
+        value: slot.time,
+
+        // Disable when:
+        // 1. API says enable=false
+        // 2. Time has already passed today
+        isDisabled: slot.enable !== true || isPast,
+      };
+    });
+  })();
+
 
   const combineDateTime = (date, time) => {
     if (!date || !time) return;
@@ -636,44 +685,71 @@ const MemberCallLogs = () => {
                         <label className="mb-2 block">
                           Date & Time<span className="text-red-500">*</span>
                         </label>
+
                         <div className="grid grid-cols-2 gap-4">
+                          {/* DATE */}
                           <div className="custom--date flex-1">
                             <span className="absolute z-[1] mt-[11px] ml-[15px]">
                               <FaCalendarDays />
                             </span>
+
                             <DatePicker
                               selected={formik.values.follow_up_date}
                               onChange={(date) => {
-                                formik.setFieldValue("follow_up_date", date);
+                                formik.setFieldValue(
+                                  "follow_up_date",
+                                  date,
+                                );
 
-                                // reset time
-                                formik.setFieldValue("follow_up_time", null);
-                                formik.setFieldValue("follow_up_datetime", "");
+                                // Reset time when date changes
+                                formik.setFieldValue(
+                                  "follow_up_time",
+                                  null,
+                                );
+
+                                formik.setFieldValue(
+                                  "follow_up_datetime",
+                                  "",
+                                );
                               }}
                               dateFormat="dd/MM/yyyy"
+                              minDate={new Date()}
+                              filterDate={filterClubSlotDates}
                               onKeyDown={(e) => {
                                 e.preventDefault();
                               }}
-                              minDate={new Date()} // ✅ disable past dates
-                              placeholderText="Select date"
+                              placeholderText={
+                                clubSlotsLoading
+                                  ? "Loading dates..."
+                                  : "Select date"
+                              }
+                              disabled={clubSlotsLoading}
                               className="border px-3 py-2 w-full input--icon"
-                              // disabled={!!editLog}
                             />
                           </div>
 
+                          {/* TIME */}
                           <div>
                             <Select
-                              key={formik.values.follow_up_date}
+                              key={`${formik.values.follow_up_date}-${clubSlotsData.length}`}
                               value={
                                 formik.values.follow_up_time
-                                  ? timeOptions.find(
+                                  ? clubSlotTimeOptions.find(
                                       (opt) =>
                                         opt.value ===
                                         formik.values.follow_up_time,
-                                    )
+                                    ) || null
                                   : null
                               }
                               onChange={(option) => {
+                                if (
+                                  !option ||
+                                  option.isDisabled ||
+                                  !option.value
+                                ) {
+                                  return;
+                                }
+
                                 formik.setFieldValue(
                                   "follow_up_time",
                                   option.value,
@@ -684,9 +760,16 @@ const MemberCallLogs = () => {
                                   option.value,
                                 );
                               }}
-                              options={timeOptions}
-                              placeholder="Select time"
-                              isDisabled={!formik.values.follow_up_date}
+                              options={clubSlotTimeOptions}
+                              placeholder={
+                                clubSlotsLoading
+                                  ? "Loading slots..."
+                                  : "Select time"
+                              }
+                              isDisabled={
+                                !formik.values.follow_up_date ||
+                                clubSlotsLoading
+                              }
                               styles={customStyles}
                             />
                           </div>

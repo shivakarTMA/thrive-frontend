@@ -12,8 +12,6 @@ const InvoiceModal = ({ isOpen, onClose, data }) => {
     }
   };
 
-  // console.log(data,'data')
-
   return (
     <div
       className="bg--blur create--lead--container overflow-auto hide--overflow fixed top-0 left-0 z-[999] w-full bg-black bg-opacity-60 h-full"
@@ -50,44 +48,33 @@ const InvoiceModal = ({ isOpen, onClose, data }) => {
           {/* Customer & Company Info */}
           <div className="flex justify-between mb-5">
             <div className="space-y-1 text-sm">
+              <p className="font-semibold text-[16px]">Member Details:</p>
               <p>
-                <strong>Customer Name:</strong> {data.member_full_name}
+                <strong>ID:</strong> {data?.membership_number}
               </p>
-              {data?.gst_registration_number && (
+              <p>
+                <strong>Name:</strong> {data?.member_full_name}
+              </p>
+              <p>
+                <strong>Address:</strong> {data?.member_address || "--"}
+              </p>
+              <p>
+                <strong>Pincode:</strong> {data?.member_pincode || "--"}
+              </p>
+              <p>
+                <strong>Email:</strong> {data?.member_email}
+              </p>
+              <p>
+                <strong>Mobile:</strong> +{data?.member_country_code} {data?.member_mobile}
+              </p>
+              {/* {data?.gst_registration_number && ( */}
                 <p>
-                  <strong>Customer GSTIN:</strong> {data.gst_registration_number}
+                  <strong>GSTIN:</strong> {data?.gst_registration_number || "--"}
                 </p>
-              )}
-              {data?.gst_registered_company_name && (
-                <p>
-                  <strong>Customer Company Name:</strong> {data.gst_registered_company_name}
-                </p>
-              )}
-              {data?.gst_registered_company_address && (
-                <p>
-                  <strong>Customer Company Address:</strong> {data.gst_registered_company_address}
-                </p>
-              )}
-              <p>
-                <strong>Address:</strong> {data.member_address || "--"}
-              </p>
-              <p>
-                <strong>Pincode:</strong> {data.member_pincode || "--"}
-              </p>
-              <p>
-                <strong>Email:</strong> {data.member_email}
-              </p>
-              <p>
-                <strong>Mobile:</strong> +{data?.member_country_code} {data.member_mobile}
-              </p>
+              {/* )} */}
+              
             </div>
             <div className="text-right text-sm space-y-1">
-              <p>
-                <strong>Company Name:</strong> {data.company_name}
-              </p>
-              <p className="!mb-4 w-[55%] ml-auto">
-                <strong>Company Address:</strong> {data.company_address}
-              </p>
               <p>
                 <strong>Site Name:</strong> {data.club_name}
               </p>
@@ -198,20 +185,30 @@ const InvoiceModal = ({ isOpen, onClose, data }) => {
                     <span className="font-bold">- ₹{formatIndianNumber(data.discount)}</span>
                 </div>
               )}
+              {data?.gsttyp === "C-SGST" && (
+                <>
+                  <div className="flex gap-2 justify-between">
+                    {/* <span className="font-bold">CGST @2.5%:</span> */}
+                    <span className="font-bold">CGST:</span>
+                    <span className="font-bold">₹{data?.cgst_amount ? formatIndianNumber(data?.cgst_amount) : "--"}</span>
+                  </div>
+                  <div className="flex gap-2 justify-between">
+                    {/* <span className="font-bold">SGST @2.5%:</span> */}
+                    <span className="font-bold">SGST:</span>
+                    <span className="font-bold">₹{data?.sgst_amount ? formatIndianNumber(data?.sgst_amount) : "--"}</span>
+                  </div>
+                </>
+              )}
+              {data?.gsttyp === "IGST" && (
+                <div className="flex gap-2 justify-between">
+                  {/* <span className="font-bold">IGST @5%:</span> */}
+                  <span className="font-bold">IGST:</span>
+                  <span className="font-bold">₹{data?.igst_amount ? formatIndianNumber(data?.igst_amount) : "--"}</span>
+                </div>
+              )}
               <div className="flex gap-2 justify-between">
-                <span className="font-bold">CGST @2.5%:</span>
-                <span className="font-bold">₹{data?.cgst_amount ? formatIndianNumber(data?.cgst_amount) : "--"}</span>
-              </div>
-              <div className="flex gap-2 justify-between">
-                <span className="font-bold">SGST @2.5%:</span>
-                <span className="font-bold">₹{data?.sgst_amount ? formatIndianNumber(data?.sgst_amount) : "--"}</span>
-              </div>
-              <div className="flex gap-2 justify-between">
-                <span className="font-bold">IGST @5%:</span>
-                <span className="font-bold">₹{data?.igst_amount ? formatIndianNumber(data?.igst_amount) : "--"}</span>
-              </div>
-              <div className="flex gap-2 justify-between">
-                <span className="font-bold">Total Tax @ 5%:</span>
+                {/* <span className="font-bold">Total Tax @ 5%:</span> */}
+                <span className="font-bold">Total Tax:</span>
                 <span className="font-bold">
 
                   ₹{
@@ -247,7 +244,7 @@ const InvoiceModal = ({ isOpen, onClose, data }) => {
           {/* Terms & Conditions */}
           <div className="border rounded-md mb-5 p-5">
             <p className="mb-1 text-sm text-center">
-                If you have any questions about this bill, please contact Mail : <a href={`mailto:${data.email}`}>{data.email}</a>, Phone : +91 {data.club_phone.slice(-10)}
+                If you have any questions about this bill, please contact Mail :<br /> <a href={`mailto:${data.email}`}>{data.email}</a>, Phone : +91 {data.club_phone.slice(-10)}
               </p>
             <p className="mb-1 text-lg font-[600] text-center">
                 Thank You For Your Business!
@@ -259,6 +256,33 @@ const InvoiceModal = ({ isOpen, onClose, data }) => {
                 Government Taxes and levies are subject to change as applicable. 
               </p>
           </div>
+
+          <div className="mb-3">
+            <p className="font-[600] text-black text-[14px] mb-1">Reg. Office:</p>
+            <p className="text-sm">{data.company_name}</p>
+            <p className="text-sm">{data.company_address}</p>
+          </div>
+
+          <div className="mb-5 pt-3 border-t">
+            <div className="flex gap-5">
+              {data.fssai && (
+                <p className="text-black text-[14px] border-r pr-5">
+                  <span className="font-[600]">FSSAI</span>: {data.fssai}
+                </p>
+              )}
+              {data.pan && (
+                <p className="text-black text-[14px] border-r pr-5">
+                  <span className="font-[600]">PAN</span>: {data.pan}
+                </p>
+              )}
+              {data.cin && (
+                <p className="text-black text-[14px]">
+                  <span className="font-[600]">CIN</span>: {data.cin}
+                </p>
+              )}
+            </div>
+          </div>
+
         </div>
 
         {/* Close Button */}

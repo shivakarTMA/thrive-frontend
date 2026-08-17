@@ -29,7 +29,8 @@ const AddNewItemModal = ({
 }) => {
   const leadBoxRef = useRef(null);
   const { user } = useSelector((state) => state.auth);
-  const [clubTiming, setClubTiming] = useState([]);
+  const [clubSlotsData, setClubSlotsData] = useState([]);
+  const [clubSlotsLoading, setClubSlotsLoading] = useState(false);
 
   const formik = useFormik({
     initialValues: {
@@ -101,24 +102,33 @@ const AddNewItemModal = ({
     },
   });
 
-  const fetchClubTimingAPI = async () => {
+  const fetchClubSlots = async () => {
     try {
-      if (!formik.values.club_id) return;
+      if (!formik.values.club_id) {
+        setClubSlotsData([]);
+        return;
+      }
 
-      const res = await authAxios().get(
-        `/club/fetch/timing/${formik.values.club_id}`,
-      );
+      setClubSlotsLoading(true);
 
-      setClubTiming(res.data?.data?.time || []);
+      const res = await authAxios().post("/club/details/slots", {
+        club_id: formik.values.club_id,
+      });
+
+      setClubSlotsData(res.data?.data || []);
     } catch (err) {
-      console.error("Club timing error:", err);
-      setClubTiming([]);
+      console.error("Club slots error:", err);
+      setClubSlotsData([]);
+    } finally {
+      setClubSlotsLoading(false);
     }
   };
 
   useEffect(() => {
     if (formik.values.club_id) {
-      fetchClubTimingAPI();
+      fetchClubSlots();
+    } else {
+      setClubSlotsData([]);
     }
   }, [formik.values.club_id]);
 
@@ -130,29 +140,64 @@ const AddNewItemModal = ({
     return `${hour}:${m.toString().padStart(2, "0")} ${ampm}`;
   };
 
-  const startTimeOptions = clubTiming.map((time) => {
-    const now = new Date();
-    const selectedDate = formik.values.found_date;
-    let isDisabled = false;
+  const formatDateForSlotAPI = (date) => {
+    if (!date) return "";
 
-    if (selectedDate) {
-      const [h, m] = time.split(":").map(Number);
-      const slotTime = new Date();
-      slotTime.setHours(h, m, 0, 0);
+    const dd = String(date.getDate()).padStart(2, "0");
+    const mm = String(date.getMonth() + 1).padStart(2, "0");
+    const yyyy = date.getFullYear();
 
-      const isToday =
-        new Date(selectedDate).toDateString() === now.toDateString();
-
-      // ✅ For today: only past/current slots are valid (item was already found)
-      // Disable future slots
-      if (isToday && slotTime > now) {
-        isDisabled = true;
-      }
-      // Past dates → all slots enabled (item could have been found any time)
+    return `${dd}-${mm}-${yyyy}`;
+  };
+  
+  const getSelectedDateSlotData = () => {
+    if (!formik.values.found_date) {
+      return null;
     }
 
-    return { label: formatTo12Hour(time), value: time, isDisabled };
-  });
+    const selectedDate = new Date(formik.values.found_date);
+
+    const apiDate = formatDateForSlotAPI(selectedDate);
+
+    return (
+      clubSlotsData.find((item) => item.date === apiDate) || null
+    );
+  };
+
+  const startTimeOptions = (() => {
+    const selectedDateData = getSelectedDateSlotData();
+
+    if (!selectedDateData?.slots?.length) {
+      return [];
+    }
+
+    return selectedDateData.slots.map((slot) => {
+      return {
+        label: formatTo12Hour(slot.time),
+        value: slot.time,
+        isDisabled: slot.enable !== true,
+      };
+    });
+  })();
+
+  const isFoundDateAvailable = (date) => {
+    if (!date) return false;
+
+    const apiDate = formatDateForSlotAPI(date);
+
+    const dateData = clubSlotsData.find(
+      (item) => item.date === apiDate,
+    );
+
+    if (!dateData || !Array.isArray(dateData.slots)) {
+      return false;
+    }
+
+    // Date is available only if at least one slot is enabled
+    return dateData.slots.some(
+      (slot) => slot.enable === true,
+    );
+  };
 
   useEffect(() => {
     const fetchLostItemById = async (id) => {
@@ -244,7 +289,7 @@ const AddNewItemModal = ({
       onClick={handleOverlayClick}
     >
       <div
-        className="min-h-[70vh]  w-[95%] max-w-[630px] mx-auto mt-[100px] mb-[100px] container--leadbox rounded-[10px] flex flex-col"
+        className="min-h-[70vh]  w-[95%] max-w-[700px] mx-auto mt-[100px] mb-[100px] container--leadbox rounded-[10px] flex flex-col"
         ref={leadBoxRef}
         onClick={(e) => e.stopPropagation()}
       >
@@ -453,21 +498,35 @@ const AddNewItemModal = ({
                             : null
                         }
                         onChange={(date) => {
+                          if (!date) {
+                            formik.setFieldValue("found_date", "");
+                            formik.setFieldValue("found_time", "");
+                            return;
+                          }
+
                           formik.setFieldValue(
                             "found_date",
                             date.toLocaleDateString("en-CA"),
                           );
-                          formik.setFieldValue("found_time", ""); // reset time on date change
+
+                          // Reset time when date changes
+                          formik.setFieldValue("found_time", "");
                         }}
                         onBlur={() =>
                           formik.setFieldTouched("found_date", true)
                         }
                         dateFormat="dd-MM-yyyy"
-                        maxDate={new Date()} // ✅ no future dates
-                        placeholderText="Date"
+                        filterDate={isFoundDateAvailable}
+                        placeholderText={
+                          clubSlotsLoading
+                            ? "Loading dates..."
+                            : "Date"
+                        }
                         className="custom--input w-full input--icon"
                         onKeyDown={(e) => e.preventDefault()}
-                        disabled={editingOption}
+                        disabled={
+                          editingOption || clubSlotsLoading
+                        }
                       />
                     </div>
                     <div className="custom--date relative">
@@ -482,11 +541,27 @@ const AddNewItemModal = ({
                           ) || null
                         }
                         onChange={(option) => {
-                          formik.setFieldValue("found_time", option.value);
+                          if (!option || option.isDisabled) return;
+
+                          formik.setFieldValue(
+                            "found_time",
+                            option.value,
+                          );
                         }}
                         options={startTimeOptions}
-                        placeholder="Time"
-                        isDisabled={!formik.values.found_date || editingOption}
+                        placeholder={
+                          clubSlotsLoading
+                            ? "Loading time slots..."
+                            : formik.values.found_date
+                              ? "Select Time"
+                              : "Select Time"
+                        }
+                        isDisabled={
+                          clubSlotsLoading ||
+                          !formik.values.found_date ||
+                          startTimeOptions.length === 0 ||
+                          editingOption
+                        }
                         styles={selectIcon}
                       />
                     </div>

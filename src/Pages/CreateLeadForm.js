@@ -331,7 +331,7 @@ const CreateLeadForm = ({
             interested_in: interestedList.map((i) => i.value),
             lead_source: data.lead_source || "",
             lead_type: data.lead_type || "",
-            platform: data.platform || "",
+            platform: data.platform || "Event",
             schedule: data.schedule || "",
             schedule_date_time: data.schedule_date_time
               ? new Date(data.schedule_date_time).toISOString()
@@ -1315,7 +1315,6 @@ useEffect(() => {
                             type="text"
                             name="platform"
                             value={formik.values.platform}
-                            // onChange={formik.handleChange}
                             onKeyDown={blockNonLetters}
                             onChange={(e) => {
                               const cleaned = allowOnlyLetters(e.target.value);

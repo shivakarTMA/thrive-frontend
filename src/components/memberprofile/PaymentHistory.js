@@ -135,17 +135,16 @@ const PaymentHistory = ({ details, setLoading }) => {
           <table className="min-w-full border border-gray-300 text-sm">
             <thead className="bg-gray-100 text-left">
               <tr>
-                <th className="border px-3 py-2">Transaction Date</th>
-                <th className="border px-3 py-2">Invoice No.</th>
-                <th className="border px-3 py-2">Order No.</th>
-                <th className="border px-3 py-2">Order Type</th>
-                <th className="border px-3 py-2">Amount</th>
-
-                <th className="border px-3 py-2">Payment Method</th>
-                <th className="border px-3 py-2">Mode of Payment</th>
-                <th className="border px-3 py-2">Transaction ID</th>
-                <th className="border px-3 py-2">Status</th>
-                <th className="border px-3 py-2">Action</th>
+                <th className="border px-3 py-2 min-w-[120px]">Transaction Date</th>
+                <th className="border px-3 py-2 min-w-[150px]">Invoice No.</th>
+                <th className="border px-3 py-2 min-w-[150px]">Order No.</th>
+                <th className="border px-3 py-2 min-w-[120px]">Order Type</th>
+                <th className="border px-3 py-2 min-w-[120px]">Amount</th>
+                <th className="border px-3 py-2 min-w-[150px]">Payment Method</th>
+                <th className="border px-3 py-2 min-w-[150px]">Mode of Payment</th>
+                <th className="border px-3 py-2 min-w-[150px]">Transaction ID</th>
+                <th className="border px-3 py-2 min-w-[120px]">Status</th>
+                <th className="border px-3 py-2 min-w-[120px]">Action</th>
               </tr>
             </thead>
             <tbody>

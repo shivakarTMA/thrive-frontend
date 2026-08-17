@@ -677,7 +677,10 @@ const ConvertMemberForm = ({
           // ✅ COMPANY HANDLING (SOURCE OF TRUTH)
           // ===============================
           let companyId = null;
-          let companyName = values.company_name?.trim() || "";
+          // let companyName = values.company_name?.trim() || "";
+          let companyName = typeof values.company_name === "string"
+              ? values.company_name.trim()
+              : values.company_name?.label || "";
 
           const existingCompany = companyOptions.find(
             (opt) => opt.label.toLowerCase() === companyName.toLowerCase(),
@@ -1043,7 +1046,7 @@ const ConvertMemberForm = ({
             interested_in: interestedList.map((i) => i.value),
             lead_source: data.lead_source || "",
             lead_type: data.lead_type || "",
-            platform: data.platform || "",
+            platform: data.platform || "Event",
             schedule: data.schedule || "",
             invoiceDate:
               data.invoiceDate || new Date().toISOString().split("T")[0],
@@ -1055,10 +1058,6 @@ const ConvertMemberForm = ({
             staff_name: data.staff_name || "",
 
             member_emergency_contact: emergencyContacts,
-            // id_proof_card_front: data?.id_proof_card_front || null,
-            // id_proof_card_back: data?.id_proof_card_back || null,
-            // passport_photo: data?.passport_photo || null,
-            // corporate_id: data?.corporate_id || null,
 
             // DOCUMENT IDS
             aadhar_doc_id: aadharDoc?.id || null,
@@ -2462,26 +2461,50 @@ const ConvertMemberForm = ({
                                 styles={selectIcon}
                               />
                             ) : (
+                              // <Select
+                              //   name="company_name"
+                              //   value={
+                              //     formik.values?.company_name
+                              //       ? companyOptions.find(
+                              //           (opt) =>
+                              //             opt.value ===
+                              //             formik.values?.company_name,
+                              //         ) || {
+                              //           label: formik.values?.company_name,
+                              //           value: formik.values?.company_name,
+                              //         }
+                              //       : null
+                              //   }
+                              //   onChange={(option) =>
+                              //     formik.setFieldValue(
+                              //       "company_name",
+                              //       option.value,
+                              //     )
+                              //   }
+                              //   options={companyOptions}
+                              //   isLoading={loading}
+                              //   styles={selectIcon}
+                              //   placeholder="Select Company"
+                              // />
                               <Select
                                 name="company_name"
                                 value={
-                                  formik.values?.company_name
+                                  formik.values?.company_id
                                     ? companyOptions.find(
-                                        (opt) =>
-                                          opt.value ===
-                                          formik.values?.company_name,
-                                      ) || {
-                                        label: formik.values?.company_name,
-                                        value: formik.values?.company_name,
-                                      }
+                                        (opt) => opt.value === formik.values.company_id
+                                      ) || null
                                     : null
                                 }
-                                onChange={(option) =>
-                                  formik.setFieldValue(
-                                    "company_name",
-                                    option.value,
-                                  )
-                                }
+                                onChange={(option) => {
+                                  if (!option) {
+                                    formik.setFieldValue("company_id", null);
+                                    formik.setFieldValue("company_name", "");
+                                    return;
+                                  }
+
+                                  formik.setFieldValue("company_id", option.value);
+                                  formik.setFieldValue("company_name", option.label);
+                                }}
                                 options={companyOptions}
                                 isLoading={loading}
                                 styles={selectIcon}

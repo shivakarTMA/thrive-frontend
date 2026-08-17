@@ -53,7 +53,9 @@ const CreateProductsInvoice = ({
   // ── Delivery schedule ─────────────────────────────────────────────────────
   const [deliveryDate, setDeliveryDate] = useState(null); // TODAY | TOMORROW | DAY_AFTER
   const [selectedTimeSlot, setSelectedTimeSlot] = useState(null);
-  const [clubTiming, setClubTiming] = useState([]);
+
+  const [clubSlotsData, setClubSlotsData] = useState([]);
+  const [clubSlotsLoading, setClubSlotsLoading] = useState(false);
 
   // ── Voucher ───────────────────────────────────────────────────────────────
   const [voucherInput, setVoucherInput] = useState("");
@@ -139,11 +141,7 @@ const CreateProductsInvoice = ({
 
     // selected products except current row
     const selectedProductIds = items
-      .filter(
-        (item) =>
-          item.tempId !== currentTempId &&
-          item.product_id
-      )
+      .filter((item) => item.tempId !== currentTempId && item.product_id)
       .map((item) => item.product_id);
 
     // console.log("Selected Product IDs:", selectedProductIds);
@@ -154,13 +152,13 @@ const CreateProductsInvoice = ({
     // category 1 means ALL
     if (Number(categoryId) === 1) {
       filteredProducts = productList.filter(
-        (p) => !selectedProductIds.includes(p.id)
+        (p) => !selectedProductIds.includes(p.id),
       );
     } else {
       filteredProducts = productList.filter(
         (p) =>
           Number(p.product_category_id) === Number(categoryId) &&
-          !selectedProductIds.includes(p.id)
+          !selectedProductIds.includes(p.id),
       );
     }
 
@@ -192,35 +190,30 @@ const CreateProductsInvoice = ({
         if (item.productData) {
           const qty = item.quantity || 1;
 
-          const itemAmount =
-            parseFloat(item.productData.amount || 0) * qty;
+          const itemAmount = parseFloat(item.productData.amount || 0) * qty;
 
           const itemTotalAmount =
             parseFloat(item.productData.total_amount || 0) * qty;
 
-          const gstPercent =
-            Number(item.productData.gst || 0);
+          const gstPercent = Number(item.productData.gst || 0);
 
           originalAmount += itemAmount;
           subtotalAmount += itemTotalAmount;
 
-          console.log(itemTotalAmount,'itemTotalAmount');
+          console.log(itemTotalAmount, "itemTotalAmount");
 
           let gstAmount = 0;
 
           if (clubGstType === "IGST") {
-            gstAmount =
-              (itemTotalAmount * gstPercent) / 100;
+            gstAmount = (itemTotalAmount * gstPercent) / 100;
           } else {
             const cgstAmount =
-            Math.round(
-              ((itemTotalAmount * (gstPercent / 2)) / 100) * 100
-            ) / 100;
+              Math.round(((itemTotalAmount * (gstPercent / 2)) / 100) * 100) /
+              100;
 
-          const sgstAmount =
-            Math.round(
-              ((itemTotalAmount * (gstPercent / 2)) / 100) * 100
-            ) / 100;
+            const sgstAmount =
+              Math.round(((itemTotalAmount * (gstPercent / 2)) / 100) * 100) /
+              100;
 
             gstAmount = cgstAmount + sgstAmount;
           }
@@ -229,25 +222,18 @@ const CreateProductsInvoice = ({
         }
       });
 
-      const discounted = Math.max(
-        0,
-        subtotalAmount - discountAmount
-      );
+      const discounted = Math.max(0, subtotalAmount - discountAmount);
       let adjustedGst = 0;
-      const gstPercent =  Number(items?.[0]?.productData?.gst || 0);
+      const gstPercent = Number(items?.[0]?.productData?.gst || 0);
 
       if (clubGstType === "IGST") {
         adjustedGst = (discounted * gstPercent) / 100;
       } else {
         const cgstAmount =
-          Math.round(
-            ((discounted * (gstPercent / 2)) / 100) * 100
-          ) / 100;
+          Math.round(((discounted * (gstPercent / 2)) / 100) * 100) / 100;
 
         const sgstAmount =
-          Math.round(
-            ((discounted * (gstPercent / 2)) / 100) * 100
-          ) / 100;
+          Math.round(((discounted * (gstPercent / 2)) / 100) * 100) / 100;
 
         adjustedGst = cgstAmount + sgstAmount;
       }
@@ -261,7 +247,7 @@ const CreateProductsInvoice = ({
         grandTotal,
       };
     },
-    [items, clubGstType]
+    [items, clubGstType],
   );
 
   // Sync totals into formik whenever items change (coupon excluded – handled in applyCoupon)
@@ -270,7 +256,7 @@ const CreateProductsInvoice = ({
     const { originalAmount, subtotalAmount, gstAmount, grandTotal } =
       computeTotals(discount);
 
-      console.log(originalAmount,'originalAmount')
+    console.log(originalAmount, "originalAmount");
 
     formik.setValues(
       {
@@ -339,6 +325,33 @@ const CreateProductsInvoice = ({
     const mm = String(d.getMonth() + 1).padStart(2, "0");
     const dd = String(d.getDate()).padStart(2, "0");
     return `${yyyy}-${mm}-${dd}`;
+  };
+  const getSlotApiDateByKey = (key) => {
+    const d = new Date();
+
+    if (key === "TOMORROW") {
+      d.setDate(d.getDate() + 1);
+    }
+
+    if (key === "DAY_AFTER") {
+      d.setDate(d.getDate() + 2);
+    }
+
+    const dd = String(d.getDate()).padStart(2, "0");
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const yyyy = d.getFullYear();
+
+    return `${dd}-${mm}-${yyyy}`;
+  };
+
+  const getSelectedDeliveryDateData = () => {
+    if (!deliveryDate) {
+      return null;
+    }
+
+    const apiDate = getSlotApiDateByKey(deliveryDate);
+
+    return clubSlotsData.find((item) => item.date === apiDate) || null;
   };
 
   /**
@@ -609,50 +622,34 @@ const CreateProductsInvoice = ({
   // API calls
   // ═══════════════════════════════════════════════════════════════════════════
 
-  const fetchClubTimingAPI = async () => {
+  const fetchClubSlots = async () => {
     try {
-      if (!formik.values.club_id) return;
-      const res = await authAxios().get(
-        `/club/fetch/timing/${formik.values.club_id}`,
-      );
-      const timings = res.data?.data?.time || [];
+      if (!formik.values.club_id) {
+        setClubSlotsData([]);
+        return;
+      }
 
-      const formattedSlots = timings.map((time) => {
-        const [hour, minute] = time.split(":").map(Number);
+      setClubSlotsLoading(true);
 
-        const start = new Date();
-        start.setHours(hour, minute);
-
-        const end = new Date(start);
-        end.setMinutes(end.getMinutes() + 30);
-
-        const formatTime = (date) => {
-          return date.toLocaleTimeString([], {
-            hour: "numeric",
-            minute: "2-digit",
-            hour12: true,
-          });
-        };
-
-        return {
-          start_time: time,
-          end_time: `${String(end.getHours()).padStart(2, "0")}:${String(
-            end.getMinutes(),
-          ).padStart(2, "0")}`,
-
-          label: `${formatTime(start)} - ${formatTime(end)}`,
-        };
+      const res = await authAxios().post("/club/details/slots", {
+        club_id: formik.values.club_id,
       });
 
-      setClubTiming(formattedSlots);
+      setClubSlotsData(res.data?.data || []);
     } catch (err) {
-      console.error("Club timing error:", err);
-      setClubTiming([]);
+      console.error("Club slots error:", err);
+      setClubSlotsData([]);
+    } finally {
+      setClubSlotsLoading(false);
     }
   };
 
   useEffect(() => {
-    if (formik.values.club_id) fetchClubTimingAPI();
+    if (formik.values.club_id) {
+      fetchClubSlots();
+    } else {
+      setClubSlotsData([]);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formik.values.club_id]);
 
@@ -809,34 +806,79 @@ const CreateProductsInvoice = ({
     value: item.id,
   }));
 
-  const isPastTimeSlot = (startTime) => {
-    if (deliveryDate !== "TODAY") return false;
+  const timeSlotOptions = (() => {
+    const selectedDateData = getSelectedDeliveryDateData();
+
+    if (!selectedDateData?.slots?.length) {
+      return [];
+    }
 
     const now = new Date();
 
-    const [hours, minutes] = startTime.split(":").map(Number);
+    return selectedDateData.slots.map((slot) => {
+      const [hours, minutes] = slot.time.split(":").map(Number);
 
-    const slotTime = new Date();
+      const slotDate = new Date();
 
-    slotTime.setHours(hours);
-    slotTime.setMinutes(minutes);
-    slotTime.setSeconds(0);
+      slotDate.setHours(hours);
+      slotDate.setMinutes(minutes);
+      slotDate.setSeconds(0);
+      slotDate.setMilliseconds(0);
 
-    return slotTime < now;
-  };
+      const isToday = deliveryDate === "TODAY";
 
-  // Each option carries start_time + end_time so buildDateTime can use them
-  const timeSlotOptions = clubTiming.map((t) => ({
-    label: t.label,
-    value: `${t.start_time}-${t.end_time}`,
-    start_time: t.start_time,
-    end_time: t.end_time,
-    isDisabled: isPastTimeSlot(t.start_time),
-  }));
+      const isPast = isToday && slotDate <= now;
+
+      // Delivery duration = 30 minutes
+      const endDate = new Date(slotDate);
+
+      endDate.setMinutes(endDate.getMinutes() + 30);
+
+      const endTime =
+        `${String(endDate.getHours()).padStart(2, "0")}:` +
+        `${String(endDate.getMinutes()).padStart(2, "0")}`;
+
+      const formatTime = (time) => {
+        const [hour, minute] = time.split(":").map(Number);
+
+        const ampm = hour >= 12 ? "PM" : "AM";
+
+        const displayHour = hour % 12 || 12;
+
+        return `${displayHour}:${String(minute).padStart(2, "0")} ${ampm}`;
+      };
+
+      return {
+        label: `${formatTime(slot.time)} - ${formatTime(endTime)}`,
+
+        value: `${slot.time}-${endTime}`,
+
+        start_time: slot.time,
+
+        end_time: endTime,
+
+        isDisabled: slot.enable !== true || isPast,
+      };
+    });
+  })();
 
   // ═══════════════════════════════════════════════════════════════════════════
   // Render
   // ═══════════════════════════════════════════════════════════════════════════
+
+  const isDeliveryDateAvailable = (key) => {
+    const apiDate = getSlotApiDateByKey(key);
+
+    const dateData = clubSlotsData.find(
+      (item) => item.date === apiDate
+    );
+
+    return (
+      dateData &&
+      Array.isArray(dateData.slots) &&
+      dateData.slots.length > 0
+    );
+  };
 
   return (
     <>
@@ -889,7 +931,7 @@ const CreateProductsInvoice = ({
                         // );
                         const filteredProducts = getFilteredProducts(
                           item.product_category_id,
-                          item.tempId
+                          item.tempId,
                         );
 
                         // Row-level amount: booking_amount (total_amount + gst) × qty
@@ -925,7 +967,10 @@ const CreateProductsInvoice = ({
                                       ) || null
                                     }
                                     onChange={(option) => {
-                                      console.log("Selected Category Option:", option);
+                                      console.log(
+                                        "Selected Category Option:",
+                                        option,
+                                      );
                                       updateItem(item.tempId, {
                                         product_category_id: option.value,
                                         service_name: option.label,
@@ -1022,7 +1067,9 @@ const CreateProductsInvoice = ({
 
                               {/* Quantity + amount */}
                               <div>
-                                <label className="text-sm mb-2 block">Quantity</label>
+                                <label className="text-sm mb-2 block">
+                                  Quantity
+                                </label>
                                 <div className="flex items-center">
                                   <button
                                     type="button"
@@ -1085,42 +1132,79 @@ const CreateProductsInvoice = ({
                     </div>
                   </div>
 
-                  {/* ══════════════════════════════════════════════════════════
+                  {/* ═══════════════════════════════════════════════════════════════════════════
                       DELIVERY SCHEDULE
-                  ══════════════════════════════════════════════════════════ */}
+                  ═══════════════════════════════════════════════════════════════════════════ */}
                   <div className="mb-6 border rounded-[10px] p-4">
                     <h3 className="text-base font-semibold mb-3">
                       Delivery Schedule
                     </h3>
+
                     <div className="grid grid-cols-2 gap-4">
+
                       {/* Delivery date quick-pick */}
                       <div>
                         <label className="text-sm mb-2 block">
                           Delivery Date
                         </label>
+
                         <div className="flex gap-2">
                           {[
-                            { key: "TODAY", label: "Today" },
-                            { key: "TOMORROW", label: "Tomorrow" },
-                            { key: "DAY_AFTER", label: "Day After" },
-                          ].map(({ key, label }) => (
-                            <button
-                              key={key}
-                              type="button"
-                              onClick={() => {
-                                setDeliveryDate(key);
-                                setSelectedTimeSlot(null);
-                              }}
-                              className={`px-4 py-2 rounded border text-sm font-medium transition-colors ${
-                                deliveryDate === key
-                                  ? "bg-black text-white border-black"
-                                  : "bg-white text-black border-gray-300 hover:border-black"
-                              }`}
-                            >
-                              {label}
-                            </button>
-                          ))}
+                            {
+                              key: "TODAY",
+                              label: "Today",
+                            },
+                            {
+                              key: "TOMORROW",
+                              label: "Tomorrow",
+                            },
+                            {
+                              key: "DAY_AFTER",
+                              label: "Day After",
+                            },
+                          ].map(({ key, label }) => {
+                            const available =
+                              isDeliveryDateAvailable(key);
+
+                            return (
+                              <button
+                                key={key}
+                                type="button"
+                                disabled={
+                                  clubSlotsLoading || !available
+                                }
+                                onClick={() => {
+                                  if (!available) return;
+
+                                  setDeliveryDate(key);
+                                  setSelectedTimeSlot(null);
+                                }}
+                                className={`px-4 py-2 rounded border text-sm font-medium transition-colors ${
+                                  deliveryDate === key
+                                    ? "bg-black text-white border-black"
+                                    : available
+                                      ? "bg-white text-black border-gray-300 hover:border-black"
+                                      : "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
+                                }`}
+                              >
+                                {label}
+                              </button>
+                            );
+                          })}
                         </div>
+
+                        {clubSlotsLoading && (
+                          <p className="text-gray-500 text-xs mt-2">
+                            Loading delivery availability...
+                          </p>
+                        )}
+
+                        {!clubSlotsLoading &&
+                          clubSlotsData.length === 0 && (
+                            <p className="text-red-500 text-xs mt-2">
+                              No delivery slots available.
+                            </p>
+                          )}
                       </div>
 
                       {/* Time slot */}
@@ -1128,11 +1212,29 @@ const CreateProductsInvoice = ({
                         <label className="text-sm mb-2 block">
                           Time Slot
                         </label>
+
                         <Select
                           options={timeSlotOptions}
                           value={selectedTimeSlot}
-                          onChange={setSelectedTimeSlot}
-                          placeholder="Select time slot"
+                          onChange={(option) => {
+                            if (!option || option.isDisabled) {
+                              return;
+                            }
+
+                            setSelectedTimeSlot(option);
+                          }}
+                          placeholder={
+                            clubSlotsLoading
+                              ? "Loading time slots..."
+                              : deliveryDate
+                                ? "Select time slot"
+                                : "Select delivery date first"
+                          }
+                          isDisabled={
+                            clubSlotsLoading ||
+                            !deliveryDate ||
+                            timeSlotOptions.length === 0
+                          }
                           styles={customStyles}
                         />
                       </div>

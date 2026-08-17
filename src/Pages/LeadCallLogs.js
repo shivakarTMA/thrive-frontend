@@ -133,6 +133,9 @@ const LeadCallLogs = () => {
   // Schedule Follow UP trainer working slots
   const [scheduleTrainerSlotsData, setScheduleTrainerSlotsData] = useState([]);
 
+  const [clubSlotsData, setClubSlotsData] = useState([]);
+  const [clubSlotsLoading, setClubSlotsLoading] = useState(false);
+
   // ===============================
   // TRIAL/TOUR trainer slots (new API) — scoped only to the
   // "Trial/Tour Scheduled" trainer + date/time fields below.
@@ -389,28 +392,6 @@ const LeadCallLogs = () => {
     fetchTrialTrainerSlots(formik.values.training_by, clubId);
   }, [formik.values.training_by, clubId]);
 
-  // Schedule Follow Up (schedule_for) — unchanged, still uses old API
-  // const fetchScheduleBookedSlots = async (staffId) => {
-  //   if (!staffId || !clubId) {
-  //     setScheduleBookedSlots([]);
-  //     return;
-  //   }
-
-  //   try {
-  //     const res = await authAxios().post("/appointment/trainer/booked/slot", {
-  //       club_id: clubId,
-  //       trainer_id: staffId, // same API used for FOH too
-  //       booking_type: "COMPLIMENTARY", // always COMPLIMENTARY for schedule follow-up
-  //     });
-
-  //     const slots = res.data?.availability || [];
-  //     // console.log("Schedule Follow Up booked slots:", slots);
-  //     setScheduleBookedSlots(slots);
-  //   } catch (err) {
-  //     console.error(err);
-  //     setScheduleBookedSlots([]);
-  //   }
-  // };
   // ===============================
   // SCHEDULE FOLLOW UP:
   // Fetch trainer working/available slots
@@ -467,6 +448,39 @@ const LeadCallLogs = () => {
       setScheduleBookedSlots([]);
     }
   };
+
+  // Club Slots (for schedule follow-up) — fetches all club slots, not just trainer-specific
+  const fetchClubSlots = async (targetClubId) => {
+    if (!targetClubId) {
+      setClubSlotsData([]);
+      return;
+    }
+
+    try {
+      setClubSlotsLoading(true);
+
+      const res = await authAxios().post("/club/details/slots", {
+        club_id: targetClubId,
+      });
+
+      setClubSlotsData(res.data?.data || []);
+    } catch (err) {
+      console.error("Club slots fetch error:", err);
+      setClubSlotsData([]);
+    } finally {
+      setClubSlotsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    console.log("Club ID changed:", clubId);
+    if (!clubId) {
+      setClubSlotsData([]);
+      return;
+    }
+
+    fetchClubSlots(clubId);
+  }, [clubId]);
 
   const fetchStaff = async () => {
     try {
@@ -734,6 +748,61 @@ const LeadCallLogs = () => {
     formik.setFieldValue("follow_up_datetime", combined.toISOString());
   };
 
+  // Convert JS Date -> API date format: dd-MM-yyyy
+const formatClubSlotDate = (date) => {
+  if (!date) return null;
+
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const year = date.getFullYear();
+
+  return `${day}-${month}-${year}`;
+};
+
+// Find API data for selected date
+const getClubSlotsForDate = (date) => {
+  if (!date || !clubSlotsData.length) return null;
+
+  const dateStr = formatClubSlotDate(date);
+
+  return clubSlotsData.find((item) => item.date === dateStr) || null;
+};
+
+// Only dates returned by API are selectable
+const filterClubAvailableDate = (date) => {
+  const dateStr = formatClubSlotDate(date);
+
+  return clubSlotsData.some((item) => item.date === dateStr);
+};
+
+// Time options for the selected date
+const clubTimeOptions = useMemo(() => {
+  const selectedDate = formik.values.follow_up_date;
+
+  if (!selectedDate) {
+    return [];
+  }
+
+  const selectedDay = getClubSlotsForDate(selectedDate);
+
+  // Date exists but has no slots
+  if (!selectedDay || !selectedDay.slots?.length) {
+    return [
+      {
+        label: "No time slots",
+        value: "",
+        isDisabled: true,
+      },
+    ];
+  }
+
+  return selectedDay.slots.map((slot) => ({
+    label: formatTo12Hour(slot.time),
+    value: slot.time,
+    isDisabled: slot.enable !== true,
+  }));
+}, [formik.values.follow_up_date, clubSlotsData]);
+
   return (
     <div className="page--content">
       <div className="flex items-end justify-between gap-2 mb-5">
@@ -798,12 +867,13 @@ const LeadCallLogs = () => {
                         <span className="absolute z-[1] mt-[11px] ml-[15px]">
                           <FaCalendarDays />
                         </span>
+
                         <DatePicker
                           selected={formik.values.follow_up_date}
                           onChange={(date) => {
                             formik.setFieldValue("follow_up_date", date);
 
-                            // reset time
+                            // Reset time whenever date changes
                             formik.setFieldValue("follow_up_time", null);
                             formik.setFieldValue("follow_up_datetime", "");
                           }}
@@ -811,26 +881,28 @@ const LeadCallLogs = () => {
                             e.preventDefault();
                           }}
                           dateFormat="dd/MM/yyyy"
-                          minDate={new Date()} // ✅ disable past dates
-                          placeholderText="Select date"
+                          minDate={new Date()}
+                          filterDate={filterClubAvailableDate}
+                          placeholderText={
+                            clubSlotsLoading ? "Loading dates..." : "Select date"
+                          }
                           className="border px-3 py-2 w-full input--icon"
-                          // disabled={!!editLog}
+                          disabled={clubSlotsLoading}
                         />
                       </div>
 
                       <div>
                         <Select
-                          key={`${formik.values.schedule_for}-${formik.values.follow_up_date}`}
+                          key={`${formik.values.follow_up_date}-${clubSlotsData.length}`}
                           value={
                             formik.values.follow_up_time
-                              ? scheduleTimeOptions.find(
-                                  (opt) =>
-                                    opt.value === formik.values.follow_up_time,
-                                )
+                              ? clubTimeOptions.find(
+                                  (opt) => opt.value === formik.values.follow_up_time,
+                                ) || null
                               : null
                           }
                           onChange={(option) => {
-                            if (!option || option.isDisabled) return;
+                            if (!option || option.isDisabled || !option.value) return;
 
                             formik.setFieldValue(
                               "follow_up_time",
@@ -842,9 +914,14 @@ const LeadCallLogs = () => {
                               option.value,
                             );
                           }}
-                          options={scheduleTimeOptions}
-                          placeholder="Select Time"
-                          isDisabled={!formik.values.follow_up_date}
+                          options={clubTimeOptions}
+                          placeholder={
+                            clubSlotsLoading ? "Loading slots..." : "Select Time"
+                          }
+                          isDisabled={
+                            !formik.values.follow_up_date ||
+                            clubSlotsLoading
+                          }
                           styles={customStyles}
                         />
                       </div>

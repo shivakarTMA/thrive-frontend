@@ -227,6 +227,9 @@ const CreateClub = ({
             is_corporate_id: data.is_corporate_id === true || data.is_corporate_id === false ? data.is_corporate_id : null,
             gsttyp: data.gsttyp || "",
             prefix: data.prefix || "",
+            fssai: data.fssai || "",
+            pan: data.pan || "",
+            cin: data.cin || "",
           });
         }
       } catch (err) {
@@ -1131,6 +1134,84 @@ const CreateClub = ({
                         {formik.errors.prefix}
                       </p>
                     )}
+                  </div>
+                  {/* FSSAI */}
+                  <div>
+                    <label className="mb-2 block">
+                      FSSAI
+                    </label>
+                    <div className="relative">
+                      <span className="absolute top-[50%] translate-y-[-50%] left-[15px]">
+                        <FaListUl />
+                      </span>
+                      <input
+                        type="text"
+                        name="fssai"
+                        value={formik.values.fssai}
+                        onKeyDown={blockNonLettersAndNumbers}
+                        onChange={(e) => {
+                          const cleaned = sanitizeTextWithNumbers(
+                            e.target.value.toUpperCase(),
+                          );
+                          formik.setFieldValue("fssai", cleaned);
+                        }}
+                        onBlur={formik.handleBlur}
+                        className={`custom--input w-full input--icon ${editingClub ? "!bg-gray-100 cursor-not-allowed" : ""}`}
+                        disabled={editingClub ? true : false}
+                      />
+                    </div>
+                  </div>
+                  {/* PAN */}
+                  <div>
+                    <label className="mb-2 block">
+                      PAN
+                    </label>
+                    <div className="relative">
+                      <span className="absolute top-[50%] translate-y-[-50%] left-[15px]">
+                        <FaListUl />
+                      </span>
+                      <input
+                        type="text"
+                        name="pan"
+                        value={formik.values.pan}
+                        onKeyDown={blockNonLettersAndNumbers}
+                        onChange={(e) => {
+                          const cleaned = sanitizeTextWithNumbers(
+                            e.target.value.toUpperCase(),
+                          );
+                          formik.setFieldValue("pan", cleaned);
+                        }}
+                        onBlur={formik.handleBlur}
+                        className={`custom--input w-full input--icon ${editingClub ? "!bg-gray-100 cursor-not-allowed" : ""}`}
+                        disabled={editingClub ? true : false}
+                      />
+                    </div>
+                  </div>
+                  {/* CIN */}
+                  <div>
+                    <label className="mb-2 block">
+                      CIN
+                    </label>
+                    <div className="relative">
+                      <span className="absolute top-[50%] translate-y-[-50%] left-[15px]">
+                        <FaListUl />
+                      </span>
+                      <input
+                        type="text"
+                        name="cin"
+                        value={formik.values.cin}
+                        onKeyDown={blockNonLettersAndNumbers}
+                        onChange={(e) => {
+                          const cleaned = sanitizeTextWithNumbers(
+                            e.target.value.toUpperCase(),
+                          );
+                          formik.setFieldValue("cin", cleaned);
+                        }}
+                        onBlur={formik.handleBlur}
+                        className={`custom--input w-full input--icon ${editingClub ? "!bg-gray-100 cursor-not-allowed" : ""}`}
+                        disabled={editingClub ? true : false}
+                      />
+                    </div>
                   </div>
                   {/* Address */}
                   <div className="col-span-3 grid grid-cols-2 lg:gap-4 gap-2">

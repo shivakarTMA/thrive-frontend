@@ -121,6 +121,9 @@ const ClubList = () => {
       is_corporate_id: null,
       gsttyp:"",
       prefix:"",
+      fssai:"",
+      pan:"",
+      cin:"",
     },
     validationSchema: Yup.object({
       technogym_facilit_url: Yup.string().required(
@@ -212,6 +215,9 @@ const ClubList = () => {
         formData.append("is_corporate_id", values.is_corporate_id);
         formData.append("gsttyp", values.gsttyp);
         formData.append("prefix", values.prefix);
+        formData.append("fssai", values.fssai);
+        formData.append("pan", values.pan);
+        formData.append("cin", values.cin);
         formData.append(
           "club_available_service",
           JSON.stringify(values.club_available_service),
@@ -455,7 +461,7 @@ const ClubList = () => {
                         <Tooltip
                           id={`tooltip-edit-${club.id || index}`}
                           content="Edit Club"
-                          place="top"
+                          place="left"
                         >
                           <div
                             className="p-1 cursor-pointer"

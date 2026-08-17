@@ -163,10 +163,12 @@ export default function LeadContactHistory({ handleEditLog, filteredData, userRo
           <div className="flex gap-3 justify-between">
             <p className="text-sm text-black flex-1">
               {isExpanded
-                ? filteredData?.remark
-                : `${filteredData?.remark?.slice(0, 50)}${
-                    filteredData?.remark?.length > 50 ? "..." : ""
-                  }`}
+              ? filteredData?.remark || "--"
+              : filteredData?.remark
+                ? `${filteredData.remark.slice(0, 50)}${
+                    filteredData.remark.length > 50 ? "..." : ""
+                  }`
+                : "--"}
             </p>
             {/* <p className="text-sm text-[#6F6F6F]">Marked By: Swati Singh</p> */}
           </div>
