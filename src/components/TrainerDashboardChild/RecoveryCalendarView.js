@@ -23,6 +23,34 @@ const EVENT_COLORS = {
   group: { bg: "#F3F4F6", border: "#6B7280" }, // gray fallback
 };
 
+const STATUS_COLORS = {
+  ACTIVE: {
+    bg: "#ECFDF5",
+    border: "#10B981",
+    text: "#047857",
+  },
+  COMPLETED: {
+    bg: "#EFF6FF",
+    border: "#3B82F6",
+    text: "#1D4ED8",
+  },
+  CANCELLED: {
+    bg: "#FEF2F2",
+    border: "#EF4444",
+    text: "#B91C1C",
+  },
+  RESCHEDULED: {
+    bg: "#FFF7ED",
+    border: "#F97316",
+    text: "#C2410C",
+  },
+  NO_SHOW: {
+    bg: "#FAF5FF",
+    border: "#9333EA",
+    text: "#7E22CE",
+  },
+};
+
 const RecoveryCalendarView = ({ clubId }) => {
   const [view, setView] = useState("week");
   const [date, setDate] = useState(new Date());
@@ -116,6 +144,7 @@ const RecoveryCalendarView = ({ clubId }) => {
           end: endDateTime,
           trainer: item.trainer_name,
           type: mappedType,
+          bookingStatus: item.booking_status?.toUpperCase() || "ACTIVE",
         };
       });
 
@@ -133,18 +162,23 @@ const RecoveryCalendarView = ({ clubId }) => {
     }
   }, [clubId]);
 
-  const eventStyleGetter = useCallback((event) => {
-    const colors = EVENT_COLORS[event.type] || EVENT_COLORS.group;
-    return {
-      style: {
-        backgroundColor: colors.bg,
-        borderLeft: `4px solid ${colors.border}`,
-        borderRadius: "0px",
-        color: "#000",
-        padding: "8px",
-      },
-    };
-  }, []);
+const eventStyleGetter = useCallback((event) => {
+  const typeColors =
+    EVENT_COLORS[event.type] || EVENT_COLORS.group;
+
+  const statusColors =
+    STATUS_COLORS[event.bookingStatus] || STATUS_COLORS.ACTIVE;
+
+  return {
+    style: {
+      backgroundColor: statusColors.bg,
+      borderLeft: `4px solid ${statusColors.border}`,
+      borderRadius: "0px",
+      color: "#000",
+      padding: "8px",
+    },
+  };
+}, []);
 
   const CustomEvent = ({ event }) => {
     const formatTime = (date) => moment(date).format("h:mm A");

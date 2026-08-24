@@ -467,7 +467,6 @@ const Topbar = ({
 
                 {(user?.role === "CLUB_MANAGER" ||
                   user?.role === "ASS_CLUB_MANAGER" ||
-                  user?.role === "ADMIN" ||
                   user?.role === "FITNESS_MANAGER" ||
                   user?.role === "ASS_FITNESS_MANAGER" ||
                   user?.role === "TRAINER" ||

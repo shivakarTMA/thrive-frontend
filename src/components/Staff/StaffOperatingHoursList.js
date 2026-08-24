@@ -129,7 +129,7 @@ const [staff, setStaff] = useState([]);
       return;
     }
 
-    const roles = ["FOH", "TRAINER", "FITNESS_MANAGER", "ASS_FITNESS_MANAGER"];
+    const roles = ["FOH", "TRAINER", "RECOVERY", "FITNESS_MANAGER", "ASS_FITNESS_MANAGER"];
 
     const res = await authAxios().get("/staff/list", {
       params: {
@@ -154,6 +154,7 @@ useEffect(() => {
 const roleLabels = {
   FOH: "FOH",
   TRAINER: "Trainer",
+  RECOVERY: "Recovery",
   FITNESS_MANAGER: "Fitness Manager",
   ASS_FITNESS_MANAGER: "Assistant Fitness Manager",
 };

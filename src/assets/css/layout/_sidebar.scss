@@ -112,9 +112,18 @@
 }
 .sidebar.activetoggle .sidebar--menu--list {
     padding: 5px;
+    @media (max-width: 1200px) {
+      padding-top: 0;
+      padding-left: 0.75rem;
+      padding-right: 0.75rem;
+      padding-bottom: 30px;
+    }
 }
 .sidebar.activetoggle .menu--head {
     display: none;
+    @media (max-width: 1200px) {
+      display: block;
+    }
 }
 
 
@@ -133,7 +142,7 @@
         font-size: 14px;
         min-height: auto;
         justify-content: left;
-        margin-bottom: 0;
+        margin-bottom: 0.5rem;
     }
 }
 

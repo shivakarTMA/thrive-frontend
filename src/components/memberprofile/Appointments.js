@@ -271,6 +271,7 @@ const Appointments = ({ details }) => {
                 <th className="border px-3 py-2 min-w-[100px]">Rating</th>
                 {(userRole === "FOH" ||
                   userRole === "TRAINER" ||
+                  userRole === "RECOVERY" ||
                   userRole === "FITNESS_MANAGER" ||
                   userRole === "ASS_FITNESS_MANAGER" ||
                   userRole === "CLUB_MANAGER" ||
@@ -292,7 +293,6 @@ const Appointments = ({ details }) => {
 
                   return (
                     <tr key={idx} className="hover:bg-gray-50">
-                      {/* <td className="border px-3 py-2">{appt?.id}</td> */}
                       <td className="border px-3 py-2">
                         {formatAutoDate(appt?.createdAt)}{" "}
                       </td>
@@ -332,15 +332,7 @@ const Appointments = ({ details }) => {
                           ? appt.assigned_staff_name
                           : "--"}
                       </td>
-                      {/* <td className="border px-3 py-2">
-                        {appt.staff_name ? appt.staff_name : "--"}
-                      </td> */}
                       <td className="border px-3 py-2">
-                        {/* {formatText(
-                        appt?.booking_status === "ACTIVE"
-                          ? "Upcoming"
-                          : appt?.booking_status,
-                      )} */}
                         {formatText(
                           appt?.booking_status === "ACTIVE"
                             ? isInProgress(appt)
@@ -355,14 +347,15 @@ const Appointments = ({ details }) => {
                       <td className="border px-3 py-2">
                         {appt?.rating ? appt?.rating : "--"}
                       </td>
-                  {(userRole === "FOH" ||
-                    userRole === "TRAINER" ||
-                    userRole === "FITNESS_MANAGER" ||
-                    userRole === "ASS_FITNESS_MANAGER" ||
-                    userRole === "CLUB_MANAGER" ||
-                    userRole === "ASS_CLUB_MANAGER" ||
-                    userRole === "PROGRAM_SPECIALIST" ||
-                    userRole === "ADMIN") && (
+                    {(userRole === "FOH" ||
+                      userRole === "TRAINER" ||
+                      userRole === "RECOVERY" ||
+                      userRole === "FITNESS_MANAGER" ||
+                      userRole === "ASS_FITNESS_MANAGER" ||
+                      userRole === "CLUB_MANAGER" ||
+                      userRole === "ASS_CLUB_MANAGER" ||
+                      userRole === "PROGRAM_SPECIALIST" ||
+                      userRole === "ADMIN") && (
                       <td className="border px-3 py-2">
                         <button
                           onClick={() => {
@@ -370,13 +363,20 @@ const Appointments = ({ details }) => {
                             setPendingStatus("CANCELLED");
                             setShowConfirmModal(true);
                           }}
+                          disabled={
+                            isDisabled ||
+                            (userRole === "RECOVERY" &&
+                              appt?.service_type !== "RECOVERY")
+                          }
                           className={`rounded py-2 px-2 ${
-                            isDisabled
-                              ? "opacity-[0.5] pointer-events-none cursor-not-allowed bg-gray-300 text-gray-800"
+                            isDisabled ||
+                            (userRole === "RECOVERY" &&
+                              appt?.service_type !== "RECOVERY")
+                              ? "opacity-[0.5] cursor-not-allowed bg-gray-300 text-gray-800"
                               : "bg-black text-white"
                           }`}
                         >
-                          Cancel
+                          {appt?.booking_status === "CANCELLED" ? "Cancelled" : "Cancel"}
                         </button>
                       </td>
                     )}

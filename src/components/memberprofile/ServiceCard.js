@@ -91,6 +91,7 @@ const ServiceCard = ({ details }) => {
         "TRAINER",
         "FITNESS_MANAGER",
         "ASS_FITNESS_MANAGER",
+        "RECOVERY",
       ];
       const params = {
         role: roles.join(","), // TRAINER,FITNESS_MANAGER,ASS_FITNESS_MANAGER
@@ -282,6 +283,7 @@ const ServiceCard = ({ details }) => {
       staffList?.map((item) => ({
         label: item.name,
         value: item.id,
+        role: item.role,
       })) || [],
     [staffList],
   );
@@ -698,9 +700,22 @@ const ServiceCard = ({ details }) => {
               {purchasedServices.length > 0 ? (
                 <div className="grid grid-cols-1 gap-3">
                   {purchasedServices.map((service) => {
-                    const filteredStaffOptions = baseStaffOptions.filter(
-                      (opt) => opt.value !== service?.assigned_staff_id,
-                    );
+                    // const filteredStaffOptions = baseStaffOptions.filter(
+                    //   (opt) => opt.value !== service?.assigned_staff_id,
+                    // );
+                    const filteredStaffOptions = baseStaffOptions
+                      .filter((opt) => {
+                        if (service?.service_name === "RECOVERY") {
+                          return opt.role === "RECOVERY";
+                        }
+
+                        return [
+                          "TRAINER",
+                          "FITNESS_MANAGER",
+                          "ASS_FITNESS_MANAGER",
+                        ].includes(opt.role);
+                      })
+                      .filter((opt) => opt.value !== service?.assigned_staff_id);
 
                     return (
                       <div
@@ -742,7 +757,7 @@ const ServiceCard = ({ details }) => {
 
                             <div>
                               <span className="text-sm text-black">
-                                Trainer Name:
+                                {service?.service_name === "RECOVERY" ? "Recovery Name" : "Trainer Name"}
                               </span>
                               <span className="ml-2 text-sm text-[#6F6F6F]">
                                 {service?.assigned_staff_name || "--"}
@@ -759,8 +774,8 @@ const ServiceCard = ({ details }) => {
                                   value={trainerSelections[service?.id] || null} // <-- controlled value
                                   placeholder={
                                     service?.assigned_staff_name
-                                      ? "Change trainer"
-                                      : "Assign trainer"
+                                      ? service?.service_name === "RECOVERY" ? "Change Recovery" : "Change trainer"
+                                      : service?.service_name === "RECOVERY" ? "Assign Recovery" : "Assign trainer"
                                   }
                                   onChange={(selectedOption) => {
                                     setTrainerSelections((prev) => ({

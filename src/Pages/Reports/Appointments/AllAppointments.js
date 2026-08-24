@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { addYears, subYears, format } from "date-fns";
+import { subYears, format } from "date-fns";
 import { FaCalendarDays } from "react-icons/fa6";
 import {
   ALLOWED_ROLES,
@@ -19,9 +19,7 @@ import { authAxios } from "../../../config/config";
 import { toast } from "react-toastify";
 import Pagination from "../../../components/common/Pagination";
 import { useFormik } from "formik";
-import { useDispatch, useSelector } from "react-redux";
-import { fetchClubTiming } from "../../../Redux/Reducers/clubTimingSlice";
-import { useClubDatePickerProps } from "../../../hooks/useClubDatePickerProps";
+import { useSelector } from "react-redux";
 import IsLoadingHOC from "../../../components/common/IsLoadingHOC";
 import { LuDownload } from "react-icons/lu";
 
@@ -46,22 +44,28 @@ const filterStatusOptions = [
   { value: "NO_SHOW", label: "No Show" },
 ];
 
+const NO_SLOTS_OPTION = { label: "No time Slots", value: "", isDisabled: true };
+
 const AllAppointments = (props) => {
   const { setLoading } = props;
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [pendingStatus, setPendingStatus] = useState(null);
   const [pendingId, setPendingId] = useState(null);
+  const [pendingRow, setPendingRow] = useState(null); // full row for reschedule (category/duration)
   const [remarks, setRemarks] = useState("");
   const { user } = useSelector((state) => state.auth);
   const userRole = user.role;
 
-  const dispatch = useDispatch();
-  const [selectedLeadClub, setSelectedLeadClub] = useState(null);
-  const [rescheduleDateTime, setRescheduleDateTime] = useState(null);
-
   const [selectedTrainerId, setSelectedTrainerId] = useState(null);
   const [selectedClubId, setSelectedClubId] = useState(null);
-  const [bookedSlots, setBookedSlots] = useState([]);
+
+  // Reschedule date + time now tracked separately (like create-appointment flow)
+  const [rescheduleDateOnly, setRescheduleDateOnly] = useState(null);
+  const [rescheduleTime, setRescheduleTime] = useState(null);
+
+  // Response from /staff/operating/hours/trainer/slots
+  const [trainerSlotsData, setTrainerSlotsData] = useState([]);
+  const slotsRequestIdRef = useRef(0);
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -220,8 +224,6 @@ const AllAppointments = (props) => {
         params.package_id = appliedFilters.package_id;
       }
 
-      console.log("🔍 API Request Params:", params);
-
       if (userRole === "RECOVERY") {
         params.service_name = "RECOVERY";
       }
@@ -309,8 +311,6 @@ const AllAppointments = (props) => {
       assigned_staff_id: params.get("assigned_staff_id")
         ? Number(params.get("assigned_staff_id"))
         : null,
-      // service_id: params.get("service_id") || null,
-      // service_name: params.get("service_name") || null,
     };
 
     setAppliedFilters(urlFilters);
@@ -358,114 +358,182 @@ const AllAppointments = (props) => {
   const { scheduled, upcoming, completed, noShow, cancelled } = stats;
 
   const updateAppointmentStatus = (row, newStatus) => {
-    setSelectedLeadClub(row.club_id);
     setPendingId(row.id);
     setPendingStatus(newStatus);
     setRemarks("");
 
     if (newStatus === "RESCHEDULED") {
-      // ✅ SET trainer + club from row
+      setPendingRow(row);
       setSelectedTrainerId(row.assigned_staff_id);
       setSelectedClubId(row.club_id);
-      // ✅ Combine existing date + time into single rescheduleDateTime
-      if (row.start_date && row.start_time) {
-        const combined = new Date(row.start_date);
-        const [hours, minutes] = row.start_time.split(":");
-        combined.setHours(Number(hours), Number(minutes), 0, 0);
-        setRescheduleDateTime(combined);
-      } else {
-        setRescheduleDateTime(null);
-      }
+
+      // Prefill with the existing slot; the trainer-slots fetch (below)
+      // will validate/refresh what's actually still available.
+      setRescheduleDateOnly(row.start_date ? new Date(row.start_date) : null);
+      setRescheduleTime(row.start_time ? row.start_time.slice(0, 5) : null);
+    } else {
+      setPendingRow(null);
+      setSelectedTrainerId(null);
+      setSelectedClubId(null);
+      setRescheduleDateOnly(null);
+      setRescheduleTime(null);
+      setTrainerSlotsData([]);
     }
 
     setShowConfirmModal(false); // close any previous
     setTimeout(() => setShowConfirmModal(true), 0); // reopen fresh
   };
 
-  const fetchTrainerBookedSlots = async () => {
-    if (!selectedTrainerId || !selectedClubId) {
-      setBookedSlots([]);
+  // ===============================
+  // DATE / TIME HELPERS (same convention as create-appointment flow)
+  // ===============================
+  const formatDateForApi = (date) => {
+    if (!date) return null;
+    const d = String(date.getDate()).padStart(2, "0");
+    const m = String(date.getMonth() + 1).padStart(2, "0");
+    const y = date.getFullYear();
+    return `${d}-${m}-${y}`;
+  };
+
+  const formatTo12Hour = (time24) => {
+    const [h, m] = time24.split(":").map(Number);
+    const ampm = h >= 12 ? "PM" : "AM";
+    const hour = h % 12 || 12;
+    return `${hour}:${m.toString().padStart(2, "0")} ${ampm}`;
+  };
+
+  // ===============================
+  // FETCH TRAINER SLOTS for reschedule (mirrors CreateMemberAppointment)
+  // ===============================
+  const fetchTrainerSlots = async (trainerId, clubId, category, duration) => {
+    if (!trainerId || !clubId) {
+      setTrainerSlotsData([]);
       return;
     }
 
-    try {
-      const res = await authAxios().post("/appointment/trainer/booked/slot", {
-        club_id: selectedClubId,
-        trainer_id: selectedTrainerId,
-      });
+    const requestId = ++slotsRequestIdRef.current;
 
-      setBookedSlots(res.data?.availability || []);
+    try {
+      const bookingType =
+        category === "complementary" ? "COMPLIMENTARY" : "PACKAGE";
+
+      const body = {
+        trainer_id: trainerId,
+        club_id: clubId,
+        booking_type: bookingType,
+      };
+
+      // ⚠️ Confirm `session_duration` (or whatever field actually holds
+      // this on the appointment-list row) is the right source for PACKAGE
+      // bookings — it's not currently rendered anywhere in this table.
+      if (bookingType === "PACKAGE" && duration) {
+        body.duration = duration;
+      }
+
+      const res = await authAxios().post(
+        "/staff/operating/hours/trainer/slots",
+        body,
+      );
+
+      if (requestId !== slotsRequestIdRef.current) return;
+
+      setTrainerSlotsData(res.data?.data || []);
     } catch (err) {
-      console.error("Trainer slot fetch error:", err);
-      setBookedSlots([]);
+      if (requestId !== slotsRequestIdRef.current) return;
+
+      console.error("fetchTrainerSlots (reschedule) error:", err);
+      setTrainerSlotsData([]);
     }
   };
 
   useEffect(() => {
-    if (pendingStatus === "RESCHEDULED") {
-      fetchTrainerBookedSlots();
+    if (pendingStatus !== "RESCHEDULED") return;
+
+    if (!selectedTrainerId || !selectedClubId) {
+      slotsRequestIdRef.current += 1; // invalidate any in-flight request
+      setTrainerSlotsData([]);
+      return;
     }
-  }, [selectedTrainerId, selectedClubId, pendingStatus]);
 
-  const getExcludeTimesForDate = (date) => {
-    if (!date || !bookedSlots.length) return [];
+    fetchTrainerSlots(
+      selectedTrainerId,
+      selectedClubId,
+      pendingRow?.appointment_category,
+      pendingRow?.session_duration,
+    );
+  }, [selectedTrainerId, selectedClubId, pendingStatus, pendingRow]);
 
-    const dateStr = new Date(date).toISOString().split("T")[0];
-    const matchedDay = bookedSlots.find((item) => item.date === dateStr);
-    if (!matchedDay) return [];
+  // Dates allowed in the reschedule calendar (must be present in API response)
+  const availableRescheduleDatesSet = useMemo(() => {
+    return new Set(trainerSlotsData.map((d) => d.date));
+  }, [trainerSlotsData]);
 
-    return [...new Set(matchedDay.slots)].map((timeStr) => {
-      const [hours, minutes] = timeStr.split(":").map(Number);
-      const d = new Date(date); // ← use actual picked date, NOT new Date()
-      d.setHours(hours, minutes, 0, 0);
-      return d;
-    });
+  const filterAvailableRescheduleDate = (date) => {
+    const dateStr = formatDateForApi(date);
+    return availableRescheduleDatesSet.has(dateStr);
   };
 
-  const getExcludeTimes = () => getExcludeTimesForDate(rescheduleDateTime);
+  // Selected reschedule day's slot data
+  const selectedRescheduleDayData = useMemo(() => {
+    if (!rescheduleDateOnly || !trainerSlotsData.length) return null;
 
-  const getFirstAvailableTime = (date) => {
-    let suggested = datePickerProps.getDefaultTimeForDate(date);
-    if (!suggested) return null;
+    const dateStr = formatDateForApi(rescheduleDateOnly);
+    return trainerSlotsData.find((d) => d.date === dateStr) || null;
+  }, [rescheduleDateOnly, trainerSlotsData]);
 
-    const excludedTimes = getExcludeTimesForDate(date);
-    const interval = datePickerProps.timeIntervals; // ← dynamic from hook
+  // Time options for reschedule, driven entirely by server `enable` flag
+  const rescheduleTimeOptions = useMemo(() => {
+    if (!rescheduleDateOnly) return [];
 
-    // ── Compare only HH:MM to avoid date mismatch with maxTime (which is today's Date) ──
-    const toMins = (d) => d.getHours() * 60 + d.getMinutes();
-    const maxMins = toMins(datePickerProps.maxTime);
+    if (!selectedRescheduleDayData) return [NO_SLOTS_OPTION];
 
-    while (toMins(suggested) <= maxMins) {
-      const suggestedMins = toMins(suggested);
+    const { slots } = selectedRescheduleDayData;
 
-      const isExcluded = excludedTimes.some(
-        (excluded) => toMins(excluded) === suggestedMins,
-      );
+    if (!slots || slots.length === 0) return [NO_SLOTS_OPTION];
 
-      if (!isExcluded) return suggested; // ✅ free slot found
+    return slots.map((slot) => ({
+      label: formatTo12Hour(slot.time),
+      value: slot.time,
+      isDisabled: !slot.enable,
+    }));
+  }, [selectedRescheduleDayData, rescheduleDateOnly]);
 
-      // Advance by one interval
-      suggested = new Date(suggested.getTime() + interval * 60 * 1000);
+  // Warn when the picked reschedule date has no bookable slots at all
+  useEffect(() => {
+    if (!rescheduleDateOnly) return;
+
+    if (
+      rescheduleTimeOptions.length === 1 &&
+      rescheduleTimeOptions[0].value === ""
+    ) {
+      toast.error("No slots available for selected date");
     }
+  }, [selectedRescheduleDayData]);
 
-    return null; // all slots blocked for this date
+  // Combine the separate date + time fields into a single Date for submit
+  const buildRescheduleDateTime = () => {
+    if (!rescheduleDateOnly || !rescheduleTime) return null;
+
+    const [h, m] = rescheduleTime.split(":").map(Number);
+    const combined = new Date(rescheduleDateOnly);
+    combined.setHours(h, m, 0, 0);
+    return combined;
   };
 
   const confirmStatusUpdate = async () => {
     try {
-      if (pendingStatus === "RESCHEDULED") {
-        // ✅ Validate single rescheduleDateTime instead of separate date+time
-        if (!rescheduleDateTime || !remarks.trim()) {
-          toast.error("Please select date & time and enter remarks");
-          return;
-        }
-      }
-
       let body = {};
 
       if (pendingStatus === "RESCHEDULED") {
+        const combinedDateTime = buildRescheduleDateTime();
+
+        if (!combinedDateTime || !remarks.trim()) {
+          toast.error("Please select date & time and enter remarks");
+          return;
+        }
+
         body = {
-          start_date: format(rescheduleDateTime, "yyyy-MM-dd HH:mm:ss"),
+          start_date: format(combinedDateTime, "yyyy-MM-dd HH:mm:ss"),
           last_status: "RESCHEDULED",
           remarks: remarks.trim(),
         };
@@ -482,7 +550,10 @@ const AllAppointments = (props) => {
       // ✅ Reset all modal state
       setShowConfirmModal(false);
       setRemarks("");
-      setRescheduleDateTime(null); // ✅ reset single state
+      setPendingRow(null);
+      setRescheduleDateOnly(null);
+      setRescheduleTime(null);
+      setTrainerSlotsData([]);
 
       fetchAppointments(page);
     } catch (err) {
@@ -512,7 +583,6 @@ const AllAppointments = (props) => {
   const getSelectedStatusOption = (status, row) => {
     if (!status) return null;
 
-    // 🔥 NEW CONDITION
     if (isInProgress(row)) {
       return { value: "ACTIVE", label: "In Progress" };
     }
@@ -527,7 +597,6 @@ const AllAppointments = (props) => {
   const getAllowedStatusOptions = (row) => {
     const currentStatus = row?.booking_status;
 
-    // 🔥 NEW CONDITION
     if (isInProgress(row)) {
       return [
         { value: "COMPLETED", label: "Completed" },
@@ -557,13 +626,6 @@ const AllAppointments = (props) => {
   };
 
   useEffect(() => {
-    if (selectedLeadClub) dispatch(fetchClubTiming(selectedLeadClub));
-  }, [selectedLeadClub]); // <-- dependency added
-
-  // ── NEW: get ready-to-use DatePicker props from Redux timing ──
-  const datePickerProps = useClubDatePickerProps(rescheduleDateTime);
-
-  useEffect(() => {
     const interval = setInterval(() => {
       setAppointmentList((prev) => [...prev]);
     }, 60000); // every 1 min
@@ -571,13 +633,12 @@ const AllAppointments = (props) => {
     return () => clearInterval(interval);
   }, []);
 
-   const handleExportBookings = async () => {
+  const handleExportBookings = async () => {
     try {
       setLoading(true);
 
       const params = {};
 
-      // 📅 Date filters
       if (dateFilter?.value && dateFilter.value !== "custom") {
         params.dateFilter = dateFilter.value;
       }
@@ -587,52 +648,41 @@ const AllAppointments = (props) => {
         params.endDate = format(customTo, "yyyy-MM-dd");
       }
 
-      // 🏢 Club filter
       if (clubFilter?.value) {
         params.club_id = clubFilter.value;
       }
-      
+
       if (userRole === "RECOVERY") {
         params.service_name = "RECOVERY";
       }
 
-      // 🎯 Applied filters
       Object.entries(appliedFilters).forEach(([key, value]) => {
         if (value !== null && value !== undefined) {
           params[key] = value;
         }
       });
 
-      console.log("📥 Download Params:", params);
+      const response = await authAxios().get(
+        "/appointment/fetch/list/download?appointment_type=SESSION",
+        {
+          params,
+          responseType: "blob",
+        },
+      );
 
-      const response = await authAxios().get("/appointment/fetch/list/download?appointment_type=SESSION", {
-        params,
-        responseType: "blob",
-      });
-
-      // 📄 Create download
       const blob = new Blob([response.data]);
-
       const url = window.URL.createObjectURL(blob);
-
       const link = document.createElement("a");
-
       link.href = url;
-
       link.setAttribute("download", "all-bookings.xlsx");
-
       document.body.appendChild(link);
-
       link.click();
-
       link.remove();
-
       window.URL.revokeObjectURL(url);
 
       toast.success("All bookings list downloaded successfully!");
     } catch (error) {
       console.error(error);
-
       toast.error("Failed to download all bookings list.");
     } finally {
       setLoading(false);
@@ -687,7 +737,6 @@ const AllAppointments = (props) => {
                     placeholderText="From Date"
                     className="custom--input w-full input--icon"
                     minDate={subYears(new Date(), 20)}
-                    // maxDate={addYears(new Date(), 0)}
                     dateFormat="dd-MM-yyyy"
                     showMonthDropdown
                     showYearDropdown
@@ -704,7 +753,6 @@ const AllAppointments = (props) => {
                     placeholderText="To Date"
                     className="custom--input w-full input--icon"
                     minDate={customFrom || subYears(new Date(), 20)}
-                    // maxDate={addYears(new Date(), 0)}
                     showMonthDropdown
                     showYearDropdown
                     dropdownMode="select"
@@ -719,7 +767,6 @@ const AllAppointments = (props) => {
                 placeholder="Filter by club"
                 value={selectedClub}
                 options={clubOptions}
-                // onChange={(option) => setClubFilter(option)}
                 onChange={(option) => {
                   setClubFilter(option);
                   formik.resetForm();
@@ -738,20 +785,25 @@ const AllAppointments = (props) => {
             </div>
           </div>
           {!ALLOWED_ROLES.includes(userRole) && (
-              <div className="max-w-[160px] w-full">
-                <button
-                  onClick={handleExportBookings}
-                  disabled={appointmentList.length === 0 || (dateFilter?.value === "custom" && (!customFrom || !customTo))}
-                  className={`w-full px-4 py-2 rounded flex items-center gap-2
+            <div className="max-w-[160px] w-full">
+              <button
+                onClick={handleExportBookings}
+                disabled={
+                  appointmentList.length === 0 ||
+                  (dateFilter?.value === "custom" && (!customFrom || !customTo))
+                }
+                className={`w-full px-4 py-2 rounded flex items-center gap-2
                         ${
-                          appointmentList.length === 0 || (dateFilter?.value === "custom" && (!customFrom || !customTo))
+                          appointmentList.length === 0 ||
+                          (dateFilter?.value === "custom" &&
+                            (!customFrom || !customTo))
                             ? "bg-gray-400 cursor-not-allowed text-white"
                             : "bg-black text-white hover:bg-gray-800"
                         }`}
-                >
-                  <LuDownload /> <span>Export Bookings</span>
-                </button>
-              </div>
+              >
+                <LuDownload /> <span>Export Bookings</span>
+              </button>
+            </div>
           )}
         </div>
 
@@ -828,9 +880,6 @@ const AllAppointments = (props) => {
                     <th className="px-2 py-4 min-w-[130px]">Member Name</th>
                     <th className="px-2 py-4 min-w-[120px]">Trainer Name</th>
                     <th className="px-2 py-4 min-w-[130px]">Last Status</th>
-
-                    {/*                
-                    <th className="px-2 py-4 min-w-[130px]">Scheduled By</th> */}
                     <th className="px-2 py-4 min-w-[170px]">
                       Current Status/Action
                     </th>
@@ -884,11 +933,6 @@ const AllAppointments = (props) => {
                         <td className="px-2 py-4">
                           {row?.assigned_staff_name || "--"}
                         </td>
-
-                        {/*                         
-                        <td className="px-2 py-4">
-                          {row?.staff_name || "Self"}
-                        </td> */}
                         <td className="px-2 py-4">
                           {formatText(row?.last_status) || "--"}
                         </td>
@@ -910,10 +954,7 @@ const AllAppointments = (props) => {
                                   row?.booking_status,
                                   row,
                                 )}
-                                isDisabled={
-                                  !canUpdateStatus(row?.booking_status)
-                                  // getAllowedStatusOptions(row?.booking_status).length === 0
-                                }
+                                isDisabled={!canUpdateStatus(row?.booking_status)}
                                 onChange={(selected) => {
                                   if (!selected) return;
                                   updateAppointmentStatus(row, selected.value);
@@ -1006,37 +1047,49 @@ const AllAppointments = (props) => {
                   <label className="block text-sm font-medium mb-1">
                     New Date & Time <span className="text-red-500">*</span>
                   </label>
-                  <div className="custom--date relative">
-                    {/* Calendar Icon */}
-                    <span className="absolute z-[1] mt-[11px] ml-[15px]">
-                      <FaCalendarDays />
-                    </span>
-                    <DatePicker
-                      selected={rescheduleDateTime}
-                      onChange={(date) => {
-                        if (!date) {
-                          setRescheduleDateTime(null);
-                          return;
-                        }
+                  <div className="flex gap-2">
+                    {/* DATE */}
+                    <div className="custom--date relative w-[50%]">
+                      <span className="absolute z-[1] mt-[11px] ml-[15px]">
+                        <FaCalendarDays />
+                      </span>
+                      <DatePicker
+                        selected={rescheduleDateOnly}
+                        onChange={(date) => {
+                          setRescheduleDateOnly(date);
+                          setRescheduleTime(null);
+                        }}
+                        dateFormat="dd/MM/yyyy"
+                        minDate={new Date()}
+                        filterDate={filterAvailableRescheduleDate}
+                        onKeyDown={(e) => e.preventDefault()}
+                        disabled={!selectedTrainerId}
+                        placeholderText="Select Date"
+                        className="custom--input w-full input--icon"
+                      />
+                    </div>
 
-                        const prev = rescheduleDateTime;
-                        const isSameDay =
-                          prev &&
-                          new Date(prev).toDateString() ===
-                            new Date(date).toDateString();
-
-                        if (isSameDay) {
-                          setRescheduleDateTime(date);
-                        } else {
-                          const dateWithTime = getFirstAvailableTime(date);
-                          setRescheduleDateTime(dateWithTime ?? null);
+                    {/* TIME */}
+                    <div className="w-[50%]">
+                      <Select
+                        key={`${selectedTrainerId}-${rescheduleDateOnly}`}
+                        value={
+                          rescheduleTime
+                            ? rescheduleTimeOptions.find(
+                                (o) => o.value === rescheduleTime,
+                              )
+                            : null
                         }
-                      }}
-                      {...datePickerProps}
-                      excludeTimes={getExcludeTimes()}
-                      disabled={!selectedTrainerId} // ✅ IMPORTANT
-                      className="custom--input w-full input--icon"
-                    />
+                        onChange={(opt) => {
+                          if (!opt || opt.value === "") return;
+                          setRescheduleTime(opt.value);
+                        }}
+                        options={rescheduleTimeOptions}
+                        isDisabled={!rescheduleDateOnly || !selectedTrainerId}
+                        placeholder="Select Time"
+                        styles={customStyles}
+                      />
+                    </div>
                   </div>
                 </div>
 
@@ -1053,7 +1106,7 @@ const AllAppointments = (props) => {
                     rows="3"
                     className="w-full border rounded p-2"
                     placeholder="Reason for rescheduling"
-                    disabled={!selectedTrainerId} // ✅ IMPORTANT
+                    disabled={!selectedTrainerId}
                   />
                 </div>
               </div>

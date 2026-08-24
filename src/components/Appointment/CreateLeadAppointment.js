@@ -339,12 +339,13 @@ const CreateLeadAppointment = ({
   // FETCH INITIAL DATA
   // ===============================
 
-  const fetchStaff = async () => {
+  const fetchStaff = async (role) => {
     try {
       const res = await authAxios().get("/staff/list", {
         params: {
           club_id: clubId,
-          role: "TRAINER,FITNESS_MANAGER,ASS_FITNESS_MANAGER",
+          // role: "TRAINER,FITNESS_MANAGER,ASS_FITNESS_MANAGER",
+          role,
         },
       });
 
@@ -352,6 +353,32 @@ const CreateLeadAppointment = ({
     } catch (err) {
       console.error("fetchStaff error:", err);
     }
+  };
+
+  const getSelectedServiceType = () => {
+    const category = formik.values.appointment_category;
+
+    // Service Appointment
+    if (category === "service") {
+      const selectedPackage = packageList.find(
+        (p) => p.id === formik.values.package_booking_id
+      );
+
+      return selectedPackage?.serviceType || null;
+    }
+
+    // Complimentary Appointment
+    if (category === "complementary") {
+      const selectedService = serviceList.find(
+        (s) => s.id === formik.values.service_id
+      );
+
+      // Your current API response uses `type`
+      // If backend changes/provides `service_type`, this also supports it.
+      return selectedService?.type || selectedService?.service_type || null;
+    }
+
+    return null;
   };
 
   const fetchService = async () => {
@@ -370,7 +397,7 @@ const CreateLeadAppointment = ({
       fetchLeadTrial(); // ✅ only for lead
     }
 
-    fetchStaff();
+    // fetchStaff();
     fetchService();
   }, [clubId]);
 
@@ -434,6 +461,25 @@ const CreateLeadAppointment = ({
       toast.error("No slots available for selected date");
     }
   }, [selectedDayData]);
+
+  useEffect(() => {
+    if (!clubId || !formik.values.appointment_category) return;
+
+    const serviceType = getSelectedServiceType();
+
+    if (serviceType === "RECOVERY") {
+      fetchStaff("RECOVERY");
+    } else {
+      fetchStaff("TRAINER,FITNESS_MANAGER,ASS_FITNESS_MANAGER");
+    }
+  }, [
+    clubId,
+    formik.values.appointment_category,
+    formik.values.package_booking_id,
+    formik.values.service_id,
+    packageList,
+    serviceList,
+  ]);
 
   const handleOverlayClick = (e) => {
     if (leadBoxRef.current && !leadBoxRef.current.contains(e.target)) {
@@ -572,7 +618,7 @@ const CreateLeadAppointment = ({
               {/* TRAINER */}
               <div className="mb-4 w-[50%]">
                 <label className="block text-sm font-medium text-black mb-2">
-                  Trainer<span className="text-red-500">*</span>
+                  {getSelectedServiceType() === "RECOVERY" ? "Recovery" : "Trainer"}<span className="text-red-500">*</span>
                 </label>
                 <Select
                   value={
@@ -595,7 +641,11 @@ const CreateLeadAppointment = ({
                   }}
                   options={staffOptions}
                   styles={customStyles}
-                  placeholder="Select trainer"
+                  placeholder={
+                    getSelectedServiceType() === "RECOVERY"
+                      ? "Select recovery"
+                      : "Select trainer"
+                  }
                   isDisabled={!formik.values.appointment_category}
                 />
                 {formik.errors.trainer_id && formik.touched.trainer_id && (
