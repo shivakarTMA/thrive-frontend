@@ -292,12 +292,12 @@ const AllInvoiceReport = (props) => {
                 <th className="px-2 py-4 min-w-[150px]">branch location</th>
                 <th className="px-2 py-4 min-w-[120px]">member id</th>
                 <th className="px-2 py-4 min-w-[150px]">member name</th>
-                <th className="px-2 py-4 min-w-[150px]">contact number</th>
-                <th className="px-2 py-4 min-w-[150px]">e-mail</th>
+                {/* <th className="px-2 py-4 min-w-[150px]">contact number</th>
+                <th className="px-2 py-4 min-w-[150px]">e-mail</th> */}
                 <th className="px-2 py-4 min-w-[100px]">gst no</th>
              
-                <th className="px-2 py-4 min-w-[120px]">gender</th>
-                <th className="px-2 py-4 min-w-[120px]">birthday</th>
+                {/* <th className="px-2 py-4 min-w-[120px]">gender</th>
+                <th className="px-2 py-4 min-w-[120px]">birthday</th> */}
                 <th className="px-2 py-4 min-w-[120px]">company</th>
                 <th className="px-2 py-4 min-w-[130px]">bill no</th>
              
@@ -341,15 +341,15 @@ const AllInvoiceReport = (props) => {
                     <td className="px-2 py-4">{row.club_address}</td>
                     <td className="px-2 py-4">{row.membership_number}</td>
                     <td className="px-2 py-4">{row.full_name}</td>
-                    <td className="px-2 py-4">+{row?.country_code}{" "}{row?.mobile}</td>
+                    {/* <td className="px-2 py-4">+{row?.country_code}{" "}{row?.mobile}</td>
                     <td className="px-2 py-4">
                       {row.email ? row.email : "--"}
-                    </td>
+                    </td> */}
                     <td className="px-2 py-4">
                       {row.club_gstno ? row.club_gstno : "--"}
                     </td>
          
-                    <td className="px-2 py-4">
+                    {/* <td className="px-2 py-4">
                       {formatText(
                         row?.gender === "NOTDISCLOSE"
                           ? "Prefer Not To Say"
@@ -360,7 +360,7 @@ const AllInvoiceReport = (props) => {
                       {row.date_of_birth
                         ? formatAutoDate(row.date_of_birth)
                         : "--"}
-                    </td>
+                    </td> */}
                     <td className="px-2 py-4">
                       {row.company_name ? row.company_name : "--"}
                     </td>

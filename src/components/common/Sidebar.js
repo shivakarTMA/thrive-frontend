@@ -30,6 +30,7 @@ import {
 import { BsCake2 } from "react-icons/bs";
 import { authAxios } from "../../config/config";
 import { PiIdentificationCardLight } from "react-icons/pi";
+import { RiPassExpiredLine } from "react-icons/ri";
 
 const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
   const location = useLocation();
@@ -3086,6 +3087,75 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                 <span className="nav-text">Nourish Orders</span>
               </Link>
             )}
+           
+          </>
+        )}
+
+        {accessToken && userType === "RECOVERY" && (
+          <>
+            <Link
+              to="/all-members"
+              className={`nav-link mb-2 ${
+                location.pathname === "/all-members" ? "active" : ""
+              }`}
+            >
+              <FiUsers className="menu--icon" />
+              <span className="nav-text">All Members</span>
+            </Link>
+            <Link
+              to="/workout-plans"
+              className={`nav-link mb-2 ${
+                location.pathname === "/workout-plans" ? "active" : ""
+              }`}
+            >
+              <TbGymnastics className="menu--icon" />
+              <span className="nav-text">Workout Plans</span>
+            </Link>
+            <Link
+              to="/birthday-report"
+              className={`nav-link mb-2 ${
+                location.pathname === "/birthday-report" ? "active" : ""
+              }`}
+            >
+              <BsCake2 className="menu--icon" />
+              <span className="nav-text">Client Birthdays</span>
+            </Link>
+            <Link
+              to="/anniversary-report"
+              className={`nav-link mb-2 ${
+                location.pathname === "/anniversary-report" ? "active" : ""
+              }`}
+            >
+              <LuPartyPopper className="menu--icon" />
+              <span className="nav-text">Client Anniversary</span>
+            </Link>
+            <Link
+              to="/reports/all-bookings"
+              className={`nav-link mb-2 ${
+                location.pathname === "/reports/all-bookings" ? "active" : ""
+              }`}
+            >
+              <LuCalendarCheck className="menu--icon" />
+              <span className="nav-text">All Bookings</span>
+            </Link>
+            <Link
+              to="/reports/all-orders"
+              className={`nav-link mb-2 ${
+                location.pathname === "/reports/all-orders" ? "active" : ""
+              }`}
+            >
+              <AiOutlineProduct className="menu--icon" />
+              <span className="nav-text">All Orders</span>
+            </Link>
+            <Link
+              to="/reports/operations-reports/service-expiry-report"
+              className={`nav-link mb-2 ${
+                location.pathname === "/reports/operations-reports/service-expiry-report" ? "active" : ""
+              }`}
+            >
+              <RiPassExpiredLine className="menu--icon" />
+              <span className="nav-text">Service Expiry Report</span>
+            </Link>           
            
           </>
         )}

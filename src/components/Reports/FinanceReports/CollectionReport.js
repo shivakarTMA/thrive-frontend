@@ -301,8 +301,8 @@ const CollectionReport = (props) => {
                 <th className="px-2 py-4 min-w-[140px]">branch location</th>
                 <th className="px-2 py-4 min-w-[130px]">member id</th>
                 <th className="px-2 py-4 min-w-[150px]">member name</th>
-                <th className="px-2 py-4 min-w-[150px]">mobile</th>
-                <th className="px-2 py-4 min-w-[120px]">mail</th>
+                {/* <th className="px-2 py-4 min-w-[150px]">mobile</th> */}
+                {/* <th className="px-2 py-4 min-w-[120px]">mail</th> */}
                 <th className="px-2 py-4 min-w-[80px]">amount</th>
                 <th className="px-2 py-4 min-w-[100px]">tax amount</th>
                 <th className="px-2 py-4 min-w-[110px]">final amount</th>
@@ -329,8 +329,8 @@ const CollectionReport = (props) => {
                     <td className="px-2 py-4">{row.club_city ? row.club_city : "--"}</td>
                     <td className="px-2 py-4">{row.membership_number ? row.membership_number : "--"}</td>
                     <td className="px-2 py-4">{row.member_name ? row.member_name : "--"}</td>
-                    <td className="px-2 py-4">+{row.country_code}{" "}{row.mobile}</td>
-                    <td className="px-2 py-4">{row.email ? row.email : "--"}</td>
+                    {/* <td className="px-2 py-4">+{row.country_code}{" "}{row.mobile}</td>
+                    <td className="px-2 py-4">{row.email ? row.email : "--"}</td> */}
                     <td className="px-2 py-4">₹{formatIndianNumber(row.amount)}</td>
                     <td className="px-2 py-4">₹{formatIndianNumber(row.tax_amount)}</td>
                     <td className="px-2 py-4">₹{formatIndianNumber(row.final_amount)}</td>

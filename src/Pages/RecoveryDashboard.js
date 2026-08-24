@@ -26,7 +26,7 @@ import SummaryDashboard from "../components/common/SummaryDashboard";
 import { LiaAngleLeftSolid, LiaAngleRightSolid } from "react-icons/lia";
 import { authAxios } from "../config/config";
 import { useSelector } from "react-redux";
-import CalendarView from "../components/TrainerDashboardChild/CalendarView";
+import RecoveryCalendarView from "../components/TrainerDashboardChild/RecoveryCalendarView";
 
 const dateFilterOptions = [
   { value: "today", label: "Today" },
@@ -47,7 +47,6 @@ const RecoveryDashboard = () => {
     { label: "Today", value: "today" },
     { label: "Tomorrow", value: "tomorrow" },
   ];
-  const [dashboardData, setDashboardData] = useState([]);
   const [currentDayIndex, setCurrentDayIndex] = useState(1); // Default to Today
   const [activeTab, setActiveTab] = useState("Snapshot");
   const [dateFilter, setDateFilter] = useState(dateFilterOptions[0]);
@@ -67,136 +66,32 @@ const RecoveryDashboard = () => {
   const [totalLeads, setTotalLeads] = useState(0);
 
   // Pending Orders
-  const [orders, setOrders] = useState([]);
 
   const { user } = useSelector((state) => state.auth);
-  const [profileData, setUserClubs] = useState("");
-  const [hasProductServices, setHasProductServices] = useState(false);
-  // const [hasRecoveryServices, setHasRecoveryServices] = useState(false);
-  
-  useEffect(() => {
-    if (!user?.id) return;
 
-    const fetchStaffById = async (id) => {
-      try {
-        const res = await authAxios().get(`/staff/${id}`);
-        const data = res.data?.data || res.data || null;
+  // ✅ Recovery dashboard (replaces /dashboard/overview + /service/list)
+  const [recoveryData, setRecoveryData] = useState(null);
 
-        if (data) {
-          setUserClubs(data?.staff_clubs);
-        }
-      } catch (err) {
-        console.error(err);
-      }
-    };
-
-    fetchStaffById(user?.id);
-  }, [user?.id]);
-
-  // Function to fetch services
-  const fetchServices = async () => {
-    try {
-      if (!profileData?.length) return;
-
-      const productRequests = profileData.map((club) =>
-        authAxios().get("/service/list", {
-          params: { type: "PRODUCT", club_id: club.club_id },
-        }),
-      );
-
-      const recoveryRequests = profileData.map((club) =>
-        authAxios().get("/service/list", {
-          params: { type: "RECOVERY", club_id: club.club_id },
-        }),
-      );
-
-      const [productResponses, recoveryResponses] = await Promise.all([
-        Promise.all(productRequests),
-        Promise.all(recoveryRequests),
-      ]);
-
-      // ✅ Check PRODUCT
-      const hasProduct = productResponses.some((res) => {
-        const data = res.data?.data || res.data || [];
-        return data.length > 0;
-      });
-
-      // ✅ Check RECOVERY
-      const hasRecovery = recoveryResponses.some((res) => {
-        const data = res.data?.data || res.data || [];
-        return data.length > 0;
-      });
-
-      setHasProductServices(hasProduct);
-      // setHasRecoveryServices(hasRecovery);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  // Load initial data
-  useEffect(() => {
-    fetchServices();
-  }, [profileData]);
-
-
-
-  const fetchPendingOrdersData = async () => {
+  const fetchRecoveryData = async () => {
     try {
       const params = {};
-      // Date filter (non-custom)
+
       if (dateFilter?.value && dateFilter.value !== "custom") {
         params.dateFilter = dateFilter.value;
       }
-
-      // Custom date filter
       if (dateFilter?.value === "custom" && customFrom && customTo) {
         params.startDate = format(customFrom, "yyyy-MM-dd");
         params.endDate = format(customTo, "yyyy-MM-dd");
       }
-
-      // Club filter
       if (clubFilter?.value) {
         params.club_id = clubFilter.value;
       }
 
-      const res = await authAxios().get(
-        "/dashboard/product/pending/order/list?fulfilment_status=PLACED",
-        { params },
-      );
-      let data = res.data?.data || res.data || [];
-
-      setOrders(data);
+      const res = await authAxios().get("/dashboard/recovery", { params });
+      setRecoveryData(res.data || null);
     } catch (err) {
       console.error(err);
-    }
-  };
-
-  const fetchDashboardData = async () => {
-    try {
-      const params = {};
-      // Date filter (non-custom)
-      if (dateFilter?.value && dateFilter.value !== "custom") {
-        params.dateFilter = dateFilter.value;
-      }
-
-      // Custom date filter
-      if (dateFilter?.value === "custom" && customFrom && customTo) {
-        params.startDate = format(customFrom, "yyyy-MM-dd");
-        params.endDate = format(customTo, "yyyy-MM-dd");
-      }
-
-      // Club filter
-      if (clubFilter?.value) {
-        params.club_id = clubFilter.value;
-      }
-
-      const res = await authAxios().get("/dashboard/overview", { params });
-      let data = res.data?.data || res.data || [];
-
-      setDashboardData(data);
-    } catch (err) {
-      console.error(err);
+      setRecoveryData(null);
     }
   };
 
@@ -214,7 +109,7 @@ const RecoveryDashboard = () => {
         });
       }
     } catch (error) {
-      console.log(error)
+      console.log(error);
     }
   };
 
@@ -222,16 +117,9 @@ const RecoveryDashboard = () => {
     fetchClub();
   }, []);
 
-
   useEffect(() => {
     if (dateFilter?.value !== "custom" || (customFrom && customTo)) {
-      fetchPendingOrdersData();
-    }
-  }, [dateFilter, customFrom, customTo, clubFilter]);
-
-  useEffect(() => {
-    if (dateFilter?.value !== "custom" || (customFrom && customTo)) {
-      fetchDashboardData();
+      fetchRecoveryData();
     }
   }, [dateFilter, customFrom, customTo, clubFilter]);
 
@@ -243,8 +131,6 @@ const RecoveryDashboard = () => {
   const selectedClub = clubOptions.find(
     (option) => option.value === clubFilter?.value,
   );
-
-
 
   // End Product Sold Chart
 
@@ -280,6 +166,18 @@ const RecoveryDashboard = () => {
     [clubFilter, dateFilter, customFrom, customTo],
   );
 
+  const recoveryBreakup = recoveryData?.data?.[0] || {};
+
+  const buildRecoveryItems = (breakupKey, extraParams = "") => {
+    const breakup = recoveryBreakup[breakupKey] || {};
+    return Object.entries(breakup).map(([serviceName, value]) => ({
+      label: serviceName,
+      value: `₹${formatIndianNumber(value || 0)}`,
+      link: generateUrl(
+        `/reports/all-orders?${extraParams}service_name=${encodeURIComponent(serviceName)}`,
+      ),
+    }));
+  };
 
   return (
     <div className="page--content">
@@ -303,7 +201,6 @@ const RecoveryDashboard = () => {
       </div>
 
       {/* end title */}
-
 
       <div className="flex gap-3">
         <div className="rounded-[15px] p-3 box--shadow bg-white w-[100%]">
@@ -374,87 +271,32 @@ const RecoveryDashboard = () => {
             <SalesSummary
               icon={totalSalesIcon}
               title="Total Sales"
-              titleLink={generateUrl(`/reports/all-orders?`)}
-              totalSales={`₹${formatIndianNumber(
-                dashboardData?.summary_cards?.total_sales?.breakup?.products
-              )}`}
-              items={[
-
-                ...(hasProductServices
-                  ? [
-                      {
-                        label: "Nourish",
-                        value: `₹${formatIndianNumber(
-                          dashboardData?.summary_cards?.total_sales?.breakup?.products
-                        )}`,
-                        link: generateUrl(`/reports/all-orders?package_type=PRODUCT`),
-                      },
-                    ]
-                  : []),
-              ]}
+              titleLink={generateUrl(`/reports/all-orders?service_type=RECOVERY&package_type=PACKAGE`)}
+              totalSales={`₹${formatIndianNumber(recoveryData?.total_sales || 0)}`}
+              items={buildRecoveryItems("total_sales", "service_type=RECOVERY&package_type=PACKAGE&")}
             />
 
             <SalesSummary
               icon={newClientIcon}
               title="New Sales"
-              titleLink={generateUrl(`/reports/all-orders?bill_type=NEW`)}
-              totalSales={dashboardData?.summary_cards?.new_clients?.breakup?.products}
-              items={[
-                ...(hasProductServices
-                  ? [
-                      {
-                        label: "Nourish",
-                        value: dashboardData?.summary_cards?.new_clients?.breakup?.products,
-                        link: generateUrl(
-                          `/reports/all-orders?bill_type=NEW&package_type=PRODUCT`,
-                        ),
-                      },
-                    ]
-                  : []),
-              ]}
+              titleLink={generateUrl(`/reports/all-orders?service_type=RECOVERY&package_type=PACKAGE&bill_type=NEW`)}
+              totalSales={`₹${formatIndianNumber(recoveryData?.new_sales || 0)}`}
+              items={buildRecoveryItems("new_sales", "service_type=RECOVERY&package_type=PACKAGE&bill_type=NEW&")}
             />
+
             <SalesSummary
               icon={renewalIcon}
               title="Renewal"
-              titleLink={generateUrl(`/reports/all-orders?bill_type=RENEWAL`)}
-              totalSales={dashboardData?.summary_cards?.renewals?.breakup?.products}
-              items={[
-                ...(hasProductServices
-                  ? [
-                      {
-                        label: "Nourish",
-                        value: dashboardData?.summary_cards?.renewals?.breakup?.products,
-                        link: generateUrl(
-                          `/reports/all-orders?bill_type=RENEWAL&package_type=PRODUCT`,
-                        ),
-                      },
-                    ]
-                  : []),
-              ]}
-            /> 
+              titleLink={generateUrl(`/reports/all-orders?service_type=RECOVERY&package_type=PACKAGE&bill_type=RENEWAL`)}
+              totalSales={`₹${formatIndianNumber(recoveryData?.renewal || 0)}`}
+              items={buildRecoveryItems("renewal", "service_type=RECOVERY&package_type=PACKAGE&bill_type=RENEWAL&")}
+            />
           </div>
         </div>
-          {/* Calender View */}
-          <CalendarView clubId={clubFilter?.value} />
-          {/* Calender View end */}
       </div>
-
-      <div className="rounded-[15px] p-3 w-full mt-2 box--shadow bg-white">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="font-semibold">Pending Orders</h2>
-          <a
-            href={generateUrl(`/nourish-orders?`)}
-            className="text-[#009EB2] underline text-sm"
-          >
-            View All
-          </a>
-        </div>
-        <PendingOrderTable
-          setOrders={setOrders}
-          orders={orders}
-          fetchOrders={fetchPendingOrdersData}
-        />
-      </div>
+      {/* Calender View */}
+      <RecoveryCalendarView clubId={clubFilter?.value} />
+      {/* Calender View end */}
     </div>
   );
 };

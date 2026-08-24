@@ -72,7 +72,7 @@ const validationSchema = Yup.object({
   .required("Email is required"),
   // company_name: Yup.string().required("Company is required"),
   pincode: Yup.string().required("Pincode is required"),
-  company_name: Yup.string().required("Company Name is required"),
+  // company_name: Yup.string().required("Company Name is required"),
 });
 
 const ProfileDetails = ({ member }) => {
@@ -377,13 +377,16 @@ const ProfileDetails = ({ member }) => {
           profilePayload.append("mobile", "");
         }
 
-        // ✅ Handle company_id
         let companyId = null;
-        if (values.company_name !== null && !isNaN(values.company_name)) {
+        if (
+          values.company_name !== null &&
+          values.company_name !== undefined &&
+          values.company_name !== "" &&
+          !isNaN(values.company_name)
+        ) {
           companyId = Number(values.company_name);
         }
 
-        // ✅ Append company_id if valid
         if (companyId !== null) {
           profilePayload.append("company_id", companyId);
         }
@@ -1172,7 +1175,7 @@ const ProfileDetails = ({ member }) => {
               <div className="grid grid-cols-4 gap-3">
                 <div>
                   <label className="block text-sm font-medium text-black mb-2">
-                    Company<span className="text-red-500">*</span>
+                    Company
                   </label>
                   <Select
                     name="company_name"

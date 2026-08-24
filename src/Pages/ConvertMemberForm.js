@@ -147,7 +147,7 @@ const stepValidationSchemas = [
     }),
   }),
   Yup.object({
-    company_name: Yup.string().required("Company is required"),
+    // company_name: Yup.string().required("Company is required"),
     member_emergency_contact: Yup.array()
       .of(
         Yup.object({
@@ -2377,7 +2377,7 @@ const ConvertMemberForm = ({
                         </div>
                         <div>
                           <label className="mb-2 block">
-                            Company<span className="text-red-500">*</span>
+                            Company
                           </label>
                           <div className="relative">
                             <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
@@ -2513,12 +2513,12 @@ const ConvertMemberForm = ({
                             )}
                           </div>
 
-                          {formik.errors?.company_name &&
+                          {/* {formik.errors?.company_name &&
                             formik.touched?.company_name && (
                               <div className="text-red-500 text-sm">
                                 {formik.errors.company_name}
                               </div>
-                            )}
+                            )} */}
                         </div>
 
                         <div>
@@ -3483,14 +3483,16 @@ const ConvertMemberForm = ({
                     <>
                       <button
                         type="button"
+                        disabled={formik.isSubmitting || Number(formik.values.amount_pay) === 0}
                         onClick={() => handleFinalSubmit("ONLINE")}
-                        className="px-4 py-2 bg-black text-white font-semibold rounded max-w-[150px] w-full"
+                        className="px-4 py-2 bg-black text-white font-semibold rounded max-w-[150px] w-full disabled:bg-gray-400 disabled:text-gray-200 disabled:cursor-not-allowed"
                       >
                         Pay Online
                       </button>
 
                       <button
                         type="button"
+                        disabled={formik.isSubmitting}
                         onClick={() => handleFinalSubmit("OFFLINE")}
                         className="px-4 py-2 border bg-white text-black font-semibold rounded max-w-[150px] w-full"
                       >

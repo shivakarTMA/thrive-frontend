@@ -71,6 +71,7 @@ const ProductsSold = (props) => {
   const [appliedFilters, setAppliedFilters] = useState({
     bill_type: null,
     service_type: null,
+    service_name: null,
     package_type: null,
     lead_source: null,
     lead_owner_id: null,
@@ -82,6 +83,7 @@ const ProductsSold = (props) => {
     initialValues: {
       filterBillType: null,
       filterServiceType: null,
+      filterServiceName: null,
       filterPackageType: null,
       filterLeadSource: null,
       filterLeadOwner: null,
@@ -145,6 +147,9 @@ const ProductsSold = (props) => {
     if (filters.service_type) {
       params.set("service_type", filters.service_type);
     }
+    if (filters.service_name) {
+      params.set("service_name", filters.service_name);
+    }
     if (filters.package_type) {
       params.set("package_type", filters.package_type);
     }
@@ -186,6 +191,8 @@ const ProductsSold = (props) => {
       if (appliedFilters.bill_type) params.bill_type = appliedFilters.bill_type;
       if (appliedFilters.service_type)
         params.service_type = appliedFilters.service_type;
+      if (appliedFilters.service_name)
+        params.service_name = appliedFilters.service_name;
       if (appliedFilters.package_type)
         params.package_type = appliedFilters.package_type;
       if (appliedFilters.lead_source)
@@ -198,6 +205,13 @@ const ProductsSold = (props) => {
       // Only override package_type when API is hit
       if (userRole === "F_AND_B") {
         params.package_type = "PRODUCT";
+      }
+
+      if (userRole === "RECOVERY") {
+        params.package_type = "PACKAGE";
+      }
+      if (userRole === "RECOVERY") {
+        params.service_type = "RECOVERY";
       }
 
       console.log("🔍 API Request Params:", params);
@@ -280,6 +294,7 @@ const ProductsSold = (props) => {
     const urlFilters = {
       bill_type: params.get("bill_type") || null,
       service_type: params.get("service_type") || null,
+      service_name: params.get("service_name") || null,
       package_type: params.get("package_type") || null,
       lead_owner_id: params.get("lead_owner_id")
       ? Number(params.get("lead_owner_id"))
@@ -292,6 +307,7 @@ const ProductsSold = (props) => {
     formik.setValues({
       filterBillType: urlFilters.bill_type,
       filterServiceType: urlFilters.service_type,
+      filterServiceName: urlFilters.service_name,
       filterPackageType: urlFilters.package_type,
       filterLeadSource: urlFilters.lead_source,
       filterLeadOwner: urlFilters.lead_owner_id,
@@ -323,6 +339,7 @@ const ProductsSold = (props) => {
     clubFilter?.value,
     appliedFilters.bill_type,
     appliedFilters.service_type,
+    appliedFilters.service_name,
     appliedFilters.package_type,
     appliedFilters.lead_owner_id,
     appliedFilters.lead_source,
@@ -502,6 +519,13 @@ const ProductsSold = (props) => {
         params.club_id = clubFilter.value;
       }
 
+      if (userRole === "RECOVERY") {
+        params.package_type = "PACKAGE";
+      }
+      if (userRole === "RECOVERY") {
+        params.service_type = "RECOVERY";
+      }
+
       // 🎯 Applied filters
       Object.entries(appliedFilters).forEach(([key, value]) => {
         if (value !== null && value !== undefined) {
@@ -632,14 +656,16 @@ const ProductsSold = (props) => {
           </div>
           {!ALLOWED_ROLES.includes(userRole) && (
             <>
-            <div className="max-w-[150px] w-full">
-              <button
-                onClick={() => setExportShowModal(true)}
-                className={`ms-auto w-full px-4 py-2 rounded flex items-center gap-2 bg-black text-white hover:bg-gray-800`}
-                >
-                <LuDownload /> <span>Prologic Export</span>
-              </button>
-            </div>
+            {(userRole !== "RECOVERY" && userRole !== "F_AND_B") && (
+              <div className="max-w-[150px] w-full">
+                <button
+                  onClick={() => setExportShowModal(true)}
+                  className={`ms-auto w-full px-4 py-2 rounded flex items-center gap-2 bg-black text-white hover:bg-gray-800`}
+                  >
+                  <LuDownload /> <span>Prologic Export</span>
+                </button>
+              </div>
+            )}
             <div className="max-w-[140px] w-full">
               <button
                 onClick={handleExportProductsSold}
@@ -659,80 +685,82 @@ const ProductsSold = (props) => {
         </div>
 
         {/* Dynamic Statistics */}
-        <div className="grid grid-cols-6 gap-3 mb-5 p-3 border bg-white shodow--box rounded-[10px]">
-          {stats?.memberships !== undefined && (
-            <div className="border rounded-[5px] overflow-hidden w-full">
-              <div className="flex gap-1 justify-center bg-[#F1F1F1] p-4 py-3">
-                <div className="text-lg font-bold">Memberships</div>
+        {(userRole !== "RECOVERY" && userRole !== "F_AND_B") && (
+          <div className="grid grid-cols-6 gap-3 mb-5 p-3 border bg-white shodow--box rounded-[10px]">
+            {stats?.memberships !== undefined && (
+              <div className="border rounded-[5px] overflow-hidden w-full">
+                <div className="flex gap-1 justify-center bg-[#F1F1F1] p-4 py-3">
+                  <div className="text-lg font-bold">Memberships</div>
+                </div>
+                <div>
+                  <p className="text-3xl font-bold p-2 text-center py-5">
+                    {stats?.memberships}
+                  </p>
+                </div>
               </div>
-              <div>
-                <p className="text-3xl font-bold p-2 text-center py-5">
-                  {stats?.memberships}
-                </p>
+            )}
+            {stats?.personal_training !== undefined && (
+              <div className="border rounded-[5px] overflow-hidden w-full">
+                <div className="flex gap-1 justify-center bg-[#F1F1F1] p-4 py-3">
+                  <div className="text-lg font-bold">Personal Training</div>
+                </div>
+                <div>
+                  <p className="text-3xl font-bold p-2 text-center py-5">
+                    {stats?.personal_training}
+                  </p>
+                </div>
               </div>
-            </div>
-          )}
-          {stats?.personal_training !== undefined && (
-            <div className="border rounded-[5px] overflow-hidden w-full">
-              <div className="flex gap-1 justify-center bg-[#F1F1F1] p-4 py-3">
-                <div className="text-lg font-bold">Personal Training</div>
+            )}
+            {stats?.recovery !== undefined && (
+              <div className="border rounded-[5px] overflow-hidden w-full">
+                <div className="flex gap-1 justify-center bg-[#F1F1F1] p-4 py-3">
+                  <div className="text-lg font-bold">Recovery</div>
+                </div>
+                <div>
+                  <p className="text-3xl font-bold p-2 text-center py-5">
+                    {stats?.recovery}
+                  </p>
+                </div>
               </div>
-              <div>
-                <p className="text-3xl font-bold p-2 text-center py-5">
-                  {stats?.personal_training}
-                </p>
+            )}
+            {stats?.products !== undefined && (
+              <div className="border rounded-[5px] overflow-hidden w-full">
+                <div className="flex gap-1 justify-center bg-[#F1F1F1] p-4 py-3">
+                  <div className="text-lg font-bold">Nourish</div>
+                </div>
+                <div>
+                  <p className="text-3xl font-bold p-2 text-center py-5">
+                    {stats?.products}
+                  </p>
+                </div>
               </div>
-            </div>
-          )}
-          {stats?.recovery !== undefined && (
-            <div className="border rounded-[5px] overflow-hidden w-full">
-              <div className="flex gap-1 justify-center bg-[#F1F1F1] p-4 py-3">
-                <div className="text-lg font-bold">Recovery</div>
+            )}
+            {stats?.pilates !== undefined && (
+              <div className="border rounded-[5px] overflow-hidden w-full">
+                <div className="flex gap-1 justify-center bg-[#F1F1F1] p-4 py-3">
+                  <div className="text-lg font-bold">Pilates</div>
+                </div>
+                <div>
+                  <p className="text-3xl font-bold p-2 text-center py-5">
+                    {stats?.pilates}
+                  </p>
+                </div>
               </div>
-              <div>
-                <p className="text-3xl font-bold p-2 text-center py-5">
-                  {stats?.recovery}
-                </p>
+            )}
+            {stats?.group_class_count !== undefined && (
+              <div className="border rounded-[5px] overflow-hidden w-full">
+                <div className="flex gap-1 justify-center bg-[#F1F1F1] p-4 py-3">
+                  <div className="text-lg font-bold">Group Classes</div>
+                </div>
+                <div>
+                  <p className="text-3xl font-bold p-2 text-center py-5">
+                    {stats?.group_class_count}
+                  </p>
+                </div>
               </div>
-            </div>
-          )}
-          {stats?.products !== undefined && (
-            <div className="border rounded-[5px] overflow-hidden w-full">
-              <div className="flex gap-1 justify-center bg-[#F1F1F1] p-4 py-3">
-                <div className="text-lg font-bold">Nourish</div>
-              </div>
-              <div>
-                <p className="text-3xl font-bold p-2 text-center py-5">
-                  {stats?.products}
-                </p>
-              </div>
-            </div>
-          )}
-          {stats?.pilates !== undefined && (
-            <div className="border rounded-[5px] overflow-hidden w-full">
-              <div className="flex gap-1 justify-center bg-[#F1F1F1] p-4 py-3">
-                <div className="text-lg font-bold">Pilates</div>
-              </div>
-              <div>
-                <p className="text-3xl font-bold p-2 text-center py-5">
-                  {stats?.pilates}
-                </p>
-              </div>
-            </div>
-          )}
-          {stats?.group_class_count !== undefined && (
-            <div className="border rounded-[5px] overflow-hidden w-full">
-              <div className="flex gap-1 justify-center bg-[#F1F1F1] p-4 py-3">
-                <div className="text-lg font-bold">Group Classes</div>
-              </div>
-              <div>
-                <p className="text-3xl font-bold p-2 text-center py-5">
-                  {stats?.group_class_count}
-                </p>
-              </div>
-            </div>
-          )}
-        </div>
+            )}
+          </div>
+        )}
 
         <div className="w-full p-3 border bg-white shodow--box rounded-[10px]">
           <div className="flex items-start gap-3 justify-between w-full mb-3 border-b border-b-[#D4D4D4] pb-3">
@@ -743,6 +771,7 @@ const ProductsSold = (props) => {
                 clubId={clubFilter?.value}
                 filterBillType={formik.values.filterBillType}
                 filterServiceType={formik.values.filterServiceType}
+                filterServiceName={formik.values.filterServiceName}
                 filterPackageType={formik.values.filterPackageType}
                 filterLeadSource={formik.values.filterLeadSource}
                 filterLeadOwner={formik.values.filterLeadOwner}
@@ -764,6 +793,7 @@ const ProductsSold = (props) => {
                   <tr>
                     {/* <th className="px-2 py-4 min-w-[50px]">S.No.</th> */}
                     <th className="px-2 py-4 min-w-[120px]">Purchase date</th>
+                    <th className="px-2 py-4 min-w-[120px]">Order ID</th>
                     <th className="px-2 py-4 min-w-[90px]">Bill Type</th>
                     <th className="px-2 py-4 min-w-[150px]">Club Name</th>
                     <th className="px-2 py-4 min-w-[120px]">Member ID</th>
@@ -799,6 +829,9 @@ const ProductsSold = (props) => {
                         {/* <td className="px-2 py-4">{row?.serialNumber}</td> */}
                         <td className="px-2 py-4">
                           {formatAutoDate(row?.purchase_date)}
+                        </td>
+                        <td className="px-2 py-4">
+                          {row?.order_no}
                         </td>
                         <td className="px-2 py-4">
                           {row?.bill_type ? formatText(row?.bill_type) : "--"}

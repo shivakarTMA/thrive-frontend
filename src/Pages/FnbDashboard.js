@@ -305,71 +305,79 @@ const FnbDashboard = () => {
 
 
       <div className="flex gap-3">
-        <div className="rounded-[15px] p-3 box--shadow bg-white w-[100%]">
-          <div className="flex gap-2 w-full mb-4">
-            <div className="max-w-[180px] w-full">
-              <Select
-                placeholder="Date Filter"
-                options={dateFilterOptions}
-                value={dateFilter}
-                onChange={(selected) => {
-                  setDateFilter(selected);
-                  if (selected?.value !== "custom") {
-                    setCustomFrom(null);
-                    setCustomTo(null);
-                  }
-                }}
-                // isClearable
-                styles={customStyles}
-                className="w-full"
-              />
+        <div className="w-[100%]">
+          <div className="flex gap-2 justify-between items-end">
+            <div className="flex gap-2 flex-1">
+              <div className="max-w-[180px] w-full">
+                <Select
+                  placeholder="Date Filter"
+                  options={dateFilterOptions}
+                  value={dateFilter}
+                  onChange={(selected) => {
+                    setDateFilter(selected);
+                    if (selected?.value !== "custom") {
+                      setCustomFrom(null);
+                      setCustomTo(null);
+                    }
+                  }}
+                  // isClearable
+                  styles={customStyles}
+                  className="w-full"
+                />
+              </div>
+
+              {dateFilter?.value === "custom" && (
+                <>
+                  <div className="custom--date dob-format flex-1 max-w-[180px] w-full">
+                    <span className="absolute z-[1] mt-[11px] ml-[15px]">
+                      <FaCalendarDays />
+                    </span>
+                    <DatePicker
+                      selected={customFrom}
+                      onChange={(date) => {
+                        setCustomFrom(date);
+                        setCustomTo(null); // ✅ reset To Date if From Date changes
+                      }}
+                      placeholderText="From Date"
+                      className="custom--input w-full input--icon"
+                      minDate={subYears(new Date(), 20)}
+                      maxDate={addYears(new Date(), 0)}
+                      dateFormat="dd-MM-yyyy"
+                      showMonthDropdown
+                      showYearDropdown
+                      dropdownMode="select"
+                    />
+                  </div>
+                  <div className="custom--date dob-format flex-1 max-w-[180px] w-full">
+                    <span className="absolute z-[1] mt-[11px] ml-[15px]">
+                      <FaCalendarDays />
+                    </span>
+                    <DatePicker
+                      selected={customTo}
+                      onChange={(date) => setCustomTo(date)}
+                      placeholderText="To Date"
+                      className="custom--input w-full input--icon"
+                      minDate={customFrom || subYears(new Date(), 20)}
+                      maxDate={addYears(new Date(), 0)}
+                      showMonthDropdown
+                      showYearDropdown
+                      dropdownMode="select"
+                      dateFormat="dd-MM-yyyy"
+                      disabled={!customFrom}
+                    />
+                  </div>
+                </>
+              )}
             </div>
 
-            {dateFilter?.value === "custom" && (
-              <>
-                <div className="custom--date dob-format flex-1 max-w-[180px] w-full">
-                  <span className="absolute z-[1] mt-[11px] ml-[15px]">
-                    <FaCalendarDays />
-                  </span>
-                  <DatePicker
-                    selected={customFrom}
-                    onChange={(date) => {
-                      setCustomFrom(date);
-                      setCustomTo(null); // ✅ reset To Date if From Date changes
-                    }}
-                    placeholderText="From Date"
-                    className="custom--input w-full input--icon"
-                    minDate={subYears(new Date(), 20)}
-                    maxDate={addYears(new Date(), 0)}
-                    dateFormat="dd-MM-yyyy"
-                    showMonthDropdown
-                    showYearDropdown
-                    dropdownMode="select"
-                  />
-                </div>
-                <div className="custom--date dob-format flex-1 max-w-[180px] w-full">
-                  <span className="absolute z-[1] mt-[11px] ml-[15px]">
-                    <FaCalendarDays />
-                  </span>
-                  <DatePicker
-                    selected={customTo}
-                    onChange={(date) => setCustomTo(date)}
-                    placeholderText="To Date"
-                    className="custom--input w-full input--icon"
-                    minDate={customFrom || subYears(new Date(), 20)}
-                    maxDate={addYears(new Date(), 0)}
-                    showMonthDropdown
-                    showYearDropdown
-                    dropdownMode="select"
-                    dateFormat="dd-MM-yyyy"
-                    disabled={!customFrom}
-                  />
-                </div>
-              </>
-            )}
+            <div className="rounded-[10px] p-3 w-fit box--shadow bg-white">
+              <div className="flex justify-between items-center">
+                <h2 className="font-semibold">Total Sales: <Link to={generateUrl(`/reports/all-orders?package_type=PRODUCT`)}>₹{formatIndianNumber(dashboardData?.summary_cards?.total_sales?.breakup?.products)}</Link></h2>
+              </div>
+            </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-3">
+          {/* <div className="grid grid-cols-3 gap-3">
             <SalesSummary
               icon={totalSalesIcon}
               title="Total Sales"
@@ -431,7 +439,7 @@ const FnbDashboard = () => {
                   : []),
               ]}
             /> 
-          </div>
+          </div> */}
         </div>
       </div>
 

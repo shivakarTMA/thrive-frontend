@@ -35,6 +35,7 @@ const payModeTypeOptions = [
 export default function ProductSoldPanel({
   filterBillType,
   filterServiceType,
+  filterServiceName,
   filterPackageType,
   filterLeadSource,
   filterLeadOwner,
@@ -50,6 +51,10 @@ export default function ProductSoldPanel({
   const panelRef = useRef(null);
   const [staffList, setStaffList] = useState([]);
   const [serviceList, setServiceList] = useState([]);
+  const [recoveryServiceList, setRecoveryServiceList] = useState([]);
+
+  const isFirstClubRun = useRef(true);
+  const isFirstServiceTypeRun = useRef(true);
 
   // Fetch staff list from API
   const fetchStaffList = async (clubId) => {
@@ -106,7 +111,7 @@ export default function ProductSoldPanel({
 
       // ✅ Only ACTIVE + PRODUCT services
       const activeProductServices = data.filter(
-        (item) => item.status === "ACTIVE" && item.service_type !== "PRODUCT"
+        (item) => item.status === "ACTIVE" && item.enable === true && item.service_type !== "PRODUCT"
       );
 
       setServiceList(activeProductServices);
@@ -115,16 +120,72 @@ export default function ProductSoldPanel({
     }
   };
 
+    const fetchRecoveryService = async (
+    club_id = null,
+    service_type = null
+  ) => {
+    try {
+      const params = {};
+
+      if (club_id) {
+        params.club_id = club_id;
+      }
+
+      if (service_type) {
+        params.service_name = service_type;
+      }
+
+      const res = await authAxios().get(
+        "/package/list?booking_type=PAID",
+        { params }
+      );
+
+      const data = res.data?.data || [];
+
+      const activeAndExpiredServices = data.filter(
+        (item) =>
+          ["ACTIVE", "EXPIRED"].includes(item.status) &&
+          item.service_type !== "PRODUCT"
+      );
+
+      setRecoveryServiceList(activeAndExpiredServices);
+    } catch (err) {
+      console.error(err);
+      setRecoveryServiceList([]);
+    }
+  };
+
   useEffect(() => {
     if (clubId) {
       fetchStaffList(clubId);
       fetchService(clubId);
 
-      // Reset dependent filters
-      setFilterValue("filterServiceType", null);
-      setFilterValue("filterLeadOwner", null);
+      if (isFirstClubRun.current) {
+        // First run (e.g. page load from URL) — don't clear filters that came from the URL
+        isFirstClubRun.current = false;
+      } else {
+        // Reset dependent filters only on real, user-driven club changes
+        setFilterValue("filterServiceType", null);
+        setFilterValue("filterLeadOwner", null);
+      }
     }
   }, [clubId]);
+
+  useEffect(() => {
+    if (clubId && filterServiceType) {
+      fetchRecoveryService(clubId, filterServiceType);
+
+      if (isFirstServiceTypeRun.current) {
+        // First meaningful run (e.g. page load from URL) — don't clear service_name from the URL
+        isFirstServiceTypeRun.current = false;
+      } else {
+        // Service type changed by the user, so old service name is no longer valid
+        setFilterValue("filterServiceName", null);
+      }
+    } else {
+      setRecoveryServiceList([]);
+    }
+  }, [clubId, filterServiceType]);
 
   const dispatch = useDispatch();
   const { lists, loading } = useSelector((state) => state.optionList);
@@ -160,10 +221,17 @@ export default function ProductSoldPanel({
     value: item.name,
   }));
 
+  const recoveryServiceOptions = recoveryServiceList.map((item) => ({
+    label: item.name,
+    value: item.name,
+  }));
+
   const filteredPackageTypeOptions =
   userRole === "F_AND_B"
     ? packageTypeOptions.filter((option) => option.value === "PRODUCT")
-    : packageTypeOptions;
+    : userRole === "RECOVERY"
+      ? packageTypeOptions.filter((option) => option.value === "PACKAGE")
+      : packageTypeOptions;
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -195,6 +263,7 @@ export default function ProductSoldPanel({
     setAppliedFilters({
       bill_type: formik.values.filterBillType,
       service_type: formik.values.filterServiceType,
+      service_name: formik.values.filterServiceName,
       package_type: formik.values.filterPackageType,
       lead_source: formik.values.filterLeadSource,
       lead_owner_id: formik.values.filterLeadOwner,
@@ -209,6 +278,7 @@ export default function ProductSoldPanel({
     const keyMap = {
       bill_type: "filterBillType",
       service_type: "filterServiceType",
+      service_name: "filterServiceName",
       package_type: "filterPackageType",
       lead_source: "filterLeadSource",
       lead_owner_id: "filterLeadOwner",
@@ -236,6 +306,10 @@ export default function ProductSoldPanel({
     if (key === "service_type") {
       const service = serviceOptions.find((opt) => opt.value === value);
       return service ? service.label : value;
+    }
+    if (key === "service_name") {
+      const serviceName = recoveryServiceOptions.find((opt) => opt.value === value);
+      return serviceName ? serviceName.label : value;
     }
     if (key === "package_type") {
       const packageType = packageTypeOptions.find((opt) => opt.value === value);
@@ -280,6 +354,7 @@ export default function ProductSoldPanel({
           </div>
           <div className="p-4">
             <div className="grid grid-cols-2 gap-4 min-w-[500px]">
+              {userRole !== "F_AND_B" && (
               <div>
                 <label className="block mb-1 text-sm font-medium">
                   Bill Type
@@ -302,6 +377,7 @@ export default function ProductSoldPanel({
                   // isClearable
                 />
               </div>
+              )}
               <div>
                 <label className="block mb-1 text-sm font-medium">
                   Package Type
@@ -325,6 +401,7 @@ export default function ProductSoldPanel({
               </div>
 
               {filterPackageType === "PACKAGE" && (
+                <>
                 <div>
                   <label className="block mb-1 text-sm font-medium">
                     Service Type
@@ -346,6 +423,34 @@ export default function ProductSoldPanel({
                     styles={customStyles}
                   />
                 </div>
+                {(
+                  userRole === "ADMIN" || userRole === "RECOVERY"
+                ) && (
+                <div>
+                  <label className="block mb-1 text-sm font-medium">
+                    Service Name
+                  </label>
+                  <Select
+                    options={recoveryServiceOptions}
+                    value={
+                      recoveryServiceOptions.find(
+                        (opt) =>
+                          opt.value?.trim().toLowerCase() ===
+                          filterServiceName?.trim().toLowerCase()
+                      ) || null
+                    }
+                    onChange={(option) =>
+                      setFilterValue(
+                        "filterServiceName",
+                        option ? option.value : null
+                      )
+                    }
+                    placeholder="Select Service Name"
+                    styles={customStyles}
+                  />
+                </div>
+                )}
+                </>
               )}
 
               <div>

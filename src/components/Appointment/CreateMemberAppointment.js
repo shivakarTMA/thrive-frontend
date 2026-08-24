@@ -58,6 +58,7 @@ const CreateMemberAppointment = ({
     "ASS_CLUB_MANAGER",
     "FITNESS_MANAGER",
     "ASS_FITNESS_MANAGER",
+    "RECOVERY",
   ];
 
   const canCreateComplimentary = ALLOWED_COMPLEMENTARY_ROLES.includes(userRole);
@@ -112,15 +113,19 @@ const CreateMemberAppointment = ({
       );
       const data = res.data?.data || [];
 
+      // Keep only enabled packages
+      const enabledPackages = data.filter((item) => item.enable === true);
+
       // keep raw data around so we can read session_duration later
-      setPackageList(data);
+      setPackageList(enabledPackages);
 
       // Convert to react-select format
-      const formattedOptions = data.map((item) => ({
+      const formattedOptions = enabledPackages.map((item) => ({
         value: item.id, // what you want to store in Formik
         label: `${toCapitalizedCase(item.package_name)} - ${
           item.no_of_sessions
         } Sessions (${item.available_no_of_sessions} left)`, // what you want to show in dropdown
+        // isDisabled: item.enable === false,
       }));
       setMemberPurchasedServices(formattedOptions);
     } catch (err) {
@@ -175,7 +180,7 @@ const CreateMemberAppointment = ({
 
   const appointmentTypes = [
     ...(serviceList
-      ?.filter((item) => item.type !== "PRODUCT" && item.type !== "GROUP_CLASS")
+      ?.filter((item) => item.enable === true && item.type !== "PRODUCT" && item.type !== "GROUP_CLASS")
       .map((item) => ({
         label: item.name,
         value: item.id,

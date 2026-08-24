@@ -1153,6 +1153,7 @@ const ServiceCard = ({ details }) => {
           selectedLeadMember={details?.id}
           clubId={clubId}
           renewPlanService={renewPlanService}
+          memberProfile={true}
         />
       )}
 

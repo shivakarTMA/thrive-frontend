@@ -231,14 +231,6 @@ const KYCSubmission = ({ details, setLoading }) => {
   const handleEditDocuments = () => {
     setIsEditMode(true);
 
-    // Clear all existing documents
-    setDocuments({
-      aadharFront: null,
-      aadharBack: null,
-      passportPhoto: null,
-      corporateId: null,
-    });
-
     // Clear validation errors
     setErrors({});
   };

@@ -138,7 +138,7 @@ const WorkoutPlanList = () => {
                     userRole === "ADMIN") && (
                     <th className="px-2 py-4">Action</th>
                   )}
-                  {userRole === "MARKETING_MANAGER" && (
+                  {(userRole === "MARKETING_MANAGER" || userRole === "RECOVERY") && (
                     <th className="px-2 py-4">Action</th>
                   )}
                 </tr>
@@ -214,7 +214,7 @@ const WorkoutPlanList = () => {
                           </div>
                         </td>
                       )}
-                      {userRole === "MARKETING_MANAGER" && (
+                      {(userRole === "MARKETING_MANAGER" || userRole === "RECOVERY") && (
                         <td className="px-2 py-4">
                           <div className="flex gap-2 items-center">
                             <Tooltip

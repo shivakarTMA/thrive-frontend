@@ -574,6 +574,7 @@ const MembershipExpiryReport = (props) => {
           setSendPaymentModal={setSendPaymentModal}
           selectedLeadMember={selectedLeadMember}
           clubId={selectedLeadClub}
+          memberProfile={true}
         />
       )}
     </div>

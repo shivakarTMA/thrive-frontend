@@ -566,6 +566,7 @@ const ServiceExpiryReport = (props) => {
           setInvoiceModal={setInvoiceModal}
           selectedLeadMember={selectedLeadMember}
           clubId={selectedLeadClub}
+          memberProfile={true}
         />
       )}
     </div>

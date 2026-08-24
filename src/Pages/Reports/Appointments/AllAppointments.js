@@ -1,4 +1,3 @@
-// Import required libraries and components
 import React, { useEffect, useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -175,12 +174,6 @@ const AllAppointments = (props) => {
     if (filters.appointment_category) {
       params.set("appointment_category", filters.appointment_category);
     }
-    // if (filters.service_id) {
-    //   params.set("service_id", filters.service_id);
-    // }
-    // if (filters.service_name) {
-    //   params.set("service_name", filters.service_name);
-    // }
 
     navigate(`?${params.toString()}`, { replace: true });
   };
@@ -228,6 +221,10 @@ const AllAppointments = (props) => {
       }
 
       console.log("🔍 API Request Params:", params);
+
+      if (userRole === "RECOVERY") {
+        params.service_name = "RECOVERY";
+      }
 
       const res = await authAxios().get(
         "/appointment/fetch/list?appointment_type=SESSION",
@@ -291,18 +288,6 @@ const AllAppointments = (props) => {
 
     // Club filter - only set from URL if present, otherwise default to first club
     const clubId = params.get("club_id");
-    // if (clubId) {
-    //   const club = clubList.find((c) => c.id === Number(clubId));
-    //   if (club) {
-    //     setClubFilter({ label: club.name, value: club.id });
-    //   }
-    // } else {
-    //   // Set default club only on initial load
-    //   setClubFilter({
-    //     label: clubList[0].name,
-    //     value: clubList[0].id,
-    //   });
-    // }
     if (!clubFilter) {
       if (clubId) {
         const club = clubList.find((c) => c.id === Number(clubId));
@@ -605,6 +590,10 @@ const AllAppointments = (props) => {
       // 🏢 Club filter
       if (clubFilter?.value) {
         params.club_id = clubFilter.value;
+      }
+      
+      if (userRole === "RECOVERY") {
+        params.service_name = "RECOVERY";
       }
 
       // 🎯 Applied filters
@@ -911,6 +900,7 @@ const AllAppointments = (props) => {
                           userRole === "CLUB_MANAGER" ||
                           userRole === "ASS_CLUB_MANAGER" ||
                           userRole === "PROGRAM_SPECIALIST" ||
+                          userRole === "RECOVERY" ||
                           userRole === "ADMIN" ? (
                             <div className="max-w-[130px] w-full">
                               <Select

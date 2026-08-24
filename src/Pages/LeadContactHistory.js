@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { formatAutoDate, formatDateTimeLead, formatText } from "../Helper/helper";
 import { FaCircle } from "react-icons/fa";
 
-export default function LeadContactHistory({ handleEditLog, filteredData, userRole, editLog }) {
+export default function LeadContactHistory({ handleEditLog, filteredData, userRole, editLog, memberLeadCall }) {
   const [isExpanded, setIsExpanded] = useState(false);
 
   const toggleRemarks = () => {
@@ -189,14 +189,15 @@ export default function LeadContactHistory({ handleEditLog, filteredData, userRo
           userRole === "ADMIN") && (
         <div className="flex gap-2 items-center justify-between mt-2 w-full">
           {/* Update button */}
-          {filteredData?.status === "SCHEDULED" && (
-            <button
-              className="mt-3 bg-black text-white py-1 px-4 rounded-[5px] hover:bg-gray-800"
-              onClick={() => handleEditLog(filteredData)}
-            >
-              Update
-            </button>
-          )}
+          {memberLeadCall === true ? null : ( 
+            <> 
+            {filteredData?.status === "SCHEDULED" && ( 
+              <button className="mt-3 bg-black text-white py-1 px-4 rounded-[5px] hover:bg-gray-800" onClick={() => handleEditLog(filteredData)} >
+                 Update 
+              </button>
+             )} 
+             </> 
+            )}
 
           {filteredData?.updatedAt && (
             <p className="text-sm text-[#6F6F6F] flex gap-2 text-right w-full justify-end">

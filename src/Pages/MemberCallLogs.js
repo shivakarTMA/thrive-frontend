@@ -1004,6 +1004,7 @@ const MemberCallLogs = () => {
                     handleEditLog={setEditLog}
                     userRole={userRole}
                     editLog={editLog}
+                    memberLeadCall={true}
                   />
                 ))
               ) : (

@@ -621,7 +621,7 @@ const MemberList = (props) => {
   const getOptions = (member) => {
   // F_AND_B can only buy products
   if (userRole === "F_AND_B") {
-    if (hasProductServices && member?.is_subscribed === true) {
+    if (hasProductServices && (member?.upcoming_subscription_start_date !== null || member?.is_subscribed === true)) {
       return [
         {
           value: "products",
@@ -645,8 +645,7 @@ const MemberList = (props) => {
 
   if (
     hasProductServices &&
-    member?.upcoming_subscription_start_date === null &&
-    member?.is_subscribed === true
+    (member?.upcoming_subscription_start_date !== null || member?.is_subscribed === true)
   ) {
     options.push({
       value: "products",
@@ -701,6 +700,7 @@ const MemberList = (props) => {
     "ASS_CLUB_MANAGER",
     "FOH",
     "F_AND_B",
+    "RECOVERY",
     "FITNESS_MANAGER",
     "ASS_FITNESS_MANAGER",
     "TRAINER",
@@ -1032,8 +1032,23 @@ const hasMemberPermission = (permission) =>
                   {memberList.map((member, index) => (
                     <tr
                       key={member.id}
-                      className="group bg-white border-b relative hover:bg-gray-50"
-                      onMouseEnter={() => setHoveredRow(member.id)}
+                      className={`group border-b relative ${
+                        hoveredRow === member.id
+                          ? "bg-gray-50"
+                          : "bg-white"
+                      }`}
+                      onPointerMove={(e) => {
+                        if (e.pointerType !== "mouse") return;
+
+                        // Only activate when the pointer ACTUALLY moved.
+                        // Scrolling content underneath a stationary cursor does not count.
+                        if (e.movementX !== 0 || e.movementY !== 0) {
+                          setHoveredRow(member.id);
+                        }
+                      }}
+                      onClick={() => {
+                        setHoveredRow(member.id);
+                      }}
                     >
                       {(userRole === "CLUB_MANAGER" ||
                         userRole === "ASS_CLUB_MANAGER" ||
@@ -1197,6 +1212,7 @@ const hasMemberPermission = (permission) =>
                               userRole === "ASS_CLUB_MANAGER" ||
                               userRole === "FOH" || 
                               userRole === "F_AND_B" || 
+                              userRole === "RECOVERY" || 
                               userRole === "FITNESS_MANAGER" || 
                               userRole === "ASS_FITNESS_MANAGER" || 
                               userRole === "TRAINER" || 
@@ -1258,16 +1274,17 @@ const hasMemberPermission = (permission) =>
                                     content={
                                       member?.freeze_status === "FREEZED"
                                         ? "Your membership is currently frozen."
-                                        : member?.is_kyc === "YES"
-                                        ? "Buy"
-                                        : "KYC required to buy services"
+                                        : "Buy"
+                                        // : member?.is_kyc === "YES"
+                                        // ? "Buy"
+                                        // : "KYC required to buy services"
                                     }
                                     place="left"
                                   >
                                     
                                     <div
                                       className={`min-w-[30px] ${
-                                        member?.is_kyc === "YES" &&
+                                        // member?.is_kyc === "YES" &&
                                         member?.freeze_status !== "FREEZED"
                                           ? ""
                                           : "pointer-events-none opacity-50"

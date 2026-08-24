@@ -1488,9 +1488,9 @@ const CreateProductsInvoice = ({
                 <div className="flex gap-2 items-center justify-end flex-1">
                   <button
                     type="button"
-                    disabled={formik.isSubmitting}
+                    disabled={formik.isSubmitting || Number(formik.values.amount_pay) === 0}
                     onClick={() => handleFinalSubmit("ONLINE")}
-                    className="px-4 py-2 bg-black text-white font-semibold rounded max-w-[150px] w-full"
+                    className="px-4 py-2 bg-black text-white font-semibold rounded max-w-[150px] w-full disabled:bg-gray-400 disabled:text-gray-200 disabled:cursor-not-allowed"
                   >
                     Pay Online
                   </button>

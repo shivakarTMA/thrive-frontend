@@ -520,7 +520,7 @@ const CreateWorkoutplan = () => {
             <strong>Exercise</strong>: {exercise.name}
           </h3>
         </div>
-        {userRole !== "MARKETING_MANAGER" && (
+        {(userRole !== "MARKETING_MANAGER" && userRole !== "RECOVERY") && (
         <div className="flex gap-2">
           <button
             onClick={() => handleDeleteExercise(activeDayIndex, exercise)}
@@ -985,7 +985,7 @@ const CreateWorkoutplan = () => {
                 </div>
 
                 <div className="rounded p-0 mb-6">
-                  {userRole !== "MARKETING_MANAGER" && (
+                  {userRole !== "MARKETING_MANAGER" && userRole !== "RECOVERY" && (
                   <div
                     className={`flex items-center ${
                       data.days?.length === 1
@@ -1111,7 +1111,7 @@ const CreateWorkoutplan = () => {
                 </div>
               </>
             )}
-            {userRole !== "MARKETING_MANAGER" && (
+            {(userRole !== "MARKETING_MANAGER" && userRole !== "RECOVERY") && (
             <div className="flex gap-3 mt-6">
               <button
                 type="button"

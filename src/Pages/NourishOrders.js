@@ -308,7 +308,7 @@ const NourishOrders = (props) => {
 
       link.href = url;
 
-      link.setAttribute("download", "all-orders.xlsx");
+      link.setAttribute("download", "nourish-orders.xlsx");
 
       document.body.appendChild(link);
 
@@ -318,11 +318,11 @@ const NourishOrders = (props) => {
 
       window.URL.revokeObjectURL(url);
 
-      toast.success("All orders list downloaded successfully!");
+      toast.success("Nourish orders list downloaded successfully!");
     } catch (error) {
       console.error(error);
 
-      toast.error("Failed to download all orders list.");
+      toast.error("Failed to download nourish orders list.");
     } finally {
       setLoading(false);
     }

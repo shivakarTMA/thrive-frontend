@@ -216,6 +216,7 @@ const Appointments = ({ details }) => {
         </div>
         {(userRole === "FOH" ||
           userRole === "TRAINER" ||
+          userRole === "RECOVERY" ||
           userRole === "FITNESS_MANAGER" ||
           userRole === "ASS_FITNESS_MANAGER" ||
           userRole === "CLUB_MANAGER" ||
