@@ -301,9 +301,9 @@ const Topbar = ({
               <img src={ToggleMenu} className="cursor-pointer w-8" />
             </div>
 
-            <div ref={searchRef} className="search--topbar relative w-fit">
+            <div ref={searchRef} className="search--topbar relative w-full">
               <form onSubmit={handleSubmit} className="flex items-center gap-2">
-                <div className="w-[350px]">
+                <div className="max-w-[350px] w-full">
                   <input
                     type="text"
                     value={searchItem}
@@ -325,7 +325,7 @@ const Topbar = ({
                 filteredUsers?.members?.length > 0) && (
                 <div
                   ref={dropdownRef}
-                  className="absolute bg-white mt-1 w-full max-h-60 overflow-y-auto z-10 shadow-lg rounded min-w-[500px]"
+                  className="absolute bg-white mt-1 w-full max-h-60 overflow-y-auto z-10 shadow-lg rounded max-w-[500px]"
                 >
                   {filteredUsers?.members?.length > 0 && (
                     <div className="members-list">
@@ -467,6 +467,7 @@ const Topbar = ({
 
                 {(user?.role === "CLUB_MANAGER" ||
                   user?.role === "ASS_CLUB_MANAGER" ||
+                  user?.role === "ADMIN" ||
                   user?.role === "FITNESS_MANAGER" ||
                   user?.role === "ASS_FITNESS_MANAGER" ||
                   user?.role === "TRAINER" ||

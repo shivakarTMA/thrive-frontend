@@ -37,6 +37,7 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
   const { accessToken } = useSelector((state) => state.auth);
   const userType = useSelector((state) => state.auth?.user?.role);
   const { user } = useSelector((state) => state.auth);
+  const [isDesktop, setIsDesktop] = useState(false);
 
   const [dropdownToggles, setDropdownToggles] = useState({});
   const [profileData, setUserClubs] = useState("");
@@ -67,6 +68,20 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
   const toggleMarketingReports = () =>
     setMarketingReportsOpen(!marketingReportsOpen);
 
+  useEffect(() => {
+    const handleResize = () => {
+      setIsDesktop(window.innerWidth >= 1200);
+    };
+
+    handleResize();
+
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
+
   const toggleMenu = (menuKey) => {
     setDropdownToggles((prev) => {
       const newState = {};
@@ -79,14 +94,27 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
       return newState;
     });
 
-    setToggleMenuBar(false);
+    // Only close the menu bar on screens 1200px and above
+    if (isDesktop) {
+      setToggleMenuBar(false);
+    }
   };
+
+  const handleCloseToggle = () =>{
+    setToggleMenuBar(false);
+  }
 
   useEffect(() => {
     if (toggleMenuBar) {
       setDropdownToggles({});
     }
   }, [toggleMenuBar]);
+  
+  useEffect(() => {
+    if (!isDesktop) {
+      setToggleMenuBar(false);
+    }
+  }, [location.pathname]);
 
   useEffect(() => {
     if (!user?.id) return;
@@ -154,6 +182,11 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
   }, [profileData]);
 
   return (
+    <>
+    {!isDesktop && toggleMenuBar && (
+      <div className="overlay--sidebar" onClick={handleCloseToggle}>
+      </div>
+    )}
     <div className={`sidebar ${toggleMenuBar ? "activetoggle" : ""}`}>
       <div className="sidebar-logo d-flex align-items-center">
         <Link to="/">
@@ -7948,6 +7981,7 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
         )}
       </div>
     </div>
+    </>
   );
 };
 

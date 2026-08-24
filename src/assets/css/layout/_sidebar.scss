@@ -7,6 +7,8 @@
 
   @media (max-width: 1200px) {
     width: 200px;
+    transform: translateX(-200px);
+    z-index: 999;
   }
 
   .sidebar-logo {
@@ -45,6 +47,9 @@
     }
     svg.downmenu {
       width: 15px;
+      @media(max-width:1200px){
+          margin-left: auto;
+      }
     }
   }
   .nav-link.active {
@@ -70,6 +75,10 @@
 
 .sidebar.activetoggle {
   width: 100px;
+  @media (max-width: 1200px) {
+    width: 200px;
+    transform: translateX(0px);
+  }
 }
 .sidebar--menu--list::-webkit-scrollbar {
   width: 5px;
@@ -96,6 +105,10 @@
 .sidebar.activetoggle .nav-link .menu--icon {
     font-size: 22px;
     margin-right: 0px;
+    @media (max-width: 1200px) {
+          margin-right: 5px;
+    font-size: 20px;
+    }
 }
 .sidebar.activetoggle .sidebar--menu--list {
     padding: 5px;
@@ -104,25 +117,44 @@
     display: none;
 }
 
-// .sidebar.activetoggle .nav-link .nav-text, .sidebar.activetoggle .nav-link .downmenu {
-//     display: none;
-// }
 
 .sidebar.activetoggle .nav-link {
     flex-direction: column;
     font-size: 11px;
     text-align: center;
+    @media (max-width: 1200px) {
+      flex-direction: row;
+        color: rgba(255, 255, 255, 0.75);
+        padding: 10px 5px;
+        display: flex;
+        align-items: center;
+        border-radius: 5px;
+        transition: 0.3s;
+        font-size: 14px;
+        min-height: auto;
+        justify-content: left;
+        margin-bottom: 0;
+    }
 }
 
 .sidebar.activetoggle .nav-link > .flex {
     flex-direction: column;
+    @media (max-width: 1200px) {
+      flex-direction: row;
+    }
 }
 
 @media (max-width: 1200px) {
-  .side--content--area {
-    width: calc(100% - 200px);
+  .side--content--area, .sidebar.activetoggle + .side--content--area {
+    width: 100%;
   }
-  .sidebar.activetoggle + .side--content--area{
-    width: calc(100% - 70px);
-  }
+}
+
+.overlay--sidebar {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    background: #000;
+    z-index: 2;
+    opacity: 0.5;
 }
