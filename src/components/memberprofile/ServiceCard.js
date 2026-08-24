@@ -717,6 +717,14 @@ const ServiceCard = ({ details }) => {
                       })
                       .filter((opt) => opt.value !== service?.assigned_staff_id);
 
+                      const canAssignTrainer =
+                      userRole === "CLUB_MANAGER" ||
+                      userRole === "ADMIN" ||
+                      userRole === "FOH" ||
+                      userRole === "FITNESS_MANAGER" ||
+                      (userRole === "RECOVERY" &&
+                        service?.service_name === "RECOVERY");
+
                     return (
                       <div
                         key={service?.id}
@@ -764,10 +772,7 @@ const ServiceCard = ({ details }) => {
                               </span>
                             </div>
 
-                            {(userRole === "CLUB_MANAGER" ||
-                              userRole === "ADMIN" ||
-                              userRole === "FOH" ||
-                              userRole === "FITNESS_MANAGER") && (
+                            {canAssignTrainer && (
                               <div className="w-fit min-w-[180px]">
                                 <Select
                                   options={filteredStaffOptions}
