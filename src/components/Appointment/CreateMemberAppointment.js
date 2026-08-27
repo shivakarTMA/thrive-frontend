@@ -145,6 +145,15 @@ const CreateMemberAppointment = ({
     return `${d}-${m}-${y}`;
   };
 
+  // Convert package end_date (yyyy-mm-dd) to JavaScript Date
+  const getPackageEndDate = (endDate) => {
+    if (!endDate) return null;
+
+    const [year, month, day] = endDate.split("-").map(Number);
+
+    return new Date(year, month - 1, day);
+  };
+
   // ===============================
   // FORMAT TIME
   // ===============================
@@ -312,9 +321,9 @@ const CreateMemberAppointment = ({
   // Reset logic based on appointment_category
   const handleReset = (category) => {
     setTrainerSlotsData([]);
+    slotsRequestIdRef.current += 1;
 
     formik.setValues({
-      ...formik.values,
       appointment_category: category,
       package_booking_id: null,
       service_id: null,
@@ -324,6 +333,33 @@ const CreateMemberAppointment = ({
       appointment_date: null,
       remarks: "",
     });
+
+    formik.setTouched({});
+  };
+
+  const resetAppointmentFields = (category, selectedField, selectedValue) => {
+    setTrainerSlotsData([]);
+
+    // Cancel/ignore any previous slots request
+    slotsRequestIdRef.current += 1;
+
+    formik.setValues({
+      appointment_category: category,
+
+      package_booking_id:
+        selectedField === "package_booking_id" ? selectedValue : null,
+
+      service_id:
+        selectedField === "service_id" ? selectedValue : null,
+
+      trainer_id: null,
+      appointment_date_only: null,
+      appointment_time: null,
+      appointment_date: null,
+      remarks: "",
+    });
+
+    formik.setTouched({});
   };
 
   // ===============================
@@ -349,9 +385,45 @@ const CreateMemberAppointment = ({
 
   // react-datepicker calls this per rendered day; only dates present in
   // the API response (regardless of their slots) are selectable.
+  // const filterAvailableDate = (date) => {
+  //   const dateStr = formatDateForApi(date);
+  //   return availableDatesSet.has(dateStr);
+  // };
   const filterAvailableDate = (date) => {
     const dateStr = formatDateForApi(date);
-    return availableDatesSet.has(dateStr);
+
+    // 1. Date must be available from trainer slots API
+    if (!availableDatesSet.has(dateStr)) {
+      return false;
+    }
+
+    // 2. Package end date applies only to Service Appointment
+    if (formik.values.appointment_category !== "service") {
+      return true;
+    }
+
+    // 3. Find selected package
+    const selectedPackage = packageList.find(
+      (p) => p.id === formik.values.package_booking_id
+    );
+
+    // No package selected yet
+    if (!selectedPackage?.end_date) {
+      return true;
+    }
+
+    // 4. Convert package end_date to Date
+    const packageEndDate = getPackageEndDate(selectedPackage.end_date);
+
+    // 5. Remove time from selected date
+    const selectedDate = new Date(
+      date.getFullYear(),
+      date.getMonth(),
+      date.getDate()
+    );
+
+    // 6. Allow dates only up to package end_date
+    return selectedDate <= packageEndDate;
   };
 
   // Selected day's slot data (from new API response)
@@ -630,14 +702,13 @@ const CreateMemberAppointment = ({
                         option.value === formik.values.package_booking_id,
                     )}
                     onChange={(selectedOption) => {
-                      formik.setFieldValue(
+                      const packageId = selectedOption?.value || null;
+
+                      resetAppointmentFields(
+                        "service",
                         "package_booking_id",
-                        selectedOption?.value,
+                        packageId
                       );
-                      // duration changes with package -> slots must be recomputed
-                      formik.setFieldValue("appointment_date_only", null);
-                      formik.setFieldValue("appointment_time", null);
-                      formik.setFieldValue("appointment_date", null);
                     }}
                     options={memberPurchasedServices}
                     styles={customStyles}
@@ -660,12 +731,15 @@ const CreateMemberAppointment = ({
                     value={appointmentTypes.find(
                       (option) => option.value === formik.values.service_id,
                     )}
-                    onChange={(selectedOption) =>
-                      formik.setFieldValue(
+                    onChange={(selectedOption) => {
+                      const serviceId = selectedOption?.value || null;
+
+                      resetAppointmentFields(
+                        "complementary",
                         "service_id",
-                        selectedOption?.value || null,
-                      )
-                    }
+                        serviceId
+                      );
+                    }}
                     options={appointmentTypes}
                     styles={customStyles}
                   />

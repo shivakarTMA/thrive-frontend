@@ -62,6 +62,7 @@ const AllAppointments = (props) => {
   // Reschedule date + time now tracked separately (like create-appointment flow)
   const [rescheduleDateOnly, setRescheduleDateOnly] = useState(null);
   const [rescheduleTime, setRescheduleTime] = useState(null);
+  const [bookingEndDate, setBookingEndDate] = useState(null);
 
   // Response from /staff/operating/hours/trainer/slots
   const [trainerSlotsData, setTrainerSlotsData] = useState([]);
@@ -366,6 +367,7 @@ const AllAppointments = (props) => {
       setPendingRow(row);
       setSelectedTrainerId(row.assigned_staff_id);
       setSelectedClubId(row.club_id);
+      setBookingEndDate(row.package_booking_end_date);
 
       // Prefill with the existing slot; the trainer-slots fetch (below)
       // will validate/refresh what's actually still available.
@@ -377,6 +379,7 @@ const AllAppointments = (props) => {
       setSelectedClubId(null);
       setRescheduleDateOnly(null);
       setRescheduleTime(null);
+      setBookingEndDate(null);
       setTrainerSlotsData([]);
     }
 
@@ -1061,6 +1064,7 @@ const AllAppointments = (props) => {
                         }}
                         dateFormat="dd/MM/yyyy"
                         minDate={new Date()}
+                        maxDate={bookingEndDate ? new Date(bookingEndDate) : null}
                         filterDate={filterAvailableRescheduleDate}
                         onKeyDown={(e) => e.preventDefault()}
                         disabled={!selectedTrainerId}

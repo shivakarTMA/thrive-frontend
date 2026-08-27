@@ -130,6 +130,10 @@ const ServiceExpiryReport = (props) => {
         params.dateFilter = dateFilter.value;
       }
 
+      if (userRole === "RECOVERY") {
+        params.service_type = "RECOVERY";
+      }
+
       const res = await authAxios().get("/report/service/expiry/list", {
         params,
       });
@@ -251,6 +255,10 @@ const ServiceExpiryReport = (props) => {
       // Club filter
       if (clubFilter) {
         params.club_id = clubFilter.value;
+      }
+
+      if (userRole === "RECOVERY") {
+        params.service_type = "RECOVERY";
       }
 
       console.log("📥 Download Params:", params);

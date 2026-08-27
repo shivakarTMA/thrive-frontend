@@ -224,7 +224,7 @@ const ServiceCard = ({ details }) => {
 
       await authAxios().put("/member/assign/trainer", payload);
 
-      toast.success("Trainer assigned successfully");
+      toast.success("Assigned successfully");
 
       // ✅ clear select value after success
       setTrainerSelections((prev) => ({
@@ -344,12 +344,14 @@ const ServiceCard = ({ details }) => {
     trainerName,
     packageBookingId,
     hasTrainer,
+    serviceName,
   ) => {
     setSelectedTrainerData({
       trainerId,
       trainerName,
       packageBookingId,
       hasTrainer,
+      serviceName,
     });
     setConfirmModal(true);
   };
@@ -793,6 +795,7 @@ const ServiceCard = ({ details }) => {
                                       selectedOption.label,
                                       service?.id,
                                       !!service?.assigned_staff_name,
+                                      service?.service_name,
                                     );
                                   }}
                                   styles={{
@@ -1198,8 +1201,8 @@ const ServiceCard = ({ details }) => {
           <div className="bg-white p-6 rounded shadow-lg text-center max-w-sm w-full">
             <p className="mb-2 text-lg font-semibold">
               {selectedTrainerData?.hasTrainer
-                ? "Change Trainer"
-                : "Assign Trainer"}
+                ? selectedTrainerData?.serviceName === "RECOVERY" ? "Change Recovery" : "Change Trainer"
+                : selectedTrainerData?.serviceName === "RECOVERY" ? "Assign Recovery" : "Assign Trainer"}
             </p>
             <p className="mb-4 text-sm text-gray-600">
               {selectedTrainerData?.hasTrainer

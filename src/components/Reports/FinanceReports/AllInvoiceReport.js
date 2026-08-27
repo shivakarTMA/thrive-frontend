@@ -301,16 +301,16 @@ const AllInvoiceReport = (props) => {
                 <th className="px-2 py-4 min-w-[120px]">company</th>
                 <th className="px-2 py-4 min-w-[130px]">bill no</th>
              
-                <th className="px-2 py-4 min-w-[120px]">paid invoice</th>
+                {/* <th className="px-2 py-4 min-w-[120px]">paid invoice</th>
                 <th className="px-2 py-4 min-w-[170px]">
                   cancelled paid invoice
-                </th>
+                </th> */}
                 <th className="px-2 py-4 min-w-[200px]">description service</th>
                 <th className="px-2 py-4 min-w-[120px]">start date</th>
                 <th className="px-2 py-4 min-w-[120px]">end date</th>
-                <th className="px-2 py-4 min-w-[120px]">pt name</th>
+                {/* <th className="px-2 py-4 min-w-[120px]">pt name</th> */}
                 <th className="px-2 py-4 min-w-[120px]">sales rep name</th>
-                <th className="px-2 py-4 min-w-[120px]">general trainer</th>
+                {/* <th className="px-2 py-4 min-w-[120px]">general trainer</th> */}
                 <th className="px-2 py-4 min-w-[100px]">created by</th>
                 <th className="px-2 py-4 min-w-[80px]">amount</th>
                 <th className="px-2 py-4 min-w-[80px]">cgst</th>
@@ -366,8 +366,8 @@ const AllInvoiceReport = (props) => {
                     </td>
                     <td className="px-2 py-4">{row.invoice_no ? row.invoice_no : "--"}</td>
            
-                    <td className="px-2 py-4">{row.paidInvoice ? row.paidInvoice : "--"}</td>
-                    <td className="px-2 py-4">{row.cancelledPaidInvoice ? row.cancelledPaidInvoice : "--"}</td>
+                    {/* <td className="px-2 py-4">{row.paidInvoice ? row.paidInvoice : "--"}</td>
+                    <td className="px-2 py-4">{row.cancelledPaidInvoice ? row.cancelledPaidInvoice : "--"}</td> */}
 
                     <td className="px-2 py-4">{row.service_name ? row.service_name : "--"}</td>
                     <td className="px-2 py-4">
@@ -376,15 +376,15 @@ const AllInvoiceReport = (props) => {
                     <td className="px-2 py-4">
                       {formatAutoDate(row.end_date)}
                     </td>
-                    <td className="px-2 py-4">
+                    {/* <td className="px-2 py-4">
                       {row.pt_name ? row.pt_name : "--"}
-                    </td>
+                    </td> */}
                     <td className="px-2 py-4">
                       {row.sales_rep_name ? row.sales_rep_name : "--"}
                     </td>
-                    <td className="px-2 py-4">
+                    {/* <td className="px-2 py-4">
                       {row.gt_name ? row.gt_name : "--"}
-                    </td>
+                    </td> */}
                     <td className="px-2 py-4">
                       {row.createdBy ? row.createdBy : "--"}
                     </td>

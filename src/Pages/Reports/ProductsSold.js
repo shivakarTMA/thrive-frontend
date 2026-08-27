@@ -452,11 +452,6 @@ const ProductsSold = (props) => {
       const blob = new Blob([response.data]);
       const link = document.createElement("a");
 
-      // Club code mapping
-      // const clubCodeMap = {
-      //   1: "DICCL",
-      //   4: "DCCDL",
-      // };
       const selectedClub = clubOptions.find(
         (club) => club.value === clubIdExport
       );
