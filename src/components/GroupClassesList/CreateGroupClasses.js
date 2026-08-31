@@ -36,7 +36,7 @@ const featureType = [
   { label: "No", value: false },
 ];
 
-const CreateGroupClasses = ({ setShowModal, editingOption, formik }) => {
+const CreateGroupClasses = ({ setShowModal, editingOption, checkActiveBooking, formik }) => {
   const leadBoxRef = useRef(null);
   const [studio, setStudio] = useState([]);
   const [club, setClub] = useState([]);
@@ -1299,24 +1299,29 @@ const endTimeOptions = useMemo(() => {
               </div>
 
               {/* Submit Button */}
-              <div className="flex gap-4 justify-end">
-                <button
-                  type="button"
-                  onClick={() => {
-                    formik.resetForm();
-                    setShowModal(false);
-                  }}
-                  className="px-4 py-2 bg-transparent border border-white text-white font-semibold rounded max-w-[150px] w-full"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-white text-black font-semibold rounded max-w-[150px] w-full"
-                >
-                  Submit
-                </button>
-              </div>
+              {!(editingOption && checkActiveBooking !== 0) &&
+                formik?.values?.status !== "EXPIRED" && (
+                  <div className="flex gap-4 justify-end">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        formik.resetForm();
+                        setShowModal(false);
+                      }}
+                      className="px-4 py-2 bg-transparent border border-white text-white font-semibold rounded max-w-[150px] w-full"
+                    >
+                      Cancel
+                    </button>
+
+                    <button
+                      type="submit"
+                      className="px-4 py-2 bg-white text-black font-semibold rounded max-w-[150px] w-full"
+                    >
+                      Submit
+                    </button>
+                  </div>
+                )}
+
             </form>
           </div>
         </div>

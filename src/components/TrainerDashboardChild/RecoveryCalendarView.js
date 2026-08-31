@@ -223,6 +223,34 @@ const eventStyleGetter = useCallback((event) => {
     setDate(newDate);
   };
 
+  // Header title text: full date for Day view, a range for Week view,
+  // and month + year for Month view.
+  const getHeaderLabel = () => {
+    if (view === "day") {
+      return moment(date).format("DD MMMM YYYY");
+    }
+
+    if (view === "week") {
+      const start = moment(date).startOf("week");
+      const end = moment(date).endOf("week");
+
+      if (start.month() === end.month() && start.year() === end.year()) {
+        // e.g. "25 - 31 Aug 2026"
+        return `${start.format("DD")} - ${end.format("DD MMM YYYY")}`;
+      }
+
+      if (start.year() === end.year()) {
+        // e.g. "28 Aug - 03 Sep 2026"
+        return `${start.format("DD MMM")} - ${end.format("DD MMM YYYY")}`;
+      }
+
+      // e.g. "29 Dec 2026 - 04 Jan 2027"
+      return `${start.format("DD MMM YYYY")} - ${end.format("DD MMM YYYY")}`;
+    }
+
+    return moment(date).format("MMMM YYYY");
+  };
+
   return (
     <div className="rounded-[15px] p-4 bg-white mt-3">
       {/* Header */}
@@ -254,9 +282,7 @@ const eventStyleGetter = useCallback((event) => {
               <FaChevronRight />
             </button>
           </div>
-          <h2 className="text-xl font-semibold">
-            {moment(date).format("MMMM YYYY")}
-          </h2>
+          <h2 className="text-xl font-semibold">{getHeaderLabel()}</h2>
         </div>
       </div>
 

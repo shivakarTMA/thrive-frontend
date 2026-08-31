@@ -52,6 +52,7 @@ const GroupClassesList = (props) => {
   const [clubFilter, setClubFilter] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [editingOption, setEditingOption] = useState(null);
+  const [checkActiveBooking, setCheckActiveBooking] = useState(null);
 
   const [page, setPage] = useState(1);
   const [rowsPerPage] = useState(10);
@@ -379,6 +380,7 @@ const GroupClassesList = (props) => {
         fetchGroupClass();
         resetForm();
         setEditingOption(null);
+        setCheckActiveBooking(null);
         setShowModal(false);
       } catch (err) {
         console.error("API Error:", err.response?.data?.errors);
@@ -660,6 +662,7 @@ const GroupClassesList = (props) => {
                 className="px-4 py-2 bg-black text-white rounded flex items-center gap-2 w-full"
                 onClick={() => {
                   setEditingOption(null);
+                  setCheckActiveBooking(null);
                   setShowModal(true);
                 }}
               >
@@ -818,6 +821,8 @@ const GroupClassesList = (props) => {
                             className={`flex gap-1 items-center ${
                               row?.status === "ACTIVE"
                                 ? "text-green-500"
+                                : row?.status === "INACTIVE"
+                                ? "text-orange-500"
                                 : "text-red-500"
                             }`}
                           >
@@ -859,6 +864,7 @@ const GroupClassesList = (props) => {
                                     className="p-1 cursor-pointer block"
                                     onClick={() => {
                                       setEditingOption(row.id);
+                                      setCheckActiveBooking(row.active_bookings);
                                       setShowModal(true);
                                     }}
                                   >
@@ -903,6 +909,7 @@ const GroupClassesList = (props) => {
         <CreateGroupClasses
           setShowModal={setShowModal}
           editingOption={editingOption}
+          checkActiveBooking={checkActiveBooking}
           formik={CreateFormik}
         />
       )}
