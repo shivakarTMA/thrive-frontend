@@ -19,7 +19,23 @@ import { authAxios } from "../../config/config";
 import { useClubDateTime } from "../../hooks/useClubDateTime";
 import { useDateTimePicker } from "../../hooks/useDateTimePicker";
 import { PiImageFill } from "react-icons/pi";
-import { FiClock } from "react-icons/fi";
+import { FiClock, FiUpload, FiCamera } from "react-icons/fi";
+import Webcam from "react-webcam";
+
+// Helper: convert a base64 dataURL (from the webcam) into a real File object
+// so it behaves exactly like a file picked from <input type="file" />.
+const dataURLtoFile = (dataUrl, filename) => {
+  const arr = dataUrl.split(",");
+  const mimeMatch = arr[0].match(/:(.*?);/);
+  const mime = mimeMatch ? mimeMatch[1] : "image/jpeg";
+  const bstr = atob(arr[1]);
+  let n = bstr.length;
+  const u8arr = new Uint8Array(n);
+  while (n--) {
+    u8arr[n] = bstr.charCodeAt(n);
+  }
+  return new File([u8arr], filename, { type: mime });
+};
 
 const AddNewItemModal = ({
   onClose,
@@ -28,9 +44,16 @@ const AddNewItemModal = ({
   fetchLostFoundList,
 }) => {
   const leadBoxRef = useRef(null);
+  const fileInputRef = useRef(null);
   const { user } = useSelector((state) => state.auth);
   const [clubSlotsData, setClubSlotsData] = useState([]);
   const [clubSlotsLoading, setClubSlotsLoading] = useState(false);
+
+  // Controls the "Choose Upload Method" popup
+  const [showUploadOptions, setShowUploadOptions] = useState(false);
+  // Controls the webcam capture view
+  const [showCamera, setShowCamera] = useState(false);
+  const webcamReference = useRef(null);
 
   const formik = useFormik({
     initialValues: {
@@ -149,7 +172,7 @@ const AddNewItemModal = ({
 
     return `${dd}-${mm}-${yyyy}`;
   };
-  
+
   const getSelectedDateSlotData = () => {
     if (!formik.values.found_date) {
       return null;
@@ -281,7 +304,41 @@ const AddNewItemModal = ({
     const file = e.target.files[0];
     if (!file) return;
     formik.setFieldValue("image", file); // for preview
+    // allow re-selecting the same file later
+    e.target.value = "";
   };
+
+  // ---- Upload method modal handlers ----
+  const openUploadOptions = () => {
+    if (editingOption) return;
+    setShowUploadOptions(true);
+  };
+
+  const chooseDeviceUpload = () => {
+    setShowUploadOptions(false);
+    // trigger the hidden native file input
+    fileInputRef.current?.click();
+  };
+
+  const chooseCameraUpload = () => {
+    setShowUploadOptions(false);
+    setShowCamera(true);
+  };
+
+  // ---- Webcam handlers ----
+  const captureImage = () => {
+    const imageSrc = webcamReference.current?.getScreenshot();
+    if (!imageSrc) {
+      toast.error("Unable to capture image. Please try again.");
+      return;
+    }
+    const file = dataURLtoFile(imageSrc, `captured_${Date.now()}.jpg`);
+    formik.setFieldValue("image", file);
+    formik.setFieldTouched("image", true);
+    setShowCamera(false);
+  };
+
+  const closeCamera = () => setShowCamera(false);
 
   return (
     <div
@@ -308,9 +365,14 @@ const AddNewItemModal = ({
           >
             <div className="p-4 flex-1 bg-white rounded-b-[10px]">
               <div className="grid grid-cols-2 gap-4">
-                {/* Image Preview */}
+                {/* Image Preview (click to choose upload method) */}
                 <div className="row-span-2">
-                  <div className="bg-gray-100 rounded-lg w-full h-[160px] overflow-hidden">
+                  <div
+                    className={`bg-gray-100 rounded-lg w-full h-[160px] overflow-hidden ${
+                      editingOption ? "" : "cursor-pointer"
+                    }`}
+                    onClick={openUploadOptions}
+                  >
                     {formik.values?.image ? (
                       <img
                         src={
@@ -331,25 +393,30 @@ const AddNewItemModal = ({
                   </div>
                 </div>
 
-                {/* Image Upload */}
+                {/* Image Upload trigger + hidden native input */}
                 {editingOption ? null : (
                   <div>
                     <label className="mb-2 block">
                       Image<span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
+                      <button
+                        type="button"
+                        onClick={openUploadOptions}
+                        onBlur={() => formik.setFieldTouched("image", true)}
+                        className="custom--input w-full text-left"
+                      >
+                        {formik.values.image ? "Change Image" : "Choose Image"}
+                      </button>
+
+                      {/* Hidden native file input, opened programmatically */}
                       <input
                         type="file"
                         name="image"
-                        // onChange={handleFileChange} // ✅ no value prop here
+                        ref={fileInputRef}
+                        accept="image/jpeg,image/png,image/webp"
                         onChange={(e) => handleFileChange(e, formik)}
-                        onBlur={() => formik.setFieldTouched("image", true)}
-                        className={`custom--input w-full ${
-                          editingOption
-                            ? "!bg-gray-100 pointer-events-none text-gray-500"
-                            : ""
-                        }`}
-                        disabled={editingOption}
+                        className="hidden"
                       />
                     </div>
 
@@ -647,6 +714,92 @@ const AddNewItemModal = ({
           </form>
         </div>
       </div>
+
+      {/* --- Choose Upload Method popup --- */}
+      {showUploadOptions && (
+        <div
+          className="fixed inset-0 z-[1100] flex items-center justify-center bg-black bg-opacity-50"
+          onClick={(e) => {
+            e.stopPropagation();
+            setShowUploadOptions(false);
+          }}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-xl p-5 w-[90%] max-w-[380px]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-center font-semibold text-lg mb-4">
+              Choose Upload Method
+            </h3>
+
+            <button
+              type="button"
+              onClick={chooseDeviceUpload}
+              className="w-full flex items-center justify-center gap-2 border border-gray-200 rounded-lg py-3 mb-3 hover:bg-gray-50 transition"
+            >
+              <FiUpload className="text-lg" />
+              <span>Upload From Device</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={chooseCameraUpload}
+              className="w-full flex items-center justify-center gap-2 border border-gray-200 rounded-lg py-3 mb-4 hover:bg-gray-50 transition"
+            >
+              <FiCamera className="text-lg" />
+              <span>Capture Using Camera</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setShowUploadOptions(false)}
+              className="w-full bg-red-500 hover:bg-red-600 text-white font-semibold rounded-lg py-3 transition"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* --- Webcam capture view --- */}
+      {showCamera && (
+        <div
+          className="fixed inset-0 z-[1100] flex items-center justify-center bg-black bg-opacity-70"
+          onClick={(e) => {
+            e.stopPropagation();
+            closeCamera();
+          }}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-xl p-4 w-[92%] max-w-[520px]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Webcam
+              audio={false}
+              ref={webcamReference}
+              screenshotFormat="image/jpeg"
+              videoConstraints={{ facingMode: "environment" }}
+              className="w-full rounded-lg mb-4"
+            />
+            <div className="flex gap-3 justify-end">
+              <button
+                type="button"
+                onClick={closeCamera}
+                className="px-4 py-2 border border-gray-300 rounded font-semibold"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={captureImage}
+                className="px-4 py-2 bg-black text-white rounded font-semibold"
+              >
+                Capture
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

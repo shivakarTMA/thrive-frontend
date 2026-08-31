@@ -306,6 +306,8 @@ const AllInvoiceReport = (props) => {
                   cancelled paid invoice
                 </th> */}
                 <th className="px-2 py-4 min-w-[200px]">description service</th>
+                <th className="px-2 py-4 min-w-[100px]">Quantity</th>
+                <th className="px-2 py-4 min-w-[100px]">HSN Code</th>
                 <th className="px-2 py-4 min-w-[120px]">start date</th>
                 <th className="px-2 py-4 min-w-[120px]">end date</th>
                 {/* <th className="px-2 py-4 min-w-[120px]">pt name</th> */}
@@ -346,7 +348,7 @@ const AllInvoiceReport = (props) => {
                       {row.email ? row.email : "--"}
                     </td> */}
                     <td className="px-2 py-4">
-                      {row.club_gstno ? row.club_gstno : "--"}
+                      {row.gst_registration_number ? row.gst_registration_number : "--"}
                     </td>
          
                     {/* <td className="px-2 py-4">
@@ -370,6 +372,8 @@ const AllInvoiceReport = (props) => {
                     <td className="px-2 py-4">{row.cancelledPaidInvoice ? row.cancelledPaidInvoice : "--"}</td> */}
 
                     <td className="px-2 py-4">{row.service_name ? row.service_name : "--"}</td>
+                    <td className="px-2 py-4">{row.quantity ? row.quantity : "--"}</td>
+                    <td className="px-2 py-4">{row.hsn_code ? row.hsn_code : "--"}</td>
                     <td className="px-2 py-4">
                       {formatAutoDate(row.start_date)}
                     </td>
@@ -386,7 +390,7 @@ const AllInvoiceReport = (props) => {
                       {row.gt_name ? row.gt_name : "--"}
                     </td> */}
                     <td className="px-2 py-4">
-                      {row.createdBy ? row.createdBy : "--"}
+                      {row.created_by_name ? row.created_by_name : "--"}
                     </td>
                     <td className="px-2 py-4">₹{formatIndianNumber(row.total_amount)}</td>
                     <td className="px-2 py-4">₹{formatIndianNumber(row.cgst_amount)}</td>
