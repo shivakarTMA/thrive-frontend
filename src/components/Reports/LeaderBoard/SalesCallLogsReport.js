@@ -89,35 +89,36 @@ const SalesCallLogsReport = (props) => {
     setMemberCallStatus(null);
 
     const fetchStaff = async () => {
-      try {
-        const res = await authAxios().get("/staff/list", {
-          params: {
-            role: "ADMIN,FOH,TRAINER,CLUB_MANAGER,ASS_CLUB_MANAGER,FITNESS_MANAGER,ASS_FITNESS_MANAGER",
-            club_id: clubFilter.value,
-          },
-        });
-        const data = res.data?.data || [];
-        const activeStaff = data.filter(
-          (item) =>
-            item.status === "ACTIVE" &&
-            [
-              "ADMIN",
-              "FOH",
-              "TRAINER",
-              "CLUB_MANAGER",
-              "ASS_CLUB_MANAGER",
-              "FITNESS_MANAGER",
-              "ASS_FITNESS_MANAGER",
-            ].includes(item.role),
-        );
-        setStaffList(activeStaff);
-        setLeadOwner(null);
-      } catch (err) {
-        console.error(err);
-      }
-    };
+    try {
+      const roles =
+        userRole === "ADMIN"
+          ? "ADMIN,FOH,TRAINER,CLUB_MANAGER,ASS_CLUB_MANAGER,FITNESS_MANAGER,ASS_FITNESS_MANAGER"
+          : "FOH,TRAINER,CLUB_MANAGER,ASS_CLUB_MANAGER,FITNESS_MANAGER,ASS_FITNESS_MANAGER";
+
+      const res = await authAxios().get("/staff/list", {
+        params: {
+          role: roles,
+          club_id: clubFilter.value,
+        },
+      });
+
+      const data = res.data?.data || [];
+
+      const allowedRoles = roles.split(",");
+
+      const activeStaff = data.filter(
+        (item) =>
+          item.status === "ACTIVE" && allowedRoles.includes(item.role)
+      );
+
+      setStaffList(activeStaff);
+      setLeadOwner(null);
+    } catch (err) {
+      console.error(err);
+    }
+  };
     fetchStaff();
-  }, [clubFilter?.value]);
+  }, [clubFilter?.value, userRole]);
 
   // ── Initialize filters from URL ───────────────────────
   useEffect(() => {

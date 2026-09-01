@@ -1315,7 +1315,12 @@ const endTimeOptions = useMemo(() => {
 
                     <button
                       type="submit"
-                      className="px-4 py-2 bg-white text-black font-semibold rounded max-w-[150px] w-full"
+                      disabled={formik.isSubmitting}
+                      className={`px-4 py-2 font-semibold rounded max-w-[150px] w-full ${
+                        formik.isSubmitting
+                          ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                          : "bg-white text-black"
+                      }`}
                     >
                       Submit
                     </button>
