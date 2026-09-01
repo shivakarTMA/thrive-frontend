@@ -580,7 +580,7 @@ const StaffList = () => {
           <p className="text-sm">{`Home > All Staff`}</p>
           <h1 className="text-3xl font-semibold">All Staff</h1>
         </div>
-        {(currentUserRole === "ADMIN" ||  currentUserRole === "CLUB_MANAGER" || currentUserRole === "ASS_CLUB_MANAGER") && (
+        {(currentUserRole === "ADMIN" ||  currentUserRole === "CLUB_MANAGER" || currentUserRole === "ASS_CLUB_MANAGER" || currentUserRole === "PROGRAM_SPECIALIST") && (
           <button
             type="button"
             className="px-4 py-2 bg-black text-white rounded flex items-center gap-2"
@@ -660,7 +660,7 @@ const StaffList = () => {
                 <th className="px-2 py-4">Status</th>
                 <th className="px-2 py-4">Show on App</th>
                 {(currentUserRole === "ADMIN" ||
-                  currentUserRole === "CLUB_MANAGER" || currentUserRole === "ASS_CLUB_MANAGER") && (
+                  currentUserRole === "CLUB_MANAGER" || currentUserRole === "ASS_CLUB_MANAGER" || currentUserRole === "PROGRAM_SPECIALIST") && (
                 <th className="px-2 py-4">Action</th>
                 )}
               </tr>
@@ -737,7 +737,7 @@ const StaffList = () => {
                       )}
                     </td>
                   {(currentUserRole === "ADMIN" ||
-                    currentUserRole === "CLUB_MANAGER" || currentUserRole === "ASS_CLUB_MANAGER") && (
+                    currentUserRole === "CLUB_MANAGER" || currentUserRole === "ASS_CLUB_MANAGER" || currentUserRole === "PROGRAM_SPECIALIST") && (
                     <td className="px-2 py-4">
                       <div className="flex">
                         <Tooltip

@@ -60,7 +60,7 @@ const [staff, setStaff] = useState([]);
 
   const { user } = useSelector((state) => state.auth);
   const userRole = user.role;
-  const canManage = userRole === "ADMIN" || userRole === "MARKETING_MANAGER";
+  const canManage = userRole === "ADMIN" || userRole === "MARKETING_MANAGER" ||"CLUB_MANAGER" || userRole === "ASS_CLUB_MANAGER" || userRole === "PROGRAM_SPECIALIST";
 
   const [page, setPage] = useState(1);
   const [rowsPerPage] = useState(10);
