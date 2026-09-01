@@ -389,42 +389,79 @@ const CreateMemberAppointment = ({
   //   const dateStr = formatDateForApi(date);
   //   return availableDatesSet.has(dateStr);
   // };
-  const filterAvailableDate = (date) => {
+
+    const getPackageDate = (dateString) => {
+  if (!dateString) return null;
+
+  // Works for:
+  // "2026-11-19"
+  // "2026-08-22T00:00:00.000Z"
+  const [year, month, day] = dateString
+    .split("T")[0]
+    .split("-")
+    .map(Number);
+
+  return new Date(year, month - 1, day);
+};
+
+const filterAvailableDate = (date) => {
+  // Complimentary appointment:
+  // keep your existing trainer-slot date behaviour
+  if (formik.values.appointment_category !== "service") {
     const dateStr = formatDateForApi(date);
+    return availableDatesSet.has(dateStr);
+  }
 
-    // 1. Date must be available from trainer slots API
-    if (!availableDatesSet.has(dateStr)) {
-      return false;
-    }
+  // Service appointment
+  const selectedPackage = packageList.find(
+    (p) => p.id === formik.values.package_booking_id
+  );
 
-    // 2. Package end date applies only to Service Appointment
-    if (formik.values.appointment_category !== "service") {
-      return true;
-    }
+  if (!selectedPackage) {
+    return false;
+  }
 
-    // 3. Find selected package
-    const selectedPackage = packageList.find(
-      (p) => p.id === formik.values.package_booking_id
-    );
+  const packageStartDate = getPackageDate(selectedPackage.start_date);
+  const packageEndDate = getPackageDate(selectedPackage.end_date);
 
-    // No package selected yet
-    if (!selectedPackage?.end_date) {
-      return true;
-    }
+  const selectedDate = new Date(
+    date.getFullYear(),
+    date.getMonth(),
+    date.getDate()
+  );
 
-    // 4. Convert package end_date to Date
-    const packageEndDate = getPackageEndDate(selectedPackage.end_date);
+  if (packageStartDate && selectedDate < packageStartDate) {
+    return false;
+  }
 
-    // 5. Remove time from selected date
-    const selectedDate = new Date(
-      date.getFullYear(),
-      date.getMonth(),
-      date.getDate()
-    );
+  if (packageEndDate && selectedDate > packageEndDate) {
+    return false;
+  }
 
-    // 6. Allow dates only up to package end_date
-    return selectedDate <= packageEndDate;
-  };
+  return true;
+};
+
+const selectedPackage = useMemo(() => {
+  if (formik.values.appointment_category !== "service") {
+    return null;
+  }
+
+  return packageList.find(
+    (p) => p.id === formik.values.package_booking_id
+  );
+}, [
+  packageList,
+  formik.values.package_booking_id,
+  formik.values.appointment_category,
+]);
+
+const packageStartDate = selectedPackage?.start_date
+  ? getPackageDate(selectedPackage.start_date)
+  : null;
+
+const packageEndDate = selectedPackage?.end_date
+  ? getPackageDate(selectedPackage.end_date)
+  : null;
 
   // Selected day's slot data (from new API response)
   const selectedDayData = useMemo(() => {
@@ -800,23 +837,38 @@ const CreateMemberAppointment = ({
               <div className="flex gap-2">
                 <div className="custom--date w-[50%]">
                   <DatePicker
-                    selected={formik.values.appointment_date_only}
-                    onChange={(date) => {
-                      formik.setFieldValue("appointment_date_only", date);
+  selected={formik.values.appointment_date_only}
+  onChange={(date) => {
+    formik.setFieldValue("appointment_date_only", date);
+    formik.setFieldValue("appointment_time", null);
+    formik.setFieldValue("appointment_date", null);
+  }}
+  dateFormat="dd/MM/yyyy"
 
-                      formik.setFieldValue("appointment_time", null);
-                      formik.setFieldValue("appointment_date", null);
-                    }}
-                    dateFormat="dd/MM/yyyy"
-                    minDate={new Date()}
-                    filterDate={filterAvailableDate}
-                    onKeyDown={(e) => {
-                      e.preventDefault();
-                    }}
-                    disabled={!formik.values.trainer_id}
-                    placeholderText="Select Date"
-                    className="custom--input !w-full"
-                  />
+  minDate={
+    formik.values.appointment_category === "service" &&
+    packageStartDate &&
+    packageStartDate > new Date()
+      ? packageStartDate
+      : new Date()
+  }
+
+  maxDate={
+    formik.values.appointment_category === "service"
+      ? packageEndDate
+      : undefined
+  }
+
+  filterDate={filterAvailableDate}
+
+  onKeyDown={(e) => {
+    e.preventDefault();
+  }}
+
+  disabled={!formik.values.trainer_id}
+  placeholderText="Select Date"
+  className="custom--input !w-full"
+/>
                 </div>
                 <div className=" w-[50%]">
                   {/* TIME */}

@@ -62,6 +62,7 @@ const AllAppointments = (props) => {
   // Reschedule date + time now tracked separately (like create-appointment flow)
   const [rescheduleDateOnly, setRescheduleDateOnly] = useState(null);
   const [rescheduleTime, setRescheduleTime] = useState(null);
+  const [bookingStartDate, setBookingStartDate] = useState(null);
   const [bookingEndDate, setBookingEndDate] = useState(null);
 
   // Response from /staff/operating/hours/trainer/slots
@@ -367,10 +368,9 @@ const AllAppointments = (props) => {
       setPendingRow(row);
       setSelectedTrainerId(row.assigned_staff_id);
       setSelectedClubId(row.club_id);
+      setBookingStartDate(row.package_booking_start_date);
       setBookingEndDate(row.package_booking_end_date);
 
-      // Prefill with the existing slot; the trainer-slots fetch (below)
-      // will validate/refresh what's actually still available.
       setRescheduleDateOnly(row.start_date ? new Date(row.start_date) : null);
       setRescheduleTime(row.start_time ? row.start_time.slice(0, 5) : null);
     } else {
@@ -386,6 +386,17 @@ const AllAppointments = (props) => {
     setShowConfirmModal(false); // close any previous
     setTimeout(() => setShowConfirmModal(true), 0); // reopen fresh
   };
+const getPackageDate = (dateString) => {
+  if (!dateString) return null;
+
+  const [year, month, day] = dateString
+    .split("T")[0]
+    .split("-")
+    .map(Number);
+
+  return new Date(year, month - 1, day);
+};
+
 
   // ===============================
   // DATE / TIME HELPERS (same convention as create-appointment flow)
@@ -472,9 +483,32 @@ const AllAppointments = (props) => {
   }, [trainerSlotsData]);
 
   const filterAvailableRescheduleDate = (date) => {
+  // Complimentary appointments don't have package date restriction
+  if (pendingRow?.appointment_category === "complementary") {
     const dateStr = formatDateForApi(date);
     return availableRescheduleDatesSet.has(dateStr);
-  };
+  }
+
+  // Package / Service appointment
+  const packageStartDate = getPackageDate(bookingStartDate);
+  const packageEndDate = getPackageDate(bookingEndDate);
+
+  const selectedDate = new Date(
+    date.getFullYear(),
+    date.getMonth(),
+    date.getDate()
+  );
+
+  if (packageStartDate && selectedDate < packageStartDate) {
+    return false;
+  }
+
+  if (packageEndDate && selectedDate > packageEndDate) {
+    return false;
+  }
+
+  return true;
+};
 
   // Selected reschedule day's slot data
   const selectedRescheduleDayData = useMemo(() => {
@@ -1057,20 +1091,33 @@ const AllAppointments = (props) => {
                         <FaCalendarDays />
                       </span>
                       <DatePicker
-                        selected={rescheduleDateOnly}
-                        onChange={(date) => {
-                          setRescheduleDateOnly(date);
-                          setRescheduleTime(null);
-                        }}
-                        dateFormat="dd/MM/yyyy"
-                        minDate={new Date()}
-                        maxDate={bookingEndDate ? new Date(bookingEndDate) : null}
-                        filterDate={filterAvailableRescheduleDate}
-                        onKeyDown={(e) => e.preventDefault()}
-                        disabled={!selectedTrainerId}
-                        placeholderText="Select Date"
-                        className="custom--input w-full input--icon"
-                      />
+  selected={rescheduleDateOnly}
+  onChange={(date) => {
+    setRescheduleDateOnly(date);
+    setRescheduleTime(null);
+  }}
+  dateFormat="dd/MM/yyyy"
+
+  minDate={
+    bookingStartDate &&
+    getPackageDate(bookingStartDate) > new Date()
+      ? getPackageDate(bookingStartDate)
+      : new Date()
+  }
+
+  maxDate={
+    bookingEndDate
+      ? getPackageDate(bookingEndDate)
+      : null
+  }
+
+  filterDate={filterAvailableRescheduleDate}
+
+  onKeyDown={(e) => e.preventDefault()}
+  disabled={!selectedTrainerId}
+  placeholderText="Select Date"
+  className="custom--input w-full input--icon"
+/>
                     </div>
 
                     {/* TIME */}
