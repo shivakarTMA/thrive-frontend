@@ -129,6 +129,11 @@ export const ROUTE_PERMISSIONS = {
     'ADMIN', 'CLUB_MANAGER', 'ASS_CLUB_MANAGER', 'FOH', 'PROGRAM_SPECIALIST',
     'MARKETING_MANAGER', 'FINANCE_MANAGER', 'FINANCE_MANAGER_CLUB', 'FINANCE_MANAGER_CORPORATE', 'F_AND_B',
   ],
+  
+  '/reports/nourish-reports': [
+    'ADMIN','FINANCE_MANAGER_CORPORATE','CLUB_MANAGER','ASS_CLUB_MANAGER','PROGRAM_SPECIALIST','FINANCE_MANAGER_CLUB','F_AND_B'
+  ],
+
 
   // ─── Group Class ────────────────────────────────────────────────────────────
   '/group-class': [

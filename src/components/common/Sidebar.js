@@ -331,17 +331,51 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
               <FaReact className="menu--icon" />
               <span className="nav-text">Group Class</span>
             </Link>
-            {hasProductServices && (
+            {hasProductServices &&
+          <>
+          <div
+              className="nav-link d-flex justify-between align-items-center mb-2"
+              onClick={() => toggleMenu("nourish")}
+              style={{ cursor: "pointer" }}
+            >
+              <div className="flex items-center">
+                <IoFastFoodOutline className="menu--icon" />
+
+                <span className="nav-text">Nourish</span>
+              </div>
+              <FaAngleDown
+                className={`downmenu transition ${
+                  dropdownToggles["nourish"] ? "rotate-[180deg]" : ""
+                }`}
+              />
+            </div>
+
+            {dropdownToggles["nourish"] && (
+              <div className="mt-2 pl-5 relative">
+                <div className="absolute h-[calc(100%-15px)] w-[2px] bg-white left-[23px] top-[8px]"></div>
+               
               <Link
                 to="/nourish-orders"
-                className={`nav-link mb-2 ${
+                className={`text-white flex items-center gap-[5px] mb-2 text-sm ${
                   location.pathname === "/nourish-orders" ? "active" : ""
                 }`}
               >
-                <IoFastFoodOutline className="menu--icon" />
+                 <FaCircle className="menu--icon !text-[10px]" />
                 <span className="nav-text">Nourish Orders</span>
               </Link>
+                
+                
+                <Link
+                  to="/reports/nourish-reports"
+                  className="text-white flex items-center gap-[5px] mb-2 text-sm"
+                >
+                  <FaCircle className="menu--icon !text-[10px]" />
+                  <span className="nav-text">Nourish Reports</span>
+                </Link>
+              </div>
             )}
+              </>
+            }
 
             <div
               className="nav-link d-flex justify-between align-items-center mb-2"
@@ -1218,17 +1252,51 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
               <FaReact className="menu--icon" />
               <span className="nav-text">Group Class</span>
             </Link>
-            {hasProductServices && (
+            {hasProductServices &&
+          <>
+          <div
+              className="nav-link d-flex justify-between align-items-center mb-2"
+              onClick={() => toggleMenu("nourish")}
+              style={{ cursor: "pointer" }}
+            >
+              <div className="flex items-center">
+                <IoFastFoodOutline className="menu--icon" />
+
+                <span className="nav-text">Nourish</span>
+              </div>
+              <FaAngleDown
+                className={`downmenu transition ${
+                  dropdownToggles["nourish"] ? "rotate-[180deg]" : ""
+                }`}
+              />
+            </div>
+
+            {dropdownToggles["nourish"] && (
+              <div className="mt-2 pl-5 relative">
+                <div className="absolute h-[calc(100%-15px)] w-[2px] bg-white left-[23px] top-[8px]"></div>
+               
               <Link
                 to="/nourish-orders"
-                className={`nav-link mb-2 ${
+                className={`text-white flex items-center gap-[5px] mb-2 text-sm ${
                   location.pathname === "/nourish-orders" ? "active" : ""
                 }`}
               >
-                <IoFastFoodOutline className="menu--icon" />
+                 <FaCircle className="menu--icon !text-[10px]" />
                 <span className="nav-text">Nourish Orders</span>
               </Link>
+                
+                
+                <Link
+                  to="/reports/nourish-reports"
+                  className="text-white flex items-center gap-[5px] mb-2 text-sm"
+                >
+                  <FaCircle className="menu--icon !text-[10px]" />
+                  <span className="nav-text">Nourish Reports</span>
+                </Link>
+              </div>
             )}
+              </>
+            }
             <div
               className="nav-link d-flex justify-between align-items-center mb-2"
               onClick={() => toggleMenu("clubmanagermarketing")}
@@ -1949,17 +2017,51 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
               <FaReact className="menu--icon" />
               <span className="nav-text">Group Class</span>
             </Link>
-            {hasProductServices && (
+            {hasProductServices &&
+          <>
+          <div
+              className="nav-link d-flex justify-between align-items-center mb-2"
+              onClick={() => toggleMenu("nourish")}
+              style={{ cursor: "pointer" }}
+            >
+              <div className="flex items-center">
+                <IoFastFoodOutline className="menu--icon" />
+
+                <span className="nav-text">Nourish</span>
+              </div>
+              <FaAngleDown
+                className={`downmenu transition ${
+                  dropdownToggles["nourish"] ? "rotate-[180deg]" : ""
+                }`}
+              />
+            </div>
+
+            {dropdownToggles["nourish"] && (
+              <div className="mt-2 pl-5 relative">
+                <div className="absolute h-[calc(100%-15px)] w-[2px] bg-white left-[23px] top-[8px]"></div>
+               
               <Link
                 to="/nourish-orders"
-                className={`nav-link mb-2 ${
+                className={`text-white flex items-center gap-[5px] mb-2 text-sm ${
                   location.pathname === "/nourish-orders" ? "active" : ""
                 }`}
               >
-                <IoFastFoodOutline className="menu--icon" />
+                 <FaCircle className="menu--icon !text-[10px]" />
                 <span className="nav-text">Nourish Orders</span>
               </Link>
+                
+                
+                <Link
+                  to="/reports/nourish-reports"
+                  className="text-white flex items-center gap-[5px] mb-2 text-sm"
+                >
+                  <FaCircle className="menu--icon !text-[10px]" />
+                  <span className="nav-text">Nourish Reports</span>
+                </Link>
+              </div>
             )}
+              </>
+            }
             <div
               className="nav-link d-flex justify-between align-items-center mb-2"
               onClick={() => toggleMenu("clubmanagermarketing")}
@@ -3109,17 +3211,51 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
               <AiOutlineProduct className="menu--icon" />
               <span className="nav-text">All Orders</span>
             </Link>
-            {hasProductServices && (
+            {hasProductServices &&
+          <>
+          <div
+              className="nav-link d-flex justify-between align-items-center mb-2"
+              onClick={() => toggleMenu("nourish")}
+              style={{ cursor: "pointer" }}
+            >
+              <div className="flex items-center">
+                <IoFastFoodOutline className="menu--icon" />
+
+                <span className="nav-text">Nourish</span>
+              </div>
+              <FaAngleDown
+                className={`downmenu transition ${
+                  dropdownToggles["nourish"] ? "rotate-[180deg]" : ""
+                }`}
+              />
+            </div>
+
+            {dropdownToggles["nourish"] && (
+              <div className="mt-2 pl-5 relative">
+                <div className="absolute h-[calc(100%-15px)] w-[2px] bg-white left-[23px] top-[8px]"></div>
+               
               <Link
                 to="/nourish-orders"
-                className={`nav-link mb-2 ${
+                className={`text-white flex items-center gap-[5px] mb-2 text-sm ${
                   location.pathname === "/nourish-orders" ? "active" : ""
                 }`}
               >
-                <IoFastFoodOutline className="menu--icon" />
+                 <FaCircle className="menu--icon !text-[10px]" />
                 <span className="nav-text">Nourish Orders</span>
               </Link>
+                
+                
+                <Link
+                  to="/reports/nourish-reports"
+                  className="text-white flex items-center gap-[5px] mb-2 text-sm"
+                >
+                  <FaCircle className="menu--icon !text-[10px]" />
+                  <span className="nav-text">Nourish Reports</span>
+                </Link>
+              </div>
             )}
+              </>
+            }
            
           </>
         )}
@@ -3274,15 +3410,51 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
               <FaReact className="menu--icon" />
               <span className="nav-text">Group Class</span>
             </Link>
-            {hasProductServices && (
+            {hasProductServices &&
+          <>
+          <div
+              className="nav-link d-flex justify-between align-items-center mb-2"
+              onClick={() => toggleMenu("nourish")}
+              style={{ cursor: "pointer" }}
+            >
+              <div className="flex items-center">
+                <IoFastFoodOutline className="menu--icon" />
+
+                <span className="nav-text">Nourish</span>
+              </div>
+              <FaAngleDown
+                className={`downmenu transition ${
+                  dropdownToggles["nourish"] ? "rotate-[180deg]" : ""
+                }`}
+              />
+            </div>
+
+            {dropdownToggles["nourish"] && (
+              <div className="mt-2 pl-5 relative">
+                <div className="absolute h-[calc(100%-15px)] w-[2px] bg-white left-[23px] top-[8px]"></div>
+               
               <Link
                 to="/nourish-orders"
-                className={`nav-link mb-2 ${location.pathname === "/nourish-orders" ? "active" : ""}`}
+                className={`text-white flex items-center gap-[5px] mb-2 text-sm ${
+                  location.pathname === "/nourish-orders" ? "active" : ""
+                }`}
               >
-                <IoFastFoodOutline className="menu--icon" />
+                 <FaCircle className="menu--icon !text-[10px]" />
                 <span className="nav-text">Nourish Orders</span>
               </Link>
+                
+                
+                <Link
+                  to="/reports/nourish-reports"
+                  className="text-white flex items-center gap-[5px] mb-2 text-sm"
+                >
+                  <FaCircle className="menu--icon !text-[10px]" />
+                  <span className="nav-text">Nourish Reports</span>
+                </Link>
+              </div>
             )}
+              </>
+            }
             <div
               className="nav-link d-flex justify-between align-items-center mb-2"
               onClick={() => toggleMenu("marketing")}
@@ -6011,17 +6183,51 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
               <FaReact className="menu--icon" />
               <span className="nav-text">Group Class</span>
             </Link>
-            {hasProductServices && (
+            {hasProductServices &&
+          <>
+          <div
+              className="nav-link d-flex justify-between align-items-center mb-2"
+              onClick={() => toggleMenu("nourish")}
+              style={{ cursor: "pointer" }}
+            >
+              <div className="flex items-center">
+                <IoFastFoodOutline className="menu--icon" />
+
+                <span className="nav-text">Nourish</span>
+              </div>
+              <FaAngleDown
+                className={`downmenu transition ${
+                  dropdownToggles["nourish"] ? "rotate-[180deg]" : ""
+                }`}
+              />
+            </div>
+
+            {dropdownToggles["nourish"] && (
+              <div className="mt-2 pl-5 relative">
+                <div className="absolute h-[calc(100%-15px)] w-[2px] bg-white left-[23px] top-[8px]"></div>
+               
               <Link
                 to="/nourish-orders"
-                className={`nav-link mb-2 ${
+                className={`text-white flex items-center gap-[5px] mb-2 text-sm ${
                   location.pathname === "/nourish-orders" ? "active" : ""
                 }`}
               >
-                <IoFastFoodOutline className="menu--icon" />
+                 <FaCircle className="menu--icon !text-[10px]" />
                 <span className="nav-text">Nourish Orders</span>
               </Link>
+                
+                
+                <Link
+                  to="/reports/nourish-reports"
+                  className="text-white flex items-center gap-[5px] mb-2 text-sm"
+                >
+                  <FaCircle className="menu--icon !text-[10px]" />
+                  <span className="nav-text">Nourish Reports</span>
+                </Link>
+              </div>
             )}
+              </>
+            }
 
             <div
               className="nav-link d-flex justify-between align-items-center mb-2"
@@ -6698,17 +6904,51 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
               <FaReact className="menu--icon" />
               <span className="nav-text">Group Class</span>
             </Link>
-            {hasProductServices && (
+           {hasProductServices &&
+          <>
+          <div
+              className="nav-link d-flex justify-between align-items-center mb-2"
+              onClick={() => toggleMenu("nourish")}
+              style={{ cursor: "pointer" }}
+            >
+              <div className="flex items-center">
+                <IoFastFoodOutline className="menu--icon" />
+
+                <span className="nav-text">Nourish</span>
+              </div>
+              <FaAngleDown
+                className={`downmenu transition ${
+                  dropdownToggles["nourish"] ? "rotate-[180deg]" : ""
+                }`}
+              />
+            </div>
+
+            {dropdownToggles["nourish"] && (
+              <div className="mt-2 pl-5 relative">
+                <div className="absolute h-[calc(100%-15px)] w-[2px] bg-white left-[23px] top-[8px]"></div>
+               
               <Link
                 to="/nourish-orders"
-                className={`nav-link mb-2 ${
+                className={`text-white flex items-center gap-[5px] mb-2 text-sm ${
                   location.pathname === "/nourish-orders" ? "active" : ""
                 }`}
               >
-                <IoFastFoodOutline className="menu--icon" />
+                 <FaCircle className="menu--icon !text-[10px]" />
                 <span className="nav-text">Nourish Orders</span>
               </Link>
+                
+                
+                <Link
+                  to="/reports/nourish-reports"
+                  className="text-white flex items-center gap-[5px] mb-2 text-sm"
+                >
+                  <FaCircle className="menu--icon !text-[10px]" />
+                  <span className="nav-text">Nourish Reports</span>
+                </Link>
+              </div>
             )}
+              </>
+            }
 
             <div
               className="nav-link d-flex justify-between align-items-center mb-2"
