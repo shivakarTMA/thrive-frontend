@@ -1291,7 +1291,7 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
                 >
                   <FaCircle className="menu--icon !text-[10px]" />
-                  <span className="nav-text">Nourish Reports</span>
+                  <span className="nav-text">Item-wise Report</span>
                 </Link>
               </div>
             )}
@@ -2056,7 +2056,7 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
                 >
                   <FaCircle className="menu--icon !text-[10px]" />
-                  <span className="nav-text">Nourish Reports</span>
+                  <span className="nav-text">Item-wise Report</span>
                 </Link>
               </div>
             )}
@@ -3250,7 +3250,7 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
                 >
                   <FaCircle className="menu--icon !text-[10px]" />
-                  <span className="nav-text">Nourish Reports</span>
+                  <span className="nav-text">Item-wise Report</span>
                 </Link>
               </div>
             )}
@@ -3449,7 +3449,7 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
                 >
                   <FaCircle className="menu--icon !text-[10px]" />
-                  <span className="nav-text">Nourish Reports</span>
+                  <span className="nav-text">Item-wise Report</span>
                 </Link>
               </div>
             )}
@@ -6222,7 +6222,7 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
                 >
                   <FaCircle className="menu--icon !text-[10px]" />
-                  <span className="nav-text">Nourish Reports</span>
+                  <span className="nav-text">Item-wise Report</span>
                 </Link>
               </div>
             )}
@@ -6943,7 +6943,7 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
                 >
                   <FaCircle className="menu--icon !text-[10px]" />
-                  <span className="nav-text">Nourish Reports</span>
+                  <span className="nav-text">Item-wise Report</span>
                 </Link>
               </div>
             )}
