@@ -432,7 +432,7 @@ const handleExportKycDocuments = async () => {
             <div className="text-lg font-bold">Total Sales</div>
           </div>
           <p className="text-3xl font-bold text-center py-5">
-            {kycDataCount?.total_sales }
+           ₹ {kycDataCount?.total_sales }
           </p>
         </div>
         
@@ -503,9 +503,9 @@ const handleExportKycDocuments = async () => {
                     <td className="px-2 py-4">{row?.current_stocks}</td>
                     <td className="px-2 py-4">{row?.quantity_sold}</td>
                     <td className="px-2 py-4">
-                      {row?.selling_price || "--"}
+                     ₹ {row?.selling_price || "--"}
                     </td>
-                    <td className="px-2 py-4">{row?.total_sales}</td>
+                    <td className="px-2 py-4">₹ {row?.total_sales}</td>
                    
                   </tr>
                 ))
