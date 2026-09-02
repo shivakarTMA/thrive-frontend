@@ -3,6 +3,7 @@ import { IoCloseCircle } from "react-icons/io5";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import ProductModal from "../components/modal/ProductDetails";
+import { format } from "date-fns";
 import {
   allowLettersAndNumbers,
   allowOnlyNumbers,
@@ -86,7 +87,8 @@ const MemberSendPaymentLink = ({
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
   const [paymentUrl, setPaymentUrl] = useState("");
   const [orderNo, setOrderNo] = useState("");
-
+  const [clubSlotsData, setClubSlotsData] = useState([]);
+  const [clubSlotsLoading, setClubSlotsLoading] = useState(false);
   const leadBoxRef = useRef(null);
   const [showGstDetails, setShowGstDetails] = useState(false);
   const initialGstState = {
@@ -739,6 +741,107 @@ const MemberSendPaymentLink = ({
   const handleApplyVoucher = () => {
     applyCoupon();
   };
+  const fetchClubSlots = async () => {
+      try {
+        if (!formik.values.club_id) {
+          setClubSlotsData([]);
+          return;
+        }
+  
+        setClubSlotsLoading(true);
+  
+        const res = await authAxios().post("/club/details/slots", {
+          club_id: formik.values.club_id,
+        });
+  
+        setClubSlotsData(res.data?.data || []);
+      } catch (err) {
+        console.error("Club slots error:", err);
+        setClubSlotsData([]);
+      } finally {
+        setClubSlotsLoading(false);
+      }
+    };
+  
+    useEffect(() => {
+      if (formik.values.club_id) {
+        fetchClubSlots();
+      } else {
+        setClubSlotsData([]);
+      }
+    }, [formik.values.club_id]);
+
+const isDateAvailable = (date) => {
+  // While API is loading, don't allow selection
+  if (clubSlotsLoading) return false;
+
+  if (!clubSlotsData?.length) return false;
+
+  // API date format = DD-MM-YYYY
+  const formattedDate = format(date, "dd-MM-yyyy");
+
+  const dayData = clubSlotsData.find(
+    (item) => item.date === formattedDate
+  );
+
+  // Date not returned by API
+  if (!dayData) return false;
+
+  // Date returned but no slots
+  if (!Array.isArray(dayData.slots) || dayData.slots.length === 0) {
+    return false;
+  }
+
+  return true;
+};
+useEffect(() => {
+  if (clubSlotsLoading || !clubSlotsData?.length) return;
+
+  // If already selected date is available, keep it
+  if (
+    formik.values.start_date &&
+    isDateAvailable(new Date(formik.values.start_date))
+  ) {
+    return;
+  }
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const firstAvailableDay = clubSlotsData.find((item) => {
+    if (!Array.isArray(item.slots) || item.slots.length === 0) {
+      return false;
+    }
+
+    // API format DD-MM-YYYY
+    const [day, month, year] = item.date.split("-");
+
+    const itemDate = new Date(
+      Number(year),
+      Number(month) - 1,
+      Number(day)
+    );
+
+    itemDate.setHours(0, 0, 0, 0);
+
+    return itemDate >= today;
+  });
+
+  if (firstAvailableDay) {
+    const [day, month, year] = firstAvailableDay.date.split("-");
+
+    const nextAvailableDate = new Date(
+      Number(year),
+      Number(month) - 1,
+      Number(day)
+    );
+
+    formik.setFieldValue("start_date", nextAvailableDate);
+  } else {
+    // No available date
+    formik.setFieldValue("start_date", null);
+  }
+}, [clubSlotsData, clubSlotsLoading]);
 
   return (
     <>
@@ -843,22 +946,39 @@ const MemberSendPaymentLink = ({
                         <FaCalendarDays />
                       </span>
                       <DatePicker
-                        selected={
-                          formik.values.start_date
-                            ? new Date(formik.values.start_date)
-                            : new Date() // ✅ fallback to today
-                        }
-                        onChange={(date) =>
-                          formik.setFieldValue("start_date", date)
-                        }
-                        // minDate={new Date()} // ❌ disables past dates
-                        minDate={minStartDate}
-                        dateFormat="dd MMM yyyy"
-                        yearDropdownItemNumber={100}
-                        onKeyDown={(e) => e.preventDefault()}
-                        placeholderText="Select date"
-                        className="input--icon"
-                      />
+  selected={
+     formik.values.start_date
+      ? new Date(formik.values.start_date)
+      : null
+  }
+
+  onChange={(date) => {
+    // Extra protection
+    if (!isDateAvailable(date)) {
+      toast.error("No slots available for this date");
+      return;
+    }
+
+    formik.setFieldValue("start_date", date);
+  }}
+
+  minDate={minStartDate}
+
+  filterDate={isDateAvailable}
+
+  dateFormat="dd MMM yyyy"
+  yearDropdownItemNumber={100}
+
+  placeholderText={
+    clubSlotsLoading
+      ? "Loading available dates..."
+      : "Select date"
+  }
+
+  disabled={clubSlotsLoading}
+
+  className="input--icon"
+/>
                     </div>
                     {formik.errors?.start_date &&
                       formik.touched?.start_date && (
