@@ -366,7 +366,7 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                 
                 
                 <Link
-                  to="/reports/nourish-reports"
+                  to="/reports/Item-wise-reports"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
                 >
                   <FaCircle className="menu--icon !text-[10px]" />
@@ -1287,7 +1287,7 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                 
                 
                 <Link
-                  to="/reports/nourish-reports"
+                  to="/reports/Item-wise-reports"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
                 >
                   <FaCircle className="menu--icon !text-[10px]" />
@@ -2052,7 +2052,7 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                 
                 
                 <Link
-                  to="/reports/nourish-reports"
+                  to="/reports/Item-wise-reports"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
                 >
                   <FaCircle className="menu--icon !text-[10px]" />
@@ -3246,7 +3246,7 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                 
                 
                 <Link
-                  to="/reports/nourish-reports"
+                  to="/reports/Item-wise-reports"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
                 >
                   <FaCircle className="menu--icon !text-[10px]" />
@@ -3445,7 +3445,7 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                 
                 
                 <Link
-                  to="/reports/nourish-reports"
+                  to="/reports/Item-wise-reports"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
                 >
                   <FaCircle className="menu--icon !text-[10px]" />
@@ -6218,7 +6218,7 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                 
                 
                 <Link
-                  to="/reports/nourish-reports"
+                  to="/reports/Item-wise-reports"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
                 >
                   <FaCircle className="menu--icon !text-[10px]" />
@@ -6939,7 +6939,7 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                 
                 
                 <Link
-                  to="/reports/nourish-reports"
+                  to="/reports/Item-wise-reports"
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
                 >
                   <FaCircle className="menu--icon !text-[10px]" />

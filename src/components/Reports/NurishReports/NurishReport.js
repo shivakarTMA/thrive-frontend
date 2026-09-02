@@ -210,6 +210,80 @@ if (sortBy) {
   setPage(1);
 };
 
+const handleExportKycDocuments = async () => {
+  try {
+    setLoading(true);
+
+    const params = {};
+
+    // Search
+    if (searchTerm?.trim()) {
+      params.search = searchTerm.trim();
+    }
+
+    // Club filter
+    if (clubFilter) {
+      params.club_id = clubFilter;
+    }
+
+    // Category filter
+    if (categoryFilter) {
+      params.product_category_id = categoryFilter;
+    }
+
+    // Status filter
+    if (statusFilter) {
+      params.status = statusFilter;
+    }
+
+    // Date filter
+    if (dateFilter?.value === "custom") {
+      if (customFrom && customTo) {
+        params.startDate = formatDate(customFrom);
+        params.endDate = formatDate(customTo);
+      }
+    } else if (dateFilter?.value) {
+      params.dateFilter = dateFilter.value;
+    }
+
+    // Sorting
+    if (sortBy) {
+      params.sort_by = sortBy;
+      params.sort_order = sortOrders[sortBy];
+    }
+
+    console.log("Download Params:", params);
+
+    const response = await authAxios().get(
+      "/report/nourish/list/download",
+      {
+        params,
+        responseType: "blob",
+      }
+    );
+
+    const blob = new Blob([response.data]);
+
+    const url = window.URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", "Item-wise-report.xlsx");
+
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+
+    window.URL.revokeObjectURL(url);
+
+    toast.success("Report downloaded successfully!");
+  } catch (error) {
+    console.error("Download error:", error);
+    toast.error("Failed to download report.");
+  } finally {
+    setLoading(false);
+  }
+};
 
 
   return (
@@ -218,9 +292,9 @@ if (sortBy) {
       <div className="flex items-end justify-between gap-2 mb-5">
         <div className="title--breadcrumbs">
           <p className="text-sm">{`Home > KYC Documents`}</p>
-          <h1 className="text-3xl font-semibold">Nourish Report</h1>
+          <h1 className="text-3xl font-semibold">Item-wise Report</h1>
         </div>
-        {/* {!ALLOWED_ROLES.includes(userRole) && (
+        {/* {!ALLOWED_ROLES.includes(userRole) && ( */}
           <div className="w-full max-w-[200px]">
             <button
               onClick={handleExportKycDocuments}
@@ -232,10 +306,10 @@ if (sortBy) {
                   : "bg-black text-white hover:bg-gray-800"
               }`}
             >
-              <LuDownload /> <span>Download Documents</span>
+              <LuDownload /> <span>Download Report</span>
             </button>
           </div>
-        )} */}
+        {/* )} */}
       </div>
 
       {/* Filters */}
@@ -372,6 +446,7 @@ if (sortBy) {
               <tr>
                 <th className="px-2 py-4 min-w-[150px]">Item Name</th>
                 <th className="px-2 py-4 min-w-[120px]">Category</th>
+                <th className="px-2 py-4 min-w-[120px]">Current Stocks</th>
                <th
   className="px-2 py-4 min-w-[150px] cursor-pointer select-none"
   onClick={() => handleSort("quantity_sold")}
@@ -425,6 +500,7 @@ if (sortBy) {
                   >
                     <td className="px-2 py-4">{row?.product_name || "--"}</td>
                     <td className="px-2 py-4">{row?.product_category_name}</td>
+                    <td className="px-2 py-4">{row?.current_stocks}</td>
                     <td className="px-2 py-4">{row?.quantity_sold}</td>
                     <td className="px-2 py-4">
                       {row?.selling_price || "--"}

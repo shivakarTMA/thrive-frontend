@@ -808,9 +808,9 @@ export default function Routing() {
           }
         />
         <Route
-          path="/reports/nourish-reports"
+          path="/reports/Item-wise-reports"
           element={
-            <RoleProtectedRoute path="/reports/nourish-reports">
+            <RoleProtectedRoute path="/reports/Item-wise-reports">
               <NurishReport />
             </RoleProtectedRoute>
           }
