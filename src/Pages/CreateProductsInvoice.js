@@ -633,6 +633,7 @@ const CreateProductsInvoice = ({
 
       const res = await authAxios().post("/club/details/slots", {
         club_id: formik.values.club_id,
+        duration : 30
       });
 
       setClubSlotsData(res.data?.data || []);
@@ -893,7 +894,7 @@ const CreateProductsInvoice = ({
         >
           {/* ── Modal header ─────────────────────────────────────────────── */}
           <div className="bg-white rounded-t-[10px] flex gap-3 items-center justify-between py-4 px-4 border-b">
-            <h2 className="text-xl font-semibold">Buy Products</h2>
+            <h2 className="text-xl font-semibold">Buy Productsdfsdfsdfsds</h2>
             <div
               className="close--lead cursor-pointer"
               onClick={() => setProductInvoiceModal(false)}
@@ -1210,7 +1211,7 @@ const CreateProductsInvoice = ({
                       {/* Time slot */}
                       <div>
                         <label className="text-sm mb-2 block">
-                          Time Slot
+                          Time Slotsss
                         </label>
 
                         <Select

@@ -767,9 +767,6 @@ const getStatusText = (status) => {
   }
 };
 
-
-
-console.log(filterStatus,"AyushAyushAyushAyushAyush")
   return (
     <>
       <div className="page--content">
