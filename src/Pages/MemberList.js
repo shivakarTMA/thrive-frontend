@@ -136,8 +136,8 @@ const MemberList = (props) => {
         if (clubIdFromUrl) params.club_id = clubIdFromUrl;
       } else {
         const filters = {
-          is_subscribed: overrideSelected.hasOwnProperty("is_subscribed")
-            ? overrideSelected.is_subscribed
+          status: overrideSelected.hasOwnProperty("status")
+            ? overrideSelected.status
             : filterStatus,
           service_id: overrideSelected.hasOwnProperty("service_id")
             ? overrideSelected.service_id
@@ -507,7 +507,7 @@ const MemberList = (props) => {
     }
 
     const setterMap = {
-      is_subscribed: setFilterStatus,
+      status: setFilterStatus,
       service_id: setFilterService,
       age_range: setFilterAgeGroup,
       lead_source: setFilterLeadSource,
@@ -523,7 +523,7 @@ const MemberList = (props) => {
     setterMap[filterKey]?.(null);
 
     const overrideSelected = {
-      is_subscribed: filterKey === "is_subscribed" ? null : filterStatus,
+      status: filterKey === "status" ? null : filterStatus,
       service_id: filterKey === "service_id" ? null : filterService,
       age_range: filterKey === "age_range" ? null : filterAgeGroup,
       lead_source: filterKey === "lead_source" ? null : filterLeadSource,
@@ -563,7 +563,7 @@ const MemberList = (props) => {
         }
       } else {
         const filters = {
-          is_subscribed: filterStatus,
+          status: filterStatus,
           service_id: filterService,
           age_range: filterAgeGroup,
           lead_source: filterLeadSource,
@@ -733,6 +733,43 @@ const MemberList = (props) => {
 const hasMemberPermission = (permission) =>
   memberPermissions[permission]?.includes(userRole);
 
+const getStatusClass = (status) => {
+  switch (status) {
+    case "ACTIVE":
+      return "bg-[#E8FFE6] text-[#138808]";
+
+    case "UPCOMING":
+      return "bg-[#FFF4E5] text-[#F59E0B]";
+
+    case "EXPIRED":
+      return "bg-[#FFE8E8] text-[#D32F2F]";
+
+    case "FREEZED":
+      return "bg-[#EEEEEE] text-[#666666]";
+
+    default:
+      return "bg-[#EEEEEE] text-[#666666]";
+  }
+};
+
+const getStatusText = (status) => {
+  switch (status) {
+    case "ACTIVE":
+      return "Active";
+    case "UPCOMING":
+      return "Upcoming";
+    case "EXPIRED":
+      return "Expired";
+    case "FREEZED":
+      return "Freezed";
+    default:
+      return "-";
+  }
+};
+
+
+
+console.log(filterStatus,"AyushAyushAyushAyushAyush")
   return (
     <>
       <div className="page--content">
@@ -1112,18 +1149,14 @@ const hasMemberPermission = (permission) =>
                             ${
                               member?.freeze_status === "FREEZED"
                                 ? "bg-[#ffe9c6] text-[#ffac28]"
-                                : member?.is_subscribed === true
-                                ? "bg-[#E8FFE6] text-[#138808]"
-                                : "bg-[#EEEEEE] text-[#666666]"
+                                : getStatusClass(member?.status)
                             }
                           `}
                         >
                           <FaCircle className="text-[10px]" />
                           {member?.freeze_status === "FREEZED"
                             ? formatText(member?.freeze_status)
-                            : member?.is_subscribed === true
-                            ? "Active"
-                            : "Inactive"}
+                             : getStatusText(member?.status)}
                         </span>
                       </td>
                       <td className="px-2 py-4">

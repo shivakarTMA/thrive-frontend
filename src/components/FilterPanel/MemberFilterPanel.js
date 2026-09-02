@@ -12,8 +12,10 @@ import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 
 const memberStatus = [
-  { value: true, label: "Active" },
-  { value: false, label: "Inactive" },
+  { value: "UPCOMING", label: "Upcoming" },
+  { value: "ACTIVE", label: "Active" },
+  { value: "EXPIRED", label: "Expired" },
+  { value: "FREEZED", label: "Freezed" },
 ];
 
 const downloadApp = [
@@ -281,7 +283,7 @@ export default function MemberFilterPanel({
   // Handle Submit (apply filters)
   const handleSubmitFilters = () => {
     setAppliedFilters({
-      is_subscribed:
+      status:
         filterStatus !== null
           ? memberStatus.find((option) => option.value === filterStatus)
           : null,
@@ -309,7 +311,7 @@ export default function MemberFilterPanel({
   // Handle remove filter chip
   const removeFilter = (filterKey) => {
     const setterMap = {
-      is_subscribed: setFilterStatus,
+      status: setFilterStatus,
       service_id: setFilterService,
       // service_variation: setFilterServiceVariation,
       age_range: setFilterAgeGroup,
