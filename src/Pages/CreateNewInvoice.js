@@ -117,6 +117,9 @@ const CreateNewInvoice = ({
   const [voucherInput, setVoucherInput] = useState("");
   const [voucherStatus, setVoucherStatus] = useState(null);
   const [voucherMessage, setVoucherMessage] = useState("");
+  const [clubSlotsData, setClubSlotsData] = useState([]);
+  const [clubSlotsLoading, setClubSlotsLoading] = useState(false);
+
   // const [clubTiming, setClubTiming] = useState([]);
 
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
@@ -1030,6 +1033,121 @@ const CreateNewInvoice = ({
     setPaymentModalOpen(false);
   };
 
+  const fetchClubSlots = async () => {
+      try {
+        if (!formik.values.club_id) {
+          setClubSlotsData([]);
+          return;
+        }
+  
+        setClubSlotsLoading(true);
+  
+        const res = await authAxios().post("/club/details/slots", {
+          club_id: formik.values.club_id,
+        });
+  
+        setClubSlotsData(res.data?.data || []);
+      } catch (err) {
+        console.error("Club slots error:", err);
+        setClubSlotsData([]);
+      } finally {
+        setClubSlotsLoading(false);
+      }
+    };
+  
+    useEffect(() => {
+      if (formik.values.club_id) {
+        fetchClubSlots();
+      } else {
+        setClubSlotsData([]);
+      }
+    }, [formik.values.club_id]);
+
+const isDateAvailable = (date) => {
+  // While API is loading, don't allow selection
+  if (clubSlotsLoading) return false;
+
+  if (!clubSlotsData?.length) return false;
+
+  // API date format = DD-MM-YYYY
+  const formattedDate = format(date, "dd-MM-yyyy");
+
+  const dayData = clubSlotsData.find(
+    (item) => item.date === formattedDate
+  );
+
+  // Date not returned by API
+  if (!dayData) return false;
+
+  // Date returned but no slots
+  if (!Array.isArray(dayData.slots) || dayData.slots.length === 0) {
+    return false;
+  }
+
+  return true;
+};
+useEffect(() => {
+  if (clubSlotsLoading || !clubSlotsData?.length) return;
+
+  // Minimum allowed date
+  const minAllowedDate = upCommingDateMember
+    ? new Date(upCommingDateMember)
+    : new Date();
+
+  minAllowedDate.setHours(0, 0, 0, 0);
+
+  // If currently selected date is valid + available, keep it
+  if (formik.values.start_date) {
+    const selectedDate = new Date(formik.values.start_date);
+    selectedDate.setHours(0, 0, 0, 0);
+
+    if (
+      selectedDate >= minAllowedDate &&
+      isDateAvailable(selectedDate)
+    ) {
+      return;
+    }
+  }
+
+  // Find first available date after minAllowedDate
+  const firstAvailableDay = clubSlotsData.find((item) => {
+    if (!Array.isArray(item.slots) || item.slots.length === 0) {
+      return false;
+    }
+
+    // API date format = DD-MM-YYYY
+    const [day, month, year] = item.date.split("-");
+
+    const itemDate = new Date(
+      Number(year),
+      Number(month) - 1,
+      Number(day)
+    );
+
+    itemDate.setHours(0, 0, 0, 0);
+
+    return itemDate >= minAllowedDate;
+  });
+
+  if (firstAvailableDay) {
+    const [day, month, year] = firstAvailableDay.date.split("-");
+
+    const nextAvailableDate = new Date(
+      Number(year),
+      Number(month) - 1,
+      Number(day)
+    );
+
+    formik.setFieldValue("start_date", nextAvailableDate);
+  } else {
+    // No available slots
+    formik.setFieldValue("start_date", null);
+  }
+}, [
+  clubSlotsData,
+  clubSlotsLoading,
+  upCommingDateMember,
+]);
   return (
     <>
       <div
@@ -1197,31 +1315,60 @@ const CreateNewInvoice = ({
                             <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
                               <FaCalendarDays />
                             </span>
-                            <DatePicker
-                              selected={formik.values.start_date}
-                              onChange={(date) => {
-                                formik.setFieldValue("start_date", date);
-                              }}
-                              onBlur={() =>
-                                formik.setFieldTouched("start_date", true, true)
-                              }
-                              minDate={
-                                upCommingDateMember
-                                  ? new Date(upCommingDateMember)
-                                  : new Date()
-                              }
-                              onKeyDown={(e) => {
-                                e.preventDefault();
-                              }}
-                              dateFormat="dd MMM yyyy"
-                              placeholderText="Select date"
-                              className={`input--icon ${
-                                formik.errors?.start_date &&
-                                formik.touched?.start_date
-                                  ? "border-red-500"
-                                  : ""
-                              }`}
-                            />
+                           <DatePicker
+  selected={
+    formik.values.start_date
+      ? new Date(formik.values.start_date)
+      : null
+  }
+
+  onChange={(date) => {
+    if (!date) {
+      formik.setFieldValue("start_date", null);
+      return;
+    }
+
+    if (!isDateAvailable(date)) {
+      toast.error("No slots available for this date");
+      return;
+    }
+
+    formik.setFieldValue("start_date", date);
+  }}
+
+  filterDate={isDateAvailable}
+
+  onBlur={() =>
+    formik.setFieldTouched("start_date", true, true)
+  }
+
+  minDate={
+    upCommingDateMember
+      ? new Date(upCommingDateMember)
+      : new Date()
+  }
+
+  onKeyDown={(e) => {
+    e.preventDefault();
+  }}
+
+  dateFormat="dd MMM yyyy"
+
+  placeholderText={
+    clubSlotsLoading
+      ? "Loading available dates..."
+      : "Select date"
+  }
+
+  disabled={clubSlotsLoading}
+
+  className={`input--icon ${
+    formik.errors?.start_date &&
+    formik.touched?.start_date
+      ? "border-red-500"
+      : ""
+  }`}
+/>
                           </div>
                           {formik.errors?.start_date &&
                             formik.touched?.start_date && (
