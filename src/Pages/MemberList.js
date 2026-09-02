@@ -763,7 +763,7 @@ const getStatusText = (status) => {
     case "FREEZED":
       return "Freezed";
     default:
-      return "-";
+      return "No Status"
   }
 };
 
