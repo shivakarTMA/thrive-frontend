@@ -827,7 +827,7 @@ const ConvertMemberForm = ({
               subscription_plan_id: values.productDetails.id,
               order_type: "SUBSCRIPTION",
               start_date: values.start_date
-                ? new Date(values.start_date).toISOString().split("T")[0]
+                ? format(values.start_date, "yyyy-MM-dd")
                 : null,
               coins: 0,
               coupon_code: values.coupon || "",
@@ -3187,7 +3187,7 @@ useEffect(() => {
                   {step === 2 && (
                     <>
                       <h3 className="text-2xl font-semibold mb-2">
-                        Subscriptionsssssssss plan
+                        Subscriptions plan
                       </h3>
                       <div className="grid grid-cols-3 gap-4">
                         <div>

@@ -33,7 +33,7 @@ const FreezeMembershipModal = ({
         .required("Extension days is required")
         .positive("Must be greater than 0")
         .integer("Only whole numbers are allowed")
-        .min(1, "Minimum 1 days are required")
+        .min(7, "Minimum 7 days are required")
         .max(90, "Maximum 90 days are allowed"),
     }),
 

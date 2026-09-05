@@ -295,7 +295,7 @@ const handleExportKycDocuments = async () => {
           <h1 className="text-3xl font-semibold">Item-wise Report</h1>
         </div>
         {/* {!ALLOWED_ROLES.includes(userRole) && ( */}
-          <div className="w-full max-w-[200px]">
+          <div className="w-full max-w-[170px]">
             <button
               onClick={handleExportKycDocuments}
               disabled={kycDocumentsData.length === 0 || (dateFilter?.value === "custom" && (!customFrom || !customTo))}

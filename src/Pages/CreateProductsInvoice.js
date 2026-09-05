@@ -598,6 +598,17 @@ const CreateProductsInvoice = ({
     if (!validateItems()) return;
     if (showGstDetails && !validateGstFields()) return;
 
+         const hasAvailableDeliveryDate = [
+    "TODAY",
+    "TOMORROW",
+    "DAY_AFTER",
+  ].some((key) => isDeliveryDateAvailable(key));
+
+  if (!hasAvailableDeliveryDate) {
+    toast.error("Please select delivery date");
+    return;
+  }
+  
     if (mode === "OFFLINE") {
       setPaymentModalOpen(true); // open offline details modal
     } else {
@@ -636,7 +647,26 @@ const CreateProductsInvoice = ({
         duration : 30
       });
 
-      setClubSlotsData(res.data?.data || []);
+     const slotsData = res.data?.data || [];
+
+setClubSlotsData(slotsData);
+
+const defaultDeliveryDate = ["TODAY", "TOMORROW", "DAY_AFTER"].find(
+  (key) => {
+    const apiDate = getSlotApiDateByKey(key);
+
+    const dateData = slotsData.find((item) => item.date === apiDate);
+
+    return (
+      dateData &&
+      Array.isArray(dateData.slots) &&
+      dateData.slots.length > 0
+    );
+  },
+);
+
+setDeliveryDate(defaultDeliveryDate || null);
+setSelectedTimeSlot(null);
     } catch (err) {
       console.error("Club slots error:", err);
       setClubSlotsData([]);
@@ -894,7 +924,7 @@ const CreateProductsInvoice = ({
         >
           {/* ── Modal header ─────────────────────────────────────────────── */}
           <div className="bg-white rounded-t-[10px] flex gap-3 items-center justify-between py-4 px-4 border-b">
-            <h2 className="text-xl font-semibold">Buy Productsdfsdfsdfsds</h2>
+            <h2 className="text-xl font-semibold">Buy Products</h2>
             <div
               className="close--lead cursor-pointer"
               onClick={() => setProductInvoiceModal(false)}
@@ -1211,7 +1241,7 @@ const CreateProductsInvoice = ({
                       {/* Time slot */}
                       <div>
                         <label className="text-sm mb-2 block">
-                          Time Slotsss
+                          Time Slots
                         </label>
 
                         <Select

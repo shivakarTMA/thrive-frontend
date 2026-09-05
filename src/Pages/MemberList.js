@@ -753,18 +753,9 @@ const getStatusClass = (status) => {
 };
 
 const getStatusText = (status) => {
-  switch (status) {
-    case "ACTIVE":
-      return "Active";
-    case "UPCOMING":
-      return "Upcoming";
-    case "EXPIRED":
-      return "Expired";
-    case "FREEZED":
-      return "Freezed";
-    default:
-      return "No Status"
-  }
+  if (!status) return "No Status";
+
+  return status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
 };
 
   return (
