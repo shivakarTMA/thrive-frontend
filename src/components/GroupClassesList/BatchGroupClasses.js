@@ -18,6 +18,7 @@ import { authAxios } from "../../config/config";
 import { toast } from "react-toastify";
 import { PiImageFill } from "react-icons/pi";
 import { useDispatch } from "react-redux";
+import { FaArrowRightLong } from "react-icons/fa6";
 
 // status type options for dropdown
 const statusType = [
@@ -121,7 +122,7 @@ const CreateBatchClasses = ({  setShowBatchModal,
     endTime: "",
     trainerId: "",
     studioId: "",
-    capacity: 18,
+    capacity: 0,
     waitlist: 0,
   });
   const [dayRows, setDayRows] = useState(
@@ -204,19 +205,23 @@ const CreateBatchClasses = ({  setShowBatchModal,
     );
   };
 
- const copyFirstRowToWeek = () => {
+const copyFirstRowToWeek = () => {
   setDayRows((rows) => {
     const firstRow = rows[0];
 
     return rows.map((row, index) => {
       if (index === 0) return row;
 
+      const canEnableDay =
+        availableDaysInRange.has(row.day) &&
+        hasAvailableSlots(row.day);
+
       return {
         ...row,
-        enabled: true, // Enables Saturday and Sunday too
-        slots: firstRow.slots.map((slot) => ({
-          ...slot,
-        })),
+        enabled: canEnableDay,
+        slots: canEnableDay
+          ? firstRow.slots.map((slot) => ({ ...slot }))
+          : row.slots,
       };
     });
   });
@@ -367,6 +372,7 @@ const toggleSkipDate = (dateStr) => {
           endTime: !slot.endTime,
           trainerId: !slot.trainerId,
           studioId: !slot.studioId,
+          capacity: Number(slot.capacity) <= 0,
         };
         if (Object.values(fieldErrors).some(Boolean)) {
           errors[`${dayIndex}-${slotIndex}`] = fieldErrors;
@@ -384,7 +390,7 @@ const toggleSkipDate = (dateStr) => {
     const errors = validateSlots();
     if (Object.keys(errors).length > 0) {
       setSlotErrors(errors);
-      toast.error("Class Start, Class End, Trainer and Studio are required for every slot");
+      toast.error("Please fill required fields for every slot");
       return;
     }
     setSlotErrors({});
@@ -396,6 +402,30 @@ const toggleSkipDate = (dateStr) => {
     }
 
     const isPaid = formik.values.booking_type === "PAID";
+
+    // Amount/Discount are mandatory for PAID classes (not required for FREE).
+    if (isPaid) {
+      const amountMissing =
+        formik.values.amount === "" ||
+        formik.values.amount === null ||
+        formik.values.amount === undefined ||
+        Number(formik.values.amount) <= 0;
+      const discountMissing =
+        formik.values.discount === "" ||
+        formik.values.discount === null ||
+        formik.values.discount === undefined;
+
+      if (amountMissing || discountMissing) {
+        formik.setTouched({
+          ...formik.touched,
+          amount: true,
+          discount: true,
+        });
+        toast.error("Amount and Discount are required for a Paid class");
+        return;
+      }
+    }
+
     const payload = {
       club_id: formik.values.club_id,
       service_id: formik.values.service_id,
@@ -444,9 +474,9 @@ const toggleSkipDate = (dateStr) => {
       console.error("Batch create error:", err);
       const responseData = err.response?.data;
 
-      if (responseData?.conflict_type === "EXISTING_DATA") {
-        setSessionConflicts(responseData.conflicts || []);
-      }
+    if (responseData?.conflict_type) {
+    setSessionConflicts(responseData?.conflicts || []);
+    }
 
       toast.error(
         responseData?.message ||
@@ -1058,7 +1088,7 @@ const excludeDuplicateCombo = (options, row, slotIndex, field) => {
           {/* Header */}
           <div className="bg-white rounded-t-[10px] flex gap-3 items-center justify-between py-4 px-4 border-b">
             <h2 className="text-xl font-semibold">
-              {editingOption ? "Edit Class" : "Create Class"}
+              {editingOption ? "Edit Class" : "Create Batch Classes"}
             </h2>
             <div
               className="close--lead cursor-pointer"
@@ -1100,7 +1130,7 @@ const excludeDuplicateCombo = (options, row, slotIndex, field) => {
           {/* Form */}
           <div className="flex-1">
             <form onSubmit={handleBatchSubmit} className="space-y-6">
-              <div className="flex bg-white rounded-b-[10px]">
+              <div className="flexx bg-white rounded-b-[10px]">
                 <div className="p-6 flex-1">
                   {/* <div className="flex gap-3"> */}
 
@@ -1704,36 +1734,35 @@ const excludeDuplicateCombo = (options, row, slotIndex, field) => {
       </span>
 
       <DatePicker
-        selected={null}
-        onChange={(date) => {
-          if (!date) return;
-
-          const formattedDate = date.toLocaleDateString("en-CA");
-
-          toggleSkipDate(formattedDate);
-
-          const updatedSkipDates = skipDates.includes(formattedDate)
-            ? skipDates.filter((item) => item !== formattedDate)
-            : [...skipDates, formattedDate];
-
-          formik.setFieldValue("skip_dates", updatedSkipDates);
-        }}
-        dateFormat="dd-MM-yyyy"
-        placeholderText="dd-mm-yyyy"
-        minDate={
-          scheduleStartDate
-            ? new Date(`${scheduleStartDate}T00:00:00`)
-            : new Date()
-        }
-        maxDate={
-          scheduleEndDate
-            ? new Date(`${scheduleEndDate}T00:00:00`)
-            : null
-        }
-        disabled={!scheduleStartDate || !scheduleEndDate}
-        className="custom--input w-full input--icon"
-        onKeyDown={(e) => e.preventDefault()}
-      />
+       selected={null}
+       onChange={(date) => {
+         if (!date) return;
+     
+         const formattedDate = date.toLocaleDateString("en-CA");
+         const updatedSkipDates = [...skipDates, formattedDate];
+     
+         setSkipDates(updatedSkipDates);
+         formik.setFieldValue("skip_dates", updatedSkipDates);
+       }}
+       excludeDates={skipDates.map(
+         (date) => new Date(`${date}T00:00:00`)
+       )}
+       dateFormat="dd-MM-yyyy"
+       placeholderText="dd-mm-yyyy"
+       minDate={
+         scheduleStartDate
+           ? new Date(`${scheduleStartDate}T00:00:00`)
+           : new Date()
+       }
+       maxDate={
+         scheduleEndDate
+           ? new Date(`${scheduleEndDate}T00:00:00`)
+           : null
+       }
+       disabled={!scheduleStartDate || !scheduleEndDate}
+       className="custom--input w-full input--icon"
+       onKeyDown={(e) => e.preventDefault()}
+     />
     </div>
 
   {/* {skipDates.length > 0 && (
@@ -1761,13 +1790,13 @@ const excludeDuplicateCombo = (options, row, slotIndex, field) => {
               <thead>
                 <tr className="bg-gray-50 text-left">
                   <th className="p-2">Day</th>
-                  <th className="p-2">Class Start</th>
-                  <th className="p-2">Class End</th>
-                  <th className="p-2">Trainer</th>
-                  <th className="p-2">Studio</th>
-                  <th className="p-2">Cap.</th>
+                  <th className="p-2">Class Start<span className="text-red-500">*</span></th>
+                  <th className="p-2">Class End<span className="text-red-500">*</span></th>
+                  <th className="p-2">Trainer<span className="text-red-500">*</span></th>
+                  <th className="p-2">Studio<span className="text-red-500">*</span></th>
+                  <th className="p-2">Capacity<span className="text-red-500">*</span></th>
                   <th className="p-2">Waitlist</th>
-                  <th className="p-2">Row Actions</th>
+                  <th className="p-2">Actions</th>
                 </tr>
               </thead>
 
@@ -1832,7 +1861,7 @@ menuPosition="fixed"
 
                       <td className="p-2 min-w-[140px]">
                         <Select
-                          isDisabled={!row.enabled}
+                          isDisabled={!row.enabled || !slot.startTime}
                           value={
                             getDayTimeOptions(row.day, slot.startTime).find(
                               (o) => o.value === slot.endTime,
@@ -1860,7 +1889,7 @@ menuPosition="fixed"
                       </td>
                            <td className="p-2 min-w-[140px]">
                         <Select
-                          isDisabled={!row.enabled}
+                          isDisabled={!row.enabled  || !slot.startTime || !slot.endTime}
                           value={
                             trainerOptions.find(
                               (o) => o.value === slot.trainerId,
@@ -1893,7 +1922,7 @@ menuPosition="fixed"
                       </td>
                       <td className="p-2 min-w-[140px]">
                         <Select
-                          isDisabled={!row.enabled}
+                          isDisabled={!row.enabled || !slot.startTime ||!slot.endTime ||!slot.trainerId}
                           value={
                             studioOptions.find(
                               (o) => o.value === slot.studioId,
@@ -1938,7 +1967,11 @@ menuPosition="fixed"
                               ),
                             })
                           }
-                          className="custom--input w-16 number--appearance-none"
+                           className={`custom--input w-16 number--appearance-none ${
+    slotErrors[`${dayIndex}-${slotIndex}`]?.capacity
+      ? "!border-red-500 !ring-1 !ring-red-500"
+      : ""
+  }`}
                         />
                       </td>
 
@@ -2145,15 +2178,15 @@ menuPosition="fixed"
 
         <input
           type="number"
-          disabled
+          disabled={true}
           name="gst"
           value={formik.values.gst ?? 5}
-          className="custom--input w-full bg-gray-100"
+          className="custom--input w-full disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed"
         />
       </div>
 
       {/* HSN/SAC */}
-      <div>
+      {/* <div>
         <label className="mb-2 block font-medium">
           HSN / SAC Code
         </label>
@@ -2171,7 +2204,7 @@ menuPosition="fixed"
           onBlur={formik.handleBlur}
           className="custom--input w-full"
         />
-      </div>
+      </div> */}
 
       {/* Payable Amount */}
       <div>
@@ -2210,9 +2243,11 @@ menuPosition="fixed"
           <span className="text-sm font-normal ml-1">classes</span>
         </p>
 
-        <p className="text-xs text-gray-500 mb-3">
-          {scheduleStartDate || "—"} → {scheduleEndDate || "—"}
-        </p>
+       <p className="mb-3 flex items-center gap-2 text-xs text-gray-500">
+        <span>{scheduleStartDate || "—"}</span>
+        <FaArrowRightLong />
+        <span>{scheduleEndDate || "—"}</span>
+      </p>
 
         {sessionSummaryByDay.map((s) => (
           <div

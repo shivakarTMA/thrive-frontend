@@ -627,7 +627,13 @@ const endTimeOptions = useMemo(() => {
                         }
                         options={trainerOptions}
                         onChange={(option) =>
-                          formik.setFieldValue("trainer_id", option.value)
+                        (
+                          formik.setFieldValue("trainer_id", option.value),
+                          formik.setFieldValue("start_date", null),
+                          formik.setFieldValue("start_time", null),
+                          formik.setFieldValue("end_time", null),
+                          formik.setFieldValue("studio_id", null)
+                        )
                         }
                         onBlur={() =>
                           formik.setFieldTouched("trainer_id", true)
