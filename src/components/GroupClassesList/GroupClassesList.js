@@ -29,6 +29,7 @@ import { FiPlus } from "react-icons/fi";
 import { LiaEdit } from "react-icons/lia";
 import { LuDownload } from "react-icons/lu";
 import IsLoadingHOC from "../common/IsLoadingHOC";
+import CreateBatchClasses from "./BatchGroupClasses";
 
 const dateFilterOptions = [
   { value: "today", label: "Today" },
@@ -60,7 +61,7 @@ const GroupClassesList = (props) => {
   const [totalCount, setTotalCount] = useState(0);
 
   const [filtersInitialized, setFiltersInitialized] = useState(false);
-
+  const [showBatchClass, setShowBatchClass] = useState(false);
   // ✅ Single source of truth for applied filters
   const [appliedFilters, setAppliedFilters] = useState({
     package_category_id: null,
@@ -382,6 +383,7 @@ const GroupClassesList = (props) => {
         setEditingOption(null);
         setCheckActiveBooking(null);
         setShowModal(false);
+      setShowBatchClass(false);
       } catch (err) {
         console.error("API Error:", err.response?.data?.errors);
         toast.error(err.response?.data?.errors || err.response?.data?.message);
@@ -566,6 +568,34 @@ const GroupClassesList = (props) => {
     }
   };
 
+  const createClassOptions = [
+  {
+    value: "single",
+    label: "Single Class",
+    icon: <FiPlus className="text-[18px]" />,
+  },
+  {
+  value: "batch",
+  label: "Batch Class",
+  icon: <FaCalendarDays className="text-[16px]" />,
+},
+];
+
+const customCreateClassOption = ({
+  innerRef,
+  innerProps,
+  data,
+}) => (
+  <div
+    ref={innerRef}
+    {...innerProps}
+    className="flex items-center gap-2 p-2 hover:bg-gray-100 cursor-pointer text-black"
+  >
+    {data.icon}
+    <span>{data.label}</span>
+  </div>
+);
+
   return (
     <>
       <div className="page--content">
@@ -656,19 +686,93 @@ const GroupClassesList = (props) => {
             userRole === "FITNESS_MANAGER" ||
             userRole === "ASS_FITNESS_MANAGER" ||
             userRole === "ADMIN") && (
-            <div className="max-w-[140px] w-full">
-              <button
-                type="button"
-                className="px-4 py-2 bg-black text-white rounded flex items-center gap-2 w-full"
-                onClick={() => {
-                  setEditingOption(null);
-                  setCheckActiveBooking(null);
-                  setShowModal(true);
-                }}
-              >
-                <FiPlus /> Create Class
-              </button>
-            </div>
+            <div className="max-w-[150px] w-full">
+  <Select
+    options={createClassOptions}
+    components={{
+      Option: customCreateClassOption,
+      IndicatorSeparator: () => null,
+    }}
+    value={null}
+    isSearchable={false}
+    controlShouldRenderValue={false}
+    placeholder={
+      <div className="flex items-center gap-2 text-white">
+        {/* <FiPlus className="text-[18px]" /> */}
+        <span>Create Class</span>
+      </div>
+    }
+    onChange={(selected) => {
+  if (selected?.value === "single") {
+    CreateFormik.resetForm();
+    setEditingOption(null);
+    setCheckActiveBooking(null);
+
+    setShowBatchClass(false);
+    setShowModal(true);
+  }
+
+  if (selected?.value === "batch") {
+    CreateFormik.resetForm();
+    setEditingOption(null);
+    setCheckActiveBooking(null);
+
+    setShowModal(false);
+    setShowBatchClass(true);
+  }
+}}
+    styles={{
+      control: (base, state) => ({
+        ...base,
+        minHeight: "40px",
+        width: "150px",
+        padding: "0 4px",
+        border: "none",
+        borderRadius: "4px",
+        boxShadow: "none",
+        backgroundColor: "black",
+        cursor: "pointer",
+      }),
+
+      valueContainer: (base) => ({
+        ...base,
+        padding: "0 8px",
+      }),
+
+      placeholder: (base) => ({
+        ...base,
+        margin: 0,
+        color: "white",
+      }),
+
+      dropdownIndicator: (base) => ({
+        ...base,
+        padding: "4px",
+        color: "white",
+        "&:hover": {
+          color: "white",
+        },
+      }),
+
+      menu: (base) => ({
+        ...base,
+        zIndex: 9999,
+        width: "180px",
+        right: 0,
+        backgroundColor: "white",
+        color: "black",
+      }),
+
+      menuPortal: (base) => ({
+        ...base,
+        zIndex: 9999,
+      }),
+    }}
+    menuPortalTarget={document.body}
+    menuPosition="fixed"
+    menuPlacement="auto"
+  />
+</div>
           )}
           {!ALLOWED_ROLES.includes(userRole) && (
             <div className="max-w-[150px] w-full">
@@ -913,6 +1017,14 @@ const GroupClassesList = (props) => {
           formik={CreateFormik}
         />
       )}
+      {showBatchClass && (
+  <CreateBatchClasses
+    setShowBatchModal={setShowBatchClass}
+    editingOption={editingOption}
+    checkActiveBooking={checkActiveBooking}
+    formik={CreateFormik}
+  />
+)}
     </>
   );
 };
