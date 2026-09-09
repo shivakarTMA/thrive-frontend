@@ -21,13 +21,11 @@ const packageTypeOptions = [
 ];
 
 const payModeTypeOptions = [
-  { value: "CASH", label: "Cash" },
-  { value: "CARD", label: "Card" },
-  { value: "UPI", label: "UPI" },
-  { value: "WALLET", label: "Wallet" },
+  { value: "CREDIT_CARD", label: "Credit Card" },
+  { value: "DEBIT_CARD", label: "Debit Card" },
+  { value: "UPI_ICICI", label: "UPI" },
   { value: "NET_BANKING", label: "Net Banking" },
-  // { value: "COIN", label: "Coin" },
-  { value: "OTHER", label: "Other" },
+  { value: "BTC", label: "BTC" },
 ];
 
 //  'CASH','CARD','UPI','WALLET','NET_BANKING','OTHER','COIN'

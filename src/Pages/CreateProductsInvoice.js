@@ -21,6 +21,7 @@ const paymentMethodOptions = [
   { value: "DEBIT_CARD", label: "Debit Card" },
   { value: "CREDIT_CARD", label: "Credit Card" },
   { value: "UPI_ICICI", label: "UPI" },
+  { value: "BTC", label: "BTC" },
 ];
 
 // ── Helper: create a blank item row ──────────────────────────────────────────

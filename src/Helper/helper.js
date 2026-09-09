@@ -362,6 +362,9 @@ export function formatText(status) {
   if (!status) return "";
 
   if (status === "F_AND_B") return "F&B";
+  if (status === "BTC") return "BTC";
+  if (status === "UPI") return "UPI";
+  if (status === "UPI_ICICI") return "UPI";
 
   return status
     .split("_")

@@ -16,7 +16,7 @@ export default function GroupClassPanel({
   filterCategory,
   filterBookingType,
   filterTrainer,
-
+ filterStatus, 
   formik,
   setFilterValue,
   appliedFilters, // ✅ Receive from parent
@@ -144,6 +144,7 @@ export default function GroupClassPanel({
       package_category_id: formik.values.filterCategory,
       booking_type: formik.values.filterBookingType,
       trainer_id: formik.values.filterTrainer,
+       status: formik.values.filterStatus,
     });
 
     setShowFilters(false);
@@ -155,6 +156,7 @@ export default function GroupClassPanel({
       package_category_id: "filterCategory",
       booking_type: "filterBookingType",
       trainer_id: "filterTrainer",
+      status: "filterStatus",
     };
 
     // Update parent's applied filters
@@ -184,9 +186,18 @@ export default function GroupClassPanel({
       const trainerId = trainerOptions.find((opt) => opt.value === value);
       return trainerId ? trainerId.label : value;
     }
+    if (key === "status") {
+    const status = StatusOptions.find((opt) => opt.value === value);
+    return status ? status.label : value;
+   }
 
     return String(value);
   };
+  const StatusOptions = [
+    { value: "ACTIVE", label: "Active" },
+    { value: "INACTIVE", label: "Inactive" },
+    { value: "EXPIRED", label: "Expired" },
+  ];
 
   return (
     <div className="relative max-w-fit w-full" ref={panelRef}>
@@ -273,6 +284,25 @@ export default function GroupClassPanel({
                   // isClearable
                 />
               </div>
+              <div>
+              <label className="block mb-1 text-sm font-medium">
+                Status
+              </label>
+              <Select
+                value={
+                  StatusOptions.find((opt) => opt.value === filterStatus) || null
+                }
+                onChange={(option) =>
+                  setFilterValue(
+                    "filterStatus",
+                    option ? option.value : null
+                  )
+                }
+                options={StatusOptions}
+                placeholder="Select Status"
+                styles={customStyles}
+              />
+            </div>
             </div>
 
             <div className="flex justify-between pt-3">

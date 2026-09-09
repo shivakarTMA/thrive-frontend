@@ -53,7 +53,8 @@ const CreateBatchClasses = ({  setShowBatchModal,
   const dispatch = useDispatch();
   const [clubSlotsData, setClubSlotsData] = useState([]);
   const [clubSlotsLoading, setClubSlotsLoading] = useState(false);
-
+  const [previewError, setPreviewError] = useState("");
+  const [conflictMessage, setConflictMessage] = useState(""); 
   const FULL_TO_SHORT_DAY = {
     Monday: "Mon",
     Tuesday: "Tue",
@@ -90,23 +91,78 @@ const CreateBatchClasses = ({  setShowBatchModal,
     "position",
     "tags",
     "description",
+      "booking_type",
+  "amount",
+  "discount",
   ];
 
-  const goToScheduleTab = (e) => {
-    if (e) e.preventDefault();
-    formik.validateForm().then((errors) => {
-      const detailsErrors = Object.keys(errors).filter((key) =>
-        DETAILS_TAB_FIELDS.includes(key),
-      );
-      if (detailsErrors.length > 0) {
-        formik.setTouched(
-          Object.fromEntries(detailsErrors.map((key) => [key, true])),
-        );
-        return;
+  const goToScheduleTab = async (e) => {
+  if (e) e.preventDefault();
+
+  const errors = await formik.validateForm();
+
+  const detailsErrors = Object.keys(errors).filter((field) =>
+    DETAILS_TAB_FIELDS.includes(field),
+  );
+
+  // Additional validation for Booking Type
+  if (!formik.values.booking_type) {
+    errors.booking_type = "Booking Type is required";
+
+    if (!detailsErrors.includes("booking_type")) {
+      detailsErrors.push("booking_type");
+    }
+  }
+
+  // Amount and discount are required only for Paid classes
+  if (formik.values.booking_type === "PAID") {
+    const amount = Number(formik.values.amount);
+
+    if (
+      formik.values.amount === "" ||
+      formik.values.amount === null ||
+      formik.values.amount === undefined ||
+      amount <= 0
+    ) {
+      errors.amount = "Amount is required";
+
+      if (!detailsErrors.includes("amount")) {
+        detailsErrors.push("amount");
       }
-      setActiveTab("schedule");
+    }
+
+    if (
+      formik.values.discount === "" ||
+      formik.values.discount === null ||
+      formik.values.discount === undefined
+    ) {
+      errors.discount = "Discount is required";
+
+      if (!detailsErrors.includes("discount")) {
+        detailsErrors.push("discount");
+      }
+    }
+  }
+
+  if (detailsErrors.length > 0) {
+    formik.setErrors({
+      ...formik.errors,
+      ...errors,
     });
-  };
+
+    formik.setTouched({
+      ...formik.touched,
+      ...Object.fromEntries(
+        detailsErrors.map((field) => [field, true]),
+      ),
+    });
+
+    toast.error("Please fill all required details");
+    return;
+  }
+
+  setActiveTab("schedule");
+};
 
   // ===== Schedule (weekly recurring pattern) builder state =====
   const DAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
@@ -139,6 +195,13 @@ const CreateBatchClasses = ({  setShowBatchModal,
 
   // Conflicting sessions returned by the API (e.g. on_conflict = WARN).
   const [sessionConflicts, setSessionConflicts] = useState([]);
+
+  // Sessions confirmed by the backend preview call (only for fully-filled rows).
+  const [previewSessions, setPreviewSessions] = useState([]);
+  const [previewSessionDetails, setPreviewSessionDetails] = useState([]);
+const [previewTotal, setPreviewTotal] = useState(0);
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const lastPreviewKeyRef = useRef("");
 
   const updateSlot = (dayIndex, slotIndex, changes) => {
     setDayRows((rows) =>
@@ -195,15 +258,15 @@ const CreateBatchClasses = ({  setShowBatchModal,
     );
   };
 
-  const toggleDayEnabled = (dayIndex, enabled) => {
-    setDayRows((rows) =>
-      rows.map((row, i) => {
-        if (i !== dayIndex) return row;
-        const updated = { ...row, enabled };
-        return enabled ? applyDefaultTimes(updated) : updated;
-      }),
-    );
-  };
+ const toggleDayEnabled = (dayIndex, enabled) => {
+  setDayRows((rows) =>
+    rows.map((row, index) =>
+      index === dayIndex
+        ? { ...row, enabled }
+        : row,
+    ),
+  );
+};
 
 const copyFirstRowToWeek = () => {
   setDayRows((rows) => {
@@ -230,29 +293,32 @@ const copyFirstRowToWeek = () => {
 const hasAvailableSlots = (dayLabel) =>
   (clubSlotsByWeekday[dayLabel] || []).some((slot) => slot.enable);
 
-  const selectWeekdaysOnly = () => {
-    setDayRows((rows) =>
-      rows.map((row) => {
-        const enabled =
-          row.day !== "Sat" && row.day !== "Sun" && hasAvailableSlots(row.day);
-        const updated = { ...row, enabled };
-        return enabled ? applyDefaultTimes(updated) : updated;
-      }),
-    );
-  };
+const selectWeekdaysOnly = () => {
+  setDayRows((rows) =>
+    rows.map((row) => ({
+      ...row,
+      enabled:
+        row.day !== "Sat" &&
+        row.day !== "Sun" &&
+        availableDaysInRange.has(row.day) &&
+        hasAvailableSlots(row.day),
+    })),
+  );
+};
 
-  const selectAllDays = () => {
-    setDayRows((rows) =>
-      rows.map((row) => {
-        const enabled = hasAvailableSlots(row.day);
-        const updated = { ...row, enabled };
-        return enabled ? applyDefaultTimes(updated) : updated;
-      }),
-    );
-  };
+const selectAllDays = () => {
+  setDayRows((rows) =>
+    rows.map((row) => ({
+      ...row,
+      enabled:
+        availableDaysInRange.has(row.day) &&
+        hasAvailableSlots(row.day),
+    })),
+  );
+};
 
 const clearAllDays = () => {
-  // Clear table rows
+  setConflictMessage("")
   setDayRows((rows) =>
     rows.map((row) => ({
       ...row,
@@ -334,6 +400,137 @@ const toggleSkipDate = (dateStr) => {
     return sessions;
   }, [scheduleMode, scheduleStartDate, scheduleEndDate, skipDates, dayRows]);
 
+const isSlotComplete = (slot) =>
+    !!slot.startTime &&
+    !!slot.endTime &&
+    !!slot.trainerId &&
+    !!slot.studioId &&
+    Number(slot.capacity) > 0;
+
+  const isRowComplete = (row) =>
+    !!row?.enabled && row.slots.length > 0 && row.slots.every(isSlotComplete);
+
+  // Only the sessions belonging to fully-filled rows are sent to the backend.
+ const buildCompletedSessions = () => {
+  const rowsByDay = Object.fromEntries(
+    dayRows.map((row) => [row.day, row]),
+  );
+
+  return scheduledSessions.filter((session) => {
+    const row = rowsByDay[session.day];
+    const slot = row?.slots?.[session.slotIndex];
+
+    return row?.enabled && slot && isSlotComplete(slot);
+  });
+};
+
+  // Maps completed sessions + their slot data into the backend preview payload.
+  const buildPreviewPayload = (sessions) => {
+    const rowsByDay = Object.fromEntries(dayRows.map((r) => [r.day, r]));
+
+    return {
+      club_id: formik.values.club_id,
+      skip_dates: skipDates,
+      sessions: sessions.map((s) => {
+        const slot = rowsByDay[s.day]?.slots?.[s.slotIndex] || {};
+        return {
+          date: s.date,
+          start_time: s.startTime ? `${s.startTime}:00` : "",
+          end_time: s.endTime ? `${s.endTime}:00` : "",
+          trainer_id: slot.trainerId || null,
+          studio_id: slot.studioId || null,
+        };
+      }),
+    };
+  };
+
+  // Dummy backend call — fired once a day's row becomes fully filled in.
+const fetchSessionPreview = async (sessions) => {
+  try {
+    setPreviewLoading(true);
+    setPreviewError("");
+
+    setPreviewSessions([]);
+    setPreviewSessionDetails([]);
+    setPreviewTotal(0);
+    setSessionConflicts([]);
+    setConflictMessage("");
+
+    const res = await authAxios().post(
+      "/package/group/class/valid/dates",
+      buildPreviewPayload(sessions),
+    );
+
+    const data = res.data?.data || res.data || {};
+
+    setPreviewSessions(
+      Array.isArray(data.sessions) ? data.sessions : [],
+    );
+
+    setPreviewSessionDetails(
+      Array.isArray(data.session_details)
+        ? data.session_details
+        : [],
+    );
+
+    setPreviewTotal(
+      typeof data.total === "number"
+        ? data.total
+        : Array.isArray(data.sessions)
+          ? data.sessions.length
+          : 0,
+    );
+
+    if (typeof data.conflicts === "string") {
+      setConflictMessage(data.conflicts);
+      setSessionConflicts([]);
+    } else if (Array.isArray(data.conflicts)) {
+      setConflictMessage("");
+      setSessionConflicts(data.conflicts);
+    } else {
+      setConflictMessage("");
+      setSessionConflicts([]);
+    }
+  } catch (err) {
+    console.error("Session preview error:", err);
+
+    setPreviewSessions([]);
+    setPreviewSessionDetails([]);
+    setPreviewTotal(0);
+    setSessionConflicts([]);
+    setConflictMessage("");
+
+    setPreviewError(
+      err.response?.data?.message ||
+        "Unable to load session preview. Please try again.",
+    );
+  } finally {
+    setPreviewLoading(false);
+  }
+};
+
+  // Re-runs the preview whenever the set of fully-filled sessions changes.
+  useEffect(() => {
+    const sessions = buildCompletedSessions();
+
+    if (!formik.values.club_id || !sessions.length) {
+      lastPreviewKeyRef.current = "";
+       setPreviewSessions([]);
+  setPreviewSessionDetails([]);
+  setPreviewTotal(0);
+  setSessionConflicts([]);
+  setPreviewError("");
+
+  return;
+    }
+
+    const payloadKey = JSON.stringify(buildPreviewPayload(sessions));
+    if (payloadKey === lastPreviewKeyRef.current) return;
+    lastPreviewKeyRef.current = payloadKey;
+
+    fetchSessionPreview(sessions);
+  }, [dayRows, scheduledSessions, skipDates, formik.values.club_id]);
+
   // Maps the conflict select's current values to the API's expected enum.
   const CONFLICT_ACTION_MAP = {
     Stop: "SKIP",
@@ -342,23 +539,63 @@ const toggleSkipDate = (dateStr) => {
 
   // Attaches each scheduled session's trainer/studio/capacity from the
   // matching day row + slot, and formats date/time for the API.
-  const buildSessionsPayload = () => {
-    const rowsByDay = Object.fromEntries(dayRows.map((r) => [r.day, r]));
+ const buildSessionsPayload = () => {
+  const rowsByDay = Object.fromEntries(
+    dayRows.map((row) => [row.day, row]),
+  );
 
-    return scheduledSessions.map((s) => {
-      const slot = rowsByDay[s.day]?.slots?.[s.slotIndex] || {};
+  // Count only sessions approved and returned by the backend.
+  const validSessionCounts = new Map();
+
+  previewSessions.forEach((session) => {
+    const key = [
+      session.date,
+      session.start_time?.slice(0, 5),
+      session.end_time?.slice(0, 5),
+    ].join("|");
+
+    validSessionCounts.set(
+      key,
+      (validSessionCounts.get(key) || 0) + 1,
+    );
+  });
+
+  return scheduledSessions
+    .filter((session) => {
+      const key = [
+        session.date,
+        session.startTime?.slice(0, 5),
+        session.endTime?.slice(0, 5),
+      ].join("|");
+
+      const remainingCount = validSessionCounts.get(key) || 0;
+
+      if (remainingCount === 0) {
+        return false;
+      }
+
+      validSessionCounts.set(key, remainingCount - 1);
+      return true;
+    })
+    .map((session) => {
+      const slot =
+        rowsByDay[session.day]?.slots?.[session.slotIndex] || {};
 
       return {
-        date: s.date,
-        start_time: s.startTime ? `${s.startTime}:00` : "",
-        end_time: s.endTime ? `${s.endTime}:00` : "",
+        date: session.date,
+        start_time: session.startTime
+          ? `${session.startTime}:00`
+          : "",
+        end_time: session.endTime
+          ? `${session.endTime}:00`
+          : "",
         trainer_id: slot.trainerId || null,
         studio_id: slot.studioId || null,
-        max_capacity: slot.capacity,
-        waitlist_capacity: slot.waitlist,
+        max_capacity: Number(slot.capacity) || 0,
+        waitlist_capacity: Number(slot.waitlist) || 0,
       };
     });
-  };
+};
 
   // Ensures every enabled day's slots have Class Start/End/Trainer/Studio
   // filled in; returns a map of `${dayIndex}-${slotIndex}` -> field flags.
@@ -396,10 +633,18 @@ const toggleSkipDate = (dateStr) => {
     setSlotErrors({});
 
     const sessions = buildSessionsPayload();
-    if (!sessions.length) {
-      toast.error("Please build at least one session before submitting");
-      return;
-    }
+
+if (!previewSessions.length) {
+  toast.error(
+    "No valid sessions were returned by the preview API",
+  );
+  return;
+}
+
+if (!sessions.length) {
+  toast.error("No valid sessions are available for creation");
+  return;
+}
 
     const isPaid = formik.values.booking_type === "PAID";
 
@@ -489,42 +734,42 @@ const toggleSkipDate = (dateStr) => {
   };
 
   // Sessions grouped per weekday+time for the "Mon · 7:00 PM  4 × 7:00 PM" summary rows
- const sessionSummaryByDay = useMemo(() => {
-  const groups = {};
+//  const sessionSummaryByDay = useMemo(() => {
+//   const groups = {};
 
-  scheduledSessions.forEach((s) => {
-    // slotIndex keeps same-time slots separate
-    const key = `${s.day}-${s.startTime}-${s.slotIndex}`;
+//   previewSessions.forEach((s) => {
+//     // slotIndex keeps same-time slots separate
+//     const key = `${s.day}-${s.startTime}-${s.slotIndex}`;
 
-    if (!groups[key]) {
-      groups[key] = {
-        day: s.day,
-        time: s.startTime,
-        slotIndex: s.slotIndex,
-        count: 0,
-      };
-    }
+//     if (!groups[key]) {
+//       groups[key] = {
+//         day: s.day,
+//         time: s.startTime,
+//         slotIndex: s.slotIndex,
+//         count: 0,
+//       };
+//     }
 
-    groups[key].count += 1;
-  });
+//     groups[key].count += 1;
+//   });
 
-  return Object.values(groups).sort((a, b) => {
-    const dayDifference =
-      DAY_LABELS.indexOf(a.day) - DAY_LABELS.indexOf(b.day);
+//   return Object.values(groups).sort((a, b) => {
+//     const dayDifference =
+//       DAY_LABELS.indexOf(a.day) - DAY_LABELS.indexOf(b.day);
 
-    if (dayDifference !== 0) {
-      return dayDifference;
-    }
+//     if (dayDifference !== 0) {
+//       return dayDifference;
+//     }
 
-    const timeDifference = a.time.localeCompare(b.time);
+//     const timeDifference = a.time.localeCompare(b.time);
 
-    if (timeDifference !== 0) {
-      return timeDifference;
-    }
+//     if (timeDifference !== 0) {
+//       return timeDifference;
+//     }
 
-    return a.slotIndex - b.slotIndex;
-  });
-}, [scheduledSessions]);
+//     return a.slotIndex - b.slotIndex;
+//   });
+// }, [previewSessions]);
 
   const formatDateForState = (date) => {
   if (!date) return "";
@@ -571,7 +816,7 @@ useEffect(() => {
         availableDaysInRange.has(row.day) && hasAvailableSlots(row.day);
       const updated = { ...row, enabled };
       // Select only days which come in the chosen date range
-      return enabled ? applyDefaultTimes(updated) : updated;
+     return updated;
     }),
   );
 }, [scheduleStartDate, scheduleEndDate, availableDaysInRange, clubSlotsByWeekday]);
@@ -687,12 +932,17 @@ const fetchTrainerAvailability = async (trainerId, clubId) => {
       const res = await authAxios().get("/package-category/list", { params });
       let data = res.data?.data || res.data || [];
       // filter only ACTIVE categories
-      const activeCategories = data.filter((item) => item.status === "ACTIVE");
+       const activeCategories = data.filter(
+      (item) =>
+        item.status === "ACTIVE" &&
+        item.title?.trim().toUpperCase() !== "ALL"
+    );
       setPackageCategory(activeCategories);
     } catch (err) {
       console.error(err);
     }
   };
+
 
   useEffect(() => {
     fetchClub();
@@ -1009,30 +1259,12 @@ const getDayTimeOptions = (dayLabel, afterTime) => {
   return slots.map((slot) => ({
     label: formatTo12Hour(slot.time),
     value: slot.time,
-    isDisabled: !slot.enable || (afterTime ? slot.time <= afterTime : false),
+    isDisabled: (afterTime ? slot.time <= afterTime : false),
   }));
 };
 
 // Defaults a row's slots to the day's first/last available time whenever
-// they don't already have a start/end time set.
-const applyDefaultTimes = (row) => {
-  const available = (clubSlotsByWeekday[row.day] || []).filter(
-    (slot) => slot.enable,
-  );
-  if (!available.length) return row;
 
-  const firstTime = available[0].time;
-  const lastTime = available[available.length - 1].time;
-
-  return {
-    ...row,
-    slots: row.slots.map((slot) => ({
-      ...slot,
-      startTime: slot.startTime || firstTime,
-      endTime: slot.endTime || lastTime,
-    })),
-  };
-};
 
 // Merges customStyles with a red control border/shadow when a field is invalid.
 const getSlotSelectStyles = (isInvalid) => ({
@@ -1051,28 +1283,107 @@ const getSlotSelectStyles = (isInvalid) => ({
 
 // Disables a trainer/studio option if another slot on the same day already
 // has the exact same (startTime, endTime, field) combination.
-const excludeDuplicateCombo = (options, row, slotIndex, field) => {
-  const current = row.slots[slotIndex];
-  const usedValues = new Set(
-    row.slots
-      .filter((_, i) => i !== slotIndex)
-      .filter(
-        (s) => s.startTime === current.startTime && s.endTime === current.endTime,
-      )
-      .map((s) => s[field])
-      .filter(Boolean),
-  );
-  return options.map((option) =>
-    usedValues.has(option.value)
-      ? { ...option, isDisabled: true }
-      : option,
+const timeToMinutes = (time) => {
+  if (!time) return 0;
+
+  const [hours, minutes] = time.split(":").map(Number);
+  return hours * 60 + minutes;
+};
+
+const rangesOverlap = (start1, end1, start2, end2) => {
+  if (!start1 || !end1 || !start2 || !end2) {
+    return false;
+  }
+
+  return (
+    timeToMinutes(start1) < timeToMinutes(end2) &&
+    timeToMinutes(end1) > timeToMinutes(start2)
   );
 };
 
+const excludeDuplicateCombo = (
+  options,
+  row,
+  slotIndex,
+  field,
+) => {
+  const currentSlot = row.slots[slotIndex];
 
+  if (!currentSlot.startTime || !currentSlot.endTime) {
+    return options;
+  }
 
+  const unavailableValues = new Set(
+    row.slots
+      .filter((_, index) => index !== slotIndex)
+      .filter(
+        (otherSlot) =>
+          otherSlot[field] &&
+          rangesOverlap(
+            currentSlot.startTime,
+            currentSlot.endTime,
+            otherSlot.startTime,
+            otherSlot.endTime,
+          ),
+      )
+      .map((otherSlot) => otherSlot[field]),
+  );
 
+  // Completely removes unavailable trainer/studio options.
+  return options.filter(
+    (option) => !unavailableValues.has(option.value),
+  );
+};
 
+const isPaid = formik.values.booking_type === "PAID";
+
+useEffect(() => {
+  if (!isPaid) return;
+
+  setDayRows((rows) =>
+    rows.map((row) => ({
+      ...row,
+      slots: row.slots.map((slot) => ({
+        ...slot,
+        waitlist: 0,
+      })),
+    })),
+  );
+
+  formik.setFieldValue("gst", 5);
+}, [isPaid]);
+
+const previousClubIdRef = useRef(formik.values.club_id);
+
+useEffect(() => {
+  // Skip the initial component render
+  if (previousClubIdRef.current === formik.values.club_id) return;
+
+  previousClubIdRef.current = formik.values.club_id;
+
+  // Reset all Schedule details
+  setScheduleMode("weekly");
+  setScheduleStartDate("");
+  setScheduleEndDate("");
+  setSkipDates([]);
+  setShowSessionList(true);
+  setAutoReserve(false);
+  setConflictAction("skip");
+
+  setDayRows(
+    DAY_LABELS.map((day) => ({
+      day,
+      enabled: false,
+      slots: [makeSlot()],
+    })),
+  );
+
+  setSlotErrors({});
+  setSessionConflicts([]);
+  setPreviewSessions([]);
+  setPreviewLoading(false);
+  lastPreviewKeyRef.current = "";
+}, [formik.values.club_id]);
 
   return (
     <>
@@ -1401,7 +1712,7 @@ const excludeDuplicateCombo = (options, row, slotIndex, field) => {
                       )}
                     </div>
                     <div>
-                        <label className="mb-2 block">Status</label>
+                        <label className="mb-2 block">Status </label>
                         <div className="relative">
                           <Select
                             name="status"
@@ -1430,7 +1741,160 @@ const excludeDuplicateCombo = (options, row, slotIndex, field) => {
                           </div>
                         )}
                       </div>
+                      <div>
+                      <label className="mb-2 block">
+                        Booking Type<span className="text-red-500">*</span>
+                      </label>
+                      <div className="relative">
+                        <Select
+                          name="booking_type"
+                          value={
+                            bookingType.find(
+                              (opt) =>
+                                opt.value === formik.values?.booking_type,
+                            ) || null
+                          }
+                          options={bookingType}
+                          onChange={(option) => {
+  const value = option?.value || "";
 
+  formik.setFieldValue("booking_type", value);
+  formik.setFieldTouched("booking_type", true, false);
+
+  if (value === "PAID") {
+    // Paid classes cannot have waitlist.
+    setDayRows((rows) =>
+      rows.map((row) => ({
+        ...row,
+        slots: row.slots.map((slot) => ({
+          ...slot,
+          waitlist: 0,
+        })),
+      })),
+    );
+  } else {
+    // Clear paid-only fields when Free is selected.
+    formik.setFieldValue("amount", "");
+    formik.setFieldValue("discount", "");
+    formik.setFieldValue("gst", "");
+  }
+}}
+                          onBlur={() =>
+                            formik.setFieldTouched("booking_type", true)
+                          }
+                          styles={customStyles}
+                        />
+                      </div>
+                      {formik.touched.booking_type &&
+                        formik.errors.booking_type && (
+                          <div className="text-red-500 text-sm">
+                            {formik.errors.booking_type}
+                          </div>
+                        )}
+                    </div>
+
+                    {formik.values?.booking_type === "PAID" && (
+                      <>
+                        <div>
+                          <label className="mb-2 block">
+                            Amount (₹)<span className="text-red-500">*</span>
+                          </label>
+                          <div className="relative">
+                            <input
+                              type="number"
+                              name="amount"
+                              value={
+                                formik.values.amount !== null
+                                  ? formik.values.amount
+                                  : ""
+                              }
+                              // onChange={formik.handleChange}
+                              onKeyDown={blockInvalidNumberKeys} // ⛔ blocks typing -, e, etc.
+                              onChange={(e) => {
+                                const cleanValue = sanitizePositiveInteger(
+                                  e.target.value,
+                                );
+                                formik.setFieldValue("amount", cleanValue);
+                              }}
+                              onBlur={formik.handleBlur}
+                              className="custom--input w-full number--appearance-none"
+                            />
+                          </div>
+
+                          {formik.touched.amount && formik.errors.amount && (
+                            <div className="text-red-500 text-sm">
+                              {formik.errors.amount}
+                            </div>
+                          )}
+                        </div>
+
+                        <div>
+                          <label className="mb-2 block">
+                            Discount (₹)
+                            <span className="text-red-500">*</span>
+                          </label>
+                          <div className="relative">
+                            <input
+                              type="number"
+                              name="discount"
+                              value={
+                                formik.values.discount !== null
+                                  ? formik.values.discount
+                                  : ""
+                              }
+                              // onChange={formik.handleChange}
+                              onKeyDown={blockInvalidNumberKeys} // ⛔ blocks typing -, e, etc.
+                              onChange={(e) => {
+                                const cleanValue = sanitizePositiveInteger(
+                                  e.target.value,
+                                );
+                                formik.setFieldValue("discount", cleanValue);
+                              }}
+                              onBlur={formik.handleBlur}
+                              className="custom--input w-full number--appearance-none"
+                            />
+                          </div>
+                          {formik.touched.discount &&
+                            formik.errors.discount && (
+                              <div className="text-red-500 text-sm">
+                                {formik.errors.discount}
+                              </div>
+                            )}
+                        </div>
+
+                        <div>
+                          <label className="mb-2 block">
+                            GST <span>(%)</span>
+                          </label>
+                          <div className="relative">
+                            <input
+                              type="number"
+                              name="gst"
+                              value={
+                                formik.values.gst !== null
+                                  ? formik.values.gst
+                                  : ""
+                              }
+                              // onChange={formik.handleChange}
+                              onKeyDown={blockInvalidNumberKeys} // ⛔ blocks typing -, e, etc.
+                              onChange={(e) => {
+                                const cleanValue = sanitizePositiveInteger(
+                                  e.target.value,
+                                );
+                                formik.setFieldValue("gst", cleanValue);
+                              }}
+                              onBlur={formik.handleBlur}
+                              className="custom--input w-full number--appearance-none cursor-not-allowed pointer-events-none !bg-gray-100 !text-gray-500"
+                            />
+                          </div>
+                          {formik.touched.gst && formik.errors.gst && (
+                            <div className="text-red-500 text-sm">
+                              {formik.errors.gst}
+                            </div>
+                          )}
+                        </div>
+                      </>
+                    )}
                     {/* HSN SAC Code */}
                     <div>
                       <label className="mb-2 block">HSN SAC Code</label>
@@ -1839,11 +2303,20 @@ const excludeDuplicateCombo = (options, row, slotIndex, field) => {
                             ) || null
                           }
                           options={getDayTimeOptions(row.day)}
-                          onChange={(option) =>
+                          onChange={(option) => {
+                           const newStartTime = option.value;
+                           const isEndTimeInvalid =
+                           !slot.endTime || slot.endTime <= newStartTime;
+                         
                             updateSlot(dayIndex, slotIndex, {
-                              startTime: option.value,
-                            })
-                          }
+                              startTime: newStartTime,
+                              ...(isEndTimeInvalid && {
+                                endTime: "",
+                                trainerId: "",
+                                studioId: "",
+                              }),
+                            });
+                          }}
                         styles={{
   ...customStyles,
   ...getSlotSelectStyles(
@@ -1869,10 +2342,12 @@ menuPosition="fixed"
                           }
                           options={getDayTimeOptions(row.day, slot.startTime)}
                           onChange={(option) =>
-                            updateSlot(dayIndex, slotIndex, {
-                              endTime: option.value,
-                            })
-                          }
+  updateSlot(dayIndex, slotIndex, {
+    endTime: option?.value || "",
+    trainerId: "",
+    studioId: "",
+  })
+}
                          styles={{
   ...customStyles,
   ...getSlotSelectStyles(
@@ -1967,28 +2442,34 @@ menuPosition="fixed"
                               ),
                             })
                           }
-                           className={`custom--input w-16 number--appearance-none ${
-    slotErrors[`${dayIndex}-${slotIndex}`]?.capacity
-      ? "!border-red-500 !ring-1 !ring-red-500"
-      : ""
-  }`}
+                             className={`custom--input w-16 number--appearance-none
+    disabled:cursor-not-allowed disabled:bg-gray-100 disabled:opacity-60
+    ${
+      slotErrors[`${dayIndex}-${slotIndex}`]?.capacity
+        ? "!border-red-500 !ring-1 !ring-red-500"
+        : ""
+    }`}
                         />
                       </td>
 
                       <td className="p-2">
                         <input
                           type="number"
-                          disabled={!row.enabled}
-                          value={slot.waitlist}
+                           disabled={
+    !row.enabled || formik.values.booking_type === "PAID"
+  }
+                          value={
+    formik.values.booking_type === "PAID"
+      ? 0
+      : slot.waitlist
+  }
                           onKeyDown={blockInvalidNumberKeys}
                           onChange={(e) =>
-                            updateSlot(dayIndex, slotIndex, {
-                              waitlist: sanitizePositiveInteger(
-                                e.target.value,
-                              ),
-                            })
-                          }
-                          className="custom--input w-16 number--appearance-none"
+    updateSlot(dayIndex, slotIndex, {
+      waitlist: sanitizePositiveInteger(e.target.value),
+    })
+  }
+                          className="custom--input w-16 number--appearance-none disabled:cursor-not-allowed disabled:bg-gray-100 disabled:opacity-60"
                         />
                       </td>
 
@@ -2043,228 +2524,71 @@ menuPosition="fixed"
               Unchecked days are skipped
             </span>
           </div>
-          {/* Booking settings */}
-<div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-5">
-  {/* Booking Type */}
-  <div>
-    <label className="mb-2 block font-medium">
-      Booking Type <span className="text-red-500">*</span>
-    </label>
-
-    <select
-      name="booking_type"
-      value={formik.values.booking_type || "FREE"}
-      onChange={(e) => {
-        const value = e.target.value;
-
-        formik.setFieldValue("booking_type", value);
-
-        if (value === "PAID") {
-          formik.setFieldValue("gst", formik.values.gst ?? 5);
-        }
-      }}
-      onBlur={formik.handleBlur}
-      className="custom--input w-full"
-    >
-      <option value="FREE">Free</option>
-      <option value="PAID">Paid</option>
-    </select>
-
-    {formik.touched.booking_type && formik.errors.booking_type && (
-      <div className="text-red-500 text-sm">
-        {formik.errors.booking_type}
-      </div>
-    )}
-  </div>
-
-  {/* Auto Reserve */}
-  {/* <div>
-    <label className="mb-2 block font-medium">Auto Reserve</label>
-
-    <select
-      name="auto_reserve"
-      value={formik.values.auto_reserve ? "ON" : "OFF"}
-      onChange={(e) => {
-        formik.setFieldValue(
-          "auto_reserve",
-          e.target.value === "ON",
-        );
-      }}
-      className="custom--input w-full"
-    >
-      <option value="OFF">Off</option>
-      <option value="ON">On</option>
-    </select>
-  </div> */}
-
-  {/* Conflict Action */}
-  <div>
-    <label className="mb-2 block font-medium">
-      On conflict with existing class
-    </label>
-
-    <select
-      name="conflict_action"
-      value={formik.values.conflict_action || "STOP"}
-      onChange={formik.handleChange}
-      className="custom--input w-full"
-    >
-      <option value="Stop">Skip this session</option>
-      <option value="Warn">Stop and warn me</option>
-    </select>
-  </div>
-</div>
-
-{/* Show pricing only when Paid is selected */}
-{formik.values.booking_type === "PAID" && (
-  <div className="rounded-lg border border-gray-200 bg-gray-50 p-5 mb-6">
-    <p className="mb-4 text-sm font-semibold uppercase tracking-wide text-gray-600">
-      Pricing — each session is sold separately at this price
-    </p>
-
-    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
-      {/* Amount */}
-      <div>
-        <label className="mb-2 block font-medium">
-          Amount (₹) <span className="text-red-500">*</span>
-        </label>
-
-        <input
-          type="number"
-          name="amount"
-          min="0"
-          value={formik.values.amount ?? ""}
-          onKeyDown={blockInvalidNumberKeys}
-          onChange={formik.handleChange}
-          onBlur={formik.handleBlur}
-          className="custom--input w-full number--appearance-none"
-        />
-
-        {formik.touched.amount && formik.errors.amount && (
-          <div className="text-red-500 text-sm">
-            {formik.errors.amount}
-          </div>
-        )}
-      </div>
-
-      {/* Discount */}
-      <div>
-        <label className="mb-2 block font-medium">
-          Discount (₹) <span className="text-red-500">*</span>
-        </label>
-
-        <input
-          type="number"
-          name="discount"
-          min="0"
-          value={formik.values.discount ?? ""}
-          onKeyDown={blockInvalidNumberKeys}
-          onChange={formik.handleChange}
-          onBlur={formik.handleBlur}
-          placeholder="0.00"
-          className="custom--input w-full number--appearance-none"
-        />
-
-        {formik.touched.discount && formik.errors.discount && (
-          <div className="text-red-500 text-sm">
-            {formik.errors.discount}
-          </div>
-        )}
-      </div>
-
-      {/* GST */}
-      <div>
-        <label className="mb-2 block font-medium">GST (%)</label>
-
-        <input
-          type="number"
-          disabled={true}
-          name="gst"
-          value={formik.values.gst ?? 5}
-          className="custom--input w-full disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed"
-        />
-      </div>
-
-      {/* HSN/SAC */}
-      {/* <div>
-        <label className="mb-2 block font-medium">
-          HSN / SAC Code
-        </label>
-
-        <input
-          type="text"
-          name="hsn_sac_code"
-          value={formik.values.hsn_sac_code ?? ""}
-          onKeyDown={blockNonLettersAndNumbers}
-          onChange={(e) => {
-            const cleaned = sanitizeTextWithNumbers(e.target.value);
-
-            formik.setFieldValue("hsn_sac_code", cleaned);
-          }}
-          onBlur={formik.handleBlur}
-          className="custom--input w-full"
-        />
-      </div> */}
-
-      {/* Payable Amount */}
-      <div>
-        <label className="mb-2 block font-medium">
-          Payable per booking
-        </label>
-
-        <div className="custom--input w-full font-semibold">
-          ₹
-          {(
-            Math.max(
-              Number(formik.values.amount || 0) -
-                Number(formik.values.discount || 0),
-              0,
-            ) *
-            (1 + Number(formik.values.gst ?? 5) / 100)
-          ).toFixed(2)}
-        </div>
-      </div>
-    </div>
-  </div>
-)}
         </>
       )}
     </div>
 
-    {/* Right: session preview */}
-    {scheduleMode === "weekly" && (
-      <div className="w-full lg:w-[260px] shrink-0 bg-gray-50 rounded-md p-4">
-        <p className="text-xs uppercase text-gray-500 mb-1">
+{/* Right: session preview */}
+{scheduleMode === "weekly" && (
+  <div className="w-full lg:w-[260px] shrink-0 bg-gray-50 rounded-md p-4">
+    {previewLoading ? (
+      <div className="flex min-h-[180px] items-center justify-center text-center">
+        <p className="text-sm text-gray-500">
+          Loading session preview...
+        </p>
+      </div>
+    ) : previewError ? (
+      <div className="flex min-h-[180px] flex-col items-center justify-center text-center">
+        <p className="text-sm font-medium text-red-600">
+          Session preview unavailable
+        </p>
+
+        <p className="mt-2 text-xs text-gray-500">
+          {previewError}
+        </p>
+      </div>
+    ) : previewSessions.length === 0 &&
+      previewSessionDetails.length === 0 ? (
+      <div className="flex min-h-[180px] flex-col items-center justify-center text-center">
+        <p className="text-sm font-medium text-gray-700">
+          No session preview
+        </p>
+        
+        <p className="mt-2 text-xs text-gray-500">
+         {conflictMessage ? conflictMessage : "Complete the schedule details to view sessions."}
+        </p>
+      </div>
+    ) : (
+      <>
+        <p className="mb-1 text-xs uppercase text-gray-500">
           Sessions to be created
         </p>
 
         <p className="text-3xl font-semibold">
-          {scheduledSessions.length}
-          <span className="text-sm font-normal ml-1">classes</span>
+          {previewTotal}
+          <span className="ml-1 text-sm font-normal">
+            classes
+          </span>
         </p>
 
-       <p className="mb-3 flex items-center gap-2 text-xs text-gray-500">
-        <span>{scheduleStartDate || "—"}</span>
-        <FaArrowRightLong />
-        <span>{scheduleEndDate || "—"}</span>
-      </p>
+        <div className="mt-3">
+          {previewSessionDetails.map((detail, index) => (
+            <div
+              key={`${detail.Weekday}-${detail.start_time}-${index}`}
+              className="flex justify-between gap-3 py-0.5 text-sm"
+            >
+              <span className="whitespace-nowrap">
+                {shortWeekday(detail.Weekday)} ·{" "}
+                {formatTo12Hour(detail.start_time)}
+              </span>
 
-        {sessionSummaryByDay.map((s) => (
-          <div
-            key={s.day}
-            className="flex justify-between gap-3 text-sm py-0.5"
-          >
-            <span className="whitespace-nowrap">
-              {s.day} · {formatTo12Hour(s.time)}
-            </span>
-
-            <span className="whitespace-nowrap">
-              {s.count} × {formatTo12Hour(s.time)}
-            </span>
-          </div>
-        ))}
-
-        {skipDates.length > 0 && (
+              <span className="whitespace-nowrap">
+                 {detail.count} × {detail.count > 1 ? "Sessions" : "Session"}
+              </span>
+            </div>
+          ))}
+        </div>
+{skipDates.length > 0 && (
   <div className="mt-3">
     <p className="text-xs text-gray-500 mb-2">
       {skipDates.length} dates excluded:
@@ -2291,104 +2615,122 @@ menuPosition="fixed"
 )}
         <button
           type="button"
-          className="text-xs text-gray-700 mt-2"
-          onClick={() => setShowSessionList((s) => !s)}
+          className="mt-3 text-xs text-gray-700"
+          onClick={() =>
+            setShowSessionList((current) => !current)
+          }
         >
           {showSessionList ? "Hide" : "Show"} session list
         </button>
 
         {showSessionList && (
-          <div className="max-h-[220px] overflow-y-auto mt-2 space-y-2 pr-1">
-          {scheduledSessions.map((s) => (
-  <div
-    key={`${s.date}-${s.slotIndex}-${s.startTime}-${s.endTime}`}
-    className="text-xs flex justify-between gap-3"
-  >
+          <div className="mt-2 max-h-[220px] space-y-2 overflow-y-auto pr-1">
+            {previewSessions.map((session, index) => (
+              <div
+                key={`${session.date}-${session.start_time}-${index}`}
+                className="flex justify-between gap-3 text-xs"
+              >
                 <span className="whitespace-nowrap">
-                  {s.date} · {s.day}
+                  {session.date} ·{" "}
+                  {shortWeekday(session.Weekday)}
                 </span>
 
                 <span className="whitespace-nowrap">
-                  {formatTo12Hour(s.startTime)} –{" "}
-                  {formatTo12Hour(s.endTime)}
+                  {formatTo12Hour(session.start_time)} –{" "}
+                  {formatTo12Hour(session.end_time)}
                 </span>
               </div>
             ))}
           </div>
         )}
 
-        {sessionConflicts.length > 0 && (
-          <div className="mt-3 rounded-md ">
-            <p className="text-xs font-semibold text-red-600 mb-2">
-              {sessionConflicts.length} conflicting date
-              {sessionConflicts.length > 1 ? "s" : ""}:
-            </p>
+        {conflictMessage && (
+  <div className="mt-4 ">
+    <p className="text-xs font-semibold text-amber-800">
+      Session conflict
+    </p>
 
-            <div className="max-h-[180px] overflow-y-auto space-y-1 pr-1">
-              {sessionConflicts.map((c, i) => (
-                <div
-                  key={`${c.date}-${c.start_time}-${i}`}
-                  className="text-xs flex justify-between gap-3 text-red-700"
-                >
-                  <span className="whitespace-nowrap">
-                    {c.date} · {shortWeekday(c.weekday)}
-                  </span>
-
-                  <span className="whitespace-nowrap">
-                     {formatTo12Hour(c.start_time)} – {formatTo12Hour(c.end_time)}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
+    <p className="mt-1 text-xs leading-5 text-amber-700">
+      {conflictMessage}
+    </p>
+  </div>
+)}
+      </>
     )}
+  </div>
+)}
   </div>
 )}
                 </div>
               </div>
 
               {/* Submit Button */}
-              {!(editingOption && checkActiveBooking !== 0) &&
-                formik?.values?.status !== "EXPIRED" && (
-                  <div className="flex gap-4 justify-end">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        formik.resetForm();
-                        setShowBatchModal(false);
-                      }}
-                      className="px-4 py-2 bg-transparent border border-white text-white font-semibold rounded max-w-[150px] w-full"
-                    >
-                      Cancel
-                    </button>
+             {!(editingOption && checkActiveBooking !== 0) &&
+  formik?.values?.status !== "EXPIRED" && (
+    <div
+      className={`flex gap-4 ${
+        activeTab === "schedule"
+          ? "justify-between"
+          : "justify-end"
+      }`}
+    >
+      {/* Back button — only on Schedule tab */}
+      {activeTab === "schedule" && (
+        <button
+          type="button"
+          onClick={() => setActiveTab("details")}
+          className="px-2 py-2 bg-transparent border border-white bg-white text-black font-semibold rounded max-w-[110px] w-full"
+        >
+           Back
+        </button>
+      )}
 
-                    {activeTab === "details" ? (
-                      <button
-                        type="button"
-                        onClick={goToScheduleTab}
-                        className="px-4 py-2 font-semibold rounded max-w-[150px] w-full bg-white text-black"
-                      >
-                        Next
-                      </button>
-                  ) : (
-                    <button
-                      type="submit"
-                      disabled={formik.isSubmitting}
-                      className={`px-4 py-2 font-semibold rounded max-w-[150px] w-full ${
-                        formik.isSubmitting
-                          ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                          : "bg-white text-black"
-                      }`}
-                    >
-                      {scheduleMode === "weekly"
-                        ? `Create ${scheduledSessions.length} classes`
-                        : "Submit"}
-                    </button>
-                  )}
-                  </div>
-                )}
+      <div className="flex gap-4">
+        <button
+          type="button"
+          onClick={() => {
+            formik.resetForm();
+            setShowBatchModal(false);
+          }}
+          className="px-4 py-2 bg-transparent border border-white text-white font-semibold rounded max-w-[150px] w-full"
+        >
+          Cancel
+        </button>
+
+        {activeTab === "details" ? (
+          <button
+            type="button"
+            onClick={goToScheduleTab}
+            className="px-4 py-2 font-semibold rounded max-w-[150px] w-full bg-white text-black"
+          >
+            Next
+          </button>
+        ) : (
+          <button
+            type="submit"
+            disabled={formik.isSubmitting}
+            className={`px-4 py-2 font-semibold rounded min-w-[150px] ${
+    formik.isSubmitting ||
+    previewLoading ||
+    previewSessions.length === 0
+      ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+      : "bg-white text-black"
+  }`}
+          >
+            {formik.isSubmitting
+    ? "Creating..."
+    : previewLoading
+      ? "Checking sessions..."
+      : scheduleMode === "weekly"
+        ? `Create ${previewSessions.length} ${
+            previewSessions.length === 1 ? "class" : "classes"
+          }`
+        : "Submit"}
+          </button>
+        )}
+      </div>
+    </div>
+  )}
 
             </form>
           </div>

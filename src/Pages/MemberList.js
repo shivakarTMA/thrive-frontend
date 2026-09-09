@@ -537,6 +537,7 @@ const MemberList = (props) => {
       club_id: clubFilter,
     };
 
+    setPage(1);
     fetchMemberList(1, overrideSelected);
   };
 
@@ -545,8 +546,8 @@ const MemberList = (props) => {
     if (isSearchMode) {
       navigate("/all-members", { replace: true });
     }
-
-    fetchMemberList("", 1);
+  setPage(1);
+  fetchMemberList(1);
   };
 
   const handleDownloadMembers = async () => {

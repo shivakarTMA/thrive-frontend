@@ -154,7 +154,7 @@ const fetchTrainerAvailability = async (trainerId, clubId) => {
       const res = await authAxios().get("/package-category/list", { params });
       let data = res.data?.data || res.data || [];
       // filter only ACTIVE categories
-      const activeCategories = data.filter((item) => item.status === "ACTIVE");
+      const activeCategories = data.filter((item) => item.status === "ACTIVE" && item.title?.trim().toUpperCase() !== "ALL");
       setPackageCategory(activeCategories);
     } catch (err) {
       console.error(err);
@@ -848,80 +848,8 @@ const endTimeOptions = useMemo(() => {
                         </div>
                       )}
                     </div>
-
-                    {/* Max Capacity Field */}
-                    <div>
-                      <label className="mb-2 block">
-                        Max Capacity
-                        <span className="text-red-500">*</span>
-                      </label>
-                      <div className="relative">
-                        <input
-                          type="number"
-                          name="max_capacity"
-                          value={
-                            formik.values.max_capacity !== null
-                              ? formik.values.max_capacity
-                              : ""
-                          }
-                          // onChange={formik.handleChange}
-                          onKeyDown={blockInvalidNumberKeys} // ⛔ blocks typing -, e, etc.
-                          onChange={(e) => {
-                            const cleanValue = sanitizePositiveInteger(
-                              e.target.value,
-                            );
-                            formik.setFieldValue("max_capacity", cleanValue);
-                          }}
-                          onBlur={formik.handleBlur}
-                          className="custom--input w-full number--appearance-none"
-                        />
-                      </div>
-                      {formik.touched.max_capacity &&
-                        formik.errors.max_capacity && (
-                          <div className="text-red-500 text-sm">
-                            {formik.errors.max_capacity}
-                          </div>
-                        )}
-                    </div>
-                    {/* Waitlist Capacity Field */}
-                    <div>
-                      <label className="mb-2 block">
-                        Waitlist Capacity
-                        <span className="text-red-500">*</span>
-                      </label>
-                      <div className="relative">
-                        <input
-                          type="number"
-                          name="waitlist_capacity"
-                          value={
-                            formik.values.waitlist_capacity !== null
-                              ? formik.values.waitlist_capacity
-                              : ""
-                          }
-                          // onChange={formik.handleChange}
-                          onKeyDown={blockInvalidNumberKeys} // ⛔ blocks typing -, e, etc.
-                          onChange={(e) => {
-                            const cleanValue = sanitizePositiveInteger(
-                              e.target.value,
-                            );
-                            formik.setFieldValue(
-                              "waitlist_capacity",
-                              cleanValue,
-                            );
-                          }}
-                          onBlur={formik.handleBlur}
-                          className="custom--input w-full number--appearance-none"
-                        />
-                      </div>
-                      {formik.touched.waitlist_capacity &&
-                        formik.errors.waitlist_capacity && (
-                          <div className="text-red-500 text-sm">
-                            {formik.errors.waitlist_capacity}
-                          </div>
-                        )}
-                    </div>
-
-                    {/* Booking Type */}
+                    
+                     {/* Booking Type */}
                     <div>
                       <label className="mb-2 block">
                         Booking Type<span className="text-red-500">*</span>
@@ -936,9 +864,15 @@ const endTimeOptions = useMemo(() => {
                             ) || null
                           }
                           options={bookingType}
-                          onChange={(option) =>
-                            formik.setFieldValue("booking_type", option.value)
-                          }
+                          onChange={(option) =>{
+                            formik.setFieldValue("booking_type", option.value);
+                        
+                            if (option.value === "PAID") {
+                              formik.setFieldValue("waitlist_capacity", 0);
+                            } else {
+                              formik.setFieldValue("waitlist_capacity", "");
+                            }
+                          }}
                           onBlur={() =>
                             formik.setFieldTouched("booking_type", true)
                           }
@@ -1055,6 +989,87 @@ const endTimeOptions = useMemo(() => {
                         </div>
                       </>
                     )}
+                    {/* Max Capacity Field */}
+                    <div>
+                      <label className="mb-2 block">
+                        Max Capacity
+                        <span className="text-red-500">*</span>
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="number"
+                          name="max_capacity"
+                          value={
+                            formik.values.max_capacity !== null
+                              ? formik.values.max_capacity
+                              : ""
+                          }
+                          // onChange={formik.handleChange}
+                          onKeyDown={blockInvalidNumberKeys} // ⛔ blocks typing -, e, etc.
+                          onChange={(e) => {
+                            const cleanValue = sanitizePositiveInteger(
+                              e.target.value,
+                            );
+                            formik.setFieldValue("max_capacity", cleanValue);
+                          }}
+                          onBlur={formik.handleBlur}
+                          className="custom--input w-full number--appearance-none"
+                        />
+                      </div>
+                      {formik.touched.max_capacity &&
+                        formik.errors.max_capacity && (
+                          <div className="text-red-500 text-sm">
+                            {formik.errors.max_capacity}
+                          </div>
+                        )}
+                    </div>
+                    {/* Waitlist Capacity Field */}
+                    <div>
+                      <label className="mb-2 block">
+                        Waitlist Capacity
+                        <span className="text-red-500">*</span>
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="number"
+                          name="waitlist_capacity"
+                          value={
+                            formik.values.booking_type === "PAID"
+      ? 0
+      : formik.values.waitlist_capacity ?? ""
+                          }
+                          // onChange={formik.handleChange}
+                          disabled={formik.values.booking_type === "PAID"}
+                          onKeyDown={blockInvalidNumberKeys} // ⛔ blocks typing -, e, etc.
+                          onChange={(e) => {
+                            const cleanValue = sanitizePositiveInteger(
+                              e.target.value,
+                            );
+                            formik.setFieldValue(
+                              "waitlist_capacity",
+                              cleanValue,
+                            );
+                          }}
+                          onBlur={formik.handleBlur}
+                          // className="custom--input w-full number--appearance-none"
+                          className={`custom--input w-full number--appearance-none ${
+                            formik.values.booking_type === "PAID"
+                              ? "number--appearance-none cursor-not-allowed pointer-events-none !bg-gray-100 !text-gray-500"
+                              : ""
+                          }`}
+
+
+                        />
+                      </div>
+                      {formik.touched.waitlist_capacity &&
+                        formik.errors.waitlist_capacity && (
+                          <div className="text-red-500 text-sm">
+                            {formik.errors.waitlist_capacity}
+                          </div>
+                        )}
+                    </div>
+
+                   
 
                     <div>
                       <label className="mb-2 block">

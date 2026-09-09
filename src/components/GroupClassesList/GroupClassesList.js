@@ -67,6 +67,7 @@ const GroupClassesList = (props) => {
     package_category_id: null,
     booking_type: null,
     trainer_id: null,
+    status: null,
   });
 
   const formik = useFormik({
@@ -75,6 +76,7 @@ const GroupClassesList = (props) => {
       filterCategory: null,
       filterBookingType: null,
       filterTrainer: null,
+      filterStatus: null,
     },
     onSubmit: (values) => {
       console.log(values);
@@ -149,7 +151,8 @@ const GroupClassesList = (props) => {
         params.startDate = formatDate(customFrom);
         params.endDate = formatDate(customTo);
       }
-
+     if (appliedFilters.status)
+       params.status = appliedFilters.status;
       // Club filter
       if (clubFilter?.value) {
         params.club_id = clubFilter.value;
@@ -455,6 +458,7 @@ const GroupClassesList = (props) => {
       filterCategory: urlFilters.package_category_id,
       filterBookingType: urlFilters.booking_type,
       filterTrainer: urlFilters.trainer_id,
+       filterStatus: urlFilters.status,
     });
 
     setFiltersInitialized(true);
@@ -483,6 +487,7 @@ const GroupClassesList = (props) => {
     appliedFilters.package_category_id,
     appliedFilters.booking_type,
     appliedFilters.trainer_id,
+    appliedFilters.status,
   ]);
 
   useEffect(() => {
@@ -802,6 +807,7 @@ const customCreateClassOption = ({
                 filterCategory={formik.values.filterCategory}
                 filterBookingType={formik.values.filterBookingType}
                 filterTrainer={formik.values.filterTrainer}
+                filterStatus={formik.values.filterStatus}
                 formik={formik}
                 setFilterValue={(field, value) =>
                   formik.setFieldValue(field, value)
@@ -831,7 +837,7 @@ const customCreateClassOption = ({
                     <th className="px-2 py-4 min-w-[100px]">Studio</th>
                     <th className="px-2 py-4 min-w-[150px]">Trainer Name</th>
                     <th className="px-2 py-4 min-w-[130px]">Max Capacity</th>
-                    <th className="px-2 py-4 min-w-[110px]">Bookings</th>
+                    <th className="px-2 py-4 min-w-[170px]">Total Bookings</th>
                     <th className="px-2 py-4 min-w-[130px]">Active Bookings</th>
                     <th className="px-2 py-4 min-w-[110px]">No-Show</th>
                     <th className="px-2 py-4 min-w-[110px]">Waitings</th>
