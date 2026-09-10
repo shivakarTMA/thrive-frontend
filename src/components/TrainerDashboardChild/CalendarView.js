@@ -39,6 +39,11 @@ const STATUS_COLORS = {
     border: "#EF4444",
     text: "#B91C1C",
   },
+  EXPIRED: {
+    bg: "#FEF2F2",
+    border: "#EF4444",
+    text: "#B91C1C",
+  },
   RESCHEDULED: {
     bg: "#FFF7ED",
     border: "#F97316",
@@ -139,7 +144,10 @@ const CalendarView = ({ clubId }) => {
         return {
           id: item.id,
           title: item.package_name || item.type,
+          appointment_type : item?.appointment_type,
           subTitle: item.member_name,
+          appointments: item?.appointments,
+          studio: item?.studio_name,
           start: startDateTime,
           end: endDateTime,
           trainer: item.trainer_name,
@@ -195,12 +203,20 @@ const CalendarView = ({ clubId }) => {
             <div className="font-medium text-[10px] leading-tight mb-1">
               {event.subTitle}
             </div>
-            <div className="text-[10px] text-gray-600">
+            {event?.appointment_type =="CLASS" && <div className="text-[10px] text-gray-600 truncate mb-1">
+            {event?.studio}
+            </div>}
+            <div className="text-[10px] text-gray-600 mb-1">
               {formatTime(event.start)} – {formatTime(event.end)}
             </div>
-            <div className="text-[10px] text-gray-600 truncate">
+            <div className="text-[10px] text-gray-600 truncate mb-1">
               {event.trainer}
             </div>
+            {event?.appointment_type =="CLASS" &&
+            <div className="text-[10px] text-gray-600 truncate mb-1">
+             Appointments : {event?.appointments}
+            </div>}
+           
           </>
         )}
       </div>

@@ -122,7 +122,25 @@ const WorkoutApp = ({ member }) => {
   const closeConfirmModal = () => {
     setConfirmModal({ show: false, id: null, action: null });
   };
+  
 
+  const hasActiveSession = workouts.some(
+  (workout) => workout?.status?.toUpperCase() === "ACTIVE",
+);
+
+const isAddWorkoutDisabled =
+  kycCheckMember !== true ||
+  freezeStatus === "FREEZED" ||
+  hasActiveSession;
+
+const disabledTooltipMessage =
+  freezeStatus === "FREEZED"
+    ? "Your membership is currently frozen."
+    : kycCheckMember !== true
+      ? "Your KYC is not completed yet."
+      : hasActiveSession
+        ? "You currently have an active workout plan."
+        : "";
   return (
     <div className="p-4 bg-white rounded shadow relative">
       {/* ---------------- CONFIRMATION MODAL ---------------- */}
@@ -170,31 +188,34 @@ const WorkoutApp = ({ member }) => {
         userRole === "ADMIN") && (
         <>
           {!workoutModal && (
-            <div className="flex justify-end items-end gap-2 mb-3 w-full">
-              {kycCheckMember !== true || freezeStatus === "FREEZED" ? (
-                <Tooltip
-                  id={`tooltip-membership-kyc`}
-                  content={freezeStatus === "FREEZED" ? "Your membership is currently frozen." : "Your kyc is not completed yet."}
-                  place="top"
-                >
-                  <button
-                    disabled={true}
-                    className="px-3 py-2 flex rounded items-center gap-2 border text-sm bg-gray-300 border-gray-300 cursor-not-allowed text-gray-500"
-                  >
-                    <FiPlus /> Add Workout
-                  </button>
-                </Tooltip>
-              ) : (
-                <button
-                  type="button"
-                  onClick={handleAddWorkout}
-                  className="px-4 py-2 bg-black text-white rounded flex items-center gap-2"
-                >
-                  <FiPlus /> Add Workout
-                </button>
-              )}
-            </div>
-          )}
+  <div className="flex justify-end items-end gap-2 mb-3 w-full">
+    {isAddWorkoutDisabled ? (
+      <Tooltip
+        id="tooltip-add-workout"
+        content={disabledTooltipMessage}
+        place="top"
+      >
+        <button
+          type="button"
+          disabled
+          className="px-3 py-2 flex rounded items-center gap-2 border text-sm bg-gray-300 border-gray-300 cursor-not-allowed text-gray-500"
+        >
+          <FiPlus />
+          Add Workout
+        </button>
+      </Tooltip>
+    ) : (
+      <button
+        type="button"
+        onClick={handleAddWorkout}
+        className="px-4 py-2 bg-black text-white rounded flex items-center gap-2"
+      >
+        <FiPlus />
+        Add Workout
+      </button>
+    )}
+  </div>
+)}
         </>
       )}
 
