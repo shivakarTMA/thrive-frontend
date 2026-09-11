@@ -365,6 +365,7 @@ export function formatText(status) {
   if (status === "BTC") return "BTC";
   if (status === "UPI") return "UPI";
   if (status === "UPI_ICICI") return "UPI";
+  if (status === "RESUBMITTED") return "Re-submitted";
 
   return status
     .split("_")

@@ -1932,7 +1932,15 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
               <MdFollowTheSigns className="menu--icon" />
               <span className="nav-text">My Followups</span>
             </Link>
-
+            <Link
+              to="/kyc-documents"
+              className={`nav-link mb-2 ${
+                location.pathname === "/kyc-documents" ? "active" : ""
+              }`}
+            >
+              <PiIdentificationCardLight className="menu--icon" />
+              <span className="nav-text">Kyc Documents</span>
+            </Link>
             <Link
               to="/all-members"
               className={`nav-link mb-2 ${
@@ -3344,6 +3352,15 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
             >
               <MdFollowTheSigns className="menu--icon" />
               <span className="nav-text">My Followups</span>
+            </Link>
+             <Link
+              to="/kyc-documents"
+              className={`nav-link mb-2 ${
+                location.pathname === "/kyc-documents" ? "active" : ""
+              }`}
+            >
+              <PiIdentificationCardLight className="menu--icon" />
+              <span className="nav-text">Kyc Documents</span>
             </Link>
             <Link
               to="/all-members"

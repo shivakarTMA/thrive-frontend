@@ -549,6 +549,7 @@ const ServiceCard = ({ details }) => {
                     ${freezeStatus === "FREEZED" ? "bg-[#ffe9c6] border-[#ffe9c6]" : ""}
                     ${membershipData?.booking_status === "EXPIRED" ? "bg-[#ffd4d4] border-[#ffd4d4]" : ""}
                     ${membershipData?.booking_status === "ACTIVE" ? "bg-[#e3f2e8] border-[#e3f2e8]" : ""}
+                    ${membershipData?.booking_status === "UPCOMING" ? "bg-[#FFF4E5]  border-[#FFF4E5]" : ""}
                     `}
                   >
                     <div
@@ -557,6 +558,7 @@ const ServiceCard = ({ details }) => {
                     ${freezeStatus === "FREEZED" ? "bg-[#ffac28]" : ""}
                     ${membershipData?.booking_status === "EXPIRED" ? "bg-[#ff3f3f]" : ""}
                     ${membershipData?.booking_status === "ACTIVE" ? "bg-[#498366]" : ""}
+                    ${membershipData?.booking_status === "UPCOMING" ? "bg-[#F59E0B]" : ""}
                       
                       `}
                     ></div>
@@ -566,6 +568,7 @@ const ServiceCard = ({ details }) => {
                     ${freezeStatus === "FREEZED" ? "text-[#ffac28]" : ""}
                     ${membershipData?.booking_status === "EXPIRED" ? "text-[#ff3f3f]" : ""}
                     ${membershipData?.booking_status === "ACTIVE" ? "text-[#498366]" : ""}
+                    ${membershipData?.booking_status === "UPCOMING" ? "text-[#F59E0B]" : ""}
                       `}
                     >
                       {freezeStatus === "FREEZED"

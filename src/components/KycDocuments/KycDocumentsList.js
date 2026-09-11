@@ -32,6 +32,7 @@ const statusFilterOptions = [
   { value: "PENDING", label: "Pending" },
   { value: "APPROVED", label: "Approved" },
   { value: "REJECTED", label: "Rejected" },
+  { value: "RESUBMITTED", label: "Re-submitted" },
 ];
 
 const formatDate = (date) => format(date, "yyyy-MM-dd");
@@ -135,32 +136,36 @@ const KycDocumentsList = (props) => {
     }
   };
 
-  useEffect(() => {
-    const delayDebounce = setTimeout(() => {
-      setPage(1);
-      fetchMemberKycDocuments(searchTerm, 1);
-    }, 300);
+useEffect(() => {
+  const delayDebounce = setTimeout(() => {
+    setDebouncedSearch(searchTerm);
+    setPage(1);
+  }, 300);
 
-    return () => clearTimeout(delayDebounce);
-  }, [searchTerm, statusFilter, clubFilter, dateFilter, customFrom, customTo]);
+  return () => clearTimeout(delayDebounce);
+}, [searchTerm]);
 
   // Fetch data
-  useEffect(() => {
-    // Prevent API call until both dates selected
-    if (dateFilter?.value === "custom") {
-      if (!(customFrom && customTo)) return;
-    }
+  // Call API when filters change
+useEffect(() => {
+  // For custom filter, wait until both dates are selected
+  if (
+    dateFilter?.value === "custom" &&
+    (!customFrom || !customTo)
+  ) {
+    return;
+  }
 
-    fetchMemberKycDocuments(searchTerm, page);
-  }, [
-    page,
-    searchTerm,
-    statusFilter,
-    clubFilter,
-    dateFilter,
-    customFrom,
-    customTo,
-  ]);
+  fetchMemberKycDocuments(debouncedSearch, page);
+}, [
+  page,
+  debouncedSearch,
+  statusFilter,
+  clubFilter,
+  dateFilter?.value,
+  customFrom,
+  customTo,
+]);
 
   const handleExportKycDocuments = async () => {
     try {
@@ -228,7 +233,18 @@ const KycDocumentsList = (props) => {
       setLoading(false);
     }
   };
+const getStatusBadgeClass = (status) => {
+  const statusMap = {
+    APPROVED: "bg-[#E8FFE6] text-[#138808]",
+    REJECTED: "bg-red-100 text-red-600",
+    RESUBMITTED: "bg-blue-100 text-blue-600",
+    PENDING_REVIEW: "bg-orange-100 text-orange-700",
+    PENDING: "bg-yellow-100 text-yellow-700",
+    FREEZED: "bg-gray-200 text-gray-700",
+  };
 
+  return statusMap[status] || "bg-gray-100 text-gray-600";
+};
   return (
     <div className="page--content">
       {/* Header */}
@@ -238,7 +254,7 @@ const KycDocumentsList = (props) => {
           <h1 className="text-3xl font-semibold">KYC Documents</h1>
         </div>
         {!ALLOWED_ROLES.includes(userRole) && (
-          <div className="w-full max-w-[200px]">
+          <div className="w-full max-w-[170px]">
             <button
               onClick={handleExportKycDocuments}
               disabled={kycDocumentsData.length === 0 || (dateFilter?.value === "custom" && (!customFrom || !customTo))}
@@ -249,7 +265,7 @@ const KycDocumentsList = (props) => {
                   : "bg-black text-white hover:bg-gray-800"
               }`}
             >
-              <LuDownload /> <span>Download Documents</span>
+              <LuDownload /> <span>Download Reports</span>
             </button>
           </div>
         )}
@@ -277,6 +293,7 @@ const KycDocumentsList = (props) => {
               options={dateFilterOptions}
               value={dateFilter}
               onChange={(selected) => {
+                setPage(1);
                 setDateFilter(selected);
                 if (selected?.value !== "custom") {
                   setCustomFrom(null);
@@ -296,6 +313,7 @@ const KycDocumentsList = (props) => {
                 <DatePicker
                   selected={customFrom}
                   onChange={(date) => {
+                    setPage(1);
                     setCustomFrom(date);
                     setCustomTo(null); // ✅ reset To Date if From Date changes
                   }}
@@ -315,7 +333,7 @@ const KycDocumentsList = (props) => {
                 </span>
                 <DatePicker
                   selected={customTo}
-                  onChange={(date) => setCustomTo(date)}
+                  onChange={(date) =>{setPage(1); setCustomTo(date)}}
                   placeholderText="To Date"
                   className="custom--input w-full input--icon"
                   minDate={customFrom || subYears(new Date(), 20)}
@@ -335,7 +353,7 @@ const KycDocumentsList = (props) => {
               placeholder="Filter by club"
               value={clubOptions.find((o) => o.value === clubFilter) || null}
               options={clubOptions}
-              onChange={(option) => setClubFilter(option?.value)}
+              onChange={(option) =>{setPage(1); setClubFilter(option?.value)}}
               styles={customStyles}
               className="w-full"
               isClearable={userRole === "ADMIN" ? true : false}
@@ -349,7 +367,7 @@ const KycDocumentsList = (props) => {
                 null
               }
               options={statusFilterOptions}
-              onChange={(option) => setStatusFilter(option?.value)}
+              onChange={(option) =>{setPage(1); setStatusFilter(option?.value)}}
               styles={customStyles}
               className="w-full"
               isClearable={userRole === "ADMIN" ? true : false}
@@ -359,10 +377,10 @@ const KycDocumentsList = (props) => {
         
       </div>
 
-      <div className="grid grid-cols-4 gap-5 mb-5 p-3 border bg-white shodow--box rounded-[10px]">
+      <div className="grid grid-cols-5 gap-5 mb-5 p-3 border bg-white shodow--box rounded-[10px]">
         <div className="border rounded-[5px] overflow-hidden w-full">
           <div className="flex justify-center bg-[#F1F1F1] p-4 py-3">
-            <div className="text-lg font-bold">Total</div>
+            <div className="text-lg font-bold">Total submissions</div>
           </div>
           <p className="text-3xl font-bold text-center py-5">
             {kycDataCount?.total}
@@ -385,6 +403,14 @@ const KycDocumentsList = (props) => {
             {kycDataCount?.pending}
           </p>
         </div>
+        <div className="border rounded-[5px] overflow-hidden w-full">
+          <div className="flex justify-center bg-[#F1F1F1] p-4 py-3">
+            <div className="text-lg font-bold">Re-submitted</div>
+          </div>
+          <p className="text-3xl font-bold text-center py-5">
+            {kycDataCount?.resubmitted}
+          </p>
+        </div>
 
         <div className="border rounded-[5px] overflow-hidden w-full">
           <div className="flex justify-center bg-[#F1F1F1] p-4 py-3">
@@ -405,14 +431,16 @@ const KycDocumentsList = (props) => {
                 <th className="px-2 py-4 min-w-[150px]">club name</th>
                 <th className="px-2 py-4 min-w-[120px]">Membership ID</th>
                 <th className="px-2 py-4 min-w-[150px]">Member Name</th>
-                <th className="px-2 py-4 min-w-[200px]">Membership Duration</th>
-                <th className="px-2 py-4 min-w-[150px]">Upload Date</th>
-                <th className="px-2 py-4 min-w-[150px]">Reviewed By</th>
+                <th className="px-2 py-4 min-w-[200px]">Subscription plan</th>
+                <th className="px-2 py-4 min-w-[150px]">Latest submission</th>
                 <th className="px-2 py-4 min-w-[150px]">Status</th>
                 <th className="px-2 py-4 min-w-[120px]">Source</th>
-                <th className="px-2 py-4 min-w-[120px]">Remark</th>
+                <th className="px-2 py-4 min-w-[150px]">Reviewed By</th>
+                <th className="px-2 py-4 min-w-[150px]">Reviewed on</th>
+                <th className="px-2 py-4 min-w-[150px]">Latest remark</th>
+                {console.log(userRole,"userRoleuserRoleuserRole")}
                 {(userRole === "FOH" ||
-                  userRole === "CLUB_MANAGER" ||
+                  userRole === "CLUB_MANAGER" || userRole === "ASS_CLUB_MANAGER" || userRole === "PROGRAM_SPECIALIST" ||
                   userRole === "ADMIN") && (
                   <th className="px-2 py-4 min-w-[100px]">Action</th>
                 )}
@@ -432,36 +460,31 @@ const KycDocumentsList = (props) => {
                     <td className="px-2 py-4">
                       {row?.membership_duration || "--"}
                     </td>
-                    <td className="px-2 py-4">{row?.upload_date}</td>
-                    <td className="px-2 py-4">{row?.reviewed_by}</td>
+                    <td className="px-2 py-4">{row?.latest_submission || "--"}</td>
                     <td className="px-2 py-4">
                       <span
                         className={`
                             flex items-center justify-between gap-1 rounded-full min-h-[30px] px-3 text-sm w-fit
-                          ${
-                            row?.status === "APPROVED"
-                              ? "bg-[#E8FFE6] text-[#138808]"
-                              : row?.status === "REJECTED"
-                                ? "bg-red-100 text-red-600"
-                                : "bg-orange-100 text-orange-600"
-                          }
+                          ${getStatusBadgeClass(row?.status)}
                           `}
                       >
                         <FaCircle className="text-[10px]" />{" "}
                         {formatText(row?.status)}
                       </span>
                     </td>
-                    <td className="px-2 py-4">{row?.source}</td>
+                    <td className="px-2 py-4">{row?.source || "--"}</td>
+                    <td className="px-2 py-4">{row?.reviewed_by || "--"}</td>
+                    <td className="px-2 py-4">{row?.reviewed_on || "--"}</td>
                     <td className="px-2 py-4">{row?.remark || "--"}</td>
                     {(userRole === "FOH" ||
-                      userRole === "CLUB_MANAGER" ||
-                      userRole === "ADMIN") && (
+                  userRole === "CLUB_MANAGER" || userRole === "ASS_CLUB_MANAGER" || userRole === "PROGRAM_SPECIALIST" ||
+                  userRole === "ADMIN") && (
                       <td className="px-2 py-4">
                         <button
                           type="button"
                           onClick={() => {
                             setMemberKycDocuments(row?.member_id);
-                            setMemberStatusId(row?.status);
+                            setMemberStatusId(row?.status === "RESUBMITTED" ? "PENDING" :row?.status);
                             setShowModal(true);
                           }}
                           className="w-[30px] h-[30px] text-center flex items-center justify-center bg-gray-100 text-black rounded gap-2 !text-[13px]"

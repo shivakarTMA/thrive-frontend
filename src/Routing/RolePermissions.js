@@ -48,7 +48,7 @@ export const ROUTE_PERMISSIONS = {
     'FITNESS_MANAGER', 'ASS_FITNESS_MANAGER', 'TRAINER',
     'MARKETING_MANAGER', 'FINANCE_MANAGER', 'FINANCE_MANAGER_CLUB', 'FINANCE_MANAGER_CORPORATE',
   ],
-  '/kyc-documents': ['ADMIN', 'FOH', 'CLUB_MANAGER'],
+  '/kyc-documents': ['ADMIN', 'FOH', 'CLUB_MANAGER','ASS_CLUB_MANAGER','PROGRAM_SPECIALIST'],
 
   // ─── Member Management ──────────────────────────────────────────────────────
   '/all-members': [
