@@ -804,7 +804,9 @@ const ProductsSold = (props) => {
                     <th className="px-2 py-4 min-w-[120px]">End Date</th>
                     <th className="px-2 py-4 min-w-[120px]">Lead Source</th>
                     <th className="px-2 py-4 min-w-[150px]">Lead Owner</th>
-                    <th className="px-2 py-4 min-w-[100px]">Amount</th>
+                    <th className="px-2 py-4 min-w-[100px]">Base Amount</th>
+                    <th className="px-2 py-4 min-w-[100px]">Discount</th>
+                    <th className="px-2 py-4 min-w-[100px]">Net Payable</th>
                     <th className="px-2 py-4 min-w-[100px]">CGST</th>
                     <th className="px-2 py-4 min-w-[100px]">SGST</th>
                     <th className="px-2 py-4 min-w-[100px]">IGST</th>
@@ -897,6 +899,12 @@ const ProductsSold = (props) => {
                         </td>
                         <td className="px-2 py-4">
                           ₹{row?.amount ? formatIndianNumber(row?.amount) : 0}
+                        </td>
+                        <td className="px-2 py-4">
+                          ₹{row?.amount ? formatIndianNumber(row?.total_discount) : 0}
+                        </td>
+                        <td className="px-2 py-4">
+                          ₹{row?.amount ? formatIndianNumber(row?.taxable_amount) : 0}
                         </td>
                         <td className="px-2 py-4">
                           ₹
