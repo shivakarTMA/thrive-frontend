@@ -662,7 +662,7 @@ const TrainerDashboard = () => {
                     <tr>
                       <th className="p-2">Class Type</th>
                       <th className="p-2">Scheduled</th>
-                      <th className="p-2">Bookings</th>
+                      <th className="p-2">Active Bookings</th>
                       <th className="p-2">Cancellations</th>
                       <th className="p-2">Action</th>
                     </tr>

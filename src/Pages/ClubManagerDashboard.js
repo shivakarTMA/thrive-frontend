@@ -1132,7 +1132,7 @@ const ClubManagerDashboard = () => {
                   <tr>
                     <th className="p-2">Class Type</th>
                     <th className="p-2 text-center">Scheduled</th>
-                    <th className="p-2 text-center">Bookings</th>
+                    <th className="p-2 text-center">Active Bookings</th>
                     <th className="p-2 text-center">Cancellations</th>
                     <th className="p-2">Action</th>
                   </tr>
