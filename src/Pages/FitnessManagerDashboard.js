@@ -383,13 +383,13 @@ const FitnessManagerDashboard = () => {
 
   return (
     <div className="page--content">
-      <div className=" flex items-end justify-between gap-2 mb-5">
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 mb-5">
         <div className="title--breadcrumbs">
           <p className="text-sm">{`Home > Dashboard`}</p>
           <h1 className="text-3xl font-semibold">Dashboard</h1>
         </div>
-        <div className="flex gap-3 items-center justify-between">
-          <div className="w-fit min-w-[180px]">
+        <div className="flex gap-3 items-center justify-between w-full sm:w-auto">
+          <div className="w-full sm:w-fit min-w-0 sm:min-w-[180px]">
             <Select
               placeholder="Filter by club"
               value={selectedClub || null}
@@ -404,7 +404,7 @@ const FitnessManagerDashboard = () => {
 
       {/* end title */}
 
-      <div className="w-full bg-white box--shadow rounded-[10px] px-2 py-2 flex gap-3 justify-between items-center mb-4">
+      <div className="w-full bg-white box--shadow rounded-[10px] px-2 py-2 flex flex-col lg:flex-row gap-3 justify-between items-stretch lg:items-center mb-4">
         <div className="flex gap-3">
           <div
             // type="button"
@@ -425,8 +425,8 @@ const FitnessManagerDashboard = () => {
             Leaderboard
           </button> */}
         </div>
-        <div className="flex items-center">
-          <div className="w-fit flex items-center gap-2 border-r">
+         <div className="flex flex-col sm:flex-row items-stretch sm:items-center w-full sm:w-auto overflow-visible pb-0">
+          <div className="w-full sm:w-fit shrink-0 flex items-center gap-2 border-b sm:border-b-0 sm:border-r py-2 sm:py-0">
             <div className="text-sm font-medium text-gray-600 flex gap-2 items-center">
               <FaCircle className="text-[10px] text-[#009EB2]" /> Active Members
             </div>
@@ -436,7 +436,7 @@ const FitnessManagerDashboard = () => {
               </span>
             </div>
           </div>
-          <div className="w-fit flex items-center gap-2 border-r pl-2">
+          <div className="w-full sm:w-fit shrink-0 flex items-center gap-2 border-b sm:border-b-0 sm:border-r pl-0 sm:pl-2 py-2 sm:py-0">
             <div className="text-sm font-medium text-gray-600 flex gap-2 items-center">
               <FaCircle className="text-[10px] text-[#1F9254]" />
               Active PT Members
@@ -447,7 +447,7 @@ const FitnessManagerDashboard = () => {
               </span>
             </div>
           </div>
-          <div className="w-fit flex items-center gap-2 border-r pl-2">
+          <div className="w-full sm:w-fit shrink-0 flex items-center gap-2 border-b sm:border-b-0 sm:border-r pl-0 sm:pl-2 py-2 sm:py-0">
             <div className="text-sm font-medium text-gray-600 flex gap-2 items-center">
               <FaCircle className="text-[10px] text-[#ff9900]" />
               Irregular Members
@@ -458,7 +458,7 @@ const FitnessManagerDashboard = () => {
               </span>
             </div>
           </div>
-          <div className="w-fit flex items-center gap-2 pl-2">
+          <div className="w-full sm:w-fit shrink-0 flex items-center gap-2 pl-0 sm:pl-2 py-2 sm:py-0">
             <div className="text-sm font-medium text-gray-600 flex gap-2 items-center">
               <FaCircle className="text-[10px] text-[#FF0000]" />
               Inactive Members
@@ -472,11 +472,11 @@ const FitnessManagerDashboard = () => {
         </div>
       </div>
 
-      <div className="flex gap-3">
-        <div className="w-[75%]">
+      <div className="flex flex-col lg:flex-row gap-3">
+        <div className="w-full lg:w-[75%] min-w-0">
           <div className="rounded-[15px] p-3 box--shadow bg-white">
-            <div className="flex gap-2 w-full mb-4">
-              <div className="max-w-[180px] w-full">
+            <div className="flex flex-col sm:flex-row gap-2 w-full mb-4">
+              <div className="max-w-none sm:max-w-[180px] w-full">
                 <Select
                   placeholder="Date Filter"
                   options={dateFilterOptions}
@@ -496,7 +496,7 @@ const FitnessManagerDashboard = () => {
 
               {dateFilter?.value === "custom" && (
                 <>
-                  <div className="custom--date dob-format flex-1 max-w-[180px] w-full">
+                  <div className="custom--date dob-format flex-1 max-w-none sm:max-w-[180px] w-full">
                     <span className="absolute z-[1] mt-[11px] ml-[15px]">
                       <FaCalendarDays />
                     </span>
@@ -516,7 +516,7 @@ const FitnessManagerDashboard = () => {
                       dropdownMode="select"
                     />
                   </div>
-                  <div className="custom--date dob-format flex-1 max-w-[180px] w-full">
+                  <div className="custom--date dob-format flex-1 max-w-none sm:max-w-[180px] w-full">
                     <span className="absolute z-[1] mt-[11px] ml-[15px]">
                       <FaCalendarDays />
                     </span>
@@ -537,8 +537,8 @@ const FitnessManagerDashboard = () => {
                 </>
               )}
             </div>
-
-            <div className="grid grid-cols-3 gap-3">
+    
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
               <SalesSummary
                 icon={totalSalesIcon}
                 title="Total Sales"
@@ -553,7 +553,7 @@ const FitnessManagerDashboard = () => {
                       dashboardData?.summary_cards?.total_sales?.breakup
                         ?.memberships,
                     )}`,
-                    link: currentUserRole === "FITNESS_MANAGER" ? generateUrl(`/reports/all-orders?package_type=SUBSCRIPTION`): "#",
+                    link: currentUserRole === "FITNESS_MANAGER" ? generateUrl(`/reports/all-orders?package_type=SUBSCRIPTION`) : "#",
                   },
                   {
                     label: "Packages",
@@ -588,28 +588,28 @@ const FitnessManagerDashboard = () => {
               <SalesSummary
                 icon={renewalIcon}
                 title="Membership Sold"
-                titleLink={currentUserRole === "FITNESS_MANAGER" ? generateUrl(`/reports/all-orders?package_type=SUBSCRIPTION`): "#"}
+                titleLink={currentUserRole === "FITNESS_MANAGER" ? generateUrl(`/reports/all-orders?package_type=SUBSCRIPTION`) : "#"}
                 totalSales={dashboardData?.summary_cards?.total_members?.total_count}
                 items={[
                   {
                     label: "New Clients",
                     value: dashboardData?.summary_cards?.total_members?.newMember,
-                    link:currentUserRole === "FITNESS_MANAGER" ? generateUrl(`/reports/all-orders?bill_type=NEW&package_type=SUBSCRIPTION`): "#"
+                    link: currentUserRole === "FITNESS_MANAGER" ? generateUrl(`/reports/all-orders?bill_type=NEW&package_type=SUBSCRIPTION`) : "#",
                   },
                   {
                     label: "Renewals",
                     value: dashboardData?.summary_cards?.total_members?.renewalMember,
-                    link:currentUserRole === "FITNESS_MANAGER" ? generateUrl(`/reports/all-orders?bill_type=RENEWAL&package_type=SUBSCRIPTION`): "#"
+                    link: currentUserRole === "FITNESS_MANAGER" ? generateUrl(`/reports/all-orders?bill_type=RENEWAL&package_type=SUBSCRIPTION`) : "#",
                   },
                   // {
                   //   label: "Advanced renewal",
                   //   value: dashboardData?.summary_cards?.total_members?.advanceRenewalMember,
-                  //   link:currentUserRole === "FITNESS_MANAGER" ? generateUrl(`/reports/all-orders?bill_type=ADVANCED_RENEWAL&package_type=SUBSCRIPTION`) : "#"
+                  //   link: currentUserRole === "FITNESS_MANAGER" ? generateUrl(`/reports/all-orders?bill_type=ADVANCED_RENEWAL&package_type=SUBSCRIPTION`) : "#"
                   // },
                   // {
                   //   label: "Returning User",
                   //   value: dashboardData?.summary_cards?.total_members?.returningMember,
-                  //   link:currentUserRole === "FITNESS_MANAGER" ? generateUrl(`/reports/all-orders?bill_type=RETURNING&package_type=SUBSCRIPTION`) : "#"
+                  //   link: currentUserRole === "FITNESS_MANAGER" ? generateUrl(`/reports/all-orders?bill_type=RETURNING&package_type=SUBSCRIPTION`) : "#"
                   // },
                 ]}
               />
@@ -697,7 +697,7 @@ const FitnessManagerDashboard = () => {
           {/* Calender View end */}
         </div>
 
-        <div className="w-[25%]">
+        <div className="w-full lg:w-[25%] min-w-0">
           <div className="rounded-[15px] p-3 box--shadow bg-white">
             <div>
               <p className="text-lg font-[600] mb-3 text-center">Summary </p>

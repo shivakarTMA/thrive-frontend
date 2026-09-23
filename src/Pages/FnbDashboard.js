@@ -281,185 +281,195 @@ const FnbDashboard = () => {
 
 
   return (
-    <div className="page--content">
-      <div className=" flex items-end justify-between gap-2 mb-5">
-        <div className="title--breadcrumbs">
-          <p className="text-sm">{`Home > Dashboard`}</p>
-          <h1 className="text-3xl font-semibold">Dashboard</h1>
-        </div>
-        <div className="flex gap-3 items-center justify-between">
-          <div className="w-fit min-w-[180px]">
-            <Select
-              placeholder="Filter by club"
-              value={selectedClub || null}
-              options={clubOptions}
-              onChange={(option) => setClubFilter(option)}
-              // isClearable
-              styles={customStyles}
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* end title */}
-
-
-      <div className="flex gap-3">
-        <div className="w-[100%]">
-          <div className="flex gap-2 justify-between items-end">
-            <div className="flex gap-2 flex-1">
-              <div className="max-w-[180px] w-full">
-                <Select
-                  placeholder="Date Filter"
-                  options={dateFilterOptions}
-                  value={dateFilter}
-                  onChange={(selected) => {
-                    setDateFilter(selected);
-                    if (selected?.value !== "custom") {
-                      setCustomFrom(null);
-                      setCustomTo(null);
-                    }
-                  }}
-                  // isClearable
-                  styles={customStyles}
-                  className="w-full"
-                />
-              </div>
-
-              {dateFilter?.value === "custom" && (
-                <>
-                  <div className="custom--date dob-format flex-1 max-w-[180px] w-full">
-                    <span className="absolute z-[1] mt-[11px] ml-[15px]">
-                      <FaCalendarDays />
-                    </span>
-                    <DatePicker
-                      selected={customFrom}
-                      onChange={(date) => {
-                        setCustomFrom(date);
-                        setCustomTo(null); // ✅ reset To Date if From Date changes
-                      }}
-                      placeholderText="From Date"
-                      className="custom--input w-full input--icon"
-                      minDate={subYears(new Date(), 20)}
-                      maxDate={addYears(new Date(), 0)}
-                      dateFormat="dd-MM-yyyy"
-                      showMonthDropdown
-                      showYearDropdown
-                      dropdownMode="select"
-                    />
-                  </div>
-                  <div className="custom--date dob-format flex-1 max-w-[180px] w-full">
-                    <span className="absolute z-[1] mt-[11px] ml-[15px]">
-                      <FaCalendarDays />
-                    </span>
-                    <DatePicker
-                      selected={customTo}
-                      onChange={(date) => setCustomTo(date)}
-                      placeholderText="To Date"
-                      className="custom--input w-full input--icon"
-                      minDate={customFrom || subYears(new Date(), 20)}
-                      maxDate={addYears(new Date(), 0)}
-                      showMonthDropdown
-                      showYearDropdown
-                      dropdownMode="select"
-                      dateFormat="dd-MM-yyyy"
-                      disabled={!customFrom}
-                    />
-                  </div>
-                </>
-              )}
-            </div>
-
-            <div className="rounded-[10px] p-3 w-fit box--shadow bg-white">
-              <div className="flex justify-between items-center">
-                <h2 className="font-semibold">Total Sales: <Link to={generateUrl(`/reports/all-orders?package_type=PRODUCT`)}>₹{formatIndianNumber(dashboardData?.summary_cards?.total_sales?.breakup?.products)}</Link></h2>
-              </div>
-            </div>
-          </div>
-
-          {/* <div className="grid grid-cols-3 gap-3">
-            <SalesSummary
-              icon={totalSalesIcon}
-              title="Total Sales"
-              titleLink={generateUrl(`/reports/all-orders?`)}
-              totalSales={`₹${formatIndianNumber(
-                dashboardData?.summary_cards?.total_sales?.breakup?.products
-              )}`}
-              items={[
-
-                ...(hasProductServices
-                  ? [
-                      {
-                        label: "Nourish",
-                        value: `₹${formatIndianNumber(
-                          dashboardData?.summary_cards?.total_sales?.breakup?.products
-                        )}`,
-                        link: generateUrl(`/reports/all-orders?package_type=PRODUCT`),
-                      },
-                    ]
-                  : []),
-              ]}
-            />
-
-            <SalesSummary
-              icon={newClientIcon}
-              title="New Sales"
-              titleLink={generateUrl(`/reports/all-orders?bill_type=NEW`)}
-              totalSales={dashboardData?.summary_cards?.new_clients?.breakup?.products}
-              items={[
-                ...(hasProductServices
-                  ? [
-                      {
-                        label: "Nourish",
-                        value: dashboardData?.summary_cards?.new_clients?.breakup?.products,
-                        link: generateUrl(
-                          `/reports/all-orders?bill_type=NEW&package_type=PRODUCT`,
-                        ),
-                      },
-                    ]
-                  : []),
-              ]}
-            />
-            <SalesSummary
-              icon={renewalIcon}
-              title="Renewal"
-              titleLink={generateUrl(`/reports/all-orders?bill_type=RENEWAL`)}
-              totalSales={dashboardData?.summary_cards?.renewals?.breakup?.products}
-              items={[
-                ...(hasProductServices
-                  ? [
-                      {
-                        label: "Nourish",
-                        value: dashboardData?.summary_cards?.renewals?.breakup?.products,
-                        link: generateUrl(
-                          `/reports/all-orders?bill_type=RENEWAL&package_type=PRODUCT`,
-                        ),
-                      },
-                    ]
-                  : []),
-              ]}
-            /> 
-          </div> */}
-        </div>
-      </div>
-
-      <div className="rounded-[15px] p-3 w-full mt-2 box--shadow bg-white">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="font-semibold">Pending Orders</h2>
-          <a
-            href={generateUrl(`/nourish-orders?`)}
-            className="text-[#009EB2] underline text-sm"
-          >
-            View All
-          </a>
-        </div>
-        <PendingOrderTable
-          setOrders={setOrders}
-          orders={orders}
-          fetchOrders={fetchPendingOrdersData}
+  <div className="page--content">
+  <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 mb-5">
+    <div className="title--breadcrumbs">
+      <p className="text-sm">{`Home > Dashboard`}</p>
+      <h1 className="text-3xl font-semibold">Dashboard</h1>
+    </div>
+    <div className="flex gap-3 items-center justify-between w-full sm:w-auto">
+      <div className="w-full sm:w-fit min-w-0 sm:min-w-[180px]">
+        <Select
+          placeholder="Filter by club"
+          value={selectedClub || null}
+          options={clubOptions}
+          onChange={(option) => setClubFilter(option)}
+          // isClearable
+          styles={customStyles}
         />
       </div>
     </div>
+  </div>
+
+  {/* end title */}
+
+  <div className="flex gap-3">
+    <div className="w-full">
+      <div className="flex flex-col lg:flex-row gap-3 lg:justify-between lg:items-end">
+        <div className="flex flex-col sm:flex-row flex-1 gap-2 min-w-0">
+          <div className="max-w-none sm:max-w-[180px] w-full">
+            <Select
+              placeholder="Date Filter"
+              options={dateFilterOptions}
+              value={dateFilter}
+              onChange={(selected) => {
+                setDateFilter(selected);
+                if (selected?.value !== "custom") {
+                  setCustomFrom(null);
+                  setCustomTo(null);
+                }
+              }}
+              // isClearable
+              styles={customStyles}
+              className="w-full"
+            />
+          </div>
+
+          {dateFilter?.value === "custom" && (
+            <>
+              <div className="custom--date dob-format flex-1 max-w-none sm:max-w-[180px] w-full">
+                <span className="absolute z-[1] mt-[11px] ml-[15px]">
+                  <FaCalendarDays />
+                </span>
+                <DatePicker
+                  selected={customFrom}
+                  onChange={(date) => {
+                    setCustomFrom(date);
+                    setCustomTo(null); // ✅ reset To Date if From Date changes
+                  }}
+                  placeholderText="From Date"
+                  className="custom--input w-full input--icon"
+                  minDate={subYears(new Date(), 20)}
+                  maxDate={addYears(new Date(), 0)}
+                  dateFormat="dd-MM-yyyy"
+                  showMonthDropdown
+                  showYearDropdown
+                  dropdownMode="select"
+                />
+              </div>
+
+              <div className="custom--date dob-format flex-1 max-w-none sm:max-w-[180px] w-full">
+                <span className="absolute z-[1] mt-[11px] ml-[15px]">
+                  <FaCalendarDays />
+                </span>
+                <DatePicker
+                  selected={customTo}
+                  onChange={(date) => setCustomTo(date)}
+                  placeholderText="To Date"
+                  className="custom--input w-full input--icon"
+                  minDate={customFrom || subYears(new Date(), 20)}
+                  maxDate={addYears(new Date(), 0)}
+                  showMonthDropdown
+                  showYearDropdown
+                  dropdownMode="select"
+                  dateFormat="dd-MM-yyyy"
+                  disabled={!customFrom}
+                />
+              </div>
+            </>
+          )}
+        </div>
+
+        <div className="rounded-[10px] p-3 w-full lg:w-fit box--shadow bg-white">
+          <div className="flex justify-between items-center">
+            <h2 className="font-semibold">
+              Total Sales:{" "}
+              <Link to={generateUrl(`/reports/all-orders?package_type=PRODUCT`)}>
+                ₹
+                {formatIndianNumber(
+                  dashboardData?.summary_cards?.total_sales?.breakup?.products,
+                )}
+              </Link>
+            </h2>
+          </div>
+        </div>
+      </div>
+
+      {/* <div className="grid grid-cols-3 gap-3">
+        <SalesSummary
+          icon={totalSalesIcon}
+          title="Total Sales"
+          titleLink={generateUrl(`/reports/all-orders?`)}
+          totalSales={`₹${formatIndianNumber(
+            dashboardData?.summary_cards?.total_sales?.breakup?.products
+          )}`}
+          items={[
+
+            ...(hasProductServices
+              ? [
+                  {
+                    label: "Nourish",
+                    value: `₹${formatIndianNumber(
+                      dashboardData?.summary_cards?.total_sales?.breakup?.products
+                    )}`,
+                    link: generateUrl(`/reports/all-orders?package_type=PRODUCT`),
+                  },
+                ]
+              : []),
+          ]}
+        />
+
+        <SalesSummary
+          icon={newClientIcon}
+          title="New Sales"
+          titleLink={generateUrl(`/reports/all-orders?bill_type=NEW`)}
+          totalSales={dashboardData?.summary_cards?.new_clients?.breakup?.products}
+          items={[
+            ...(hasProductServices
+              ? [
+                  {
+                    label: "Nourish",
+                    value: dashboardData?.summary_cards?.new_clients?.breakup?.products,
+                    link: generateUrl(
+                      `/reports/all-orders?bill_type=NEW&package_type=PRODUCT`,
+                    ),
+                  },
+                ]
+              : []),
+          ]}
+        />
+        <SalesSummary
+          icon={renewalIcon}
+          title="Renewal"
+          titleLink={generateUrl(`/reports/all-orders?bill_type=RENEWAL`)}
+          totalSales={dashboardData?.summary_cards?.renewals?.breakup?.products}
+          items={[
+            ...(hasProductServices
+              ? [
+                  {
+                    label: "Nourish",
+                    value: dashboardData?.summary_cards?.renewals?.breakup?.products,
+                    link: generateUrl(
+                      `/reports/all-orders?bill_type=RENEWAL&package_type=PRODUCT`,
+                    ),
+                  },
+                ]
+              : []),
+          ]}
+        /> 
+      </div> */}
+    </div>
+  </div>
+
+  <div className="rounded-[15px] p-3 w-full mt-2 box--shadow bg-white">
+    <div className="flex justify-between items-center mb-4">
+      <h2 className="font-semibold">Pending Orders</h2>
+      <a
+        href={generateUrl(`/nourish-orders?`)}
+        className="text-[#009EB2] underline text-sm"
+      >
+        View All
+      </a>
+    </div>
+    <div className="w-full overflow-x-auto">
+      <PendingOrderTable
+        setOrders={setOrders}
+        orders={orders}
+        fetchOrders={fetchPendingOrdersData}
+      />
+    </div>
+  </div>
+</div>
   );
 };
 

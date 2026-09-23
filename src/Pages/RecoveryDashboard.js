@@ -181,123 +181,140 @@ const RecoveryDashboard = () => {
 
   return (
     <div className="page--content">
-      <div className=" flex items-end justify-between gap-2 mb-5">
-        <div className="title--breadcrumbs">
-          <p className="text-sm">{`Home > Dashboard`}</p>
-          <h1 className="text-3xl font-semibold">Dashboard</h1>
-        </div>
-        <div className="flex gap-3 items-center justify-between">
-          <div className="w-fit min-w-[180px]">
-            <Select
-              placeholder="Filter by club"
-              value={selectedClub || null}
-              options={clubOptions}
-              onChange={(option) => setClubFilter(option)}
-              // isClearable
-              styles={customStyles}
-            />
-          </div>
-        </div>
+  <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 mb-5">
+    <div className="title--breadcrumbs">
+      <p className="text-sm">{`Home > Dashboard`}</p>
+      <h1 className="text-3xl font-semibold">Dashboard</h1>
+    </div>
+    <div className="flex gap-3 items-center justify-between w-full sm:w-auto">
+      <div className="w-full sm:w-fit min-w-0 sm:min-w-[180px]">
+        <Select
+          placeholder="Filter by club"
+          value={selectedClub || null}
+          options={clubOptions}
+          onChange={(option) => setClubFilter(option)}
+          // isClearable
+          styles={customStyles}
+        />
       </div>
+    </div>
+  </div>
 
-      {/* end title */}
+  {/* end title */}
 
-      <div className="flex gap-3">
-        <div className="rounded-[15px] p-3 box--shadow bg-white w-[100%]">
-          <div className="flex gap-2 w-full mb-4">
-            <div className="max-w-[180px] w-full">
-              <Select
-                placeholder="Date Filter"
-                options={dateFilterOptions}
-                value={dateFilter}
-                onChange={(selected) => {
-                  setDateFilter(selected);
-                  if (selected?.value !== "custom") {
-                    setCustomFrom(null);
-                    setCustomTo(null);
-                  }
+  <div className="flex flex-col gap-3">
+    <div className="rounded-[15px] p-3 box--shadow bg-white w-full min-w-0">
+      <div className="flex flex-col sm:flex-row flex-wrap gap-2 w-full mb-4">
+        <div className="max-w-none sm:max-w-[180px] w-full">
+          <Select
+            placeholder="Date Filter"
+            options={dateFilterOptions}
+            value={dateFilter}
+            onChange={(selected) => {
+              setDateFilter(selected);
+              if (selected?.value !== "custom") {
+                setCustomFrom(null);
+                setCustomTo(null);
+              }
+            }}
+            // isClearable
+            styles={customStyles}
+            className="w-full"
+          />
+        </div>
+
+        {dateFilter?.value === "custom" && (
+          <>
+            <div className="custom--date dob-format flex-1 max-w-none sm:max-w-[180px] w-full">
+              <span className="absolute z-[1] mt-[11px] ml-[15px]">
+                <FaCalendarDays />
+              </span>
+              <DatePicker
+                selected={customFrom}
+                onChange={(date) => {
+                  setCustomFrom(date);
+                  setCustomTo(null); // ✅ reset To Date if From Date changes
                 }}
-                // isClearable
-                styles={customStyles}
-                className="w-full"
+                placeholderText="From Date"
+                className="custom--input w-full input--icon"
+                minDate={subYears(new Date(), 20)}
+                maxDate={addYears(new Date(), 0)}
+                dateFormat="dd-MM-yyyy"
+                showMonthDropdown
+                showYearDropdown
+                dropdownMode="select"
               />
             </div>
 
-            {dateFilter?.value === "custom" && (
-              <>
-                <div className="custom--date dob-format flex-1 max-w-[180px] w-full">
-                  <span className="absolute z-[1] mt-[11px] ml-[15px]">
-                    <FaCalendarDays />
-                  </span>
-                  <DatePicker
-                    selected={customFrom}
-                    onChange={(date) => {
-                      setCustomFrom(date);
-                      setCustomTo(null); // ✅ reset To Date if From Date changes
-                    }}
-                    placeholderText="From Date"
-                    className="custom--input w-full input--icon"
-                    minDate={subYears(new Date(), 20)}
-                    maxDate={addYears(new Date(), 0)}
-                    dateFormat="dd-MM-yyyy"
-                    showMonthDropdown
-                    showYearDropdown
-                    dropdownMode="select"
-                  />
-                </div>
-                <div className="custom--date dob-format flex-1 max-w-[180px] w-full">
-                  <span className="absolute z-[1] mt-[11px] ml-[15px]">
-                    <FaCalendarDays />
-                  </span>
-                  <DatePicker
-                    selected={customTo}
-                    onChange={(date) => setCustomTo(date)}
-                    placeholderText="To Date"
-                    className="custom--input w-full input--icon"
-                    minDate={customFrom || subYears(new Date(), 20)}
-                    maxDate={addYears(new Date(), 0)}
-                    showMonthDropdown
-                    showYearDropdown
-                    dropdownMode="select"
-                    dateFormat="dd-MM-yyyy"
-                    disabled={!customFrom}
-                  />
-                </div>
-              </>
-            )}
-          </div>
-
-          <div className="grid grid-cols-3 gap-3">
-            <SalesSummary
-              icon={totalSalesIcon}
-              title="Total Sales"
-              titleLink={generateUrl(`/reports/all-orders?service_type=RECOVERY&package_type=PACKAGE`)}
-              totalSales={`₹${formatIndianNumber(recoveryData?.total_sales || 0)}`}
-              items={buildRecoveryItems("total_sales", "service_type=RECOVERY&package_type=PACKAGE&")}
-            />
-
-            <SalesSummary
-              icon={newClientIcon}
-              title="New Sales"
-              titleLink={generateUrl(`/reports/all-orders?service_type=RECOVERY&package_type=PACKAGE&bill_type=NEW`)}
-              totalSales={`₹${formatIndianNumber(recoveryData?.new_sales || 0)}`}
-              items={buildRecoveryItems("new_sales", "service_type=RECOVERY&package_type=PACKAGE&bill_type=NEW&")}
-            />
-
-            <SalesSummary
-              icon={renewalIcon}
-              title="Renewal"
-              titleLink={generateUrl(`/reports/all-orders?service_type=RECOVERY&package_type=PACKAGE&bill_type=RENEWAL`)}
-              totalSales={`₹${formatIndianNumber(recoveryData?.renewal || 0)}`}
-              items={buildRecoveryItems("renewal", "service_type=RECOVERY&package_type=PACKAGE&bill_type=RENEWAL&")}
-            />
-          </div>
-        </div>
+            <div className="custom--date dob-format flex-1 max-w-none sm:max-w-[180px] w-full">
+              <span className="absolute z-[1] mt-[11px] ml-[15px]">
+                <FaCalendarDays />
+              </span>
+              <DatePicker
+                selected={customTo}
+                onChange={(date) => setCustomTo(date)}
+                placeholderText="To Date"
+                className="custom--input w-full input--icon"
+                minDate={customFrom || subYears(new Date(), 20)}
+                maxDate={addYears(new Date(), 0)}
+                showMonthDropdown
+                showYearDropdown
+                dropdownMode="select"
+                dateFormat="dd-MM-yyyy"
+                disabled={!customFrom}
+              />
+            </div>
+          </>
+        )}
       </div>
-      {/* Calender View */}
-      <RecoveryCalendarView clubId={clubFilter?.value} />
-      {/* Calender View end */}
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        <SalesSummary
+          icon={totalSalesIcon}
+          title="Total Sales"
+          titleLink={generateUrl(
+            `/reports/all-orders?service_type=RECOVERY&package_type=PACKAGE`,
+          )}
+          totalSales={`₹${formatIndianNumber(recoveryData?.total_sales || 0)}`}
+          items={buildRecoveryItems(
+            "total_sales",
+            "service_type=RECOVERY&package_type=PACKAGE&",
+          )}
+        />
+
+        <SalesSummary
+          icon={newClientIcon}
+          title="New Sales"
+          titleLink={generateUrl(
+            `/reports/all-orders?service_type=RECOVERY&package_type=PACKAGE&bill_type=NEW`,
+          )}
+          totalSales={`₹${formatIndianNumber(recoveryData?.new_sales || 0)}`}
+          items={buildRecoveryItems(
+            "new_sales",
+            "service_type=RECOVERY&package_type=PACKAGE&bill_type=NEW&",
+          )}
+        />
+
+        <SalesSummary
+          icon={renewalIcon}
+          title="Renewal"
+          titleLink={generateUrl(
+            `/reports/all-orders?service_type=RECOVERY&package_type=PACKAGE&bill_type=RENEWAL`,
+          )}
+          totalSales={`₹${formatIndianNumber(recoveryData?.renewal || 0)}`}
+          items={buildRecoveryItems(
+            "renewal",
+            "service_type=RECOVERY&package_type=PACKAGE&bill_type=RENEWAL&",
+          )}
+        />
+      </div>
     </div>
+  </div>
+
+  {/* Calender View */}
+  <RecoveryCalendarView clubId={clubFilter?.value} />
+  {/* Calender View end */}
+</div>
   );
 };
 

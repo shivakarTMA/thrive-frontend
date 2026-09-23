@@ -730,13 +730,13 @@ const FohDashboard = () => {
 
   return (
     <div className="page--content">
-      <div className=" flex items-end justify-between gap-2 mb-5">
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 mb-5">
         <div className="title--breadcrumbs">
           <p className="text-sm">{`Home > Dashboard`}</p>
           <h1 className="text-3xl font-semibold">Dashboard</h1>
         </div>
-        <div className="flex gap-3 items-center justify-between">
-          <div className="w-fit min-w-[180px]">
+        <div className="flex gap-3 items-center justify-between w-full sm:w-auto">
+          <div className="w-full sm:w-fit min-w-0 sm:min-w-[180px]">
             <Select
               placeholder="Filter by club"
               value={selectedClub || null}
@@ -748,10 +748,10 @@ const FohDashboard = () => {
           </div>
         </div>
       </div>
-
+    
       {/* end title */}
-
-      <div className="w-full bg-white box--shadow rounded-[10px] px-2 py-2 flex gap-3 justify-between items-center mb-4">
+    
+      <div className="w-full bg-white box--shadow rounded-[10px] px-2 py-2 flex flex-col lg:flex-row gap-3 justify-between items-stretch lg:items-center mb-4">
         <div className="flex gap-3">
           <div
             // type="button"
@@ -772,8 +772,8 @@ const FohDashboard = () => {
             Leaderboard
           </button> */}
         </div>
-        <div className="flex items-center">
-          <div className="w-fit flex items-center gap-2 border-r">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center w-full sm:w-auto overflow-visible pb-0">
+          <div className="w-full sm:w-fit shrink-0 flex items-center gap-2 border-b sm:border-b-0 sm:border-r py-2 sm:py-0">
             <div className="text-sm font-medium text-gray-600 flex gap-2 items-center">
               <FaCircle className="text-[10px] text-[#009EB2]" /> Active Members
             </div>
@@ -783,7 +783,7 @@ const FohDashboard = () => {
               </span>
             </div>
           </div>
-          <div className="w-fit flex items-center gap-2 border-r pl-2">
+          <div className="w-full sm:w-fit shrink-0 flex items-center gap-2 border-b sm:border-b-0 sm:border-r pl-0 sm:pl-2 py-2 sm:py-0">
             <div className="text-sm font-medium text-gray-600 flex gap-2 items-center">
               <FaCircle className="text-[10px] text-[#1F9254]" />
               Active PT Members
@@ -794,7 +794,7 @@ const FohDashboard = () => {
               </span>
             </div>
           </div>
-          <div className="w-fit flex items-center gap-2 border-r pl-2">
+          <div className="w-full sm:w-fit shrink-0 flex items-center gap-2 border-b sm:border-b-0 sm:border-r pl-0 sm:pl-2 py-2 sm:py-0">
             <div className="text-sm font-medium text-gray-600 flex gap-2 items-center">
               <FaCircle className="text-[10px] text-[#ff9900]" />
               Irregular Members
@@ -805,7 +805,7 @@ const FohDashboard = () => {
               </span>
             </div>
           </div>
-          <div className="w-fit flex items-center gap-2 pl-2">
+          <div className="w-full sm:w-fit shrink-0 flex items-center gap-2 pl-0 sm:pl-2 py-2 sm:py-0">
             <div className="text-sm font-medium text-gray-600 flex gap-2 items-center">
               <FaCircle className="text-[10px] text-[#FF0000]" />
               Inactive Members
@@ -818,11 +818,11 @@ const FohDashboard = () => {
           </div>
         </div>
       </div>
-
-      <div className="flex gap-3">
-        <div className="rounded-[15px] p-3 box--shadow bg-white w-[75%]">
-          <div className="flex gap-2 w-full mb-4">
-            <div className="max-w-[180px] w-full">
+    
+      <div className="flex flex-col lg:flex-row gap-3">
+        <div className="rounded-[15px] p-3 box--shadow bg-white w-full lg:w-[75%] min-w-0">
+          <div className="flex flex-col sm:flex-row gap-2 w-full mb-4">
+            <div className="max-w-none sm:max-w-[180px] w-full">
               <Select
                 placeholder="Date Filter"
                 options={dateFilterOptions}
@@ -839,10 +839,10 @@ const FohDashboard = () => {
                 className="w-full"
               />
             </div>
-
+    
             {dateFilter?.value === "custom" && (
               <>
-                <div className="custom--date dob-format flex-1 max-w-[180px] w-full">
+                <div className="custom--date dob-format flex-1 max-w-none sm:max-w-[180px] w-full">
                   <span className="absolute z-[1] mt-[11px] ml-[15px]">
                     <FaCalendarDays />
                   </span>
@@ -862,7 +862,7 @@ const FohDashboard = () => {
                     dropdownMode="select"
                   />
                 </div>
-                <div className="custom--date dob-format flex-1 max-w-[180px] w-full">
+                <div className="custom--date dob-format flex-1 max-w-none sm:max-w-[180px] w-full">
                   <span className="absolute z-[1] mt-[11px] ml-[15px]">
                     <FaCalendarDays />
                   </span>
@@ -883,8 +883,8 @@ const FohDashboard = () => {
               </>
             )}
           </div>
-
-          <div className="grid grid-cols-3 gap-3">
+    
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
             <SalesSummary
               icon={totalSalesIcon}
               title="Total Sales"
@@ -906,18 +906,17 @@ const FohDashboard = () => {
                 {
                   label: "Packages",
                   value: `₹${formatIndianNumber(
-                    dashboardData?.summary_cards?.total_sales?.breakup
-                      ?.packages,
+                    dashboardData?.summary_cards?.total_sales?.breakup?.packages,
                   )}`,
                   link: generateUrl(`/reports/all-orders?package_type=PACKAGE`),
                 },
                 // {
                 //   label: "Nourish",
-                  // value: `₹${formatIndianNumber(
-                  //   dashboardData?.summary_cards?.total_sales?.breakup
-                  //     ?.products,
-                  // )}`,
-                  // link: generateUrl(`/reports/all-orders?package_type=PRODUCT`),
+                //   value: `₹${formatIndianNumber(
+                //     dashboardData?.summary_cards?.total_sales?.breakup
+                //       ?.products,
+                //   )}`,
+                //   link: generateUrl(`/reports/all-orders?package_type=PRODUCT`),
                 // },
                 ...(hasProductServices
                   ? [
@@ -930,7 +929,7 @@ const FohDashboard = () => {
                   : []),
               ]}
             />
-
+    
             <SalesSummary
               icon={newClientIcon}
               title="New Sales"
@@ -940,8 +939,7 @@ const FohDashboard = () => {
                 {
                   label: "Memberships",
                   value:
-                    dashboardData?.summary_cards?.new_clients?.breakup
-                      ?.memberships,
+                    dashboardData?.summary_cards?.new_clients?.breakup?.memberships,
                   link: generateUrl(
                     `/reports/all-orders?bill_type=NEW&package_type=SUBSCRIPTION`,
                   ),
@@ -949,26 +947,26 @@ const FohDashboard = () => {
                 {
                   label: "Packages",
                   value:
-                    dashboardData?.summary_cards?.new_clients?.breakup
-                      ?.packages,
+                    dashboardData?.summary_cards?.new_clients?.breakup?.packages,
                   link: generateUrl(
                     `/reports/all-orders?bill_type=NEW&package_type=PACKAGE`,
                   ),
                 },
                 // {
                 //   label: "Nourish",
-                  // value:
-                  //   dashboardData?.summary_cards?.new_clients?.breakup
-                  //     ?.products,
-                  // link: generateUrl(
-                  //   `/reports/all-orders?bill_type=NEW&package_type=PRODUCT`,
-                  // ),
+                //   value:
+                //     dashboardData?.summary_cards?.new_clients?.breakup?.products,
+                //   link: generateUrl(
+                //     `/reports/all-orders?bill_type=NEW&package_type=PRODUCT`,
+                //   ),
                 // },
                 ...(hasProductServices
                   ? [
                       {
                         label: "Nourish",
-                        value: dashboardData?.summary_cards?.new_clients?.breakup?.products,
+                        value:
+                          dashboardData?.summary_cards?.new_clients?.breakup
+                            ?.products,
                         link: generateUrl(
                           `/reports/all-orders?bill_type=NEW&package_type=PRODUCT`,
                         ),
@@ -977,6 +975,7 @@ const FohDashboard = () => {
                   : []),
               ]}
             />
+    
             <SalesSummary
               icon={renewalIcon}
               title="Renewal"
@@ -986,33 +985,32 @@ const FohDashboard = () => {
                 {
                   label: "Memberships",
                   value:
-                    dashboardData?.summary_cards?.renewals?.breakup
-                      ?.memberships,
+                    dashboardData?.summary_cards?.renewals?.breakup?.memberships,
                   link: generateUrl(
                     `/reports/all-orders?bill_type=RENEWAL&package_type=SUBSCRIPTION`,
                   ),
                 },
                 {
                   label: "Packages",
-                  value:
-                    dashboardData?.summary_cards?.renewals?.breakup?.packages,
+                  value: dashboardData?.summary_cards?.renewals?.breakup?.packages,
                   link: generateUrl(
                     `/reports/all-orders?bill_type=RENEWAL&package_type=PACKAGE`,
                   ),
                 },
                 // {
                 //   label: "Nourish",
-                  // value:
-                  //   dashboardData?.summary_cards?.renewals?.breakup?.products,
-                  // link: generateUrl(
-                  //   `/reports/all-orders?bill_type=RENEWAL&package_type=PRODUCT`,
-                  // ),
+                //   value: dashboardData?.summary_cards?.renewals?.breakup?.products,
+                //   link: generateUrl(
+                //     `/reports/all-orders?bill_type=RENEWAL&package_type=PRODUCT`,
+                //   ),
                 // },
                 ...(hasProductServices
                   ? [
                       {
                         label: "Nourish",
-                        value:dashboardData?.summary_cards?.renewals?.breakup?.products,
+                        value:
+                          dashboardData?.summary_cards?.renewals?.breakup
+                            ?.products,
                         link: generateUrl(
                           `/reports/all-orders?bill_type=RENEWAL&package_type=PRODUCT`,
                         ),
@@ -1021,7 +1019,7 @@ const FohDashboard = () => {
                   : []),
               ]}
             />
-
+    
             <SalesSummary
               icon={trialIcon}
               title="Trials"
@@ -1053,6 +1051,7 @@ const FohDashboard = () => {
                 },
               ]}
             />
+    
             <SalesSummary
               icon={enquiriesIcon}
               title="Conversion"
@@ -1077,6 +1076,7 @@ const FohDashboard = () => {
                 },
               ]}
             />
+    
             <SalesSummary
               icon={checkInIcon}
               title="Check-ins"
@@ -1104,8 +1104,9 @@ const FohDashboard = () => {
               ]}
             />
           </div>
-          <div className="mt-3 w-full grid grid-cols-8 gap-3">
-            <div className="border border-[#D4D4D4] rounded-[5px] bg-white p-1 pb-1 w-full relative col-span-4">
+    
+          <div className="mt-3 w-full grid grid-cols-1 sm:grid-cols-8 gap-3">
+            <div className="border border-[#D4D4D4] rounded-[5px] bg-white p-1 pb-1 w-full relative sm:col-span-4">
               <span className="absolute top-[10px] right-[20px] z-[2] text-lg font-bold">
                 {totalProductValue}
               </span>
@@ -1114,14 +1115,14 @@ const FohDashboard = () => {
                 options={productStatus}
               />
             </div>
-            <div className="border border-[#D4D4D4] rounded-[5px] bg-white p-1 pb-1 w-full relative col-span-4">
+            <div className="border border-[#D4D4D4] rounded-[5px] bg-white p-1 pb-1 w-full relative sm:col-span-4">
               <span className="absolute top-[10px] right-[20px] z-[2] text-lg font-bold">
                 {totalLeads}
               </span>
               <HighchartsReact highcharts={Highcharts} options={leadsStatus} />
             </div>
           </div>
-
+    
           <div className="border border-[#D4D4D4] rounded-[5px] bg-white p-4 pb-1 w-full relative mt-3">
             <div className="flex justify-between items-center mb-4">
               <h2 className="font-semibold">Class Performances Overview</h2>
@@ -1141,16 +1142,16 @@ const FohDashboard = () => {
                   {classPerformance.map((item) => (
                     <tr key={item.id} className="border-t">
                       <td className="p-2">{item?.classType}</td>
-
+    
                       {/* Scheduled */}
                       <td className="p-2 text-center">{item?.scheduled}</td>
-
+    
                       {/* Bookings (Active) */}
                       <td className="p-2 text-center">{item?.active}</td>
-
+    
                       {/* Cancellations */}
                       <td className="p-2 text-center">{item?.canceled}</td>
-
+    
                       <td className="p-2">
                         <Link
                           to={generateUrl(item?.url)}
@@ -1166,7 +1167,8 @@ const FohDashboard = () => {
             </div>
           </div>
         </div>
-        <div className="w-[25%]">
+    
+        <div className="w-full lg:w-[25%] min-w-0">
           <div className="rounded-[15px] p-3 box--shadow bg-white">
             <div>
               <p className="text-lg font-[600] mb-3 text-center">Summary </p>

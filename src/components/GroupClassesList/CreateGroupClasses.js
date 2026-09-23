@@ -99,6 +99,7 @@ const fetchTrainerAvailability = async (trainerId, clubId) => {
   const fetchService = async (clubId = null) => {
     try {
       const params = {};
+      // if (clubId) params.club_id = clubId;
       if (clubId) params.club_id = clubId;
       const res = await authAxios().get("/service/list", { params });
       let data = res.data?.data || res.data || [];
@@ -138,6 +139,9 @@ const fetchTrainerAvailability = async (trainerId, clubId) => {
     try {
       const params = {};
       if (clubId) params.club_id = clubId;
+      params.start_date = formik.values.start_date;
+      params.start_time = formik.values.start_time;
+      params.end_time = formik.values.end_time;
       const res = await authAxios().get("/studio/list", { params });
       let data = res.data?.data || res.data || [];
       const activeService = data.filter((item) => item.status === "ACTIVE");
@@ -168,7 +172,6 @@ const fetchTrainerAvailability = async (trainerId, clubId) => {
   useEffect(() => {
     if (formik.values.club_id) {
       fetchService(formik.values.club_id);
-      fetchStudio(formik.values.club_id);
       fetchStaff(formik.values.club_id);
       fetchPackageCategory(formik.values.club_id);
 
@@ -189,6 +192,14 @@ const fetchTrainerAvailability = async (trainerId, clubId) => {
     }
   }, [formik.values.club_id]);
 
+
+
+  useEffect(() => {
+    if(formik.values.club_id && formik.values.start_date && formik.values.start_time  && formik.values.end_time){
+      fetchStudio(formik.values.club_id,formik.values.start_date,formik.values.start_time,formik.values.end_time);
+
+      }
+  }, [formik.values.club_id,formik.values.start_date ,formik.values.start_time,formik.values.end_time])
   // Availability window depends on BOTH club and trainer, so refetch
 // whenever either changes.
 useEffect(() => {
@@ -351,6 +362,7 @@ const endTimeOptions = useMemo(() => {
     studio?.map((item) => ({
       label: item.name,
       value: item.id,
+      isDisabled: item.enable === false,
     })) || [];
 
   const serviceOptions =
@@ -708,32 +720,6 @@ const endTimeOptions = useMemo(() => {
                       )}
                     </div>
 
-                    {/* Studio */}
-                    <div>
-                      <label className="mb-2 block">
-                        Studio <span className="text-red-500">*</span>
-                      </label>
-                      <Select
-                        name="studio_id"
-                        value={
-                          studioOptions.find(
-                            (opt) => opt.value === formik.values.studio_id,
-                          ) || null
-                        }
-                        options={studioOptions}
-                        onChange={(option) =>
-                          formik.setFieldValue("studio_id", option.value)
-                        }
-                        onBlur={() => formik.setFieldTouched("studio_id", true)}
-                        styles={customStyles}
-                      />
-                      {formik.touched.studio_id && formik.errors.studio_id && (
-                        <div className="text-red-500 text-sm">
-                          {formik.errors.studio_id}
-                        </div>
-                      )}
-                    </div>
-
                     {/* Start Date Field */}
                     <div>
                       <label className="mb-2 block">
@@ -848,7 +834,31 @@ const endTimeOptions = useMemo(() => {
                         </div>
                       )}
                     </div>
-                    
+                     {/* Studio */}
+                    <div>
+                      <label className="mb-2 block">
+                        Studio <span className="text-red-500">*</span>
+                      </label>
+                      <Select
+                        name="studio_id"
+                        value={
+                          studioOptions.find(
+                            (opt) => opt.value === formik.values.studio_id,
+                          ) || null
+                        }
+                        options={studioOptions}
+                        onChange={(option) =>
+                          formik.setFieldValue("studio_id", option.value)
+                        }
+                        onBlur={() => formik.setFieldTouched("studio_id", true)}
+                        styles={customStyles}
+                      />
+                      {formik.touched.studio_id && formik.errors.studio_id && (
+                        <div className="text-red-500 text-sm">
+                          {formik.errors.studio_id}
+                        </div>
+                      )}
+                    </div>
                      {/* Booking Type */}
                     <div>
                       <label className="mb-2 block">
