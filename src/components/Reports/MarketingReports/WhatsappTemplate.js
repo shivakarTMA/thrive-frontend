@@ -231,6 +231,7 @@ const WhatsappTemplate = () => {
         {(userRole === "ADMIN" ||
           userRole === "CLUB_MANAGER" ||
           userRole === "ASS_CLUB_MANAGER" ||
+          userRole === "PROGRAM_SPECIALIST" ||
           userRole === "MARKETING_MANAGER") && (
           <div className="flex items-end gap-2">
             <Link
