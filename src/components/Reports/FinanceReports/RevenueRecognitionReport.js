@@ -80,7 +80,7 @@ const RevenueRecognitionReport = () => {
       setIsDownloading(false);
     }
   };
-
+console.log("downloading")
   return (
     <div className="page--content">
       {/* Header */}
