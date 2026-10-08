@@ -15,7 +15,7 @@ const RevenueRecognitionReport = () => {
 
   const [startMonth, setStartMonth] = useState(null);
   const [endMonth, setEndMonth] = useState(null);
-
+const [isDownloading, setIsDownloading] = useState(false);
   // Fetch Clubs
   const fetchClub = async (search = "") => {
     try {
@@ -42,11 +42,13 @@ const RevenueRecognitionReport = () => {
 
   // Download report
   const downloadReport = async () => {
+    if (isDownloading) return;
     if (!startMonth || !endMonth) {
       toast.error("Please select start and end date");
       return;
     }
 
+    setIsDownloading(true);
     try {
       const response = await authAxios().get(
         "/invoice/download/revenue/recognition/report",
@@ -73,6 +75,9 @@ const RevenueRecognitionReport = () => {
       toast.success("Report download successfully!");
     } catch (error) {
       console.error(error);
+    }
+    finally {
+      setIsDownloading(false);
     }
   };
 console.log("downloading")
@@ -148,15 +153,27 @@ console.log("downloading")
           {/* Download Button */}
           <button
             onClick={downloadReport}
-            disabled={!startMonth || !endMonth || !clubFilter}
+            disabled={
+    !startMonth ||
+    !endMonth ||
+    !clubFilter ||
+    isDownloading
+  }
             className={`px-4 py-2 rounded flex items-center gap-2
             ${
-              !startMonth || !endMonth || !clubFilter
-                ? "bg-gray-400 cursor-not-allowed text-white"
-                : "bg-black text-white hover:bg-gray-800"
-            }`}
-          >
-            <LuDownload /> <span>Download Report</span>
+              !startMonth ||
+        !endMonth ||
+        !clubFilter ||
+        isDownloading
+          ? "bg-gray-400 cursor-not-allowed text-white"
+          : "bg-black text-white hover:bg-gray-800"
+      }`}
+  >
+    <LuDownload />
+
+    <span>
+      {isDownloading ? "Downloading..." : "Download Report"}
+    </span>
           </button>
         </div>
       </div>
