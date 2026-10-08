@@ -75,7 +75,7 @@ const RevenueRecognitionReport = () => {
       console.error(error);
     }
   };
-
+console.log("downloading")
   return (
     <div className="page--content">
       {/* Header */}
