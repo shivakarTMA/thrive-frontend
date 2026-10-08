@@ -717,4 +717,29 @@ export const blockNonNumbers = (e) => {
   }
 };
 
+export const getStatusClass = (status) => {
+  switch (status) {
+    case "ACTIVE":
+      return "bg-[#E8FFE6] text-[#138808]";
+
+    case "UPCOMING":
+      return "bg-[#FFF4E5] text-[#F59E0B]";
+
+    case "EXPIRED":
+      return "bg-[#FFE8E8] text-[#D32F2F]";
+
+    case "FREEZED":
+      return "bg-[#EEEEEE] text-[#666666]";
+
+    default:
+      return "bg-[#EEEEEE] text-[#666666]";
+  }
+};
+
+export const formatStatus = (status) => {
+  if (!status) return "";
+
+  return status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
+};
+
 export const ALLOWED_ROLES = ["TRAINER", "FOH", "FITNESS_MANAGER", "ASS_FITNESS_MANAGER"];

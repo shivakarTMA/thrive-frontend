@@ -70,6 +70,8 @@ const BulkWhatsappCriteriaForm = () => {
       sendType: "NOW",
       scheduledAt: null,
       status: "",
+      media_url: null,
+      is_template : true,
     },
     validationSchema,
     // ✅ CHANGE: onSubmit no longer calls the API directly — it validates, checks
@@ -143,6 +145,12 @@ const BulkWhatsappCriteriaForm = () => {
         ...(selectedTemplate?.external_id && {
           whatsapp_external_id: selectedTemplate.external_id,
         }),
+        //  ...(selectedTemplate?.media_url && {
+        media_url: selectedTemplate?.media_url,
+      // }),
+        //  ...(selectedTemplate?.is_template && {
+        is_template: selectedTemplate?.is_template,
+      // }),
         ...(selectedTemplate?.template_name && {
           template_name: selectedTemplate.template_name,
         }),
@@ -150,9 +158,9 @@ const BulkWhatsappCriteriaForm = () => {
           category: selectedTemplate.category,
         }),
         // ✅ is_template — true when the selected template has a header, false otherwise
-        is_template: selectedTemplate
-          ? Boolean(selectedTemplate.header)
-          : false,
+        // is_template: selectedTemplate
+        //   ? Boolean(selectedTemplate.header)
+        //   : false,
         // ✅ variables_json — only sent when there's at least one editable {{n}} placeholder
         ...(editableKeys.length > 0 && { variables_json: variablesJson }),
       };
@@ -224,6 +232,7 @@ const BulkWhatsappCriteriaForm = () => {
           category: t.category,
           header: t.header,
           is_template: t.is_template,
+           media_url :t.media_url,
         }));
         setTemplateOptions(options);
       } catch (error) {

@@ -215,7 +215,7 @@ const MemberList = (props) => {
     try {
       const params = {};
       // Club filter
-      if (clubFilter?.value) {
+      if (clubFilter.value) {
         params.club_id = clubFilter.value;
       }
 

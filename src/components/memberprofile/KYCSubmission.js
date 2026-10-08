@@ -15,7 +15,7 @@ const KYCSubmission = ({ details, setLoading }) => {
   const corporateId = details?.is_corporate_id;
   const [errors, setErrors] = useState({});
   const [memberKycStatus, setMemberKycStatus] = useState("");
-
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { user } = useSelector((state) => state.auth);
   const userRole = user.role;
 
@@ -239,6 +239,9 @@ const KYCSubmission = ({ details, setLoading }) => {
 
   // Handle submit for all documents
   const handleSubmit = async () => {
+     if (isSubmitting) return;
+
+  setIsSubmitting(true);
     let hasError = false;
     const newErrors = {};
 
@@ -377,6 +380,10 @@ const KYCSubmission = ({ details, setLoading }) => {
     } catch (error) {
       console.error("Error uploading documents:", error);
     }
+    finally {
+    // Re-enable button only after ALL API calls are finished
+    setIsSubmitting(false);
+  }
   };
 
   const handleDrop = (event, documentType) => {
@@ -719,7 +726,13 @@ const KYCSubmission = ({ details, setLoading }) => {
               {memberKycStatus === "APPROVED" && (
                 <button
                   onClick={handleSubmit}
-                  className="px-4 py-2 text-white bg-black hover:bg-gray-800 rounded flex items-center gap-2"
+                  disabled={isSubmitting}
+                  // className="px-4 py-2 text-white bg-black hover:bg-gray-800 rounded flex items-center gap-2"
+                 className={`px-4 py-2 text-white rounded ${
+    isSubmitting
+      ? "bg-gray-400 cursor-not-allowed"
+      : "bg-black hover:bg-gray-800"
+  }`}
                 >
                   Update Documents
                 </button>
@@ -728,15 +741,28 @@ const KYCSubmission = ({ details, setLoading }) => {
               {memberKycStatus === "REJECTED" && isEditMode && (
                 <button
                   onClick={handleSubmit}
-                  className="px-4 py-2 text-white bg-black hover:bg-gray-800 rounded"
-                >
+                  disabled={isSubmitting}
+                  // className="px-4 py-2 text-white bg-black hover:bg-gray-800 rounded"
+                
+                 className={`px-4 py-2 text-white rounded ${
+    isSubmitting
+      ? "bg-gray-400 cursor-not-allowed"
+      : "bg-black hover:bg-gray-800"
+  }`}
+  >
                   Upload Documents
                 </button>
               )}
               {memberKycStatus === "NONE" && (
                 <button
                   onClick={handleSubmit}
-                  className="px-4 py-2 text-white bg-black hover:bg-gray-800 rounded"
+                  disabled={isSubmitting}
+                  // className="px-4 py-2 text-white bg-black hover:bg-gray-800 rounded"
+                 className={`px-4 py-2 text-white rounded ${
+    isSubmitting
+      ? "bg-gray-400 cursor-not-allowed"
+      : "bg-black hover:bg-gray-800"
+  }`}
                 >
                   Upload Documents
                 </button>

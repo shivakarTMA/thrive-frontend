@@ -219,7 +219,7 @@ const staffOptions = Object.values(
     club_id: Yup.mixed().required("Club is required"),
     staff_id: Yup.mixed().required("Staff is required"),
     weekday: Yup.string().required("Weekday is required"),
-    available_from: Yup.string().required("Available form is required"),
+    available_from: Yup.string().required("Available from is required"),
     available_to: Yup.string().required("Available to is required"),
     position: Yup.number()
       .transform((value, originalValue) =>
@@ -393,7 +393,7 @@ const staffOptions = Object.values(
                 <th className="px-2 py-4 min-w-[150px]">Club</th>
                 <th className="px-2 py-4 min-w-[150px]">Staff Name</th>
                 <th className="px-2 py-4 min-w-[100px]">Weekday</th>
-                <th className="px-2 py-4 min-w-[130px]">Available form</th>
+                <th className="px-2 py-4 min-w-[130px]">Available from</th>
                 <th className="px-2 py-4 min-w-[130px]">Available to</th>
                 <th className="px-2 py-4 min-w-[100px] text-center">
                   Position

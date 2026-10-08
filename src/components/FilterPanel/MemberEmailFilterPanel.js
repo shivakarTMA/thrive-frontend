@@ -10,6 +10,7 @@ import { toast } from "react-toastify";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchOptionList } from "../../Redux/Reducers/optionListSlice";
 import { format } from "date-fns";
+import { useLocation } from "react-router-dom";
 
 const ageGroupOptions = [
   { value: "15-20", label: "15-20" },
@@ -60,7 +61,7 @@ const MemberEmailFilterPanel = ({
   const [showFilters, setShowFilters] = useState(false);
   const [appliedFilters, setAppliedFilters] = useState({});
   const panelRef = useRef(null);
-
+  const location = useLocation();
   const [serviceList, setServiceList] = useState([]);
   const [servicesType, setServicesType] = useState([]);
   const [clubList, setClubList] = useState([]);
@@ -96,6 +97,13 @@ const MemberEmailFilterPanel = ({
       return [];
     }
   };
+
+  const getFilterType = () => {
+  if (location.pathname.includes("send-whatsapp-list")) return "whatsapp";
+  if (location.pathname.includes("send-mail-list")) return "email";
+  if (location.pathname.includes("send-notification")) return "notification";
+  return null;
+};
 
   const fetchServiceNames = async (serviceId) => {
     if (!serviceId) {
@@ -322,6 +330,11 @@ const MemberEmailFilterPanel = ({
         params.append("expiry_from", formatDate(filters.filterExpiryFrom));
       if (filters.filterExpiryTo)
         params.append("expiry_to", formatDate(filters.filterExpiryTo));
+      
+      const filterType = getFilterType();
+      if (filterType) {
+        params.append("filter_type", filterType);
+      }
 
       const res = await authAxios().post(
         `/emailCampaign/filter/member/list?${params.toString()}`,

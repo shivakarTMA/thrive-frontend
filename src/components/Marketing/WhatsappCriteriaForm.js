@@ -144,6 +144,8 @@ const WhatsappCriteriaForm = () => {
       sendType: "NOW",
       scheduledAt: null,
       status: "",
+      media_url: null,
+      is_template : true,
     },
     validationSchema,
     // ✅ CHANGE: onSubmit no longer calls the API directly — it just validates and
@@ -216,6 +218,14 @@ const WhatsappCriteriaForm = () => {
       ...(selectedTemplate?.external_id && {
         whatsapp_external_id: selectedTemplate.external_id,
       }),
+
+      
+      // ...(selectedTemplate?.media_url && {
+        media_url: selectedTemplate?.media_url,
+      // }),
+      // ...(selectedTemplate?.is_template && {
+        is_template: selectedTemplate?.is_template,
+      // }),
       ...(selectedTemplate?.template_name && {
         template_name: selectedTemplate.template_name,
       }),
@@ -223,7 +233,7 @@ const WhatsappCriteriaForm = () => {
         category: selectedTemplate.category,
       }),
       // ✅ is_template — true when the selected template has a header, false otherwise
-      is_template: selectedTemplate ? Boolean(selectedTemplate.header) : false,
+      // is_template: selectedTemplate ? Boolean(selectedTemplate.header) : false,
       // ✅ variables_json — only sent when there's at least one editable {{n}} placeholder
       ...(editableKeys.length > 0 && {
         variables_json: variablesJson,
@@ -301,6 +311,8 @@ const WhatsappCriteriaForm = () => {
         formik.setFieldValue("campaign_name", data.campaign_name || "");
         formik.setFieldValue("message", data.body_text || "");
         formik.setFieldValue("status", data.status || "");
+        formik.setFieldValue("media_url", data.media_url || "");
+        formik.setFieldValue("is_template", data.is_template || "");
 
         // ✅ Module / tab from whatsapp_for
         if (data.whatsapp_for) {
@@ -331,8 +343,9 @@ const WhatsappCriteriaForm = () => {
             template_name: data.template_name,
             body_html: data.body_text,
             external_id: data.whatsapp_external_id,
-            category: data.category,
+            media_url: data.media_url,
             is_template: data.is_template,
+            category: data.category,
           });
 
           // ✅ NEW: GET the template by ID to learn which variables are editable,
@@ -476,6 +489,7 @@ const WhatsappCriteriaForm = () => {
           category: t.category,
           header: t.header,
           is_template: t.is_template,
+          media_url :t.media_url,
         }));
         setTemplateOptions(options);
       } catch (error) {

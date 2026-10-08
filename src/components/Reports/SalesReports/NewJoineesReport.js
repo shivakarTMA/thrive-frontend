@@ -11,6 +11,8 @@ import {
   formatAutoDate,
   formatIndianNumber,
   formatText,
+  getStatusClass,
+  formatStatus
 } from "../../../Helper/helper";
 import { authAxios } from "../../../config/config";
 import { toast } from "react-toastify";
@@ -626,13 +628,11 @@ const NewJoineesReport = (props) => {
                     </td>
                     <td className="px-2 py-4">
                       <span
-                        className={`flex items-center justify-between gap-1 rounded-full min-h-[30px] px-3 text-sm w-fit ${
-                          row?.status !== "ACTIVE"
-                            ? "bg-[#EEEEEE]"
-                            : "bg-[#E8FFE6] text-[#138808]"
-                        }`}
+                          className={`flex items-center justify-between gap-1 rounded-full min-h-[30px] px-3 text-sm w-fit ${getStatusClass(
+    row?.status
+  )}`}
                       >
-                        <FaCircle className="text-[10px]" /> {row?.status}
+                        <FaCircle className="text-[10px]" /> {formatStatus(row?.status)}
                       </span>
                     </td>
                   </tr>

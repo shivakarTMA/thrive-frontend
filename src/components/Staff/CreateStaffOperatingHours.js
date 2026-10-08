@@ -419,7 +419,7 @@ const CreateStaffOperatingHours = ({
                   {/* Available form */}
                   <div>
                     <label className="mb-2 block">
-                      Available form<span className="text-red-500">*</span>
+                      Available from<span className="text-red-500">*</span>
                     </label>
                     <div className="custom--date relative">
                       <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[10]">
