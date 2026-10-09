@@ -451,7 +451,7 @@ const MembershipExpiryReport = (props) => {
                 <th className="px-2 py-4 min-w-[120px]">Member Name</th>
                 <th className="px-2 py-4 min-w-[130px]">Status</th>
                 <th className="px-2 py-4 min-w-[130px]">Sales Rep</th>
-                <th className="px-2 py-4 min-w-[130px]">General Trainer</th>
+                {/* <th className="px-2 py-4 min-w-[130px]">General Trainer</th> */}
                 <th className="px-2 py-4 min-w-[150px]">Plan Name</th>
                 <th className="px-2 py-4 min-w-[120px]">Plan Type</th>
                 <th className="px-2 py-4 min-w-[120px]">Amount</th>
@@ -485,9 +485,9 @@ const MembershipExpiryReport = (props) => {
                     <td className="px-2 py-4">
                       {row.sales_rep_name ? row.sales_rep_name : "--"}
                     </td>
-                    <td className="px-2 py-4">
+                    {/* <td className="px-2 py-4">
                       {row.general_trainer ? row.general_trainer : "--"}
-                    </td>
+                    </td> */}
                     <td className="px-2 py-4">
                       {row.plan_name ? row.plan_name : "--"}
                     </td>
