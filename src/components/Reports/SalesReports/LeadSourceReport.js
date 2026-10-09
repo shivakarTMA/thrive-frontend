@@ -297,10 +297,10 @@ const LeadSourceReport = (props) => {
                 <th className="px-2 py-4">Leads </th>
                 <th className="px-2 py-4">Opportunity</th>
                 <th className="px-2 py-4">Closed</th>
-                <th className="px-2 py-4">Trials </th>
                 <th className="px-2 py-4">Lost </th>
                 <th className="px-2 py-4">Future Prospect </th>
                 <th className="px-2 py-4">Won </th>
+                <th className="px-2 py-4">Trials </th>
               </tr>
             </thead>
 
@@ -318,10 +318,10 @@ const LeadSourceReport = (props) => {
                     <td className="px-2 py-4">{row?.lead_count}</td>
                     <td className="px-2 py-4">{row?.opportunity_count}</td>
                     <td className="px-2 py-4">{row?.closed_count}</td>
-                    <td className="px-2 py-4">{row?.trial_count}</td>
                     <td className="px-2 py-4">{row?.lost_count}</td>
                     <td className="px-2 py-4">{row?.future_prospect_count}</td>
                     <td className="px-2 py-4">{row?.won_count}</td>
+                    <td className="px-2 py-4">{row?.trial_count}</td>
                   </tr>
                 ))
               ) : (

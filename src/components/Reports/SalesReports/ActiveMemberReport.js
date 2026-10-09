@@ -303,7 +303,7 @@ const ActiveMemberReport = (props) => {
                 <th className="px-2 py-4 min-w-[100px]">End date</th>
                 <th className="px-2 py-4 min-w-[130px]">Sales Rep</th>
                 <th className="px-2 py-4 min-w-[130px]">PT</th>
-                <th className="px-2 py-4 min-w-[130px]">GT</th>
+                {/* <th className="px-2 py-4 min-w-[130px]">GT</th> */}
                 <th className="px-2 py-4 min-w-[170px]">
                   Group Classes Attend
                 </th>
@@ -357,9 +357,9 @@ const ActiveMemberReport = (props) => {
                     <td className="px-2 py-2">
                       {row?.pt_name ? row?.pt_name : "--"}
                     </td>
-                    <td className="px-2 py-2">
+                    {/* <td className="px-2 py-2">
                       {row?.gt_name ? row?.gt_name : "--"}
-                    </td>
+                    </td> */}
                     <td className="px-2 py-2">
                       {row?.group_class_attended_count}
                     </td>
