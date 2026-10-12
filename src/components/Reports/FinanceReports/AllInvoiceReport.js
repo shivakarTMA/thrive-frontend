@@ -11,6 +11,8 @@ import {
   formatAutoDate,
   formatIndianNumber,
   formatText,
+  getStatusClass,
+  formatStatus
 } from "../../../Helper/helper";
 import { authAxios } from "../../../config/config";
 import { toast } from "react-toastify";
@@ -405,7 +407,7 @@ const AllInvoiceReport = (props) => {
                     </td>
                     <td className="px-2 py-4">{row.lead_source}</td>
                     <td className="px-2 py-4">
-                      {row.is_subscribed === true ? "Active" : "Inactive"}
+                      {formatStatus(row.status)}
                     </td>
 
   
