@@ -595,12 +595,12 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                     >
                       All Invoice Report
                     </Link>
-                    <Link
+                    {/* <Link
                       to="/reports/finance-reports/pending-collection"
                       className="submenu-link text-white text-sm"
                     >
                       Pending Collection
-                    </Link>
+                    </Link> */}
                     <Link
                       to="/reports/finance-reports/cancelled-paid-invoice"
                       className="submenu-link text-white text-sm"
@@ -619,18 +619,18 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                     >
                       Collection Report
                     </Link>
-                    <Link
+                    {/* <Link
                       to="/reports/finance-reports/tds-report"
                       className="submenu-link text-white text-sm"
                     >
                       TDS Report
-                    </Link>
-                    <Link
+                    </Link> */}
+                    {/* <Link
                       to="/reports/finance-reports/advance-payments-report"
                       className="submenu-link text-white text-sm"
                     >
                       Advance Payments Report
-                    </Link>
+                    </Link> */}
                   </div>
                 )}
 
@@ -682,12 +682,12 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                     >
                       Irregular Members Report
                     </Link>
-                    <Link
+                    {/* <Link
                       to="/reports/operations-reports/active-client-report"
                       className="submenu-link text-white text-sm"
                     >
                       Active Client Report
-                    </Link>
+                    </Link> */}
                     <Link
                       to="/reports/operations-reports/inactive-client-report"
                       className="submenu-link text-white text-sm"
@@ -787,12 +787,12 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                     >
                       SMS Delivery Report
                     </Link>
-                    <Link
+                    {/* <Link
                       to="/reports/marketing-reports/event-community-engagement"
                       className="submenu-link text-white text-sm"
                     >
                       Event Community Engagement
-                    </Link>
+                    </Link> */}
                   </div>
                 )}
               </div>
