@@ -333,14 +333,15 @@ const endTimeOptions = useMemo(() => {
   const startMinutes = sh * 60 + sm;
 
   return daySlots.map((slot) => {
-    const [eh, em] = slot.time.split(":").map(Number);
+    const endTime = slot.end_slot_time;
+    const [eh, em] = endTime.split(":").map(Number);
     const endMinutes = eh * 60 + em;
 
     const isDisabled = !slot.enable || endMinutes <= startMinutes;
 
     return {
-      label: formatTo12Hour(slot.time),
-      value: slot.time,
+      label: formatTo12Hour(endTime),
+      value: endTime,
       isDisabled,
     };
   });
