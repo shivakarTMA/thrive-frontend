@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { addYears, format, subYears } from "date-fns";
-import { FaCalendarDays } from "react-icons/fa6";
+import { FaCalendarDays, FaCircle } from "react-icons/fa6";
 import Select from "react-select";
 import {
   ALLOWED_ROLES,
@@ -407,7 +407,13 @@ const AllInvoiceReport = (props) => {
                     </td>
                     <td className="px-2 py-4">{row.lead_source}</td>
                     <td className="px-2 py-4">
-                      {formatStatus(row.status)}
+                       <span
+                    className={`flex items-center justify-between gap-1 rounded-full min-h-[30px] px-3 text-sm w-fit ${getStatusClass(
+                          row?.status
+                        )}`}
+                    >
+                    <FaCircle className="text-[10px]" /> {formatStatus(row?.status)}
+                    </span>
                     </td>
 
   
