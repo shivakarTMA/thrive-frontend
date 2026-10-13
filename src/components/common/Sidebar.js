@@ -712,6 +712,12 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                     >
                       Referral Report
                     </Link>
+                       <Link
+                      to="/reports/operations-reports/extended-report"
+                      className="submenu-link text-white text-sm"
+                    >
+                      Extension Report
+                    </Link>
                     <Link
                       to="/reports/operations-reports/sales-incentive-report"
                       className="submenu-link text-white text-sm"
