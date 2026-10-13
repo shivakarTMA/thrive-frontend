@@ -131,6 +131,7 @@ import StaffOperatingHoursList from "../components/Staff/StaffOperatingHoursList
 import FnbDashboard from "../Pages/FnbDashboard";
 import RecoveryDashboard from "../Pages/RecoveryDashboard";
 import NurishReport from "../components/Reports/NurishReports/NurishReport";
+import ExtendedReport from "../components/Reports/OperationsReports/ExtendedReport";
 
 // Role-based route wrapper component
 const RoleProtectedRoute = ({ children, path, skipPrivateRoute = false }) => {
@@ -1032,6 +1033,14 @@ export default function Routing() {
           element={
             <RoleProtectedRoute path="/reports/operations-reports/referral-report">
               <ReferralReport />
+            </RoleProtectedRoute>
+          }
+        />
+        <Route
+          path="/reports/operations-reports/extended-report"
+          element={
+            <RoleProtectedRoute path="/reports/operations-reports/extended-report">
+              <ExtendedReport />
             </RoleProtectedRoute>
           }
         />

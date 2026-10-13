@@ -326,15 +326,15 @@ const startTimeOptions = useMemo(() => {
 }, [daySlots, formik.values.start_date]);
 
 const endTimeOptions = useMemo(() => {
-  if (!formik.values.start_time) return [];
+  if (!formik?.values.start_time) return [];
   if (!daySlots.length) return [NO_SLOTS_OPTION];
 
-  const [sh, sm] = formik.values.start_time.split(":").map(Number);
+  const [sh, sm] = formik?.values.start_time.split(":").map(Number);
   const startMinutes = sh * 60 + sm;
 
   return daySlots.map((slot) => {
-    const endTime = slot.end_slot_time;
-    const [eh, em] = endTime.split(":").map(Number);
+    const endTime = slot?.end_slot_time;
+    const [eh, em] = endTime?.split(":").map(Number);
     const endMinutes = eh * 60 + em;
 
     const isDisabled = !slot.enable || endMinutes <= startMinutes;
