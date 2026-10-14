@@ -1555,6 +1555,12 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                     >
                       Referral Report
                     </Link>
+                      <Link
+                      to="/reports/operations-reports/extended-report"
+                      className="submenu-link text-white text-sm"
+                    >
+                      Extension Report
+                    </Link>
                     <Link
                       to="/reports/operations-reports/sales-incentive-report"
                       className="submenu-link text-white text-sm"
@@ -2328,6 +2334,12 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                     >
                       Referral Report
                     </Link>
+                      <Link
+                      to="/reports/operations-reports/extended-report"
+                      className="submenu-link text-white text-sm"
+                    >
+                      Extension Report
+                    </Link>
                     <Link
                       to="/reports/operations-reports/sales-incentive-report"
                       className="submenu-link text-white text-sm"
@@ -3010,6 +3022,12 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                       className="submenu-link text-white text-sm"
                     >
                       Referral Report
+                    </Link>
+                      <Link
+                      to="/reports/operations-reports/extended-report"
+                      className="submenu-link text-white text-sm"
+                    >
+                      Extension Report
                     </Link>
                     </div>
                   )}
@@ -3757,6 +3775,12 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                     >
                       Referral Report
                     </Link>
+                      <Link
+                      to="/reports/operations-reports/extended-report"
+                      className="submenu-link text-white text-sm"
+                    >
+                      Extension Report
+                    </Link>
                   </div>
                 )}
 
@@ -4355,6 +4379,12 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                     >
                       Referral Report
                     </Link>
+                      <Link
+                      to="/reports/operations-reports/extended-report"
+                      className="submenu-link text-white text-sm"
+                    >
+                      Extension Report
+                    </Link>
                   </div>
                 )}
 
@@ -4891,6 +4921,12 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                     >
                       Referral Report
                     </Link>
+                      <Link
+                      to="/reports/operations-reports/extended-report"
+                      className="submenu-link text-white text-sm"
+                    >
+                      Extension Report
+                    </Link>
                   </div>
                 )}
 
@@ -5413,6 +5449,12 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                       className="submenu-link text-white text-sm"
                     >
                       Irregular Members Report
+                    </Link>
+                      <Link
+                      to="/reports/operations-reports/extended-report"
+                      className="submenu-link text-white text-sm"
+                    >
+                      Extension Report
                     </Link>
                     {/* <Link
                       to="/reports/operations-reports/attendance-heatmap-report"
@@ -5953,6 +5995,12 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                       className="submenu-link text-white text-sm"
                     >
                       Referral Report
+                    </Link>
+                      <Link
+                      to="/reports/operations-reports/extended-report"
+                      className="submenu-link text-white text-sm"
+                    >
+                      Extension Report
                     </Link>
                   </div>
                 )}
@@ -6500,6 +6548,12 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                       className="submenu-link text-white text-sm"
                     >
                       Referral Report
+                    </Link>
+                      <Link
+                      to="/reports/operations-reports/extended-report"
+                      className="submenu-link text-white text-sm"
+                    >
+                      Extension Report
                     </Link>
                     <Link
                       to="/reports/operations-reports/sales-incentive-report"
@@ -7221,6 +7275,12 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                       className="submenu-link text-white text-sm"
                     >
                       Referral Report
+                    </Link>
+                      <Link
+                      to="/reports/operations-reports/extended-report"
+                      className="submenu-link text-white text-sm"
+                    >
+                      Extension Report
                     </Link>
                     <Link
                       to="/reports/operations-reports/sales-incentive-report"
@@ -7968,6 +8028,12 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                       className="submenu-link text-white text-sm"
                     >
                       Referral Report
+                    </Link>
+                      <Link
+                      to="/reports/operations-reports/extended-report"
+                      className="submenu-link text-white text-sm"
+                    >
+                      Extension Report
                     </Link>
                   </div>
                 )}
