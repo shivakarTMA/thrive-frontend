@@ -603,7 +603,7 @@ const handleDownloadReport = async () => {
 
           <div className="w-full max-w-[190px]">
             <Select
-              placeholder="Filter by Service Type"
+              placeholder="Filter by service type"
               options={serviceTypeOptions}
               styles={customStyles}
               value={
@@ -622,7 +622,7 @@ const handleDownloadReport = async () => {
           <div className="relative max-w-[220px] w-full">
             <input
               type="text"
-              placeholder="Search Member"
+              placeholder="Search member"
               value={search}
               onChange={(event) => {
                 setSearch(event.target.value);
