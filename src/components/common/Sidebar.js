@@ -719,6 +719,12 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                       Extension Report
                     </Link>
                     <Link
+                      to="/reports/operations-reports/revival-report"
+                      className="submenu-link text-white text-sm"
+                    >
+                      Revival Report
+                    </Link>
+                    <Link
                       to="/reports/operations-reports/sales-incentive-report"
                       className="submenu-link text-white text-sm"
                     >
@@ -1562,6 +1568,12 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                       Extension Report
                     </Link>
                     <Link
+                      to="/reports/operations-reports/revival-report"
+                      className="submenu-link text-white text-sm"
+                    >
+                      Revival Report
+                    </Link>
+                    <Link
                       to="/reports/operations-reports/sales-incentive-report"
                       className="submenu-link text-white text-sm"
                     >
@@ -2341,6 +2353,12 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                       Extension Report
                     </Link>
                     <Link
+                      to="/reports/operations-reports/revival-report"
+                      className="submenu-link text-white text-sm"
+                    >
+                      Revival Report
+                    </Link>
+                    <Link
                       to="/reports/operations-reports/sales-incentive-report"
                       className="submenu-link text-white text-sm"
                     >
@@ -3028,6 +3046,12 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                       className="submenu-link text-white text-sm"
                     >
                       Extension Report
+                    </Link>
+                    <Link
+                      to="/reports/operations-reports/revival-report"
+                      className="submenu-link text-white text-sm"
+                    >
+                      Revival Report
                     </Link>
                     </div>
                   )}
@@ -3781,6 +3805,12 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                     >
                       Extension Report
                     </Link>
+                    <Link
+                      to="/reports/operations-reports/revival-report"
+                      className="submenu-link text-white text-sm"
+                    >
+                      Revival Report
+                    </Link>
                   </div>
                 )}
 
@@ -4385,6 +4415,12 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                     >
                       Extension Report
                     </Link>
+                    <Link
+                      to="/reports/operations-reports/revival-report"
+                      className="submenu-link text-white text-sm"
+                    >
+                      Revival Report
+                    </Link>
                   </div>
                 )}
 
@@ -4927,6 +4963,12 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                     >
                       Extension Report
                     </Link>
+                    <Link
+                      to="/reports/operations-reports/revival-report"
+                      className="submenu-link text-white text-sm"
+                    >
+                      Revival Report
+                    </Link>
                   </div>
                 )}
 
@@ -5455,6 +5497,12 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                       className="submenu-link text-white text-sm"
                     >
                       Extension Report
+                    </Link>
+                    <Link
+                      to="/reports/operations-reports/revival-report"
+                      className="submenu-link text-white text-sm"
+                    >
+                      Revival Report
                     </Link>
                     {/* <Link
                       to="/reports/operations-reports/attendance-heatmap-report"
@@ -6001,6 +6049,12 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                       className="submenu-link text-white text-sm"
                     >
                       Extension Report
+                    </Link>
+                    <Link
+                      to="/reports/operations-reports/revival-report"
+                      className="submenu-link text-white text-sm"
+                    >
+                      Revival Report
                     </Link>
                   </div>
                 )}
@@ -6554,6 +6608,12 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                       className="submenu-link text-white text-sm"
                     >
                       Extension Report
+                    </Link>
+                    <Link
+                      to="/reports/operations-reports/revival-report"
+                      className="submenu-link text-white text-sm"
+                    >
+                      Revival Report
                     </Link>
                     <Link
                       to="/reports/operations-reports/sales-incentive-report"
@@ -7281,6 +7341,12 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                       className="submenu-link text-white text-sm"
                     >
                       Extension Report
+                    </Link>
+                    <Link
+                      to="/reports/operations-reports/revival-report"
+                      className="submenu-link text-white text-sm"
+                    >
+                      Revival Report
                     </Link>
                     <Link
                       to="/reports/operations-reports/sales-incentive-report"
@@ -8034,6 +8100,12 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                       className="submenu-link text-white text-sm"
                     >
                       Extension Report
+                    </Link>
+                    <Link
+                      to="/reports/operations-reports/revival-report"
+                      className="submenu-link text-white text-sm"
+                    >
+                      Revival Report
                     </Link>
                   </div>
                 )}
