@@ -30,7 +30,7 @@ const FreezeMembershipModal = ({
     validationSchema: Yup.object({
       no_of_days: Yup.number()
         .typeError("Extension days must be a number")
-        .required("Extension days is required")
+        .required("Freeze days is required")
         .positive("Must be greater than 0")
         .integer("Only whole numbers are allowed")
         .min(7, "Minimum 7 days are required")
@@ -87,7 +87,7 @@ const FreezeMembershipModal = ({
                   onBlur={formik.handleBlur}
                   onKeyDown={blockInvalidNumberKeys}
                   className="custom--input w-full input--icon number--appearance-none"
-                  placeholder="Enter extension days"
+                  placeholder="Enter freeze days"
                 />
               </div>
 
