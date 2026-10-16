@@ -10,7 +10,9 @@ import {
   filterActiveItems,
   formatAutoDate,
   formatIndianNumber,
+  formatStatus,
   formatText,
+  getStatusClass,
 } from "../../../Helper/helper";
 import { authAxios } from "../../../config/config";
 import { toast } from "react-toastify";
@@ -479,9 +481,15 @@ const MembershipExpiryReport = (props) => {
                     <td className="px-2 py-4">{row.club_name || "-"}</td>
                     <td className="px-2 py-4">{row.membership_number}</td>
                     <td className="px-2 py-4">{row.full_name}</td>
-                    <td className="px-2 py-4 flex items-center gap-1">
-                      {row.is_subscribed === true ? "Active" : "Inactive"}
-                    </td>
+                    <td className="px-2 py-4">
+                                          <span
+                                              className={`flex items-center justify-between gap-1 rounded-full min-h-[30px] px-3 text-sm w-fit ${getStatusClass(
+                        row?.status
+                      )}`}
+                                          >
+                                            <FaCircle className="text-[10px]" /> {formatStatus(row?.status)}
+                                          </span>
+                                        </td>
                     <td className="px-2 py-4">
                       {row.sales_rep_name ? row.sales_rep_name : "--"}
                     </td>

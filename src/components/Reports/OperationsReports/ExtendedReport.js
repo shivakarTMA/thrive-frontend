@@ -729,7 +729,7 @@ const handleDownloadReport = async () => {
                         {row?.new_end_date || "--"}
                       </td>
                       <td className="px-2 py-4">
-                        {row?.updated_on?.split("T")[0] || "--"}
+                        {row?.updated_on?.split(" ")[0] || "--"}
                       </td>
                       <td className="px-2 py-4">
                         {row?.remarks || "--"}
