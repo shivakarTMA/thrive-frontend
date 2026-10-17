@@ -422,7 +422,7 @@ export const ROUTE_PERMISSIONS = {
     'ADMIN', 'FITNESS_MANAGER', 'ASS_FITNESS_MANAGER', 'TRAINER',
     'CLUB_MANAGER', 'ASS_CLUB_MANAGER',
   ],
-  '/reports/operations-reports/membership-frozen-report': [
+  '/reports/operations-reports/freeze-membership-report': [
     'ADMIN', 'FINANCE_MANAGER', 'FINANCE_MANAGER_CLUB', 'FINANCE_MANAGER_CORPORATE',
     'CLUB_MANAGER', 'ASS_CLUB_MANAGER',
   ],
