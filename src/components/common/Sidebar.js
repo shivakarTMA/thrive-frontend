@@ -695,10 +695,10 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                       Inactive Client Report
                     </Link>
                     <Link
-                      to="/reports/operations-reports/membership-frozen-report"
+                      to="/reports/operations-reports/freeze-membership-report"
                       className="submenu-link text-white text-sm"
                     >
-                      Membership Frozen Report
+                      Freeze membership Report
                     </Link>
                     <Link
                       to="/reports/operations-reports/attendance-heatmap-report"
@@ -1555,6 +1555,12 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                     >
                       Attendance Heatmap Report
                     </Link> */}
+                     <Link
+                      to="/reports/operations-reports/freeze-membership-report"
+                      className="submenu-link text-white text-sm"
+                    >
+                      Freeze membership Report
+                    </Link>
                     <Link
                       to="/reports/operations-reports/referral-report"
                       className="submenu-link text-white text-sm"
@@ -2334,6 +2340,12 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                     >
                       Irregular Members Report
                     </Link>
+                     <Link
+                      to="/reports/operations-reports/freeze-membership-report"
+                      className="submenu-link text-white text-sm"
+                    >
+                      Freeze membership Report
+                    </Link>
                     {/* <Link
                       to="/reports/operations-reports/attendance-heatmap-report"
                       className="submenu-link text-white text-sm"
@@ -3035,6 +3047,12 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                       >
                         Attendance Heatmap Report
                       </Link> */}
+                       <Link
+                      to="/reports/operations-reports/freeze-membership-report"
+                      className="submenu-link text-white text-sm"
+                    >
+                      Freeze membership Report
+                    </Link>
                       <Link
                       to="/reports/operations-reports/referral-report"
                       className="submenu-link text-white text-sm"
@@ -3769,6 +3787,18 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                     >
                       Irregular Members Report
                     </Link>
+                     <Link
+                      to="/reports/operations-reports/freeze-membership-report"
+                      className="submenu-link text-white text-sm"
+                    >
+                      Freeze membership Report
+                    </Link>
+                     <Link
+                      to="/reports/operations-reports/freeze-membership-report"
+                      className="submenu-link text-white text-sm"
+                    >
+                      Freeze membership Report
+                    </Link>
                     {/* <Link
                       to="/reports/operations-reports/active-client-report"
                       className="submenu-link text-white text-sm"
@@ -3782,10 +3812,10 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                       Inactive Client Report
                     </Link> */}
                     {/* <Link
-                      to="/reports/operations-reports/membership-frozen-report"
+                      to="/reports/operations-reports/freeze-membership-report"
                       className="submenu-link text-white text-sm"
                     >
-                      Membership Frozen Report
+                      Freeze membership Report
                     </Link> */}
                     {/* <Link
                       to="/reports/operations-reports/attendance-heatmap-report"
@@ -4397,6 +4427,12 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                     >
                       Irregular Members Report
                     </Link>
+                     <Link
+                      to="/reports/operations-reports/freeze-membership-report"
+                      className="submenu-link text-white text-sm"
+                    >
+                      Freeze membership Report
+                    </Link>
                     {/* <Link
                       to="/reports/operations-reports/attendance-heatmap-report"
                       className="submenu-link text-white text-sm"
@@ -4945,6 +4981,12 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                     >
                       Irregular Members Report
                     </Link>
+                     <Link
+                      to="/reports/operations-reports/freeze-membership-report"
+                      className="submenu-link text-white text-sm"
+                    >
+                      Freeze membership Report
+                    </Link>
                     {/* <Link
                       to="/reports/operations-reports/attendance-heatmap-report"
                       className="submenu-link text-white text-sm"
@@ -5492,6 +5534,12 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                     >
                       Irregular Members Report
                     </Link>
+                     <Link
+                      to="/reports/operations-reports/freeze-membership-report"
+                      className="submenu-link text-white text-sm"
+                    >
+                      Freeze membership Report
+                    </Link>
                       <Link
                       to="/reports/operations-reports/extended-report"
                       className="submenu-link text-white text-sm"
@@ -6031,6 +6079,12 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                       className="submenu-link text-white text-sm"
                     >
                       Irregular Members Report
+                    </Link>
+                     <Link
+                      to="/reports/operations-reports/freeze-membership-report"
+                      className="submenu-link text-white text-sm"
+                    >
+                      Freeze membership Report
                     </Link>
                     {/* <Link
                       to="/reports/operations-reports/attendance-heatmap-report"
@@ -6590,6 +6644,12 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                       className="submenu-link text-white text-sm"
                     >
                       Irregular Members Report
+                    </Link>
+                     <Link
+                      to="/reports/operations-reports/freeze-membership-report"
+                      className="submenu-link text-white text-sm"
+                    >
+                      Freeze membership Report
                     </Link>
                     {/* <Link
                       to="/reports/operations-reports/attendance-heatmap-report"
@@ -7323,6 +7383,12 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                       className="submenu-link text-white text-sm"
                     >
                       Irregular Members Report
+                    </Link>
+                     <Link
+                      to="/reports/operations-reports/freeze-membership-report"
+                      className="submenu-link text-white text-sm"
+                    >
+                      Freeze membership Report
                     </Link>
                     {/* <Link
                       to="/reports/operations-reports/attendance-heatmap-report"
@@ -8082,6 +8148,12 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                       className="submenu-link text-white text-sm"
                     >
                       Irregular Members Report
+                    </Link>
+                     <Link
+                      to="/reports/operations-reports/freeze-membership-report"
+                      className="submenu-link text-white text-sm"
+                    >
+                      Freeze membership Report
                     </Link>
                     {/* <Link
                       to="/reports/operations-reports/attendance-heatmap-report"
