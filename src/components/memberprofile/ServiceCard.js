@@ -77,6 +77,8 @@ const ServiceCard = ({ details }) => {
   const [extendServiceModal, setExtendServiceModal] = useState(false);
   const [extendServiceId, setExtendServiceId] = useState(null);
   const [freezeStatus, setFreezeStatus] = useState("");
+  const [userStatus, setuserStatus] = useState("");
+
   const [freezeMembership, setFreezeMembership] = useState(false);
   const [unfreezeMembership, setUnfreezeMembership] = useState(false);
   const [reviveMembership, setReviveMembership] = useState(false);
@@ -245,6 +247,7 @@ const ServiceCard = ({ details }) => {
       const res = await authAxios().get(`/member/${memberId}`);
       const data = res.data?.data || res.data || null;
       setFreezeStatus(data?.freeze_status);
+      setuserStatus(data)
     } catch (err) {
       console.error(err);
     }
@@ -414,18 +417,26 @@ const ServiceCard = ({ details }) => {
                     freezeStatus !== "FREEZED") && (
                     <Tooltip
                       id={`tooltip-membership-extend`}
-                      content={
-                        freezeStatus === "FREEZED"
-                          ? "Your membership is currently frozen."
-                          : "Extend Membership"
-                      }
+                     content={
+    freezeStatus === "FREEZED"
+      ? "Your membership is currently frozen."
+      : userStatus?.status === "EXPIRED"
+      ? "Your membership has expired."
+      : "Extend Membership"
+  }
                       place="top"
                     >
-                      <button
-                        onClick={() => setExtendMembershipModal(true)}
-                        className={`px-3 py-2 rounded-full flex items-center gap-2 border text-sm  ${freezeStatus === "FREEZED" ? "bg-gray-300 border-gray-300 cursor-not-allowed text-gray-500" : "bg-black border-black text-white"}`}
-                        disabled={freezeStatus === "FREEZED"}
-                      >
+                    <button
+  onClick={() => setExtendMembershipModal(true)}
+  className={`px-3 py-2 rounded-full flex items-center gap-2 border text-sm ${
+    freezeStatus === "FREEZED" || userStatus?.status === "EXPIRED"
+      ? "bg-gray-300 border-gray-300 cursor-not-allowed text-gray-500"
+      : "bg-black border-black text-white"
+  }`}
+  disabled={
+    freezeStatus === "FREEZED" || userStatus?.status === "EXPIRED"
+  }
+>
                         <TbCalendarPlus className="text-xl" />
                         <span>Extend Membership</span>
                       </button>
