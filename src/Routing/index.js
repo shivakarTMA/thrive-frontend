@@ -1014,9 +1014,9 @@ export default function Routing() {
           }
         />
         <Route
-          path="/reports/operations-reports/membership-frozen-report"
+          path="/reports/operations-reports/freeze-membership-report"
           element={
-            <RoleProtectedRoute path="/reports/operations-reports/membership-frozen-report">
+            <RoleProtectedRoute path="/reports/operations-reports/freeze-membership-report">
               <MembershipFrozenReport />
             </RoleProtectedRoute>
           }
