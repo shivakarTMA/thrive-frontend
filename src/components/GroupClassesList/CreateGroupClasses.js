@@ -46,6 +46,9 @@ const CreateGroupClasses = ({ setShowModal, editingOption, checkActiveBooking, f
   // const [clubTiming, setClubTiming] = useState([]);
   const [trainerSlotsData, setTrainerSlotsData] = useState([]);
   const slotsRequestIdRef = useRef(0);
+  const [endTimeSlotsData, setEndTimeSlotsData] = useState([]);
+  const [endTimeLoading, setEndTimeLoading] = useState(false);
+  const endTimeRequestIdRef = useRef(0);
   const dispatch = useDispatch();
 
   const fetchClub = async (search = "") => {
@@ -67,6 +70,75 @@ const CreateGroupClasses = ({ setShowModal, editingOption, checkActiveBooking, f
 // uses booking_type "TRIAL" — response gives open_time/close_time per
 // date (no discrete slots), gated by the holiday flags.
 // ===============================
+const fetchTrainerEndTimeSlots = async (
+  trainerId,
+  clubId,
+  date,
+  startTime
+) => {
+  const requestId = ++endTimeRequestIdRef.current;
+
+  if (!trainerId || !clubId || !date || !startTime) {
+    setEndTimeSlotsData([]);
+    setEndTimeLoading(false);
+    return;
+  }
+
+  setEndTimeSlotsData([]);
+  setEndTimeLoading(true);
+
+  try {
+    const res = await authAxios().post(
+      "/staff/operating/hours/trainer/endtime/slots",
+      {
+        trainer_id: trainerId,
+        club_id: clubId,
+        booking_type: "TRIAL",
+        date: date,
+        time: startTime,
+      }
+    );
+
+    if (requestId !== endTimeRequestIdRef.current) return;
+
+    if (res.data?.status === true) {
+      setEndTimeSlotsData(res.data?.data || []);
+    } else {
+      setEndTimeSlotsData([]);
+    }
+  } catch (error) {
+    if (requestId !== endTimeRequestIdRef.current) return;
+
+    console.error("End Time API Error:", error);
+    setEndTimeSlotsData([]);
+    toast.error("Unable to fetch trainer end time slots");
+  } finally {
+    if (requestId === endTimeRequestIdRef.current) {
+      setEndTimeLoading(false);
+    }
+  }
+};
+
+
+
+useEffect(() => {
+  fetchTrainerEndTimeSlots(
+    formik.values.trainer_id,
+    formik.values.club_id,
+    formik.values.start_date,
+    formik.values.start_time
+  );
+
+  return () => {
+    endTimeRequestIdRef.current += 1;
+  };
+}, [
+  formik.values.trainer_id,
+  formik.values.club_id,
+  formik.values.start_date,
+  formik.values.start_time,
+]);
+
 const fetchTrainerAvailability = async (trainerId, clubId) => {
   if (!trainerId || !clubId) {
     setTrainerSlotsData([]);
@@ -327,25 +399,44 @@ const startTimeOptions = useMemo(() => {
 
 const endTimeOptions = useMemo(() => {
   if (!formik?.values.start_time) return [];
-  if (!daySlots.length) return [NO_SLOTS_OPTION];
 
-  const [sh, sm] = formik?.values.start_time.split(":").map(Number);
-  const startMinutes = sh * 60 + sm;
+  const selectedDay = endTimeSlotsData.find((day) => {
+    const [year, month, date] =
+      formik.values.start_date.split("-");
 
-  return daySlots.map((slot) => {
-    const endTime = slot?.end_slot_time;
-    const [eh, em] = endTime?.split(":").map(Number);
-    const endMinutes = eh * 60 + em;
-
-    const isDisabled = !slot.enable || endMinutes <= startMinutes;
-
-    return {
-      label: formatTo12Hour(endTime),
-      value: endTime,
-      isDisabled,
-    };
+    return day.date === `${date}-${month}-${year}`;
   });
-}, [daySlots, formik.values.start_time]);
+
+  if (
+    !selectedDay ||
+    selectedDay.is_full_day_holiday ||
+    selectedDay.is_staff_holiday ||
+    !selectedDay.slots?.length
+  ) {
+    return [NO_SLOTS_OPTION];
+  }
+
+  const options = selectedDay.slots
+    .filter((slot) => Boolean(slot.end_slot_time))
+    .map((slot) => ({
+      label: formatTo12Hour(slot.end_slot_time),
+      value: slot.end_slot_time,
+      isDisabled: slot.enable !== true,
+    }));
+
+  // Remove duplicate end times, if returned by the API.
+  return options.filter(
+    (option, index, array) =>
+      array.findIndex(
+        (item) => item.value === option.value
+      ) === index
+  );
+}, [
+  endTimeSlotsData,
+  formik.values.start_date,
+  formik.values.start_time,
+]);
+
 
   const trainerOptions =
     staffList?.map((item) => ({
@@ -738,8 +829,13 @@ const endTimeOptions = useMemo(() => {
                               : null
                           }
                           onChange={(date) => {
-                            const formattedDate =
-                              date.toLocaleDateString("en-CA");
+                            const formattedDate = date
+  ? `${date.getFullYear()}-${String(
+      date.getMonth() + 1
+    ).padStart(2, "0")}-${String(
+      date.getDate()
+    ).padStart(2, "0")}`
+  : "";
 
                             formik.setFieldValue("start_date", formattedDate);
 
