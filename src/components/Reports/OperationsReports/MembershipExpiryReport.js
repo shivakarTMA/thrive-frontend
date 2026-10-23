@@ -451,6 +451,8 @@ const MembershipExpiryReport = (props) => {
                 <th className="px-2 py-4 min-w-[150px]">Club Name</th>
                 <th className="px-2 py-4 min-w-[100px]">Member ID</th>
                 <th className="px-2 py-4 min-w-[120px]">Member Name</th>
+                <th className="px-2 py-4 min-w-[100px]">Gender</th>
+                <th className="px-2 py-4 min-w-[150px]">Company Name</th>
                 <th className="px-2 py-4 min-w-[130px]">Status</th>
                 <th className="px-2 py-4 min-w-[130px]">Sales Rep</th>
                 {/* <th className="px-2 py-4 min-w-[130px]">General Trainer</th> */}
@@ -466,8 +468,6 @@ const MembershipExpiryReport = (props) => {
                   userRole === "ADMIN") && (
                 <th className="px-2 py-4 min-w-[120px]">Payment Link</th>
                 )}
-                <th className="px-2 py-4 min-w-[150px]">Company Name</th>
-                <th className="px-2 py-4 min-w-[100px]">Gender</th>
               </tr>
             </thead>
 
@@ -482,20 +482,28 @@ const MembershipExpiryReport = (props) => {
                     <td className="px-2 py-4">{row.membership_number}</td>
                     <td className="px-2 py-4">{row.full_name}</td>
                     <td className="px-2 py-4">
-                                          <span
-                                              className={`flex items-center justify-between gap-1 rounded-full min-h-[30px] px-3 text-sm w-fit ${getStatusClass(
+                      {formatText(
+                        row?.gender === "NOTDISCLOSE"
+                          ? "Prefer Not To Say"
+                          : row?.gender,
+                      )}
+                    </td>
+                    <td className="px-2 py-4">
+                      {row.company_name ? row.company_name : "--"}
+                    </td>
+                    
+                    <td className="px-2 py-4">
+                      <span
+                        className={`flex items-center justify-between gap-1 rounded-full min-h-[30px] px-3 text-sm w-fit ${getStatusClass(
                         row?.status
                       )}`}
-                                          >
-                                            <FaCircle className="text-[10px]" /> {formatStatus(row?.status)}
-                                          </span>
-                                        </td>
+                      >
+                          <FaCircle className="text-[10px]" /> {formatStatus(row?.status)}
+                        </span>
+                      </td>
                     <td className="px-2 py-4">
                       {row.sales_rep_name ? row.sales_rep_name : "--"}
                     </td>
-                    {/* <td className="px-2 py-4">
-                      {row.general_trainer ? row.general_trainer : "--"}
-                    </td> */}
                     <td className="px-2 py-4">
                       {row.plan_name ? row.plan_name : "--"}
                     </td>
@@ -541,16 +549,6 @@ const MembershipExpiryReport = (props) => {
                           </button>
                         </td>
                       )}
-                    <td className="px-2 py-4">
-                      {row.company_name ? row.company_name : "--"}
-                    </td>
-                    <td className="px-2 py-4">
-                      {formatText(
-                        row?.gender === "NOTDISCLOSE"
-                          ? "Prefer Not To Say"
-                          : row?.gender,
-                      )}
-                    </td>
                   </tr>
                 ))
               ) : (
