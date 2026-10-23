@@ -1,8 +1,13 @@
-import React, { useEffect, useState } from "react";
+
+import React, { useCallback, useEffect, useState } from "react";
 import Select from "react-select";
 import { authAxios } from "../../../config/config";
-import { customStyles, filterActiveItems } from "../../../Helper/helper";
+import {
+  customStyles,
+  filterActiveItems,
+} from "../../../Helper/helper";
 import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
 
 const monthOptions = [
   { value: 0, label: "January" },
@@ -19,41 +24,85 @@ const monthOptions = [
   { value: 11, label: "December" },
 ];
 
+const currentDate = new Date();
+const currentMonth = currentDate.getMonth();
+const currentYear = currentDate.getFullYear();
+
 const yearOptions = Array.from({ length: 10 }, (_, i) => {
-  const year = new Date().getFullYear() - i;
-  return { value: year, label: year.toString() };
+  const year = currentYear - i;
+
+  return {
+    value: year,
+    label: year.toString(),
+  };
 });
 
 const RenewalReport = () => {
   const [clubList, setClubList] = useState([]);
   const [clubFilter, setClubFilter] = useState(null);
 
-  const [selectedMonth, setSelectedMonth] = useState(null);
-  const [selectedYear, setSelectedYear] = useState(null);
+  const [selectedMonth, setSelectedMonth] = useState(
+    monthOptions.find((month) => month.value === currentMonth)
+  );
 
-  const data = [
-    {
-      studio: "DLF Thrive - Cyberpark",
-      totalExpiry: 135,
-      totalRenewal: 16,
-      renewalPercent: 12,
-      attritionPercent: 88,
-      oldExpiry: 1125,
-      reinstatements: 28,
-      reinstatementPercent: 2,
-      renewedAdvance: 0,
-    },
-  ];
+  const [selectedYear, setSelectedYear] = useState(
+    yearOptions.find((year) => year.value === currentYear)
+  );
 
-  // Function to fetch club list
+  const [reportData, setReportData] = useState([]);
+  const [reportTotal, setReportTotal] = useState(null);
+
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+
+  const handleViewList = (clubId, listType) => {
+    if (!selectedMonth || !selectedYear || !clubId) {
+      toast.error("Please select a month, year, and club.");
+      return;
+    }
+
+    const month = selectedMonth.value; // 0-based month
+    const year = selectedYear.value;
+
+    // Calculate the first and last day of the selected month.
+    const startDate = new Date(year, month, 1);
+    const endDate = new Date(year, month + 1, 0);
+
+    const formatDate = (date) => {
+      const yyyy = date.getFullYear();
+      const mm = String(date.getMonth() + 1).padStart(2, "0");
+      const dd = String(date.getDate()).padStart(2, "0");
+
+      return `${yyyy}-${mm}-${dd}`;
+    };
+
+    const params = new URLSearchParams({
+      startDate: formatDate(startDate),
+      endDate: formatDate(endDate),
+      club_id: String(clubId),
+    });
+
+    // Optional: preserve which View button was clicked.
+    // Remove listType if the destination does not need it.
+    // params.set("listType", listType);
+
+    navigate(
+      `/reports/operations-reports/membership-expiry-report?${params.toString()}`
+    );
+  };
+
+  // Fetch active clubs for the dropdown.
   const fetchClub = async () => {
     try {
       const response = await authAxios().get("/club/list");
-      const data = response.data?.data || [];
-      const activeOnly = filterActiveItems(data);
-      setClubList(activeOnly);
+
+      const clubs = response.data?.data || [];
+      const activeClubs = filterActiveItems(clubs);
+
+      setClubList(activeClubs);
     } catch (error) {
-      console.error(error);
+      console.error("Error fetching clubs:", error);
+      toast.error("Failed to fetch club list.");
     }
   };
 
@@ -61,10 +110,77 @@ const RenewalReport = () => {
     fetchClub();
   }, []);
 
+  // Prepare dropdown options.
   const clubOptions = clubList.map((item) => ({
     label: item.name,
     value: item.id,
   }));
+
+  // Fetch renewal report from the API.
+  const fetchRenewalReport = useCallback(async () => {
+    setLoading(true);
+
+    try {
+      const params = {};
+
+      // Club filter is optional.
+      if (clubFilter !== null && clubFilter !== undefined) {
+        params.club_id = clubFilter;
+      }
+
+      // The dropdown uses 0-11 for January-December.
+      // The API is assumed to use 1-12.
+      if (selectedMonth !== null) {
+        params.month = selectedMonth.value + 1;
+      }
+
+      if (selectedYear !== null) {
+        params.year = selectedYear.value;
+      }
+
+      const response = await authAxios().get(
+        "/report/renewal/iteration/list",
+        { params }
+      );
+
+      const responseData = response.data;
+
+      if (responseData?.success) {
+        setReportData(responseData.data || []);
+        setReportTotal(responseData.total || null);
+      } else {
+        setReportData([]);
+        setReportTotal(null);
+
+        toast.error(
+          responseData?.message || "Failed to fetch renewal report."
+        );
+      }
+    } catch (error) {
+      console.error("Error fetching renewal report:", error);
+
+      setReportData([]);
+      setReportTotal(null);
+
+      toast.error(
+        error.response?.data?.message ||
+          "Failed to fetch renewal report."
+      );
+    } finally {
+      setLoading(false);
+    }
+  }, [clubFilter, selectedMonth, selectedYear]);
+
+  // Fetch report whenever a filter changes.
+  useEffect(() => {
+    fetchRenewalReport();
+  }, [fetchRenewalReport]);
+
+  // Read total values safely from the API response.
+  const thisMonthTotal = reportTotal?.this_month_summary || {};
+  const oldExpiredTotal = reportTotal?.old_expired_memberships || {};
+  const advanceTotal =
+    reportTotal?.membership_renewed_in_advance || {};
 
   return (
     <div className="page--content">
@@ -72,43 +188,55 @@ const RenewalReport = () => {
       <div className="flex items-end justify-between gap-2 mb-5">
         <div className="title--breadcrumbs">
           <p className="text-sm">
-            {`Home > Reports > Operations Reports > Renewal Report`}
+            Home &gt; Reports &gt; Operations Reports &gt; Renewal Report
           </p>
-          <h1 className="text-3xl font-semibold">Renewal Report</h1>
+
+          <h1 className="text-3xl font-semibold">
+            Renewal Report
+          </h1>
         </div>
       </div>
 
       {/* Filters */}
-      <div className="flex gap-3 mb-4 items-center justify-between">
-        <div className="flex gap-2 w-full">
+      <div className="flex flex-wrap gap-3 mb-4 items-center justify-between">
+        <div className="flex flex-wrap gap-2 w-full">
+          {/* Month filter */}
           <div className="max-w-[160px] w-full">
             <Select
               placeholder="Month"
               options={monthOptions}
               value={selectedMonth}
               onChange={setSelectedMonth}
-              isClearable
+              // isClearable
               styles={customStyles}
             />
           </div>
 
+          {/* Year filter */}
           <div className="w-full max-w-[140px]">
             <Select
               placeholder="Year"
               options={yearOptions}
               value={selectedYear}
               onChange={setSelectedYear}
-              isClearable
+              // isClearable
               styles={customStyles}
             />
           </div>
 
+          {/* Club filter */}
           <div className="w-full max-w-[200px]">
             <Select
               placeholder="Filter by club"
-              value={clubOptions.find((o) => o.value === clubFilter) || null}
               options={clubOptions}
-              onChange={(option) => setClubFilter(option?.value)}
+              value={
+                clubOptions.find(
+                  (option) => option.value === clubFilter
+                ) || null
+              }
+              onChange={(option) =>
+                setClubFilter(option?.value ?? null)
+              }
               isClearable
               styles={customStyles}
             />
@@ -116,93 +244,223 @@ const RenewalReport = () => {
         </div>
       </div>
 
-      {/* Table */}
-      <div className="w-full p-3 border bg-white shodow--box rounded-[10px]">
+      {/* Report table */}
+      <div className="w-full p-3 border bg-white shadow--box rounded-[10px]">
         <div className="relative overflow-x-auto">
           <table className="min-w-full border border-gray-300 text-sm">
             <thead className="bg-gray-100">
               <tr>
-                <th rowSpan="2" className="border px-3 py-2">
-                  S.No
+                <th
+                  rowSpan={2}
+                  className="border px-3 py-2 whitespace-nowrap"
+                >
+                  Club Name
                 </th>
-                <th rowSpan="2" className="border px-3 py-2">
-                  Studio
+
+                <th
+                  colSpan={5}
+                  className="border px-3 py-2 whitespace-nowrap"
+                >
+                  This Month&apos;s Summary
                 </th>
-                <th colSpan="6" className="border px-3 py-2">
-                  This Month's Summary
-                </th>
-                <th colSpan="4" className="border px-3 py-2">
+
+                <th
+                  colSpan={5}
+                  className="border px-3 py-2 whitespace-nowrap"
+                >
                   Old Expired Memberships
                 </th>
-                <th colSpan="2" className="border px-3 py-2">
+
+                <th
+                  colSpan={2}
+                  className="border px-3 py-2 whitespace-nowrap"
+                >
                   Membership Renewed In Advance
                 </th>
               </tr>
+
               <tr>
-                <th className="border px-3 py-2">Total Expiry</th>
-                <th className="border px-3 py-2">Total Renewal</th>
-                <th className="border px-3 py-2">Renewal %</th>
-                <th className="border px-3 py-2">Attrition %</th>
-                <th className="border px-3 py-2">List</th>
+                {/* This month's summary */}
+                <th className="border px-3 py-2 whitespace-nowrap">
+                  Total Expiry
+                </th>
+                <th className="border px-3 py-2 whitespace-nowrap">
+                  Total Renewal
+                </th>
+                <th className="border px-3 py-2 whitespace-nowrap">
+                  Renewal %
+                </th>
+                <th className="border px-3 py-2 whitespace-nowrap">
+                  Attrition %
+                </th>
+                <th className="border px-3 py-2 whitespace-nowrap">
+                  List
+                </th>
 
-                <th className="border px-3 py-2">Total Old Expiry</th>
-                <th className="border px-3 py-2">Total Reinstatements</th>
-                <th className="border px-3 py-2">Reinstatement %</th>
-                <th className="border px-3 py-2">List</th>
+                {/* Old expired memberships */}
+                <th className="border px-3 py-2 whitespace-nowrap">
+                  Total Old Expiry
+                </th>
+                <th className="border px-3 py-2 whitespace-nowrap">
+                  Total Reinstatements
+                </th>
+                <th className="border px-3 py-2 whitespace-nowrap">
+                  Reinstatement %
+                </th>
+                <th className="border px-3 py-2 whitespace-nowrap">
+                  List
+                </th>
 
-                <th className="border px-3 py-2">Renewed In Advance</th>
-                <th className="border px-3 py-2">List</th>
+                {/* Advance renewals */}
+                <th className="border px-3 py-2 whitespace-nowrap">
+                  Renewed In Advance
+                </th>
+                <th className="border px-3 py-2 whitespace-nowrap">
+                  List
+                </th>
               </tr>
             </thead>
 
             <tbody>
-              {data.map((row, index) => (
-                <tr key={index} className="text-center">
-                  <td className="border px-3 py-2">{index + 1}</td>
-                  <td className="border px-3 py-2 text-left">{row.studio}</td>
-
-                  <td className="border px-3 py-2">{row.totalExpiry}</td>
-                  <td className="border px-3 py-2">{row.totalRenewal}</td>
-                  <td className="border px-3 py-2">{row.renewalPercent}</td>
-                  <td className="border px-3 py-2">{row.attritionPercent}</td>
-                  <td className="border px-3 py-2">
-                    <button className="bg-black text-white px-3 py-1 rounded">
-                      View
-                    </button>
-                  </td>
-
-                  <td className="border px-3 py-2">{row.oldExpiry}</td>
-                  <td className="border px-3 py-2">{row.reinstatements}</td>
-                  <td className="border px-3 py-2">
-                    {row.reinstatementPercent}
-                  </td>
-                  <td className="border px-3 py-2">
-                    <button className="bg-black text-white px-3 py-1 rounded">
-                      View
-                    </button>
-                  </td>
-
-                  <td className="border px-3 py-2">{row.renewedAdvance}</td>
-                  <td className="border px-3 py-2">
-                    <button className="bg-black text-white px-3 py-1 rounded">
-                      View
-                    </button>
+              {loading ? (
+                <tr>
+                  <td
+                    colSpan={12}
+                    className="border px-3 py-6 text-center"
+                  >
+                    Loading renewal report...
                   </td>
                 </tr>
-              ))}
+              ) : reportData.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan={12}
+                    className="border px-3 py-6 text-center"
+                  >
+                    No renewal report data found.
+                  </td>
+                </tr>
+              ) : (
+                reportData.map((row) => {
+                  const monthSummary =
+                    row.this_month_summary || {};
 
-              {/* Total Row */}
-              <tr className="font-bold bg-gray-50 text-center">
-                <td colSpan="2" className="border px-3 py-2 text-left">
-                  Total
-                </td>
-                <td className="border px-3 py-2">135</td>
-                <td className="border px-3 py-2">16</td>
-                <td colSpan="3" className="border px-3 py-2"></td>
-                <td className="border px-3 py-2">1125</td>
-                <td className="border px-3 py-2">28</td>
-                <td colSpan="3" className="border px-3 py-2"></td>
-              </tr>
+                  const oldExpired =
+                    row.old_expired_memberships || {};
+
+                  const advanceRenewal =
+                    row.membership_renewed_in_advance || {};
+
+                  return (
+                    <tr
+                      key={row.club_id}
+                      className="text-center"
+                    >
+                      <td className="border px-3 py-2 text-left whitespace-nowrap">
+                        {row.club_name || "-"}
+                      </td>
+
+                      {/* This month's summary */}
+                      <td className="border px-3 py-2">
+                        {monthSummary.total_expiry ?? 0}
+                      </td>
+
+                      <td className="border px-3 py-2">
+                        {monthSummary.total_renewal ?? 0}
+                      </td>
+
+                      <td className="border px-3 py-2">
+                        {monthSummary.renewal_percentage ?? 0}%
+                      </td>
+
+                      <td className="border px-3 py-2">
+                        {monthSummary.attrition_percentage ?? 0}%
+                      </td>
+
+                      <td className="border px-3 py-2">
+                        <button
+                          type="button"
+                          className="bg-black text-white px-3 py-1 rounded"
+                          onClick={() => handleViewList(row.club_id, "renewal")}
+                        >
+                          View
+                        </button>
+                      </td>
+
+                      {/* Old expired memberships */}
+                      <td className="border px-3 py-2">
+                        {oldExpired.old_expiry ?? 0}
+                      </td>
+
+                      <td className="border px-3 py-2">
+                        {oldExpired.total_reinstatements ?? 0}
+                      </td>
+
+                      <td className="border px-3 py-2">
+                        {oldExpired.reinstatement_percentage ?? 0}%
+                      </td>
+
+                      <td className="border px-3 py-2">
+                        <button
+                          type="button"
+                          className="bg-black text-white px-3 py-1 rounded"
+                          onClick={() => handleViewList(row.club_id, "reinstatement")}
+                        >
+                          View
+                        </button>
+                      </td>
+
+                      {/* Advance renewals */}
+                      <td className="border px-3 py-2">
+                        {advanceRenewal.advance_renewal ?? 0}
+                      </td>
+
+                      <td className="border px-3 py-2">
+                        <button
+                          type="button"
+                          className="bg-black text-white px-3 py-1 rounded"
+                          onClick={() => handleViewList(row.club_id, "advance-renewal")}
+                        >
+                          View
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+
+              {/* Total row */}
+              {!loading && reportData.length > 0 && (
+                <tr className="font-bold bg-gray-50 text-center">
+                  <td className="border px-3 py-2 text-left">
+                    Total
+                  </td>
+
+                  <td className="border px-3 py-2">
+                    {thisMonthTotal.expiry_count ?? 0}
+                  </td>
+
+                  <td className="border px-3 py-2">
+                    {thisMonthTotal.renewal_count ?? 0}
+                  </td>
+
+                  <td colSpan="3" className="border px-3 py-2"></td>
+
+                  <td className="border px-3 py-2">
+                    {oldExpiredTotal.old_expiry_count ?? 0}
+                  </td>
+
+                  <td className="border px-3 py-2">
+                    {oldExpiredTotal.reinstatements_count ?? 0}
+                  </td>
+
+                  <td colSpan="3" className="border px-3 py-2"></td>
+
+                  {/* <td className="border px-3 py-2">
+                    {advanceTotal.advance_renewal_count ?? 0}
+                  </td> */}
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
