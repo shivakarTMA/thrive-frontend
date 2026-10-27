@@ -366,6 +366,7 @@ export function formatText(status) {
   if (status === "UPI") return "UPI";
   if (status === "UPI_ICICI") return "UPI";
   if (status === "RESUBMITTED") return "Re-submitted";
+  if (status === "N/A") return "N/A";
 
   return status
     .split("_")

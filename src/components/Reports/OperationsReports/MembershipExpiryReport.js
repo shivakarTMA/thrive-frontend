@@ -461,7 +461,8 @@ const MembershipExpiryReport = (props) => {
                 <th className="px-2 py-4 min-w-[120px]">Amount</th>
                 <th className="px-2 py-4 min-w-[120px]">Expiry Date</th>
                 <th className="px-2 py-4 min-w-[150px]">Last Check-in Date</th>
-                <th className="px-2 py-4 min-w-[150px]">Renewal Done (Y/N)</th>
+                <th className="px-2 py-4 min-w-[150px]">RENEWED</th>
+                <th className="px-2 py-4 min-w-[150px]">RENEWED TYPE </th>
                 {(userRole === "FOH" ||
                   userRole === "CLUB_MANAGER" ||
                   userRole === "ASS_CLUB_MANAGER" ||
@@ -521,15 +522,18 @@ const MembershipExpiryReport = (props) => {
                         ? formatAutoDate(row.last_check_in_date)
                         : "--"}
                     </td>
-                    <td className="px-2 py-4 flex items-center justify-center gap-1">
+                    <td className="px-2 py-4 flex items-center  gap-1">
                       <FaCircle
                         className={`text-xs ${
-                          row.is_renewal === true
+                          row.renewed !== "NO"
                             ? "text-green-500"
                             : "text-red-500"
                         }`}
                       />
-                      {row.is_renewal === true ? "Y" : "N"}
+                      {formatText(row.renewed) }
+                    </td>
+                     <td className="px-2 py-4">
+                      {row.renewed_type ? formatText(row.renewed_type) : "--"}
                     </td>
                     {(userRole === "FOH" ||
                       userRole === "CLUB_MANAGER" ||
