@@ -679,7 +679,7 @@ const handleDownloadReport = async () => {
                   </th>
 
                   <th className="px-2 py-4 min-w-[100px]">
-                    Updated On
+                    Revived On
                   </th>
 
                   <th className="px-2 py-4 min-w-[100px]">

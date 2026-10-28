@@ -509,7 +509,7 @@ const MembershipFrozenReport = () => {
                   </th>
 
                   <th className="px-2 py-4 min-w-[120px]">
-                    Updated On
+                    freezed On
                   </th>
                 </tr>
               </thead>
