@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { toast } from "react-toastify";
 import { authAxios } from "../../config/config";
 
@@ -10,7 +10,10 @@ const UnfreezeMembershipModal = ({
   fetchPurchasedMemberships,
   details,
 }) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const handleUnfreeze = async () => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
     try {
       const payload = {
         member_id: membershipData?.member_id,
@@ -35,6 +38,8 @@ const UnfreezeMembershipModal = ({
         error.response?.data?.errors ||
           error.response?.data?.message
       );
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -52,16 +57,26 @@ const UnfreezeMembershipModal = ({
         <div className="flex justify-center gap-2">
           <button
             onClick={() => setUnfreezeMembership(false)}
-            className="border px-4 py-2 rounded"
+            disabled={isSubmitting}
+            className={`border px-4 py-2 rounded ${
+              isSubmitting
+                ? "opacity-50 cursor-not-allowed"
+                : "cursor-pointer"
+            }`}
           >
             Cancel
           </button>
 
           <button
             onClick={handleUnfreeze}
-            className="bg-black text-white px-4 py-2 rounded"
+            disabled={isSubmitting}
+            className={`bg-black text-white px-4 py-2 rounded ${
+              isSubmitting
+                ? "opacity-50 cursor-not-allowed"
+                : "cursor-pointer"
+            }`}
           >
-            Yes, Unfreeze
+            {isSubmitting ? "Yes, Unfreeze" : "Yes, Unfreeze"}
           </button>
         </div>
       </div>

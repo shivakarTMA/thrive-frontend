@@ -186,7 +186,8 @@ const BulkEmailCriteriaForm = () => {
 
 const isSubmitDisabled =
   idsArray.length === 0 ||
-  !clubId;
+  !clubId ||
+  formik.isSubmitting;
 
   return (
     <div className="page--content">
@@ -359,7 +360,9 @@ const isSubmitDisabled =
                   disabled={isSubmitDisabled}
                   className="px-4 py-2 bg-black text-white rounded flex items-center gap-2 mt-4 disabled:opacity-50"
                 >
-                  {formik.values.sendType === "SCHEDULED"
+                  {formik.isSubmitting
+                    ? "Submitting..."
+                    : formik.values.sendType === "SCHEDULED"
                     ? "Schedule Email"
                     : "Send Email"}
                 </button>

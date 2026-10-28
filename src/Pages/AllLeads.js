@@ -106,6 +106,7 @@ const AllLeads = (props) => {
 
   const [staffList, setStaffList] = useState([]);
   const [filtersInitialized, setFiltersInitialized] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Applied filters state (like TrialAppointments)
   const [appliedFilters, setAppliedFilters] = useState({
@@ -572,6 +573,7 @@ const clubOptions = [
   };
 
   const confirmAssign = async () => {
+    if (isSubmitting) return;
     if (!bulkOwner) {
       toast.error("Please select an owner.");
       return;
@@ -581,6 +583,7 @@ const clubOptions = [
       member_ids: selectedUserId,
       owner_id: bulkOwner.value,
     };
+      setIsSubmitting(true);
 
     try {
       const res = await authAxios().put(
@@ -598,6 +601,9 @@ const clubOptions = [
     } catch (err) {
       console.error(err);
     }
+     finally {
+    setIsSubmitting(false);
+  }
   };
 
   // ✅ CENTRAL LOGOUT HANDLER (API ALWAYS CALLED)
@@ -1132,9 +1138,13 @@ const clubOptions = [
                               </button>
                               <button
                                 onClick={confirmAssign}
-                                className="px-4 py-2 bg-black text-white rounded-[5px] border-black border flex items-center gap-2"
+                                className={`px-4 py-2 bg-black text-white rounded-[5px] border-black border flex items-center gap-2 ${
+                                  isSubmitting
+                                    ? "opacity-50 cursor-not-allowed"
+                                    : "cursor-pointer"
+                                }`}
                               >
-                                Confirm
+                            {isSubmitting ? "Confirm" : "Confirm"}
                               </button>
                             </div>
                           </div>

@@ -37,6 +37,7 @@ import IsLoadingHOC from "../components/common/IsLoadingHOC";
 import CreateProductsInvoice from "./CreateProductsInvoice";
 
 const MemberList = (props) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { id } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
@@ -445,6 +446,7 @@ const MemberList = (props) => {
 
   // Confirm assignment
   const confirmAssign = async () => {
+    if (isSubmitting) return;
     if (!bulkOwner) {
       toast.error("Please select an owner.");
       return;
@@ -454,7 +456,7 @@ const MemberList = (props) => {
       member_ids: selectedUserId,
       owner_id: bulkOwner.value,
     };
-
+    setIsSubmitting(true);
     try {
       const res = await authAxios().put(
         "/lead/assign/owner",
@@ -470,7 +472,9 @@ const MemberList = (props) => {
       fetchMemberList();
     } catch (err) {
       console.error(err);
-    }
+    } finally {
+    setIsSubmitting(false);
+  }
   };
 
   const handleCommunicate = (type) => {
@@ -1010,9 +1014,12 @@ const getStatusText = (status) => {
                         </button>
                         <button
                           onClick={confirmAssign}
-                          className="px-4 py-2 bg-black text-white rounded-[5px] border-black border flex items-center gap-2"
-                        >
-                          Confirm
+                          className={`px-4 py-2 bg-black text-white rounded-[5px] border-black border flex items-center gap-2 ${
+    isSubmitting
+      ? "opacity-50 cursor-not-allowed"
+      : "cursor-pointer"
+  }`}>
+                         {isSubmitting ? "Confirm" : "Confirm"}
                         </button>
                       </div>
                     </div>

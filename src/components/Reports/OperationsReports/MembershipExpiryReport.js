@@ -544,6 +544,7 @@ const MembershipExpiryReport = (props) => {
                             type="button"
                             onClick={() => {
                               setSelectedLeadMember(row.id);
+                              // setSelectedLeadMember(row?.member_id);
                               setSendPaymentModal(true);
                               setSelectedLeadClub(row?.club_id);
                             }}

@@ -596,14 +596,25 @@ const NotificationCriteriaForm = () => {
                 <button
                   type="submit"
                   disabled={
+                formik.isSubmitting ||
                     hasFilterErrors ||
                     (!id && memberIds.length === 0) ||
                     (formik.values.sendType === "SCHEDULED" &&
                       !formik.values.scheduledAt)
                   }
-                  className="px-4 py-2 bg-black text-white rounded flex items-center gap-2 mt-4 disabled:opacity-50"
-                >
-                  {id
+                  className={`px-4 py-2 bg-black text-white rounded flex items-center gap-2 mt-4 ${
+                      formik.isSubmitting ||
+                      hasFilterErrors ||
+                      (!id && memberIds.length === 0) ||
+                      (formik.values.sendType === "SCHEDULED" &&
+                        !formik.values.scheduledAt)
+                        ? "opacity-50 cursor-not-allowed"
+                        : "cursor-pointer"
+                    }`}
+                  >
+                    {formik.isSubmitting
+                      ? "Submitting..."
+                      : id
                     ? "Send Notification"
                     : formik.values.sendType === "SCHEDULED"
                       ? "Schedule Notification"
