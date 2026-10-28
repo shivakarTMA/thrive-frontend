@@ -1387,13 +1387,31 @@ useEffect(() => {
                                     formik.setFieldValue("schedule", value);
 
                                     if (value === "NOTRIAL") {
-                                      formik.setFieldValue("assigned_staff_id", null);
-                                      formik.setFieldValue("schedule_date", null);
-                                      formik.setFieldValue("schedule_time", null);
-                                      formik.setFieldValue("schedule_date_time", null);
+                                      formik.setFieldValue(
+                                        "assigned_staff_id",
+                                        null,
+                                      );
+                                      formik.setFieldValue(
+                                        "schedule_date",
+                                        null,
+                                      );
+                                      formik.setFieldValue(
+                                        "schedule_time",
+                                        null,
+                                      );
+                                      formik.setFieldValue(
+                                        "schedule_date_time",
+                                        null,
+                                      );
 
-                                      formik.setFieldError("assigned_staff_id", "");
-                                      formik.setFieldError("schedule_date_time", "");
+                                      formik.setFieldError(
+                                        "assigned_staff_id",
+                                        "",
+                                      );
+                                      formik.setFieldError(
+                                        "schedule_date_time",
+                                        "",
+                                      );
                                     }
                                   }}
                                   className="w-4 h-4 mr-1"
@@ -1431,7 +1449,9 @@ useEffect(() => {
                                     ? staffList
                                         .flatMap((group) => group.options)
                                         .find(
-                                          (opt) => opt.value === formik.values.assigned_staff_id
+                                          (opt) =>
+                                            opt.value ===
+                                            formik.values.assigned_staff_id,
                                         )
                                     : null
                                 }
@@ -1489,7 +1509,9 @@ useEffect(() => {
                                     <FaCalendarDays />
                                   </span>
                                   <DatePicker
-                                    selected={formik.values.schedule_date || null}
+                                    selected={
+                                      formik.values.schedule_date || null
+                                    }
                                     onChange={(date) => {
                                       formik.setFieldValue(
                                         "schedule_date",
@@ -1497,7 +1519,10 @@ useEffect(() => {
                                       );
 
                                       // ✅ reset time when date changes
-                                      formik.setFieldValue("schedule_time", null); // instead of ""
+                                      formik.setFieldValue(
+                                        "schedule_time",
+                                        null,
+                                      ); // instead of ""
                                       formik.setFieldValue(
                                         "schedule_date_time",
                                         "",
@@ -1528,18 +1553,23 @@ useEffect(() => {
                                   value={
                                     formik.values.schedule_time
                                       ? timeOptions.find(
-                                          (opt) => opt.value === formik.values.schedule_time
+                                          (opt) =>
+                                            opt.value ===
+                                            formik.values.schedule_time,
                                         )
                                       : null
                                   }
                                   onChange={(option) => {
                                     if (!option || option.value === "") return;
 
-                                    formik.setFieldValue("schedule_time", option.value);
+                                    formik.setFieldValue(
+                                      "schedule_time",
+                                      option.value,
+                                    );
 
                                     combineDateTime(
                                       formik.values.schedule_date,
-                                      option.value
+                                      option.value,
                                     );
                                   }}
                                   options={timeOptions}
@@ -1577,9 +1607,14 @@ useEffect(() => {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-white text-black font-semibold rounded max-w-[150px] w-full"
+                   disabled={formik.isSubmitting}
+                  className={`px-4 py-2 bg-white text-black font-semibold rounded max-w-[150px] w-full${
+                    formik.isSubmitting
+                      ? "opacity-50 cursor-not-allowed"
+                      : "cursor-pointer"
+                  }`}
                 >
-                  Submit
+                  {formik.isSubmitting ? "Submitting..." : "Submit"}
                 </button>
               </div>
             </form>
