@@ -333,7 +333,7 @@ const MembershipExpiryReport = (props) => {
 
       link.href = url;
 
-      link.setAttribute("download", "Membership-Expiry_Report.xlsx");
+      link.setAttribute("download", "Membership Expiry Report.xlsx");
 
       document.body.appendChild(link);
 
