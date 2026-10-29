@@ -12,21 +12,42 @@ import { MdFileDownload } from "react-icons/md";
 import IsLoadingHOC from "../common/IsLoadingHOC";
 import InvoiceModal from "../common/InvoiceModal";
 import { FaEye } from "react-icons/fa6";
+import Pagination from "../common/Pagination";
 
 const PaymentHistory = ({ details, setLoading }) => {
   const [paymentHistory, setPaymentHistory] = useState([]);
   const [sendModalOrder, setSendModalOrder] = useState(null);
   const [invoiceModal, setInvoiceModal] = useState(false);
   const [invoiceData, setInvoiceData] = useState(null);
+  const [page, setPage] = useState(1);
+  const [rowsPerPage] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  
+  const fetchMemberPayment = async (currentPage = 1) => {
+  try {
+    const params = {
+      page: currentPage,
+      limit: rowsPerPage,
+    };
 
-  const fetchMemberPayment = async () => {
-    try {
-      // Make the API call with query parameters
-      const res = await authAxios().get(`/member/payment/${details?.id}`);
-      const data = res.data?.data || [];
-      setPaymentHistory(data);
+    const res = await authAxios().get(
+      `/member/payment/${details?.id}`,
+      { params }
+    );
+
+    const responseData = res?.data?.data || [];
+
+    setPaymentHistory(
+      Array.isArray(responseData) ? responseData : []
+    );
+
+    // Update these paths according to your actual API response.
+    setPage(Number(res?.data?.currentPage) || currentPage);
+    setTotalPages(Number(res?.data?.totalPage) || 1);
+    setTotalCount(Number(res?.data?.totalCount) || 0);
     } catch (err) {
-      console.error(err);
+      console.error("Failed to fetch payment history:", err);
     }
   };
 
@@ -223,7 +244,17 @@ const PaymentHistory = ({ details, setLoading }) => {
             </tbody>
           </table>
         </div>
-
+      <Pagination
+          page={page}
+          totalPages={totalPages}
+          rowsPerPage={rowsPerPage}
+          totalCount={totalCount}
+          currentDataLength={paymentHistory.length}
+          onPageChange={(newPage) => {
+            setPage(newPage);
+            fetchMemberPayment(newPage);
+          }}
+        />              
         {sendModalOrder && (
           <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-2">
             <div className="bg-white p-6 rounded shadow-lg w-[300px]">

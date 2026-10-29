@@ -7,13 +7,18 @@ import { authAxios } from "../../config/config";
 import { toast } from "react-toastify";
 import { addYears, subYears } from "date-fns";
 import { FaCalendarDays } from "react-icons/fa6";
+import Pagination from "../common/Pagination";
 
 const OrderHistory = ({ details }) => {
   const [category, setCategory] = useState({ value: "All", label: "All" });
   const [dateFrom, setDateFrom] = useState(null);
   const [dateTo, setDateTo] = useState(null);
   const [ordersList, setOrdersList] = useState([]);
-
+  const [page, setPage] = useState(1);
+  const [rowsPerPage] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  
   const categoryOptions = [
     { value: "All", label: "All" },
     { value: "Membership", label: "Membership" },
@@ -27,14 +32,30 @@ const OrderHistory = ({ details }) => {
   ];
 
   // Fetch coins with filters applied
-  const fetchMemberOrders = async () => {
-    try {
-      // Make the API call with query parameters
-      const res = await authAxios().get(`/member/order/${details?.id}`);
-      const data = res.data?.data || [];
-      setOrdersList(data);
+  const fetchMemberOrders = async (currentPage = 1) => {
+   try {
+     const params = {
+       page: currentPage,
+       limit: rowsPerPage,
+     };
+ 
+     const res = await authAxios().get(
+       `/member/order/${details?.id}`,
+       { params }
+     );
+ 
+     const responseData = res?.data?.data || [];
+ 
+     setOrdersList(
+       Array.isArray(responseData) ? responseData : []
+     );
+ 
+     // Update these paths according to your actual API response.
+     setPage(Number(res?.data?.currentPage) || currentPage);
+     setTotalPages(Number(res?.data?.totalPage) || 1);
+     setTotalCount(Number(res?.data?.totalCount) || 0);
     } catch (err) {
-      console.error(err);
+      console.error("Failed to fetch payment history:", err);
     }
   };
 
@@ -150,6 +171,17 @@ const OrderHistory = ({ details }) => {
           </tbody>
         </table>
       </div>
+      <Pagination
+                page={page}
+                totalPages={totalPages}
+                rowsPerPage={rowsPerPage}
+                totalCount={totalCount}
+                currentDataLength={ordersList.length}
+                onPageChange={(newPage) => {
+                  setPage(newPage);
+                  fetchMemberOrders(newPage);
+                }}
+              />   
     </div>
   );
 };

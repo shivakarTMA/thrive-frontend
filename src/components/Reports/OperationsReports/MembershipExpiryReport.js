@@ -43,6 +43,8 @@ const MembershipExpiryReport = (props) => {
   const [selectedLeadClub, setSelectedLeadClub] = useState(null);
   const [companyList, setCompanyList] = useState([]);
   const [filterCompanyName, setFilterCompanyName] = useState(null);
+  const [renewed, setRenewed] = useState(null);
+  const [renewedType, setRenewedType] = useState(null);
 
   const { user } = useSelector((state) => state.auth);
   const userRole = user.role;
@@ -85,6 +87,15 @@ const MembershipExpiryReport = (props) => {
     label: item.name,
     value: item.name,
   }));
+  const RenewedOptions = [
+  { label: "Yes", value: "YES" },
+  { label: "No", value: "NO" },
+];
+  const RenewTypeOptions = [
+  { label: "Advance Renewal", value: "ADVANCE_RENEWAL" },
+  { label: "Renewal", value: "RENEWAL" },
+  { label: "Reinstatements", value: "REINSTATEMENTS" },
+];
 
   // Function to fetch club list
   const fetchClub = async (search = "") => {
@@ -152,6 +163,12 @@ const MembershipExpiryReport = (props) => {
       // Company Name filter
       if (filterCompanyName?.value) {
         params.company_name = filterCompanyName.value;
+      }
+      if (renewed?.value) {
+        params.renewed = renewed.value;
+      }
+      if (renewedType?.value) {
+        params.renewed_type = renewedType.value;
       }
 
       // Date filter
@@ -265,6 +282,8 @@ const MembershipExpiryReport = (props) => {
     customTo,
     clubFilter?.value,
     filterCompanyName,
+    renewed,
+    renewedType,
   ]);
 
   const handleExportMembershipExpiry = async () => {
@@ -290,6 +309,12 @@ const MembershipExpiryReport = (props) => {
 
       if (filterCompanyName?.value) {
         params.company_name = filterCompanyName.value;
+      }
+      if (renewed?.value) {
+        params.renewed = renewed.value;
+      }
+      if (renewedType?.value) {
+        params.renewed_type = renewedType.value;
       }
 
       console.log("📥 Download Params:", params);
@@ -341,8 +366,8 @@ const MembershipExpiryReport = (props) => {
       </div>
 
       {/* Filters */}
-      <div className="flex gap-3 mb-4 items-center justify-between">
-        <div className="flex gap-2 w-full">
+      <div className="flex lg:flex-row flex-col gap-3 mb-4 lg:items-center lg:justify-between">
+        <div className="flex gap-2 flex-wrap w-full">
           <div className="max-w-[150px] w-full">
             <Select
               placeholder="Date Filter"
@@ -402,7 +427,7 @@ const MembershipExpiryReport = (props) => {
             </>
           )}
 
-          <div className="w-fit min-w-[200px]">
+          <div className="w-fit min-w-[150px]">
             <Select
               placeholder="Filter by club"
               value={selectedClub}
@@ -423,13 +448,33 @@ const MembershipExpiryReport = (props) => {
                 styles={customStyles}
               />
             </div>
+          <div className="relative min-w-[80px] max-w-fit w-full">
+              <Select
+                value={renewed}
+                onChange={setRenewed}
+                options={RenewedOptions}
+                isClearable
+                placeholder="Select Renewed"
+                styles={customStyles}
+              />
+            </div>
+          <div className="relative min-w-[100px] max-w-fit w-full">
+              <Select
+                value={renewedType}
+                onChange={setRenewedType}
+                options={RenewTypeOptions}
+                isClearable
+                placeholder="Select Renewed Type"
+                styles={customStyles}
+              />
+            </div>
         </div>
         {!ALLOWED_ROLES.includes(userRole) && (
             <div className="w-full max-w-[170px]">
               <button
                 onClick={handleExportMembershipExpiry}
                 disabled={activeMember.length === 0 || (dateFilter?.value === "custom" && (!customFrom || !customTo))}
-                className={`ms-auto px-4 py-2 rounded flex items-center gap-2
+                className={`lg:ms-auto px-4 py-2 rounded flex items-center gap-2
                 ${
                   activeMember.length === 0 || (dateFilter?.value === "custom" && (!customFrom || !customTo))
                     ? "bg-gray-400 cursor-not-allowed text-white"
@@ -544,7 +589,6 @@ const MembershipExpiryReport = (props) => {
                             type="button"
                             onClick={() => {
                               setSelectedLeadMember(row.id);
-                              // setSelectedLeadMember(row?.member_id);
                               setSendPaymentModal(true);
                               setSelectedLeadClub(row?.club_id);
                             }}
