@@ -95,6 +95,7 @@ const MembershipExpiryReport = (props) => {
   { label: "Advance Renewal", value: "ADVANCE_RENEWAL" },
   { label: "Renewal", value: "RENEWAL" },
   { label: "Reinstatements", value: "REINSTATEMENTS" },
+  { label: "N/A", value: "N/A" },
 ];
 
   // Function to fetch club list
@@ -464,7 +465,7 @@ const MembershipExpiryReport = (props) => {
                 onChange={setRenewedType}
                 options={RenewTypeOptions}
                 isClearable
-                placeholder="Select Renewed Type"
+                placeholder="Select Renewal Type"
                 styles={customStyles}
               />
             </div>
@@ -507,7 +508,7 @@ const MembershipExpiryReport = (props) => {
                 <th className="px-2 py-4 min-w-[120px]">Expiry Date</th>
                 <th className="px-2 py-4 min-w-[150px]">Last Check-in Date</th>
                 <th className="px-2 py-4 min-w-[150px]">RENEWED</th>
-                <th className="px-2 py-4 min-w-[150px]">RENEWED TYPE </th>
+                <th className="px-2 py-4 min-w-[150px]">renewal type </th>
                 {(userRole === "FOH" ||
                   userRole === "CLUB_MANAGER" ||
                   userRole === "ASS_CLUB_MANAGER" ||
@@ -567,7 +568,8 @@ const MembershipExpiryReport = (props) => {
                         ? formatAutoDate(row.last_check_in_date)
                         : "--"}
                     </td>
-                    <td className="px-2 py-4 flex items-center  gap-1">
+                    <td className="px-2 py-4 ">
+                      <div className="flex items-center  gap-1">
                       <FaCircle
                         className={`text-xs ${
                           row.renewed !== "NO"
@@ -576,6 +578,7 @@ const MembershipExpiryReport = (props) => {
                         }`}
                       />
                       {formatText(row.renewed) }
+                      </div>
                     </td>
                      <td className="px-2 py-4">
                       {row.renewed_type ? formatText(row.renewed_type) : "--"}
@@ -592,7 +595,15 @@ const MembershipExpiryReport = (props) => {
                               setSendPaymentModal(true);
                               setSelectedLeadClub(row?.club_id);
                             }}
-                            className="px-3 py-1 bg-black text-white rounded flex items-center gap-2 !text-[13px]"
+                disabled={row.renewed === "YES"}
+
+                            className={`px-3 py-1 bg-black text-white rounded flex items-center gap-2 !text-[13px]
+                              ${
+                 row.renewed === "YES"  
+                    ? "bg-gray-400 cursor-not-allowed text-white"
+                    : "bg-black text-white hover:bg-gray-800"
+                }`}
+                              
                           >
                             Send Link
                           </button>
