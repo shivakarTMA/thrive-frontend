@@ -333,6 +333,36 @@ const MembershipFrozenReport = () => {
             Freeze Membership Report
           </h1>
         </div>
+          <div className="w-full max-w-[170px]">
+          <button
+            type="button"
+            onClick={handleDownloadReport}
+            disabled={
+              loading ||
+              downloadLoading ||
+              data.length === 0 ||
+              (dateFilter?.value === "custom" &&
+                (!customFrom || !customTo))
+            }
+            className={`ms-auto px-4 py-2 rounded flex items-center justify-center gap-2 whitespace-nowrap ${
+              loading ||
+              downloadLoading ||
+              data.length === 0 ||
+              (dateFilter?.value === "custom" &&
+                (!customFrom || !customTo))
+                ? "bg-gray-400 cursor-not-allowed text-white"
+                : "bg-black text-white hover:bg-gray-800"
+            }`}
+          >
+            <LuDownload />
+
+            <span>
+              {downloadLoading
+                ? "Downloading..."
+                : "Download Report"}
+            </span>
+          </button>
+        </div>
       </div>
 
       {/* Filters */}
@@ -433,36 +463,7 @@ const MembershipFrozenReport = () => {
         </div>
 
         {/* Download Button */}
-        <div className="w-full max-w-[170px]">
-          <button
-            type="button"
-            onClick={handleDownloadReport}
-            disabled={
-              loading ||
-              downloadLoading ||
-              data.length === 0 ||
-              (dateFilter?.value === "custom" &&
-                (!customFrom || !customTo))
-            }
-            className={`ms-auto px-4 py-2 rounded flex items-center justify-center gap-2 whitespace-nowrap ${
-              loading ||
-              downloadLoading ||
-              data.length === 0 ||
-              (dateFilter?.value === "custom" &&
-                (!customFrom || !customTo))
-                ? "bg-gray-400 cursor-not-allowed text-white"
-                : "bg-black text-white hover:bg-gray-800"
-            }`}
-          >
-            <LuDownload />
-
-            <span>
-              {downloadLoading
-                ? "Downloading..."
-                : "Download Report"}
-            </span>
-          </button>
-        </div>
+      
       </div>
 
       {/* Table */}

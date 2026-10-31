@@ -167,6 +167,22 @@ const PtRevenueListReport = (props) => {
             {staffDetails} Revenue Report
           </h1>
         </div>
+        {!ALLOWED_ROLES.includes(userRole) && (
+          <div className="w-full max-w-[300px]">
+            <button
+              onClick={handleDownloadPtRevenueList}
+              disabled={ptRevenueListStaff.length === 0}
+              className={`ms-auto px-4 py-2 rounded flex items-center gap-2
+                ${
+                  ptRevenueListStaff.length === 0
+                    ? "bg-gray-400 cursor-not-allowed text-white"
+                    : "bg-black text-white hover:bg-gray-800"
+                }`}
+            >
+              <LuDownload /> <span>Download Report</span>
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Filters */}
@@ -211,22 +227,7 @@ const PtRevenueListReport = (props) => {
             />
           </div>
         </div>
-        {!ALLOWED_ROLES.includes(userRole) && (
-          <div className="w-full">
-            <button
-              onClick={handleDownloadPtRevenueList}
-              disabled={ptRevenueListStaff.length === 0}
-              className={`ms-auto px-4 py-2 rounded flex items-center gap-2
-                ${
-                  ptRevenueListStaff.length === 0
-                    ? "bg-gray-400 cursor-not-allowed text-white"
-                    : "bg-black text-white hover:bg-gray-800"
-                }`}
-            >
-              <LuDownload /> <span>Download Report</span>
-            </button>
-          </div>
-        )}
+        
       </div>
 
       {/* Table */}

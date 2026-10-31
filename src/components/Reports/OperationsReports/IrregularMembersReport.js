@@ -167,6 +167,22 @@ const IrregularMembersReport = (props) => {
           </p>
           <h1 className="text-3xl font-semibold">Irregular Members Report</h1>
         </div>
+        {!ALLOWED_ROLES.includes(userRole) && (
+            <div className="w-full max-w-[170px]">
+              <button
+                onClick={handleExportIrregularMember}
+                disabled={irregularMember.length === 0}
+                className={`ms-auto px-4 py-2 rounded flex items-center gap-2
+                ${
+                  irregularMember.length === 0
+                    ? "bg-gray-400 cursor-not-allowed text-white"
+                    : "bg-black text-white hover:bg-gray-800"
+                }`}
+              >
+                <LuDownload /> <span>Download Report</span>
+              </button>
+            </div>
+          )}
       </div>
 
       {/* Filters */}
@@ -194,22 +210,7 @@ const IrregularMembersReport = (props) => {
             />
           </div>
         </div>
-        {!ALLOWED_ROLES.includes(userRole) && (
-            <div className="w-full max-w-[170px]">
-              <button
-                onClick={handleExportIrregularMember}
-                disabled={irregularMember.length === 0}
-                className={`ms-auto px-4 py-2 rounded flex items-center gap-2
-                ${
-                  irregularMember.length === 0
-                    ? "bg-gray-400 cursor-not-allowed text-white"
-                    : "bg-black text-white hover:bg-gray-800"
-                }`}
-              >
-                <LuDownload /> <span>Download Report</span>
-              </button>
-            </div>
-          )}
+        
       </div>
 
       {/* Table */}
