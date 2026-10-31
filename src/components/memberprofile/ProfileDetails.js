@@ -12,6 +12,7 @@ import {
   customStyles,
   sanitizePositiveInteger,
   sanitizeTextWithNumbers,
+  selectIcon,
 } from "../../Helper/helper";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchOptionList } from "../../Redux/Reducers/optionListSlice";
@@ -30,6 +31,7 @@ import { toast } from "react-toastify";
 import { IoIosAddCircle, IoIosCloseCircle } from "react-icons/io";
 import MultiSelect from "react-multi-select-component";
 import { useNavigate } from "react-router-dom";
+import { FaListCheck } from "react-icons/fa6";
 
 // Lead source types
 const genderOptions = [
@@ -73,6 +75,12 @@ const validationSchema = Yup.object({
   // company_name: Yup.string().required("Company is required"),
   pincode: Yup.string().required("Pincode is required"),
   // company_name: Yup.string().required("Company Name is required"),
+  lead_source: Yup.string().required("Lead Source is required"),
+  lead_type: Yup.string().required("Lead Type is required"),
+  platform: Yup.string().when("lead_source", {
+    is: (val) => ["Social Media", "Events/Campaigns"].includes(val),
+    then: () => Yup.string().required("This is required"),
+  }),
 });
 
 const ProfileDetails = ({ member }) => {
@@ -108,6 +116,7 @@ const ProfileDetails = ({ member }) => {
     lead_owner: "",
     lead_type: null,
     lead_source: "",
+    platform: "",
     company_name: "",
     designation: "",
     official_email: "",
@@ -176,6 +185,7 @@ const ProfileDetails = ({ member }) => {
     dispatch(fetchOptionList("LEAD_TYPE"));
     dispatch(fetchOptionList("GOAL"));
     dispatch(fetchOptionList("RELATIONSHIP"));
+    dispatch(fetchOptionList("SOCIAL_MEDIA"));
   }, [dispatch]);
 
   // Extract Redux lists
@@ -184,6 +194,7 @@ const ProfileDetails = ({ member }) => {
   const servicesName = lists["GOAL"] || [];
   const genralTrainer = lists["GENRAL_TRAINER"] || [];
   const relationList = lists["RELATIONSHIP"] || [];
+  const socialList = lists["SOCIAL_MEDIA"] || [];
 
   // Utility: Convert base64 to File
   const base64ToFile = (base64String, fileName) => {
@@ -224,6 +235,7 @@ const ProfileDetails = ({ member }) => {
           lead_owner: data?.lead_owner || "",
           lead_type: data?.lead_type || "",
           lead_source: data?.lead_source || "",
+          platform: data?.platform || "",
           company_name: data?.company_name || "",
           designation: data?.designation || "",
           official_email: data?.official_email || "",
@@ -453,7 +465,7 @@ const ProfileDetails = ({ member }) => {
         await fetchEmergencyContacts();
         setNewEmergencies([]); // ✅ Clear new emergency forms after success
         setEmergencyErrors({}); // ✅ Clear validation errors
-        navigate("/all-members");
+        // navigate("/all-members");
       } catch (error) {
         console.error("Error updating profile:", error);
         toast.error(error.response?.data?.errors || error.response?.data?.message)
@@ -1137,7 +1149,7 @@ const ProfileDetails = ({ member }) => {
                     disabled
                   />
                 </div>
-                <div>
+                {/* <div>
                   <label className="block text-sm font-medium text-black mb-2">
                     Lead Type
                   </label>
@@ -1149,8 +1161,36 @@ const ProfileDetails = ({ member }) => {
                     className="custom--input w-full cursor-not-allowed pointer-events-none !bg-gray-100 !text-gray-500"
                     disabled={true}
                   />
-                </div>
+                </div> */}
                 <div>
+                  <label className="mb-2 block">
+                    Lead Type<span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
+                      <FaListCheck />
+                    </span>
+                    <Select
+                      name="lead_type"
+                      value={leadTypes.find(
+                        (opt) => opt.value === formik.values.lead_type,
+                      )}
+                      onChange={(option) =>
+                        formik.setFieldValue("lead_type", option.value)
+                      }
+                      options={leadTypes}
+                      styles={selectIcon}
+                      isDisabled={true}
+                    />
+                  </div>
+                  {formik.errors?.lead_type &&
+                    formik.touched?.lead_type && (
+                      <div className="text-red-500 text-sm">
+                        {formik.errors.lead_type}
+                      </div>
+                    )}
+                </div>
+                {/* <div>
                   <label className="block text-sm font-medium text-black mb-2">
                     Lead Source
                   </label>
@@ -1162,7 +1202,101 @@ const ProfileDetails = ({ member }) => {
                     className="custom--input w-full cursor-not-allowed pointer-events-none !bg-gray-100 !text-gray-500"
                     disabled={true}
                   />
+                </div> */}
+                <div>
+                  <label className="mb-2 block">
+                    Lead Source<span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
+                      <FaListCheck />
+                    </span>
+                    <Select
+                      name="lead_source"
+                      value={
+                        leadsSources.find(
+                          (opt) =>
+                            opt.value.toLowerCase() ===
+                            String(
+                              formik.values.lead_source || "",
+                            ).toLowerCase(),
+                        ) || null
+                      }
+                      onChange={(option) =>
+                        formik.setFieldValue("lead_source", option.value)
+                      }
+                      options={leadsSources}
+                      styles={selectIcon}
+                      isDisabled={true}
+                    />
+                  </div>
                 </div>
+
+                {formik.values.lead_source === "Social Media" && (
+                      <div>
+                        <label className="mb-2 block">
+                          Lead Sub-Source
+                          <span className="text-red-500">*</span>
+                        </label>
+                        <div className="relative">
+                          <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
+                            <FaListCheck />
+                          </span>
+                          <Select
+                            name="platform"
+                            value={socialList.find(
+                              (opt) => opt.value === formik.values.platform,
+                            )}
+                            onChange={(option) =>
+                              formik.setFieldValue("platform", option.value)
+                            }
+                            options={socialList}
+                            styles={selectIcon}
+                            isDisabled={true}
+                          />
+                        </div>
+                        {formik.errors?.platform &&
+                          formik.touched?.platform && (
+                            <div className="text-red-500 text-sm">
+                              {formik.errors.platform}
+                            </div>
+                          )}
+                      </div>
+                    )}
+
+                    {formik.values.lead_source === "Events/Campaigns" && (
+                      <div>
+                        <label className="mb-2 block">
+                          Lead Sub-Source
+                          <span className="text-red-500">*</span>
+                        </label>
+                        <div className="relative">
+                          <span className="absolute top-[50%] translate-y-[-50%] left-[15px] z-[1]">
+                            <FaListCheck />
+                          </span>
+                          <input
+                            type="text"
+                            name="platform"
+                            value={formik.values.platform}
+                            onKeyDown={blockNonLetters}
+                            onChange={(e) => {
+                              const cleaned = allowOnlyLetters(e.target.value);
+                              formik.setFieldValue("platform", cleaned);
+                            }}
+                            readOnly={true}
+                            isDisabled={true}
+                            className={`custom--input w-full input--icon cursor-not-allowed pointer-events-none !bg-gray-100 !text-gray-500`}
+                          />
+                        </div>
+                        {formik.errors?.platform &&
+                          formik.touched?.platform && (
+                            <div className="text-red-500 text-sm">
+                              {formik.errors.platform}
+                            </div>
+                          )}
+                      </div>
+                    )}
+
               </div>
             </div>
 

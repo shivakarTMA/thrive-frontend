@@ -609,84 +609,8 @@ const customCreateClassOption = ({
             <p className="text-sm">{`Home > Group Classes`}</p>
             <h1 className="text-3xl font-semibold">Group Classes</h1>
           </div>
-          
-        </div>
-
-        <div className="flex gap-3 mb-4 items-center justify-between">
-          <div className="flex gap-2 w-full">
-            <div className="max-w-[180px] w-full">
-              <Select
-                placeholder="Date Filter"
-                options={dateFilterOptions}
-                value={dateFilter}
-                onChange={(selected) => {
-                  setDateFilter(selected);
-                  if (selected?.value !== "custom") {
-                    setCustomFrom(null);
-                    setCustomTo(null);
-                  }
-                }}
-                styles={customStyles}
-                className="w-full"
-              />
-            </div>
-
-            {dateFilter?.value === "custom" && (
-              <>
-                <div className="custom--date dob-format flex-1 max-w-[180px] w-full">
-                  <span className="absolute z-[1] mt-[9px] ml-[15px]">
-                    <FaCalendarDays />
-                  </span>
-                  <DatePicker
-                    selected={customFrom}
-                    onChange={(date) => {
-                      setCustomFrom(date);
-                      setCustomTo(null);
-                    }}
-                    placeholderText="From Date"
-                    className="custom--input w-full input--icon"
-                    // minDate={subYears(new Date(), 20)}
-                    // maxDate={addYears(new Date(), 0)}
-                    dateFormat="dd-MM-yyyy"
-                    showMonthDropdown
-                    showYearDropdown
-                    dropdownMode="select"
-                  />
-                </div>
-                <div className="custom--date dob-format flex-1 max-w-[180px] w-full">
-                  <span className="absolute z-[1] mt-[9px] ml-[15px]">
-                    <FaCalendarDays />
-                  </span>
-                  <DatePicker
-                    selected={customTo}
-                    onChange={(date) => setCustomTo(date)}
-                    placeholderText="To Date"
-                    className="custom--input w-full input--icon"
-                    minDate={customFrom || subYears(new Date(), 20)}
-                    // maxDate={addYears(new Date(), 0)}
-                    showMonthDropdown
-                    showYearDropdown
-                    dropdownMode="select"
-                    dateFormat="dd-MM-yyyy"
-                    disabled={!customFrom}
-                  />
-                </div>
-              </>
-            )}
-
-            <div className="w-fit min-w-[180px]">
-              <Select
-                placeholder="Filter by club"
-                value={selectedClub}
-                options={clubOptions}
-                onChange={(option) => setClubFilter(option)}
-                isClearable={userRole === "ADMIN" ? true : false}
-                styles={customStyles}
-              />
-            </div>
-          </div>
-          
-          {(userRole === "CLUB_MANAGER" ||
+          <div className="flex gap-2">
+           {(userRole === "CLUB_MANAGER" ||
             userRole === "ASS_CLUB_MANAGER" ||
             userRole === "FITNESS_MANAGER" ||
             userRole === "ASS_FITNESS_MANAGER" ||
@@ -780,7 +704,7 @@ const customCreateClassOption = ({
 </div>
           )}
           {!ALLOWED_ROLES.includes(userRole) && (
-            <div className="max-w-[150px] w-full">
+            <div className="min-w-[150px] w-full">
               <button
                 onClick={handleDownloadGroupClass}
                 disabled={productSoldData.length === 0 || (dateFilter?.value === "custom" && (!customFrom || !customTo))}
@@ -795,6 +719,83 @@ const customCreateClassOption = ({
               </button>
             </div>
           )}
+          </div>
+        </div>
+
+        <div className="flex gap-3 mb-4 items-center justify-between">
+          <div className="flex gap-2 w-full">
+            <div className="max-w-[180px] w-full">
+              <Select
+                placeholder="Date Filter"
+                options={dateFilterOptions}
+                value={dateFilter}
+                onChange={(selected) => {
+                  setDateFilter(selected);
+                  if (selected?.value !== "custom") {
+                    setCustomFrom(null);
+                    setCustomTo(null);
+                  }
+                }}
+                styles={customStyles}
+                className="w-full"
+              />
+            </div>
+
+            {dateFilter?.value === "custom" && (
+              <>
+                <div className="custom--date dob-format flex-1 max-w-[180px] w-full">
+                  <span className="absolute z-[1] mt-[9px] ml-[15px]">
+                    <FaCalendarDays />
+                  </span>
+                  <DatePicker
+                    selected={customFrom}
+                    onChange={(date) => {
+                      setCustomFrom(date);
+                      setCustomTo(null);
+                    }}
+                    placeholderText="From Date"
+                    className="custom--input w-full input--icon"
+                    // minDate={subYears(new Date(), 20)}
+                    // maxDate={addYears(new Date(), 0)}
+                    dateFormat="dd-MM-yyyy"
+                    showMonthDropdown
+                    showYearDropdown
+                    dropdownMode="select"
+                  />
+                </div>
+                <div className="custom--date dob-format flex-1 max-w-[180px] w-full">
+                  <span className="absolute z-[1] mt-[9px] ml-[15px]">
+                    <FaCalendarDays />
+                  </span>
+                  <DatePicker
+                    selected={customTo}
+                    onChange={(date) => setCustomTo(date)}
+                    placeholderText="To Date"
+                    className="custom--input w-full input--icon"
+                    minDate={customFrom || subYears(new Date(), 20)}
+                    // maxDate={addYears(new Date(), 0)}
+                    showMonthDropdown
+                    showYearDropdown
+                    dropdownMode="select"
+                    dateFormat="dd-MM-yyyy"
+                    disabled={!customFrom}
+                  />
+                </div>
+              </>
+            )}
+
+            <div className="w-fit min-w-[180px]">
+              <Select
+                placeholder="Filter by club"
+                value={selectedClub}
+                options={clubOptions}
+                onChange={(option) => setClubFilter(option)}
+                isClearable={userRole === "ADMIN" ? true : false}
+                styles={customStyles}
+              />
+            </div>
+          </div>
+
         </div>
 
         <div className="w-full p-3 border bg-white shodow--box rounded-[10px]">

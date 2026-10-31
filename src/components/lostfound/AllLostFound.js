@@ -327,6 +327,22 @@ const AllLostFound = (props) => {
           <p className="text-sm">Home &gt; Lost &amp; Found</p>
           <h1 className="text-3xl font-semibold">Lost &amp; Found</h1>
         </div>
+          {!ALLOWED_ROLES.includes(userRole) && (
+          <div className="w-full max-w-[170px]">
+            <button
+              onClick={handleExportData}
+              disabled={data.length === 0 || (dateFilter?.value === "custom" && (!customFrom || !customTo))}
+              className={`ms-auto px-4 py-2 rounded flex items-center gap-2
+              ${
+                data.length === 0 || (dateFilter?.value === "custom" && (!customFrom || !customTo))
+                  ? "bg-gray-400 cursor-not-allowed text-white"
+                  : "bg-black text-white hover:bg-gray-800"
+              }`}
+            >
+              <LuDownload /> <span>Download Report</span>
+            </button>
+          </div>
+        )}
       </div>
 
       <div className="flex gap-3 mb-4 items-center justify-between">
@@ -406,22 +422,6 @@ const AllLostFound = (props) => {
             />
           </div>
         </div>
-        {!ALLOWED_ROLES.includes(userRole) && (
-          <div className="w-full max-w-[170px]">
-            <button
-              onClick={handleExportData}
-              disabled={data.length === 0 || (dateFilter?.value === "custom" && (!customFrom || !customTo))}
-              className={`ms-auto px-4 py-2 rounded flex items-center gap-2
-              ${
-                data.length === 0 || (dateFilter?.value === "custom" && (!customFrom || !customTo))
-                  ? "bg-gray-400 cursor-not-allowed text-white"
-                  : "bg-black text-white hover:bg-gray-800"
-              }`}
-            >
-              <LuDownload /> <span>Download Report</span>
-            </button>
-          </div>
-        )}
       </div>
 
       <div className="w-full p-3 border bg-white shodow--box rounded-[10px]">

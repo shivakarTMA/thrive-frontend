@@ -574,6 +574,34 @@ const ProductsSold = (props) => {
             <p className="text-sm">{`Home > Reports > All Orders`}</p>
             <h1 className="text-3xl font-semibold">All Orders</h1>
           </div>
+          {!ALLOWED_ROLES.includes(userRole) && (
+            <div className="flex gap-2">
+            {(userRole !== "RECOVERY" && userRole !== "F_AND_B") && (
+              <div className="min-w-[150px] w-full">
+                <button
+                  onClick={() => setExportShowModal(true)}
+                  className={`ms-auto w-full px-4 py-2 rounded flex items-center gap-2 bg-black text-white hover:bg-gray-800`}
+                  >
+                  <LuDownload /> <span>Prologic Export</span>
+                </button>
+              </div>
+            )}
+            <div className="min-w-[140px] w-full">
+              <button
+                onClick={handleExportProductsSold}
+                disabled={productSoldData.length === 0 || (dateFilter?.value === "custom" && (!customFrom || !customTo))}
+                className={`w-full px-4 py-2 rounded flex items-center gap-2
+                      ${
+                        productSoldData.length === 0 || (dateFilter?.value === "custom" && (!customFrom || !customTo))
+                          ? "bg-gray-400 cursor-not-allowed text-white"
+                          : "bg-black text-white hover:bg-gray-800"
+                      }`}
+              >
+                <LuDownload /> <span>Export Orders</span>
+              </button>
+            </div>
+            </div>
+          )}
         </div>
 
         <div className="flex gap-3 mb-4 items-center justify-between">
@@ -649,34 +677,6 @@ const ProductsSold = (props) => {
               />
             </div>
           </div>
-          {!ALLOWED_ROLES.includes(userRole) && (
-            <>
-            {(userRole !== "RECOVERY" && userRole !== "F_AND_B") && (
-              <div className="max-w-[150px] w-full">
-                <button
-                  onClick={() => setExportShowModal(true)}
-                  className={`ms-auto w-full px-4 py-2 rounded flex items-center gap-2 bg-black text-white hover:bg-gray-800`}
-                  >
-                  <LuDownload /> <span>Prologic Export</span>
-                </button>
-              </div>
-            )}
-            <div className="max-w-[140px] w-full">
-              <button
-                onClick={handleExportProductsSold}
-                disabled={productSoldData.length === 0 || (dateFilter?.value === "custom" && (!customFrom || !customTo))}
-                className={`w-full px-4 py-2 rounded flex items-center gap-2
-                      ${
-                        productSoldData.length === 0 || (dateFilter?.value === "custom" && (!customFrom || !customTo))
-                          ? "bg-gray-400 cursor-not-allowed text-white"
-                          : "bg-black text-white hover:bg-gray-800"
-                      }`}
-              >
-                <LuDownload /> <span>Export Orders</span>
-              </button>
-            </div>
-            </>
-          )}
         </div>
 
         {/* Dynamic Statistics */}
