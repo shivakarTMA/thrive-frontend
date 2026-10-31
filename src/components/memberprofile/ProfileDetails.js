@@ -1180,7 +1180,7 @@ const ProfileDetails = ({ member }) => {
                       }
                       options={leadTypes}
                       styles={selectIcon}
-                      isDisabled={userRole !== "ADMIN"}
+                      isDisabled={true}
                     />
                   </div>
                   {formik.errors?.lead_type &&
@@ -1227,7 +1227,7 @@ const ProfileDetails = ({ member }) => {
                       }
                       options={leadsSources}
                       styles={selectIcon}
-                      isDisabled={userRole !== "ADMIN"}
+                      isDisabled={true}
                     />
                   </div>
                 </div>
@@ -1252,7 +1252,7 @@ const ProfileDetails = ({ member }) => {
                             }
                             options={socialList}
                             styles={selectIcon}
-                            isDisabled={userRole !== "ADMIN"}
+                            isDisabled={true}
                           />
                         </div>
                         {formik.errors?.platform &&
@@ -1283,13 +1283,9 @@ const ProfileDetails = ({ member }) => {
                               const cleaned = allowOnlyLetters(e.target.value);
                               formik.setFieldValue("platform", cleaned);
                             }}
-                            readOnly={userRole !== "ADMIN"}
-                            isDisabled={userRole !== "ADMIN"}
-                            className={`custom--input w-full input--icon ${
-                              userRole !== "ADMIN"
-                                ? "cursor-not-allowed pointer-events-none !bg-gray-100 !text-gray-500"
-                                : ""
-                            }`}
+                            readOnly={true}
+                            isDisabled={true}
+                            className={`custom--input w-full input--icon cursor-not-allowed pointer-events-none !bg-gray-100 !text-gray-500`}
                           />
                         </div>
                         {formik.errors?.platform &&

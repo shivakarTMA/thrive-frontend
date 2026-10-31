@@ -1207,7 +1207,7 @@ useEffect(() => {
                           }
                           options={leadTypes}
                           styles={selectIcon}
-                          isDisabled={!!selectedLead && userRole !== "ADMIN"}
+                          isDisabled={!!selectedLead}
                         />
                       </div>
                       {formik.errors?.lead_type &&
@@ -1222,7 +1222,7 @@ useEffect(() => {
                       <label className="mb-2 block">
                         Lead Source<span className="text-red-500">*</span>
                       </label>
-                      {selectedLead && userRole !== "ADMIN" ? (
+                      {selectedLead && selectedLead ? (
                         <div className="relative">
                           <span className="absolute top-[50%] translate-y-[-50%] left-[15px]">
                             <FaListCheck />
@@ -1289,7 +1289,7 @@ useEffect(() => {
                             }
                             options={socialList}
                             styles={selectIcon}
-                            isDisabled={!!selectedLead && userRole !== "ADMIN"}
+                            isDisabled={!!selectedLead}
                           />
                         </div>
                         {formik.errors?.platform &&
@@ -1320,10 +1320,10 @@ useEffect(() => {
                               const cleaned = allowOnlyLetters(e.target.value);
                               formik.setFieldValue("platform", cleaned);
                             }}
-                            readOnly={!!selectedLead && userRole !== "ADMIN"}
-                            isDisabled={!!selectedLead && userRole !== "ADMIN"}
+                            readOnly={!!selectedLead}
+                            isDisabled={!!selectedLead}
                             className={`custom--input w-full input--icon ${
-                              selectedLead && userRole !== "ADMIN"
+                              selectedLead
                                 ? "cursor-not-allowed pointer-events-none !bg-gray-100 !text-gray-500"
                                 : ""
                             }`}
