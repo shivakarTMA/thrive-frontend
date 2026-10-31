@@ -131,19 +131,28 @@ const MembershipExpiryReport = (props) => {
   const updateURLParams = () => {
     const params = new URLSearchParams();
 
-    // Date filter
-    if (dateFilter?.value && dateFilter.value !== "custom") {
-      params.set("dateFilter", dateFilter.value);
-    }
-
     if (dateFilter?.value === "custom" && customFrom && customTo) {
       params.set("startDate", format(customFrom, "yyyy-MM-dd"));
       params.set("endDate", format(customTo, "yyyy-MM-dd"));
+    } else if (dateFilter?.value) {
+      params.set("dateFilter", dateFilter.value);
     }
 
     // Club filter
     if (clubFilter?.value) {
       params.set("club_id", clubFilter.value);
+      }
+  
+    if (filterCompanyName?.value) {
+      params.set("company_name", filterCompanyName.value);
+    }
+  
+    if (renewed?.value) {
+      params.set("renewed", renewed.value);
+    }
+  
+    if (renewedType?.value) {
+      params.set("renewed_type", renewedType.value);
     }
 
     navigate(`?${params.toString()}`, { replace: true });
@@ -210,57 +219,45 @@ const MembershipExpiryReport = (props) => {
     const params = new URLSearchParams(location.search);
 
     // ---- Date filter ----
-    const dateFilterValue = params.get("dateFilter");
-    if (dateFilterValue) {
-      const matchedDate = dateFilterOptions.find(
-        (opt) => opt.value === dateFilterValue,
-      );
-      if (matchedDate) {
-        setDateFilter(matchedDate);
-      }
-    }
-
-    // ---- Custom date ----
     const startDate = params.get("startDate");
     const endDate = params.get("endDate");
     if (startDate && endDate) {
       setDateFilter(dateFilterOptions.find((d) => d.value === "custom"));
-      setCustomFrom(new Date(startDate));
-      setCustomTo(new Date(endDate));
+      setCustomFrom(new Date(`${startDate}T00:00:00`));
+      setCustomTo(new Date(`${endDate}T00:00:00`));
     }
 
     // ---- Club filter ----
     const clubId = params.get("club_id");
 
-    // if (clubId) {
-    //   const club = clubList.find((c) => c.id === Number(clubId));
-    //   if (club) {
-    //     setClubFilter({ label: club.name, value: club.id });
-    //   }
-    // } else {
-    //   // ✅ default only when URL does NOT have club_id
-    //   setClubFilter({
-    //     label: clubList[0].name,
-    //     value: clubList[0].id,
-    //   });
-    // }
+  if (clubId) {
+    const club = clubList.find(
+      (c) => c.id === Number(clubId)
+    );
 
-    if (!clubFilter) {
-      if (clubId) {
-        const club = clubList.find((c) => c.id === Number(clubId));
-        if (club) {
-          setClubFilter({ label: club.name, value: club.id });
-        }
-      } else {
-        setClubFilter({
-          label: clubList[0].name,
-          value: clubList[0].id,
-        });
-      }
+    if (club) {
+      setClubFilter({
+        label: club.name,
+        value: club.id,
+      });
     }
+  }
 
-    setFiltersInitialized(true);
-  }, [clubList, location.search]);
+  // Renewed Type
+  const renewedTypeValue = params.get("renewed_type");
+
+  if (renewedTypeValue) {
+    const selectedType = RenewTypeOptions.find(
+      (opt) => opt.value === renewedTypeValue
+    );
+
+    if (selectedType) {
+      setRenewedType(selectedType);
+    }
+  }
+
+  setFiltersInitialized(true);
+}, [clubList, location.search]);
 
   // ---------------------------
   // FETCH WHEN FILTERS CHANGE

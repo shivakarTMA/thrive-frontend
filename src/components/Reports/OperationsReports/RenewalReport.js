@@ -75,11 +75,17 @@ const RenewalReport = () => {
 
       return `${yyyy}-${mm}-${dd}`;
     };
+    const renewedTypeMap = {
+      renewal: "RENEWAL",
+      reinstatement: "REINSTATEMENTS",
+      "advance-renewal": "ADVANCE_RENEWAL",
+    };
 
     const params = new URLSearchParams({
       startDate: formatDate(startDate),
       endDate: formatDate(endDate),
       club_id: String(clubId),
+      renewed_type: renewedTypeMap[listType],
     });
 
     // Optional: preserve which View button was clicked.
