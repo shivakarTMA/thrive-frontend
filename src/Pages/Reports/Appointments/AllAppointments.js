@@ -752,7 +752,7 @@ const getPackageDate = (dateString) => {
                             : "bg-black text-white hover:bg-gray-800"
                         }`}
               >
-                <LuDownload /> <span>Export Bookings</span>
+                <LuDownload /> <span>Download Bookings</span>
               </button>
             </div>
           )}

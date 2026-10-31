@@ -745,7 +745,7 @@ const trainerChangeOptions =
                           : "bg-black text-white hover:bg-gray-800"
                       }`}
               >
-                <LuDownload /> <span>Export Appointments</span>
+                <LuDownload /> <span>Download Appointments</span>
               </button>
             </div>
           )}
