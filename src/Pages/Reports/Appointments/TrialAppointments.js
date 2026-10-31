@@ -728,6 +728,27 @@ const trainerChangeOptions =
             <p className="text-sm">{`Home > Trial Appointments`}</p>
             <h1 className="text-3xl font-semibold">Trial Appointments</h1>
           </div>
+          {!ALLOWED_ROLES.includes(userRole) && (
+            <div className="max-w-[190px] w-full">
+              <button
+                onClick={handleDownloadTrialAppointments}
+                disabled={
+                  appointmentList.length === 0 ||
+                  (dateFilter?.value === "custom" && (!customFrom || !customTo))
+                }
+                className={`w-full px-4 py-2 rounded flex items-center gap-2
+                      ${
+                        appointmentList.length === 0 ||
+                        (dateFilter?.value === "custom" &&
+                          (!customFrom || !customTo))
+                          ? "bg-gray-400 cursor-not-allowed text-white"
+                          : "bg-black text-white hover:bg-gray-800"
+                      }`}
+              >
+                <LuDownload /> <span>Export Appointments</span>
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Filters */}
@@ -805,27 +826,6 @@ const trainerChangeOptions =
               />
             </div>
           </div>
-          {!ALLOWED_ROLES.includes(userRole) && (
-            <div className="max-w-[190px] w-full">
-              <button
-                onClick={handleDownloadTrialAppointments}
-                disabled={
-                  appointmentList.length === 0 ||
-                  (dateFilter?.value === "custom" && (!customFrom || !customTo))
-                }
-                className={`w-full px-4 py-2 rounded flex items-center gap-2
-                      ${
-                        appointmentList.length === 0 ||
-                        (dateFilter?.value === "custom" &&
-                          (!customFrom || !customTo))
-                          ? "bg-gray-400 cursor-not-allowed text-white"
-                          : "bg-black text-white hover:bg-gray-800"
-                      }`}
-              >
-                <LuDownload /> <span>Export Appointments</span>
-              </button>
-            </div>
-          )}
         </div>
 
         {/* Dynamic Statistics */}

@@ -336,6 +336,22 @@ const NourishOrders = (props) => {
           <p className="text-sm">{`Home > Nourish Orders`}</p>
           <h1 className="text-3xl font-semibold">Nourish Orders</h1>
         </div>
+        {!ALLOWED_ROLES.includes(userRole) && (
+          <div className="max-w-[140px] w-full">
+            <button
+              onClick={handleExportOrders}
+              disabled={nourishOrders.length === 0 || (dateFilter?.value === "custom" && (!customFrom || !customTo))}
+              className={`w-full px-4 py-2 rounded flex items-center gap-2
+                    ${
+                      nourishOrders.length === 0 || (dateFilter?.value === "custom" && (!customFrom || !customTo))
+                        ? "bg-gray-400 cursor-not-allowed text-white"
+                        : "bg-black text-white hover:bg-gray-800"
+                    }`}
+            >
+              <LuDownload /> <span>Export Orders</span>
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Filters */}
@@ -425,22 +441,6 @@ const NourishOrders = (props) => {
             />
           </div>
         </div>
-        {!ALLOWED_ROLES.includes(userRole) && (
-          <div className="max-w-[140px] w-full">
-            <button
-              onClick={handleExportOrders}
-              disabled={nourishOrders.length === 0 || (dateFilter?.value === "custom" && (!customFrom || !customTo))}
-              className={`w-full px-4 py-2 rounded flex items-center gap-2
-                    ${
-                      nourishOrders.length === 0 || (dateFilter?.value === "custom" && (!customFrom || !customTo))
-                        ? "bg-gray-400 cursor-not-allowed text-white"
-                        : "bg-black text-white hover:bg-gray-800"
-                    }`}
-            >
-              <LuDownload /> <span>Export Orders</span>
-            </button>
-          </div>
-        )}
       </div>
 
       {/* Table */}

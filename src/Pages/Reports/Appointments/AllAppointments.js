@@ -735,6 +735,27 @@ const getPackageDate = (dateString) => {
             <p className="text-sm">{`Home > All Bookings`}</p>
             <h1 className="text-3xl font-semibold">All Bookings</h1>
           </div>
+           {!ALLOWED_ROLES.includes(userRole) && (
+            <div className="max-w-[160px] w-full">
+              <button
+                onClick={handleExportBookings}
+                disabled={
+                  appointmentList.length === 0 ||
+                  (dateFilter?.value === "custom" && (!customFrom || !customTo))
+                }
+                className={`w-full px-4 py-2 rounded flex items-center gap-2
+                        ${
+                          appointmentList.length === 0 ||
+                          (dateFilter?.value === "custom" &&
+                            (!customFrom || !customTo))
+                            ? "bg-gray-400 cursor-not-allowed text-white"
+                            : "bg-black text-white hover:bg-gray-800"
+                        }`}
+              >
+                <LuDownload /> <span>Export Bookings</span>
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Filters */}
@@ -821,27 +842,6 @@ const getPackageDate = (dateString) => {
               />
             </div>
           </div>
-          {!ALLOWED_ROLES.includes(userRole) && (
-            <div className="max-w-[160px] w-full">
-              <button
-                onClick={handleExportBookings}
-                disabled={
-                  appointmentList.length === 0 ||
-                  (dateFilter?.value === "custom" && (!customFrom || !customTo))
-                }
-                className={`w-full px-4 py-2 rounded flex items-center gap-2
-                        ${
-                          appointmentList.length === 0 ||
-                          (dateFilter?.value === "custom" &&
-                            (!customFrom || !customTo))
-                            ? "bg-gray-400 cursor-not-allowed text-white"
-                            : "bg-black text-white hover:bg-gray-800"
-                        }`}
-              >
-                <LuDownload /> <span>Export Bookings</span>
-              </button>
-            </div>
-          )}
         </div>
 
         {/* Dynamic Statistics */}
