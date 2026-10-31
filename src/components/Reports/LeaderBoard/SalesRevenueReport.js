@@ -181,6 +181,22 @@ const SalesRevenueReport = (props) => {
         <div className="title--breadcrumbs">
           <h1 className="text-3xl font-semibold">Revenue Report</h1>
         </div>
+        {!ALLOWED_ROLES.includes(userRole) && (
+          <div className="w-full max-w-[300px]">
+            <button
+              onClick={handleDownloadSalesRevenue}
+              disabled={revenueReportData.length === 0}
+              className={`ms-auto px-4 py-2 rounded flex items-center gap-2
+                ${
+                  revenueReportData.length === 0
+                    ? "bg-gray-400 cursor-not-allowed text-white"
+                    : "bg-black text-white hover:bg-gray-800"
+                }`}
+            >
+              <LuDownload /> <span>Download Report</span>
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Filters */}
@@ -216,22 +232,6 @@ const SalesRevenueReport = (props) => {
             />
           </div>
         </div>
-        {!ALLOWED_ROLES.includes(userRole) && (
-          <div className="w-full">
-            <button
-              onClick={handleDownloadSalesRevenue}
-              disabled={revenueReportData.length === 0}
-              className={`ms-auto px-4 py-2 rounded flex items-center gap-2
-                ${
-                  revenueReportData.length === 0
-                    ? "bg-gray-400 cursor-not-allowed text-white"
-                    : "bg-black text-white hover:bg-gray-800"
-                }`}
-            >
-              <LuDownload /> <span>Download Report</span>
-            </button>
-          </div>
-        )}
       </div>
 
       {/* Table */}

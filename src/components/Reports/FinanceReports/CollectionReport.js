@@ -193,6 +193,22 @@ const CollectionReport = (props) => {
           </p>
           <h1 className="text-3xl font-semibold">Collection Report</h1>
         </div>
+        {!ALLOWED_ROLES.includes(userRole) && (
+          <div className="w-full max-w-[170px]">
+            <button
+              onClick={handleExportData}
+              disabled={activeService.length === 0 || (dateFilter?.value === "custom" && (!customFrom || !customTo))}
+              className={`ms-auto px-4 py-2 rounded flex items-center gap-2
+              ${
+                activeService.length === 0 || (dateFilter?.value === "custom" && (!customFrom || !customTo))
+                  ? "bg-gray-400 cursor-not-allowed text-white"
+                  : "bg-black text-white hover:bg-gray-800"
+              }`}
+            >
+              <LuDownload /> <span>Download Report</span>
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Filters */}
@@ -269,22 +285,7 @@ const CollectionReport = (props) => {
             />
           </div>
         </div>
-        {!ALLOWED_ROLES.includes(userRole) && (
-          <div className="w-full max-w-[170px]">
-            <button
-              onClick={handleExportData}
-              disabled={activeService.length === 0 || (dateFilter?.value === "custom" && (!customFrom || !customTo))}
-              className={`ms-auto px-4 py-2 rounded flex items-center gap-2
-              ${
-                activeService.length === 0 || (dateFilter?.value === "custom" && (!customFrom || !customTo))
-                  ? "bg-gray-400 cursor-not-allowed text-white"
-                  : "bg-black text-white hover:bg-gray-800"
-              }`}
-            >
-              <LuDownload /> <span>Download Report</span>
-            </button>
-          </div>
-        )}
+        
       </div>
 
       {/* Table */}

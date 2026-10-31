@@ -368,6 +368,22 @@ const AllEnquiriesReport = (props) => {
               <p className="text-sm">{`Home > Sales Reports > All Enquiries Report`}</p>
               <h1 className="text-3xl font-semibold">All Enquiries Report</h1>
             </div>
+            {!ALLOWED_ROLES.includes(userRole) && (
+              <div className="w-full max-w-[170px]">
+                <button
+                  onClick={handleExportEnquiries}
+                  disabled={allLeads.length === 0 || (dateFilter?.value === "custom" && (!customFrom || !customTo))}
+                  className={`ms-auto px-4 py-2 rounded flex items-center gap-2
+                  ${
+                    allLeads.length === 0 || (dateFilter?.value === "custom" && (!customFrom || !customTo))
+                      ? "bg-gray-400 cursor-not-allowed text-white"
+                      : "bg-black text-white hover:bg-gray-800"
+                  }`}
+                >
+                  <LuDownload /> <span>Download Report</span>
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Filters */}
@@ -443,22 +459,7 @@ const AllEnquiriesReport = (props) => {
                 />
               </div>
             </div>
-            {!ALLOWED_ROLES.includes(userRole) && (
-              <div className="w-full max-w-[170px]">
-                <button
-                  onClick={handleExportEnquiries}
-                  disabled={allLeads.length === 0 || (dateFilter?.value === "custom" && (!customFrom || !customTo))}
-                  className={`ms-auto px-4 py-2 rounded flex items-center gap-2
-                  ${
-                    allLeads.length === 0 || (dateFilter?.value === "custom" && (!customFrom || !customTo))
-                      ? "bg-gray-400 cursor-not-allowed text-white"
-                      : "bg-black text-white hover:bg-gray-800"
-                  }`}
-                >
-                  <LuDownload /> <span>Download Report</span>
-                </button>
-              </div>
-            )}
+            
           </div>
 
           <div className="w-full p-3 border bg-white shodow--box rounded-[10px]">
