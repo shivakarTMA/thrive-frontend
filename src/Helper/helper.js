@@ -452,14 +452,31 @@ export const formatIndianNumber = (value) => {
   }).format(number);
 };
 
+// export const sanitizePositiveInteger = (value) => {
+//   if (value === "") return "";
+
+//   // Remove everything except digits
+//   const digitsOnly = value.replace(/[^0-9]/g, "");
+
+//   // Prevent values like 000, 00 → keep single 0
+//   return digitsOnly.replace(/^0+(?!$)/, "");
+// };
+
 export const sanitizePositiveInteger = (value) => {
   if (value === "") return "";
 
-  // Remove everything except digits
-  const digitsOnly = value.replace(/[^0-9]/g, "");
+  // 1. Remove anything that isn't a digit or a period
+  let sanitized = String(value).replace(/[^0-9.]/g, "");
 
-  // Prevent values like 000, 00 → keep single 0
-  return digitsOnly.replace(/^0+(?!$)/, "");
+  // 2. Separate whole number from decimal portion
+  const parts = sanitized.split(".");
+
+  // 3. Rebuild the string, explicitly limiting the decimal part to 2 characters
+  if (parts.length > 1) {
+    return parts[0] + "." + parts[1].slice(0, 2);
+  }
+
+  return parts[0];
 };
 
 export const durationValueInteger = (value) => {
@@ -480,7 +497,9 @@ export const durationValueInteger = (value) => {
 };
 
 export const blockInvalidNumberKeys = (e) => {
-  const invalidKeys = ["-", "+", "e", "E", ".", ","];
+  e.target.inputMode = "decimal";
+  // const invalidKeys = ["-", "+", "e", "E", ".", ","];
+  const invalidKeys = ["-", "+", "e", "E", ","];
 
   if (invalidKeys.includes(e.key)) {
     e.preventDefault();
