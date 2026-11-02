@@ -254,7 +254,7 @@ const getStatusBadgeClass = (status) => {
           <h1 className="text-3xl font-semibold">KYC Documents</h1>
         </div>
         {!ALLOWED_ROLES.includes(userRole) && (
-          <div className="w-full max-w-[170px]">
+          <div className="w-full max-w-[165px]">
             <button
               onClick={handleExportKycDocuments}
               disabled={kycDocumentsData.length === 0 || (dateFilter?.value === "custom" && (!customFrom || !customTo))}
@@ -265,7 +265,7 @@ const getStatusBadgeClass = (status) => {
                   : "bg-black text-white hover:bg-gray-800"
               }`}
             >
-              <LuDownload /> <span>Download Reports</span>
+              <LuDownload /> <span>Download Report</span>
             </button>
           </div>
         )}
