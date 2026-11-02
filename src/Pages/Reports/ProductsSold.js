@@ -597,7 +597,7 @@ const ProductsSold = (props) => {
                           : "bg-black text-white hover:bg-gray-800"
                       }`}
               >
-                <LuDownload /> <span>Export Orders</span>
+                <LuDownload /> <span>Download Orders</span>
               </button>
             </div>
             </div>

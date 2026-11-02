@@ -715,7 +715,7 @@ const customCreateClassOption = ({
                           : "bg-black text-white hover:bg-gray-800"
                       }`}
               >
-                <LuDownload /> <span>Export Classes</span>
+                <LuDownload /> <span>Download Classes</span>
               </button>
             </div>
           )}
