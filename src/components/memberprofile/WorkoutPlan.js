@@ -314,21 +314,28 @@ const WorkoutPlan = ({
     });
   };
 
-  const handleExerciseFieldChange = (dayIdx, exIdx, field, value) => {
-    setData((prev) => {
-      const updatedDays = prev.days.map((day, idx) => {
-        if (idx !== dayIdx) return day;
+const handleExerciseFieldChange = (dayIdx, exIdx, field, value) => {
+  setData((prev) => ({
+    ...prev,
+    days: prev.days.map((day, idx) =>
+      idx !== dayIdx
+        ? day
+        : {
+            ...day,
+            exercises: day.exercises.map((ex, i) =>
+              i === exIdx ? { ...ex, [field]: value } : ex,
+            ),
+          },
+    ),
+  }));
 
-        const updatedExercises = day.exercises.map((ex, i) =>
-          i === exIdx ? { ...ex, [field]: value } : ex,
-        );
-
-        return { ...day, exercises: updatedExercises };
-      });
-
-      return { ...prev, days: updatedDays };
-    });
-  };
+  setValidationErrors((prev) => {
+    const k = `day_${dayIdx}_ex_${exIdx}_${field}`;
+    if (!(k in prev)) return prev;
+    const { [k]: _removed, ...rest } = prev;
+    return rest;
+  });
+};
 
   const handleClearDay = (dayIdx) => {
     const dayToClear = data.days[dayIdx];
@@ -468,29 +475,38 @@ const WorkoutPlan = ({
     };
   };
 
+  const isEmpty = (v) => v === null || v === undefined || v === "";
+  const isPositive = (v) => !isEmpty(v) && Number(v) > 0;
+
   const validateWorkoutPlan = (data) => {
-    const errs = {};
+  const errs = {};
 
-    data.days.forEach((day, dIdx) => {
-      if (day.is_rest_day) return;
+  data.days.forEach((day, dIdx) => {
+    if (day.is_rest_day) return;
 
-      day.exercises.forEach((ex, eIdx) => {
-        const key = `day_${dIdx}_ex_${eIdx}`;
+    if (day.exercises.length === 0) {
+      errs[`day_${dIdx}`] = `Day ${day.day_no}: add an exercise or mark it as a rest day`;
+      return;
+    }
 
-        if (ex.sets == null) errs[`${key}_sets`] = "Sets required";
+    day.exercises.forEach((ex, eIdx) => {
+      const key = `day_${dIdx}_ex_${eIdx}`;
 
-        if (ex._ui?.hasReps && ex.reps == null)
-          errs[`${key}_reps`] = "Reps required";
-
-        if (ex._ui?.hasWeight && ex.weight_kg == null)
-          errs[`${key}_weight`] = "Weight required";
-
-        if (ex.rest_secs == null) errs[`${key}_rest`] = "Rest required";
-      });
+      if (!isPositive(ex.sets)) errs[`${key}_sets`] = "Sets required";
+      if (ex._ui?.hasReps && !isPositive(ex.reps))
+        errs[`${key}_reps`] = "Reps required";
+      if (ex._ui?.hasDuration && !isPositive(ex.duration_mins))
+        errs[`${key}_duration_mins`] = "Duration required";
+      if (ex._ui?.hasDistance && !isPositive(ex.distance_mts))
+        errs[`${key}_distance_mts`] = "Distance required";
+      if (ex._ui?.hasWeight && isEmpty(ex.weight_kg))
+        errs[`${key}_weight_kg`] = "Weight required";
+      if (isEmpty(ex.rest_secs)) errs[`${key}_rest_secs`] = "Rest required";
     });
+  });
 
-    return errs;
-  };
+  return errs;
+};
 
   const handleSaveWorkoutPlan = async () => {
     try {
@@ -509,8 +525,19 @@ const WorkoutPlan = ({
       }
 
       const exErrors = validateWorkoutPlan(data);
+      setValidationErrors(exErrors);               // also clears old errors when valid
       if (Object.keys(exErrors).length) {
         console.error("❌ Exercise validation errors:", exErrors);
+        const dayMessages = Object.keys(exErrors)
+          .filter((k) => /^day_\d+$/.test(k))
+          .map((k) => exErrors[k]);
+
+        if (dayMessages.length) {
+          const emptyDays = dayMessages.map((m) => m.split(":")[0]).join(", ");
+          toast.error(`${emptyDays}: add an exercise or mark as a rest day`, {
+            toastId: "empty-days", // prevents duplicate toasts on repeated clicks
+          });
+        }
         setValidationErrors(exErrors);
         return;
       }
