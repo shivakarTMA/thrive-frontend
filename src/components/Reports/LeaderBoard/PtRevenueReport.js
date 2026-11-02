@@ -192,6 +192,22 @@ const PtRevenueReport = (props) => {
         <div className="title--breadcrumbs">
           <h1 className="text-3xl font-semibold">PT Revenue Report</h1>
         </div>
+          {!ALLOWED_ROLES.includes(userRole) && (
+            <div className="max-w-[162px] w-full">
+              <button
+                onClick={handleDownloadPtRevenueReport}
+                disabled={leaderboardCallLogs.length === 0}
+                className={`ms-auto px-4 py-2 rounded flex items-center gap-2
+                ${
+                  leaderboardCallLogs.length === 0
+                    ? "bg-gray-400 cursor-not-allowed text-white"
+                    : "bg-black text-white hover:bg-gray-800"
+                }`}
+              >
+                <LuDownload /> <span>Download Report</span>
+              </button>
+            </div>
+          )}
       </div>
 
       {/* Filters */}
@@ -227,22 +243,6 @@ const PtRevenueReport = (props) => {
             />
           </div>
         </div>
-        {!ALLOWED_ROLES.includes(userRole) && (
-            <div className="w-full">
-              <button
-                onClick={handleDownloadPtRevenueReport}
-                disabled={leaderboardCallLogs.length === 0}
-                className={`ms-auto px-4 py-2 rounded flex items-center gap-2
-                ${
-                  leaderboardCallLogs.length === 0
-                    ? "bg-gray-400 cursor-not-allowed text-white"
-                    : "bg-black text-white hover:bg-gray-800"
-                }`}
-              >
-                <LuDownload /> <span>Download Report</span>
-              </button>
-            </div>
-          )}
       </div>
 
       {/* Dynamic Statistics */}
