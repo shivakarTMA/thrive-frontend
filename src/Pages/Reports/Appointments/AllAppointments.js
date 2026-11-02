@@ -736,7 +736,7 @@ const getPackageDate = (dateString) => {
             <h1 className="text-3xl font-semibold">All Bookings</h1>
           </div>
            {!ALLOWED_ROLES.includes(userRole) && (
-            <div className="max-w-[160px] w-full">
+            <div className="max-w-[180px] w-full">
               <button
                 onClick={handleExportBookings}
                 disabled={

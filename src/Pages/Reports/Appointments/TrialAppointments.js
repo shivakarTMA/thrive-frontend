@@ -729,7 +729,7 @@ const trainerChangeOptions =
             <h1 className="text-3xl font-semibold">Trial Appointments</h1>
           </div>
           {!ALLOWED_ROLES.includes(userRole) && (
-            <div className="max-w-[190px] w-full">
+            <div className="max-w-[210px] w-full">
               <button
                 onClick={handleDownloadTrialAppointments}
                 disabled={

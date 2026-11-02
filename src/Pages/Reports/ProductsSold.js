@@ -586,7 +586,7 @@ const ProductsSold = (props) => {
                 </button>
               </div>
             )}
-            <div className="min-w-[140px] w-full">
+            <div className="min-w-[170px] w-full">
               <button
                 onClick={handleExportProductsSold}
                 disabled={productSoldData.length === 0 || (dateFilter?.value === "custom" && (!customFrom || !customTo))}
