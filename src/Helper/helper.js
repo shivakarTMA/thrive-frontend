@@ -498,6 +498,7 @@ export const durationValueInteger = (value) => {
 
 export const blockInvalidNumberKeys = (e) => {
   e.target.inputMode = "decimal";
+  e.target.step = "0.01"; // allows 2 decimal places
   // const invalidKeys = ["-", "+", "e", "E", ".", ","];
   const invalidKeys = ["-", "+", "e", "E", ","];
 
