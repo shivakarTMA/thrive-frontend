@@ -337,7 +337,7 @@ const NourishOrders = (props) => {
           <h1 className="text-3xl font-semibold">Nourish Orders</h1>
         </div>
         {!ALLOWED_ROLES.includes(userRole) && (
-          <div className="max-w-[170px] w-full">
+          <div className="max-w-[162px] w-full">
             <button
               onClick={handleExportOrders}
               disabled={nourishOrders.length === 0 || (dateFilter?.value === "custom" && (!customFrom || !customTo))}
