@@ -194,11 +194,11 @@ const RenewalReport = () => {
       <div className="flex items-end justify-between gap-2 mb-5">
         <div className="title--breadcrumbs">
           <p className="text-sm">
-            Home &gt; Reports &gt; Operations Reports &gt; Renewal Report
+            Home &gt; Reports &gt; Operations Reports &gt; Renewal vs Attrition Report
           </p>
 
           <h1 className="text-3xl font-semibold">
-            Renewal Report
+            Renewal vs Attrition Report
           </h1>
         </div>
       </div>
