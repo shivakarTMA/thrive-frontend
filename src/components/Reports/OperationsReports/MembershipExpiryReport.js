@@ -95,7 +95,7 @@ const MembershipExpiryReport = (props) => {
   { label: "Advance Renewal", value: "ADVANCE_RENEWAL" },
   { label: "Renewal", value: "RENEWAL" },
   { label: "Reinstatements", value: "REINSTATEMENTS" },
-  { label: "N/A", value: "N/A" },
+  { label: "New", value: "NEW" },
 ];
 
   // Function to fetch club list
