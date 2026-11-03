@@ -656,7 +656,7 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                       to="/reports/operations-reports/renewal-report"
                       className="submenu-link text-white text-sm"
                     >
-                      Renewal Report
+                      Renewal vs Attrition Report
                     </Link>
                     <Link
                       to="/reports/operations-reports/member-checkins-report"
@@ -1523,7 +1523,7 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                       to="/reports/operations-reports/renewal-report"
                       className="submenu-link text-white text-sm"
                     >
-                      Renewal Report
+                      Renewal vs Attrition Report
                     </Link> */}
                     <Link
                       to="/reports/operations-reports/member-checkins-report"
@@ -2314,7 +2314,7 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                       to="/reports/operations-reports/renewal-report"
                       className="submenu-link text-white text-sm"
                     >
-                      Renewal Report
+                      Renewal vs Attrition Report
                     </Link> */}
                     <Link
                       to="/reports/operations-reports/member-checkins-report"
@@ -3015,7 +3015,7 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                         to="/reports/operations-reports/renewal-report"
                         className="submenu-link text-white text-sm"
                       >
-                        Renewal Report
+                        Renewal vs Attrition Report
                       </Link> */}
                       <Link
                         to="/reports/operations-reports/member-checkins-report"
@@ -3761,7 +3761,7 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                       to="/reports/operations-reports/renewal-report"
                       className="submenu-link text-white text-sm"
                     >
-                      Renewal Report
+                      Renewal vs Attrition Report
                     </Link> */}
                     <Link
                       to="/reports/operations-reports/member-checkins-report"
@@ -4401,7 +4401,7 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                       to="/reports/operations-reports/renewal-report"
                       className="submenu-link text-white text-sm"
                     >
-                      Renewal Report
+                      Renewal vs Attrition Report
                     </Link> */}
                     <Link
                       to="/reports/operations-reports/member-checkins-report"
@@ -4955,7 +4955,7 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                       to="/reports/operations-reports/renewal-report"
                       className="submenu-link text-white text-sm"
                     >
-                      Renewal Report
+                      Renewal vs Attrition Report
                     </Link> */}
                     <Link
                       to="/reports/operations-reports/member-checkins-report"
@@ -5514,7 +5514,7 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                       to="/reports/operations-reports/renewal-report"
                       className="submenu-link text-white text-sm"
                     >
-                      Renewal Report
+                      Renewal vs Attrition Report
                     </Link> */}
                     <Link
                       to="/reports/operations-reports/membership-expiry-report"
@@ -6054,7 +6054,7 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                       to="/reports/operations-reports/renewal-report"
                       className="submenu-link text-white text-sm"
                     >
-                      Renewal Report
+                      Renewal vs Attrition Report
                     </Link> */}
                     <Link
                       to="/reports/operations-reports/member-checkins-report"
@@ -6619,7 +6619,7 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                       to="/reports/operations-reports/renewal-report"
                       className="submenu-link text-white text-sm"
                     >
-                      Renewal Report
+                      Renewal vs Attrition Report
                     </Link> */}
                     <Link
                       to="/reports/operations-reports/member-checkins-report"
@@ -7358,7 +7358,7 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                       to="/reports/operations-reports/renewal-report"
                       className="submenu-link text-white text-sm"
                     >
-                      Renewal Report
+                      Renewal vs Attrition Report
                     </Link> */}
                     <Link
                       to="/reports/operations-reports/member-checkins-report"
@@ -8123,7 +8123,7 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                       to="/reports/operations-reports/renewal-report"
                       className="submenu-link text-white text-sm"
                     >
-                      Renewal Report
+                      Renewal vs Attrition Report
                     </Link> */}
                     <Link
                       to="/reports/operations-reports/member-checkins-report"
