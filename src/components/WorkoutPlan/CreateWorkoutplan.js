@@ -247,19 +247,41 @@ const CreateWorkoutplan = () => {
     });
   };
 
+  // const handleExerciseFieldChange = (dayIdx, exIdx, field, value) => {
+  //   setData((prev) => {
+  //     const updatedDays = prev.days.map((day, idx) => {
+  //       if (idx !== dayIdx) return day;
+
+  //       const updatedExercises = day.exercises.map((ex, i) =>
+  //         i === exIdx ? { ...ex, [field]: value } : ex,
+  //       );
+
+  //       return { ...day, exercises: updatedExercises };
+  //     });
+
+  //     return { ...prev, days: updatedDays };
+  //   });
+  // };
   const handleExerciseFieldChange = (dayIdx, exIdx, field, value) => {
-    setData((prev) => {
-      const updatedDays = prev.days.map((day, idx) => {
-        if (idx !== dayIdx) return day;
+    setData((prev) => ({
+      ...prev,
+      days: prev.days.map((day, idx) =>
+        idx !== dayIdx
+          ? day
+          : {
+              ...day,
+              exercises: day.exercises.map((ex, i) =>
+                i === exIdx ? { ...ex, [field]: value } : ex,
+              ),
+            },
+      ),
+    }));
 
-        const updatedExercises = day.exercises.map((ex, i) =>
-          i === exIdx ? { ...ex, [field]: value } : ex,
-        );
-
-        return { ...day, exercises: updatedExercises };
-      });
-
-      return { ...prev, days: updatedDays };
+    setValidationErrors((prev) => {
+      const k = `day_${dayIdx}_ex_${exIdx}_${field}`;
+      if (!(k in prev)) return prev;
+      const { [k]: _removed, ...rest } = prev;
+      return rest;
     });
   };
 
@@ -375,65 +397,107 @@ const CreateWorkoutplan = () => {
     };
   };
 
-  const validateWorkoutPlan = (data) => {
-    let errors = {};
+  const isEmpty = (v) => v === null || v === undefined || v === "";
+  const isPositive = (v) => !isEmpty(v) && Number(v) > 0;
 
-    data.days.forEach((day, dayIndex) => {
+  const validateWorkoutPlan = (data) => {
+    const errs = {};
+
+    data.days.forEach((day, dIdx) => {
       if (day.is_rest_day) return;
 
-      day.exercises.forEach((ex, exIndex) => {
-        const prefix = `day_${dayIndex}_ex_${exIndex}`;
+      if (day.exercises.length === 0) {
+        errs[`day_${dIdx}`] = `Day ${day.day_no}: add an exercise or mark it as a rest day`;
+        return;
+      }
 
-        // Skip rest block
-        if (ex._ui?.type === "rest") {
-          if (ex.rest_secs == null || ex.rest_secs === "") {
-            errors[`${prefix}_rest_secs`] = "Rest seconds is required";
-          }
-          return;
-        }
+      day.exercises.forEach((ex, eIdx) => {
+        const key = `day_${dIdx}_ex_${eIdx}`;
 
-        // sets
-        if (ex.sets == null || ex.sets === "") {
-          errors[`${prefix}_sets`] = "Sets is required";
-        }
-
-        // reps
-        if (ex._ui?.hasReps && (ex.reps == null || ex.reps === "")) {
-          errors[`${prefix}_reps`] = "Reps is required";
-        }
-
-        // duration_mins
-        if (
-          ex._ui?.hasDuration &&
-          (ex.duration_mins == null || ex.duration_mins === "")
-        ) {
-          errors[`${prefix}_duration`] = "Duration is required";
-        }
-
-        // distance_mts
-        if (
-          ex._ui?.hasDistance &&
-          (ex.distance_mts == null || ex.distance_mts === "")
-        ) {
-          errors[`${prefix}_distance`] = "Distance is required";
-        }
-
-        // weight
-        if (
-          ex._ui?.hasWeight &&
-          (ex.weight_kg == null || ex.weight_kg === "")
-        ) {
-          errors[`${prefix}_weight_kg`] = "Weight is required";
-        }
-
-        // rest
-        if (ex.rest_secs == null || ex.rest_secs === "") {
-          errors[`${prefix}_rest_secs`] = "Rest seconds is required";
-        }
+        if (!isPositive(ex.sets)) errs[`${key}_sets`] = "Sets required";
+        if (ex._ui?.hasReps && !isPositive(ex.reps))
+          errs[`${key}_reps`] = "Reps required";
+        if (ex._ui?.hasDuration && !isPositive(ex.duration_mins))
+          errs[`${key}_duration_mins`] = "Duration required";
+        if (ex._ui?.hasDistance && !isPositive(ex.distance_mts))
+          errs[`${key}_distance_mts`] = "Distance required";
+        if (ex._ui?.hasWeight && isEmpty(ex.weight_kg))
+          errs[`${key}_weight_kg`] = "Weight required";
+        if (isEmpty(ex.rest_secs)) errs[`${key}_rest_secs`] = "Rest required";
       });
     });
 
-    return errors;
+    return errs;
+  };
+
+  // const validateWorkoutPlan = (data) => {
+  //   let errors = {};
+
+  //   data.days.forEach((day, dayIndex) => {
+  //     if (day.is_rest_day) return;
+
+  //     day.exercises.forEach((ex, exIndex) => {
+  //       const prefix = `day_${dayIndex}_ex_${exIndex}`;
+
+  //       // Skip rest block
+  //       if (ex._ui?.type === "rest") {
+  //         if (ex.rest_secs == null || ex.rest_secs === "") {
+  //           errors[`${prefix}_rest_secs`] = "Rest seconds is required";
+  //         }
+  //         return;
+  //       }
+
+  //       // sets
+  //       if (ex.sets == null || ex.sets === "") {
+  //         errors[`${prefix}_sets`] = "Sets is required";
+  //       }
+
+  //       // reps
+  //       if (ex._ui?.hasReps && (ex.reps == null || ex.reps === "")) {
+  //         errors[`${prefix}_reps`] = "Reps is required";
+  //       }
+
+  //       // duration_mins
+  //       if (
+  //         ex._ui?.hasDuration &&
+  //         (ex.duration_mins == null || ex.duration_mins === "")
+  //       ) {
+  //         errors[`${prefix}_duration`] = "Duration is required";
+  //       }
+
+  //       // distance_mts
+  //       if (
+  //         ex._ui?.hasDistance &&
+  //         (ex.distance_mts == null || ex.distance_mts === "")
+  //       ) {
+  //         errors[`${prefix}_distance`] = "Distance is required";
+  //       }
+
+  //       // weight
+  //       if (
+  //         ex._ui?.hasWeight &&
+  //         (ex.weight_kg == null || ex.weight_kg === "")
+  //       ) {
+  //         errors[`${prefix}_weight_kg`] = "Weight is required";
+  //       }
+
+  //       // rest
+  //       if (ex.rest_secs == null || ex.rest_secs === "") {
+  //         errors[`${prefix}_rest_secs`] = "Rest seconds is required";
+  //       }
+  //     });
+  //   });
+
+  //   return errors;
+  // };
+
+  const getDayIndexesWithErrors = (errs) => {
+    const set = new Set();
+    Object.keys(errs).forEach((k) => {
+      const m = k.match(/^day_(\d+)/);
+      if (m) set.add(Number(m[1]));
+    });
+    return [...set].sort((a, b) => a - b);
   };
 
   const handleSaveWorkoutPlan = async () => {
@@ -451,11 +515,39 @@ const CreateWorkoutplan = () => {
     }
 
     // NEW VALIDATION
-    const errors = validateWorkoutPlan(data);
+    // const errors = validateWorkoutPlan(data);
 
-    if (Object.keys(errors).length > 0) {
-      setValidationErrors(errors);
-      return; // stop save
+    // if (Object.keys(errors).length > 0) {
+    //   setValidationErrors(errors);
+    //   return; // stop save
+    // }
+    const exErrors = validateWorkoutPlan(data);
+    setValidationErrors(exErrors);
+
+    if (Object.keys(exErrors).length) {
+      const errorDays = getDayIndexesWithErrors(exErrors);
+
+      // If the current tab is fine, jump to the first day with errors
+      if (!errorDays.includes(activeDayIndex)) {
+        setActiveDayIndex(errorDays[0]);
+      }
+
+      const dayLabels = errorDays
+        .map((i) => `Day ${data.days[i]?.day_no ?? i + 1}`)
+        .join(", ");
+
+      toast.error(`Please fix the highlighted fields in: ${dayLabels}`, {
+        toastId: "workout-validation",
+      });
+
+      // Scroll to the first error after the tab has re-rendered
+      setTimeout(() => {
+        document
+          .querySelector("[data-field-error]")
+          ?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 100);
+
+      return;
     }
 
     setValidationErrors({});
@@ -621,7 +713,7 @@ const CreateWorkoutplan = () => {
                     }
                     className="custom--input number--appearance-none w-full"
                   />
-                  {validationErrors[
+                  {/* {validationErrors[
                     `day_${activeDayIndex}_ex_${exIdx}_duration`
                   ] && (
                     <p className="text-red-600 text-sm mt-1">
@@ -630,6 +722,11 @@ const CreateWorkoutplan = () => {
                           `day_${activeDayIndex}_ex_${exIdx}_duration`
                         ]
                       }
+                    </p>
+                  )} */}
+                  {validationErrors[`day_${activeDayIndex}_ex_${exIdx}_duration_mins`] && (
+                    <p data-field-error className="text-red-600 text-sm mt-1">
+                      {validationErrors[`day_${activeDayIndex}_ex_${exIdx}_duration_mins`]}
                     </p>
                   )}
                 </div>
@@ -654,7 +751,7 @@ const CreateWorkoutplan = () => {
                     }
                     className="custom--input number--appearance-none w-full"
                   />
-                  {validationErrors[
+                  {/* {validationErrors[
                     `day_${activeDayIndex}_ex_${exIdx}_distance`
                   ] && (
                     <p className="text-red-600 text-sm mt-1">
@@ -663,6 +760,11 @@ const CreateWorkoutplan = () => {
                           `day_${activeDayIndex}_ex_${exIdx}_distance`
                         ]
                       }
+                    </p>
+                  )} */}
+                  {validationErrors[`day_${activeDayIndex}_ex_${exIdx}_distance_mts`] && (
+                    <p data-field-error className="text-red-600 text-sm mt-1">
+                      {validationErrors[`day_${activeDayIndex}_ex_${exIdx}_distance_mts`]}
                     </p>
                   )}
                 </div>
@@ -796,6 +898,8 @@ const CreateWorkoutplan = () => {
       </div>
     );
   }
+
+  const errorDaySet = new Set(getDayIndexesWithErrors(validationErrors));
 
   return (
     <div className="page--content">
@@ -969,7 +1073,7 @@ const CreateWorkoutplan = () => {
                 <div className="w-full mb-4">
                   <div className="flex flex-col gap-2">
                     <div className="grid grid-cols-7 gap-2 mt-2">
-                      {data.days.map((day, idx) => (
+                      {/* {data.days.map((day, idx) => (
                         <button
                           key={idx}
                           onClick={() => setActiveDayIndex(idx)}
@@ -978,6 +1082,20 @@ const CreateWorkoutplan = () => {
                           }`}
                         >
                           Day {day.day_no}
+                        </button>
+                      ))} */}
+                      {data.days.map((day, idx) => (
+                        <button
+                          key={idx}
+                          onClick={() => setActiveDayIndex(idx)}
+                          className={`px-4 py-2 border rounded text-center relative ${
+                            activeDayIndex === idx ? "bg-blue-200" : ""
+                          } ${errorDaySet.has(idx) ? "!border-red-500 text-red-600" : ""}`}
+                        >
+                          Day {day.day_no}
+                          {errorDaySet.has(idx) && (
+                            <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-red-500" />
+                          )}
                         </button>
                       ))}
                     </div>
@@ -1091,6 +1209,11 @@ const CreateWorkoutplan = () => {
                       <>
                         {isDayEmpty && (
                           <div className="text-center py-4 bg-gray-100 rounded">
+                            {validationErrors[`day_${activeDayIndex}`] && (
+                              <p data-field-error className="text-red-600 text-sm mb-2">
+                                {validationErrors[`day_${activeDayIndex}`]}
+                              </p>
+                            )}
                             <button
                               onClick={() =>
                                 handleToggleRestDay(activeDayIndex, true)
