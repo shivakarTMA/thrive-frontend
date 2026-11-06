@@ -508,6 +508,15 @@ const handleExerciseFieldChange = (dayIdx, exIdx, field, value) => {
   return errs;
 };
 
+  const getDayIndexesWithErrors = (errs) => {
+    const set = new Set();
+    Object.keys(errs).forEach((k) => {
+      const m = k.match(/^day_(\d+)/);
+      if (m) set.add(Number(m[1]));
+    });
+    return [...set].sort((a, b) => a - b);
+  };
+
   const handleSaveWorkoutPlan = async () => {
     try {
       console.log("Saving workout plan…", data);
@@ -525,22 +534,35 @@ const handleExerciseFieldChange = (dayIdx, exIdx, field, value) => {
       }
 
       const exErrors = validateWorkoutPlan(data);
-      setValidationErrors(exErrors);               // also clears old errors when valid
-      if (Object.keys(exErrors).length) {
-        console.error("❌ Exercise validation errors:", exErrors);
-        const dayMessages = Object.keys(exErrors)
-          .filter((k) => /^day_\d+$/.test(k))
-          .map((k) => exErrors[k]);
+      setValidationErrors(exErrors);
 
-        if (dayMessages.length) {
-          const emptyDays = dayMessages.map((m) => m.split(":")[0]).join(", ");
-          toast.error(`${emptyDays}: add an exercise or mark as a rest day`, {
-            toastId: "empty-days", // prevents duplicate toasts on repeated clicks
-          });
+      if (Object.keys(exErrors).length) {
+        const errorDays = getDayIndexesWithErrors(exErrors);
+
+        // If the current tab is fine, jump to the first day with errors
+        if (!errorDays.includes(activeDayIndex)) {
+          setActiveDayIndex(errorDays[0]);
         }
-        setValidationErrors(exErrors);
+
+        const dayLabels = errorDays
+          .map((i) => `Day ${data.days[i]?.day_no ?? i + 1}`)
+          .join(", ");
+
+        toast.error(`Please fix the highlighted fields in: ${dayLabels}`, {
+          toastId: "workout-validation",
+        });
+
+        // Scroll to the first error after the tab has re-rendered
+        setTimeout(() => {
+          document
+            .querySelector("[data-field-error]")
+            ?.scrollIntoView({ behavior: "smooth", block: "center" });
+        }, 100);
+
         return;
       }
+
+      setValidationErrors({});
 
       const payload = {
         ...cleanDataForSubmission(data),
@@ -680,7 +702,7 @@ const handleExerciseFieldChange = (dayIdx, exIdx, field, value) => {
                     }
                     className="custom--input number--appearance-none w-full"
                   />
-                  {validationErrors[
+                  {/* {validationErrors[
                     `day_${activeDayIndex}_ex_${exIdx}_duration`
                   ] && (
                     <p className="text-red-600 text-sm mt-1">
@@ -689,6 +711,11 @@ const handleExerciseFieldChange = (dayIdx, exIdx, field, value) => {
                           `day_${activeDayIndex}_ex_${exIdx}_duration`
                         ]
                       }
+                    </p>
+                  )} */}
+                  {validationErrors[`day_${activeDayIndex}_ex_${exIdx}_duration_mins`] && (
+                    <p data-field-error className="text-red-600 text-sm mt-1">
+                      {validationErrors[`day_${activeDayIndex}_ex_${exIdx}_duration_mins`]}
                     </p>
                   )}
                 </div>
@@ -713,7 +740,7 @@ const handleExerciseFieldChange = (dayIdx, exIdx, field, value) => {
                     }
                     className="custom--input number--appearance-none w-full"
                   />
-                  {validationErrors[
+                  {/* {validationErrors[
                     `day_${activeDayIndex}_ex_${exIdx}_distance`
                   ] && (
                     <p className="text-red-600 text-sm mt-1">
@@ -722,6 +749,11 @@ const handleExerciseFieldChange = (dayIdx, exIdx, field, value) => {
                           `day_${activeDayIndex}_ex_${exIdx}_distance`
                         ]
                       }
+                    </p>
+                  )} */}
+                  {validationErrors[`day_${activeDayIndex}_ex_${exIdx}_distance_mts`] && (
+                    <p data-field-error className="text-red-600 text-sm mt-1">
+                      {validationErrors[`day_${activeDayIndex}_ex_${exIdx}_distance_mts`]}
                     </p>
                   )}
                 </div>
@@ -980,6 +1012,8 @@ const handleExerciseFieldChange = (dayIdx, exIdx, field, value) => {
     );
   }
 
+  const errorDaySet = new Set(getDayIndexesWithErrors(validationErrors));
+
   return (
     <div className="p-0">
       <div className="flex justify-end items-end gap-2 mb-3 w-full">
@@ -1237,7 +1271,7 @@ const handleExerciseFieldChange = (dayIdx, exIdx, field, value) => {
               <div className="w-full mb-4">
                 <div className="flex flex-col gap-2">
                   <div className="grid grid-cols-7 gap-2 mt-2">
-                    {data.days.map((day, idx) => (
+                    {/* {data.days.map((day, idx) => (
                       <button
                         key={idx}
                         onClick={() => setActiveDayIndex(idx)}
@@ -1246,6 +1280,20 @@ const handleExerciseFieldChange = (dayIdx, exIdx, field, value) => {
                         }`}
                       >
                         Day {day.day_no}
+                      </button>
+                    ))} */}
+                    {data.days.map((day, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => setActiveDayIndex(idx)}
+                        className={`px-4 py-2 border rounded text-center relative ${
+                          activeDayIndex === idx ? "bg-blue-200" : ""
+                        } ${errorDaySet.has(idx) ? "!border-red-500 text-red-600" : ""}`}
+                      >
+                        Day {day.day_no}
+                        {errorDaySet.has(idx) && (
+                          <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-red-500" />
+                        )}
                       </button>
                     ))}
                   </div>
@@ -1360,6 +1408,11 @@ const handleExerciseFieldChange = (dayIdx, exIdx, field, value) => {
                     <>
                       {isDayEmpty && (
                         <div className="text-center py-4 bg-gray-100 rounded">
+                          {validationErrors[`day_${activeDayIndex}`] && (
+                            <p data-field-error className="text-red-600 text-sm mb-2">
+                              {validationErrors[`day_${activeDayIndex}`]}
+                            </p>
+                          )}
                           <button
                             onClick={() =>
                               handleToggleRestDay(activeDayIndex, true)
