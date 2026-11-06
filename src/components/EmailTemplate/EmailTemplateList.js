@@ -17,6 +17,7 @@ import Pagination from "../common/Pagination";
 import Select from "react-select";
 
 const EmailTemplateList = () => {
+  const [loading,setLoading] = useState(false)
   const [emailTemplateData, setEmailTemplateData] = useState([]);
   const [clubList, setClubList] = useState([]);
   const [clubFilter, setClubFilter] = useState(null);
@@ -84,18 +85,21 @@ const EmailTemplateList = () => {
   }, [clubFilter]);
 
   const handleConfirmDelete = async () => {
+    setLoading(true)
     const exerciesID = selectedDeleteId?.id;
     if (!exerciesID) return;
 
     try {
       await authAxios().delete(`/emailtemplate/${exerciesID}`);
       toast.success("Email template deleted successfully");
+      setLoading(false)
       fetchEmailTemplate();
     } catch (error) {
       console.error(error);
     } finally {
       setShowDeleteModal(false);
       setSelectedDeleteId(null);
+      setLoading(false)
     }
   };
 
@@ -253,7 +257,14 @@ const EmailTemplateList = () => {
             <div className="flex justify-center gap-4">
               <button
                 onClick={handleConfirmDelete}
-                className="bg-black text-white px-4 py-2 rounded max-w-[100px] w-full"
+                disabled={loading}
+                className={`bg-black text-white px-4 py-2 rounded max-w-[100px] w-full
+                  
+                  ${
+                    loading
+                      ? "opacity-50 cursor-not-allowed"
+                      : "cursor-pointer"
+                  }`}
               >
                 Yes
               </button>

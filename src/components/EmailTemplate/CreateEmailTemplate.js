@@ -257,9 +257,14 @@ const CreateEmailTemplate = () => {
             {isAllowed && (
               <button
                 type="submit"
-                className="px-4 py-2 bg-black text-white rounded flex items-center gap-2 mt-4"
+                disabled={formik.isSubmitting}
+                className={`px-4 py-2 bg-black text-white rounded flex items-center gap-2 mt-4${
+                    formik.isSubmitting
+                      ? "opacity-50 cursor-not-allowed"
+                      : "cursor-pointer"
+                  }`}
               >
-                Submit
+                  {formik.isSubmitting ? "Submitting..." : "Submit"}
               </button>
             )}
           </div>

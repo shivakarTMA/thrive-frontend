@@ -297,8 +297,12 @@ const CreateExercise = ({
               </button>
               <button
                 type="submit"
-                className="px-4 py-2 bg-white text-black font-semibold rounded max-w-[150px] w-full"
-              >
+                disabled={formik.isSubmitting}
+                className={`px-4 py-2 bg-white text-black font-semibold rounded max-w-[150px] w-full${
+                    formik.isSubmitting
+                      ? "opacity-50 cursor-not-allowed"
+                      : "cursor-pointer"
+                  }`}>
                 Submit
               </button>
             </div>
