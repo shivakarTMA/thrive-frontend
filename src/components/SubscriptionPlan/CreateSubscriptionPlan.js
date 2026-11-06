@@ -89,7 +89,7 @@ const CreateSubscriptionPlan = ({
       >
         <div className="bg-white rounded-t-[10px] flex gap-3 items-center justify-between py-4 px-4 border-b">
           <h2 className="text-xl font-semibold">
-            {editingOption ? "Edit On Plan" : "Create On Plan"}
+            {editingOption ? "Edit Membership Plan" : "Create Membership Plan"}
           </h2>
           <div
             className="close--lead cursor-pointer"

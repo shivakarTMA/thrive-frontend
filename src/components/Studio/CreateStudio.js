@@ -31,7 +31,7 @@ const CreateStudio = ({
       >
         <div className="bg-white rounded-t-[10px] flex gap-3 items-center justify-between py-4 px-4 border-b">
           <h2 className="text-xl font-semibold">
-            {editingOption ? "Edit On Boarding" : "Create On Boarding"}
+            {editingOption ? "Edit Studio" : "Create Studio"}
           </h2>
           <div
             className="close--lead cursor-pointer"

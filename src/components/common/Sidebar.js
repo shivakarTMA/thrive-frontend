@@ -977,7 +977,7 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
                 >
                   <FaCircle className="menu--icon !text-[10px]" />
-                  <span className="nav-text">Exercises Categories</span>
+                  <span className="nav-text">Exercise Categories</span>
                 </Link>
                 <Link
                   to="/email-template-list"
@@ -1814,7 +1814,7 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
                 >
                   <FaCircle className="menu--icon !text-[10px]" />
-                  <span className="nav-text">Exercises Categories</span>
+                  <span className="nav-text">Exercise Categories</span>
                 </Link>
                 <Link
                   to="/package-category"
@@ -2605,7 +2605,7 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
                 >
                   <FaCircle className="menu--icon !text-[10px]" />
-                  <span className="nav-text">Exercises Categories</span>
+                  <span className="nav-text">Exercise Categories</span>
                 </Link>
                 <Link
                   to="/package-category"
@@ -3991,7 +3991,7 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
                 >
                   <FaCircle className="menu--icon !text-[10px]" />
-                  <span className="nav-text">Exercises Categories</span>
+                  <span className="nav-text">Exercise Categories</span>
                 </Link>
                 <Link
                   to="/package-category"
@@ -4566,7 +4566,7 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
                 >
                   <FaCircle className="menu--icon !text-[10px]" />
-                  <span className="nav-text">Exercises Categories</span>
+                  <span className="nav-text">Exercise Categories</span>
                 </Link>
                 <Link
                   to="/package-category"
@@ -5120,7 +5120,7 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
                 >
                   <FaCircle className="menu--icon !text-[10px]" />
-                  <span className="nav-text">Exercises Categories</span>
+                  <span className="nav-text">Exercise Categories</span>
                 </Link>
                 <Link
                   to="/package-category"
@@ -5639,7 +5639,7 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
                 >
                   <FaCircle className="menu--icon !text-[10px]" />
-                  <span className="nav-text">Exercises Categories</span>
+                  <span className="nav-text">Exercise Categories</span>
                 </Link>
                 <Link
                   to="/package-category"
@@ -7649,7 +7649,7 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar, setLeadModal }) => {
                   className="text-white flex items-center gap-[5px] mb-2 text-sm"
                 >
                   <FaCircle className="menu--icon !text-[10px]" />
-                  <span className="nav-text">Exercises Categories</span>
+                  <span className="nav-text">Exercise Categories</span>
                 </Link>
                 <Link
                   to="/package-category"

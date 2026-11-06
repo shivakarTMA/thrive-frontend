@@ -175,7 +175,7 @@ setLoading(true)
       <div className="flex items-end justify-between gap-2 mb-5">
         <div className="title--breadcrumbs">
           <p className="text-sm">{`Home > Exercises Categories`}</p>
-          <h1 className="text-3xl font-semibold">Exercises Categories</h1>
+          <h1 className="text-3xl font-semibold">Exercise Categories</h1>
         </div>
         {(
           userRole === "ADMIN" || 

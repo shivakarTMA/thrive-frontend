@@ -236,7 +236,7 @@ const SetIncentivePolicy = () => {
             className="px-4 py-2 bg-black text-white rounded flex items-center gap-2"
             onClick={handleCreate}
           >
-            <FiPlus /> Create New Rule
+            <FiPlus /> Create New Policy
           </button>
         </div>
       </div>
@@ -398,10 +398,10 @@ const SetIncentivePolicy = () => {
             <div className="bg-white rounded-t-[10px] flex gap-3 items-center justify-between py-4 px-4 border-b">
               <h2 className="text-xl font-semibold">
                 {modalMode === "view"
-                  ? "View Rule"
+                  ? "View Policy"
                   : modalMode === "edit"
-                  ? "Edit Rule"
-                  : "Create New Rule"}
+                  ? "Edit Policy"
+                  : "Create New Policy"}
               </h2>
               <div
                 className="close--lead cursor-pointer"
