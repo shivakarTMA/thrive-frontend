@@ -33,6 +33,9 @@ const displayPosition = [
 // Define the main GalleryList component
 const ExerciesCategoryList = () => {
   // Component state management
+
+
+  const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [galleryList, setGalleryList] = useState([]);
   const [editingOption, setEditingOption] = useState(null);
@@ -145,16 +148,18 @@ const ExerciesCategoryList = () => {
   const handleConfirmDelete = async () => {
     const exerciesID = selectedDeleteId?.id;
     if (!exerciesID) return;
-
+setLoading(true)
     try {
       await authAxios().delete(`/exercise/category/${exerciesID}`);
       toast.success("Category item deleted successfully");
       fetchExerciesCategory();
+      setLoading(false)
     } catch (error) {
       console.error(error);
     } finally {
       setShowDeleteModal(false);
       setSelectedDeleteId(null);
+      setLoading(false)
     }
   };
 
@@ -355,6 +360,7 @@ const ExerciesCategoryList = () => {
           message={`Confirm deletion of the "${selectedDeleteId?.title}" category?`}
           onConfirm={handleConfirmDelete}
           onCancel={handleCancelDelete}
+          loading={loading}
         />
       )}
     </div>

@@ -45,6 +45,8 @@ const weekdayOptions = [
 
 const ClubOperatingHoursList = () => {
   const location = useLocation();
+
+  const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [clubList, setClubList] = useState([]);
   const [clubFilter, setClubFilter] = useState(null);
@@ -226,6 +228,7 @@ const ClubOperatingHoursList = () => {
   };
 
   const handleConfirmDelete = async () => {
+    setLoading(true)
     if (itemToDelete) {
       try {
         await authAxios().delete(`/club/operating/hours/${itemToDelete.id}`);
@@ -233,9 +236,11 @@ const ClubOperatingHoursList = () => {
           (ex) => ex.id !== itemToDelete.id,
         );
         setOperatingHours(updatedCoupons);
+        setLoading(false)
         toast.success("Operating hours deleted successfully");
       } catch (error) {
         console.error("Error deleting operating:", error);
+        setLoading(false)
       }
     }
     setItemToDelete(null);
@@ -455,6 +460,7 @@ const ClubOperatingHoursList = () => {
           }
           onConfirm={handleConfirmDelete}
           onCancel={handleCancelDelete}
+          loading={loading}
         />
       )}
     </div>
