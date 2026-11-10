@@ -33,6 +33,7 @@ const displayPosition = [
 const GalleryList = () => {
   // Component state management
   const [showModal, setShowModal] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [galleryList, setGalleryList] = useState([]);
   const [club, setClub] = useState([]);
   const [editingOption, setEditingOption] = useState(null);
@@ -183,16 +184,20 @@ const GalleryList = () => {
   });
 
   const handleConfirmDelete = async () => {
+    setLoading(true)
     const exerciesID = selectedDeleteId?.id;
     if (!exerciesID) return;
 
     try {
       await authAxios().delete(`/club/gallery/${exerciesID}`);
       toast.success("Gallery item deleted successfully");
+      setLoading(false)
       fetchGallery();
     } catch (error) {
       console.error(error);
+      setLoading(false)
     } finally {
+      setLoading(false)
       setShowDeleteModal(false);
       setSelectedDeleteId(null);
     }
@@ -383,8 +388,11 @@ const GalleryList = () => {
             <div className="flex justify-center gap-4">
               <button
                 onClick={handleConfirmDelete}
-                className="bg-black text-white px-4 py-2 rounded max-w-[100px] w-full"
-              >
+                className={`bg-black text-white px-4 py-2 rounded min-w-[100px] w-full${
+                   loading
+                      ? "opacity-50 cursor-not-allowed"
+                      : "cursor-pointer"
+                  }`}>
                 Yes
               </button>
               <button

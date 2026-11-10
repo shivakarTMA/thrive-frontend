@@ -29,6 +29,8 @@ const ExercisesList = () => {
   const [exerciseToDelete, setExerciseToDelete] = useState(null);
   const [showConfirmPopup, setShowConfirmPopup] = useState(false);
   const [productCategory, setProductCategory] = useState([]);
+  const [loading, setLoading] = useState(false);
+
   const [productFilter, setProductFilter] = useState(null);
   const { user } = useSelector((state) => state.auth);
   const userRole = user.role;
@@ -108,6 +110,7 @@ const ExercisesList = () => {
 
   // Confirm deletion
   const handleConfirmDelete = async () => {
+    setLoading(true)
     if (exerciseToDelete) {
       try {
         await authAxios().delete(`/exercise/${exerciseToDelete.id}`);
@@ -116,8 +119,10 @@ const ExercisesList = () => {
         // );
         // setExercisesList(updatedExercises);
         toast.success("Exercise deleted successfully");
+        setLoading(false)
         fetchExercisesList();
       } catch (error) {
+        setLoading(false)
         console.error("Error deleting exercise:", error);
       }
     }
@@ -322,6 +327,7 @@ const ExercisesList = () => {
           }
           onConfirm={handleConfirmDelete}
           onCancel={handleCancelDelete}
+          loading={loading}
         />
       )}
     </div>
