@@ -265,6 +265,7 @@ const StaffList = () => {
   const [roleFilter, setRoleFilter] = useState(null);
   const [statusFilter, setStatusFilter] = useState(null);
   const [editingOption, setEditingOption] = useState(null);
+  const [loading, setLoading] = useState(false);
   const { user } = useSelector((state) => state.auth);
   const currentUserRole = user?.role; // Example, dynamically from user info
   const roleOptions = roleOptionsByUser[currentUserRole] || [];
@@ -544,12 +545,14 @@ const StaffList = () => {
   });
 
   const handleDeleteClick = (exercise) => {
+    // setLoading()
     setStaffToDelete(exercise);
     setShowConfirmPopup(true);
   };
 
   // Confirm deletion
   const handleConfirmDelete = async () => {
+    setLoading(true)
     if (staffToDelete) {
       try {
         await authAxios().delete(`/staff/${staffToDelete.id}`);
@@ -558,9 +561,11 @@ const StaffList = () => {
         // );
         // setExercisesList(updatedExercises);
         toast.success("Staff deleted successfully");
+        setLoading(false)
         fetchStaff();
       } catch (error) {
         console.error("Error deleting Staff:", error);
+        setLoading(false)
       }
     }
     setStaffToDelete(null);
@@ -814,6 +819,7 @@ const StaffList = () => {
           }
           onConfirm={handleConfirmDelete}
           onCancel={handleCancelDelete}
+          loading={loading}
         />
       )}
     </div>
