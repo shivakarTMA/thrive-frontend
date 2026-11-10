@@ -248,7 +248,7 @@ const ExercisesList = () => {
                         <Tooltip
                           id={`edit-exercise-${row.id}`}
                           content="Edit Exercise"
-                          place="top"
+                          place="left"
                         >
                           <div
                             onClick={() => {
@@ -263,7 +263,7 @@ const ExercisesList = () => {
                         <Tooltip
                           id={`delete-exercise-${row.id}`}
                           content="Delete Exercise"
-                          place="top"
+                          place="left"
                         >
                           <div
                             onClick={() => handleDeleteClick(row)}

@@ -388,6 +388,7 @@ const GalleryList = () => {
             <div className="flex justify-center gap-4">
               <button
                 onClick={handleConfirmDelete}
+                disabled={loading}
                 className={`bg-black text-white px-4 py-2 rounded min-w-[100px] w-full${
                    loading
                       ? "opacity-50 cursor-not-allowed"
